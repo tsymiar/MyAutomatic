@@ -1,0 +1,145 @@
+﻿<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.TsyQi909006258.bt"
+    android:versionCode="3"
+    android:versionName="2.0777" >
+	
+<!--
+	2.0预测:用service代替NewActivity
+	3.0：actionbar优化,聊天功能，material design
+	4.0：WiFi功能，以接收到的视频数据流为背景,悬浮窗？
+-->
+
+    <uses-sdk
+        android:minSdkVersion="8"
+        android:targetSdkVersion="21" />
+    
+	<uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+	<uses-permission android:name="android.permission.BLUETOOTH" />
+
+    <application
+		android:allowBackup="true"
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/title"
+        android:theme="@style/AppTheme" >
+	
+        <activity
+            android:name=".MainActivity"
+			android:label="@string/title" >
+			
+			<intent-filter>
+				
+			<action android:name="android.intent.action.MAIN" />
+				
+		    <category android:name="android.intent.category.LAUNCHER"/>
+				
+			</intent-filter>
+			
+		</activity>
+		
+		<activity
+			android:name=".WifiActivity"
+			android:label="@string/wifi" />
+		
+		<activity
+			android:name=".ConnectionActivity"
+			android:label="@string/bt">
+			
+            <intent-filter>
+				
+                <action android:name="android.intent.action.CONNECTION" />
+					
+            </intent-filter>
+			
+        </activity>
+        
+        <activity
+            android:name=".NewActivity"
+            android:alwaysRetainTaskState="true"
+            android:label="@string/bt">
+        </activity>
+        
+		<activity
+			android:name=".ChatAct"
+            android:theme="@android:style/Theme.Holo.Dialog"
+			android:alwaysRetainTaskState="true"
+            android:label="数据发送窗口"  >
+			
+            <intent-filter>
+				
+                <action android:name="android.intent.action.NEW" />
+				<category android:name="android.intent.category.LAUNCHER"/>
+					
+            </intent-filter>
+			
+        </activity>
+		
+		<activity
+			android:name=".DeviceListActivity"
+			android:label="@string/title_activity_e" 
+			android:screenOrientation="portrait"
+			android:theme="@android:style/Theme.Holo.Dialog"
+			android:configChanges="orientation|keyboardHidden" />
+		
+		<activity
+			android:name=".About"
+			android:label="@string/about" 
+			android:theme="@android:style/Theme.Holo.Dialog"
+			android:configChanges="orientation|keyboardHidden"/>
+		
+		<activity
+			android:name=".OpenUrl"
+			android:theme="@style/dialog"
+			android:screenOrientation="unspecified">
+			
+		<intent-filter>
+			
+			<action android:name="android.intent.action.VIEW" />
+			<category android:name="android.intent.category.DEFAULT" />
+			<category android:name="android.intent.category.BROWSABLE" />
+			<data android:scheme="file" />
+				
+		</intent-filter>
+		
+		</activity>
+		
+		<activity
+			android:name=".Feedback"
+			android:theme="@style/dialog"
+			android:screenOrientation="unspecified">
+
+			<intent-filter>
+
+				<action android:name="android.intent.action.VIEW" />
+				<action android:name="android.intent.action.SENDTO"/>
+				<category android:name="android.intent.category.DEFAULT" />
+				<category android:name="android.intent.category.BROWSABLE" />
+				<data android:scheme="mailto" />
+
+			</intent-filter>
+
+		</activity>
+		
+		<activity
+			android:name=".Dialog"
+			android:theme="@android:style/Theme.Holo.Dialog"
+			android:screenOrientation="unspecified">
+		
+		<intent-filter>
+
+			<action android:name="android.intent.action.ACTION_MAIN" />
+			<category android:name="android.intent.category.LAUNCHER" />
+
+		</intent-filter>
+		</activity>
+		
+		<meta-data android:name="TA_APPKEY" android:value="Aqc1103558758" />
+			<meta-data android:name="InstallChannel" android:value="play" /> 
+			 </application> <uses-permission android:name="android.permission.INTERNET" /> 
+			  <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+			   <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" /> 
+                <uses-permission android:name="android.permission.READ_PHONE_STATE" /> 
+		         <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" /> 
+			      <uses-permission android:name="android.permission.WRITE_SETTINGS"/>
+
+</manifest>

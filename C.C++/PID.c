@@ -1,4 +1,4 @@
-#include<stdio.h>
+﻿#include<stdio.h>
 #include<math.h>
  struct _pid
       {
@@ -8,7 +8,7 @@
        float pgain;
        float igain;
        float dgain;
-       int deadband; //死区
+       int deadband; //一个死区
        int last_error;
       };
  struct _pid warm, *pid;
