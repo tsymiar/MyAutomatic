@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">记录手机传感器数据的APP</string>
+    <string name="action_settings">退出程序</string>
+	<string name="exit">关闭蓝牙并退出</string>
+    <string name="pairing">点此配对</string>
+    <string name="toscan">点击搜索</string>
+    <string name="begin">开始</string>
+    <string name="stop">暂停</string>
+	<string name="draw">绘图</string>
+    <string name="detectable">可检测性</string>
+    <string name="available">可用的：</string>
+    <string name="tobegin">点击按钮开始操作</string>
+    <string name="title_activity_e">搜索附近的设备</string>
+    <string name="select_device">搜索结果</string>
+    <string name="none_found">为您找到的:</string>
+    <string name="title_paired_devices">与您的设备已配对的:</string>
+    <string name="none_paired">没有已配对的设备</string>
+    <string name="scanning">正在搜索……</string>
+	<string name="btstate">此按钮仅提供关闭功能☞</string>
+    <string name="startchart">Canvas绘图</string>
+
+
+</resources>
