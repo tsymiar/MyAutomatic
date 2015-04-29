@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="bulutooth.oscillogragh.myapplication" >
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme" >
+        <activity
+            android:name="bulutooth.oscillogragh.myapplication.MainActivity"
+            android:label="@string/app_name" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="bulutooth.oscillogragh.myapplication.ConnectionActivity"
+            android:label="@string/connection" >
+            <intent-filter>
+                <action android:name="android.intent.action.CONNECTION" />
+            </intent-filter>
+        </activity>
+        <activity android:name="bulutooth.oscillogragh.myapplication.SensorChart" />
+        <activity
+            android:name="bulutooth.oscillogragh.myapplication.DeviceListActivity"
+            android:configChanges="orientation|keyboardHidden"
+            android:label="@string/title_activity_e"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.Holo.Dialog" />
+    </application>
+
+</manifest>
