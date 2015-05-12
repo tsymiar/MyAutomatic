@@ -12,7 +12,7 @@ import android.net.Uri;
 		protected void onCreate(Bundle savedInstanceState) {
 			super.onCreate(savedInstanceState);
 			Intent data=new Intent(Intent.ACTION_SENDTO); 
-			data.setData(Uri.parse("mailto:tsy905@gmail.com")); 
+			data.setData(Uri.parse("mailto:909006258@qq.com")); 
 			data.putExtra(Intent.EXTRA_SUBJECT, "反馈"); 
 			data.putExtra(Intent.EXTRA_TEXT, "请输入你要说的话,我应该会很快回复的。"); 
 			startActivity(data); 	

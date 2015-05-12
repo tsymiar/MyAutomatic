@@ -147,7 +147,7 @@ public class DeviceListActivity extends Activity{
             String info = ((TextView) v).getText().toString();
             String address= info.substring(info.length() - 17);
             // Create the result Intent and include the MAC address
-			Intent intent=new Intent(DeviceListActivity.this, ChatAct.class); 
+			Intent intent=new Intent(DeviceListActivity.this, SendRecieve.class); 
 			//传送数据的代码,顺序千万不能错。
 			Bundle bundle = new Bundle();  
 			bundle.putString("address", address);

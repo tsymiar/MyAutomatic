@@ -1,42 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
+<LinearLayout
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	xmlns:tools="http://schemas.android.com/tools"
-	style="@style/AppTheme"
 	android:uiOptions="splitActionBarWhenNarrow"
-	android:layout_width="fill_parent"
-	android:layout_height="fill_parent">
+	android:layout_width="wrap_content"
+	android:layout_height="wrap_content"
+	android:orientation="vertical"
+	android:id="@+id/activitynewLinearLayout1"
+	android:visibility="visible"
+	android:textAlignment="center"
+	android:gravity="top|left">
 
-	<LinearLayout
-		android:layout_width="fill_parent"
-		android:layout_height="fill_parent"
-		android:gravity="top|center"
-		android:orientation="vertical"
-		style="@style/AppTheme"
-		android:id="@+id/activitynewLinearLayout1"
-		android:visibility="visible"
-		android:translationZ="-10dp"
-		android:textAlignment="center">
+	<TextView
+		android:layout_height="wrap_content"
+		android:text="此处为信号接收区↓↓↓:"
+		android:textAppearance="?android:attr/textAppearanceMedium"
+		android:layout_width="wrap_content"/>
 
-		<TextView
-			android:layout_height="wrap_content"
-			android:text="此处为信号接收区↓↓↓:"
-			android:textAppearance="?android:attr/textAppearanceMedium"
-			android:layout_width="wrap_content"/>
+	<TextView
+		android:layout_height="wrap_content"
+		android:text=" "
+		android:id="@+id/view"
+		android:textAppearance="?android:attr/textAppearanceMedium"
+		android:layout_width="wrap_content"
+		android:layout_gravity="center_horizontal"/>
 
-	</LinearLayout>
-
-	<ImageView
-		android:layout_height="60dp"
-		android:id="@+id/imageView3"
-		android:layout_width="60dp"
-		android:src="@drawable/edit"
-		android:adjustViewBounds="true"
-		android:layout_gravity="bottom"
-		android:layout_alignParentBottom="true"
-		android:layout_alignParentRight="true"
-		android:translationX="-15dp"
-		android:translationY="-15dp"/>
-
-</RelativeLayout>
+</LinearLayout>
 

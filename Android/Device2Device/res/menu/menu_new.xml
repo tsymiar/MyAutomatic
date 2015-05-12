@@ -15,5 +15,7 @@
         android:id="@+id/wificonnect"
         android:showAsAction="ifRoom"
         android:title="@string/wificonnect"/>
-	
+	<item
+        android:id="@+id/exit"
+        android:title="@string/exit"/>
 </menu>

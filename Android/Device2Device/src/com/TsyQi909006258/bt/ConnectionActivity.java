@@ -1,6 +1,5 @@
 ﻿package com.TsyQi909006258.bt;
 
-
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
@@ -19,37 +18,24 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.Menu;
 import android.view.KeyEvent;
+import com.TsyQi909006258.bt.CloseAll;
 
 public class ConnectionActivity extends Activity {
 	final Activity me = this;
-	public static final String TAG = "TetrisBlast";
+	public static final String TAG = "Connection";
     public static final String SYSTEM_EXIT = "exit";
     private MyReceiver receiver;  
 	 // Intent request codes
     private static final int REQUEST_DISCOVER_DEVICE = 1;
     private static final int REQUEST_ENABLE_BT = 2;
-    
+    private int r=0;
     
     // Member object for the chat services
-    private BluetoothMsgService mChatService = null;
+    // private BluetoothMsgService mChatService = null;
     
 	// Local Bluetooth adapter
     private BluetoothAdapter mBluetoothAdapter = null;
-	
-	public boolean onCreateOptionsMenu(Menu menu)
-	{
-		getMenuInflater().inflate(R.menu.menu_main,menu);
-	    return true;
-	}
-	public boolean onOptionsItemSelected(MenuItem item) { 
-    switch (item.getItemId()) { 
-	case R.id.item: 
-	{
-        Intent intent = new Intent(this,WifiActivity.class);
-	    startActivity(intent);
-		}
-		}return true;
-		}
+
 	/** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -60,6 +46,7 @@ public class ConnectionActivity extends Activity {
         receiver = new MyReceiver();
         this.registerReceiver(receiver, filter);
         Log.d(TAG, "Connection Activity Created");
+		CloseAll.getInstance().addActivity(this);  
        // getWindow().setBackgroundDrawableResource(R.drawable.tetris_bg);//Draw background
         Button hostBtn = (Button)findViewById(R.id.btn_host);
         Button joinBtn = (Button)findViewById(R.id.btn_join);                
@@ -75,7 +62,6 @@ public class ConnectionActivity extends Activity {
 					Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
 					discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
 					startActivityForResult(discoverableIntent, REQUEST_DISCOVER_DEVICE);
-					me.finish();
 					}
 				else {
 					Toast toast;
@@ -90,9 +76,19 @@ public class ConnectionActivity extends Activity {
 			
 			@Override
 			public void onClick(View v) {
-				// Launch the DeviceListActivity to see devices and do scan
-	            Intent serverIntent = new Intent(me, DeviceListActivity.class);
-	            startActivityForResult(serverIntent, REQUEST_DISCOVER_DEVICE);
+				if (!mBluetoothAdapter.isEnabled()) {
+					Toast toast;
+					toast=Toast.makeText(ConnectionActivity.this, "请打开蓝牙后重试", Toast.LENGTH_SHORT);
+					toast.show();
+					toast.setGravity(Gravity.CENTER,0,0);
+					Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+					startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
+					// Otherwise, setup the chat session
+				} else {
+					// Launch the DeviceListActivity to see devices and do scan
+					Intent serverIntent = new Intent(me, DeviceListActivity.class);
+					startActivityForResult(serverIntent, REQUEST_DISCOVER_DEVICE);
+				}
 			}
 		});
         
@@ -105,39 +101,97 @@ public class ConnectionActivity extends Activity {
             onPause();
         }       
     }
+
+    public boolean onCreateOptionsMenu(Menu menu)
+    {
+		// getMenuInflater().inflate(R.menu.menu_main,menu);
+        getMenuInflater().inflate(R.menu.menu_new,menu);
+        return true;
+    }
+
+    public boolean onOptionsItemSelected(MenuItem item) { 
+		switch (item.getItemId()) { 
+			case R.id.item: 
+				{
+					Intent intent = new Intent(this,WifiActivity.class);
+					startActivity(intent);
+				}
+			}
+        // Handle item selection 
+        switch (item.getItemId()) {
+            case R.id.url: 
+                openurl(); 
+                return true; 
+            case R.id.feedback: 
+                feedback(); 
+                return true; 
+            case R.id.about:
+                about();
+                return true;
+            case R.id.wificonnect:
+                wificonnect();
+                return true;
+			case R.id.exit:
+				exit();
+				return true;
+            default: 
+                return super.onOptionsItemSelected(item); 
+        } 
+	}
+	
     private class MyReceiver extends BroadcastReceiver {  
         @Override  
         public void onReceive(Context context, Intent intent) {  
             finish();  
         }  
     }  
+	private void openurl()
+    {
+        Intent intent = new Intent(this,OpenUrl.class);
+        startActivity(intent);
+    }
+    private void feedback(){
+        Intent intent = new Intent(this,Feedback.class);
+        startActivity(intent);
+    }
+    private void about(){
+        Intent intent = new Intent(this,About.class);
+        startActivity(intent);
+    }
+    private void wificonnect(){
+        Intent intent = new Intent(this,WifiActivity.class);
+        startActivity(intent);
+    }
+	private void exit() {
+	CloseAll.getInstance().exit(); 
+	}
+   
     @Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
         Log.d(TAG, "onActivityResult " + resultCode);
+		r++;
         switch (requestCode) {
-        case REQUEST_DISCOVER_DEVICE:
-          	// When the request to enable Bluetooth returns
-           if (resultCode != 0) {
-            	Intent intt = new Intent(me, NewActivity.class);
-				startActivity(intt);
-            } 
-		else {
-                // User did not enable Bluetooth or an error occured
-			Log.d(TAG, "Device not Available");
-             }
-            break;
-        case REQUEST_ENABLE_BT:
-            // When the request to enable Bluetooth returns
-            if (resultCode == Activity.RESULT_OK) {
-                // Bluetooth is now enabled, so set up a chat session
-                setupChat();
-            } else {
-                // User did not enable Bluetooth or an error occured
-                Log.d(TAG, "BT not enabled");
-                Toast.makeText(this, "请打开蓝牙" , Toast.LENGTH_SHORT).show();
-				Intent mainIntent = new Intent(me, MainActivity.class);
-				startActivity(mainIntent);
-            }
+			case REQUEST_DISCOVER_DEVICE:
+				// When the request to enable Bluetooth returns
+				if (resultCode != 0) { } 
+				else {
+					// User did not enable Bluetooth or an error occured
+					Log.d(TAG, "Device not Available");
+				}
+				break;
+			case REQUEST_ENABLE_BT:
+				// When the request to enable Bluetooth returns
+				if (resultCode == Activity.RESULT_OK) {
+					// Bluetooth is now enabled, so set up a chat session
+				} else {
+					// User did not enable Bluetooth or an error occured
+					Log.d(TAG, "BT not enabled");
+					Toast.makeText(this, "请打开蓝牙" , Toast.LENGTH_SHORT).show();
+					if(r<=2) {
+						Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+						startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
+					}
+				}
         }
     }
 	
@@ -151,38 +205,30 @@ public class ConnectionActivity extends Activity {
             startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
         // Otherwise, setup the chat session
         } else {
-            if (mChatService == null) setupChat();
+           // if (mChatService == null) setupChat();
         }
     }
-    
-    private void setupChat() {
+	/*
+	private void setupChat() {
         Log.d(TAG, "setupChat()");
-    }
-
-    @Override
-    protected void onPause()
-    {
-        // TODO: Implement this method
-        super.onPause();
-        
-    }
+    }*/
+  
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
 
         if (keyCode == KeyEvent.KEYCODE_BACK) {
-
-            finish();
-        }
-        
+			Intent intent = new Intent(this,MainActivity.class);
+			startActivity(intent);
+			finish();
+        }     
         return super.onKeyDown(keyCode, event);
 	}
 
     @Override
     protected void onDestroy()
     {
-        this.unregisterReceiver(receiver);  
+        this.unregisterReceiver(receiver); 
         // TODO: Implement this method
         super.onDestroy();
-    }
-    
+    }   
 }

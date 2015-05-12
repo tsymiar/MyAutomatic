@@ -26,20 +26,11 @@ public class MainActivity extends Activity {
 	@Override
 	
 	public void onCreate(Bundle savedInstanceState){
-		{
 			super.onCreate(savedInstanceState);
 			setContentView(R.layout.activity_main);
 			StatService.trackCustomEvent(this, "onCreate", ""); 
-			
-		}}
-
-	@Override
-	protected void onResume()
-	{
-        // TODO: Implement this method
-		super.onResume();
-		Button imageView3 = (Button) findViewById(R.id.imageView3);
-		Button imageView4 = (Button) findViewById(R.id.imageView4);
+			Button imageView3 = (Button) findViewById(R.id.imageView3);
+			Button imageView4 = (Button) findViewById(R.id.imageView4);
 		imageView3.setOnClickListener(new View.OnClickListener()
 			{
 				public void onClick(View v)
@@ -53,13 +44,12 @@ public class MainActivity extends Activity {
 					}  
 				}
 			});
-            
+
 		imageView4.setOnClickListener(new View.OnClickListener()
 			{
 				public void onClick(View v)
 				{
 					startActivity(new Intent(MainActivity.this, WifiActivity.class));
-					// 2.0(SdkVersion版本号为5)以后的版本才支持 
 					int version = Integer.valueOf(android.os.Build.VERSION.SDK);    
 					if(version  >= 5) {    
 						overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out);   
@@ -67,7 +57,7 @@ public class MainActivity extends Activity {
 					}  
 				}
 			});
-	}
+		}
     
     public static final OnTouchListener VIEW_TOUCH_DARK = new OnTouchListener() {
         public final float[] BT_SELECTED = new float[] { 1, 0, 0, 0, -50, 0, 1,  
@@ -117,6 +107,7 @@ public class MainActivity extends Activity {
     {
         // TODO: Implement this method
         super.onPause();
+		this.finish();
     }
     
     @Override
@@ -141,7 +132,6 @@ public class MainActivity extends Activity {
             }
         
         }
-        else{ }
         return super.onKeyDown(keyCode, event);
 	}
 }
