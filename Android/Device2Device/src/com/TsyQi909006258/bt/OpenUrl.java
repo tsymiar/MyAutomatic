@@ -13,7 +13,7 @@ public class OpenUrl extends Activity{
 		super.onCreate(savedInstanceState);	
 		Intent intent = new Intent();        
 		intent.setAction("android.intent.action.VIEW");    
-		Uri content_url = Uri.parse("http://adf.ly/uPQPs");   
+		Uri content_url = Uri.parse("http://adf.ly/1Gz1sP");   
 		intent.setData(content_url);  
 		startActivity(intent);
 	}

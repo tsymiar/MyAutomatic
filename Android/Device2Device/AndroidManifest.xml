@@ -1,13 +1,7 @@
 ﻿<manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.TsyQi909006258.bt"
     android:versionCode="3"
-    android:versionName="2.0777" >
-	
-<!--
-	2.0预测:用service代替NewActivity
-	3.0：actionbar优化,聊天功能，material design
-	4.0：WiFi功能，以接收到的视频数据流为背景,悬浮窗？
--->
+    android:versionName="3.0" >
 
     <uses-sdk
         android:minSdkVersion="8"
@@ -36,6 +30,9 @@
 			</intent-filter>
 			
 		</activity>
+
+		<service
+			android:name=".FloatWindow"/>
 		
 		<activity
 			android:name=".WifiActivity"
@@ -52,17 +49,11 @@
             </intent-filter>
 			
         </activity>
-        
-        <activity
-            android:name=".NewActivity"
-            android:alwaysRetainTaskState="true"
-            android:label="@string/bt">
-        </activity>
-        
+     
 		<activity
-			android:name=".ChatAct"
-            android:theme="@android:style/Theme.Holo.Dialog"
+			android:name=".SendRecieve"
 			android:alwaysRetainTaskState="true"
+			android:theme="@android:style/Theme.Material.Dialog"
             android:label="数据发送窗口"  >
 			
             <intent-filter>
@@ -102,6 +93,10 @@
 		</intent-filter>
 		
 		</activity>
+		
+		<service android:name=".SaveToSDCard">
+			<action android:name="SaveToSDCard"/>
+		</service>
 		
 		<activity
 			android:name=".Feedback"

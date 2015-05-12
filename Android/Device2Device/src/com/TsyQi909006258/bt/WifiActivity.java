@@ -18,4 +18,22 @@ public class WifiActivity extends Activity{
 	       Toast.makeText(getBaseContext(), "该功能尚在开发…请稍等", Toast.LENGTH_LONG).show();
 	}
 	}
+
+	@Override
+	protected void onPause()
+	{
+		// TODO: Implement this method
+		super.onPause();
+		this.finish();
+	}
+
+	@Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+			Intent intent = new Intent(this,MainActivity.class);
+			startActivity(intent);
+        }     
+        return super.onKeyDown(keyCode, event);
+	}
 }
