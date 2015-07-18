@@ -1,0 +1,33 @@
+<resources>
+
+	<string name="AppName">蓝牙串口BTserial</string>
+    <string name="title">手机⇌蓝牙</string>
+	<string name="title_activity_e">搜索附近的设备</string>
+	<string name="select_device">搜索结果</string>
+	<string name="available">可用的：</string>
+	<string name="scan">点击搜索</string>
+	<string name="send">点击发送</string>
+	<string name="more">更多</string>
+	<string name="none_found">为您找到的:</string>
+	<string name="title_paired_devices">与您的设备已配对的:</string>
+	<string name="none_paired">没有已配对的设备</string>
+	<string name="scanning">正在搜索…</string>
+	<string name="edit_text">默认⑴。</string>
+	<string name="about_text">\n感谢您的使用\n如有任何建议请直接呼出菜单反馈。\n\n</string>
+    <string name="back">点击回到发送界面</string>
+	<string name="recieve">服务已启动…</string>
+	<string name="url">作者Github</string>
+	<string name="about">查看更多</string>
+	<string name="feedback">意见反馈</string>
+	<string name="exit">退出程序</string>
+	<string name="begin">开始：</string>
+	<string name="window">数据发送窗口</string>
+	<string name="ci">此处为信号接收区↓↓↓:</string>
+	<string name="nu"/>
+	<string name="_0">❨0❩</string>
+	<string name="hint">接收到的数据将保存于sdcard/Device2Device目录</string>
+	<string name="discoverable">可检测性</string>
+	<string name="entrance">点此进入</string>
+	<string name="tobegin">点击按钮开始操作</string>
+
+</resources>
