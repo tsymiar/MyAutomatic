@@ -56,6 +56,7 @@ public class DeviceListActivity extends Activity{
                 doDiscovery();
 			    findViewById(R.id.imageView1).setVisibility(View.GONE);
 				findViewById(R.id.scan).setVisibility(View.GONE);
+                findViewById(R.id.btn1).setVisibility(View.GONE);
                 v.setVisibility(View.GONE);
             }
         });

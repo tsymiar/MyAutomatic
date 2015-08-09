@@ -132,6 +132,6 @@ public class MainActivity extends Activity {
     protected void onPause() {
         // TODO: Implement this method
         super.onPause();
-        this.finish();
+        finish();
     }
 }
