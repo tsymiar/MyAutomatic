@@ -21,10 +21,16 @@
 	<string name="feedback">意见反馈</string>
 	<string name="exit">退出程序</string>
 	<string name="begin">开始：</string>
+	<string name="typenone">未输入</string>
 	<string name="window">数据发送窗口</string>
 	<string name="ci">此处为信号接收区↓↓↓:</string>
 	<string name="nu"/>
 	<string name="_0">❨0❩</string>
+    <string name="cmd_0">A00</string>
+    <string name="cmd_hu">Q00</string>
+    <string name="cmd_hr">R00</string>
+    <string name="cmd_hl">L00</string>
+    <string name="cmd_hd">H00</string>
 	<string name="hint">接收到的数据将保存于sdcard/Device2Device目录</string>
 	<string name="discoverable">可检测性</string>
 	<string name="entrance">点此进入</string>

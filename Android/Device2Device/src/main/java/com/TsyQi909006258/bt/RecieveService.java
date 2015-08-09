@@ -102,7 +102,7 @@ public class RecieveService extends Service
 		wmParams.flags |= WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
 		wmParams.gravity = 51;
 
-		wmParams.x = 250;
+		wmParams.x = 0;
 		wmParams.y = 0;
 
 		wmParams.width = WindowManager.LayoutParams.WRAP_CONTENT;
