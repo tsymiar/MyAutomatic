@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/QtKline"/>
+    <qresource prefix="/new/prefix1">
+        <file>qtkline.ui</file>
+    </qresource>
+</RCC>
