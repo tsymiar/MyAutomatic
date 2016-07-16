@@ -75,8 +75,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>F:\dell-pc\Documents\Visual Studio 2015\Projects\WinNTKline\MFCKline\Font;F:\dell-pc\Documents\Visual Studio 2015\Projects\WinNTKline\MFCKline;G:\Qt\msvc2015_32\5.6\msvc2015\include;F:\dell-pc\lib\boost\boost_1_60_0;F:\dell-pc\lib\pthread\pthreads.2;$(IncludePath)</IncludePath>
-    <LibraryPath>F:\dell-pc\Documents\Visual Studio 2015\Projects\WinNTKline\MFCKline\Font\lib;G:\Qt\msvc2015_32\5.6\msvc2015\lib;F:\dell-pc\lib\boost\boost_1_60_0\stage\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>F:\dell-pc\Documents\GitHub\MyAutomatic\\WinNTKline\MFCKline\Font;F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\MFCKline;G:\Qt\msvc2015_32\5.6\msvc2015\include;F:\dell-pc\lib\boost\boost_1_60_0;F:\dell-pc\lib\pthread\pthreads.2;$(IncludePath)</IncludePath>
+    <LibraryPath>F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\MFCKline\Font\lib;G:\Qt\msvc2015_32\5.6\msvc2015\lib;F:\dell-pc\lib\boost\boost_1_60_0\stage\lib;$(LibraryPath)</LibraryPath>
     <SourcePath>F:\dell-pc\lib\pthread\pthreads.2;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
