@@ -55,7 +55,7 @@
 #else
 #define fixpixelx 0.002f
 #endif
-#define GLTEST
+//#define GLTEST
 
 class OGLKview
 {
@@ -193,10 +193,10 @@ public:
 		else return market;
 	}
 public:
+	bool unfurl;
 	bool coding;
 	DOSCout DOS;
 	ZOOM Zoom;
-	bool unfurl;
 	Indexes index;
 	FixWhat tinkep;
 	Dlginfo dlginfo;

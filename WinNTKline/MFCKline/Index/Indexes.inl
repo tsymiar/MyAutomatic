@@ -1,13 +1,16 @@
+#ifndef _INDEXS_H
+#define _INDEXS_H
+
 #include<cfloat>
 #include<cmath>
 #include<assert.h>
 #include<atlstr.h>
-#include<GL\GL.h>
 
 class Indexes {
+
 public:
-	Indexes::Indexes()
-	{}
+	Indexes::Indexes(){}
+
 	struct GLColor {
 		GLfloat R;
 		GLfloat G;
@@ -60,3 +63,4 @@ public:
 		}
 	}
 };
+#endif
