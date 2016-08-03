@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include <aes.h>
-#include <md5.h>
+#include "aes.h"
+#include "md5.h"
 #include "transcoding.h"
 int main(int argc, char *argv[]) {
 	int i,len;
@@ -12,27 +12,27 @@ int main(int argc, char *argv[]) {
 	uint8_t encrypt[64];
 	while (1)
 	{
-		printf("ÇëÊäÈëÒª¼ÆËãMD5ÖµµÄ×Ö·û´®:\n");
+		printf("è¯·è¾“å…¥è¦è®¡ç®—MD5å€¼çš„å­—ç¬¦ä¸²:\n");
 		gets_s(in);
 		md5_str(in, key);
 		//printf("MD5:");
-		//for (i = 0; i<16; i++) //16Î»ÎŞ·ûºÅÕûÊı
+		//for (i = 0; i<16; i++) //16ä½æ— ç¬¦å·æ•´æ•°
 		//	printf("%02x", (unsigned char)key[i]);
 		//printf("\n");
 		hex_to_str((unsigned char*)key, out);
 		printf("MD5:%s\n", out);
-		printf("ÒÔMD5ÖµÎªÃÜÔ¿\n");
+		printf("ä»¥MD5å€¼ä¸ºå¯†é’¥\n");
 		len=key_len((uint8_t *)key);
 		ek = (uint8_t*)malloc(len);
 		key_exp((uint8_t*)key, ek);
 		hex_to_str((unsigned char*)key, out);
-		printf("ÊäÈë:%s\n", out);
+		printf("è¾“å…¥:%s\n", out);
 		en_cipher((uint8_t*)key, cipher, ek);
 		hex_to_str(cipher, out);
-		printf("ÃÜÎÄ:%s\n", out);
+		printf("å¯†æ–‡:%s\n", out);
 		inv_cipher(cipher, encrypt, ek);
 		hex_to_str(encrypt, out);
-		printf("½âÃÜ:%s\n", out);
+		printf("è§£å¯†:%s\n", out);
 		//getchar();
 		printf("\n");
 	}
