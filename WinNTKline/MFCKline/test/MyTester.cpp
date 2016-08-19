@@ -16,6 +16,7 @@ BMP::BMP(char *FileName) {
 	Load(FileName);
 	TexSet();
 }
+
 bool BMP::Load(char *FileName) {
 	FILE *File;
 	unsigned long size;

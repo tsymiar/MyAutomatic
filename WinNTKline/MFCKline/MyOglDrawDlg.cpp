@@ -65,7 +65,7 @@ END_MESSAGE_MAP()
 	std::ostream;
 	WIN32_FIND_DATA fileData;
 	Stock::Rsi rise{ 0 }, drop{ 0 }, total{ 0 }, last{ 0 };
-	Stock::Sma::MA curma{ 0 }, totma{ 0 }, yma{ 0 };
+	Stock::Sma::MA tepma{ 0 }, totma{ 0 }, yma{ 0 };
 	Stock::Sma ma20{ 0 }, ma10{ 0 }, ma5{ 0 };
 	OGLKview::Point Per = { 0 }, P[4] = { 0 };
 	OGLKview::Point p_vol = { 0 }, p_dif = { 0 }, p_dea = { 0 }, p_rsi = { 0 }, p_macd = { 0 };
@@ -83,6 +83,7 @@ BOOL MyOglDrawDlg::OnInitDialog()
 	m_hDC = ::GetDC(m_hWnd/*m_tab.GetSafeHwnd()*/);
 	Ogl.SetWindowPixelFormat(m_hDC, m_hWnd);
 	OnPaint();
+	SetCtrl();
 	Ogl.AdjustDraw(W, H);
 #ifdef GLTEST
 	//test.LoadGLTexture();
@@ -213,10 +214,12 @@ void MyOglDrawDlg::FloatDrift(char* text)
 	wdc.SetTextColor(RGB(20, 20, 20));
 	//wdc.BitBlt(0,0,
 	wdc.LineTo(0, 0);
-	font.CreateFont(17, 17, 0, 0, FW_SEMIBOLD, true, false, false,
-		CHINESEBIG5_CHARSET, OUT_CHARACTER_PRECIS,
+	font.CreateFont(17, 17, 0, 0, 
+		FW_MEDIUM,
+		false/*斜体*/, false, false,
+		GB2312_CHARSET, OUT_CHARACTER_PRECIS,
 		CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY,
-		FF_MODERN, "仿宋");
+		FF_MODERN, "");
 	wdc.SelectObject(&font);
 	wdc.TextOut(400, 400, text, strlen(text));
 	::Sleep(100);
@@ -260,7 +263,7 @@ bool MyOglDrawDlg::GetMarkDatatoDraw()
 	if (Readfile.fail())
 	{
 		if (failmsg < 1)
-			::PostMessage(m_hWnd, WM_MSG_OGL, 0, (LPARAM)Ogl.index.AllocBuffer("Reading failure"));
+			::PostMessage(m_hWnd, WM_MSG_OGL, 0, (LPARAM)Ogl.index.AllocBuffer("Reading failure!"));
 		failmsg++;
 		return false;
 	}
@@ -299,11 +302,12 @@ bool MyOglDrawDlg::GetMarkDatatoDraw()
 					p_code = { 0.8f,1.189f };
 					*div_stock = NULL;
 				}
-				else { 1; }
+				else { 1; }//continue;
 				markdata.clear();
 			}
 			else if (markdata.size() > 8)
 			{
+				//将行情数据临时存储到结构体
 				Ogl.lastmarket = trademarket;
 				trademarket.time.tm_year	= atoi(markdata[0]);
 				trademarket.time.tm_mon		= atoi(markdata[1]);
@@ -315,41 +319,43 @@ bool MyOglDrawDlg::GetMarkDatatoDraw()
 				trademarket.amount	= atoi(markdata[7]);
 				trademarket.price	= (float)atof(markdata[8]);
 				market.push_back(trademarket);
+				//设置初始显示图形数量
 				if (line < Ogl.tinkep.move + Ogl.dlginfo.cycle / Ogl.tinkep.ratio)
 				{
-					if(line > 0)
+					if (line > 0)//pi不必分组
 						if (pi > 3)
 						{
 							pi = 0;
 							isnext = true;
 						}
-						if (line <= 3)
-						{
-							Ogl.dlginfo.line = 1;
-						}
-						else
-							Ogl.dlginfo.line = line - 2;
-						if (Ogl.tinkep.ratio == 0)
-						{
-							P[pi].x += 6.5f;
-							P[pi].y /= 2;
-						}
+					line % 20 == 0 ? totma._20 = totma._10 = totma._5 = 0 : (line % 10 == 0 ? totma._10 = totma._5 = 0 : (line % 5 == 0 ? totma._5 = 0 : 1));
+					if (line <= 3)
+					{
+						Ogl.dlginfo.line = 1;
+					}
+					else
+						Ogl.dlginfo.line = line - 2;
+					if (Ogl.tinkep.ratio == 0)
+					{
+						P[pi].x += 6.5f;
+						P[pi].y /= 2;
+					}
 					P[pi].x = Ogl.Pxtinker(Ogl.tinkep);
 					P[pi].y = (float)atof(markdata[6]);
 					ASSERT(_CrtCheckMemory());
-					Ogl.dlginfo.line == 1 ? Per = P[0] : Per = P[pi];
+					Ogl.dlginfo.line <= 1? Per = P[0]: P[0];
 					if (line >= Ogl.tinkep.move)
 						Ogl.DrawKline(trademarket, Ogl.tinkep);
 					Ogl.DrawPoly(Per, P[pi], { 0.f,1.f,0.f });
-					Ogl.dlginfo.line == 1 ? Per = P[0] : Per = P[pi];
-					if (line % 20 == 0)
+					Per = P[pi];
+					if ((line - 1) % 20 == 0)
 					{
 						ma20.X = (int)totma._20;
 						ma20.M = 1;
 						ma20.N = 20;
 						if (line == 20)
 						{
-							curma._20 = totma._20 / 20;
+							tepma._20 = totma._20 / 20;
 							p_ma20old.x = Per.x;
 							p_ma20old.y = p_ma20.y;
 						}
@@ -426,7 +432,7 @@ void MyOglDrawDlg::OnLButtonDown(UINT nFlags, CPoint point)
 
 void MyOglDrawDlg::OnRButtonDown(UINT nFlags, CPoint point)
 {
-
+	*((bool*)&Ogl) = false;
 }
 
 void MyOglDrawDlg::OnSysCommand(UINT nID, LPARAM lparam)
@@ -559,7 +565,6 @@ BOOL MyOglDrawDlg::PreTranslateMessage(tagMSG * pMsg)
 
 BOOL MyOglDrawDlg::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* pHandlerInfo)
 {
-//	char buffer[1];
 #ifdef _DEBUG
 	if (nCode < 0 && nCode != (int)0x8000)
 		TRACE1("Implementation Warning: control notification = $%X.\n",
@@ -638,6 +643,13 @@ void MyOglDrawDlg::PostNcDestroy()
 void MyOglDrawDlg::ToQuit()
 {
 	MyOglDrawDlg::OnClose();
+}
+
+void MyOglDrawDlg::SetCtrl()
+{
+	p_Tool = new CMenu();
+	p_Tool->LoadMenuA(IDR_TOOL);
+	SetMenu(p_Tool);
 }
 
 MyOglDrawDlg::~MyOglDrawDlg()

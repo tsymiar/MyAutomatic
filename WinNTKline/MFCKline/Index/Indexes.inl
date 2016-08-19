@@ -15,6 +15,7 @@ public:
 		GLfloat R;
 		GLfloat G;
 		GLfloat B;
+		GLfloat A;
 	};
 	struct GLPoint {
 		GLfloat x;

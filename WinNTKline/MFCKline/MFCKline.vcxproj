@@ -245,6 +245,7 @@
   <ItemGroup>
     <Image Include="res\graph_line24_h.bmp" />
     <Image Include="res\MFCKline.ico" />
+    <Image Include="res\toolbar1.bmp" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="AmCharts.Windows.Stock">

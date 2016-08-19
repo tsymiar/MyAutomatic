@@ -33,42 +33,49 @@ namespace WpfKline
 
         private List<StockParam> LoadStockInfo(string fileName)
         {
-            using (Stream resourceStream =new FileStream(fileName, FileMode.Open))
-            {
-                using (StreamReader reader = new StreamReader(resourceStream, Encoding.GetEncoding("GB2312")))
+            if (File.Exists(fileName))
+                using (Stream resourceStream = new FileStream(fileName, FileMode.Open))
                 {
-                    //读每一行
-                    var strings = reader.ReadToEnd().Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                    //获取股票名称
-                    stockName = strings[0].Replace("\r", "");
-
-                    var res = new List<StockParam>(strings.Length - 2);
-
-                    //第一行是股票名称, 第二行是类型名称, 第3行才是股票数据
-                    for (int i = 2; i < strings.Length; i++)
+                    using (StreamReader reader = new StreamReader(resourceStream, Encoding.GetEncoding("GB2312")))
                     {
-                        string line = strings[i];
-                        string[] subLines = line.Split('\t');
+                        //读每一行
+                        var strings = reader.ReadToEnd().Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                        //获取股票名称
+                        stockName = strings[0].Replace("\r", "");
 
-                        DateTime date = DateTime.Parse(subLines[0]);
-                        Double open = Double.Parse(subLines[1]);
-                        Double high = Double.Parse(subLines[2]);
-                        Double low = Double.Parse(subLines[3]);
-                        Double close = Double.Parse(subLines[4]);
-                        Double volumn = Double.Parse(subLines[5]);
+                        var res = new List<StockParam>(strings.Length - 2);
 
-                        res.Add(
-                            new StockParam {
-                                date = date,
-                                open = open,
-                                high = high,
-                                low = low,
-                                close = close,
-                                volume = volumn
-                        });
+                        //第一行是股票名称, 第二行是类型名称, 第3行才是股票数据
+                        for (int i = 2; i < strings.Length; i++)
+                        {
+                            string line = strings[i];
+                            string[] subLines = line.Split('\t');
+
+                            DateTime date = DateTime.Parse(subLines[0]);
+                            Double open = Double.Parse(subLines[1]);
+                            Double high = Double.Parse(subLines[2]);
+                            Double low = Double.Parse(subLines[3]);
+                            Double close = Double.Parse(subLines[4]);
+                            Double volumn = Double.Parse(subLines[5]);
+
+                            res.Add(
+                                new StockParam
+                                {
+                                    date = date,
+                                    open = open,
+                                    high = high,
+                                    low = low,
+                                    close = close,
+                                    volume = volumn
+                                });
+                        }
+                        return res;
                     }
-                    return res;
                 }
+            else
+            {
+                MessageBox.Show("文件不存在！","警告");
+                return null;
             }
         }
         private void LoadFile()

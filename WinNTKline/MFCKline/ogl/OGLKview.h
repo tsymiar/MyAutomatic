@@ -62,7 +62,13 @@ class OGLKview
 public:
 	OGLKview();
 	virtual ~OGLKview();
-
+private:
+	bool limitup;//harden’«Õ£
+	float radius;
+	float moveDist;
+	int item0;
+	int pory, widt, heig;
+public:
 	typedef HWND(WINAPI *PROCGETCONSOLEWINDOW)();
 	typedef char* SB;
 
@@ -88,6 +94,7 @@ public:
 	struct Dlginfo {
 		int line;
 		int width;
+		int multi;
 		int height;
 		int insert;
 		int cycle=222;
@@ -156,9 +163,9 @@ public:
 		std::string info;
 	}Strmap;
 	typedef Indexes::GLPoint Point;
-	typedef Indexes::GLColor Color3f;
+	typedef Indexes::GLColor Color4f;
 public:
-	std::list<struct OGLKview::Market> OGLKview::VectorToList(std::vector<struct OGLKview::Market> marvec)
+	std::list<struct OGLKview::Market> OGLKview::Vec2List(std::vector<struct OGLKview::Market> marvec)
 	{
 		std::list<struct OGLKview::Market> marklist;
 		std::copy_n(std::make_move_iterator(marvec.begin()), marvec.size(), std::back_inserter(marklist));
@@ -192,9 +199,21 @@ public:
 		}
 		else return market;
 	}
+private:
+	HGLRC m_hRC;
+	Point itempt;
+	boostest buset;
+	OGLKview* Okv;
+	PROCGETCONSOLEWINDOW GetConsoleWindow;
+	OGLKview::Point pt[2] = { { 1.7f,0 },{ -9.0,0 } };
+	bool chart_frame(void);
+	int diag_staff(int x, int y);
+	void draw_string(const char* str);
+	void GetChangeMatrix(float &angel, float &x, float &y, float &z);
 public:
 	bool unfurl;
 	bool coding;
+	float y_fix = 0;
 	DOSCout DOS;
 	ZOOM Zoom;
 	Indexes index;
@@ -206,39 +225,22 @@ public:
 public:
 	void SetBkg(bool b);
 	void DrawItem(void);
-	void SetColor(OGLKview::Color3f color);
+	void SetColor(OGLKview::Color4f color);
 	void _stdcall InitGraph(void);
 	void DrawDash(OGLKview::Point pt[2]);
 	void DrawCurve(OGLKview::Point A[4]);
 	void DrawLevel(float mascl,float miscl);
 	void AdjustDraw(GLsizei W, GLsizei H, bool b = true);
 	void SwitchViewport(int viewport, OGLKview::ViewSize adjust = {1,1,1,1});
-	void DrawKtext(char text[], Point &coor, int size = 14, OGLKview::Color3f color = {1,1,1}, char font[] = "Arial", bool dim=true);
+	void DrawKtext(char text[], Point &coor, int size = 14, OGLKview::Color4f color = {1,1,1,1}, char font[] = "Arial", bool dim=true);
 	int DrawCoord(int mX, int mY);
 	int DrawArrow(OGLKview::Point begin);
 	int DrawDetail(OGLKview::Market market);
-	int Transfer(std::vector<struct OGLKview::Market> market, OGLKview::Dlginfo toview);
-	int DrawPoly(OGLKview::Point Pb, OGLKview::Point Pe, OGLKview::Color3f color = {1,1,1}, int viewport = 1);
+	int DrawPoly(OGLKview::Point Pb, OGLKview::Point Pe, OGLKview::Color4f color = {1,1,1}, int viewport = 1);
+	int Data2View(std::vector<struct OGLKview::Market> market, OGLKview::Dlginfo toview);
 	bool SetWindowPixelFormat(HDC m_hDC, HWND m_hWnd, int pixelformat = 0);
 	bool DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool hollow = 1, OGLKview::Point pt = { 0 });
-	private:
-	bool harden;
-	HGLRC m_hRC;
-	Point itempt;
-	float radius;
-	int item0;
-	float moveDist;
-	boostest buset;
-	OGLKview* Okv;
-	PROCGETCONSOLEWINDOW GetConsoleWindow;
-	OGLKview::Point pt[2] = { { 1.7f,0 },{ -9.0,0 } };
-private:
-	bool chart_frame(void);
-	int diag_staff(int x, int y);
-	void draw_string(const char* str);
-	void GetChangeMatrix(float &angel,float &x,float &y,float &z);
 public:
-	float y_fix = 0;
 	float axistinker(int pX)
 	{
 		return pX > 680 ? (float)(pX*fixpixelx - 1) : (float)(pX*fixpixely + 1);
@@ -252,7 +254,7 @@ public:
 		xy.x = (float)(xy.x*fixpixelx - 1.234f);
 		xy.y = (float)(1.39f - xy.y*fixpixely);
 		return xy;
-	}
+	} 
 	float OGLKview::Pxtinker(OGLKview::FixWhat tinker)
 	{
 		return (tinker.datacol - tinker.zoom)*tinker.ratio*0.01f-1.F;

@@ -26,7 +26,6 @@ public:
 // 实现
 protected:
 	HICON m_hIcon;
-
 	// 生成的消息映射函数
 	virtual BOOL OnInitDialog();
 	afx_msg void OnPaint();
