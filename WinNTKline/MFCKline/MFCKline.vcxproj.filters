@@ -134,6 +134,9 @@
     <Image Include="res\graph_line24_h.bmp">
       <Filter>资源文件</Filter>
     </Image>
+    <Image Include="res\toolbar1.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="res\windows.manifest" />

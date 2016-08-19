@@ -23,7 +23,7 @@ private:
 	int column = 0;
 	int MAX_COL = 17;
 	OGLKview Okv;
-	OGLKview::Color3f color = { 1,1,1 };
+	OGLKview::Color4f color = { 1,1,1,1 };
 
 private:
 	void fillitem();

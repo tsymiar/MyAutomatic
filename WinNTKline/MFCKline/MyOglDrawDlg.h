@@ -48,6 +48,7 @@ public:
 	HACCEL m_hAcc;
 	CString title;
 	CTabCtrl m_tab;
+	CMenu *p_Tool;
 	DepthChart chart;
 	CMyTester test;
 	OGLKview::Market trademarket;
@@ -93,4 +94,5 @@ private:
 	void _stdcall DrawFunc(HDC m_hDC);
 	bool GetMarkDatatoDraw();
 	void PostNcDestroy();
+	void SetCtrl();
 };

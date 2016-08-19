@@ -248,9 +248,15 @@ int CMFCKlineDlg::OpenQtexe()
 	HWND hChildWnd = NULL;
 	//::GetCurrentDirectory(300, (LPTSTR)path);
 	//strcat
+	CHAR fulPth[256] = { NULL };
+	GetModuleFileName(NULL, fulPth, sizeof(fulPth));
+	CString dirPth((LPCSTR)fulPth);
+	dirPth = dirPth.Left(dirPth.ReverseFind(_T('\\')));
+	dirPth = dirPth.Left(dirPth.ReverseFind(_T('\\')));
+	LPTSTR cmdline = new TCHAR[dirPth.GetLength() + 40];
+	_tcscpy(cmdline,TEXT(dirPth + "\\QtKline\\Win32\\Debug\\QtKline.exe"));
 	si.dwFlags = STARTF_USESHOWWINDOW;
 	si.wShowWindow = TRUE;
-	TCHAR cmdline[] = TEXT("F:/dell-pc/Documents/Visual Studio 2015/Projects/WinNTKline/QtKline/Win32/Debug/QtKline.exe");
 	if (::CreateProcess(
 		cmdline,
 		"", //Unicode版本此参数不能为常量字符串
@@ -276,6 +282,7 @@ int CMFCKlineDlg::OpenQtexe()
 		int error = GetLastError();
 		printf("error code:%d/n", error);
 	}
+	delete cmdline;
 	//while (!hChildWnd)
 	//{
 	//	hChildWnd = ::FindWindow(/*0 & , */"QtKline", NULL);

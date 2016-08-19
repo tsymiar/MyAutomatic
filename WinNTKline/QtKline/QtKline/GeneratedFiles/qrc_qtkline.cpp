@@ -7,7 +7,7 @@
 *****************************************************************************/
 
 static const unsigned char qt_resource_data[] = {
-  // F:/dell-pc/Documents/Visual Studio 2015/Projects/QtKline/QtKline/qtkline.ui
+  // F:/dell-pc/Documents/GitHub/MyAutomatic/WinNTKline/QtKline/QtKline/qtkline.ui
   0x0,0x0,0x5,0x74,
   0x3c,
   0x3f,0x78,0x6d,0x6c,0x20,0x76,0x65,0x72,0x73,0x69,0x6f,0x6e,0x3d,0x22,0x31,0x2e,
