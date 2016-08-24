@@ -21,54 +21,54 @@ bool BMP::Load(char *FileName) {
 	FILE *File;
 	unsigned long size;
 	unsigned long i;
-	unsigned short int planes;			//ÃæÊı
-	unsigned short int bpp;				// ÏñËØÊı
-	char temp;							// ÑÕÉ«
-										//´ò¿ªÍ¼Æ¬
+	unsigned short int planes;			//é¢æ•°
+	unsigned short int bpp;				// åƒç´ æ•°
+	char temp;							// é¢œè‰²
+										//æ‰“å¼€å›¾ç‰‡
 	if (fopen_s(&File, FileName, "rb") != 0) {
-		printf("Í¼Æ¬²»´æÔÚ");
+		printf("å›¾ç‰‡ä¸å­˜åœ¨");
 		return false;
 	}
-	//ÒÆ¶¯ÖÁºáÏò
+	//ç§»åŠ¨è‡³æ¨ªå‘
 	fseek(File, 18, SEEK_CUR);
-	//¶ÁÈ¡ºáÏò
+	//è¯»å–æ¨ªå‘
 	if ((i = fread(&horizon, 4, 1, File)) != 1) {
-		printf("¶ÁÈ¡Ê§°Ü");
+		printf("è¯»å–å¤±è´¥");
 		return false;
 	}
-	//¶ÁÈ¡×İÏò
+	//è¯»å–çºµå‘
 	if ((i = fread(&vertical, 4, 1, File)) != 1) {
-		printf("¶ÁÈ¡Ê§°Ü");
+		printf("è¯»å–å¤±è´¥");
 		return false;
 	}
-	//¼ÆËãÍ¼ÏñµÄ³ß´ç
+	//è®¡ç®—å›¾åƒçš„å°ºå¯¸
 	size = horizon * vertical * 3;
-	if ((fread(&planes, 2, 1, File)) != 1) {   //bmpÌî1
-		printf("¶ÁÈ¡Ê§°Ü");
+	if ((fread(&planes, 2, 1, File)) != 1) {   //bmpå¡«1
+		printf("è¯»å–å¤±è´¥");
 		return false;
 	}
 	if (planes != 1) {
-		printf("²»ÊÇbmpÍ¼Ïñ");
+		printf("ä¸æ˜¯bmpå›¾åƒ");
 		return false;
 	}
-	//¶ÁÈ¡ÏñËØÖµ
+	//è¯»å–åƒç´ å€¼
 	if ((i = fread(&bpp, 2, 1, File)) != 1) {
-		printf("¶ÁÈ¡ÏñËØÖµÊ§°Ü");
+		printf("è¯»å–åƒç´ å€¼å¤±è´¥");
 		return false;
 	}
-	if (bpp != 24) {//Èç¹û²»ÊÇ24bppµÄ»°Ê§°Ü
-		printf("²»ÊÇ24bitÍ¼Ïñ");
+	if (bpp != 24) {//å¦‚æœä¸æ˜¯24bppçš„è¯å¤±è´¥
+		printf("ä¸æ˜¯24bitå›¾åƒ");
 		return false;
 	}
-	//Ìø¹ı24bit£¬¼à²âRGBÊı¾İ
-	fseek(File, 24, SEEK_CUR);    //¶ÁÈ¡Êı¾İ
+	//è·³è¿‡24bitï¼Œç›‘æµ‹RGBæ•°æ®
+	fseek(File, 24, SEEK_CUR);    //è¯»å–æ•°æ®
 	Data = (char *)malloc(size);
 	if (Data == NULL) {
-		printf("ÄÚ´æÁ¿²»ÄÜËø¶¨");
+		printf("å†…å­˜é‡ä¸èƒ½é”å®š");
 		return false;
 	}
 	if ((i = fread(Data, size, 1, File)) != 1) {
-		printf("²»ÄÜ¶ÁÈ¡Êı¾İ");
+		printf("ä¸èƒ½è¯»å–æ•°æ®");
 		return false;
 	}
 	for (i = 0; i<size; i += 3) { //bgr -> rgb
@@ -151,7 +151,7 @@ void CMyTester::Load__qdu(int wide, int tall)
 	glOrtho(0.0, wide, tall, 0.0, -1.0, 1.0);
 	glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, bmp->texture);
-	glEnable(GL_ALPHA_TEST);//ÊÔÃè»­
+	glEnable(GL_ALPHA_TEST);//è¯•æç”»
 	glBegin(GL_POLYGON);
 	glTexCoord2f(0.0f, 0.0f); glVertex2d(0, 0);
 	glTexCoord2f(0.0f, 1.0f); glVertex2d(0, tall);
@@ -221,7 +221,7 @@ void __sphere(GLfloat xx, GLfloat yy, GLfloat zz, GLfloat radius, GLfloat M, GLf
 
 void __ball()
 {
-	/** ÉèÖÃ²ÄÖÊÊôĞÔ */
+	/** è®¾ç½®æè´¨å±æ€§ */
 	GLfloat mat_ambient[] = { 0.9f, 0.5f, 0.8f, 1.0f };
 	GLfloat mat_diffuse[] = { 0.9f, 0.5f, 0.8f, 1.0f };
 	GLfloat mat_shininess[] = { 100.0f };
@@ -231,12 +231,12 @@ void __ball()
 
 	glBindTexture(GL_TEXTURE_2D, texture[2]);
 
-	glPushMatrix();//±£´æ±ä»»ºóµÄÎ»ÖÃºÍ½Ç¶È¡£
+	glPushMatrix();//ä¿å­˜å˜æ¢åçš„ä½ç½®å’Œè§’åº¦ã€‚
 	glTranslatef(-5.0f, -2.0f, -10.0f);
-	GLUquadricObj * sphere = gluNewQuadric();//»æÖÆ¶ş´ÎÇúÃæ
-	gluQuadricOrientation(sphere, GLU_OUTSIDE);//·¨ÏßÏòÍâ
-	gluQuadricNormals(sphere, GLU_SMOOTH);//·¨Ïß·ç¸ñ
-	gluSphere(sphere, 1.0, 50, 50);//¶ş´ÎÇúÃæ»æÖÆº¯Êı
+	GLUquadricObj * sphere = gluNewQuadric();//ç»˜åˆ¶äºŒæ¬¡æ›²é¢
+	gluQuadricOrientation(sphere, GLU_OUTSIDE);//æ³•çº¿å‘å¤–
+	gluQuadricNormals(sphere, GLU_SMOOTH);//æ³•çº¿é£æ ¼
+	gluSphere(sphere, 1.0, 50, 50);//äºŒæ¬¡æ›²é¢ç»˜åˆ¶å‡½æ•°
 	gluDeleteQuadric(sphere);
 	glPopMatrix();
 }

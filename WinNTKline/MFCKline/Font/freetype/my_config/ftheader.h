@@ -169,7 +169,7 @@
    *   base FreeType 2 API.
    *
    */
-#define FT_FREETYPE_H  <Font/freetype/freetype.h>
+#define FT_FREETYPE_H  <freetype/freetype.h>
 
 
   /*************************************************************************
