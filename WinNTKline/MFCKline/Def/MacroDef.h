@@ -11,6 +11,7 @@
 #define WM_MSG_BKG	WM_USER + 101
 #define WM_MSG_DEP	WM_USER + 110
 #define WM_MSG_QUIT	WM_USER + 111
+#define WM_MSG_BOX	WM_USER	+ 1000
 
 #define fixpixely 0.0035277777777778	//1.27/360
 
