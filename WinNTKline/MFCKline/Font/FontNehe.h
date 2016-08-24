@@ -2,11 +2,11 @@
 #define FONT_NEHE_H_
 
 // FreeType Headers
-#include <Font/ft2build.h>
-#include <Font/freetype/freetype.h>
-#include <Font/freetype/ftglyph.h>
-#include <Font/freetype/ftoutln.h>
-#include <Font/freetype/fttrigon.h>
+#include <font/ft2build.h>
+#include <font/freetype/freetype.h>
+#include <font/freetype/ftglyph.h>
+#include <font/freetype/ftoutln.h>
+#include <font/freetype/fttrigon.h>
 
 // OpenGL Headers
 #include <windows.h>                                      // (The GL Headers Need It)

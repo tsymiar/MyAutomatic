@@ -1,32 +1,32 @@
 
-// MFCKlineDlg.h : Í·ÎÄ¼ş
+// MFCKlineDlg.h : å¤´æ–‡ä»¶
 //
 
 #pragma once
 #include "MyOglDrawDlg.h"
 #include "Wpf/WpfHost.h"
 
-// CMFCKlineDlg ¶Ô»°¿ò
+// CMFCKlineDlg å¯¹è¯æ¡†
 class CMFCKlineDlg : public CDialogEx
 {
-// ¹¹Ôì
+// æ„é€ 
 public:
-	CMFCKlineDlg(CWnd* pParent = NULL);	// ±ê×¼¹¹Ôìº¯Êı
+	CMFCKlineDlg(CWnd* pParent = NULL);	// æ ‡å‡†æ„é€ å‡½æ•°
 	~CMFCKlineDlg();
 
-// ¶Ô»°¿òÊı¾İ
+// å¯¹è¯æ¡†æ•°æ®
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_MFCKLINE_DIALOG };
 #endif
 
 	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV Ö§³Ö
+	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV æ”¯æŒ
 
 
-// ÊµÏÖ
+// å®ç°
 protected:
 	HICON m_hIcon;
-	// Éú³ÉµÄÏûÏ¢Ó³Éäº¯Êı
+	// ç”Ÿæˆçš„æ¶ˆæ¯æ˜ å°„å‡½æ•°
 	virtual BOOL OnInitDialog();
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();

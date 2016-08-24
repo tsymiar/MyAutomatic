@@ -6,9 +6,9 @@
 #include <time.h>
 #include <Windows.h>
 #include <GL/glu.h>
-#include <GL/glaux.h>
-#include "Index/Indexes.inl"
-#include "Set/MacroSets.h"
+#include "../GL/glaux.h"
+#include "../Index/Indexes.inl"
+#include "../Def/MacroDef.h"
 
 #define INTS int
 #define REAL float
