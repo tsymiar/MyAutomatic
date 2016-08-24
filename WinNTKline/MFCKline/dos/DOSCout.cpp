@@ -28,17 +28,18 @@ BOOL WINAPI ConsoleHandler(DWORD msgType)
 void DOSCout::OpenConsole()
 {
 	//#pragma comment(linker,"/subsystem:\"Windows\" /entry:\"mainCRTStartup\"")
+	FILE* stream;
 	AllocConsole();
-	SetConsoleTitle("TextOut");
-	freopen("CONIN$", "r+t", stdin);
-	freopen("CONOUT$", "w+t", stdout);
+	SetConsoleTitle(_T("TextOut"));
+	freopen_s(&stream, "CONIN$", "r+t", stdin);
+	freopen_s(&stream, "CONOUT$", "w+t", stdout);
 	cout << "Press Esc to exit." << endl;
 	DeleteMenu(GetSystemMenu(GetConsoleWindow(), FALSE), SC_CLOSE, MF_BYCOMMAND);
 	//×èÈûÖ÷Ïß³Ì
 	while (true)
 	{
 		if (_getch() == 27)
-			ShowWindow(::FindWindow(NULL, "TextOut"), SW_HIDE);
+			ShowWindow(::FindWindow(NULL, _T("TextOut")), SW_HIDE);
 			break;
 	}
 }
@@ -82,7 +83,7 @@ void DOSCout::ConsoleIOoverload()
 	while (true)
 	{
 		if (_getch() == 27)
-			ShowWindow(::FindWindow(NULL, "TextOut"), SW_HIDE);
+			ShowWindow(::FindWindow(NULL, _T("TextOut")), SW_HIDE);
 		break;
 	}
 	//if (SetWindowsHookEx(WH_CALLWNDPROC, ConsoleHandler, 0, GetCurrentThreadId()) == NULL)
