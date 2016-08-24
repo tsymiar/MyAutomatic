@@ -1,4 +1,4 @@
-// MFCKlineDlg.cpp : 实现文件
+﻿// MFCKlineDlg.cpp : 实现文件
 //
 #include "MFCKline.h"
 #include "MFCKlineDlg.h"

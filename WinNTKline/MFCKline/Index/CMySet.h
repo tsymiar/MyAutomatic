@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <afxwin.h>
 #include <WinUser.h>
 // CMyBkgnd 将模板函数声明与实现写在同一文件内

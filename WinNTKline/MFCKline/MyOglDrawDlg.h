@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 //#include	<afxstat_.h>
 #include	"OGL/OGLKview.h"
 #include	"Def/MacroDef.h"
