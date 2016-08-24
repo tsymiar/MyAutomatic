@@ -36,9 +36,6 @@
     <ClInclude Include="OGL\OGLKview.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Set\MacroSets.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="boost\boostest.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -73,6 +70,18 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="ogl\House.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Def\MacroDef.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="own\CNMenu.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NET\tcpip.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Index\CMySet.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -113,6 +122,12 @@
     <ClCompile Include="ogl\House.cc">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="Index\CPUID.H">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NET\tcpip.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="MFCKline.rc">
@@ -134,7 +149,13 @@
     <Image Include="res\graph_line24_h.bmp">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="res\toolbar1.bmp">
+    <Image Include="res\bmp00001.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\top1_h.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\icon1.ico">
       <Filter>资源文件</Filter>
     </Image>
   </ItemGroup>
