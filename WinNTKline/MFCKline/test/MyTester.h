@@ -5,10 +5,11 @@
 #include <stdio.h>
 #include <gl\gl.h>
 #include <gl\glu.h>
-#include <Set\MacroSets.h>
+#include "Def\MacroDef.h"
 #include "ogl\Model.h"
 #include "ogl\House.h"
 #include "GL\glaux.h"
+//é“¾æ¥å™¨â€”â€”ã€‹è¾“å…¥â€”â€”ã€‹é™„åŠ ä¾èµ–é¡¹ï¼šlegacy_studio_definitions.lib
 #pragma comment(lib, "GL\\glaux.lib") 
 
 class CMyTester
@@ -28,9 +29,9 @@ public:
 class BMP
 {
 public:
-	unsigned long horizon; //ºá
-	unsigned long vertical;//Êú
-	char *Data;  //·ÅÖÃÍ¼ÏñÊı¾İ
+	unsigned long horizon; //æ¨ª
+	unsigned long vertical;//ç«–
+	char *Data;  //æ”¾ç½®å›¾åƒæ•°æ®
 	bool Load(char *filename);
 	GLuint texture;
 	void TexSet();

@@ -1,5 +1,4 @@
-
-// MFCKlineDlg.cpp : ÊµÏÖÎÄ¼ş
+// MFCKlineDlg.cpp : å®ç°æ–‡ä»¶
 //
 #include "MFCKline.h"
 #include "MFCKlineDlg.h"
@@ -17,7 +16,7 @@ struct ProcessWindow
 	HWND hwndWindow = NULL;
 } window;
 
-// CMFCKlineDlg ¶Ô»°¿ò
+// CMFCKlineDlg å¯¹è¯æ¡†
 
 CMFCKlineDlg::CMFCKlineDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(IDD_MFCKLINE_DIALOG, pParent)
@@ -45,38 +44,38 @@ BEGIN_MESSAGE_MAP(CMFCKlineDlg, CDialogEx)
 END_MESSAGE_MAP()
 
 
-// CMFCKlineDlg ÏûÏ¢´¦Àí³ÌĞò
+// CMFCKlineDlg æ¶ˆæ¯å¤„ç†ç¨‹åº
 
 BOOL CMFCKlineDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
 
-	// ÉèÖÃ´Ë¶Ô»°¿òµÄÍ¼±ê¡£  µ±Ó¦ÓÃ³ÌĞòÖ÷´°¿Ú²»ÊÇ¶Ô»°¿òÊ±£¬¿ò¼Ü½«×Ô¶¯
-	//  Ö´ĞĞ´Ë²Ù×÷
-	SetIcon(m_hIcon, TRUE);			// ÉèÖÃ´óÍ¼±ê
-	SetIcon(m_hIcon, FALSE);		// ÉèÖÃĞ¡Í¼±ê
+	// è®¾ç½®æ­¤å¯¹è¯æ¡†çš„å›¾æ ‡ã€‚  å½“åº”ç”¨ç¨‹åºä¸»çª—å£ä¸æ˜¯å¯¹è¯æ¡†æ—¶ï¼Œæ¡†æ¶å°†è‡ªåŠ¨
+	//  æ‰§è¡Œæ­¤æ“ä½œ
+	SetIcon(m_hIcon, TRUE);			// è®¾ç½®å¤§å›¾æ ‡
+	SetIcon(m_hIcon, FALSE);		// è®¾ç½®å°å›¾æ ‡
 
-	// TODO: ÔÚ´ËÌí¼Ó¶îÍâµÄ³õÊ¼»¯´úÂë
+	// TODO: åœ¨æ­¤æ·»åŠ é¢å¤–çš„åˆå§‹åŒ–ä»£ç 
 	InitMap();
 	SetList();
 	SetBottom();
 
-	return TRUE;  // ³ı·Ç½«½¹µãÉèÖÃµ½¿Ø¼ş£¬·ñÔò·µ»Ø TRUE
+	return TRUE;  // é™¤éå°†ç„¦ç‚¹è®¾ç½®åˆ°æ§ä»¶ï¼Œå¦åˆ™è¿”å› TRUE
 }
 
-// Èç¹ûÏò¶Ô»°¿òÌí¼Ó×îĞ¡»¯°´Å¥£¬ÔòĞèÒªÏÂÃæµÄ´úÂë
-//  À´»æÖÆ¸ÃÍ¼±ê¡£  ¶ÔÓÚÊ¹ÓÃÎÄµµ/ÊÓÍ¼Ä£ĞÍµÄ MFC Ó¦ÓÃ³ÌĞò£¬
-//  Õâ½«ÓÉ¿ò¼Ü×Ô¶¯Íê³É¡£
+// å¦‚æœå‘å¯¹è¯æ¡†æ·»åŠ æœ€å°åŒ–æŒ‰é’®ï¼Œåˆ™éœ€è¦ä¸‹é¢çš„ä»£ç 
+//  æ¥ç»˜åˆ¶è¯¥å›¾æ ‡ã€‚  å¯¹äºä½¿ç”¨æ–‡æ¡£/è§†å›¾æ¨¡å‹çš„ MFC åº”ç”¨ç¨‹åºï¼Œ
+//  è¿™å°†ç”±æ¡†æ¶è‡ªåŠ¨å®Œæˆã€‚
 
 void CMFCKlineDlg::OnPaint()
 {
 	if (IsIconic())
 	{
-		CPaintDC dc(this); // ÓÃÓÚ»æÖÆµÄÉè±¸ÉÏÏÂÎÄ
+		CPaintDC dc(this); // ç”¨äºç»˜åˆ¶çš„è®¾å¤‡ä¸Šä¸‹æ–‡
 
 		SendMessage(WM_ICONERASEBKGND, reinterpret_cast<WPARAM>(dc.GetSafeHdc()), 0);
 
-		// Ê¹Í¼±êÔÚ¹¤×÷Çø¾ØĞÎÖĞ¾ÓÖĞ
+		// ä½¿å›¾æ ‡åœ¨å·¥ä½œåŒºçŸ©å½¢ä¸­å±…ä¸­
 		int cxIcon = GetSystemMetrics(SM_CXICON);
 		int cyIcon = GetSystemMetrics(SM_CYICON);
 		CRect rect;
@@ -84,7 +83,7 @@ void CMFCKlineDlg::OnPaint()
 		int x = (rect.Width() - cxIcon + 1) / 2;
 		int y = (rect.Height() - cyIcon + 1) / 2;
 
-		// »æÖÆÍ¼±ê
+		// ç»˜åˆ¶å›¾æ ‡
 		dc.DrawIcon(x, y, m_hIcon);
 	}
 	else
@@ -93,8 +92,8 @@ void CMFCKlineDlg::OnPaint()
 	}
 }
 
-//µ±ÓÃ»§ÍÏ¶¯×îĞ¡»¯´°¿ÚÊ±ÏµÍ³µ÷ÓÃ´Ëº¯ÊıÈ¡µÃ¹â±ê
-//ÏÔÊ¾¡£
+//å½“ç”¨æˆ·æ‹–åŠ¨æœ€å°åŒ–çª—å£æ—¶ç³»ç»Ÿè°ƒç”¨æ­¤å‡½æ•°å–å¾—å…‰æ ‡
+//æ˜¾ç¤ºã€‚
 HCURSOR CMFCKlineDlg::OnQueryDragIcon()
 {
 	return static_cast<HCURSOR>(m_hIcon);
@@ -112,13 +111,16 @@ void CMFCKlineDlg::OnLvnItemchangedList(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
 	POSITION curpos = m_list.GetFirstSelectedItemPosition();
-	char Open[4][8] = { "K-line","Qt","WPF","OK" };
+	const char Open[4][8] = { "K-line","Qt","WPF","OK" };
+	int item;
 	if(!curpos)
 		::SendMessage(m_hBottom, SB_SETTEXT, 0, (LPARAM)TEXT(Open[3]));
 	else
 		while (curpos)
 		{
-			int item = m_list.GetNextSelectedItem(curpos);
+			item = m_list.GetNextSelectedItem(curpos);
+			if (strcmp(Open[item], "Qt") == 0)
+				m_Mod.FloatDrift("Qtæ¡†æ¶ä¹‹Kçº¿å›¾");
 			::SendMessage(m_hBottom, SB_SETTEXT, 0, (LPARAM)TEXT(Open[item]));
 		}
 	*pResult = 0;
@@ -126,7 +128,7 @@ void CMFCKlineDlg::OnLvnItemchangedList(NMHDR *pNMHDR, LRESULT *pResult)
 
 void CMFCKlineDlg::InitMap()
 {
-	m_Ogl.stockmap.insert(std::pair<int, OGLKview::Strmap>(0, { "SH600747", "´óÁ¬¿Ø¹É" }));
+	m_Ogl.stockmap.insert(std::pair<int, OGLKview::Strmap>(0, { "SH600747", "å¤§è¿æ§è‚¡" }));
 	m_Ogl.stockmap.insert(std::pair<int, OGLKview::Strmap>(1, { "1", "File1" }));
 }
 
@@ -135,9 +137,9 @@ void CMFCKlineDlg::SetList()
 	RECT m_rect;
 	m_list.GetClientRect(&m_rect);
 	m_list.SetExtendedStyle(m_list.GetExtendedStyle() | LVS_EX_FULLROWSELECT);
-	m_list.InsertColumn(0, _T("´ò¿ª·½Ê½"), 0, m_rect.right / 6);
-	m_list.InsertColumn(1, _T("ÎÄ¼ş"), 0, m_list.GetColumnWidth(0));
-	m_list.InsertColumn(2, _T("ÄÚÈİ"), 0, m_list.GetColumnWidth(0));
+	m_list.InsertColumn(0, _T("æ‰“å¼€æ–¹å¼"), 0, m_rect.right / 6);
+	m_list.InsertColumn(1, _T("æ–‡ä»¶"), 0, m_list.GetColumnWidth(0));
+	m_list.InsertColumn(2, _T("å†…å®¹"), 0, m_list.GetColumnWidth(0));
 	m_list.InsertColumn(3, _T("..."), 0, m_list.GetColumnWidth(0));
 	m_list.InsertItem(0, _T("MFC"));
 	m_list.InsertItem(1, _T("QT"));
@@ -150,9 +152,10 @@ void CMFCKlineDlg::OnNMDblclkList(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
 	POSITION curpos = m_list.GetFirstSelectedItemPosition();
+	int item;
 	while(curpos)
 	{
-		int item = m_list.GetNextSelectedItem(curpos);
+		item = m_list.GetNextSelectedItem(curpos);
 		TRACE1("Item %d was selected!\n", item);
 		::PostMessage(this->m_hWnd, WM_MSG_LIST, 0, (LPARAM)item);
 	}
@@ -206,9 +209,8 @@ void CMFCKlineDlg::OpenWpf()
 
 void CMFCKlineDlg::OpenQt()
 {
-	m_Mod.FloatDrift("Qt¿ò¼ÜKÏßÍ¼");
 	HWND h_Wnd=::FindWindow(NULL,_T("QtKline"));
-	CDialog MessageBox("Qt");
+	CDialog MessageBox(_T("Qt"));
 	OpenQtexe();
 }
 
@@ -259,7 +261,7 @@ int CMFCKlineDlg::OpenQtexe()
 	si.wShowWindow = TRUE;
 	if (::CreateProcess(
 		cmdline,
-		"", //Unicode°æ±¾´Ë²ÎÊı²»ÄÜÎª³£Á¿×Ö·û´®
+		"", //Unicodeç‰ˆæœ¬æ­¤å‚æ•°ä¸èƒ½ä¸ºå¸¸é‡å­—ç¬¦ä¸²
 		NULL,
 		NULL,
 		FALSE,

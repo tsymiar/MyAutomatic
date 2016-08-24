@@ -1,12 +1,14 @@
 #include "MyOglDrawDlg.h"
-
 // MyOglDrawDlg.cpp : 
+
+bool net_exit = false;
 
 IMPLEMENT_DYNAMIC(MyOglDrawDlg, CDialog)
 
 MyOglDrawDlg::MyOglDrawDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(IDD_OGLDLG, pParent)
 {
+	net_exit = false;
 	//m_hIcon = LoadIcon((HINSTANCE)IDR_ICON, "");
 }
 
@@ -28,11 +30,16 @@ BEGIN_MESSAGE_MAP(MyOglDrawDlg, CDialog)
 	ON_WM_RBUTTONDOWN()
 	ON_MESSAGE(WM_MSG_OGL, GetOglCmd)
 	ON_MESSAGE(WM_MSG_SHOW, OnTaskShow)
+	ON_MESSAGE(WM_MSG_BOX, ShowMsgOnly)
 	ON_COMMAND(WM_MSG_QUIT, &MyOglDrawDlg::ToQuit)
 	ON_COMMAND(WM_MSG_BKG, &MyOglDrawDlg::SetBkg)
 	ON_COMMAND(WM_MSG_DEP, &MyOglDrawDlg::Set_5_Deg)
+	ON_WM_DROPFILES()
+	ON_WM_CTLCOLOR()
+	ON_WM_CREATE()
+	ON_COMMAND(ID_PRIV, &MyOglDrawDlg::OnPriv)
 END_MESSAGE_MAP()
-///*******************¶¨Òå±¾ÎÄ¼şÄÚµÄÈ«¾Ö±äÁ¿*******************///
+///*******************å®šä¹‰æœ¬æ–‡ä»¶å†…çš„å…¨å±€å˜é‡*******************///
 	MyOglDrawDlg* Mod;//Notify
 	OGLKview Ogl;//FillChart
 	//OnTaskShow
@@ -40,18 +47,18 @@ END_MESSAGE_MAP()
 	//END OnTaskShow
 ///**************GetMarkDatatoDraw()**************///
 	int		i = 0;
-	int		pi = 0;
-	int		line = 0;
+	int		pi = 0;//ç»˜åˆ¶æ›²çº¿æ—¶æ¯ç»„ä¸‹æ ‡
+	int		line = 0;//å½“å‰è¯»å–è¡Œæ•°
 	int		item0 = 0;
-	char*	cot = NULL;
+	char*	cot = NULL;//åˆ‡åˆ†ä¸´æ—¶æ•°æ®
 	char*	buff = NULL;
 	char*	token = NULL;
-	bool	draw5  = false;
+	bool	draw5 = false;
 	bool	draw10 = false;
 	bool	draw20 = false;
-	bool	isnext = false;
+	bool	isnext = false;//æ˜¯å¦ä¸ºä¸‹ä¸€ç»„
 	char*	div_stock[3] = { NULL };
-	char	ma[32]	= { NULL };
+	char	ma[32] = { NULL };
 	char	dif[32] = { NULL };
 	char	dea[32] = { NULL };
 	char	rsi[32] = { NULL };
@@ -67,20 +74,24 @@ END_MESSAGE_MAP()
 	Stock::Rsi rise{ 0 }, drop{ 0 }, total{ 0 }, last{ 0 };
 	Stock::Sma::MA tepma{ 0 }, totma{ 0 }, yma{ 0 };
 	Stock::Sma ma20{ 0 }, ma10{ 0 }, ma5{ 0 };
-	OGLKview::Point Per = { 0 }, P[4] = { 0 };
+	OGLKview::Point Per = { 0 },/*æŠ˜çº¿çš„å‰ä¸€ä¸ªç‚¹*/ P[4] = { 0 };
 	OGLKview::Point p_vol = { 0 }, p_dif = { 0 }, p_dea = { 0 }, p_rsi = { 0 }, p_macd = { 0 };
 	OGLKview::Point p_code = { 0.8f,1.189f }, p_stock = { -1.22f,p_code.y };
-	OGLKview::Point p_rsi6 = { 0 }, p_rsi12 = { 0 }, p_24 = { 0 };
+	OGLKview::Point p_rsi6 = { 0 }, p_rsi12 = { 0 }, p_rsi24 = { 0 };
+	//MAç§»åŠ¨å¹³å‡çº¿
 	OGLKview::Point p_ma5 = { 0 }, p_ma10 = { 0 }, p_ma20 = { 0 };
 	OGLKview::Point p_ma5old = { 0 }, p_ma10old = { 0 }, p_ma20old = { 0 };
+	//RSA
 	OGLKview::Point p_AB6 = { 0 }, p_AB12 = { 0 }, p_AB24 = { 0 };
 	OGLKview::Point p_AB6old = { 0 }, p_AB12old = { 0 }, p_AB24old = { 0 };
 ///**************END GetMarkDatatoDraw**************///
 ///**************************end**************************///
+
 BOOL MyOglDrawDlg::OnInitDialog()
 {
-	m_hWnd = this->GetSafeHwnd();
+	HWND m_hWnd = this->GetSafeHwnd();
 	m_hDC = ::GetDC(m_hWnd/*m_tab.GetSafeHwnd()*/);
+	tcpip* m_net = new tcpip();
 	Ogl.SetWindowPixelFormat(m_hDC, m_hWnd);
 	OnPaint();
 	SetCtrl();
@@ -92,7 +103,8 @@ BOOL MyOglDrawDlg::OnInitDialog()
 	SetTimer(1, 30, NULL);
 	SetWindowPos(FromHandle(GetSafeHwnd()), 0, 0, GetSystemMetrics(SM_CXFULLSCREEN), GetSystemMetrics(SM_CYFULLSCREEN), SWP_NOZORDER);
 	m_hAcc = LoadAccelerators(AfxGetInstanceHandle(), MAKEINTRESOURCE(ID_ACCLER));
-	CloseHandle((HANDLE)_beginthreadex(NULL, 0, ClientThread, (void*)this, 0, NULL));
+	CloseHandle((HANDLE)_beginthreadex(NULL, 0, m_net->ClientThread, (void*)this, 0, NULL));
+	delete m_net;
 	return CDialog::OnInitDialog();
 }
 
@@ -116,78 +128,13 @@ void MyOglDrawDlg::OnTimer(UINT nIDEvent)
 {
 	switch (nIDEvent)
 	{
-	case 1://µ÷ÓÃ»æÍ¼º¯Êı
+	case 1://è°ƒç”¨ç»˜å›¾å‡½æ•°
 		DrawFunc(m_hDC);
 		break;
 	default:
 		break;
 	}
 	CDialog::OnTimer(nIDEvent);
-}
-
-unsigned int __stdcall MyOglDrawDlg::ClientThread(void* pParam)
-{ 
-	//Ïß³ÌÒªµ÷ÓÃµÄº¯Êı
-	int err;
-	int j = 0;
-	SOCKET clientSock;
-	MyOglDrawDlg *m_user = new MyOglDrawDlg();
-	WSADATA wsaData;//WSAata´æ´¢ÏµÍ³´«»ØµÄ¹ØÓÚWinSocketµÄĞÅÏ¢
-	int loo[8];
-	CString CStr;
-	CString Left;
-	char Buf[50];
-	char buffer[10];
-	WCHAR LPCT[50];
-	SOCKADDR_IN addrSrv;
-	WORD wVersionRequested;
-	wVersionRequested = MAKEWORD(1, 1);//Á¬½ÓÁ½¸öÎŞ·ûºÅ²ÎÊı
-	err = WSAStartup(wVersionRequested, &wsaData);
-	if (err != 0)
-	{
-		m_user->MessageBox("·şÎñÆ÷¿ÉÄÜÎ´Æô¶¯£¡");
-		if (m_user != NULL)
-		{
-			m_user = NULL;
-			delete m_user;
-		}
-		return 0;
-	}
-	if (LOBYTE(wsaData.wVersion) != 1 || HIBYTE(wsaData.wVersion) != 1)
-	{
-		WSACleanup();
-		if (m_user != NULL)
-		{
-			m_user = NULL;
-			delete m_user;
-		}
-		return 0;
-	}
-	clientSock = socket(AF_INET, SOCK_STREAM, 0);//AF_INET ±íÊ¾TCP Á¬½Ó
-	addrSrv.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");//±¾»úµØÖ·,·şÎñÆ÷ÔÚ±¾»ú¿ªÆô
-	addrSrv.sin_family = AF_INET;
-	addrSrv.sin_port = htons(6001);//ÉèÖÃ¶Ë¿ÚºÅ
-	connect(clientSock, (SOCKADDR*)&addrSrv, sizeof(SOCKADDR));//Á¬½Ó·şÎñÆ÷
-	while (1)
-	{
-		if (recv(clientSock, Buf, 50, 0) == SOCKET_ERROR)
-		{
-			m_user->MessageBox("µÇÈë·şÎñÆ÷Ê§°Ü");
-			delete m_user;
-			return 0;
-		}//½ÓÊÕÊı¾İ²¢Ìî³äµ½ÁĞ±í
-		MultiByteToWideChar(CP_ACP, 0, Buf, strlen(Buf) + 1, LPCT, sizeof(LPCT) / sizeof(LPCT[0]));
-		CStr.Format(_T("%s"), LPCT);
-		loo[0] = CStr.Find(_T("."));//²éÕÒµÚÒ»¸ö"."Î»ÖÃ
-		Left = CStr.Left(loo[0]);	//½«","×ó±ßµÄÖµÈ¡³ö
-		_ultoa_s(GetCurrentThreadId(), buffer, 10);//µ±Ç°Ïß³Ìid
-		send(clientSock, buffer, strlen(buffer) + 1, 0);//·¢ËÍÊı¾İ
-		j++;
-	}
-	closesocket(clientSock);
-	WSACleanup();
-	delete m_user;
-	return 0;
 }
 
 NOTIFYICONDATA MyOglDrawDlg::myNotify(HWND O_hWnd)
@@ -199,35 +146,32 @@ NOTIFYICONDATA MyOglDrawDlg::myNotify(HWND O_hWnd)
 	icon.uCallbackMessage = WM_MSG_SHOW;
 	icon.uTimeout = 3000;
 	icon.dwInfoFlags = NIIF_INFO;
-	_tcscpy(icon.szTip, "Òş²ØµÄ¶Ô»°¿ò");
-	_tcscpy(icon.szInfoTitle, "ÒÑ×îĞ¡»¯µ½ÍĞÅÌÇø");
-	_tcscpy(icon.szInfo, "µã»÷Í¼±ê»Ö¸´£¬ÓÒ¼üµ¯³ö²Ëµ¥¡£");
+	_tcscpy(icon.szTip, "éšè—çš„å¯¹è¯æ¡†");
+	_tcscpy(icon.szInfoTitle, "å·²æœ€å°åŒ–åˆ°æ‰˜ç›˜åŒº");
+	_tcscpy(icon.szInfo, "ç‚¹å‡»å›¾æ ‡æ¢å¤ï¼Œå³é”®å¼¹å‡ºèœå•ã€‚");
 	icon.hIcon = LoadIcon(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_MAINFRAME));
 	return icon;
 }
 
 void MyOglDrawDlg::FloatDrift(char* text)
 {
-	CWindowDC wdc(Mod->FromHandle(::GetDesktopWindow()));
 	CFont font;
+	CWindowDC wdc(Mod->FromHandle(::GetDesktopWindow()));
 	wdc.SetBkMode(BKMODE_LAST);
 	wdc.SetTextColor(RGB(20, 20, 20));
 	//wdc.BitBlt(0,0,
 	wdc.LineTo(0, 0);
-	font.CreateFont(17, 17, 0, 0, 
+	font.CreateFont(20, 0, 0, 0, 
 		FW_MEDIUM,
-		false/*Ğ±Ìå*/, false, false,
-		GB2312_CHARSET, OUT_CHARACTER_PRECIS,
-		CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY,
-		FF_MODERN, "");
+		false/*æ–œä½“*/, false, false,
+		OEM_CHARSET/*ANSI_CHARSET*/, OUT_CHARACTER_PRECIS,
+		CLIP_STROKE_PRECIS, PROOF_QUALITY,
+		FF_SCRIPT, " ");
 	wdc.SelectObject(&font);
 	wdc.TextOut(400, 400, text, strlen(text));
 	::Sleep(100);
 	if (text)
-	{
 		text = NULL;
-		delete text;
-	}
 }
 
 void _stdcall MyOglDrawDlg::DrawFunc(HDC m_hDC)
@@ -236,7 +180,8 @@ void _stdcall MyOglDrawDlg::DrawFunc(HDC m_hDC)
 	Ogl.DrawCoord(Ogl.dlginfo.mouX, Ogl.dlginfo.mouY);
 #if !defined(GLTEST)
 	GetMarkDatatoDraw();
-	chart.FillChart(Ogl.unfurl);
+	depth->FillChart(Ogl.unfurl);
+	depth->DrawItem(depth->item, false);
 #else
 	//test.Load__qdu(W, H);
 	test.Model(Ogl.dlginfo.width, Ogl.dlginfo.height, dX, dY);
@@ -249,6 +194,8 @@ void _stdcall MyOglDrawDlg::DrawFunc(HDC m_hDC)
 
 bool MyOglDrawDlg::GetMarkDatatoDraw()
 {
+	//ä½¿ç”¨ç›¸å¯¹è·¯å¾„è¯»å–:
+	//F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\Debug\SH600747.TXT
 	GetModuleFileName(NULL, exeFullPath, sizeof(exeFullPath));
 	CString csDirPath((LPCSTR)exeFullPath);
 	csDirPath = csDirPath.Left(csDirPath.ReverseFind(_T('\\')));
@@ -259,9 +206,11 @@ bool MyOglDrawDlg::GetMarkDatatoDraw()
 	std::string sWritePath = sSystemPath + _T("\\") + _T("MACD.txt");
 	const char* filename = sSystemFullPath.c_str();
 	const char* writefile = sWritePath.c_str();
+	//æ‰“å¼€æ–‡ä»¶æµ
 	Readfile.open(filename, std::ios::in);
 	if (Readfile.fail())
 	{
+		//åªå‘é€ä¸€éå¤±è´¥æ¶ˆæ¯
 		if (failmsg < 1)
 			::PostMessage(m_hWnd, WM_MSG_OGL, 0, (LPARAM)Ogl.index.AllocBuffer("Reading failure!"));
 		failmsg++;
@@ -298,7 +247,7 @@ bool MyOglDrawDlg::GetMarkDatatoDraw()
 					Ogl.DrawKtext(code, p_code, 20, { 1,1,0 }, "Terminal", false);
 					sprintf(code, _T("%s(%s)<%s>"), div_stock[1], div_stock[0], div_stock[2]);
 					p_code = { -1.22f,p_code.y };
-					Ogl.DrawKtext(code, p_code, 12, { 1,1,1 }, "ËÎÌå");
+					Ogl.DrawKtext(code, p_code, 12, { 1,1,1 }, "å®‹ä½“");
 					p_code = { 0.8f,1.189f };
 					*div_stock = NULL;
 				}
@@ -307,7 +256,7 @@ bool MyOglDrawDlg::GetMarkDatatoDraw()
 			}
 			else if (markdata.size() > 8)
 			{
-				//½«ĞĞÇéÊı¾İÁÙÊ±´æ´¢µ½½á¹¹Ìå
+				//å°†è¡Œæƒ…æ•°æ®ä¸´æ—¶å­˜å‚¨åˆ°ç»“æ„ä½“
 				Ogl.lastmarket = trademarket;
 				trademarket.time.tm_year	= atoi(markdata[0]);
 				trademarket.time.tm_mon		= atoi(markdata[1]);
@@ -319,16 +268,17 @@ bool MyOglDrawDlg::GetMarkDatatoDraw()
 				trademarket.amount	= atoi(markdata[7]);
 				trademarket.price	= (float)atof(markdata[8]);
 				market.push_back(trademarket);
-				//ÉèÖÃ³õÊ¼ÏÔÊ¾Í¼ĞÎÊıÁ¿
+				//è®¾ç½®åˆå§‹æ˜¾ç¤ºå›¾å½¢æ•°é‡
 				if (line < Ogl.tinkep.move + Ogl.dlginfo.cycle / Ogl.tinkep.ratio)
 				{
-					if (line > 0)//pi²»±Ø·Ö×é
+					if (line > 0)//piä¸å¿…åˆ†ç»„
 						if (pi > 3)
 						{
 							pi = 0;
 							isnext = true;
 						}
 					line % 20 == 0 ? totma._20 = totma._10 = totma._5 = 0 : (line % 10 == 0 ? totma._10 = totma._5 = 0 : (line % 5 == 0 ? totma._5 = 0 : 1));
+					
 					if (line <= 3)
 					{
 						Ogl.dlginfo.line = 1;
@@ -411,7 +361,7 @@ void MyOglDrawDlg::OnMouseMove(UINT nFlags, CPoint point)
 BOOL MyOglDrawDlg::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt) 
 {
 	if (zDelta == WHEEL_DELTA)
-		Ogl.tinkep.ratio*=2;
+		Ogl.tinkep.ratio *= 2;
 	if (zDelta == -WHEEL_DELTA)
 	{
 		Ogl.tinkep.ratio /= 2;
@@ -432,7 +382,7 @@ void MyOglDrawDlg::OnLButtonDown(UINT nFlags, CPoint point)
 
 void MyOglDrawDlg::OnRButtonDown(UINT nFlags, CPoint point)
 {
-	*((bool*)&Ogl) = false;
+
 }
 
 void MyOglDrawDlg::OnSysCommand(UINT nID, LPARAM lparam)
@@ -457,10 +407,18 @@ LRESULT MyOglDrawDlg::GetOglCmd(WPARAM wparam, LPARAM lparam)
 	if (MessageBox(cmd) == IDOK)
 		OnClose();
 	if (pMsg)
-	{
 		pMsg = NULL;
-		delete pMsg;
-	}
+	return LRESULT();
+}
+
+LRESULT MyOglDrawDlg::ShowMsgOnly(WPARAM wparam, LPARAM lparam)
+{
+	CString cmd;
+	char* pMsg = (char*)lparam;
+	cmd.Format(_T("%s"), pMsg);
+	MessageBox(cmd);
+	if (pMsg)
+		pMsg = NULL;
 	return LRESULT();
 }
 
@@ -489,7 +447,7 @@ void MyOglDrawDlg::OnSize(UINT nType, int cx, int cy)
 
 LRESULT MyOglDrawDlg::OnTaskShow(WPARAM wparam, LPARAM lparam)
 {
-	CMenu menu;
+	CMenu cmenu;
 	HMENU hmenu;
 	CBitmap bitmap;
 	if (lparam != IDR_MAINFRAME)
@@ -499,14 +457,14 @@ LRESULT MyOglDrawDlg::OnTaskShow(WPARAM wparam, LPARAM lparam)
 			{
 				LPPOINT lpoint = new tagPOINT;
 				::GetCursorPos(lpoint);
-				menu.CreatePopupMenu();
-				menu.AppendMenu(MF_STRING, /*ID_APP_EXIT*/WM_MSG_QUIT, _T("Exit"));
+				cmenu.CreatePopupMenu();
+				cmenu.AppendMenu(MF_STRING, /*ID_APP_EXIT*/WM_MSG_QUIT, _T("Exit"));
 				SetForegroundWindow();
 				bitmap.LoadBitmap(IDB_BITMAP);
-				menu.SetMenuItemBitmaps(0, MF_BYPOSITION, &bitmap, &bitmap);
-				menu.TrackPopupMenu(TPM_LEFTALIGN, lpoint->x, lpoint->y, this);
-				hmenu = menu.Detach();
-				menu.DestroyMenu();
+				cmenu.SetMenuItemBitmaps(0, MF_BYPOSITION, &bitmap, &bitmap);
+				cmenu.TrackPopupMenu(TPM_LEFTALIGN, lpoint->x, lpoint->y, this);
+				hmenu = cmenu.Detach();
+				cmenu.DestroyMenu();
 				delete lpoint;
 			}
 				break;
@@ -534,32 +492,39 @@ LRESULT CALLBACK MyOglDrawDlg::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, L
 
 BOOL MyOglDrawDlg::PreTranslateMessage(tagMSG * pMsg)
 {
-	if (pMsg->message == WM_KEYDOWN)
+	switch (pMsg->message)
+	{
+	case WM_KEYDOWN:
 	{
 		if (m_hAcc && ::TranslateAccelerator(m_hWnd, m_hAcc, pMsg))
 		{
 			Ogl.DOS.OpenConsole();
 			//Ogl.DOS.ConsoleIOoverload();
+			break;
 		}
 		else switch (pMsg->wParam)
 		{
-			case 'F':
-			case 'f':
-			{
-				Set_5_Deg();
-			}
-			break;
-			case 'M':
-			{
-				chart.item.time.hour = chart.item.time.min = 9;
-				chart.item.pc_ = 99;
-				chart.item.mode = 1;
-				chart.DrawItem(chart.item, 0);
-			}
-			break;
-			default:	break;
+		case 'F':
+		case 'f':
+		{
+			Set_5_Deg();
 		}
-	}
+		break;
+		case 'M':
+		{
+			depth->item.time.hour = depth->item.time.min = 9;
+			depth->item.pc_ = 99;
+			depth->item.mode = 1;
+		}
+		break;
+		default:
+			break;
+		}
+	}; 
+	case WM_DROPFILES:
+		//OnDropFiles();
+		break;
+	};
 	return CDialog::PreTranslateMessage(pMsg);
 }
 
@@ -602,15 +567,17 @@ BOOL MyOglDrawDlg::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINF
 
 void MyOglDrawDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 {
-	CMenu menu;
-	menu.LoadMenu(IDR_MENU);
-	//CMenu* pPop = menu.GetSubMenu(0);
-	//if (pPop != NULL)
+	CMenu* p_mPop = new CMenu;
+	//p_mPop->CreatePopupMenu();
+	p_mPop->LoadMenu(IDR_MENU);
+	p_mPop->GetSubMenu(0);
+	//if (p_mPop != NULL)
 	{
 		ClientToScreen(&point);
-		menu./*pPop->*/TrackPopupMenu(TPM_CENTERALIGN, point.x, point.y, pWnd);
+		p_mPop->TrackPopupMenu(TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_RIGHTBUTTON, point.x, point.y, pWnd);
 	}
-	menu.Detach();
+	p_mPop->Detach();
+	delete p_mPop;
 }
 
 void MyOglDrawDlg::SetBkg()
@@ -631,6 +598,7 @@ void MyOglDrawDlg::Set_5_Deg()
 
 void MyOglDrawDlg::OnClose()
 {
+	net_exit = true;
 	KillTimer(1);
 	PostNcDestroy();
 }
@@ -642,17 +610,99 @@ void MyOglDrawDlg::PostNcDestroy()
 
 void MyOglDrawDlg::ToQuit()
 {
+	//DestroyMenu(m_hTop);
 	MyOglDrawDlg::OnClose();
 }
 
 void MyOglDrawDlg::SetCtrl()
 {
-	p_Tool = new CMenu();
-	p_Tool->LoadMenuA(IDR_TOOL);
-	SetMenu(p_Tool);
+	CNMenu m_uTop;
+	m_uTop.LoadMenu(IDR_TOP);// AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_TOP));
+	ASSERT(this);
+	CBrush m_brBkgd;
+	m_brBkgd.DeleteObject();
+	m_brBkgd.CreateSolidBrush(RGB(0, 0, 0));
+	MENUINFO m_info = { 0 };
+	m_info.cbSize = sizeof(MENUINFO);
+	m_info.fMask = /*MIM_APPLYTOSUBMENUS |*/ MIM_BACKGROUND;
+	//m_info.dwStyle = MNS_AUTODISMISS;
+	m_info.hbrBack = m_brBkgd;
+	try {
+		if (IsMenu(m_uTop.m_hMenu))
+			//::SetMenuInfo(m_uTop.m_hMenu, &m_info);
+			Invalidate();
+	}
+	catch (...) { return; }
+	for (int i = 0; i < m_uTop.GetMenuItemCount(); i++)
+	{
+		BOOL bModi = m_uTop.ModifyMenu(ID_BUTTON800 + i, MF_BYCOMMAND | MF_OWNERDRAW, ID_BUTTON800 + i);
+		if (!bModi)
+		{
+			//TRACK("ModifyMenu fail!");
+		}
+	}
+	SetMenu(/*GetSafeHwnd(),*/ &m_uTop);
+	if (m_tool.Create(this) && m_tool.LoadToolBar(IDR_TOOL))
+	{
+		//m_tool.EnableDocking(CBRS_ALIGN_ANY);
+		m_tool.ModifyStyle(0, TBSTYLE_FLAT);
+		CRect rcItem;
+		//RepositionBars(AFX_IDW_CONTROLBAR_FIRST, AFX_IDW_CONTROLBAR_LAST, 0, reposQuery, rcNew);	
+		CPoint ptOffset(0, 0);
+		CWnd* pwndChild = GetWindow(GW_CHILD);
+		while (pwndChild)
+		{
+			pwndChild->GetWindowRect(rcItem);
+			ScreenToClient(rcItem);
+			rcItem.OffsetRect(ptOffset);
+			pwndChild->MoveWindow(rcItem, FALSE);
+			pwndChild = pwndChild->GetNextWindow();
+		}
+		RepositionBars(AFX_IDW_CONTROLBAR_FIRST, AFX_IDW_CONTROLBAR_LAST, 0);
+	}
 }
 
 MyOglDrawDlg::~MyOglDrawDlg()
 {
 	Shell_NotifyIcon(NIM_DELETE, &icon);
+}
+
+void MyOglDrawDlg::OnDropFiles(HDROP hDropInfo)
+{
+	char szFile[MAX_PATH + 1] = { 0 };
+	if (DragQueryFile(hDropInfo, 0xFFFFFFFF, NULL, 0) == 1)
+	{
+		DragQueryFile(hDropInfo, 0, (LPTSTR)szFile, _MAX_PATH);
+		MessageBox(szFile);
+	};
+	DragFinish(hDropInfo);
+	CDialog::OnDropFiles(hDropInfo);
+}
+
+
+int MyOglDrawDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
+{
+	if (CDialog::OnCreate(lpCreateStruct) == -1)
+		return -1;
+	DragAcceptFiles(TRUE);
+	return 0;
+}
+
+
+HBRUSH MyOglDrawDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
+{
+	HBRUSH hbr = CreateSolidBrush(RGB(0, 0, 0));
+	if (pWnd->GetDlgCtrlID() == IDR_TOP)
+	{
+		pDC->SetTextColor(RGB(20, 20, 20));
+		pDC->SetBkMode(TRANSPARENT);
+	}
+	return hbr;
+}
+
+
+void MyOglDrawDlg::OnPriv()
+{
+	auto f = *((bool*)&Ogl) = true;
+	MessageBox("ç§æœ‰æˆå‘˜");
 }

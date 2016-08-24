@@ -87,7 +87,7 @@ float Xdeg, Ydeg;
 bool multi0 = false;
 OGLKview::Point mpt,arrow;
 OGLKview::Market fixeddata;
-float proportion, delta=1;
+float proportion, delta = 1;
 float shadowup, shadowdown;
 float candlemiddle, candleright, candleleft;
 bool OGLKview::DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool hollow, OGLKview::Point pt)
@@ -114,12 +114,12 @@ bool OGLKview::DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool h
 	fillitem.closed		= lastmarket.close;
 	markdata.open != 0 ? \
 		(fillitem.uprange = fillitem.upadp / markdata.open) : 0;
-	sprintf(markchar.close, "%.2f", markdata.close);
-	sprintf(markchar.price, "%.2f", markdata.price);
-	sprintf(markchar.amount, "%.2f", markdata.amount);
-	sprintf(markchar.open, "%.2f", markdata.open);
-	sprintf(markchar.high, "%.2f", markdata.high);
-	sprintf(markchar.low, "%.2f", markdata.low);
+	sprintf(markchar.close,	"%.2f", markdata.close);
+	sprintf(markchar.price,	"%.2f", markdata.price);
+	sprintf(markchar.amount,"%.2f", markdata.amount);
+	sprintf(markchar.open,	"%.2f", markdata.open);
+	sprintf(markchar.high,	"%.2f", markdata.high);
+	sprintf(markchar.low,	"%.2f", markdata.low);
 	if (fillitem.higest < markdata.high)
 		fillitem.higest = markdata.high;
 	if (fillitem.lowest < markdata.low)
@@ -129,10 +129,10 @@ bool OGLKview::DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool h
 		multi0 = true;
 	else
 		multi0 = false;
-	fixeddata.open	= Pytinker(markdata.open, tinkep);
-	fixeddata.close = Pytinker(markdata.close, tinkep);
-	fixeddata.high	= Pytinker(markdata.high, tinkep);
-	fixeddata.low	= Pytinker(markdata.low, tinkep);
+	fixeddata.open	= Pytinker(markdata.open,	tinkep);
+	fixeddata.close = Pytinker(markdata.close,	tinkep);
+	fixeddata.high	= Pytinker(markdata.high,	tinkep);
+	fixeddata.low	= Pytinker(markdata.low,	tinkep);
 	if (fillitem.upadp > 0)
 	{
 		limitup = true;
@@ -202,7 +202,7 @@ bool OGLKview::DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool h
 				};
 				glInterleavedArrays(GL_V2F, 0, holldata);
 				glDrawArrays(GL_LINES, 0, 8);
-				ASSERT(_CrtCheckMemory());
+				assert(_CrtCheckMemory());
 			}
 			else
 			{
@@ -233,13 +233,13 @@ bool OGLKview::DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool h
 		memcpy(markchar.time, m_time, strlen(m_time));
 		markchar.time[strlen(m_time)] = '\0';
 		sprintf(markchar.time,	"%d.%d.%d", markdata.time.tm_year, markdata.time.tm_mon, markdata.time.tm_mday);
-		sprintf(markchar.amount,"%d",	markdata.amount);
-		sprintf(markchar.price,	"%.0f", markdata.price);
-		sprintf(markchar.close, "%.2f", markdata.close);
-		sprintf(markchar.high,	"%.2f", markdata.high);
-		sprintf(markchar.low,	"%.2f", markdata.low);
-		sprintf(markchar.open,	"%.2f", markdata.open);
-		sprintf(markchar.ydeg,	"y=%.3f", Ydeg);
+		sprintf(markchar.amount,"%d",		markdata.amount);
+		sprintf(markchar.price,	"%.0f",		markdata.price);
+		sprintf(markchar.close, "%.2f",		markdata.close);
+		sprintf(markchar.high,	"%.2f",		markdata.high);
+		sprintf(markchar.low,	"%.2f",		markdata.low);
+		sprintf(markchar.open,	"%.2f",		markdata.open);
+		sprintf(markchar.ydeg,	"y=%.3f",	Ydeg);
 	}
 	if ((xytinker(mpt).x >= fixeddata.low) && (xytinker(mpt).x <= fixeddata.high))
 	{
@@ -328,6 +328,7 @@ void _stdcall OGLKview::InitGraph(void/*HDC m_hDC*/)
 	glViewport(0, 0, attr.wide, attr.tall);
 #ifdef DEBUG
 	glPointSize(3);
+	glColor3f(0.9f, .4f, 0);
 	glEnable(GL_POINT_SMOOTH);
 	glHint(GL_POINT_SMOOTH, GL_NICEST);
 	glBegin(GL_POINTS);
@@ -457,9 +458,9 @@ void OGLKview::AdjustDraw(GLsizei W, GLsizei H, bool b)
 int OGLKview::DrawCoord(int mX, int mY)
 {
 	char coor[16];
+	char pbrand[64];
 	OGLKview::Point pt = {0,1.19f};
 	glViewport(0, 0, attr.wide, attr.tall);
-
 	int m0 = mX / 1000;
 	int m1 = mX / 100 % 10;
 	int m2 = mX / 10 % 10;
@@ -485,6 +486,9 @@ int OGLKview::DrawCoord(int mX, int mY)
 	coor[14] = ')';
 	coor[15] = '\0';
 	DrawKtext(coor, pt, 14, { 1,1,0 });
+	cpu_getbrand(pbrand);
+	pt = { -0.5f,1.19f };
+	DrawKtext(pbrand, pt, 14, { 1,1,0 });
 	return m7;
 }
 
@@ -582,7 +586,6 @@ int OGLKview::DrawDetail(OGLKview::Market market)
 		glVertex3f(-1.03f, 0.333f, 0);
 	glEnd();
 
-	glColor4f(0.6f, 0.7f, 0.8f, 0.9f);
 	DrawKtext(l_time, poi, 17, { 0.6f, 0.7f, 0.8f, 0.9f }, "微软雅黑");
 	poi.y = 1.09f;
 	DrawKtext("开盘", poi, 13, { 1,1,1 }, "宋体");
@@ -651,7 +654,9 @@ void OGLKview::SetBkg(bool b)
 
 void OGLKview::SetColor(OGLKview::Color4f color)
 {
-	glColor3f(color.R, color.G, color.B);
+	if (color.A == 0)
+		color.A = 1;
+	glColor4f(color.R, color.G, color.B, color.A);
 }
 
 void OGLKview::SwitchViewport(int viewport, OGLKview::ViewSize adjust)
@@ -805,7 +810,7 @@ void OGLKview::DrawKtext(char text[], Point & coor, int size, OGLKview::Color4f 
 		fw = FW_MEDIUM;
 	else
 		fw = FW_SEMIBOLD;
-	HFONT mhfont = CreateFontA(size, 0, 0, 0, fw, 0, 0, 0, ANSI_CHARSET,
+	HFONT mhfont = CreateFont(size, 0, 0, 0, fw, 0, 0, 0, ANSI_CHARSET,
 		OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
 		DEFAULT_PITCH | FF_SWISS, font);
 	HFONT hOldFont = (HFONT)SelectObject(wglGetCurrentDC(), mhfont);

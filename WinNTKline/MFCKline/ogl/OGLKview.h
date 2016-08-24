@@ -1,4 +1,4 @@
-#ifndef OGL_KVIEW_H_
+﻿#ifndef OGL_KVIEW_H_
 #define OGL_KVIEW_H_
 //#pragma execution_character_set("utf-8")
 //#pragma comment(linker, "/subsystem:\"windows\" /entry:\"mainCRTStartup\"") 
@@ -31,12 +31,15 @@
 #include	<iostream>
 #include	<fcntl.h>
 #include	<fstream>
-#ifdef WIN32//__linux
+#include	<plus1second.h>
+#ifdef _WIN32//__linux
 #include "..\stdafx.h"
-#include <windows.h> 
+#include <Windows.h> 
+#include <WinSock2.h>
+#include <process.h>
 #endif
 #pragma comment(lib, "freetype.lib") 
-#include	<Font/ft2build.h>
+#include	<font/ft2build.h>
 #include	FT_FREETYPE_H  
 #include	<GL/glew.h>  
 #include	<GL/glut.h>
@@ -45,11 +48,11 @@
 #include	<GL/GL.h>
 #include	"boost/boostest.h"
 #include	"Index/Indexes.inl"
+#include	"Index/CPUID.H"
 #include	"dos/DOSCout.h"
 #include	"Stock/Stock.h"
-#include	"Set/MacroSets.h"
-#include	"Font/freetype/ftglyph.h" 
-
+#include	"Def/MacroDef.h"
+#include	"font/freetype/ftglyph.h" 
 #ifdef _FILL_
 #define fixpixelx 0.002f
 #else
@@ -59,15 +62,15 @@
 
 class OGLKview
 {
-public:
-	OGLKview();
-	virtual ~OGLKview();
 private:
-	bool limitup;//harden��ͣ
+	bool limitup;//harden涨停
 	float radius;
 	float moveDist;
 	int item0;
 	int pory, widt, heig;
+public:
+	OGLKview();
+	virtual ~OGLKview();
 public:
 	typedef HWND(WINAPI *PROCGETCONSOLEWINDOW)();
 	typedef char* SB;
@@ -83,11 +86,11 @@ public:
 		struct Market *next;
 		bool operator >(const Market &toless)const
 		{
-			return high>toless.high;
+			return high > toless.high;
 		}
 		bool operator <(const Market &togreater)const
 		{
-			return low<togreater.low;
+			return low < togreater.low;
 		}
 		void show();
 	};
