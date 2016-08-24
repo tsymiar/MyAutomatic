@@ -1,4 +1,4 @@
-#ifndef TEST_MINE_H_
+﻿#ifndef TEST_MINE_H_
 #define TEST_MINE_H_
 #include <windows.h>
 #include <math.h>

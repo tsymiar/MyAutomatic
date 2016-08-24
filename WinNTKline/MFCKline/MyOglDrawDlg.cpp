@@ -1,4 +1,4 @@
-#include "MyOglDrawDlg.h"
+﻿#include "MyOglDrawDlg.h"
 // MyOglDrawDlg.cpp : 
 
 bool net_exit = false;

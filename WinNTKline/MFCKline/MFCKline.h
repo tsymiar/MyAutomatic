@@ -1,4 +1,4 @@
-
+﻿
 // MFCKline.h : PROJECT_NAME 应用程序的主头文件
 //
 
