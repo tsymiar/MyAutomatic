@@ -1,6 +1,7 @@
-#ifndef TRANSCODING_H
+﻿#ifndef TRANSCODING_H
 #define TRANSCODING_H
 #include <stddef.h>
+#include <string.h>
 #ifdef _LIBICONV_H
 	#include<iconv.h>
 	#ifdef _MSC_VER

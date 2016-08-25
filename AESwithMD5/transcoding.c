@@ -1,9 +1,9 @@
-#include "transcoding.h"
+ï»¿#include "transcoding.h"
 #ifdef _LIBICONV_H
 
-//remarks:¹ú±êÂëÓëUTF-8»¥×ª
-//[IN] dest:×ªÂë¸ñÊ½,Èç¡°GBK¡±,"UTF-8";pbSrc:Ô­Âë¸ñÊ½;input:Ô­Âë×Ö·û´®;ilen:Ô­Âë×Ö·û´®³¤¶È;
-//[OUT] output:×ªÂë×Ö·û´®;olen:×ªÂë×Ö·û´®³¤¶È¡£
+//remarks:å›½æ ‡ç ä¸UTF-8äº’è½¬
+//[IN] dest:è½¬ç æ ¼å¼,å¦‚â€œGBKâ€,"UTF-8";pbSrc:åŸç æ ¼å¼;input:åŸç å­—ç¬¦ä¸²;ilen:åŸç å­—ç¬¦ä¸²é•¿åº¦;
+//[OUT] output:è½¬ç å­—ç¬¦ä¸²;olen:è½¬ç å­—ç¬¦ä¸²é•¿åº¦ã€‚
 int conv_charset(const char* dest,const char* pbSrc,const char *input,size_t ilen,char* output,size_t olen)
 	{
 		int convlen=(int)olen;
@@ -17,9 +17,9 @@ int conv_charset(const char* dest,const char* pbSrc,const char *input,size_t ile
 		return (int)(convlen-olen);
 	}
 #endif // _LIBICONV_H
-//remarks:×Ö·û´®×ª»»Îª16½øÖÆÊı
-//[IN]:string Ô´×Ö·û´®
-//[OUT]:cbuf 16½øÖÆ×ªÂë×Ö·û
+//remarks:å­—ç¬¦ä¸²è½¬æ¢ä¸º16è¿›åˆ¶æ•°
+//[IN]:string æºå­—ç¬¦ä¸²
+//[OUT]:cbuf 16è¿›åˆ¶è½¬ç å­—ç¬¦
 int str_to_hex(char *string, char *cbuf)  
 {  
 	int len = strlen(string);
@@ -54,12 +54,12 @@ int str_to_hex(char *string, char *cbuf)
 }  
 /*
 // C prototype : void hex_to_str(unsigned char *dest, char *pbSrc)
-// parameter(s): [OUT] pbDest - ´æ·ÅÄ¿±ê×Ö·û´®
-//	[IN] pbSrc - ÊäÈë16½øÖÆÊıµÄÆğÊ¼µØÖ·
-//	£¨[IN] len - 16½øÖÆÊıµÄ×Ö½ÚÊı
-// void hex_to_str(unsigned char *dest, unsigned char *pbSrc, int len)£©
+// parameter(s): [OUT] pbDest - å­˜æ”¾ç›®æ ‡å­—ç¬¦ä¸²
+//	[IN] pbSrc - è¾“å…¥16è¿›åˆ¶æ•°çš„èµ·å§‹åœ°å€
+//	ï¼ˆ[IN] len - 16è¿›åˆ¶æ•°çš„å­—èŠ‚æ•°
+// void hex_to_str(unsigned char *dest, unsigned char *pbSrc, int len)ï¼‰
 // return value: 
-// remarks : ½«16½øÖÆÊı×ª»¯ÎªASCIIÂë¸ñÊ½×Ö·û´®
+// remarks : å°†16è¿›åˆ¶æ•°è½¬åŒ–ä¸ºASCIIç æ ¼å¼å­—ç¬¦ä¸²
 */
 void hex_to_str(unsigned char *dest, char *pbSrc)
 {
