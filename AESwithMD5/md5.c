@@ -1,4 +1,4 @@
-#include "md5.h"
+ï»¿#include "md5.h"
 
 typedef unsigned char *POINTER;
 typedef unsigned short int uint2_t;
@@ -11,7 +11,7 @@ typedef struct
 	unsigned char buffer[64];
 } MD5_CTX;
 
-unsigned A, B, C, D, a, b, c, d;   //iÁÙÊ±±äÁ¿,lenÎÄ¼ş³¤,flen[2]Îª64Î»¶ş½øÖÆ±íÊ¾µÄÎÄ¼ş³õÊ¼³¤¶È
+unsigned A, B, C, D, a, b, c, d;   //iä¸´æ—¶å˜é‡,lenæ–‡ä»¶é•¿,flen[2]ä¸º64ä½äºŒè¿›åˆ¶è¡¨ç¤ºçš„æ–‡ä»¶åˆå§‹é•¿åº¦
 
 static unsigned char PADDING[64] = {
 	0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -24,16 +24,16 @@ static unsigned char PADDING[64] = {
 #define H(x, y, z) ((x) ^ (y) ^ (z))
 #define I(x, y, z) ((y) ^ ((x) | (~z)))
 
-#define RL(x, y) (((x) << (y)) | ((x) >> (32 - (y))))  //xÏò×óÑ­»·ÒÆyÎ»
+#define RL(x, y) (((x) << (y)) | ((x) >> (32 - (y))))  //xå‘å·¦å¾ªç¯ç§»yä½
 
-#define PP(x) (x<<24)|((x<<8)&0xff0000)|((x>>8)&0xff00)|(x>>24)  //½«x¸ßµÍÎ»»¥»»,ÀıÈçPP(aabbccdd)=ddccbbaa ´ó¶ËĞ¡¶Ë×ª»¯
+#define PP(x) (x<<24)|((x<<8)&0xff0000)|((x>>8)&0xff00)|(x>>24)  //å°†xé«˜ä½ä½äº’æ¢,ä¾‹å¦‚PP(aabbccdd)=ddccbbaa å¤§ç«¯å°ç«¯è½¬åŒ–
 
 #define FF(a, b, c, d, x, s, ac) a = b + (RL((a + F(b,c,d) + x + ac),s))
 #define GG(a, b, c, d, x, s, ac) a = b + (RL((a + G(b,c,d) + x + ac),s))
 #define HH(a, b, c, d, x, s, ac) a = b + (RL((a + H(b,c,d) + x + ac),s))
 #define II(a, b, c, d, x, s, ac) a = b + (RL((a + I(b,c,d) + x + ac),s))
 
-void md5_round(unsigned int x[])               //MD5ºËĞÄËã·¨,¹²64ÂÖ
+void md5_round(unsigned int x[])               //MD5æ ¸å¿ƒç®—æ³•,å…±64è½®
 {
 /**//* Round 1 */
   FF (a, b, c, d, x[ 0],  7, 0xd76aa478); /**//* 1 */
@@ -275,25 +275,25 @@ void md5_f_set(unsigned int x[])
 void md5_file(FILE *fp,char out[])
 {
 	unsigned i, len, flen[2], x[16];
-	fseek(fp, 0, SEEK_END);  //ÎÄ¼şÖ¸Õë×ªµ½ÎÄ¼şÄ©Î²
-	if ((len = ftell(fp)) == -1) { printf("Sorry! Can not calculate files which larger than 2 GB!\n"); fclose(fp); /*continue;*/ }  //ftellº¯Êı·µ»Ølong,×î´óÎª2GB,³¬³ö·µ»Ø-1
-	rewind(fp);  //ÎÄ¼şÖ¸Õë¸´Î»µ½ÎÄ¼şÍ·
-	A = 0x67452301, B = 0xefcdab89, C = 0x98badcfe, D = 0x10325476; //³õÊ¼»¯Á´½Ó±äÁ¿
-	flen[1] = len / 0x20000000;     //flenµ¥Î»ÊÇbit
+	fseek(fp, 0, SEEK_END);  //æ–‡ä»¶æŒ‡é’ˆè½¬åˆ°æ–‡ä»¶æœ«å°¾
+	if ((len = ftell(fp)) == -1) { printf("Sorry! Can not calculate files which larger than 2 GB!\n"); fclose(fp); /*continue;*/ }  //ftellå‡½æ•°è¿”å›long,æœ€å¤§ä¸º2GB,è¶…å‡ºè¿”å›-1
+	rewind(fp);  //æ–‡ä»¶æŒ‡é’ˆå¤ä½åˆ°æ–‡ä»¶å¤´
+	A = 0x67452301, B = 0xefcdab89, C = 0x98badcfe, D = 0x10325476; //åˆå§‹åŒ–é“¾æ¥å˜é‡
+	flen[1] = len / 0x20000000;     //flenå•ä½æ˜¯bit
 	flen[0] = (len % 0x20000000) * 8;
-	memset(x, 0, 64);   //³õÊ¼»¯xÊı×éÎª0
-	fread(&x, 4, 16, fp);  //ÒÔ4×Ö½ÚÎªÒ»×é,¶ÁÈ¡16×éÊı¾İ
-	for (i = 0; i<len / 64; i++) {    //Ñ­»·ÔËËãÖ±ÖÁÎÄ¼ş½áÊø
+	memset(x, 0, 64);   //åˆå§‹åŒ–xæ•°ç»„ä¸º0
+	fread(&x, 4, 16, fp);  //ä»¥4å­—èŠ‚ä¸ºä¸€ç»„,è¯»å–16ç»„æ•°æ®
+	for (i = 0; i<len / 64; i++) {    //å¾ªç¯è¿ç®—ç›´è‡³æ–‡ä»¶ç»“æŸ
 		md5_f_set(x);
 		memset(x, 0, 64);
 		fread(&x, 4, 16, fp);
 	}
-	((char*)x)[len % 64] = 128;  //ÎÄ¼ş½áÊø²¹1,²¹0²Ù×÷,128¶ş½øÖÆ¼´10000000
+	((char*)x)[len % 64] = 128;  //æ–‡ä»¶ç»“æŸè¡¥1,è¡¥0æ“ä½œ,128äºŒè¿›åˆ¶å³10000000
 	if (len % 64>55) md5_f_set(x), memset(x, 0, 64);
-	memcpy(x + 14, flen, 8);    //ÎÄ¼şÄ©Î²¼ÓÈëÔ­ÎÄ¼şµÄbit³¤¶È
+	memcpy(x + 14, flen, 8);    //æ–‡ä»¶æœ«å°¾åŠ å…¥åŸæ–‡ä»¶çš„bité•¿åº¦
 	md5_f_set(x);
 	fclose(fp);
-	sprintf(out, /*sizeof(out),*/ "MD5 Code:%08x%08x%08x%08x\n", PP(A), PP(B), PP(C), PP(D));  //¸ßµÍÎ»Äæ·´Êä³ö
+	sprintf(out, /*sizeof(out),*/ "MD5 Code:%08x%08x%08x%08x\n", PP(A), PP(B), PP(C), PP(D));  //é«˜ä½ä½é€†åè¾“å‡º
 	printf("%s", out);
 }
 
@@ -314,15 +314,15 @@ void test_s_md5()
 	char encrypt[200];  
 	while(1)
 	{
-	  printf("ÇëÊäÈëÒª¼ÆËãMD5ÖµµÄ×Ö·û´®:");
+	  printf("è¯·è¾“å…¥è¦è®¡ç®—MD5å€¼çš„å­—ç¬¦ä¸²:");
 	  gets(encrypt);
-	  printf("¼ÓÃÜ½á¹û:"); 
+	  printf("åŠ å¯†ç»“æœ:"); 
 	  md5_str(encrypt,digest);  
-	  for (i=0;i<16;i++) //16Î»ÎŞ·ûºÅÕûÊı
+	  for (i=0;i<16;i++) //16ä½æ— ç¬¦å·æ•´æ•°
 		  printf ("%02x",(unsigned char)digest[i]);
 	  printf("\n");
 	  hex_to_str((unsigned char*)digest,out);
-	  printf("×Ö·û´®Öµ:%s",out);
+	  printf("å­—ç¬¦ä¸²å€¼:%s",out);
 	  //getchar();
 	  printf("\n");
 	}
@@ -330,15 +330,15 @@ void test_s_md5()
 
 void test_f_md5()
 {
-	char filename[200];   //ÎÄ¼şÃû
+	char filename[200];   //æ–‡ä»¶å
 	char out[128];
 	FILE *fp;
 	while(1){
 		printf("Input file:");
-		gets(filename);    //ÓÃgetº¯Êı,±ÜÃâscanfÒÔ¿Õ¸ñ·Ö¸îÊı¾İ,
-		if (filename[0]==34) filename[strlen(filename)-1]=0,strcpy(filename,filename+1);  //Ö§³ÖÎÄ¼şÍÏÒ·,µ«»á¶à³öË«ÒıºÅ,ÕâÀïÊÇ´¦Àí¶àÓàµÄË«ÒıºÅ
-		if (!strcmp(filename,"exit")) exit(0);  //ÊäÈëexitÍË³ö
-		if (!(fp=fopen(filename,"rb"))) {printf("Can not open this file!\n");continue;}  //ÒÔ¶ş½øÖÆ´ò¿ªÎÄ¼ş
+		gets(filename);    //ç”¨getå‡½æ•°,é¿å…scanfä»¥ç©ºæ ¼åˆ†å‰²æ•°æ®,
+		if (filename[0]==34) filename[strlen(filename)-1]=0,strcpy(filename,filename+1);  //æ”¯æŒæ–‡ä»¶æ‹–æ›³,ä½†ä¼šå¤šå‡ºåŒå¼•å·,è¿™é‡Œæ˜¯å¤„ç†å¤šä½™çš„åŒå¼•å·
+		if (!strcmp(filename,"exit")) exit(0);  //è¾“å…¥exité€€å‡º
+		if (!(fp=fopen(filename,"rb"))) {printf("Can not open this file!\n");continue;}  //ä»¥äºŒè¿›åˆ¶æ‰“å¼€æ–‡ä»¶
 		md5_file(fp, out);
   }
 }

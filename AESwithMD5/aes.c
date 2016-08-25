@@ -1,4 +1,4 @@
-#include "aes.h"
+﻿#include "aes.h"
 #include "transcoding.h"
 
 typedef unsigned char BYTE;
