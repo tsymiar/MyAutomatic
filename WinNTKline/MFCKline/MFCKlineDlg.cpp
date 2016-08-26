@@ -106,23 +106,37 @@ void CMFCKlineDlg::OnBnClickedOgl()
 	pTD->ShowWindow(SW_SHOWNORMAL);
 }
 
-
 void CMFCKlineDlg::OnLvnItemchangedList(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
-	POSITION curpos = m_list.GetFirstSelectedItemPosition();
+	POSITION curPos = m_list.GetFirstSelectedItemPosition();
 	const char Open[4][8] = { "K-line","Qt","WPF","OK" };
-	int item;
-	if(!curpos)
+	int N = 0;
+	if(!curPos)
 		::SendMessage(m_hBottom, SB_SETTEXT, 0, (LPARAM)TEXT(Open[3]));
 	else
-		while (curpos)
+	{
+		while (curPos)
 		{
-			item = m_list.GetNextSelectedItem(curpos);
+			if(dig)
+				if((int)curPos > item && curPos != (POSITION)0x00000001)
+			{
+				MessageBox("Qt");
+				dig = false;
+				item = N;
+			}
+			if (item == 65535 && curPos == (POSITION)0x00000001) 
+			{
+				MessageBox("Qt");
+				dig = false;
+				item = N;
+			}
+			N = item = m_list.GetNextSelectedItem(curPos);
+			::SendMessage(m_hBottom, SB_SETTEXT, 0, (LPARAM)TEXT(Open[item]));
 			if (strcmp(Open[item], "Qt") == 0)
 				m_Mod.FloatDrift("Qt框架之K线图");
-			::SendMessage(m_hBottom, SB_SETTEXT, 0, (LPARAM)TEXT(Open[item]));
 		}
+	}
 	*pResult = 0;
 }
 

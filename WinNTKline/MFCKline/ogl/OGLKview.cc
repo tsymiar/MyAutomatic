@@ -457,8 +457,10 @@ void OGLKview::AdjustDraw(GLsizei W, GLsizei H, bool b)
 
 int OGLKview::DrawCoord(int mX, int mY)
 {
+	int	msgid[4];
 	char coor[16];
-	char pbrand[64];
+	char brand[64];
+	char cpuattr[64];
 	OGLKview::Point pt = {0,1.19f};
 	glViewport(0, 0, attr.wide, attr.tall);
 	int m0 = mX / 1000;
@@ -486,9 +488,11 @@ int OGLKview::DrawCoord(int mX, int mY)
 	coor[14] = ')';
 	coor[15] = '\0';
 	DrawKtext(coor, pt, 14, { 1,1,0 });
-	cpu_getbrand(pbrand);
-	pt = { -0.5f,1.19f };
-	DrawKtext(pbrand, pt, 14, { 1,1,0 });
+	cpu_getbrand(brand);
+	__cpuidex(msgid, 0, 0);
+	sprintf(cpuattr, "CPU0:%d-%s", msgid[1], brand);
+	pt = { -0.9f,1.19f };
+	DrawKtext(cpuattr, pt, 14, { 1,1,0 });
 	return m7;
 }
 

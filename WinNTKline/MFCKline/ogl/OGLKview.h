@@ -16,14 +16,13 @@
 #define NO_WARN_MBCS_MFC_DEPRECATION
 #define BUFFER_OFFSET(offset) ((void*)(offset))
 #include	<cfloat>
-#include	<string>
 #include	<cmath>
 #include	<ctime>
 #include	<list>
 #include	<map>
 #include	<vector>
 #include	<iterator>
-//#include	<thread> #error <thread> is not supported when compiling with /clr or /clr:pure.
+//#include <thread> #error <thread> is not supported when compiling with /clr or /clr:pure.
 #include	<functional>
 #include	<algorithm>
 #include	<stdio.h>
@@ -49,6 +48,7 @@
 #include	"boost/boostest.h"
 #include	"Index/Indexes.inl"
 #include	"Index/CPUID.H"
+#include	"Index/_string.h"
 #include	"dos/DOSCout.h"
 #include	"Stock/Stock.h"
 #include	"Def/MacroDef.h"
@@ -68,6 +68,7 @@ private:
 	float moveDist;
 	int item0;
 	int pory, widt, heig;
+	_string m_str;
 public:
 	OGLKview();
 	virtual ~OGLKview();
@@ -100,12 +101,12 @@ public:
 		int multi;
 		int height;
 		int insert;
-		int cycle=222;
+		int cycle = 222;
 		int mouX;
 		int mouY;
 		int drawstaff;
-		bool bkg=true;
-		bool leftdown=false;
+		bool bkg = true;
+		bool leftdown = false;
 	};
 	struct Fillitem {
 		float ask1;

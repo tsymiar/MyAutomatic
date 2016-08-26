@@ -78,10 +78,19 @@
     <ClInclude Include="own\CNMenu.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="NET\tcpip.h">
+    <ClInclude Include="Index\CMySet.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Index\CMySet.h">
+    <ClInclude Include="Index\_string.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="security\encoding.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="security\MD5.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NET\TCPIP.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -125,7 +134,16 @@
     <ClCompile Include="Index\CPUID.H">
       <Filter>头文件</Filter>
     </ClCompile>
-    <ClCompile Include="NET\tcpip.cpp">
+    <ClCompile Include="security\AES.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="security\encoding.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="security\MD5.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NET\TCPIP.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

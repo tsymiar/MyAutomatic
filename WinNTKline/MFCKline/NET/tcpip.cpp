@@ -1,19 +1,19 @@
-﻿#include "tcpip.h"
+﻿#include "TCPIP.h"
 
 extern bool net_exit;
 
-tcpip::tcpip() {}
+TCPIP::TCPIP() {}
 
-tcpip::~tcpip() {}
+TCPIP::~TCPIP() {}
 
-unsigned int __stdcall tcpip::ClientThread(void* pParam)
+unsigned int __stdcall TCPIP::ClientThread(void* pParam)
 {
 	//线程要调用的函数
 	int err;
 	int j = 0;
 	SOCKET clientSock;
 	WSADATA wsaData;//WSAata存储系统传回的关于WinSocket的信息
-	tcpip *m_net = new tcpip;
+	TCPIP *m_net = new TCPIP;
 	CWnd* m_hWnd = (CWnd*)pParam;
 	OGLKview::Point pt = { 0,0 };
 	int loo[8];
