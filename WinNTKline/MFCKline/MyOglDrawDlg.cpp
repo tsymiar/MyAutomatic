@@ -47,7 +47,7 @@ END_MESSAGE_MAP()
 	//END OnTaskShow
 ///**************GetMarkDatatoDraw()**************///
 	int		i = 0;
-	int		pi = 0;//绘制曲线时每组下标
+	int		pti = 0;//绘制曲线时每组下标
 	int		line = 0;//当前读取行数
 	int		item0 = 0;
 	char*	cot = NULL;//切分临时数据
@@ -74,16 +74,16 @@ END_MESSAGE_MAP()
 	Stock::Rsi rise{ 0 }, drop{ 0 }, total{ 0 }, last{ 0 };
 	Stock::Sma::MA tepma{ 0 }, totma{ 0 }, yma{ 0 };
 	Stock::Sma ma20{ 0 }, ma10{ 0 }, ma5{ 0 };
-	OGLKview::Point Per = { 0 },/*折线的前一个点*/ P[4] = { 0 };
-	OGLKview::Point p_vol = { 0 }, p_dif = { 0 }, p_dea = { 0 }, p_rsi = { 0 }, p_macd = { 0 };
-	OGLKview::Point p_code = { 0.8f,1.189f }, p_stock = { -1.22f,p_code.y };
-	OGLKview::Point p_rsi6 = { 0 }, p_rsi12 = { 0 }, p_rsi24 = { 0 };
+	OGLKview::Point Pter = { 0 },/*折线的前一个点*/ Pt[4] = { 0 };
+	OGLKview::Point pt_vol = { 0 }, pt_dif = { 0 }, pt_dea = { 0 }, pt_rsi = { 0 }, pt_macd = { 0 };
+	OGLKview::Point pt_code = { 0.8f,1.189f }, pt_stock = { -1.22f,pt_code.y };
+	OGLKview::Point pt_rsi6 = { 0 }, pt_rsi12 = { 0 }, pt_rsi24 = { 0 };
 	//MA移动平均线
-	OGLKview::Point p_ma5 = { 0 }, p_ma10 = { 0 }, p_ma20 = { 0 };
-	OGLKview::Point p_ma5old = { 0 }, p_ma10old = { 0 }, p_ma20old = { 0 };
+	OGLKview::Point pt_ma5 = { 0 }, pt_ma10 = { 0 }, pt_ma20 = { 0 };
+	OGLKview::Point pt_ma5old = { 0 }, pt_ma10old = { 0 }, pt_ma20old = { 0 };
 	//RSA
-	OGLKview::Point p_AB6 = { 0 }, p_AB12 = { 0 }, p_AB24 = { 0 };
-	OGLKview::Point p_AB6old = { 0 }, p_AB12old = { 0 }, p_AB24old = { 0 };
+	OGLKview::Point pt_AB6 = { 0 }, pt_AB12 = { 0 }, pt_AB24 = { 0 };
+	OGLKview::Point pt_AB6old = { 0 }, pt_AB12old = { 0 }, pt_AB24old = { 0 };
 ///**************END GetMarkDatatoDraw**************///
 ///**************************end**************************///
 
@@ -91,7 +91,7 @@ BOOL MyOglDrawDlg::OnInitDialog()
 {
 	HWND m_hWnd = this->GetSafeHwnd();
 	m_hDC = ::GetDC(m_hWnd/*m_tab.GetSafeHwnd()*/);
-	tcpip* m_net = new tcpip();
+	TCPIP* m_net = new TCPIP();
 	Ogl.SetWindowPixelFormat(m_hDC, m_hWnd);
 	OnPaint();
 	SetCtrl();
@@ -244,11 +244,11 @@ bool MyOglDrawDlg::GetMarkDatatoDraw()
 					}
 					Ogl.SwitchViewport(0);
 					sprintf(code, "%s(%s)", div_stock[1], div_stock[0]);
-					Ogl.DrawKtext(code, p_code, 20, { 1,1,0 }, "Terminal", false);
+					Ogl.DrawKtext(code, pt_code, 20, { 1,1,0 }, "Terminal", false);
 					sprintf(code, _T("%s(%s)<%s>"), div_stock[1], div_stock[0], div_stock[2]);
-					p_code = { -1.22f,p_code.y };
-					Ogl.DrawKtext(code, p_code, 12, { 1,1,1 }, "宋体");
-					p_code = { 0.8f,1.189f };
+					pt_code = { -1.22f,pt_code.y };
+					Ogl.DrawKtext(code, pt_code, 12, { 1,1,1 }, "宋体");
+					pt_code = { 0.8f,1.189f };
 					*div_stock = NULL;
 				}
 				else { 1; }//continue;
@@ -272,9 +272,9 @@ bool MyOglDrawDlg::GetMarkDatatoDraw()
 				if (line < Ogl.tinkep.move + Ogl.dlginfo.cycle / Ogl.tinkep.ratio)
 				{
 					if (line > 0)//pi不必分组
-						if (pi > 3)
+						if (pti > 3)
 						{
-							pi = 0;
+							pti = 0;
 							isnext = true;
 						}
 					line % 20 == 0 ? totma._20 = totma._10 = totma._5 = 0 : (line % 10 == 0 ? totma._10 = totma._5 = 0 : (line % 5 == 0 ? totma._5 = 0 : 1));
@@ -287,17 +287,17 @@ bool MyOglDrawDlg::GetMarkDatatoDraw()
 						Ogl.dlginfo.line = line - 2;
 					if (Ogl.tinkep.ratio == 0)
 					{
-						P[pi].x += 6.5f;
-						P[pi].y /= 2;
+						Pt[pti].x += 6.5f;
+						Pt[pti].y /= 2;
 					}
-					P[pi].x = Ogl.Pxtinker(Ogl.tinkep);
-					P[pi].y = (float)atof(markdata[6]);
+					Pt[pti].x = Ogl.Pxtinker(Ogl.tinkep);
+					Pt[pti].y = (float)atof(markdata[6]);
 					ASSERT(_CrtCheckMemory());
-					Ogl.dlginfo.line <= 1? Per = P[0]: P[0];
+					Ogl.dlginfo.line <= 1? Pter = Pt[0]: Pt[0];
 					if (line >= Ogl.tinkep.move)
 						Ogl.DrawKline(trademarket, Ogl.tinkep);
-					Ogl.DrawPoly(Per, P[pi], { 0.f,1.f,0.f });
-					Per = P[pi];
+					Ogl.DrawPoly(Pter, Pt[pti], { 0.f,1.f,0.f });
+					Pter = Pt[pti];
 					if ((line - 1) % 20 == 0)
 					{
 						ma20.X = (int)totma._20;
@@ -306,15 +306,15 @@ bool MyOglDrawDlg::GetMarkDatatoDraw()
 						if (line == 20)
 						{
 							tepma._20 = totma._20 / 20;
-							p_ma20old.x = Per.x;
-							p_ma20old.y = p_ma20.y;
+							pt_ma20old.x = Pter.x;
+							pt_ma20old.y = pt_ma20.y;
 						}
 						else
 						{
 						
 						}
 					}
-					pi++;
+					pti++;
 				}
 				markdata.clear();
 			}

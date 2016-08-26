@@ -233,10 +233,11 @@
     <ClInclude Include="dos\DOSCout.h" />
     <ClInclude Include="Font\FontNehe.h" />
     <ClInclude Include="Index\CMySet.h" />
+    <ClInclude Include="Index\_string.h" />
     <ClInclude Include="MFCKline.h" />
     <ClInclude Include="MFCKlineDlg.h" />
     <ClInclude Include="MyOglDrawDlg.h" />
-    <ClInclude Include="NET\tcpip.h" />
+    <ClInclude Include="NET\TCPIP.h" />
     <ClInclude Include="ogl\bitmap.h" />
     <ClInclude Include="ogl\House.h" />
     <ClInclude Include="ogl\Model.h" />
@@ -244,6 +245,8 @@
     <ClInclude Include="ogl\texture.h" />
     <ClInclude Include="own\CNMenu.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="security\encoding.h" />
+    <ClInclude Include="security\MD5.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Stock\Stock.h" />
     <ClInclude Include="targetver.h" />
@@ -258,7 +261,7 @@
     <ClCompile Include="MFCKline.cpp" />
     <ClCompile Include="MFCKlineDlg.cpp" />
     <ClCompile Include="MyOglDrawDlg.cpp" />
-    <ClCompile Include="NET\tcpip.cpp" />
+    <ClCompile Include="NET\TCPIP.cpp" />
     <ClCompile Include="ogl\bitmap.c">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
     </ClCompile>
@@ -268,6 +271,9 @@
     <ClCompile Include="ogl\texture.c">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
     </ClCompile>
+    <ClCompile Include="security\AES.cpp" />
+    <ClCompile Include="security\encoding.cc" />
+    <ClCompile Include="security\MD5.cc" />
     <ClCompile Include="test\MyTester.cpp" />
   </ItemGroup>
   <ItemGroup>

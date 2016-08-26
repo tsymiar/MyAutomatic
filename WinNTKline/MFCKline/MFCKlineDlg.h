@@ -49,5 +49,7 @@ private:
 	void OpenQt();
 	int OpenQtexe();
 private:
+	bool dig = true;
+	int item = 65535;
 	HWND m_hBottom;
 };
