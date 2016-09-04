@@ -227,12 +227,12 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BiTree.h" />
     <ClInclude Include="boost\boostest.h" />
     <ClInclude Include="Chart\DepthChart.h" />
     <ClInclude Include="Def\MacroDef.h" />
     <ClInclude Include="dos\DOSCout.h" />
     <ClInclude Include="Font\FontNehe.h" />
+    <ClInclude Include="Index\binarytree.h" />
     <ClInclude Include="Index\CMySet.h" />
     <ClInclude Include="Index\_string.h" />
     <ClInclude Include="LoginDlg.h" />
