@@ -2,7 +2,6 @@
 
 #define NUM 3
 
-BMP *bmp;
 GLuint	texture[NUM];
 float _dX, _dY;
 int W, H;
@@ -142,10 +141,10 @@ int CMyTester::LoadGLTexture()                                    // Load Bitmap
 	return load;                                  // Return The Status
 }
 
-void CMyTester::Load__qdu(int wide, int tall)
+void CMyTester::Load__QDU(int wide, int tall)
 {
 	glOrtho(0, wide, tall, 0, -1, 1);
-	bmp = new BMP("bmp/qdu.bmp");
+	BMP *bmp = new BMP("bmp/qdu.bmp");
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	glOrtho(0.0, wide, tall, 0.0, -1.0, 1.0);
@@ -159,7 +158,8 @@ void CMyTester::Load__qdu(int wide, int tall)
 	glTexCoord2f(1.0f, 0.0f); glVertex2d(wide, 0);
 	glEnd();
 	glDisable(GL_ALPHA_TEST);
-	glDisable(GL_TEXTURE_2D);
+	glDisable(GL_TEXTURE_2D);		
+	delete bmp;
 }
 
 void __outdoor(bool oo)
@@ -221,7 +221,7 @@ void __sphere(GLfloat xx, GLfloat yy, GLfloat zz, GLfloat radius, GLfloat M, GLf
 
 void __ball()
 {
-	/** 设置材质属性 */
+	/* 设置材质属性 */
 	GLfloat mat_ambient[] = { 0.9f, 0.5f, 0.8f, 1.0f };
 	GLfloat mat_diffuse[] = { 0.9f, 0.5f, 0.8f, 1.0f };
 	GLfloat mat_shininess[] = { 100.0f };
@@ -243,8 +243,7 @@ void __ball()
 
 CMyTester::~CMyTester()
 {
-	if (bmp)
-		delete bmp;
+
 }
 
 void CMyTester::testbegin()
@@ -271,7 +270,7 @@ void CMyTester::glTEST(bool oo)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
 
-	Load__qdu(W, H);
+	Load__QDU(W, H);
 	__outdoor(oo);
 	__ball();
 	__sphere(0, 0, 0, 0.2f, 20, 20);

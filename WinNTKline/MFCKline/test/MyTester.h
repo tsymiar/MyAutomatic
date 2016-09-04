@@ -21,7 +21,7 @@ public:
 	void testend();
 	void glTEST(bool oo);
 	int LoadGLTexture();
-	void Load__qdu(int wide, int tall);
+	void Load__QDU(int wide, int tall);
 	void Model(int wide, int tall, float deltax, float deltay);
 	void House(int wide, int tall);
 	//ClassName* pObj;

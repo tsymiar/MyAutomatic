@@ -41,6 +41,7 @@ BEGIN_MESSAGE_MAP(CMFCKlineDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_OGL, &CMFCKlineDlg::OnBnClickedOgl)
 	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST, &CMFCKlineDlg::OnLvnItemchangedList)
 	ON_NOTIFY(NM_DBLCLK, IDC_LIST, &CMFCKlineDlg::OnNMDblclkList)
+	ON_BN_CLICKED(IDOK, &CMFCKlineDlg::OnBnClickedOk)
 END_MESSAGE_MAP()
 
 
@@ -102,7 +103,7 @@ HCURSOR CMFCKlineDlg::OnQueryDragIcon()
 void CMFCKlineDlg::OnBnClickedOgl()
 {
 	MyOglDrawDlg *pTD = new MyOglDrawDlg();
-	pTD->Create(IDD_OGLDLG);
+	pTD->Create(IDD_OGL);
 	pTD->ShowWindow(SW_SHOWNORMAL);
 }
 
@@ -112,6 +113,8 @@ void CMFCKlineDlg::OnLvnItemchangedList(NMHDR *pNMHDR, LRESULT *pResult)
 	POSITION curPos = m_list.GetFirstSelectedItemPosition();
 	const char Open[4][8] = { "K-line","Qt","WPF","OK" };
 	int N = 0;
+	CLoginDlg logdlg;
+	CMFCKlineDlg newdlg;
 	if(!curPos)
 		::SendMessage(m_hBottom, SB_SETTEXT, 0, (LPARAM)TEXT(Open[3]));
 	else
@@ -121,13 +124,16 @@ void CMFCKlineDlg::OnLvnItemchangedList(NMHDR *pNMHDR, LRESULT *pResult)
 			if(dig)
 				if((int)curPos > item && curPos != (POSITION)0x00000001)
 			{
-				MessageBox("Qt");
-				dig = false;
-				item = N;
+				MessageBox("启动错误");
+				OnCancel();
+				item = 65535;
+				dig = true;
+				newdlg.DoModal();
+				continue;
 			}
 			if (item == 65535 && curPos == (POSITION)0x00000001) 
 			{
-				MessageBox("Qt");
+				logdlg.DoModal();
 				dig = false;
 				item = N;
 			}
@@ -321,4 +327,10 @@ int CMFCKlineDlg::OpenQtexe()
 		pWnd->ShowWindow(SW_SHOW);
 	}
 	return 0;
+}
+
+
+void CMFCKlineDlg::OnBnClickedOk()
+{
+	CDialogEx::OnOK();
 }

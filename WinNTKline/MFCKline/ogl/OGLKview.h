@@ -227,10 +227,10 @@ public:
 	OGLKview::Market lastmarket;
 	std::map<int, OGLKview::Strmap>stockmap;
 public:
+	void _stdcall InitGraph(void);
 	void SetBkg(bool b);
 	void DrawItem(void);
 	void SetColor(OGLKview::Color4f color);
-	void _stdcall InitGraph(void);
 	void DrawDash(OGLKview::Point pt[2]);
 	void DrawCurve(OGLKview::Point A[4]);
 	void DrawLevel(float mascl,float miscl);

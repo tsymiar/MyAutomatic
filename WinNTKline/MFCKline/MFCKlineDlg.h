@@ -4,6 +4,7 @@
 
 #pragma once
 #include "MyOglDrawDlg.h"
+#include "LoginDlg.h"
 #include "Wpf/WpfHost.h"
 
 // CMFCKlineDlg 对话框
@@ -52,4 +53,6 @@ private:
 	bool dig = true;
 	int item = 65535;
 	HWND m_hBottom;
+public:
+	afx_msg void OnBnClickedOk();
 };

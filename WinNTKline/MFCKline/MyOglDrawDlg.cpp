@@ -6,7 +6,7 @@ bool net_exit = false;
 IMPLEMENT_DYNAMIC(MyOglDrawDlg, CDialog)
 
 MyOglDrawDlg::MyOglDrawDlg(CWnd* pParent /*=NULL*/)
-	: CDialog(IDD_OGLDLG, pParent)
+	: CDialog(IDD_OGL, pParent)
 {
 	net_exit = false;
 	//m_hIcon = LoadIcon((HINSTANCE)IDR_ICON, "");
@@ -97,10 +97,11 @@ BOOL MyOglDrawDlg::OnInitDialog()
 	SetCtrl();
 	Ogl.AdjustDraw(W, H);
 #ifdef GLTEST
-	//test.LoadGLTexture();
-	test.Load__qdu(W, H);
-#endif
+	test.LoadGLTexture();
+	//test.Load__QDU(W, H);
+#else
 	SetTimer(1, 30, NULL);
+#endif
 	SetWindowPos(FromHandle(GetSafeHwnd()), 0, 0, GetSystemMetrics(SM_CXFULLSCREEN), GetSystemMetrics(SM_CYFULLSCREEN), SWP_NOZORDER);
 	m_hAcc = LoadAccelerators(AfxGetInstanceHandle(), MAKEINTRESOURCE(ID_ACCLER));
 	CloseHandle((HANDLE)_beginthreadex(NULL, 0, m_net->ClientThread, (void*)this, 0, NULL));
@@ -110,8 +111,8 @@ BOOL MyOglDrawDlg::OnInitDialog()
 
 void MyOglDrawDlg::OnPaint()
 {
-	CPaintDC dc(this);
 	CRect Recto;
+	CPaintDC dc(this);
 	GetClientRect(&Recto);
 	dc.SetViewportOrg(W = Recto.Width(), H = Recto.Height());
 }
@@ -183,7 +184,7 @@ void _stdcall MyOglDrawDlg::DrawFunc(HDC m_hDC)
 	depth->FillChart(Ogl.unfurl);
 	depth->DrawItem(depth->item, false);
 #else
-	//test.Load__qdu(W, H);
+	//test.Load__QDU(W, H);
 	test.Model(Ogl.dlginfo.width, Ogl.dlginfo.height, dX, dY);
 	test.House(Ogl.dlginfo.width, Ogl.dlginfo.height);
 	//test.glTEST(true);
@@ -520,7 +521,7 @@ BOOL MyOglDrawDlg::PreTranslateMessage(tagMSG * pMsg)
 		default:
 			break;
 		}
-	}; 
+	};
 	case WM_DROPFILES:
 		//OnDropFiles();
 		break;
