@@ -1,17 +1,17 @@
-ï»¿#ifndef BITREE_H
+#ifndef BITREE_H
 #define BITREE_H
 #include <iostream>
-/****************é“¾å¼å­˜å‚¨****************/
+/****************Á´Ê½´æ´¢****************/
 typedef struct BinaryTreeNode {
-	char data;//æ•°æ®
-	struct BinaryTreeNode* m_Lsub, *m_Rsub;//å·¦å³å­æŒ‡é’ˆ
+	char data;//Êı¾İ
+	struct BinaryTreeNode* m_Lsub, *m_Rsub;//×óÓÒ×ÓÖ¸Õë
 }BinNode, *BinTree;
-/****************äºŒå‰æ ‘çš„åˆ›å»º****************/
-//æŒ‰å…ˆåºåºåˆ—åˆ›å»ºäºŒå‰æ ‘
+/****************¶ş²æÊ÷µÄ´´½¨****************/
+//°´ÏÈĞòĞòÁĞ´´½¨¶ş²æÊ÷
 int CreateBiTree(BinTree &T)
 {
 	char data;
-	//æŒ‰å…ˆåºæ¬¡åºè¾“å…¥äºŒå‰æ ‘ä¸­ç»“ç‚¹çš„å€¼ï¼ˆä¸€ä¸ªå­—ç¬¦ï¼‰ï¼Œâ€œ#â€è¡¨ç¤ºç©ºæ ‘
+	//°´ÏÈĞò´ÎĞòÊäÈë¶ş²æÊ÷ÖĞ½áµãµÄÖµ£¨Ò»¸ö×Ö·û£©£¬¡°#¡±±íÊ¾¿ÕÊ÷
 	scanf("%c", &data);
 	if (data == '#')
 	{
@@ -20,16 +20,16 @@ int CreateBiTree(BinTree &T)
 	else
 	{
 		T = (BinTree)malloc(sizeof(BinNode));
-		//ç”Ÿæˆæ ¹èŠ‚ç‚¹
+		//Éú³É¸ù½Úµã
 		T->data = data;
-		//æ„é€ å·¦å³å­æ ‘
+		//¹¹Ôì×óÓÒ×ÓÊ÷
 		CreateBiTree(T->m_Lsub);
 		CreateBiTree(T->m_Rsub);
 	}
 	return 0;
 }
-/****************äºŒå‰æ ‘éå†****************/
-//é€’å½’
+/****************¶ş²æÊ÷±éÀú****************/
+//µİ¹é
 void Visit(BinTree T)
 {
 	if (T->data != '#')
@@ -37,29 +37,29 @@ void Visit(BinTree T)
 		printf("%c", T->data);
 	}
 }
-//å…ˆåºéå†
+//ÏÈĞò±éÀú
 void PreOrder(BinTree T)
 {
 	if (T != NULL)
 	{
-		//è®¿é—®æ ¹èŠ‚ç‚¹
+		//·ÃÎÊ¸ù½Úµã
 		Visit(T);
-		//è®¿é—®å·¦å­èŠ‚ç‚¹
+		//·ÃÎÊ×ó×Ó½Úµã
 		PreOrder(T->m_Lsub);
-		//è®¿é—®å³å­èŠ‚ç‚¹
+		//·ÃÎÊÓÒ×Ó½Úµã
 		PreOrder(T->m_Rsub);
 	}
 }
-//ä¸­åºéå†
+//ÖĞĞò±éÀú
 
-//äºŒå‰æ ‘ç»“ç‚¹ä¸ªæ•°
+//¶ş²æÊ÷½áµã¸öÊı
 int GetNodeNum(BinNode *pRoot)
 {
-	if (pRoot == NULL)//é€’å½’å‡ºå£
+	if (pRoot == NULL)//µİ¹é³ö¿Ú
 		return 0;
 	return GetNodeNum(pRoot->m_Lsub) + GetNodeNum(pRoot->m_Rsub) + 1;
 }
-//äºŒå‰æ ‘æ·±åº¦
+//¶ş²æÊ÷Éî¶È
 int GetDepth(BinNode *pRoot)
 {
 	if (pRoot == NULL)

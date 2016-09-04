@@ -96,7 +96,7 @@
     <ClInclude Include="LoginDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Index\binarytree.h">
+    <ClInclude Include="BiTree.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
