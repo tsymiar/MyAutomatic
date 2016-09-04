@@ -79,7 +79,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <CodeAnalysisRuleSet>NativeRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <IncludePath>F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\MFCKline;F:\dell-pc\lib\boost\;F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\MFCKline\font;$(IncludePath)</IncludePath>
+    <IncludePath>F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\MFCKline\font;F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\MFCKline;F:\dell-pc\lib\boost\;$(IncludePath)</IncludePath>
     <ReferencePath>$(ReferencePath)</ReferencePath>
     <ExecutablePath>$(ExecutablePath)</ExecutablePath>
     <LibraryPath>F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\MFCKline\font\lib;$(LibraryPath)</LibraryPath>
@@ -89,7 +89,7 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
     <IntDir>$(Configuration)\</IntDir>
-    <IncludePath>F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\MFCKline;F:\dell-pc\lib\boost\;F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\MFCKline\font;$(IncludePath)</IncludePath>
+    <IncludePath>F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\MFCKline\font;F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\MFCKline;F:\dell-pc\lib\boost\;$(IncludePath)</IncludePath>
     <ReferencePath>$(ReferencePath)</ReferencePath>
     <ExecutablePath>$(ExecutablePath)</ExecutablePath>
     <LibraryPath>F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\MFCKline\font\lib;$(LibraryPath)</LibraryPath>
@@ -227,6 +227,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BiTree.h" />
     <ClInclude Include="boost\boostest.h" />
     <ClInclude Include="Chart\DepthChart.h" />
     <ClInclude Include="Def\MacroDef.h" />
@@ -234,6 +235,7 @@
     <ClInclude Include="Font\FontNehe.h" />
     <ClInclude Include="Index\CMySet.h" />
     <ClInclude Include="Index\_string.h" />
+    <ClInclude Include="LoginDlg.h" />
     <ClInclude Include="MFCKline.h" />
     <ClInclude Include="MFCKlineDlg.h" />
     <ClInclude Include="MyOglDrawDlg.h" />
@@ -258,6 +260,7 @@
     <ClCompile Include="dos\DOSCout.cpp" />
     <ClCompile Include="Font\FontNehe.cc" />
     <ClCompile Include="Index\CPUID.H" />
+    <ClCompile Include="LoginDlg.cpp" />
     <ClCompile Include="MFCKline.cpp" />
     <ClCompile Include="MFCKlineDlg.cpp" />
     <ClCompile Include="MyOglDrawDlg.cpp" />
@@ -324,9 +327,6 @@
     <Manifest Include="res\windows.manifest" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\QtKline\QtKline\QtKline.vcxproj">
-      <Project>{b12702ad-abfb-343a-a199-8e24837244a3}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\WpfKline\WpfKline\WpfKline.csproj">
       <Project>{0652c320-7c16-41e3-a864-c70a672705a2}</Project>
     </ProjectReference>

@@ -6,6 +6,7 @@
 #include <iostream>
 #include <iomanip>
 #include <string.h>
+#include <assert.h>
 
 using namespace std;
 
@@ -20,6 +21,12 @@ public:
 	bool operator==(const _string&);
 	char& operator[](unsigned int);
 	char* _strcpy(char* strDest, const char* strSrc);
+	char* __cdecl _strcat(char * strDest, const char * strSrc);
+	size_t _strlen(const char* str);
+	char* _strmove(char* w, int m, bool fore=false);
+	char* _charmove(char* w, int b, bool hind = false/*默认向左*/);
+	char* _op_order(char * src, char* dst);
+	char* _op_order(char * str);
 	size_t size() {
 		int len;
 		for (len = 0; m_data[len]!= '\0'; len++)
@@ -54,14 +61,107 @@ inline _string::_string(const _string& other)
 		_strcpy(m_data, other.m_data);
 	}
 }
-
+//字符串拷贝函数
 inline char* _string::_strcpy(char* strDest, const char* strSrc)
 {
 	assert((strDest != NULL) && (strSrc != NULL));
 	char* strDestCopy = strDest;
 	while ((*strDest++ = *strSrc++) != '\0')
 		NULL;
-	return strDestCopy;
+	return strDestCopy;//返回字符串以支持链式表达式
+}
+//字符串拼接
+inline char * __cdecl _string::_strcat(char * strDest, const char * strSrc)
+{
+	if ((strDest == NULL) || (strSrc == NULL))
+		throw "buffer is empty";
+	char * cp = strDest;
+	while (*cp)
+		cp++; /* find end of strDest */
+	while (*cp++ = *strSrc++); /* Copy strSrc to end of strDest */
+	return(strDest); /* return strDest */
+}
+//计算字符个数（字符串长度）
+inline size_t _string::_strlen(const char * str)
+{
+	if(str == NULL)
+		throw "buffer is empty";
+	const char* tmp = str;
+	for (; *tmp != '\0'; ++tmp);
+	return tmp-str;
+}
+//字符串整体向左移动
+inline char* _string::_strmove(char* w, int m, bool fore)
+{
+	int i = 0, len = strlen(w);
+	char s = *w;
+	if (m > len)
+		m = len;
+	if (!fore)
+	{
+		while (w[m++] != '\0')
+		{
+			w[i++] = w[m - 1];
+		}
+		for (; i <= m; i++)
+		{
+			w[i] = s++;
+		}
+	}
+	else
+	{
+		for (int t = 0; t < len - m; t++)
+		{
+			w[t + m] = s + t;
+		}
+		while (w[len - m + (i++)] != '\0')
+		{
+			w[i - 1] = s + len - m + i - 1;
+		}
+	}
+	w[len] = '\0';
+	return w;
+}
+//单个字符移动8
+//字符串 
+inline char* _string::_charmove(char* w, int b, bool hind)
+{
+	char s = *w;
+	if (hind)
+	{
+		for (int i = 0; i < b; i++)
+		{
+			w[i] = s + i + 1;
+
+		}
+	}
+}
+//字符串逆序输出
+inline char* _string::_op_order(char * src, char *cst)
+{
+	int len = strlen(src);
+	char* dest = (char*)malloc(len + 1);//为\0分配一个空间
+	char *d = dest;
+	char* s = &src[len - 1];//指向最后一个字符
+	while (len-- != 0)
+		*d++ = *s--;
+	*d = 0;//尾部加\0
+	_strcpy(cst, dest);
+	assert(dest);
+	free(dest);//释放空间
+	return cst;
+}
+
+inline char* _string::_op_order(char * str)
+{
+	int len = strlen(str);
+	char t;
+	for (int i = 0; i < len / 2; i++)
+	{
+		t = str[i];
+		str[i] = str[len - i - 1]; str[len - i - 1] = t;
+	}
+	return str;
 }
 
 inline _string & _string::operator=(const _string & other)

@@ -1,6 +1,6 @@
 ﻿#include "encoding.h"
-#ifdef _LIBICONV_H
 
+#ifdef _LIBICONV_H
 //remarks:国标码与UTF-8互转
 //[IN] dest:转码格式,如“GBK”,"UTF-8";pbSrc:原码格式;input:原码字符串;ilen:原码字符串长度;
 //[OUT] output:转码字符串;olen:转码字符串长度。
@@ -17,6 +17,7 @@ int conv_charset(const char* dest,const char* pbSrc,const char *input,size_t ile
 		return (int)(convlen-olen);
 	}
 #endif // _LIBICONV_H
+
 //remarks:字符串转换为16进制数
 //[IN]:string 源字符串
 //[OUT]:cbuf 16进制转码字符
