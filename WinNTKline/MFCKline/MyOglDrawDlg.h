@@ -4,8 +4,8 @@
 #include	"Def/MacroDef.h"
 #include	"Chart/DepthChart.h"
 #include	"font/FontNehe.h"
-#include	"test/MyTester.h"
-#include	"Index/CMySet.h"
+#include	"ogl/GlModel.h"
+#include	"Index/CommSet.h"
 #include	"own/CNMenu.h"
 #include	"MFCKline.h"
 #include	"NET/tcpip.h"
@@ -65,7 +65,7 @@ public:
 	CString title;
 	CTabCtrl m_tab;
 	CToolBar m_tool;
-	CMyTester test;
+	GlModel model;
 	std::vector<char*> markdata;
 	OGLKview::Market trademarket;
 	DepthChart *depth= DepthChart::getDepth();
