@@ -1,4 +1,4 @@
-﻿#include "MyTester.h"
+﻿#include "GlModel.h"
 
 #define NUM 3
 
@@ -6,10 +6,6 @@ GLuint	texture[NUM];
 float _dX, _dY;
 int W, H;
 House house;
-
-CMyTester::CMyTester()
-{
-}
 
 BMP::BMP(char *FileName) {
 	Load(FileName);
@@ -104,64 +100,6 @@ AUX_RGBImageRec *LoadBMP(char *Filename)
 	return NULL;                                    // If Load Failed Return NULL
 }
 
-int CMyTester::LoadGLTexture()                                    // Load Bitmaps And Convert To Textures
-{
-	int load = FALSE;    									// Status Indicator
-	AUX_RGBImageRec *TextureImage[NUM];
-	for (int i = 0; i<NUM; i++)
-		memset(TextureImage, i, sizeof(void *) * 1);        // Set The Pointer To NULL
-															// Load The Bitmap, Check For Errors, If Bitmap's Not Found Quit
-	if ((TextureImage[0] = LoadBMP("bmp/qdu.bmp")) &&
-		(TextureImage[1] = LoadBMP("bmp/outdoor.bmp")) && (TextureImage[2] = LoadBMP("bmp/ball.bmp")))
-	{
-		load= TRUE;                            // Set The Status To TRUE
-		for (int k = 0; k<NUM; k++)
-		{
-			glGenTextures(1, &texture[k]);
-			// Create Nearest Filtered Texture
-			glBindTexture(GL_TEXTURE_2D, texture[k]);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, TextureImage[k]->sizeX, TextureImage[k]->sizeY, 0, GL_RGB, GL_UNSIGNED_BYTE, TextureImage[k]->data);
-		}
-	}
-	else 
-		return NUM;
-	for (int j = 0; j<NUM; j++)
-	{
-		if (TextureImage[j])                            // If Texture Exists
-		{
-			if (TextureImage[j]->data)              // If Texture Image Exists
-			{
-				free(TextureImage[j]->data);    // Free The Texture Image Memory
-			}
-			free(TextureImage[j]);                  // Free The Image Structure
-		}
-	}
-	return load;                                  // Return The Status
-}
-
-void CMyTester::Load__QDU(int wide, int tall)
-{
-	glOrtho(0, wide, tall, 0, -1, 1);
-	BMP *bmp = new BMP("bmp/qdu.bmp");
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	glOrtho(0.0, wide, tall, 0.0, -1.0, 1.0);
-	glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, bmp->texture);
-	glEnable(GL_ALPHA_TEST);//试描画
-	glBegin(GL_POLYGON);
-	glTexCoord2f(0.0f, 0.0f); glVertex2d(0, 0);
-	glTexCoord2f(0.0f, 1.0f); glVertex2d(0, tall);
-	glTexCoord2f(1.0f, 1.0f); glVertex2d(wide, tall);
-	glTexCoord2f(1.0f, 0.0f); glVertex2d(wide, 0);
-	glEnd();
-	glDisable(GL_ALPHA_TEST);
-	glDisable(GL_TEXTURE_2D);		
-	delete bmp;
-}
-
 void __outdoor(bool oo)
 {
 	glBindTexture(GL_TEXTURE_2D, texture[1]);
@@ -241,22 +179,7 @@ void __ball()
 	glPopMatrix();
 }
 
-CMyTester::~CMyTester()
-{
-
-}
-
-void CMyTester::testbegin()
-{
-	//pObj=new CMyTester();
-}
-
-void CMyTester::testend()
-{
-	//delete pObj;
-}
-
-void CMyTester::glTEST(bool oo)
+void GlModel::GlTexture(bool oo)
 {
 	glEnable(GL_TEXTURE_2D);							// Enable Texture Mapping
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE);					// Set The Blending Function For Translucency
@@ -276,7 +199,65 @@ void CMyTester::glTEST(bool oo)
 	__sphere(0, 0, 0, 0.2f, 20, 20);
 }
 
-void CMyTester::Model(int wide, int tall,float deltax, float deltay)
+int GlModel::LoadGLTexture()                                    // Load Bitmaps And Convert To Textures
+{
+	int load = FALSE;    									// Status Indicator
+	AUX_RGBImageRec *TextureImage[NUM];
+	for (int i = 0; i<NUM; i++)
+		memset(TextureImage, i, sizeof(void *) * 1);        // Set The Pointer To NULL
+															// Load The Bitmap, Check For Errors, If Bitmap's Not Found Quit
+	if ((TextureImage[0] = LoadBMP("bmp/qdu.bmp")) &&
+		(TextureImage[1] = LoadBMP("bmp/outdoor.bmp")) && (TextureImage[2] = LoadBMP("bmp/ball.bmp")))
+	{
+		load= TRUE;                            // Set The Status To TRUE
+		for (int k = 0; k<NUM; k++)
+		{
+			glGenTextures(1, &texture[k]);
+			// Create Nearest Filtered Texture
+			glBindTexture(GL_TEXTURE_2D, texture[k]);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, TextureImage[k]->sizeX, TextureImage[k]->sizeY, 0, GL_RGB, GL_UNSIGNED_BYTE, TextureImage[k]->data);
+		}
+	}
+	else 
+		return NUM;
+	for (int j = 0; j<NUM; j++)
+	{
+		if (TextureImage[j])                            // If Texture Exists
+		{
+			if (TextureImage[j]->data)              // If Texture Image Exists
+			{
+				free(TextureImage[j]->data);    // Free The Texture Image Memory
+			}
+			free(TextureImage[j]);                  // Free The Image Structure
+		}
+	}
+	return load;                                  // Return The Status
+}
+
+void GlModel::Load__QDU(int wide, int tall)
+{
+	glOrtho(0, wide, tall, 0, -1, 1);
+	BMP *bmp = new BMP("bmp/qdu.bmp");
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glOrtho(0.0, wide, tall, 0.0, -1.0, 1.0);
+	glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, bmp->texture);
+	glEnable(GL_ALPHA_TEST);//试描画
+	glBegin(GL_POLYGON);
+	glTexCoord2f(0.0f, 0.0f); glVertex2d(0, 0);
+	glTexCoord2f(0.0f, 1.0f); glVertex2d(0, tall);
+	glTexCoord2f(1.0f, 1.0f); glVertex2d(wide, tall);
+	glTexCoord2f(1.0f, 0.0f); glVertex2d(wide, 0);
+	glEnd();
+	glDisable(GL_ALPHA_TEST);
+	glDisable(GL_TEXTURE_2D);		
+	delete bmp;
+}
+
+void GlModel::Model(int wide, int tall,float deltax, float deltay)
 {
 	_dX = deltax;
 	_dY = deltay;
@@ -284,7 +265,7 @@ void CMyTester::Model(int wide, int tall,float deltax, float deltay)
 	BuildF16(W, H);
 }
 
-void CMyTester::House(int wide, int tall)
+void GlModel::House(int wide, int tall)
 {
 	house.InitRenderWin();
 	house.Render();
