@@ -24,7 +24,8 @@ public:
 	char* __cdecl _strcat(char * strDest, const char * strSrc);
 	size_t _strlen(const char* str);
 	char* _strmove(char* w, int m, bool fore=false);
-	char* _charmove(char* w, int b, bool hind = false/*默认向左*/);
+	char* _charmove(char* w, char c, int b, bool hind = false/*默认向左*/);
+	char* _intmove(char* w, int m, int b, bool hind = false);
 	char* _op_order(char * src, char* dst);
 	char* _op_order(char * str);
 	size_t size() {
@@ -122,19 +123,60 @@ inline char* _string::_strmove(char* w, int m, bool fore)
 	w[len] = '\0';
 	return w;
 }
-//单个字符移动8
-//字符串 
-inline char* _string::_charmove(char* w, int b, bool hind)
+//单个字符的移动
+/*字符串 w
+ *移动的字符 c
+ *移动的位数 b
+ *移动的方向 hind
+ */
+inline char* _string::_charmove(char* w, char c, int b, bool hind)
 {
+	int i = 0;
 	char s = *w;
+	char* t = w;
+	while (*t)
+	{
+		if (*t == c)
+			break;
+		++t;
+	}
+	int m = c - s;
 	if (hind)
 	{
-		for (int i = 0; i < b; i++)
-		{
-			w[i] = s + i + 1;
-
-		}
+		(b > (int)_strlen(w) - m) ? (b = (int)_strlen(w) - m) : NULL;
+		for (i = 0; i < b; i++)
+			w[m + i] = c + (i + 1);
+		w[m + b] = c;
 	}
+	else
+	{
+		(b > m) ? (b = m) : NULL;
+		for (i = 0; i < b; i++)
+			w[m - i] = c - (i + 1);
+		w[m - b] = c;
+	}
+	return w;
+}
+//m:字符位置
+inline char* _string::_intmove(char* w, int m, int b, bool hind)
+{
+	int i = 0;
+	m -= 1;
+	if (hind)
+	{
+		(b > (int)_strlen(w) - m) ? (b = (int)_strlen(w) - m) : NULL;
+		for (i = 0; i < b; i++)
+			w[m + i] = *w + m + (i + 1);
+		w[m + b] = *w + m;
+	}
+	else
+	{
+		(b > m) ? (b = m) : NULL;
+		for (i = 0; i < b; i++)
+			w[m - i] = *w + m - (i + 1);
+		w[m - b] = *w + m;
+	}
+	return w;
 }
 //字符串逆序输出
 inline char* _string::_op_order(char * src, char *cst)

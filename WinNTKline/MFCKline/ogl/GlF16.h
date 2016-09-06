@@ -1,5 +1,5 @@
-#ifndef MODEL_H
-#define MODEL_H
+#ifndef GLF16_H
+#define GLF16_H
 #include <math.h>
 #include <stdio.h>
 #include "texture.h"
@@ -7,9 +7,11 @@
 #ifdef __cplusplus
 extern "C"
 {
+#endif
 	extern float _dX, _dY;
 	void AdjustModel();
 	void BuildF16(int wide, int tall);
+#ifdef __cplusplus
 }
 #endif
-#endif // !MODEL_H
+#endif // !GLF16_H
