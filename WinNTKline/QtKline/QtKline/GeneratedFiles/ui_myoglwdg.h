@@ -76,7 +76,7 @@ public:
     void retranslateUi(QMainWindow *QtKlineClass)
     {
         QtKlineClass->setWindowTitle(QApplication::translate("QtKlineClass", "QtKline", 0));
-        menu->setTitle(QApplication::translate("QtKlineClass", "\350\217\234\345\215\225", 0));
+        menu->setTitle(QApplication::translate("QtKlineClass", "Menu", 0));
         toolBar->setWindowTitle(QApplication::translate("QtKlineClass", "toolBar", 0));
     } // retranslateUi
 

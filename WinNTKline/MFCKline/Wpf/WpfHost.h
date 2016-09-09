@@ -6,14 +6,8 @@ using namespace WpfKline;
 ref class WpfHost
 {
 public:
-
-	WpfHost()
-	{
-	}
-
-	virtual ~WpfHost()
-	{
-	}
+	WpfHost(){}
+	virtual ~WpfHost(){}
 	static WpfKline::MainWindow ^WpfWindow;
 };
 

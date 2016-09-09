@@ -227,6 +227,9 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\gSOAPWeb\soap\soapH.h" />
+    <ClInclude Include="..\gSOAPWeb\soap\stdsoap2.h" />
+    <ClInclude Include="..\gSOAPWeb\soap\web.h" />
     <ClInclude Include="boost\boostest.h" />
     <ClInclude Include="Chart\DepthChart.h" />
     <ClInclude Include="Def\MacroDef.h" />
@@ -256,6 +259,9 @@
     <ClInclude Include="Wpf\WpfHost.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\gSOAPWeb\soap\soapC.cpp" />
+    <ClCompile Include="..\gSOAPWeb\soap\soapClient.cpp" />
+    <ClCompile Include="..\gSOAPWeb\soap\stdsoap2.cpp" />
     <ClCompile Include="Chart\DepthChart.cpp" />
     <ClCompile Include="dos\DOSCout.cpp" />
     <ClCompile Include="Font\FontNehe.cc" />
@@ -284,6 +290,7 @@
     <ResourceCompile Include="MFCKline.rc" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\gSOAPWeb\soap\web.nsmap" />
     <None Include="Index\Indexes.inl" />
     <None Include="res\MFCKline.rc2" />
   </ItemGroup>

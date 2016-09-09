@@ -201,10 +201,10 @@ bool MyOglDrawDlg::GetMarkDatatoDraw()
 	CString csDirPath((LPCSTR)exeFullPath);
 	csDirPath = csDirPath.Left(csDirPath.ReverseFind(_T('\\')));
 	std::string sSystemPath = csDirPath.GetBuffer(csDirPath.GetLength());
-	csDirPath += "\\*.txt";
+	csDirPath += "\\*.dat";
 	FindFirstFile(csDirPath.GetBuffer(), &fileData);
 	std::string sSystemFullPath = sSystemPath + _T("\\") + fileData.cFileName;
-	std::string sWritePath = sSystemPath + _T("\\") + _T("MACD.txt");
+	std::string sWritePath = sSystemPath + _T("\\") + _T("MACD.TXT");
 	const char* filename = sSystemFullPath.c_str();
 	const char* writefile = sWritePath.c_str();
 	//打开文件流
