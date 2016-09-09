@@ -41,7 +41,7 @@ BEGIN_MESSAGE_MAP(CMFCKlineDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_OGL, &CMFCKlineDlg::OnBnClickedOgl)
 	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST, &CMFCKlineDlg::OnLvnItemchangedList)
 	ON_NOTIFY(NM_DBLCLK, IDC_LIST, &CMFCKlineDlg::OnNMDblclkList)
-	ON_BN_CLICKED(IDOK, &CMFCKlineDlg::OnBnClickedOk)
+	ON_BN_CLICKED(IDOK, &CMFCKlineDlg::OnBnClickedOK)
 END_MESSAGE_MAP()
 
 
@@ -330,7 +330,7 @@ int CMFCKlineDlg::OpenQtexe()
 }
 
 
-void CMFCKlineDlg::OnBnClickedOk()
+void CMFCKlineDlg::OnBnClickedOK()
 {
 	CDialogEx::OnOK();
 }

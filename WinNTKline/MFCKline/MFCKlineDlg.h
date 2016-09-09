@@ -54,5 +54,5 @@ private:
 	int item = 65535;
 	HWND m_hBottom;
 public:
-	afx_msg void OnBnClickedOk();
+	afx_msg void OnBnClickedOK();
 };

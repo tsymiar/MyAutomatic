@@ -99,6 +99,15 @@
     <ClInclude Include="boost\boostest.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="..\gSOAPWeb\soap\web.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gSOAPWeb\soap\soapH.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gSOAPWeb\soap\stdsoap2.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MFCKline.cpp">
@@ -158,6 +167,15 @@
     <ClCompile Include="ogl\GlModel.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\gSOAPWeb\soap\soapC.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gSOAPWeb\soap\soapClient.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gSOAPWeb\soap\stdsoap2.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="MFCKline.rc">
@@ -171,6 +189,7 @@
     <None Include="Index\Indexes.inl">
       <Filter>头文件</Filter>
     </None>
+    <None Include="..\gSOAPWeb\soap\web.nsmap" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\MFCKline.ico">

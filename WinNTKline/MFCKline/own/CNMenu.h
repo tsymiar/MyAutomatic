@@ -100,7 +100,7 @@ inline void CNMenu::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 	pDC->GetCurrentFont()->GetLogFont(&fontInfo);
 
 	fontInfo.lfHeight = 20;
-	lstrcpy(fontInfo.lfFaceName, _T("宋体"));
+	lstrcpy(fontInfo.lfFaceName, _T("Arial"));
 	CFont fontCh;
 	fontCh.CreateFontIndirect(&fontInfo);
 	pDC->SelectObject(&fontCh);

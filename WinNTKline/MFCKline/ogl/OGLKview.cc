@@ -561,17 +561,17 @@ int OGLKview::DrawDetail(OGLKview::Market market)
 	glViewport(0, pory, widt, heig);
 	glColor3f(0, 0, 0);
 	glBegin(GL_QUADS);
-	//glVertex3f(x,y,z);
-	glTexCoord2f(0.f, 0.f);
-	glVertex3f(-1.03f, 0.333f, 0);
-	//←
+	//↗glVertex3f(x,y,z);
 	glTexCoord2f(1.f, 1.f);
+	glVertex3f(-1.03f, 0.333f, 0);
+	//↘
+	glTexCoord2f(1.f, 0.f);
 	glVertex3f(-1.3f, 0.333f, 0);
-	//丄
-	glTexCoord2f(1.f, 0.f);
+	//↙丄
+	glTexCoord2f(0.f, 0.f);
 	glVertex3f(-1.3f, 1.2417f, 0);
-	//→
-	glTexCoord2f(1.f, 0.f);
+	//↖
+	glTexCoord2f(0.f, 1.f);
 	glVertex3f(-1.03f, 1.2417f, 0);
 	glEnd();
 

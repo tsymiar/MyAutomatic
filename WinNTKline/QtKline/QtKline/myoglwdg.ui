@@ -45,7 +45,7 @@
    </property>
    <widget class="QMenu" name="menu">
     <property name="title">
-     <string>菜单</string>
+     <string>Menu</string>
     </property>
     <addaction name="separator"/>
    </widget>
