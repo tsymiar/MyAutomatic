@@ -1,15 +1,15 @@
 ﻿#pragma once
 //#include	<afxstat_.h>
+#include	"MFCKline.h"
+#include	"afxdialogex.h"
 #include	"OGL/OGLKview.h"
+#include	"NET/tcpip.h"
 #include	"Def/MacroDef.h"
 #include	"Chart/DepthChart.h"
 #include	"font/FontNehe.h"
-#include	"ogl/GlModel.h"
 #include	"Index/CommSet.h"
 #include	"own/CNMenu.h"
-#include	"MFCKline.h"
-#include	"NET/tcpip.h"
-#include	"afxdialogex.h"
+#include	"ogl/GlModel.h"
 
 using namespace freetype;
 // MyOglDrawDlg 对话框

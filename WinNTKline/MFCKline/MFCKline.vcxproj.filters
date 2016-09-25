@@ -99,13 +99,10 @@
     <ClInclude Include="boost\boostest.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\gSOAPWeb\soap\web.h">
+    <ClInclude Include="web\web.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\gSOAPWeb\soap\soapH.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\gSOAPWeb\soap\stdsoap2.h">
+    <ClInclude Include="NET\Gethttp.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -167,13 +164,7 @@
     <ClCompile Include="ogl\GlModel.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\gSOAPWeb\soap\soapC.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gSOAPWeb\soap\soapClient.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gSOAPWeb\soap\stdsoap2.cpp">
+    <ClCompile Include="NET\Gethttp.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

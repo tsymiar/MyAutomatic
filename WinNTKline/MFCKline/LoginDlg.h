@@ -1,24 +1,23 @@
-#pragma once
+ï»¿#pragma once
 #include "afxwin.h"
 
-
-// CLoginDlg ¶Ô»°¿ò
+// CLoginDlg å¯¹è¯æ¡†
 
 class CLoginDlg : public CDialogEx
 {
 	DECLARE_DYNAMIC(CLoginDlg)
 
 public:
-	CLoginDlg(CWnd* pParent = NULL);   // ±ê×¼¹¹Ôìº¯Êı
+	CLoginDlg(CWnd* pParent = NULL);   // æ ‡å‡†æ„é€ å‡½æ•°
 	virtual ~CLoginDlg();
 
-// ¶Ô»°¿òÊı¾İ
+// å¯¹è¯æ¡†æ•°æ®
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_LOGIN };
 #endif
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV Ö§³Ö
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV æ”¯æŒ
 
 	DECLARE_MESSAGE_MAP()
 public:
