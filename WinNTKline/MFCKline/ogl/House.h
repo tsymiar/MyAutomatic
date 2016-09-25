@@ -12,7 +12,7 @@
 
 #define INTS int
 #define REAL float
-#define Error     0
+#define __error   0
 #define NoError   1
 #define FALSE     0
 #define TRUE      1

@@ -1,13 +1,15 @@
-// LoginDlg.cpp : ÊµÏÖÎÄ¼ş
+ï»¿// LoginDlg.cpp : å®ç°æ–‡ä»¶
 //
-
-#include "stdafx.h"
 #include "MFCKline.h"
+//åº”åŠ åˆ°å…·ä½“æºæ–‡ä»¶ä¸­
+#include "web/web.h"
+#include "web/web.nsmap"
+
 #include "LoginDlg.h"
+#include "stdafx.h"
 #include "afxdialogex.h"
 
-
-// CLoginDlg ¶Ô»°¿ò
+// CLoginDlg å¯¹è¯æ¡†
 
 IMPLEMENT_DYNAMIC(CLoginDlg, CDialogEx)
 
@@ -29,7 +31,6 @@ void CLoginDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_PSW, m_password);
 }
 
-
 BEGIN_MESSAGE_MAP(CLoginDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_LOGIN, &CLoginDlg::OnBnClickedLogin)
 	ON_BN_CLICKED(IDCANCEL, &CLoginDlg::OnBnClickedCancel)
@@ -37,12 +38,13 @@ BEGIN_MESSAGE_MAP(CLoginDlg, CDialogEx)
 END_MESSAGE_MAP()
 
 
-// CLoginDlg ÏûÏ¢´¦Àí³ÌĞò
+// CLoginDlg æ¶ˆæ¯å¤„ç†ç¨‹åº
 
 
 void CLoginDlg::OnBnClickedLogin()
 {
-
+	std::string s;
+	ns2__encrypt("dvf",s);
 }
 
 

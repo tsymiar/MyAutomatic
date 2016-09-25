@@ -79,7 +79,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <CodeAnalysisRuleSet>NativeRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <IncludePath>F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\MFCKline\font;F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\MFCKline;F:\dell-pc\lib\boost\;$(IncludePath)</IncludePath>
+    <IncludePath>F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\MFCKline\Index;F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\gSOAPWeb\soap;F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\MFCKline\font;F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\MFCKline;F:\dell-pc\lib\boost\;$(IncludePath)</IncludePath>
     <ReferencePath>$(ReferencePath)</ReferencePath>
     <ExecutablePath>$(ExecutablePath)</ExecutablePath>
     <LibraryPath>F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\MFCKline\font\lib;$(LibraryPath)</LibraryPath>
@@ -89,7 +89,7 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
     <IntDir>$(Configuration)\</IntDir>
-    <IncludePath>F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\MFCKline\font;F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\MFCKline;F:\dell-pc\lib\boost\;$(IncludePath)</IncludePath>
+    <IncludePath>F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\MFCKline\Index;F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\gSOAPWeb\soap;F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\MFCKline\font;F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\MFCKline;F:\dell-pc\lib\boost\;$(IncludePath)</IncludePath>
     <ReferencePath>$(ReferencePath)</ReferencePath>
     <ExecutablePath>$(ExecutablePath)</ExecutablePath>
     <LibraryPath>F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\MFCKline\font\lib;$(LibraryPath)</LibraryPath>
@@ -227,9 +227,6 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\gSOAPWeb\soap\soapH.h" />
-    <ClInclude Include="..\gSOAPWeb\soap\stdsoap2.h" />
-    <ClInclude Include="..\gSOAPWeb\soap\web.h" />
     <ClInclude Include="boost\boostest.h" />
     <ClInclude Include="Chart\DepthChart.h" />
     <ClInclude Include="Def\MacroDef.h" />
@@ -242,6 +239,7 @@
     <ClInclude Include="MFCKline.h" />
     <ClInclude Include="MFCKlineDlg.h" />
     <ClInclude Include="MyOglDrawDlg.h" />
+    <ClInclude Include="NET\Gethttp.h" />
     <ClInclude Include="NET\TCPIP.h" />
     <ClInclude Include="ogl\bitmap.h" />
     <ClInclude Include="ogl\GlModel.h" />
@@ -256,12 +254,10 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Stock\Stock.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="web\web.h" />
     <ClInclude Include="Wpf\WpfHost.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\gSOAPWeb\soap\soapC.cpp" />
-    <ClCompile Include="..\gSOAPWeb\soap\soapClient.cpp" />
-    <ClCompile Include="..\gSOAPWeb\soap\stdsoap2.cpp" />
     <ClCompile Include="Chart\DepthChart.cpp" />
     <ClCompile Include="dos\DOSCout.cpp" />
     <ClCompile Include="Font\FontNehe.cc" />
@@ -270,6 +266,7 @@
     <ClCompile Include="MFCKline.cpp" />
     <ClCompile Include="MFCKlineDlg.cpp" />
     <ClCompile Include="MyOglDrawDlg.cpp" />
+    <ClCompile Include="NET\Gethttp.cpp" />
     <ClCompile Include="NET\TCPIP.cpp" />
     <ClCompile Include="ogl\bitmap.c">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>

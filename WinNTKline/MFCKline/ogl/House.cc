@@ -404,3 +404,7 @@ void House::CleanAllTexture()
 House::~House()
 {
 }
+
+#ifdef __error //ws2tcpip.h 'Error' redefined.
+#undef __error
+#endif

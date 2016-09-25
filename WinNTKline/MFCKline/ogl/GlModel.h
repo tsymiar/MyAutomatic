@@ -10,7 +10,7 @@
 #include "ogl\House.h"
 #include "GL\glaux.h"
 //链接器——》输入——》附加依赖项：legacy_studio_definitions.lib
-#pragma comment(lib, "GL\\glaux.lib") 
+#pragma comment(lib, "GL/glaux.lib") 
 
 class GlModel
 {
@@ -33,4 +33,3 @@ public:
 	BMP(char *FileName);
 };
 #endif // !GLMODEL_H_
-

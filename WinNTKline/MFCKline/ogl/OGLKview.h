@@ -15,6 +15,7 @@
 #endif
 #define NO_WARN_MBCS_MFC_DEPRECATION
 #define BUFFER_OFFSET(offset) ((void*)(offset))
+#if !def _TCPIP_H_
 #include	<cfloat>
 #include	<cmath>
 #include	<ctime>
@@ -33,11 +34,16 @@
 #include	<plus1second.h>
 #ifdef _WIN32//__linux
 #include "..\stdafx.h"
+#ifdef Error //ws2tcpip.h 'Error' redefined.
+#undef Error
+#endif
 #include <Windows.h> 
+#pragma comment(lib, "WS2_32.lib")
 #include <WinSock2.h>
 #include <process.h>
 #endif
 #pragma comment(lib, "freetype.lib") 
+#endif
 #include	<font/ft2build.h>
 #include	FT_FREETYPE_H  
 #include	<GL/glew.h>  
