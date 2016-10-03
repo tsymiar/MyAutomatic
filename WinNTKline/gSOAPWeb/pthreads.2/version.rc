@@ -116,7 +116,7 @@ BEGIN
             VALUE "ProductName", "POSIX Threads for Windows LPGL\0"
             VALUE "ProductVersion", PTW32_VERSION_STRING
             VALUE "FileVersion", PTW32_VERSION_STRING
-            VALUE "FileDescription", PTW32_VERSIONINFO_DESCRIPTION
+//            VALUE "FileDescription", PTW32_VERSIONINFO_DESCRIPTION
             VALUE "InternalName", PTW32_VERSIONINFO_NAME
             VALUE "OriginalFilename", PTW32_VERSIONINFO_NAME
             VALUE "CompanyName", "Open Source Software community LGPL\0"
