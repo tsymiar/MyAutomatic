@@ -1,16 +1,18 @@
 #ifndef _SQLDB_H
 #define _SQLDB_H
-#include <winsock.h>
+#include <sys/socket.h>
+#include <mysql/mysql.h>
 #include <iostream>
+#include <cstdlib>
 #include <string>
-#include <mysql.h>
 
-#pragma comment (lib,"ws2_32.lib")
-#pragma comment(lib,"sql/libmysql.lib")
+//#pragma comment (lib,"ws2_32.lib")
+//#pragma comment(lib,"mysql/libmysql.lib")
+
 #  ifdef __cplusplus
 extern "C" {
 #  endif /* __cplusplus */
-	int sqldb();
+	int sqlDB();
 #  ifdef __cplusplus
 }
 #  endif

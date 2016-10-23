@@ -1,10 +1,10 @@
-//gsoap api service name: web
+//gsoap api service name: myweb
 //gsoap api service style: rpc
-//gsoap api service executable: web.cgi 
+//gsoap api service executable: myweb.cgi 
 //gsoap api service encoding: encoded
-//gsoap api service namespace: http://localhost/web.wsdl
-//gsoap api service location: http://localhost/web.cgi
-//gsoap api schema  namespace: urn:web
+//gsoap api service namespace: http://localhost/myweb.wsdl
+//gsoap api service location: http://localhost/myweb.cgi
+//gsoap api schema  namespace: urn:myweb
 
 typedef		char*	xsd_string;
 typedef		long	xsd_int;

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions name="myweb"
+  targetNamespace="http://localhost/myweb.wsdl"
+ xmlns:tns="http://localhost/myweb.wsdl"
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  xmlns:api="urn:myweb"
+  xmlns:SOAP="http://schemas.xmlsoap.org/wsdl/soap/"
+  xmlns:HTTP="http://schemas.xmlsoap.org/wsdl/http/"
+  xmlns:MIME="http://schemas.xmlsoap.org/wsdl/mime/"
+  xmlns:DIME="http://schemas.xmlsoap.org/ws/2002/04/dime/wsdl/"
+  xmlns:WSDL="http://schemas.xmlsoap.org/wsdl/"
+  xmlns="http://schemas.xmlsoap.org/wsdl/">
+
+<types>
+
+  <schema targetNamespace="urn:myweb"
+    xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+    xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:api="urn:myweb"
+    xmlns="http://www.w3.org/2001/XMLSchema"
+    elementFormDefault="unqualified"
+    attributeFormDefault="unqualified">
+    <import namespace="http://schemas.xmlsoap.org/soap/encoding/"/>
+  </schema>
+
+</types>
+
+<message name="encryptRequest">
+  <part name="input" type="xsd:string"/><!-- api__encrypt::input -->
+</message>
+
+<message name="encryptResponse">
+  <part name="output" type="xsd:string"/><!-- api__encrypt::output -->
+</message>
+
+<message name="login-by-key">
+  <part name="usr" type="xsd-string"/><!-- api__login_by_key::usr -->
+  <part name="psw" type="xsd-string"/><!-- api__login_by_key::psw -->
+</message>
+
+<message name="result">
+  <part name="flag" type="xsd-int"/><!-- api__login_by_key::flag -->
+  <part name="id" type="xsd-int"/><!-- api__login_by_key::id -->
+  <part name="age" type="xsd-int"/><!-- api__login_by_key::age -->
+  <part name="user" type="xsd-string"/><!-- api__login_by_key::user -->
+  <part name="email" type="xsd-string"/><!-- api__login_by_key::email -->
+</message>
+
+<portType name="mywebPortType">
+  <operation name="encrypt">
+    <documentation>Service definition of function api__encrypt</documentation>
+    <input message="tns:encryptRequest"/>
+    <output message="tns:encryptResponse"/>
+  </operation>
+  <operation name="login-by-key">
+    <documentation>Service definition of function api__login_by_key</documentation>
+    <input message="tns:login-by-key"/>
+    <output message="tns:result"/>
+  </operation>
+</portType>
+
+<binding name="myweb" type="tns:mywebPortType">
+  <SOAP:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
+  <operation name="encrypt">
+    <SOAP:operation style="rpc" soapAction=""/>
+    <input>
+          <SOAP:body use="encoded" namespace="urn:myweb" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+    </input>
+    <output>
+          <SOAP:body use="encoded" namespace="urn:myweb" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+    </output>
+  </operation>
+  <operation name="login-by-key">
+    <SOAP:operation style="rpc" soapAction=""/>
+    <input>
+          <SOAP:body use="encoded" namespace="urn:myweb" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+    </input>
+    <output>
+          <SOAP:body use="encoded" namespace="urn:myweb" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+    </output>
+  </operation>
+</binding>
+
+<service name="myweb">
+  <documentation>gSOAP 2.8.30 generated service definition</documentation>
+  <port name="myweb" binding="tns:myweb">
+    <SOAP:address location="http://localhost/myweb.cgi/myweb.cgi"/>
+  </port>  <port name="myweb" binding="tns:myweb">
+    <SOAP:address location="http://localhost/myweb.cgi"/>
+  </port>
+</service>
+
+</definitions>
