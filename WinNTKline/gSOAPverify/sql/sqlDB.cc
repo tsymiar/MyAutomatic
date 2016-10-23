@@ -1,16 +1,16 @@
-#include "sqldb.h"
+#include "sqlDB.h"
 
 using namespace std;
 
-int rows;
-string sql;
-MYSQL mysql;
-MYSQL_RES *result = nullptr;
-MYSQL_FIELD *field = NULL;
-unsigned int fieldcount;
-MYSQL_ROW fetch = NULL;
+	int rows;
+	string sql;
+	MYSQL mysql;
+	MYSQL_RES *result = nullptr;
+	MYSQL_FIELD *field = NULL;
+	unsigned int fieldcount;
+	MYSQL_ROW fetch = NULL;
 
-int sqldb() {
+int sqlDB() {
 
 	if (0 != mysql_library_init(0, NULL, NULL))
 		cout << "lib init fail." << endl;

@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <None Include="ClassDiagram.cd" />
+    <None Include="soap\myweb.nsmap" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{f31d4cd6-2829-4fb9-8c2b-b8c94dbf3365}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{6ad59e50-c53e-4fb2-822a-1b243e5b0ce7}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="soap\soapC.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="soap\soapServer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="soap\stdsoap2.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="sql\sqlDB.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="MyWeb.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="sql\sqlDB.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="MyWeb.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="thdpool\thread_pool.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="soap\stdsoap2.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

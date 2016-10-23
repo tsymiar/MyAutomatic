@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-  <schema targetNamespace="urn:web"
+  <schema targetNamespace="urn:myweb"
     xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
     xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-    xmlns:api="urn:web"
+    xmlns:api="urn:myweb"
     xmlns="http://www.w3.org/2001/XMLSchema"
     elementFormDefault="unqualified"
     attributeFormDefault="unqualified">
