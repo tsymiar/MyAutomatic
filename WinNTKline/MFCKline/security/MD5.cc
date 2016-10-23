@@ -293,8 +293,8 @@ void md5_file(FILE *fp,char out[])
 	memcpy(x + 14, flen, 8);    //文件末尾加入原文件的bit长度
 	md5_f_set(x);
 	fclose(fp);
-	sprintf(out, /*sizeof(out),*/ "MD5 Code:%08x%08x%08x%08x\n", PP(A), PP(B), PP(C), PP(D));  //高低位逆反输出
-	printf("%s", out);
+	sprintf(out, /*sizeof(out),*/ "%08x%08x%08x%08x", PP(A), PP(B), PP(C), PP(D));  //高低位逆反输出
+	printf("MD5Code:%s\n", out);
 }
 
 void md5_str(char *input, char *output)
@@ -305,6 +305,20 @@ void md5_str(char *input, char *output)
 	md5_update(&context, (unsigned char *)input, len);
 	md5_final((unsigned char *)output, &context);
 }
+
+/*从32字节的MD5字符串的中间截取16个字符*/  
+char* get_Hash(char *md5, int len, char *dst)
+{  
+    char *in = md5;  
+    char *out = dst;  
+	int m=16;
+    //int len = strlen(md5);  
+    if(m>len) m = len-8;
+    in += 8;  
+    while(m--) *(out++) = *(in++);  
+    *(out++)='\0';  
+    return dst;  
+} 
 
 void test_s_md5()
 {
@@ -326,9 +340,9 @@ void test_s_md5()
 		  printf("%02x", (unsigned char)digest[i]);
 	  printf("\n");
 	  hex_to_str((unsigned char*)digest, out);
-	  printf("字符串值:%s", out);
+	  printf("32字节：%s\n",out);
+	  printf("16字节：\t%s\n",get_Hash(out, 16, out));
 	  //getchar();
-	  printf("\n");
 	}
 }
 
@@ -342,7 +356,7 @@ void test_f_md5()
 #ifdef _MSC_VER
 		gets_s(filename);  //用get函数,避免scanf以空格分割数据,
 #else
-		gets(filename);
+		fgets(filename,1024,fp);
 #endif
 		if (filename[0]==34) filename[strlen(filename)-1]=0,strcpy(filename,filename+1);  //支持文件拖曳,但会多出双引号,这里是处理多余的双引号
 		if (!strcmp(filename,"exit")) exit(0);  //输入exit退出
