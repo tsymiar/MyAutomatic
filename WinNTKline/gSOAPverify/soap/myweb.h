@@ -98,16 +98,15 @@ A commercial-use license is available from Genivia, Inc., contact@genivia.com
  *   std::vector                                                              *
  *                                                                            *
 \******************************************************************************/
-
-template <class T> class std::vector;
-
+//template <class T> class std::vector;
+	#include <string>
 /******************************************************************************\
  *                                                                            *
  * Import                                                                     *
  *                                                                            *
 \******************************************************************************/
 
-#import "stl.h"	// enable STL containers when used (option -s removes STL dependency)
+//#import "stl.h"	// enable STL containers when used (option -s removes STL dependency)
 
 /******************************************************************************\
  *                                                                            *
