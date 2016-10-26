@@ -20,7 +20,7 @@ public:
 	_string& operator+(const _string& other)const;
 	bool operator==(const _string&);
 	char& operator[](unsigned int);
-	char* _strcpy(char* strDest, const char* strSrc);
+	char* _strcpy(char* strDest, const char* strSrc, int N);
 	char* __cdecl _strcat(char * strDest, const char * strSrc);
 	size_t _strlen(const char* str);
 	char* _strmove(char* w, int m, bool fore=false);
@@ -63,11 +63,12 @@ inline _string::_string(const _string& other)
 	}
 }
 //字符串拷贝函数
-inline char* _string::_strcpy(char* strDest, const char* strSrc)
+inline char* _string::_strcpy(char* strDest, const char* strSrc, int N)
 {
 	assert((strDest != NULL) && (strSrc != NULL));
+	size_t available = N;
 	char* strDestCopy = strDest;
-	while ((*strDest++ = *strSrc++) != '\0')
+	while ((*strDest++ = *strSrc++) != '\0' && --available > 0)
 		NULL;
 	return strDestCopy;//返回字符串以支持链式表达式
 }
