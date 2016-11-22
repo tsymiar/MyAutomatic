@@ -3,7 +3,7 @@
 #include "MFCKline.h"
 #include "MFCKlineDlg.h"
 #include "afxdialogex.h"
-
+//#include  <vld.h>
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -21,11 +21,13 @@ struct ProcessWindow
 CMFCKlineDlg::CMFCKlineDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(IDD_MFCKLINE_DIALOG, pParent)
 {
+	//_CrtSetBreakAlloc(2222);
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
 
 CMFCKlineDlg::~CMFCKlineDlg()
 {
+	_CrtDumpMemoryLeaks();
 }
 
 void CMFCKlineDlg::DoDataExchange(CDataExchange* pDX)
@@ -103,18 +105,18 @@ HCURSOR CMFCKlineDlg::OnQueryDragIcon()
 void CMFCKlineDlg::OnBnClickedOgl()
 {
 	MyOglDrawDlg *pTD = new MyOglDrawDlg();
-	pTD->Create(IDD_OGL);
+	pTD->Create(IDD_OGLIMG);
 	pTD->ShowWindow(SW_SHOWNORMAL);
 }
 
 void CMFCKlineDlg::OnLvnItemchangedList(NMHDR *pNMHDR, LRESULT *pResult)
 {
+	CLoginDlg logdlg;
+	CMFCKlineDlg newdlg;
 	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
 	POSITION curPos = m_list.GetFirstSelectedItemPosition();
 	const char Open[4][8] = { "K-line","Qt","WPF","OK" };
 	int N = 0;
-	CLoginDlg logdlg;
-	CMFCKlineDlg newdlg;
 	if(!curPos)
 		::SendMessage(m_hBottom, SB_SETTEXT, 0, (LPARAM)TEXT(Open[3]));
 	else
@@ -139,10 +141,10 @@ void CMFCKlineDlg::OnLvnItemchangedList(NMHDR *pNMHDR, LRESULT *pResult)
 			}
 			N = item = m_list.GetNextSelectedItem(curPos);
 			::SendMessage(m_hBottom, SB_SETTEXT, 0, (LPARAM)TEXT(Open[item]));
-			if (strcmp(Open[item], "Qt") == 0)
-				m_Mod.FloatDrift("Qt框架之K线图");
 		}
 	}
+	if (strcmp(Open[item], "Qt") == 0)
+		m_Mod.FloatDrift("Qt框架之K线图");
 	*pResult = 0;
 }
 

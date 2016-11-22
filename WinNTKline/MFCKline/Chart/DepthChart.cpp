@@ -89,7 +89,7 @@ void DepthChart::DrawItem(OGLKview::Item item, int col)
 
 int DepthChart::DrawItem(OGLKview::Item item,bool mode)
 {
-	char ti[8],time[8] = " ";
+	char ti[8], time[8] = " ";
 	OGLKview::Color4f color = { 1,1,1,1 };
 	OGLKview::Point pt = { 0.72f,Py - 0.666f };
 	item.time.min <= 9 ? sprintf(time, "0%d", item.time.min) : sprintf(time, "%d", item.time.min);

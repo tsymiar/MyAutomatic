@@ -99,10 +99,16 @@
     <ClInclude Include="boost\boostest.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="web\web.h">
+    <ClInclude Include="NET\Gethttp.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="NET\Gethttp.h">
+    <ClInclude Include="..\gSOAPverify\soap\stdsoap2.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ctl\CWebBrowser2.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RegistDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -140,9 +146,6 @@
     <ClCompile Include="Index\CPUID.H">
       <Filter>头文件</Filter>
     </ClCompile>
-    <ClCompile Include="security\AES.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="security\encoding.cc">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -161,10 +164,28 @@
     <ClCompile Include="ogl\GlF16.cc">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="ogl\GlModel.cpp">
+    <ClCompile Include="NET\Gethttp.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="NET\Gethttp.cpp">
+    <ClCompile Include="security\AES.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ogl\GlModel.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gSOAPverify\soap\soapC.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gSOAPverify\soap\soapClient.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gSOAPverify\soap\stdsoap2.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ctl\CWebBrowser2.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RegistDlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -180,7 +201,8 @@
     <None Include="Index\Indexes.inl">
       <Filter>头文件</Filter>
     </None>
-    <None Include="..\gSOAPWeb\soap\web.nsmap" />
+    <None Include="..\gSOAPverify\soap\myweb.nsmap" />
+    <None Include="ClassDiagram.cd" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\MFCKline.ico">

@@ -20,7 +20,7 @@ public:
 	_string& operator+(const _string& other)const;
 	bool operator==(const _string&);
 	char& operator[](unsigned int);
-	char* _strcpy(char* strDest, const char* strSrc, int N);
+	char* _strcpy(char* strDest, const char* strSrc, int N = 1024);
 	char* __cdecl _strcat(char * strDest, const char * strSrc);
 	size_t _strlen(const char* str);
 	char* _strmove(char* w, int m, bool fore=false);

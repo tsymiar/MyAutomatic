@@ -1,0 +1,1708 @@
+  AmCharts.Windows.Stock.Properties.Resources.resources - Embedded, ContainedInManifestFile, 
+  AmCharts.Windows.Stock.g.resources - Embedded, ContainedInManifestFile, 
+  AmCharts.Windows.Stock.StockChart.Icon.png - Embedded, ContainedInManifestFile, 
+ImageRuntimeVersion: v2.0.50727
+Assembly AmCharts.Windows.Stock, Version=1.1.0.0, Culture=neutral, PublicKeyToken=6a0af00bd7de39d1: 
+	hash=SHA1, flags=PublicKey
+Assembly mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089: 
+	hash=None, flags=None
+Assembly PresentationFramework, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35: 
+	hash=None, flags=None
+Assembly WindowsBase, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35: 
+	hash=None, flags=None
+Assembly System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089: 
+	hash=None, flags=None
+Assembly PresentationCore, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35: 
+	hash=None, flags=None
+Assembly System.Core, Version=3.5.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089: 
+	hash=None, flags=None
+Assembly System.Deployment, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a: 
+	hash=None, flags=None
+Struct AmCharts.Windows.Stock.Primitives.LegendItemType: AutoLayout, AnsiClass, Class, Public, Sealed
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    AmCharts.Windows.Stock.Primitives.LegendItemType None = 0 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Primitives.LegendItemType Value = 1 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Primitives.LegendItemType ValueChange = 2 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Primitives.LegendItemType PercentChange = 3 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Primitives.LegendItemType OpenClose = 4 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Primitives.LegendItemType Ohlc = 5 : Public, Static, Literal, HasDefault
+Struct AmCharts.Windows.Stock.Primitives.EventBulletType: AutoLayout, AnsiClass, Class, Public, Sealed
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    AmCharts.Windows.Stock.Primitives.EventBulletType Inherit = 0 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Primitives.EventBulletType None = 1 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Primitives.EventBulletType Sign = 2 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Primitives.EventBulletType Flag = 3 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Primitives.EventBulletType Pin = 4 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Primitives.EventBulletType Round = 5 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Primitives.EventBulletType Square = 6 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Primitives.EventBulletType HorizontalLine = 7 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Primitives.EventBulletType VerticalLine = 8 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Primitives.EventBulletType ArrowUp = 9 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Primitives.EventBulletType ArrowDown = 10 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Primitives.EventBulletType TriangleLeft = 11 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Primitives.EventBulletType TriangleRight = 12 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Primitives.EventBulletType HorizontalBand = 13 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Primitives.EventBulletType VerticalBand = 14 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Primitives.EventBulletType GraphHighlight = 15 : Public, Static, Literal, HasDefault
+Class AmCharts.Windows.Stock.Primitives.Axis: AutoLayout, AnsiClass, Class, Public, Abstract, BeforeFieldInit
+  :System.Windows.Controls.ContentControl
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Fields:
+    System.Windows.DependencyProperty OrientationProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty LengthProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty StrokeProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty StrokeThicknessProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty TickLengthProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ValuesEnabledProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ValuesFrequencyProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ValuesRotationAngleProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty SkipFirstValueProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty SkipLastValueProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ValuesForegroundProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ValuesBackgroundProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ValuesFontSizeProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ValuesInsideProperty : Public, Static, InitOnly
+  Properties:
+    System.Windows.Controls.Orientation Orientation 'get set' : 
+    Double Length 'get set' : 
+    System.Windows.Media.Brush Stroke 'get set' : 
+    Double StrokeThickness 'get set' : 
+    Double TickLength 'get set' : 
+    Boolean ValuesEnabled 'get set' : 
+    Int32 ValuesFrequency 'get set' : 
+    Double ValuesRotationAngle 'get set' : 
+    Boolean SkipFirstValue 'get set' : 
+    Boolean SkipLastValue 'get set' : 
+    System.Windows.Media.Brush ValuesForeground 'get set' : 
+    System.Windows.Media.Brush ValuesBackground 'get set' : 
+    Double ValuesFontSize 'get set' : 
+    Boolean ValuesInside 'get set' : 
+    AmCharts.Windows.Stock.Primitives.AxisLocation Location 'get set' : 
+    Double Step 'get set' : 
+    Int32 GridCount 'get set' : 
+    AmCharts.Windows.Stock.Chart Chart 'get set' : 
+  Methods:
+    set_Orientation(Orientation): PrivateScope, Public, HideBySig, SpecialName
+    get_Orientation(): PrivateScope, Public, HideBySig, SpecialName
+    set_Length(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_Length(): PrivateScope, Public, HideBySig, SpecialName
+    set_Stroke(Brush): PrivateScope, Public, HideBySig, SpecialName
+    get_Stroke(): PrivateScope, Public, HideBySig, SpecialName
+    set_StrokeThickness(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_StrokeThickness(): PrivateScope, Public, HideBySig, SpecialName
+    set_TickLength(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_TickLength(): PrivateScope, Public, HideBySig, SpecialName
+    set_ValuesEnabled(Boolean): PrivateScope, Public, HideBySig, SpecialName
+    get_ValuesEnabled(): PrivateScope, Public, HideBySig, SpecialName
+    set_ValuesFrequency(Int32): PrivateScope, Public, HideBySig, SpecialName
+    get_ValuesFrequency(): PrivateScope, Public, HideBySig, SpecialName
+    set_ValuesRotationAngle(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_ValuesRotationAngle(): PrivateScope, Public, HideBySig, SpecialName
+    set_SkipFirstValue(Boolean): PrivateScope, Public, HideBySig, SpecialName
+    get_SkipFirstValue(): PrivateScope, Public, HideBySig, SpecialName
+    set_SkipLastValue(Boolean): PrivateScope, Public, HideBySig, SpecialName
+    get_SkipLastValue(): PrivateScope, Public, HideBySig, SpecialName
+    set_ValuesForeground(Brush): PrivateScope, Public, HideBySig, SpecialName
+    get_ValuesForeground(): PrivateScope, Public, HideBySig, SpecialName
+    set_ValuesBackground(Brush): PrivateScope, Public, HideBySig, SpecialName
+    get_ValuesBackground(): PrivateScope, Public, HideBySig, SpecialName
+    set_ValuesFontSize(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_ValuesFontSize(): PrivateScope, Public, HideBySig, SpecialName
+    set_ValuesInside(Boolean): PrivateScope, Public, HideBySig, SpecialName
+    get_ValuesInside(): PrivateScope, Public, HideBySig, SpecialName
+    get_Location(): PrivateScope, Public, HideBySig, SpecialName
+    get_Step(): PrivateScope, Public, HideBySig, SpecialName
+    get_GridCount(): PrivateScope, Public, HideBySig, SpecialName
+    get_Chart(): PrivateScope, Public, HideBySig, SpecialName
+Class AmCharts.Windows.Stock.Primitives.DateTimeAxis: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+  :AmCharts.Windows.Stock.Primitives.Axis
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Fields:
+    System.Windows.DependencyProperty StartDateProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty EndDateProperty : Public, Static, InitOnly
+  Properties:
+    System.DateTime StartDate 'get set' : 
+    System.DateTime EndDate 'get set' : 
+    Int32 VisibleItemsCount 'get ' : 
+    System.Collections.Generic.List`1[AmCharts.Windows.Stock.Data.AggregateDataItem] VisibleDataItems 'get ' : 
+    Int32 FirstVisibleItemIndex 'get ' : 
+    Double StepWidth 'get ' : 
+    System.Collections.Generic.List`1[System.DateTime] GridLinePlaces 'get ' : 
+    Boolean DatesAreSet 'get ' : 
+  Methods:
+    set_StartDate(DateTime): PrivateScope, Public, HideBySig, SpecialName
+    get_StartDate(): PrivateScope, Public, HideBySig, SpecialName
+    set_EndDate(DateTime): PrivateScope, Public, HideBySig, SpecialName
+    get_EndDate(): PrivateScope, Public, HideBySig, SpecialName
+    InvalidateEverything(): PrivateScope, Public, HideBySig
+    get_VisibleItemsCount(): PrivateScope, Public, HideBySig, SpecialName
+    get_VisibleDataItems(): PrivateScope, Public, HideBySig, SpecialName
+    get_FirstVisibleItemIndex(): PrivateScope, Public, HideBySig, SpecialName
+    IsDateInGridInterval(DateTime, DateTime): PrivateScope, Public, HideBySig
+    GetCoordinateByValue(DateTime): PrivateScope, Public, HideBySig
+    GetCoordinateByValue(DateTime, Boolean): PrivateScope, Public, HideBySig
+    GetCoordinateByValue(DateTime, Nullable`1): PrivateScope, Public, HideBySig
+    GetCoordinateByValue(DateTime, Nullable`1, Boolean): PrivateScope, Public, HideBySig
+    GetValueByCoordinate(Double): PrivateScope, Public, HideBySig
+    GetGroupedValueByCoordinate(Double): PrivateScope, Public, HideBySig
+    get_StepWidth(): PrivateScope, Public, HideBySig, SpecialName
+    get_GridLinePlaces(): PrivateScope, Public, HideBySig, SpecialName
+    GetGridLinePlaceInterval(Int32): PrivateScope, Public, HideBySig
+    get_DatesAreSet(): PrivateScope, Public, HideBySig, SpecialName
+Class AmCharts.Windows.Stock.Data.DataItem: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Properties:
+    System.DateTime Date 'get set' : 
+    Double Open 'get set' : 
+    Double High 'get set' : 
+    Double Low 'get set' : 
+    Double Close 'get set' : 
+    Double Value 'get set' : 
+    Double Volume 'get set' : 
+  Methods:
+    get_Date(): PrivateScope, Public, HideBySig, SpecialName
+    set_Date(DateTime): PrivateScope, Public, HideBySig, SpecialName
+    get_Open(): PrivateScope, Public, HideBySig, SpecialName
+    set_Open(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_High(): PrivateScope, Public, HideBySig, SpecialName
+    set_High(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_Low(): PrivateScope, Public, HideBySig, SpecialName
+    set_Low(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_Close(): PrivateScope, Public, HideBySig, SpecialName
+    set_Close(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_Value(): PrivateScope, Public, HideBySig, SpecialName
+    set_Value(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_Volume(): PrivateScope, Public, HideBySig, SpecialName
+    set_Volume(Double): PrivateScope, Public, HideBySig, SpecialName
+Class AmCharts.Windows.Stock.Data.DateFormatCollection: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+  :System.Collections.ObjectModel.ObservableCollection`1[AmCharts.Windows.Stock.Data.DateFormat]
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Methods:
+    GetFormat(DataGroupingInterval): PrivateScope, Public, HideBySig
+Class AmCharts.Windows.Stock.Util.TextBlockHelper: AutoLayout, AnsiClass, Class, Public, Abstract, Sealed, BeforeFieldInit
+  Methods:
+    GetDesiredSize(TextBlock): PrivateScope, Public, Static, HideBySig
+Class AmCharts.Windows.Stock.Primitives.Scroller: AutoLayout, AnsiClass, Class, Public
+  :System.Windows.Controls.Control
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Fields:
+    System.Windows.DependencyProperty SelectedStartDateProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty SelectedEndDateProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ConnectOverGapsProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty DataFieldProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ChartBackgroundProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty SelectedChartBackgroundProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty GraphBrushProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty GraphLineThicknessProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty GraphFillProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty SelectedGraphBrushProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty IsFilledProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty SelectedGraphFillProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ThumbBorderBrushProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty GraphTypeProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty IsGridEnabledProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty GridVisibilityProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty GridStrokeProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty GridDashArrayProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ValuesEnabledProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty AutoSkipValuesProperty : Public, Static, InitOnly
+  Properties:
+    AmCharts.Windows.Stock.StockChart StockChart 'get set' : 
+    AmCharts.Windows.Stock.Chart BGChart 'get set' : 
+    AmCharts.Windows.Stock.Chart Chart 'get set' : 
+    AmCharts.Windows.Stock.Primitives.Thumb Thumb 'get set' : 
+    System.DateTime SelectedStartDate 'get set' : 
+    System.DateTime SelectedEndDate 'get set' : 
+    Boolean ConnectOverGaps 'get set' : 
+    AmCharts.Windows.Stock.Data.DataItemField DataField 'get set' : 
+    System.Windows.Media.Brush ChartBackground 'get set' : 
+    System.Windows.Media.Brush SelectedChartBackground 'get set' : 
+    System.Windows.Media.Brush GraphBrush 'get set' : 
+    Double GraphLineThickness 'get set' : 
+    System.Windows.Media.Brush GraphFill 'get set' : 
+    System.Windows.Media.Brush SelectedGraphBrush 'get set' : 
+    Boolean IsFilled 'get set' : 
+    System.Windows.Media.Brush SelectedGraphFill 'get set' : 
+    System.Windows.Media.Brush ThumbBorderBrush 'get set' : 
+    AmCharts.Windows.Stock.GraphType GraphType 'get set' : 
+    Boolean IsGridEnabled 'get set' : 
+    System.Windows.Visibility GridVisibility 'get set' : 
+    System.Windows.Media.Brush GridStroke 'get set' : 
+    System.Windows.Media.DoubleCollection GridDashArray 'get set' : 
+    Boolean ValuesEnabled 'get set' : 
+    Boolean AutoSkipValues 'get set' : 
+  Events:
+    System.EventHandler`1[AmCharts.Windows.Stock.DateChangeCompletedEventArgs] ScrollerOperationCompleted: 
+  Methods:
+    get_StockChart(): PrivateScope, Public, HideBySig, SpecialName
+    get_BGChart(): PrivateScope, Public, HideBySig, SpecialName
+    get_Chart(): PrivateScope, Public, HideBySig, SpecialName
+    get_Thumb(): PrivateScope, Public, HideBySig, SpecialName
+    OnApplyTemplate(): PrivateScope, Public, Virtual, HideBySig
+    set_SelectedStartDate(DateTime): PrivateScope, Public, HideBySig, SpecialName
+    get_SelectedStartDate(): PrivateScope, Public, HideBySig, SpecialName
+    set_SelectedEndDate(DateTime): PrivateScope, Public, HideBySig, SpecialName
+    get_SelectedEndDate(): PrivateScope, Public, HideBySig, SpecialName
+    GetCoordinateByValue(DateTime): PrivateScope, Public, HideBySig
+    GetValueByCoordinate(Double): PrivateScope, Public, HideBySig
+    set_ConnectOverGaps(Boolean): PrivateScope, Public, HideBySig, SpecialName
+    get_ConnectOverGaps(): PrivateScope, Public, HideBySig, SpecialName
+    set_DataField(DataItemField): PrivateScope, Public, HideBySig, SpecialName
+    get_DataField(): PrivateScope, Public, HideBySig, SpecialName
+    set_ChartBackground(Brush): PrivateScope, Public, HideBySig, SpecialName
+    get_ChartBackground(): PrivateScope, Public, HideBySig, SpecialName
+    set_SelectedChartBackground(Brush): PrivateScope, Public, HideBySig, SpecialName
+    get_SelectedChartBackground(): PrivateScope, Public, HideBySig, SpecialName
+    set_GraphBrush(Brush): PrivateScope, Public, HideBySig, SpecialName
+    get_GraphBrush(): PrivateScope, Public, HideBySig, SpecialName
+    set_GraphLineThickness(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_GraphLineThickness(): PrivateScope, Public, HideBySig, SpecialName
+    set_GraphFill(Brush): PrivateScope, Public, HideBySig, SpecialName
+    get_GraphFill(): PrivateScope, Public, HideBySig, SpecialName
+    set_SelectedGraphBrush(Brush): PrivateScope, Public, HideBySig, SpecialName
+    get_SelectedGraphBrush(): PrivateScope, Public, HideBySig, SpecialName
+    set_IsFilled(Boolean): PrivateScope, Public, HideBySig, SpecialName
+    get_IsFilled(): PrivateScope, Public, HideBySig, SpecialName
+    set_SelectedGraphFill(Brush): PrivateScope, Public, HideBySig, SpecialName
+    get_SelectedGraphFill(): PrivateScope, Public, HideBySig, SpecialName
+    set_ThumbBorderBrush(Brush): PrivateScope, Public, HideBySig, SpecialName
+    get_ThumbBorderBrush(): PrivateScope, Public, HideBySig, SpecialName
+    set_GraphType(GraphType): PrivateScope, Public, HideBySig, SpecialName
+    get_GraphType(): PrivateScope, Public, HideBySig, SpecialName
+    set_IsGridEnabled(Boolean): PrivateScope, Public, HideBySig, SpecialName
+    get_IsGridEnabled(): PrivateScope, Public, HideBySig, SpecialName
+    set_GridVisibility(Visibility): PrivateScope, Public, HideBySig, SpecialName
+    get_GridVisibility(): PrivateScope, Public, HideBySig, SpecialName
+    set_GridStroke(Brush): PrivateScope, Public, HideBySig, SpecialName
+    get_GridStroke(): PrivateScope, Public, HideBySig, SpecialName
+    set_GridDashArray(DoubleCollection): PrivateScope, Public, HideBySig, SpecialName
+    get_GridDashArray(): PrivateScope, Public, HideBySig, SpecialName
+    set_ValuesEnabled(Boolean): PrivateScope, Public, HideBySig, SpecialName
+    get_ValuesEnabled(): PrivateScope, Public, HideBySig, SpecialName
+    set_AutoSkipValues(Boolean): PrivateScope, Public, HideBySig, SpecialName
+    get_AutoSkipValues(): PrivateScope, Public, HideBySig, SpecialName
+    Refresh(): PrivateScope, Public, HideBySig
+    add_ScrollerOperationCompleted(EventHandler`1): PrivateScope, Public, HideBySig, SpecialName
+    remove_ScrollerOperationCompleted(EventHandler`1): PrivateScope, Public, HideBySig, SpecialName
+Struct AmCharts.Windows.Stock.GraphValueAxis: AutoLayout, AnsiClass, Class, Public, Sealed
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    AmCharts.Windows.Stock.GraphValueAxis Left = 0 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.GraphValueAxis Right = 1 : Public, Static, Literal, HasDefault
+Class AmCharts.Windows.Stock.Graph: AutoLayout, AnsiClass, Class, Public
+  :System.Windows.FrameworkElement
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Fields:
+    System.Windows.DependencyProperty TitleProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ValueAxisProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty GraphTypeProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty DataFieldProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty PeriodValueProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ComparisonDataFieldProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty DataSetIDProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty DataSetProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ConnectOverGapsProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty BrushProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty IsFilledProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty FillProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty PositiveBrushProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty NegativeBrushProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty UsePositiveNegativeBrushForColumnsProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty BulletTypeProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty BulletSizeProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty BulletBrushProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty CalculatedBrushProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty LineThicknessProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty DashArrayProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty IsIncludedInMinMaxCalculationsProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty CursorBrushProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty CursorSizeProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ShowDataSetEventsProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty CurrentDateTimeProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty CurrentDataItemProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty LegendItemTypeProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty LegendPeriodItemTypeProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty LegendValueFormatStringProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty LegendPeriodValueFormatStringProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty LegendValueLabelTextProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty LegendOpenLabelTextProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty LegendHighLabelTextProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty LegendLowLabelTextProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty LegendCloseLabelTextProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ShowLegendKeyProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ShowLegendTitleProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty AutoSkipValuesProperty : Public, Static, InitOnly
+  Properties:
+    AmCharts.Windows.Stock.Chart Chart 'get set' : 
+    System.String Title 'get set' : 
+    AmCharts.Windows.Stock.GraphValueAxis ValueAxis 'get set' : 
+    AmCharts.Windows.Stock.GraphType GraphType 'get set' : 
+    Boolean IsSingleValueGraph 'get ' : 
+    AmCharts.Windows.Stock.Data.DataItemField DataField 'get set' : 
+    AmCharts.Windows.Stock.Data.PeriodValue PeriodValue 'get set' : 
+    System.Nullable`1[AmCharts.Windows.Stock.Data.DataItemField] ComparisonDataField 'get set' : 
+    System.String DataSetID 'get set' : 
+    AmCharts.Windows.Stock.Data.DataSet DataSet 'get set' : 
+    AmCharts.Windows.Stock.Data.AggregateDataSet ActiveDataSet 'get ' : 
+    System.Collections.Generic.List`1[AmCharts.Windows.Stock.Data.AggregateDataItem] VisibleDataItems 'get ' : 
+    Double BaseValue 'get ' : 
+    Boolean ConnectOverGaps 'get set' : 
+    System.Windows.Media.Brush Brush 'get set' : 
+    Boolean IsFilled 'get set' : 
+    System.Windows.Media.Brush Fill 'get set' : 
+    System.Windows.Media.Brush PositiveBrush 'get set' : 
+    System.Windows.Media.Brush NegativeBrush 'get set' : 
+    Boolean UsePositiveNegativeBrushForColumns 'get set' : 
+    AmCharts.Windows.Stock.GraphBulletType BulletType 'get set' : 
+    Double BulletSize 'get set' : 
+    System.Windows.Media.Brush BulletBrush 'get set' : 
+    System.Windows.Media.Brush CalculatedBrush 'get ' : 
+    Double LineThickness 'get set' : 
+    System.Windows.Media.DoubleCollection DashArray 'get set' : 
+    Boolean IsIncludedInMinMaxCalculations 'get set' : 
+    System.Windows.Media.Brush CursorBrush 'get set' : 
+    Double CursorSize 'get set' : 
+    Boolean IsCompareGraph 'get set' : 
+    Boolean ShowDataSetEvents 'get set' : 
+    System.Nullable`1[System.DateTime] CurrentDateTime 'get set' : 
+    AmCharts.Windows.Stock.Data.AggregateDataItem CurrentDataItem 'get set' : 
+    AmCharts.Windows.Stock.Primitives.LegendItemType LegendItemType 'get set' : 
+    AmCharts.Windows.Stock.Primitives.LegendItemType LegendPeriodItemType 'get set' : 
+    System.String LegendValueFormatString 'get set' : 
+    System.String LegendPeriodValueFormatString 'get set' : 
+    System.String LegendValueLabelText 'get set' : 
+    System.String LegendOpenLabelText 'get set' : 
+    System.String LegendHighLabelText 'get set' : 
+    System.String LegendLowLabelText 'get set' : 
+    System.String LegendCloseLabelText 'get set' : 
+    Boolean ShowLegendKey 'get set' : 
+    Boolean ShowLegendTitle 'get set' : 
+    Boolean AutoSkipValues 'get set' : 
+    System.Collections.ObjectModel.ObservableCollection`1[AmCharts.Windows.Stock.Primitives.EventBullet] EventBullets 'get ' : 
+  Methods:
+    GetValueAtDate(DateTime): PrivateScope, Public, HideBySig
+    set_CurrentDateTime(Nullable`1): PrivateScope, Public, HideBySig, SpecialName
+    get_CurrentDateTime(): PrivateScope, Public, HideBySig, SpecialName
+    set_CurrentDataItem(AggregateDataItem): PrivateScope, Public, HideBySig, SpecialName
+    get_CurrentDataItem(): PrivateScope, Public, HideBySig, SpecialName
+    set_LegendItemType(LegendItemType): PrivateScope, Public, HideBySig, SpecialName
+    get_LegendItemType(): PrivateScope, Public, HideBySig, SpecialName
+    set_LegendPeriodItemType(LegendItemType): PrivateScope, Public, HideBySig, SpecialName
+    get_LegendPeriodItemType(): PrivateScope, Public, HideBySig, SpecialName
+    set_LegendValueFormatString(String): PrivateScope, Public, HideBySig, SpecialName
+    get_LegendValueFormatString(): PrivateScope, Public, HideBySig, SpecialName
+    set_LegendPeriodValueFormatString(String): PrivateScope, Public, HideBySig, SpecialName
+    get_LegendPeriodValueFormatString(): PrivateScope, Public, HideBySig, SpecialName
+    set_LegendValueLabelText(String): PrivateScope, Public, HideBySig, SpecialName
+    get_LegendValueLabelText(): PrivateScope, Public, HideBySig, SpecialName
+    set_LegendOpenLabelText(String): PrivateScope, Public, HideBySig, SpecialName
+    get_LegendOpenLabelText(): PrivateScope, Public, HideBySig, SpecialName
+    set_LegendHighLabelText(String): PrivateScope, Public, HideBySig, SpecialName
+    get_LegendHighLabelText(): PrivateScope, Public, HideBySig, SpecialName
+    set_LegendLowLabelText(String): PrivateScope, Public, HideBySig, SpecialName
+    get_LegendLowLabelText(): PrivateScope, Public, HideBySig, SpecialName
+    set_LegendCloseLabelText(String): PrivateScope, Public, HideBySig, SpecialName
+    get_LegendCloseLabelText(): PrivateScope, Public, HideBySig, SpecialName
+    set_ShowLegendKey(Boolean): PrivateScope, Public, HideBySig, SpecialName
+    get_ShowLegendKey(): PrivateScope, Public, HideBySig, SpecialName
+    set_ShowLegendTitle(Boolean): PrivateScope, Public, HideBySig, SpecialName
+    get_ShowLegendTitle(): PrivateScope, Public, HideBySig, SpecialName
+    set_AutoSkipValues(Boolean): PrivateScope, Public, HideBySig, SpecialName
+    get_AutoSkipValues(): PrivateScope, Public, HideBySig, SpecialName
+    get_EventBullets(): PrivateScope, Public, HideBySig, SpecialName
+    get_Chart(): PrivateScope, Public, HideBySig, SpecialName
+    set_Title(String): PrivateScope, Public, HideBySig, SpecialName
+    get_Title(): PrivateScope, Public, HideBySig, SpecialName
+    set_ValueAxis(GraphValueAxis): PrivateScope, Public, HideBySig, SpecialName
+    get_ValueAxis(): PrivateScope, Public, HideBySig, SpecialName
+    set_GraphType(GraphType): PrivateScope, Public, HideBySig, SpecialName
+    get_GraphType(): PrivateScope, Public, HideBySig, SpecialName
+    get_IsSingleValueGraph(): PrivateScope, Public, HideBySig, SpecialName
+    set_DataField(DataItemField): PrivateScope, Public, HideBySig, SpecialName
+    get_DataField(): PrivateScope, Public, HideBySig, SpecialName
+    set_PeriodValue(PeriodValue): PrivateScope, Public, HideBySig, SpecialName
+    get_PeriodValue(): PrivateScope, Public, HideBySig, SpecialName
+    set_ComparisonDataField(Nullable`1): PrivateScope, Public, HideBySig, SpecialName
+    get_ComparisonDataField(): PrivateScope, Public, HideBySig, SpecialName
+    set_DataSetID(String): PrivateScope, Public, HideBySig, SpecialName
+    get_DataSetID(): PrivateScope, Public, HideBySig, SpecialName
+    set_DataSet(DataSet): PrivateScope, Public, HideBySig, SpecialName
+    get_DataSet(): PrivateScope, Public, HideBySig, SpecialName
+    GetMinimumValue(DateTime, DateTime): PrivateScope, Public, HideBySig
+    GetMaximumValue(DateTime, DateTime): PrivateScope, Public, HideBySig
+    get_ActiveDataSet(): PrivateScope, Public, HideBySig, SpecialName
+    get_VisibleDataItems(): PrivateScope, Public, HideBySig, SpecialName
+    get_BaseValue(): PrivateScope, Public, HideBySig, SpecialName
+    AdjustValue(Double): PrivateScope, Public, HideBySig
+    GetValueChange(Double): PrivateScope, Public, HideBySig
+    GetPercentChange(Double): PrivateScope, Public, HideBySig
+    set_ConnectOverGaps(Boolean): PrivateScope, Public, HideBySig, SpecialName
+    get_ConnectOverGaps(): PrivateScope, Public, HideBySig, SpecialName
+    set_Brush(Brush): PrivateScope, Public, HideBySig, SpecialName
+    get_Brush(): PrivateScope, Public, HideBySig, SpecialName
+    set_IsFilled(Boolean): PrivateScope, Public, HideBySig, SpecialName
+    get_IsFilled(): PrivateScope, Public, HideBySig, SpecialName
+    set_Fill(Brush): PrivateScope, Public, HideBySig, SpecialName
+    get_Fill(): PrivateScope, Public, HideBySig, SpecialName
+    set_PositiveBrush(Brush): PrivateScope, Public, HideBySig, SpecialName
+    get_PositiveBrush(): PrivateScope, Public, HideBySig, SpecialName
+    set_NegativeBrush(Brush): PrivateScope, Public, HideBySig, SpecialName
+    get_NegativeBrush(): PrivateScope, Public, HideBySig, SpecialName
+    set_UsePositiveNegativeBrushForColumns(Boolean): PrivateScope, Public, HideBySig, SpecialName
+    get_UsePositiveNegativeBrushForColumns(): PrivateScope, Public, HideBySig, SpecialName
+    set_BulletType(GraphBulletType): PrivateScope, Public, HideBySig, SpecialName
+    get_BulletType(): PrivateScope, Public, HideBySig, SpecialName
+    set_BulletSize(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_BulletSize(): PrivateScope, Public, HideBySig, SpecialName
+    set_BulletBrush(Brush): PrivateScope, Public, HideBySig, SpecialName
+    get_BulletBrush(): PrivateScope, Public, HideBySig, SpecialName
+    get_CalculatedBrush(): PrivateScope, Public, HideBySig, SpecialName
+    set_LineThickness(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_LineThickness(): PrivateScope, Public, HideBySig, SpecialName
+    set_DashArray(DoubleCollection): PrivateScope, Public, HideBySig, SpecialName
+    get_DashArray(): PrivateScope, Public, HideBySig, SpecialName
+    set_IsIncludedInMinMaxCalculations(Boolean): PrivateScope, Public, HideBySig, SpecialName
+    get_IsIncludedInMinMaxCalculations(): PrivateScope, Public, HideBySig, SpecialName
+    set_CursorBrush(Brush): PrivateScope, Public, HideBySig, SpecialName
+    get_CursorBrush(): PrivateScope, Public, HideBySig, SpecialName
+    set_CursorSize(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_CursorSize(): PrivateScope, Public, HideBySig, SpecialName
+    get_IsCompareGraph(): PrivateScope, Public, HideBySig, SpecialName
+    set_ShowDataSetEvents(Boolean): PrivateScope, Public, HideBySig, SpecialName
+    get_ShowDataSetEvents(): PrivateScope, Public, HideBySig, SpecialName
+Class AmCharts.Windows.Stock.Primitives.DataSetSelector: AutoLayout, AnsiClass, Class, Public
+  :System.Windows.Controls.Control
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Fields:
+    System.Windows.DependencyProperty MainDataSetProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty MainDataSetSelectorTitleProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ComparisonDataSetSelectorTitleProperty : Public, Static, InitOnly
+  Properties:
+    AmCharts.Windows.Stock.Data.DataSet MainDataSet 'get set' : 
+    System.String MainDataSetSelectorTitle 'get set' : 
+    System.String ComparisonDataSetSelectorTitle 'get set' : 
+  Methods:
+    OnApplyTemplate(): PrivateScope, Public, Virtual, HideBySig
+    set_MainDataSet(DataSet): PrivateScope, Public, HideBySig, SpecialName
+    get_MainDataSet(): PrivateScope, Public, HideBySig, SpecialName
+    set_MainDataSetSelectorTitle(String): PrivateScope, Public, HideBySig, SpecialName
+    get_MainDataSetSelectorTitle(): PrivateScope, Public, HideBySig, SpecialName
+    set_ComparisonDataSetSelectorTitle(String): PrivateScope, Public, HideBySig, SpecialName
+    get_ComparisonDataSetSelectorTitle(): PrivateScope, Public, HideBySig, SpecialName
+Struct AmCharts.Windows.Stock.Primitives.AxisLocation: AutoLayout, AnsiClass, Class, Public, Sealed
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    AmCharts.Windows.Stock.Primitives.AxisLocation Top = 0 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Primitives.AxisLocation Bottom = 1 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Primitives.AxisLocation Left = 2 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Primitives.AxisLocation Right = 3 : Public, Static, Literal, HasDefault
+Struct AmCharts.Windows.Stock.Data.DataItemField: AutoLayout, AnsiClass, Class, Public, Sealed
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    AmCharts.Windows.Stock.Data.DataItemField Open = 0 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Data.DataItemField High = 1 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Data.DataItemField Low = 2 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Data.DataItemField Close = 3 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Data.DataItemField Value = 4 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Data.DataItemField Volume = 5 : Public, Static, Literal, HasDefault
+Class AmCharts.Windows.Stock.Data.DataBinder: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+  :System.Windows.FrameworkElement
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Fields:
+    System.Windows.DependencyProperty EvaluatorProperty : Public, Static, InitOnly
+  Methods:
+    Eval(Object, String): PrivateScope, Public, Static, HideBySig
+Class AmCharts.Windows.Stock.Util.ReverseVisibilityValueConverter: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Interfaces:
+    System.Windows.Data.IValueConverter
+  Methods:
+    Convert(Object, Type, Object, CultureInfo): PrivateScope, Public, Final, Virtual, HideBySig, VtableLayoutMask
+    ConvertBack(Object, Type, Object, CultureInfo): PrivateScope, Public, Final, Virtual, HideBySig, VtableLayoutMask
+Class AmCharts.Windows.Stock.Primitives.PlotArea: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+  :System.Windows.Controls.ContentControl
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Properties:
+    AmCharts.Windows.Stock.Chart Chart 'get set' : 
+    System.Windows.Media.Brush Stroke 'get set' : 
+    Double StrokeThickness 'get set' : 
+  Methods:
+    get_Chart(): PrivateScope, Public, HideBySig, SpecialName
+    get_Stroke(): PrivateScope, Public, HideBySig, SpecialName
+    set_Stroke(Brush): PrivateScope, Public, HideBySig, SpecialName
+    get_StrokeThickness(): PrivateScope, Public, HideBySig, SpecialName
+    set_StrokeThickness(Double): PrivateScope, Public, HideBySig, SpecialName
+Class AmCharts.Windows.Stock.Primitives.Balloon: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+  :System.Windows.Controls.Control
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Fields:
+    System.Windows.DependencyProperty CornerRadiusProperty : Public, Static, InitOnly
+  Properties:
+    System.Windows.CornerRadius CornerRadius 'get set' : 
+  Methods:
+    set_CornerRadius(CornerRadius): PrivateScope, Public, HideBySig, SpecialName
+    get_CornerRadius(): PrivateScope, Public, HideBySig, SpecialName
+Class AmCharts.Windows.Stock.StockChart: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+  :System.Windows.Controls.Control
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Fields:
+    System.Windows.DependencyProperty ChartingAreaMarginProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty PlotAreaMarginProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty PlotAreaBackgroundProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty PlotAreaBorderBrushProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty PlotAreaBorderThicknessProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty PlotAreaCornerRadiusProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ChartSpacingProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty CurrentGroupingIntervalProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty IsDraggingInProgressProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty IsDateChangeInProgressProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty StartDateProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty EndDateProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty MainDataSetIDProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty MainDataSetProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty IsEquallySpacedProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ItemGroupingThresholdProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty BalloonBackgroundProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty BalloonForegroundProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty BalloonBorderBrushProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty BalloonFontSizeProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty BalloonBorderThicknessProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty BalloonCornerRadiusProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty MaximumGridCountProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty DataSetSelectorProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty DataSetSelectorVisibilityProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty PeriodSelectorProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty PeriodSelectorVisibilityProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty HeaderProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ScrollerProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ScrollerVisibilityProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty CurrentDateTimeProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ScrollModifierKeysProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ZoomModifierKeysProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty AcceleratedWheelModifierKeysProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty AcceleratedWheelFactorProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ZoomInOnWheelDownProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty MinimumDataGroupingIntervalProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty MaximumDataGroupingIntervalProperty : Public, Static, InitOnly
+  Properties:
+    System.Windows.Thickness ChartingAreaMargin 'get set' : 
+    System.Windows.Thickness PlotAreaMargin 'get set' : 
+    System.Windows.Media.Brush PlotAreaBackground 'get set' : 
+    System.Windows.Media.Brush PlotAreaBorderBrush 'get set' : 
+    System.Windows.Thickness PlotAreaBorderThickness 'get set' : 
+    System.Windows.CornerRadius PlotAreaCornerRadius 'get set' : 
+    Double ChartSpacing 'get set' : 
+    Boolean DatesAreSet 'get ' : 
+    System.Collections.ObjectModel.ObservableCollection`1[AmCharts.Windows.Stock.Chart] Charts 'get ' : 
+    System.Collections.Generic.List`1[AmCharts.Windows.Stock.Chart] CompareCharts 'get ' : 
+    System.Collections.ObjectModel.ObservableCollection`1[AmCharts.Windows.Stock.Data.DataSet] DataSets 'get ' : 
+    Boolean HasData 'get ' : 
+    System.Collections.ObjectModel.ObservableCollection`1[AmCharts.Windows.Stock.Data.DataSetWrapper] MainSelectorDataSets 'get ' : 
+    System.Collections.ObjectModel.ObservableCollection`1[AmCharts.Windows.Stock.Data.DataSetWrapper] ComparisonSelectorDataSets 'get ' : 
+    System.Collections.Generic.List`1[AmCharts.Windows.Stock.Data.DataSet] ComparisonDataSets 'get ' : 
+    AmCharts.Windows.Stock.Data.DataGroupingInterval CurrentGroupingInterval 'get set' : 
+    Int32 VisibleItemCount 'get ' : 
+    Boolean IsDraggingInProgress 'get set' : 
+    Boolean IsDateChangeInProgress 'get set' : 
+    System.DateTime StartDate 'get set' : 
+    System.DateTime EndDate 'get set' : 
+    System.String MainDataSetID 'get set' : 
+    AmCharts.Windows.Stock.Data.DataSet MainDataSet 'get set' : 
+    Boolean IsEquallySpaced 'get set' : 
+    Int32 ItemGroupingThreshold 'get set' : 
+    System.Windows.Media.Brush BalloonBackground 'get set' : 
+    System.Windows.Media.Brush BalloonForeground 'get set' : 
+    System.Windows.Media.Brush BalloonBorderBrush 'get set' : 
+    Double BalloonFontSize 'get set' : 
+    System.Windows.Thickness BalloonBorderThickness 'get set' : 
+    System.Windows.CornerRadius BalloonCornerRadius 'get set' : 
+    AmCharts.Windows.Stock.Data.DateFormatCollection LegendDateFormats 'get ' : 
+    AmCharts.Windows.Stock.Data.DateFormatCollection DateTimeAxisDateFormats 'get ' : 
+    Int32 MaximumGridCount 'get set' : 
+    AmCharts.Windows.Stock.Primitives.DataSetSelector DataSetSelector 'get set' : 
+    System.Windows.Visibility DataSetSelectorVisibility 'get set' : 
+    AmCharts.Windows.Stock.Primitives.PeriodSelector PeriodSelector 'get set' : 
+    System.Windows.Visibility PeriodSelectorVisibility 'get set' : 
+    System.Windows.FrameworkElement Header 'get set' : 
+    AmCharts.Windows.Stock.Primitives.Scroller Scroller 'get set' : 
+    System.Windows.Visibility ScrollerVisibility 'get set' : 
+    System.Nullable`1[System.DateTime] CurrentDateTime 'get set' : 
+    System.Windows.Input.ModifierKeys ScrollModifierKeys 'get set' : 
+    System.Windows.Input.ModifierKeys ZoomModifierKeys 'get set' : 
+    System.Windows.Input.ModifierKeys AcceleratedWheelModifierKeys 'get set' : 
+    Int32 AcceleratedWheelFactor 'get set' : 
+    Boolean ZoomInOnWheelDown 'get set' : 
+    AmCharts.Windows.Stock.Data.DataGroupingInterval MinimumDataGroupingInterval 'get set' : 
+    AmCharts.Windows.Stock.Data.DataGroupingInterval MaximumDataGroupingInterval 'get set' : 
+  Events:
+    System.EventHandler`1[AmCharts.Windows.Stock.DateChangeCompletedEventArgs] DateChangeCompleted: 
+    System.EventHandler`1[AmCharts.Windows.Stock.DateChangeCompletedEventArgs] DatesChanged: 
+  Methods:
+    get_BalloonForeground(): PrivateScope, Public, HideBySig, SpecialName
+    set_BalloonBorderBrush(Brush): PrivateScope, Public, HideBySig, SpecialName
+    get_BalloonBorderBrush(): PrivateScope, Public, HideBySig, SpecialName
+    set_BalloonFontSize(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_BalloonFontSize(): PrivateScope, Public, HideBySig, SpecialName
+    set_BalloonBorderThickness(Thickness): PrivateScope, Public, HideBySig, SpecialName
+    get_BalloonBorderThickness(): PrivateScope, Public, HideBySig, SpecialName
+    set_BalloonCornerRadius(CornerRadius): PrivateScope, Public, HideBySig, SpecialName
+    get_BalloonCornerRadius(): PrivateScope, Public, HideBySig, SpecialName
+    get_LegendDateFormats(): PrivateScope, Public, HideBySig, SpecialName
+    get_DateTimeAxisDateFormats(): PrivateScope, Public, HideBySig, SpecialName
+    set_MaximumGridCount(Int32): PrivateScope, Public, HideBySig, SpecialName
+    get_MaximumGridCount(): PrivateScope, Public, HideBySig, SpecialName
+    set_DataSetSelector(DataSetSelector): PrivateScope, Public, HideBySig, SpecialName
+    get_DataSetSelector(): PrivateScope, Public, HideBySig, SpecialName
+    set_DataSetSelectorVisibility(Visibility): PrivateScope, Public, HideBySig, SpecialName
+    get_DataSetSelectorVisibility(): PrivateScope, Public, HideBySig, SpecialName
+    set_PeriodSelector(PeriodSelector): PrivateScope, Public, HideBySig, SpecialName
+    get_PeriodSelector(): PrivateScope, Public, HideBySig, SpecialName
+    set_PeriodSelectorVisibility(Visibility): PrivateScope, Public, HideBySig, SpecialName
+    get_PeriodSelectorVisibility(): PrivateScope, Public, HideBySig, SpecialName
+    set_Header(FrameworkElement): PrivateScope, Public, HideBySig, SpecialName
+    get_Header(): PrivateScope, Public, HideBySig, SpecialName
+    set_Scroller(Scroller): PrivateScope, Public, HideBySig, SpecialName
+    get_Scroller(): PrivateScope, Public, HideBySig, SpecialName
+    set_ScrollerVisibility(Visibility): PrivateScope, Public, HideBySig, SpecialName
+    get_ScrollerVisibility(): PrivateScope, Public, HideBySig, SpecialName
+    set_CurrentDateTime(Nullable`1): PrivateScope, Public, HideBySig, SpecialName
+    get_CurrentDateTime(): PrivateScope, Public, HideBySig, SpecialName
+    Scroll(Double): PrivateScope, Public, HideBySig
+    Zoom(Double): PrivateScope, Public, HideBySig
+    set_ScrollModifierKeys(ModifierKeys): PrivateScope, Public, HideBySig, SpecialName
+    get_ScrollModifierKeys(): PrivateScope, Public, HideBySig, SpecialName
+    set_ZoomModifierKeys(ModifierKeys): PrivateScope, Public, HideBySig, SpecialName
+    get_ZoomModifierKeys(): PrivateScope, Public, HideBySig, SpecialName
+    set_AcceleratedWheelModifierKeys(ModifierKeys): PrivateScope, Public, HideBySig, SpecialName
+    get_AcceleratedWheelModifierKeys(): PrivateScope, Public, HideBySig, SpecialName
+    set_AcceleratedWheelFactor(Int32): PrivateScope, Public, HideBySig, SpecialName
+    get_AcceleratedWheelFactor(): PrivateScope, Public, HideBySig, SpecialName
+    set_ZoomInOnWheelDown(Boolean): PrivateScope, Public, HideBySig, SpecialName
+    get_ZoomInOnWheelDown(): PrivateScope, Public, HideBySig, SpecialName
+    set_MinimumDataGroupingInterval(DataGroupingInterval): PrivateScope, Public, HideBySig, SpecialName
+    get_MinimumDataGroupingInterval(): PrivateScope, Public, HideBySig, SpecialName
+    set_MaximumDataGroupingInterval(DataGroupingInterval): PrivateScope, Public, HideBySig, SpecialName
+    get_MaximumDataGroupingInterval(): PrivateScope, Public, HideBySig, SpecialName
+    set_ChartingAreaMargin(Thickness): PrivateScope, Public, HideBySig, SpecialName
+    get_ChartingAreaMargin(): PrivateScope, Public, HideBySig, SpecialName
+    set_PlotAreaMargin(Thickness): PrivateScope, Public, HideBySig, SpecialName
+    get_PlotAreaMargin(): PrivateScope, Public, HideBySig, SpecialName
+    set_PlotAreaBackground(Brush): PrivateScope, Public, HideBySig, SpecialName
+    get_PlotAreaBackground(): PrivateScope, Public, HideBySig, SpecialName
+    set_PlotAreaBorderBrush(Brush): PrivateScope, Public, HideBySig, SpecialName
+    get_PlotAreaBorderBrush(): PrivateScope, Public, HideBySig, SpecialName
+    set_PlotAreaBorderThickness(Thickness): PrivateScope, Public, HideBySig, SpecialName
+    get_PlotAreaBorderThickness(): PrivateScope, Public, HideBySig, SpecialName
+    set_PlotAreaCornerRadius(CornerRadius): PrivateScope, Public, HideBySig, SpecialName
+    get_PlotAreaCornerRadius(): PrivateScope, Public, HideBySig, SpecialName
+    set_ChartSpacing(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_ChartSpacing(): PrivateScope, Public, HideBySig, SpecialName
+    OnApplyTemplate(): PrivateScope, Public, Virtual, HideBySig
+    get_DatesAreSet(): PrivateScope, Public, HideBySig, SpecialName
+    get_Charts(): PrivateScope, Public, HideBySig, SpecialName
+    get_CompareCharts(): PrivateScope, Public, HideBySig, SpecialName
+    get_DataSets(): PrivateScope, Public, HideBySig, SpecialName
+    get_HasData(): PrivateScope, Public, HideBySig, SpecialName
+    get_MainSelectorDataSets(): PrivateScope, Public, HideBySig, SpecialName
+    get_ComparisonSelectorDataSets(): PrivateScope, Public, HideBySig, SpecialName
+    get_ComparisonDataSets(): PrivateScope, Public, HideBySig, SpecialName
+    GetDataSetByID(String): PrivateScope, Public, HideBySig
+    set_CurrentGroupingInterval(DataGroupingInterval): PrivateScope, Public, HideBySig, SpecialName
+    get_CurrentGroupingInterval(): PrivateScope, Public, HideBySig, SpecialName
+    get_VisibleItemCount(): PrivateScope, Public, HideBySig, SpecialName
+    InvalidateGroupingInterval(): PrivateScope, Public, HideBySig
+    add_DateChangeCompleted(EventHandler`1): PrivateScope, Public, HideBySig, SpecialName
+    remove_DateChangeCompleted(EventHandler`1): PrivateScope, Public, HideBySig, SpecialName
+    get_IsDraggingInProgress(): PrivateScope, Public, HideBySig, SpecialName
+    set_IsDraggingInProgress(Boolean): PrivateScope, Public, HideBySig, SpecialName
+    add_DatesChanged(EventHandler`1): PrivateScope, Public, HideBySig, SpecialName
+    remove_DatesChanged(EventHandler`1): PrivateScope, Public, HideBySig, SpecialName
+    get_IsDateChangeInProgress(): PrivateScope, Public, HideBySig, SpecialName
+    set_IsDateChangeInProgress(Boolean): PrivateScope, Public, HideBySig, SpecialName
+    set_StartDate(DateTime): PrivateScope, Public, HideBySig, SpecialName
+    get_StartDate(): PrivateScope, Public, HideBySig, SpecialName
+    set_EndDate(DateTime): PrivateScope, Public, HideBySig, SpecialName
+    get_EndDate(): PrivateScope, Public, HideBySig, SpecialName
+    set_MainDataSetID(String): PrivateScope, Public, HideBySig, SpecialName
+    get_MainDataSetID(): PrivateScope, Public, HideBySig, SpecialName
+    set_MainDataSet(DataSet): PrivateScope, Public, HideBySig, SpecialName
+    get_MainDataSet(): PrivateScope, Public, HideBySig, SpecialName
+    set_IsEquallySpaced(Boolean): PrivateScope, Public, HideBySig, SpecialName
+    get_IsEquallySpaced(): PrivateScope, Public, HideBySig, SpecialName
+    Refresh(): PrivateScope, Public, HideBySig
+    set_ItemGroupingThreshold(Int32): PrivateScope, Public, HideBySig, SpecialName
+    get_ItemGroupingThreshold(): PrivateScope, Public, HideBySig, SpecialName
+    GetDataSetBrush(DataSet): PrivateScope, Public, HideBySig
+    ProcessComparisonCharts(): PrivateScope, Public, HideBySig
+    set_BalloonBackground(Brush): PrivateScope, Public, HideBySig, SpecialName
+    get_BalloonBackground(): PrivateScope, Public, HideBySig, SpecialName
+    set_BalloonForeground(Brush): PrivateScope, Public, HideBySig, SpecialName
+Struct AmCharts.Windows.Stock.Util.InvalidationType: AutoLayout, AnsiClass, Class, Public, Sealed
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    AmCharts.Windows.Stock.Util.InvalidationType Measure = 1 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Util.InvalidationType Arrange = 2 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Util.InvalidationType Visual = 4 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Util.InvalidationType ParentMeasure = 8 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Util.InvalidationType ParentArrange = 16 : Public, Static, Literal, HasDefault
+Class AmCharts.Windows.Stock.Util.ElementInvalidator: AutoLayout, AnsiClass, Class, Public, Abstract, Sealed, BeforeFieldInit
+  Methods:
+    Invalidate(FrameworkElement, InvalidationType): PrivateScope, Public, Static, HideBySig
+    PropertyChanged_InvalidateMeasure(DependencyObject, DependencyPropertyChangedEventArgs): PrivateScope, Public, Static, HideBySig
+    PropertyChanged_InvalidateArrange(DependencyObject, DependencyPropertyChangedEventArgs): PrivateScope, Public, Static, HideBySig
+    PropertyChanged_InvalidateMeasureArrange(DependencyObject, DependencyPropertyChangedEventArgs): PrivateScope, Public, Static, HideBySig
+    PropertyChanged_InvalidateVisual(DependencyObject, DependencyPropertyChangedEventArgs): PrivateScope, Public, Static, HideBySig
+    PropertyChanged_InvalidateMeasureArrangeVisual(DependencyObject, DependencyPropertyChangedEventArgs): PrivateScope, Public, Static, HideBySig
+    PropertyChanged_InvalidateParentMeasure(DependencyObject, DependencyPropertyChangedEventArgs): PrivateScope, Public, Static, HideBySig
+    PropertyChanged_InvalidateParentArrange(DependencyObject, DependencyPropertyChangedEventArgs): PrivateScope, Public, Static, HideBySig
+    PropertyChanged_InvalidateMeasureArrangeVisualParentMeasureArrange(DependencyObject, DependencyPropertyChangedEventArgs): PrivateScope, Public, Static, HideBySig
+Class AmCharts.Windows.Stock.Util.DateTimeToFormattedStringValueConverter: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Interfaces:
+    System.Windows.Data.IValueConverter
+  Methods:
+    Convert(Object, Type, Object, CultureInfo): PrivateScope, Public, Final, Virtual, HideBySig, VtableLayoutMask
+    ConvertBack(Object, Type, Object, CultureInfo): PrivateScope, Public, Final, Virtual, HideBySig, VtableLayoutMask
+Struct AmCharts.Windows.Stock.Primitives.ValueType: AutoLayout, AnsiClass, Class, Public, Sealed
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    AmCharts.Windows.Stock.Primitives.ValueType Number = 0 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Primitives.ValueType Duration = 1 : Public, Static, Literal, HasDefault
+Struct AmCharts.Windows.Stock.Primitives.DurationInputFormat: AutoLayout, AnsiClass, Class, Public, Sealed
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    AmCharts.Windows.Stock.Primitives.DurationInputFormat Ticks = 0 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Primitives.DurationInputFormat Milliseconds = 1 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Primitives.DurationInputFormat Seconds = 2 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Primitives.DurationInputFormat Minutes = 3 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Primitives.DurationInputFormat Hours = 4 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Primitives.DurationInputFormat Days = 5 : Public, Static, Literal, HasDefault
+Struct AmCharts.Windows.Stock.Primitives.ValueAxisType: AutoLayout, AnsiClass, Class, Public, Sealed
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    AmCharts.Windows.Stock.Primitives.ValueAxisType Linear = 0 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Primitives.ValueAxisType Stacked = 1 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Primitives.ValueAxisType Stacked100Percent = 2 : Public, Static, Literal, HasDefault
+Class AmCharts.Windows.Stock.Primitives.ValueAxis: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+  :AmCharts.Windows.Stock.Primitives.Axis
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Fields:
+    System.Windows.DependencyProperty ValueTypeProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty DurationInputFormatProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty AxisTypeProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty MinimumProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty MaximumProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty IsLogarithmicProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty IsReverseProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty StrictMinMaxProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ValuesFormatStringProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ValuesIntegersOnlyProperty : Public, Static, InitOnly
+  Properties:
+    AmCharts.Windows.Stock.Primitives.ValueType ValueType 'get set' : 
+    AmCharts.Windows.Stock.Primitives.DurationInputFormat DurationInputFormat 'get set' : 
+    AmCharts.Windows.Stock.Primitives.ValueAxisType AxisType 'get set' : 
+    Double Minimum 'get set' : 
+    Double Maximum 'get set' : 
+    Double CalculatedMinimum 'get set' : 
+    Double CalculatedMaximum 'get set' : 
+    Double MinReal 'get set' : 
+    Boolean IsLogarithmic 'get set' : 
+    Boolean IsReverse 'get set' : 
+    Boolean StrictMinMax 'get set' : 
+    System.String ValuesFormatString 'get set' : 
+    Boolean ValuesIntegersOnly 'get set' : 
+    Double StartPointCoordinate 'get ' : 
+    System.Collections.Generic.List`1[AmCharts.Windows.Stock.Graph] Graphs 'get set' : 
+    System.Collections.Generic.List`1[AmCharts.Windows.Stock.Graph] VisibleGraphs 'get ' : 
+  Methods:
+    set_ValueType(ValueType): PrivateScope, Public, HideBySig, SpecialName
+    get_ValueType(): PrivateScope, Public, HideBySig, SpecialName
+    set_DurationInputFormat(DurationInputFormat): PrivateScope, Public, HideBySig, SpecialName
+    get_DurationInputFormat(): PrivateScope, Public, HideBySig, SpecialName
+    set_AxisType(ValueAxisType): PrivateScope, Public, HideBySig, SpecialName
+    get_AxisType(): PrivateScope, Public, HideBySig, SpecialName
+    set_Minimum(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_Minimum(): PrivateScope, Public, HideBySig, SpecialName
+    set_Maximum(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_Maximum(): PrivateScope, Public, HideBySig, SpecialName
+    get_CalculatedMinimum(): PrivateScope, Public, HideBySig, SpecialName
+    get_CalculatedMaximum(): PrivateScope, Public, HideBySig, SpecialName
+    get_MinReal(): PrivateScope, Public, HideBySig, SpecialName
+    set_IsLogarithmic(Boolean): PrivateScope, Public, HideBySig, SpecialName
+    get_IsLogarithmic(): PrivateScope, Public, HideBySig, SpecialName
+    set_IsReverse(Boolean): PrivateScope, Public, HideBySig, SpecialName
+    get_IsReverse(): PrivateScope, Public, HideBySig, SpecialName
+    set_StrictMinMax(Boolean): PrivateScope, Public, HideBySig, SpecialName
+    get_StrictMinMax(): PrivateScope, Public, HideBySig, SpecialName
+    set_ValuesFormatString(String): PrivateScope, Public, HideBySig, SpecialName
+    get_ValuesFormatString(): PrivateScope, Public, HideBySig, SpecialName
+    set_ValuesIntegersOnly(Boolean): PrivateScope, Public, HideBySig, SpecialName
+    get_ValuesIntegersOnly(): PrivateScope, Public, HideBySig, SpecialName
+    GetCoordinateByValue(Double): PrivateScope, Public, HideBySig
+    GetValueByCoordinate(Double): PrivateScope, Public, HideBySig
+    get_StartPointCoordinate(): PrivateScope, Public, HideBySig, SpecialName
+    get_Graphs(): PrivateScope, Public, HideBySig, SpecialName
+    get_VisibleGraphs(): PrivateScope, Public, HideBySig, SpecialName
+    SetMinMax(Int32): PrivateScope, Public, HideBySig
+    SetMinMax(DateTime, DateTime, Int32): PrivateScope, Public, HideBySig
+Class AmCharts.Windows.Stock.Primitives.EventBullet: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+  :System.Windows.Controls.ContentControl
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Fields:
+    System.Windows.DependencyProperty DataItemProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty IsHighlightedProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty BulletTypeProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty FillProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty HoverFillProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty StrokeProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty StrokeThicknessProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty StrokeDashArrayProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty TextBrushProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty SizeProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty BandWidthProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty OnAxisProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty DateFormatStringProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty BalloonVisibilityProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty BalloonDateVisibilityProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty BalloonToDateVisibilityProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty BalloonDescriptionVisibilityProperty : Public, Static, InitOnly
+  Properties:
+    AmCharts.Windows.Stock.Data.EventDataItem DataItem 'get set' : 
+    Boolean IsHighlighted 'get set' : 
+    AmCharts.Windows.Stock.Primitives.EventBulletType BulletType 'get set' : 
+    AmCharts.Windows.Stock.Primitives.EventBulletType CalculatedBulletType 'get ' : 
+    System.Windows.Media.Brush Fill 'get set' : 
+    System.Windows.Media.Brush CalculatedFill 'get ' : 
+    System.Windows.Media.Brush HoverFill 'get set' : 
+    System.Windows.Media.Brush CalculatedHoverFill 'get ' : 
+    System.Windows.Media.Brush Stroke 'get set' : 
+    System.Windows.Media.Brush CalculatedStroke 'get ' : 
+    Double StrokeThickness 'get set' : 
+    Double CalculatedStrokeThickness 'get ' : 
+    System.Windows.Media.DoubleCollection StrokeDashArray 'get set' : 
+    System.Windows.Media.DoubleCollection CalculatedStrokeDashArray 'get ' : 
+    System.Windows.Media.Brush TextBrush 'get set' : 
+    System.Windows.Media.Brush CalculatedTextBrush 'get ' : 
+    Double Size 'get set' : 
+    Double CalculatedSize 'get ' : 
+    Double BandWidth 'get set' : 
+    System.Nullable`1[System.Boolean] OnAxis 'get set' : 
+    Boolean CalculatedOnAxis 'get ' : 
+    System.String DateFormatString 'get set' : 
+    System.String CalculatedDateFormatString 'get ' : 
+    System.String FormattedDate 'get ' : 
+    System.String FormattedToDate 'get ' : 
+    System.Windows.Visibility BalloonVisibility 'get set' : 
+    System.Windows.Visibility BalloonDateVisibility 'get ' : 
+    System.Windows.Visibility BalloonToDateVisibility 'get ' : 
+    System.Windows.Visibility BalloonDescriptionVisibility 'get ' : 
+  Methods:
+    set_DataItem(EventDataItem): PrivateScope, Public, HideBySig, SpecialName
+    get_DataItem(): PrivateScope, Public, HideBySig, SpecialName
+    set_IsHighlighted(Boolean): PrivateScope, Public, HideBySig, SpecialName
+    get_IsHighlighted(): PrivateScope, Public, HideBySig, SpecialName
+    set_BulletType(EventBulletType): PrivateScope, Public, HideBySig, SpecialName
+    get_BulletType(): PrivateScope, Public, HideBySig, SpecialName
+    get_CalculatedBulletType(): PrivateScope, Public, HideBySig, SpecialName
+    set_Fill(Brush): PrivateScope, Public, HideBySig, SpecialName
+    get_Fill(): PrivateScope, Public, HideBySig, SpecialName
+    get_CalculatedFill(): PrivateScope, Public, HideBySig, SpecialName
+    set_HoverFill(Brush): PrivateScope, Public, HideBySig, SpecialName
+    get_HoverFill(): PrivateScope, Public, HideBySig, SpecialName
+    get_CalculatedHoverFill(): PrivateScope, Public, HideBySig, SpecialName
+    set_Stroke(Brush): PrivateScope, Public, HideBySig, SpecialName
+    get_Stroke(): PrivateScope, Public, HideBySig, SpecialName
+    get_CalculatedStroke(): PrivateScope, Public, HideBySig, SpecialName
+    set_StrokeThickness(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_StrokeThickness(): PrivateScope, Public, HideBySig, SpecialName
+    get_CalculatedStrokeThickness(): PrivateScope, Public, HideBySig, SpecialName
+    set_StrokeDashArray(DoubleCollection): PrivateScope, Public, HideBySig, SpecialName
+    get_StrokeDashArray(): PrivateScope, Public, HideBySig, SpecialName
+    get_CalculatedStrokeDashArray(): PrivateScope, Public, HideBySig, SpecialName
+    set_TextBrush(Brush): PrivateScope, Public, HideBySig, SpecialName
+    get_TextBrush(): PrivateScope, Public, HideBySig, SpecialName
+    get_CalculatedTextBrush(): PrivateScope, Public, HideBySig, SpecialName
+    set_Size(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_Size(): PrivateScope, Public, HideBySig, SpecialName
+    get_CalculatedSize(): PrivateScope, Public, HideBySig, SpecialName
+    set_BandWidth(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_BandWidth(): PrivateScope, Public, HideBySig, SpecialName
+    set_OnAxis(Nullable`1): PrivateScope, Public, HideBySig, SpecialName
+    get_OnAxis(): PrivateScope, Public, HideBySig, SpecialName
+    get_CalculatedOnAxis(): PrivateScope, Public, HideBySig, SpecialName
+    set_DateFormatString(String): PrivateScope, Public, HideBySig, SpecialName
+    get_DateFormatString(): PrivateScope, Public, HideBySig, SpecialName
+    get_CalculatedDateFormatString(): PrivateScope, Public, HideBySig, SpecialName
+    get_FormattedDate(): PrivateScope, Public, HideBySig, SpecialName
+    get_FormattedToDate(): PrivateScope, Public, HideBySig, SpecialName
+    set_BalloonVisibility(Visibility): PrivateScope, Public, HideBySig, SpecialName
+    get_BalloonVisibility(): PrivateScope, Public, HideBySig, SpecialName
+    get_BalloonDateVisibility(): PrivateScope, Public, HideBySig, SpecialName
+    get_BalloonToDateVisibility(): PrivateScope, Public, HideBySig, SpecialName
+    get_BalloonDescriptionVisibility(): PrivateScope, Public, HideBySig, SpecialName
+    IsInView(DateTime, DateTime, Double, Double): PrivateScope, Public, HideBySig
+    IsInView(DateTime, DateTime): PrivateScope, Public, HideBySig
+    IsInView(Double, Double): PrivateScope, Public, HideBySig
+Struct AmCharts.Windows.Stock.GraphType: AutoLayout, AnsiClass, Class, Public, Sealed
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    AmCharts.Windows.Stock.GraphType Line = 0 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.GraphType Column = 1 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.GraphType Candlestick = 2 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.GraphType Ohlc = 3 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.GraphType Step = 4 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.GraphType StepNoRisers = 5 : Public, Static, Literal, HasDefault
+Class AmCharts.Windows.Stock.Primitives.PeriodSelector: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+  :System.Windows.Controls.Control
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Fields:
+    System.Windows.DependencyProperty CalculatedDateFormatStringProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty DateFormatStringProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty DataPrecisionProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ZoomToEndProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty IsCustomPeriodEnabledProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty CustomPeriodVisibilityProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty CustomPeriodLabelTextProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty PresetPeriodLabelTextProperty : Public, Static, InitOnly
+  Properties:
+    AmCharts.Windows.Stock.StockChart StockChart 'get set' : 
+    System.String CalculatedDateFormatString 'get ' : 
+    System.String DateFormatString 'get set' : 
+    AmCharts.Windows.Stock.Data.DataGroupingInterval DataPrecision 'get set' : 
+    System.Collections.ObjectModel.ObservableCollection`1[AmCharts.Windows.Stock.Primitives.PresetPeriodButton] PresetPeriods 'get ' : 
+    Boolean ZoomToEnd 'get set' : 
+    Boolean IsCustomPeriodEnabled 'get set' : 
+    System.Windows.Visibility CustomPeriodVisibility 'get set' : 
+    System.String CustomPeriodLabelText 'get set' : 
+    System.String PresetPeriodLabelText 'get set' : 
+  Events:
+    System.EventHandler`1[AmCharts.Windows.Stock.DateChangeCompletedEventArgs] PresetPeriodChangeCompleted: 
+  Methods:
+    add_PresetPeriodChangeCompleted(EventHandler`1): PrivateScope, Public, HideBySig, SpecialName
+    remove_PresetPeriodChangeCompleted(EventHandler`1): PrivateScope, Public, HideBySig, SpecialName
+    get_StockChart(): PrivateScope, Public, HideBySig, SpecialName
+    get_CalculatedDateFormatString(): PrivateScope, Public, HideBySig, SpecialName
+    set_DateFormatString(String): PrivateScope, Public, HideBySig, SpecialName
+    get_DateFormatString(): PrivateScope, Public, HideBySig, SpecialName
+    set_DataPrecision(DataGroupingInterval): PrivateScope, Public, HideBySig, SpecialName
+    get_DataPrecision(): PrivateScope, Public, HideBySig, SpecialName
+    OnApplyTemplate(): PrivateScope, Public, Virtual, HideBySig
+    get_PresetPeriods(): PrivateScope, Public, HideBySig, SpecialName
+    set_ZoomToEnd(Boolean): PrivateScope, Public, HideBySig, SpecialName
+    get_ZoomToEnd(): PrivateScope, Public, HideBySig, SpecialName
+    set_IsCustomPeriodEnabled(Boolean): PrivateScope, Public, HideBySig, SpecialName
+    get_IsCustomPeriodEnabled(): PrivateScope, Public, HideBySig, SpecialName
+    set_CustomPeriodVisibility(Visibility): PrivateScope, Public, HideBySig, SpecialName
+    get_CustomPeriodVisibility(): PrivateScope, Public, HideBySig, SpecialName
+    set_CustomPeriodLabelText(String): PrivateScope, Public, HideBySig, SpecialName
+    get_CustomPeriodLabelText(): PrivateScope, Public, HideBySig, SpecialName
+    set_PresetPeriodLabelText(String): PrivateScope, Public, HideBySig, SpecialName
+    get_PresetPeriodLabelText(): PrivateScope, Public, HideBySig, SpecialName
+Class AmCharts.Windows.Stock.Primitives.Legend: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+  :System.Windows.Controls.Control
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Fields:
+    System.Windows.DependencyProperty CurrentDateTimeProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty KeySizeProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ValueForegroundProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty PositiveValueForegroundProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty NegativeValueForegroundProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty IsDateVisibleProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty HideDateOnPeriodProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty DateVisibilityProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty InactiveGraphOpacityProperty : Public, Static, InitOnly
+  Properties:
+    System.Nullable`1[System.DateTime] CurrentDateTime 'get set' : 
+    Double KeySize 'get set' : 
+    System.Windows.Media.Brush ValueForeground 'get set' : 
+    System.Windows.Media.Brush PositiveValueForeground 'get set' : 
+    System.Windows.Media.Brush NegativeValueForeground 'get set' : 
+    Boolean IsDateVisible 'get set' : 
+    Boolean HideDateOnPeriod 'get set' : 
+    System.Windows.Visibility DateVisibility 'get ' : 
+    Double InactiveGraphOpacity 'get set' : 
+  Methods:
+    OnApplyTemplate(): PrivateScope, Public, Virtual, HideBySig
+    set_CurrentDateTime(Nullable`1): PrivateScope, Public, HideBySig, SpecialName
+    get_CurrentDateTime(): PrivateScope, Public, HideBySig, SpecialName
+    SetDateBlockValue(): PrivateScope, Public, HideBySig
+    set_KeySize(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_KeySize(): PrivateScope, Public, HideBySig, SpecialName
+    UpdateStateIndicators(): PrivateScope, Public, HideBySig
+    set_ValueForeground(Brush): PrivateScope, Public, HideBySig, SpecialName
+    get_ValueForeground(): PrivateScope, Public, HideBySig, SpecialName
+    set_PositiveValueForeground(Brush): PrivateScope, Public, HideBySig, SpecialName
+    get_PositiveValueForeground(): PrivateScope, Public, HideBySig, SpecialName
+    set_NegativeValueForeground(Brush): PrivateScope, Public, HideBySig, SpecialName
+    get_NegativeValueForeground(): PrivateScope, Public, HideBySig, SpecialName
+    set_IsDateVisible(Boolean): PrivateScope, Public, HideBySig, SpecialName
+    get_IsDateVisible(): PrivateScope, Public, HideBySig, SpecialName
+    set_HideDateOnPeriod(Boolean): PrivateScope, Public, HideBySig, SpecialName
+    get_HideDateOnPeriod(): PrivateScope, Public, HideBySig, SpecialName
+    get_DateVisibility(): PrivateScope, Public, HideBySig, SpecialName
+    set_InactiveGraphOpacity(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_InactiveGraphOpacity(): PrivateScope, Public, HideBySig, SpecialName
+Class AmCharts.Windows.Stock.Util.DrawingHelper: AutoLayout, AnsiClass, Class, Public, Abstract, Sealed, BeforeFieldInit
+  Methods:
+    PushClip(Object, RectangleGeometry): PrivateScope, Public, Static, HideBySig
+    Pop(Object): PrivateScope, Public, Static, HideBySig
+    DrawGeometry(Object, Brush, Brush, Double, DoubleCollection, Geometry): PrivateScope, Public, Static, HideBySig
+    DrawGeometry(Object, Brush, Brush, Double, DoubleCollection, Geometry, Geometry): PrivateScope, Public, Static, HideBySig
+    DrawLine(Object, Brush, Double, DoubleCollection, Point, Point): PrivateScope, Public, Static, HideBySig
+Class AmCharts.Windows.Stock.Data.DataSetWrapper: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+    Void .ctor(AmCharts.Windows.Stock.Data.DataSet): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Properties:
+    AmCharts.Windows.Stock.Data.DataSet DataSet 'get set' : 
+  Methods:
+    get_DataSet(): PrivateScope, Public, HideBySig, SpecialName
+    set_DataSet(DataSet): PrivateScope, Public, HideBySig, SpecialName
+Class AmCharts.Windows.Stock.Data.EventDataItem: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Properties:
+    System.Nullable`1[System.DateTime] Date 'get set' : 
+    System.Nullable`1[System.DateTime] ToDate 'get set' : 
+    Double Value 'get set' : 
+    Double ToValue 'get set' : 
+    Double PercentValue 'get set' : 
+    Double ToPercentValue 'get set' : 
+    System.String Symbol 'get set' : 
+    System.String Description 'get set' : 
+  Methods:
+    get_Date(): PrivateScope, Public, HideBySig, SpecialName
+    set_Date(Nullable`1): PrivateScope, Public, HideBySig, SpecialName
+    get_ToDate(): PrivateScope, Public, HideBySig, SpecialName
+    set_ToDate(Nullable`1): PrivateScope, Public, HideBySig, SpecialName
+    get_Value(): PrivateScope, Public, HideBySig, SpecialName
+    set_Value(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_ToValue(): PrivateScope, Public, HideBySig, SpecialName
+    set_ToValue(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_PercentValue(): PrivateScope, Public, HideBySig, SpecialName
+    set_PercentValue(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_ToPercentValue(): PrivateScope, Public, HideBySig, SpecialName
+    set_ToPercentValue(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_Symbol(): PrivateScope, Public, HideBySig, SpecialName
+    set_Symbol(String): PrivateScope, Public, HideBySig, SpecialName
+    get_Description(): PrivateScope, Public, HideBySig, SpecialName
+    set_Description(String): PrivateScope, Public, HideBySig, SpecialName
+Class AmCharts.Windows.Stock.Primitives.PresetPeriodButton: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+  :System.Windows.Controls.Button
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Fields:
+    System.Windows.DependencyProperty IntervalProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty QuantityProperty : Public, Static, InitOnly
+  Properties:
+    AmCharts.Windows.Stock.Data.DataGroupingInterval Interval 'get set' : 
+    Double Quantity 'get set' : 
+  Methods:
+    set_Interval(DataGroupingInterval): PrivateScope, Public, HideBySig, SpecialName
+    get_Interval(): PrivateScope, Public, HideBySig, SpecialName
+    set_Quantity(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_Quantity(): PrivateScope, Public, HideBySig, SpecialName
+Class AmCharts.Windows.Stock.Primitives.PlotGrid: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+  :System.Windows.Controls.Panel
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Fields:
+    System.Windows.DependencyProperty StrokeProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty StrokeThicknessProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty DashArrayProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty AlternateBackgroundProperty : Public, Static, InitOnly
+  Properties:
+    System.Windows.Media.Brush Stroke 'get set' : 
+    Double StrokeThickness 'get set' : 
+    System.Windows.Media.DoubleCollection DashArray 'get set' : 
+    System.Windows.Media.Brush AlternateBackground 'get set' : 
+  Methods:
+    set_Stroke(Brush): PrivateScope, Public, HideBySig, SpecialName
+    get_Stroke(): PrivateScope, Public, HideBySig, SpecialName
+    set_StrokeThickness(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_StrokeThickness(): PrivateScope, Public, HideBySig, SpecialName
+    set_DashArray(DoubleCollection): PrivateScope, Public, HideBySig, SpecialName
+    get_DashArray(): PrivateScope, Public, HideBySig, SpecialName
+    set_AlternateBackground(Brush): PrivateScope, Public, HideBySig, SpecialName
+    get_AlternateBackground(): PrivateScope, Public, HideBySig, SpecialName
+Class AmCharts.Windows.Stock.Primitives.DateTimeAxisGrid: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+  :AmCharts.Windows.Stock.Primitives.PlotGrid
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Properties:
+    AmCharts.Windows.Stock.Primitives.DateTimeAxis Axis 'get set' : 
+  Methods:
+    get_Axis(): PrivateScope, Public, HideBySig, SpecialName
+Class AmCharts.Windows.Stock.Chart: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+  :System.Windows.Controls.Control
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Fields:
+    System.Windows.DependencyProperty TitleProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty GridHeightProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty PlotAreaMarginProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty PlotAreaBackgroundProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty PlotAreaBorderBrushProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty PlotAreaBorderThicknessProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty DateTimeAxisProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty LeftValueAxisProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty LeftValueAxisGridProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty RightValueAxisProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty RightValueAxisGridProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty DateTimeAxisGridProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty MainDataSetProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty IsDataGroupingEnabledProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty StartDateProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty EndDateProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ColumnWidthAllocationProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty IsInComparisonModeProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty RecalculateValuesProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty RecalculateFromStartProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty RecalculateFromDateTimeProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ComparisonGraphLineThicknessProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ComparisonGraphDashArrayProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ComparisonGraphUsesMainBrushProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ShowEventBalloonsProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty EventBulletThresholdPeriodProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty EventBulletTypeProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty EventBulletFillProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty EventBulletHoverFillProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty EventBulletStrokeProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty EventBulletStrokeThicknessProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty EventBulletStrokeDashArrayProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty EventBulletTextBrushProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty EventBulletSizeProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty EventBulletOnAxisProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty EventBulletDateFormatStringProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty CurrentDateTimeProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty LegendProperty : Public, Static, InitOnly
+  Properties:
+    AmCharts.Windows.Stock.StockChart StockChart 'get set' : 
+    System.String Title 'get set' : 
+    System.Windows.GridLength GridHeight 'get set' : 
+    System.Windows.Thickness PlotAreaMargin 'get set' : 
+    System.Windows.Size PlotAreaInnerSize 'get ' : 
+    System.Windows.Media.Brush PlotAreaBackground 'get set' : 
+    System.Windows.Media.Brush PlotAreaBorderBrush 'get set' : 
+    Double PlotAreaBorderThickness 'get set' : 
+    AmCharts.Windows.Stock.Primitives.DateTimeAxis DateTimeAxis 'get set' : 
+    AmCharts.Windows.Stock.Primitives.ValueAxis LeftValueAxis 'get set' : 
+    AmCharts.Windows.Stock.Primitives.ValueGrid LeftValueAxisGrid 'get set' : 
+    AmCharts.Windows.Stock.Primitives.ValueAxis RightValueAxis 'get set' : 
+    AmCharts.Windows.Stock.Primitives.ValueGrid RightValueAxisGrid 'get set' : 
+    AmCharts.Windows.Stock.Primitives.DateTimeAxisGrid DateTimeAxisGrid 'get set' : 
+    AmCharts.Windows.Stock.Data.DataSet MainDataSet 'get ' : 
+    System.Collections.ObjectModel.ObservableCollection`1[AmCharts.Windows.Stock.Graph] Graphs 'get ' : 
+    System.Collections.Generic.List`1[AmCharts.Windows.Stock.Graph] CompareGraphs 'get ' : 
+    System.Collections.Generic.List`1[AmCharts.Windows.Stock.Graph] MainGraphs 'get ' : 
+    System.Windows.Controls.Canvas ChartCanvas 'get ' : 
+    System.Windows.Controls.Panel MainPanel 'get ' : 
+    Boolean DatesAreSet 'get ' : 
+    Boolean IsDataGroupingEnabled 'get set' : 
+    System.DateTime StartDate 'get set' : 
+    System.DateTime EndDate 'get set' : 
+    AmCharts.Windows.Stock.Data.DataGroupingInterval GroupingInterval 'get ' : 
+    Double ColumnWidthAllocation 'get set' : 
+    Double StepWidth 'get ' : 
+    Double ColumnWidth 'get ' : 
+    Boolean IsInComparisonMode 'get set' : 
+    Boolean RecalculateValues 'get set' : 
+    Boolean RecalculateFromStart 'get set' : 
+    System.Nullable`1[System.DateTime] RecalculateFromDateTime 'get set' : 
+    Double ComparisonGraphLineThickness 'get set' : 
+    System.Windows.Media.DoubleCollection ComparisonGraphDashArray 'get set' : 
+    Boolean ComparisonGraphUsesMainBrush 'get set' : 
+    Boolean ShowEventBalloons 'get set' : 
+    AmCharts.Windows.Stock.Data.DataGroupingInterval EventBulletThresholdPeriod 'get set' : 
+    AmCharts.Windows.Stock.Primitives.EventBulletType EventBulletType 'get set' : 
+    System.Windows.Media.Brush EventBulletFill 'get set' : 
+    System.Windows.Media.Brush EventBulletHoverFill 'get set' : 
+    System.Windows.Media.Brush EventBulletStroke 'get set' : 
+    Double EventBulletStrokeThickness 'get set' : 
+    System.Windows.Media.DoubleCollection EventBulletStrokeDashArray 'get set' : 
+    System.Windows.Media.Brush EventBulletTextBrush 'get set' : 
+    Double EventBulletSize 'get set' : 
+    Boolean EventBulletOnAxis 'get set' : 
+    System.String EventBulletDateFormatString 'get set' : 
+    System.Nullable`1[System.DateTime] CurrentDateTime 'get set' : 
+    AmCharts.Windows.Stock.Primitives.Legend Legend 'get set' : 
+    System.Collections.ObjectModel.ObservableCollection`1[AmCharts.Windows.Stock.Primitives.EventBullet] EventBullets 'get ' : 
+  Methods:
+    set_RecalculateValues(Boolean): PrivateScope, Public, HideBySig, SpecialName
+    get_RecalculateValues(): PrivateScope, Public, HideBySig, SpecialName
+    set_RecalculateFromStart(Boolean): PrivateScope, Public, HideBySig, SpecialName
+    get_RecalculateFromStart(): PrivateScope, Public, HideBySig, SpecialName
+    set_RecalculateFromDateTime(Nullable`1): PrivateScope, Public, HideBySig, SpecialName
+    get_RecalculateFromDateTime(): PrivateScope, Public, HideBySig, SpecialName
+    set_ComparisonGraphLineThickness(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_ComparisonGraphLineThickness(): PrivateScope, Public, HideBySig, SpecialName
+    set_ComparisonGraphDashArray(DoubleCollection): PrivateScope, Public, HideBySig, SpecialName
+    get_ComparisonGraphDashArray(): PrivateScope, Public, HideBySig, SpecialName
+    set_ComparisonGraphUsesMainBrush(Boolean): PrivateScope, Public, HideBySig, SpecialName
+    get_ComparisonGraphUsesMainBrush(): PrivateScope, Public, HideBySig, SpecialName
+    InvalidateComparisonGraphs(): PrivateScope, Public, HideBySig
+    ProcessComparisonGraphs(): PrivateScope, Public, HideBySig
+    set_ShowEventBalloons(Boolean): PrivateScope, Public, HideBySig, SpecialName
+    get_ShowEventBalloons(): PrivateScope, Public, HideBySig, SpecialName
+    set_EventBulletThresholdPeriod(DataGroupingInterval): PrivateScope, Public, HideBySig, SpecialName
+    get_EventBulletThresholdPeriod(): PrivateScope, Public, HideBySig, SpecialName
+    set_EventBulletType(EventBulletType): PrivateScope, Public, HideBySig, SpecialName
+    get_EventBulletType(): PrivateScope, Public, HideBySig, SpecialName
+    set_EventBulletFill(Brush): PrivateScope, Public, HideBySig, SpecialName
+    get_EventBulletFill(): PrivateScope, Public, HideBySig, SpecialName
+    set_EventBulletHoverFill(Brush): PrivateScope, Public, HideBySig, SpecialName
+    get_EventBulletHoverFill(): PrivateScope, Public, HideBySig, SpecialName
+    set_EventBulletStroke(Brush): PrivateScope, Public, HideBySig, SpecialName
+    get_EventBulletStroke(): PrivateScope, Public, HideBySig, SpecialName
+    set_EventBulletStrokeThickness(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_EventBulletStrokeThickness(): PrivateScope, Public, HideBySig, SpecialName
+    set_EventBulletStrokeDashArray(DoubleCollection): PrivateScope, Public, HideBySig, SpecialName
+    get_EventBulletStrokeDashArray(): PrivateScope, Public, HideBySig, SpecialName
+    set_EventBulletTextBrush(Brush): PrivateScope, Public, HideBySig, SpecialName
+    get_EventBulletTextBrush(): PrivateScope, Public, HideBySig, SpecialName
+    set_EventBulletSize(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_EventBulletSize(): PrivateScope, Public, HideBySig, SpecialName
+    set_EventBulletOnAxis(Boolean): PrivateScope, Public, HideBySig, SpecialName
+    get_EventBulletOnAxis(): PrivateScope, Public, HideBySig, SpecialName
+    set_EventBulletDateFormatString(String): PrivateScope, Public, HideBySig, SpecialName
+    get_EventBulletDateFormatString(): PrivateScope, Public, HideBySig, SpecialName
+    set_CurrentDateTime(Nullable`1): PrivateScope, Public, HideBySig, SpecialName
+    get_CurrentDateTime(): PrivateScope, Public, HideBySig, SpecialName
+    set_Legend(Legend): PrivateScope, Public, HideBySig, SpecialName
+    get_Legend(): PrivateScope, Public, HideBySig, SpecialName
+    UpdateLegend(): PrivateScope, Public, HideBySig
+    get_EventBullets(): PrivateScope, Public, HideBySig, SpecialName
+    Refresh(): PrivateScope, Public, HideBySig
+    Collapse(): PrivateScope, Public, HideBySig
+    Show(): PrivateScope, Public, HideBySig
+    get_StockChart(): PrivateScope, Public, HideBySig, SpecialName
+    set_Title(String): PrivateScope, Public, HideBySig, SpecialName
+    get_Title(): PrivateScope, Public, HideBySig, SpecialName
+    set_GridHeight(GridLength): PrivateScope, Public, HideBySig, SpecialName
+    get_GridHeight(): PrivateScope, Public, HideBySig, SpecialName
+    set_PlotAreaMargin(Thickness): PrivateScope, Public, HideBySig, SpecialName
+    get_PlotAreaMargin(): PrivateScope, Public, HideBySig, SpecialName
+    get_PlotAreaInnerSize(): PrivateScope, Public, HideBySig, SpecialName
+    set_PlotAreaBackground(Brush): PrivateScope, Public, HideBySig, SpecialName
+    get_PlotAreaBackground(): PrivateScope, Public, HideBySig, SpecialName
+    set_PlotAreaBorderBrush(Brush): PrivateScope, Public, HideBySig, SpecialName
+    get_PlotAreaBorderBrush(): PrivateScope, Public, HideBySig, SpecialName
+    set_PlotAreaBorderThickness(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_PlotAreaBorderThickness(): PrivateScope, Public, HideBySig, SpecialName
+    set_DateTimeAxis(DateTimeAxis): PrivateScope, Public, HideBySig, SpecialName
+    get_DateTimeAxis(): PrivateScope, Public, HideBySig, SpecialName
+    set_LeftValueAxis(ValueAxis): PrivateScope, Public, HideBySig, SpecialName
+    get_LeftValueAxis(): PrivateScope, Public, HideBySig, SpecialName
+    set_LeftValueAxisGrid(ValueGrid): PrivateScope, Public, HideBySig, SpecialName
+    get_LeftValueAxisGrid(): PrivateScope, Public, HideBySig, SpecialName
+    set_RightValueAxis(ValueAxis): PrivateScope, Public, HideBySig, SpecialName
+    get_RightValueAxis(): PrivateScope, Public, HideBySig, SpecialName
+    set_RightValueAxisGrid(ValueGrid): PrivateScope, Public, HideBySig, SpecialName
+    get_RightValueAxisGrid(): PrivateScope, Public, HideBySig, SpecialName
+    set_DateTimeAxisGrid(DateTimeAxisGrid): PrivateScope, Public, HideBySig, SpecialName
+    get_DateTimeAxisGrid(): PrivateScope, Public, HideBySig, SpecialName
+    get_MainDataSet(): PrivateScope, Public, HideBySig, SpecialName
+    get_Graphs(): PrivateScope, Public, HideBySig, SpecialName
+    get_CompareGraphs(): PrivateScope, Public, HideBySig, SpecialName
+    get_MainGraphs(): PrivateScope, Public, HideBySig, SpecialName
+    get_ChartCanvas(): PrivateScope, Public, HideBySig, SpecialName
+    get_MainPanel(): PrivateScope, Public, HideBySig, SpecialName
+    OnApplyTemplate(): PrivateScope, Public, Virtual, HideBySig
+    get_DatesAreSet(): PrivateScope, Public, HideBySig, SpecialName
+    IsDateVisible(DateTime): PrivateScope, Public, HideBySig
+    GetGraphStartPoint(Graph): PrivateScope, Public, HideBySig
+    GetGraphEndPoint(Graph): PrivateScope, Public, HideBySig
+    GetValueCoordinates(Graph, DateTime, Double): PrivateScope, Public, HideBySig
+    GetValueCoordinates(Graph, DateTime, Nullable`1, Double): PrivateScope, Public, HideBySig
+    GetValueYCoordinate(Graph, Double): PrivateScope, Public, HideBySig
+    set_IsDataGroupingEnabled(Boolean): PrivateScope, Public, HideBySig, SpecialName
+    get_IsDataGroupingEnabled(): PrivateScope, Public, HideBySig, SpecialName
+    set_StartDate(DateTime): PrivateScope, Public, HideBySig, SpecialName
+    get_StartDate(): PrivateScope, Public, HideBySig, SpecialName
+    set_EndDate(DateTime): PrivateScope, Public, HideBySig, SpecialName
+    get_EndDate(): PrivateScope, Public, HideBySig, SpecialName
+    get_GroupingInterval(): PrivateScope, Public, HideBySig, SpecialName
+    set_ColumnWidthAllocation(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_ColumnWidthAllocation(): PrivateScope, Public, HideBySig, SpecialName
+    get_StepWidth(): PrivateScope, Public, HideBySig, SpecialName
+    get_ColumnWidth(): PrivateScope, Public, HideBySig, SpecialName
+    set_IsInComparisonMode(Boolean): PrivateScope, Public, HideBySig, SpecialName
+    get_IsInComparisonMode(): PrivateScope, Public, HideBySig, SpecialName
+Class AmCharts.Windows.Stock.Util.TreeHelper: AutoLayout, AnsiClass, Class, Public, Abstract, Sealed, BeforeFieldInit
+  Methods:
+    TemplateFindName(String, FrameworkElement): PrivateScope, Public, Static, HideBySig
+Class AmCharts.Windows.Stock.Data.DataSet: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+  :System.Windows.FrameworkElement
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Interfaces:
+    System.ComponentModel.INotifyPropertyChanged
+  Fields:
+    System.Windows.DependencyProperty IDProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty TitleProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ShortTitleProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty DescriptionProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty BrushProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty CalculatedBrushProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty IsVisibleInMainDataSetSelectorProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty IsVisibleInCompareDataSetSelectorProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty IsSelectedForComparisonProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ItemsSourceProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty DateMemberPathProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty OpenMemberPathProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty HighMemberPathProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty LowMemberPathProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty CloseMemberPathProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ValueMemberPathProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty VolumeMemberPathProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty StartDateProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty EndDateProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty DataPrecisionProperty : Public, Static, InitOnly
+  Properties:
+    AmCharts.Windows.Stock.StockChart StockChart 'get set' : 
+    System.String ID 'get set' : 
+    System.String Title 'get set' : 
+    System.String ShortTitle 'get set' : 
+    System.String Description 'get set' : 
+    System.Windows.Media.Brush Brush 'get set' : 
+    System.Windows.Media.Brush CalculatedBrush 'get ' : 
+    Boolean IsVisibleInMainDataSetSelector 'get set' : 
+    Boolean IsVisibleInCompareDataSetSelector 'get set' : 
+    Boolean IsSelectedForComparison 'get set' : 
+    System.Collections.ObjectModel.ObservableCollection`1[AmCharts.Windows.Stock.Data.DataItem] Items 'get ' : 
+    System.Collections.IEnumerable ItemsSource 'get set' : 
+    System.String DateMemberPath 'get set' : 
+    System.String OpenMemberPath 'get set' : 
+    System.String HighMemberPath 'get set' : 
+    System.String LowMemberPath 'get set' : 
+    System.String CloseMemberPath 'get set' : 
+    System.String ValueMemberPath 'get set' : 
+    System.String VolumeMemberPath 'get set' : 
+    System.DateTime StartDate 'get set' : 
+    System.DateTime EndDate 'get set' : 
+    AmCharts.Windows.Stock.Data.DataGroupingInterval DataPrecision 'get ' : 
+    System.Collections.Generic.Dictionary`2[AmCharts.Windows.Stock.Data.DataGroupingInterval,AmCharts.Windows.Stock.Data.AggregateDataSet] AggregateData 'get ' : 
+    System.Collections.ObjectModel.ObservableCollection`1[AmCharts.Windows.Stock.Data.EventDataItem] Events 'get ' : 
+  Events:
+    System.ComponentModel.PropertyChangedEventHandler PropertyChanged: 
+  Methods:
+    get_StockChart(): PrivateScope, Public, HideBySig, SpecialName
+    set_ID(String): PrivateScope, Public, HideBySig, SpecialName
+    get_ID(): PrivateScope, Public, HideBySig, SpecialName
+    set_Title(String): PrivateScope, Public, HideBySig, SpecialName
+    get_Title(): PrivateScope, Public, HideBySig, SpecialName
+    set_ShortTitle(String): PrivateScope, Public, HideBySig, SpecialName
+    get_ShortTitle(): PrivateScope, Public, HideBySig, SpecialName
+    set_Description(String): PrivateScope, Public, HideBySig, SpecialName
+    get_Description(): PrivateScope, Public, HideBySig, SpecialName
+    set_Brush(Brush): PrivateScope, Public, HideBySig, SpecialName
+    get_Brush(): PrivateScope, Public, HideBySig, SpecialName
+    get_CalculatedBrush(): PrivateScope, Public, HideBySig, SpecialName
+    set_IsVisibleInMainDataSetSelector(Boolean): PrivateScope, Public, HideBySig, SpecialName
+    get_IsVisibleInMainDataSetSelector(): PrivateScope, Public, HideBySig, SpecialName
+    set_IsVisibleInCompareDataSetSelector(Boolean): PrivateScope, Public, HideBySig, SpecialName
+    get_IsVisibleInCompareDataSetSelector(): PrivateScope, Public, HideBySig, SpecialName
+    set_IsSelectedForComparison(Boolean): PrivateScope, Public, HideBySig, SpecialName
+    get_IsSelectedForComparison(): PrivateScope, Public, HideBySig, SpecialName
+    get_Items(): PrivateScope, Public, HideBySig, SpecialName
+    InvalidateData(): PrivateScope, Public, HideBySig
+    set_ItemsSource(IEnumerable): PrivateScope, Public, HideBySig, SpecialName
+    get_ItemsSource(): PrivateScope, Public, HideBySig, SpecialName
+    set_DateMemberPath(String): PrivateScope, Public, HideBySig, SpecialName
+    get_DateMemberPath(): PrivateScope, Public, HideBySig, SpecialName
+    set_OpenMemberPath(String): PrivateScope, Public, HideBySig, SpecialName
+    get_OpenMemberPath(): PrivateScope, Public, HideBySig, SpecialName
+    set_HighMemberPath(String): PrivateScope, Public, HideBySig, SpecialName
+    get_HighMemberPath(): PrivateScope, Public, HideBySig, SpecialName
+    set_LowMemberPath(String): PrivateScope, Public, HideBySig, SpecialName
+    get_LowMemberPath(): PrivateScope, Public, HideBySig, SpecialName
+    set_CloseMemberPath(String): PrivateScope, Public, HideBySig, SpecialName
+    get_CloseMemberPath(): PrivateScope, Public, HideBySig, SpecialName
+    set_ValueMemberPath(String): PrivateScope, Public, HideBySig, SpecialName
+    get_ValueMemberPath(): PrivateScope, Public, HideBySig, SpecialName
+    set_VolumeMemberPath(String): PrivateScope, Public, HideBySig, SpecialName
+    get_VolumeMemberPath(): PrivateScope, Public, HideBySig, SpecialName
+    set_StartDate(DateTime): PrivateScope, Public, HideBySig, SpecialName
+    get_StartDate(): PrivateScope, Public, HideBySig, SpecialName
+    set_EndDate(DateTime): PrivateScope, Public, HideBySig, SpecialName
+    get_EndDate(): PrivateScope, Public, HideBySig, SpecialName
+    get_DataPrecision(): PrivateScope, Public, HideBySig, SpecialName
+    ProcessDataBoundItems(): PrivateScope, Public, HideBySig
+    ProcessItems(): PrivateScope, Public, HideBySig
+    get_AggregateData(): PrivateScope, Public, HideBySig, SpecialName
+    add_PropertyChanged(PropertyChangedEventHandler): PrivateScope, Public, Final, Virtual, HideBySig, VtableLayoutMask, SpecialName
+    remove_PropertyChanged(PropertyChangedEventHandler): PrivateScope, Public, Final, Virtual, HideBySig, VtableLayoutMask, SpecialName
+    get_Events(): PrivateScope, Public, HideBySig, SpecialName
+Struct AmCharts.Windows.Stock.Data.DataGroupingInterval: AutoLayout, AnsiClass, Class, Public, Sealed
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    AmCharts.Windows.Stock.Data.DataGroupingInterval Raw = 0 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Data.DataGroupingInterval HundredMilliseconds = 1 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Data.DataGroupingInterval Second = 2 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Data.DataGroupingInterval FiveSeconds = 3 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Data.DataGroupingInterval FifteenSeconds = 4 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Data.DataGroupingInterval Minute = 5 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Data.DataGroupingInterval FiveMinutes = 6 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Data.DataGroupingInterval FifteenMinutes = 7 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Data.DataGroupingInterval Hour = 8 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Data.DataGroupingInterval SixHours = 9 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Data.DataGroupingInterval Day = 10 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Data.DataGroupingInterval Week = 11 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Data.DataGroupingInterval Month = 12 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Data.DataGroupingInterval Quarter = 13 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Data.DataGroupingInterval Year = 14 : Public, Static, Literal, HasDefault
+Struct AmCharts.Windows.Stock.GraphBulletType: AutoLayout, AnsiClass, Class, Public, Sealed
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    AmCharts.Windows.Stock.GraphBulletType None = 0 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.GraphBulletType Square = 1 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.GraphBulletType Round = 2 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.GraphBulletType SquareOutlined = 3 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.GraphBulletType RoundOutlined = 4 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.GraphBulletType SquareOutline = 5 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.GraphBulletType RoundOutline = 6 : Public, Static, Literal, HasDefault
+Class AmCharts.Windows.Stock.Util.GeometryHelper: AutoLayout, AnsiClass, Class, Public, Abstract, Sealed, BeforeFieldInit
+  Methods:
+    AddLineSegment(PathGeometry, Point, Boolean): PrivateScope, Public, Static, HideBySig
+    GetRect(Point, Point): PrivateScope, Public, Static, HideBySig
+Class AmCharts.Windows.Stock.Primitives.Thumb: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+  :System.Windows.Controls.Control
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Fields:
+    System.Windows.DependencyProperty SelectedStartDateProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty SelectedEndDateProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ThumbsVisibilityProperty : Public, Static, InitOnly
+  Properties:
+    AmCharts.Windows.Stock.Primitives.Scroller Scroller 'get set' : 
+    System.DateTime SelectedStartDate 'get set' : 
+    System.DateTime SelectedEndDate 'get set' : 
+    System.Windows.Visibility ThumbsVisibility 'get set' : 
+  Methods:
+    get_Scroller(): PrivateScope, Public, HideBySig, SpecialName
+    OnApplyTemplate(): PrivateScope, Public, Virtual, HideBySig
+    set_SelectedStartDate(DateTime): PrivateScope, Public, HideBySig, SpecialName
+    get_SelectedStartDate(): PrivateScope, Public, HideBySig, SpecialName
+    set_SelectedEndDate(DateTime): PrivateScope, Public, HideBySig, SpecialName
+    get_SelectedEndDate(): PrivateScope, Public, HideBySig, SpecialName
+    ArrangeDates(): PrivateScope, Public, HideBySig
+    set_ThumbsVisibility(Visibility): PrivateScope, Public, HideBySig, SpecialName
+    get_ThumbsVisibility(): PrivateScope, Public, HideBySig, SpecialName
+Class AmCharts.Windows.Stock.Primitives.LegendItem: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+  :System.Windows.Controls.Control
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Fields:
+    System.Windows.DependencyProperty CurrentDataItemProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty FormattedValueProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty FormattedOpenProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty FormattedHighProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty FormattedLowProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty FormattedCloseProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ItemTypeProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty PeriodItemTypeProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ValueTemplateVisibilityProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty OpenCloseTemplateVisibilityProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty OhlcTemplateVisibilityProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ValueFormatStringProperty : Public, Static, InitOnly
+    System.Windows.DependencyProperty ValueForegroundProperty : Public, Static, InitOnly
+  Properties:
+    AmCharts.Windows.Stock.Graph Graph 'get set' : 
+    AmCharts.Windows.Stock.Primitives.Legend Legend 'get set' : 
+    AmCharts.Windows.Stock.Data.AggregateDataItem CurrentDataItem 'get set' : 
+    System.String FormattedValue 'get ' : 
+    System.String FormattedOpen 'get ' : 
+    System.String FormattedHigh 'get ' : 
+    System.String FormattedLow 'get ' : 
+    System.String FormattedClose 'get ' : 
+    AmCharts.Windows.Stock.Primitives.LegendItemType ItemType 'get set' : 
+    AmCharts.Windows.Stock.Primitives.LegendItemType PeriodItemType 'get set' : 
+    System.Windows.Visibility ValueTemplateVisibility 'get ' : 
+    System.Windows.Visibility OpenCloseTemplateVisibility 'get ' : 
+    System.Windows.Visibility OhlcTemplateVisibility 'get ' : 
+    System.String ValueFormatString 'get set' : 
+    System.Windows.Media.Brush ValueForeground 'get ' : 
+  Methods:
+    get_Graph(): PrivateScope, Public, HideBySig, SpecialName
+    get_Legend(): PrivateScope, Public, HideBySig, SpecialName
+    OnApplyTemplate(): PrivateScope, Public, Virtual, HideBySig
+    set_CurrentDataItem(AggregateDataItem): PrivateScope, Public, HideBySig, SpecialName
+    get_CurrentDataItem(): PrivateScope, Public, HideBySig, SpecialName
+    get_FormattedValue(): PrivateScope, Public, HideBySig, SpecialName
+    get_FormattedOpen(): PrivateScope, Public, HideBySig, SpecialName
+    get_FormattedHigh(): PrivateScope, Public, HideBySig, SpecialName
+    get_FormattedLow(): PrivateScope, Public, HideBySig, SpecialName
+    get_FormattedClose(): PrivateScope, Public, HideBySig, SpecialName
+    set_ItemType(LegendItemType): PrivateScope, Public, HideBySig, SpecialName
+    get_ItemType(): PrivateScope, Public, HideBySig, SpecialName
+    set_PeriodItemType(LegendItemType): PrivateScope, Public, HideBySig, SpecialName
+    get_PeriodItemType(): PrivateScope, Public, HideBySig, SpecialName
+    get_ValueTemplateVisibility(): PrivateScope, Public, HideBySig, SpecialName
+    get_OpenCloseTemplateVisibility(): PrivateScope, Public, HideBySig, SpecialName
+    get_OhlcTemplateVisibility(): PrivateScope, Public, HideBySig, SpecialName
+    set_ValueFormatString(String): PrivateScope, Public, HideBySig, SpecialName
+    get_ValueFormatString(): PrivateScope, Public, HideBySig, SpecialName
+    get_ValueForeground(): PrivateScope, Public, HideBySig, SpecialName
+Class AmCharts.Windows.Stock.Util.DateTimeExtensions: AutoLayout, AnsiClass, Class, Public, Abstract, Sealed, BeforeFieldInit
+  Methods:
+    GetFirstDayOfWeekDate(DateTime): PrivateScope, Public, Static, HideBySig
+    GetFirstDayOfWeekDate(DateTime, CultureInfo): PrivateScope, Public, Static, HideBySig
+    GetGroupingDateTime(DateTime, DataGroupingInterval): PrivateScope, Public, Static, HideBySig
+    GetClosestGroupingDateTime(DateTime, DataGroupingInterval): PrivateScope, Public, Static, HideBySig
+    GetNextPrevGroupingDateTime(DateTime, DataGroupingInterval, Int32): PrivateScope, Public, Static, HideBySig
+    GetNextGroupingDateTime(DateTime, DataGroupingInterval): PrivateScope, Public, Static, HideBySig
+    GetPrevGroupingDateTime(DateTime, DataGroupingInterval): PrivateScope, Public, Static, HideBySig
+Class AmCharts.Windows.Stock.Data.AggregateDataItem: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Properties:
+    System.DateTime Date 'get set' : 
+    Double Open 'get set' : 
+    Double OpenSum 'get set' : 
+    Double OpenAverage 'get set' : 
+    Double High 'get set' : 
+    Double HighSum 'get set' : 
+    Double HighAverage 'get set' : 
+    Double Low 'get set' : 
+    Double LowSum 'get set' : 
+    Double LowAverage 'get set' : 
+    Double Close 'get set' : 
+    Double CloseSum 'get set' : 
+    Double CloseAverage 'get set' : 
+    Double Value 'get set' : 
+    Double ValueOpen 'get set' : 
+    Double ValueClose 'get set' : 
+    Double ValueLow 'get set' : 
+    Double ValueHigh 'get set' : 
+    Double ValueSum 'get set' : 
+    Double ValueAverage 'get set' : 
+    Double Volume 'get set' : 
+    Double VolumeOpen 'get set' : 
+    Double VolumeClose 'get set' : 
+    Double VolumeLow 'get set' : 
+    Double VolumeHigh 'get set' : 
+    Double VolumeSum 'get set' : 
+    Double VolumeAverage 'get set' : 
+  Methods:
+    get_Date(): PrivateScope, Public, HideBySig, SpecialName
+    set_Date(DateTime): PrivateScope, Public, HideBySig, SpecialName
+    get_Open(): PrivateScope, Public, HideBySig, SpecialName
+    set_Open(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_OpenSum(): PrivateScope, Public, HideBySig, SpecialName
+    set_OpenSum(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_OpenAverage(): PrivateScope, Public, HideBySig, SpecialName
+    set_OpenAverage(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_High(): PrivateScope, Public, HideBySig, SpecialName
+    set_High(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_HighSum(): PrivateScope, Public, HideBySig, SpecialName
+    set_HighSum(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_HighAverage(): PrivateScope, Public, HideBySig, SpecialName
+    set_HighAverage(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_Low(): PrivateScope, Public, HideBySig, SpecialName
+    set_Low(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_LowSum(): PrivateScope, Public, HideBySig, SpecialName
+    set_LowSum(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_LowAverage(): PrivateScope, Public, HideBySig, SpecialName
+    set_LowAverage(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_Close(): PrivateScope, Public, HideBySig, SpecialName
+    set_Close(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_CloseSum(): PrivateScope, Public, HideBySig, SpecialName
+    set_CloseSum(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_CloseAverage(): PrivateScope, Public, HideBySig, SpecialName
+    set_CloseAverage(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_Value(): PrivateScope, Public, HideBySig, SpecialName
+    set_Value(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_ValueOpen(): PrivateScope, Public, HideBySig, SpecialName
+    set_ValueOpen(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_ValueClose(): PrivateScope, Public, HideBySig, SpecialName
+    set_ValueClose(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_ValueLow(): PrivateScope, Public, HideBySig, SpecialName
+    set_ValueLow(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_ValueHigh(): PrivateScope, Public, HideBySig, SpecialName
+    set_ValueHigh(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_ValueSum(): PrivateScope, Public, HideBySig, SpecialName
+    set_ValueSum(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_ValueAverage(): PrivateScope, Public, HideBySig, SpecialName
+    set_ValueAverage(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_Volume(): PrivateScope, Public, HideBySig, SpecialName
+    set_Volume(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_VolumeOpen(): PrivateScope, Public, HideBySig, SpecialName
+    set_VolumeOpen(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_VolumeClose(): PrivateScope, Public, HideBySig, SpecialName
+    set_VolumeClose(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_VolumeLow(): PrivateScope, Public, HideBySig, SpecialName
+    set_VolumeLow(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_VolumeHigh(): PrivateScope, Public, HideBySig, SpecialName
+    set_VolumeHigh(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_VolumeSum(): PrivateScope, Public, HideBySig, SpecialName
+    set_VolumeSum(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_VolumeAverage(): PrivateScope, Public, HideBySig, SpecialName
+    set_VolumeAverage(Double): PrivateScope, Public, HideBySig, SpecialName
+    GetValue(DataItemField, PeriodValue): PrivateScope, Public, HideBySig
+    FieldSelector(DataItemField, PeriodValue): PrivateScope, Public, Static, HideBySig
+Class AmCharts.Windows.Stock.Primitives.ValueGrid: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+  :AmCharts.Windows.Stock.Primitives.PlotGrid
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Fields:
+    System.Windows.DependencyProperty CountHintProperty : Public, Static, InitOnly
+  Properties:
+    Int32 CountHint 'get set' : 
+  Methods:
+    set_CountHint(Int32): PrivateScope, Public, HideBySig, SpecialName
+    get_CountHint(): PrivateScope, Public, HideBySig, SpecialName
+Class AmCharts.Windows.Stock.DateChangeCompletedEventArgs: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+  :System.EventArgs
+    Void .ctor(System.DateTime, System.DateTime): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Properties:
+    System.DateTime StartDate 'get set' : 
+    System.DateTime EndDate 'get set' : 
+  Methods:
+    get_StartDate(): PrivateScope, Public, HideBySig, SpecialName
+    get_EndDate(): PrivateScope, Public, HideBySig, SpecialName
+Struct AmCharts.Windows.Stock.Data.PeriodValue: AutoLayout, AnsiClass, Class, Public, Sealed
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    AmCharts.Windows.Stock.Data.PeriodValue First = 0 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Data.PeriodValue Last = 1 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Data.PeriodValue Min = 2 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Data.PeriodValue Max = 3 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Data.PeriodValue Sum = 4 : Public, Static, Literal, HasDefault
+    AmCharts.Windows.Stock.Data.PeriodValue Average = 5 : Public, Static, Literal, HasDefault
+Class AmCharts.Windows.Stock.Data.AggregateDataSet: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Properties:
+    AmCharts.Windows.Stock.Data.DataGroupingInterval GroupingInterval 'get set' : 
+    System.Collections.Generic.List`1[AmCharts.Windows.Stock.Data.AggregateDataItem] Items 'get set' : 
+    System.DateTime StartDate 'get ' : 
+    System.DateTime EndDate 'get ' : 
+    System.Collections.Generic.Dictionary`2[System.DateTime,System.Int32] DateIndices 'get ' : 
+  Methods:
+    get_GroupingInterval(): PrivateScope, Public, HideBySig, SpecialName
+    set_GroupingInterval(DataGroupingInterval): PrivateScope, Public, HideBySig, SpecialName
+    get_Items(): PrivateScope, Public, HideBySig, SpecialName
+    set_Items(List`1): PrivateScope, Public, HideBySig, SpecialName
+    get_StartDate(): PrivateScope, Public, HideBySig, SpecialName
+    get_EndDate(): PrivateScope, Public, HideBySig, SpecialName
+    GetNextPeriodDate(DateTime): PrivateScope, Public, HideBySig
+    GetAggregateDataForPeriod(DateTime, DateTime): PrivateScope, Public, HideBySig
+    GetVisiblItemCount(DateTime, DateTime): PrivateScope, Public, HideBySig
+    GetPeriodValueChange(DataItemField, PeriodValue, DateTime, DateTime): PrivateScope, Public, HideBySig
+    GetPeriodPercentChange(DataItemField, PeriodValue, DateTime, DateTime): PrivateScope, Public, HideBySig
+    get_DateIndices(): PrivateScope, Public, HideBySig, SpecialName
+Class AmCharts.Windows.Stock.Data.DateFormat: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Properties:
+    AmCharts.Windows.Stock.Data.DataGroupingInterval GroupingInterval 'get set' : 
+    System.String Format 'get set' : 
+  Methods:
+    get_GroupingInterval(): PrivateScope, Public, HideBySig, SpecialName
+    set_GroupingInterval(DataGroupingInterval): PrivateScope, Public, HideBySig, SpecialName
+    get_Format(): PrivateScope, Public, HideBySig, SpecialName
+    set_Format(String): PrivateScope, Public, HideBySig, SpecialName
+Class XamlGeneratedNamespace.GeneratedInternalTypeHelper: AutoLayout, AnsiClass, Class, Public, Sealed, BeforeFieldInit
+  :System.Windows.Markup.InternalTypeHelper
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName

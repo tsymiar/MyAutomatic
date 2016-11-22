@@ -276,7 +276,7 @@ int main(int argc, char** argv)
 		for (i = 0; i <MAX_THR; i++)
 		{
 			soap_thr[i] = soap_copy(&Soap);
-			fprintf(stderr, "+++\tthread %d.\n", i);
+			fprintf(stderr, " ++++\tthread %d.\n", i);
 			pthread_create(&tid[i], NULL, (void*(*)(void*))process_queue, (void*)soap_thr[i]);
 			usleep(50);
 		}
@@ -348,6 +348,9 @@ int api__login_by_key(struct soap *soap, xsd_string usr, xsd_string psw, struct 
 int api__encrypt(struct soap *soap, char* input, char** output)
 {
 //	CHEAK;
-	sqlDB();
+	char usr[16];
+	char psw[32];
+	sqlDB(usr,psw,output);
+	printf("[IN]:\t%s\n[OUT]:\t%s\n", input, output);
 	return 0;
 }

@@ -6,7 +6,7 @@ bool net_exit = false;
 IMPLEMENT_DYNAMIC(MyOglDrawDlg, CDialog)
 
 MyOglDrawDlg::MyOglDrawDlg(CWnd* pParent /*=NULL*/)
-	: CDialog(IDD_OGL, pParent)
+	: CDialog(IDD_OGLIMG, pParent)
 {
 	net_exit = false;
 	//m_hIcon = LoadIcon((HINSTANCE)IDR_ICON, "");
@@ -70,6 +70,7 @@ END_MESSAGE_MAP()
 	std::string tmp = " ";
 	std::ifstream Readfile;
 	std::ostream;
+	CString csDirPath;
 	WIN32_FIND_DATA fileData;
 	Stock::Rsi rise{ 0 }, drop{ 0 }, total{ 0 }, last{ 0 };
 	Stock::Sma::MA tepma{ 0 }, totma{ 0 }, yma{ 0 };
@@ -92,6 +93,7 @@ BOOL MyOglDrawDlg::OnInitDialog()
 	HWND m_hWnd = this->GetSafeHwnd();
 	m_hDC = ::GetDC(m_hWnd/*m_tab.GetSafeHwnd()*/);
 	TCPIP* m_net = new TCPIP();
+	CallShellScript(".\\script", "call.bat", NULL);
 	Ogl.SetWindowPixelFormat(m_hDC, m_hWnd);
 	OnPaint();
 	SetCtrl();
@@ -170,7 +172,7 @@ void MyOglDrawDlg::FloatDrift(char* text)
 		FF_SCRIPT, " ");
 	wdc.SelectObject(&font);
 	wdc.TextOut(400, 400, text, strlen(text));
-	::Sleep(100);
+	::Sleep(300);
 	if (text)
 		text = NULL;
 }
@@ -196,18 +198,20 @@ void _stdcall MyOglDrawDlg::DrawFunc(HDC m_hDC)
 bool MyOglDrawDlg::GetMarkDatatoDraw()
 {
 	//使用相对路径读取:
-	//F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\Debug\SH600747.TXT
+	//F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\Debug\data\SH600747.DAT
 	GetModuleFileName(NULL, exeFullPath, sizeof(exeFullPath));
-	CString csDirPath((LPCSTR)exeFullPath);
-	csDirPath = csDirPath.Left(csDirPath.ReverseFind(_T('\\')));
+	//CString csDirPath((LPCSTR)exeFullPath);
+	csDirPath.Format("%s", exeFullPath);
+	csDirPath = csDirPath.Left(csDirPath.ReverseFind(_T('\\')))+ "\\data";
 	std::string sSystemPath = csDirPath.GetBuffer(csDirPath.GetLength());
-	csDirPath += "\\*.dat";
+	csDirPath += "\\*.DAT";
 	FindFirstFile(csDirPath.GetBuffer(), &fileData);
-	std::string sSystemFullPath = sSystemPath + _T("\\") + fileData.cFileName;
-	std::string sWritePath = sSystemPath + _T("\\") + _T("MACD.TXT");
+	std::string sSystemFullPath = sSystemPath + (std::string)_T("\\") + fileData.cFileName;
+	std::string sWritePath = sSystemPath + std::string(_T("\\MACD.TXT"));
 	const char* filename = sSystemFullPath.c_str();
 	const char* writefile = sWritePath.c_str();
 	//打开文件流
+//	Readfile.open(writefile, std::ios::out);
 	Readfile.open(filename, std::ios::in);
 	if (Readfile.fail())
 	{
@@ -227,6 +231,7 @@ bool MyOglDrawDlg::GetMarkDatatoDraw()
 				markdata.push_back(token);
 				token = strtok_s(NULL, "/,\t", &cot);
 			}
+			token = NULL;
 			if ((markdata.size() <= 7) && (markdata.size()>0))
 			{
 				if (markdata.size() < 3)
@@ -416,10 +421,12 @@ LRESULT MyOglDrawDlg::ShowMsgOnly(WPARAM wparam, LPARAM lparam)
 {
 	CString cmd;
 	char* pMsg = (char*)lparam;
-	cmd.Format(_T("%s"), pMsg);
-	MessageBox(cmd);
-	if (pMsg)
+	if (pMsg != NULL)
+	{
+		cmd.Format(_T("%s"), pMsg);
+		MessageBox(cmd);
 		pMsg = NULL;
+	}
 	return LRESULT();
 }
 
@@ -680,7 +687,6 @@ void MyOglDrawDlg::OnDropFiles(HDROP hDropInfo)
 	CDialog::OnDropFiles(hDropInfo);
 }
 
-
 int MyOglDrawDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
 	if (CDialog::OnCreate(lpCreateStruct) == -1)
@@ -689,6 +695,12 @@ int MyOglDrawDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	return 0;
 }
 
+void MyOglDrawDlg::OnPriv()
+{
+	auto f = *((bool*)&Ogl);
+	if (!f)
+		MessageBox("私有成员");
+}
 
 HBRUSH MyOglDrawDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 {
@@ -701,9 +713,19 @@ HBRUSH MyOglDrawDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 	return hbr;
 }
 
-
-void MyOglDrawDlg::OnPriv()
+void MyOglDrawDlg::CallShellScript(CString Path, CString fbat, CString param)
 {
-	auto f = *((bool*)&Ogl) = true;
-	MessageBox("私有成员");
+	USES_CONVERSION;
+	SHELLEXECUTEINFO ShExecInfo = { 0 };
+	ShExecInfo.cbSize = sizeof(SHELLEXECUTEINFO);
+	ShExecInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
+	ShExecInfo.hwnd = NULL;
+	ShExecInfo.lpVerb = NULL;
+	ShExecInfo.lpFile = fbat;
+	ShExecInfo.lpParameters = param;
+	ShExecInfo.lpDirectory = Path;
+	ShExecInfo.nShow = SW_HIDE;
+	ShExecInfo.hInstApp = NULL;
+	ShellExecuteEx(&ShExecInfo);
+	WaitForSingleObject(ShExecInfo.hProcess, INFINITE);
 }

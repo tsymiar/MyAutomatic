@@ -1,0 +1,56 @@
+  WpfKline.g.resources - Embedded, ContainedInManifestFile, 
+  WpfKline.Properties.Resources.resources - Embedded, ContainedInManifestFile, 
+ImageRuntimeVersion: v2.0.50727
+Assembly WpfKline, Version=3.0.*, Culture=固定语言(固定国家/地区): 
+	hash=SHA1, flags=PublicKey
+Assembly mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089: 
+	hash=None, flags=None
+Assembly PresentationFramework, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35: 
+	hash=None, flags=None
+Assembly System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089: 
+	hash=None, flags=None
+Assembly WindowsBase, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35: 
+	hash=None, flags=None
+Assembly AmCharts.Windows.Stock, Version=1.1.0.0, Culture=neutral, PublicKeyToken=6a0af00bd7de39d1: 
+	hash=None, flags=None
+Assembly PresentationCore, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35: 
+	hash=None, flags=None
+Class WpfKline.StockParam: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Properties:
+    System.DateTime date 'get set' : 
+    Double open 'get set' : 
+    Double high 'get set' : 
+    Double low 'get set' : 
+    Double close 'get set' : 
+    Double volume 'get set' : 
+  Methods:
+    get_date(): PrivateScope, Public, HideBySig, SpecialName
+    set_date(DateTime): PrivateScope, Public, HideBySig, SpecialName
+    get_open(): PrivateScope, Public, HideBySig, SpecialName
+    set_open(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_high(): PrivateScope, Public, HideBySig, SpecialName
+    set_high(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_low(): PrivateScope, Public, HideBySig, SpecialName
+    set_low(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_close(): PrivateScope, Public, HideBySig, SpecialName
+    set_close(Double): PrivateScope, Public, HideBySig, SpecialName
+    get_volume(): PrivateScope, Public, HideBySig, SpecialName
+    set_volume(Double): PrivateScope, Public, HideBySig, SpecialName
+Class WpfKline.App: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+  :System.Windows.Application
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Methods:
+    InitializeComponent(): PrivateScope, Public, HideBySig
+    Main(): PrivateScope, Public, Static, HideBySig
+Class WpfKline.MainWindow: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+  :System.Windows.Window
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Interfaces:
+    System.Windows.Markup.IComponentConnector
+  Properties:
+    System.Collections.Generic.List`1[WpfKline.StockParam] Data 'get set' : 
+  Methods:
+    get_Data(): PrivateScope, Public, HideBySig, SpecialName
+    set_Data(List`1): PrivateScope, Public, HideBySig, SpecialName
+    InitializeComponent(): PrivateScope, Public, Final, Virtual, HideBySig, VtableLayoutMask
