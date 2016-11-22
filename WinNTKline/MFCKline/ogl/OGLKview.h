@@ -1,4 +1,4 @@
-﻿#ifndef OGL_KVIEW_H_
+﻿#if !defined OGL_KVIEW_H_
 #define OGL_KVIEW_H_
 //#pragma execution_character_set("utf-8")
 //#pragma comment(linker, "/subsystem:\"windows\" /entry:\"mainCRTStartup\"") 
@@ -15,7 +15,6 @@
 #endif
 #define NO_WARN_MBCS_MFC_DEPRECATION
 #define BUFFER_OFFSET(offset) ((void*)(offset))
-#if !def _TCPIP_H_
 #include	<cfloat>
 #include	<cmath>
 #include	<ctime>
@@ -43,7 +42,6 @@
 #include <process.h>
 #endif
 #pragma comment(lib, "freetype.lib") 
-#endif
 #include	<font/ft2build.h>
 #include	FT_FREETYPE_H  
 #include	<GL/glew.h>  
@@ -65,6 +63,7 @@
 #define fixpixelx 0.002f
 #endif
 //#define GLTEST
+#define _N_ 10
 
 class OGLKview
 {
@@ -274,4 +273,28 @@ public:
 		return 0.27f*py*tinker.ratio*tinker.zoom + y_fix - 2.1f;
 	}
 };
-#endif // !OGL_KVIEW_H_
+
+class BearCharges
+{
+	double Sqrt_sum(int x, int y)
+	{
+		return sqrt(x*x + y*y);
+	}
+
+	double Max_len(OGLKview::Point Base[_N_]) {
+		double S, max = 0;
+		for (int i = 0; i<_N_; i++)
+		{
+			if (i != 0)
+			{
+				S = Sqrt_sum(int(Base[i].x - Base[i - 1].x), int(Base[i].y - Base[i - 1].y));
+				if (max <= S)
+					return S;
+			}
+			else
+				return 0;
+		}
+	}
+};
+
+#endif // !OGL_KVIEW_H_}

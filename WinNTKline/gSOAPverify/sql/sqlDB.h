@@ -2,6 +2,7 @@
 #define _SQLDB_H
 #include <sys/socket.h>
 #include <mysql/mysql.h>
+#include <pthread.h>
 #include <iostream>
 #include <cstdlib>
 #include <string>
@@ -12,7 +13,7 @@
 #  ifdef __cplusplus
 extern "C" {
 #  endif /* __cplusplus */
-	int sqlDB();
+	int sqlDB(char* usr, char* psw, char* out[]);
 #  ifdef __cplusplus
 }
 #  endif

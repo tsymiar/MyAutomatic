@@ -92,11 +92,12 @@ public:
 	afx_msg void OnContextMenu(CWnd* /*pWnd*/, CPoint /*point*/);
 	afx_msg void FloatDrift(char* text);
 	afx_msg void OnClose();
+	afx_msg void OnPriv();
 	afx_msg void ToQuit();
 	afx_msg void SetBkg();
-	afx_msg void Set_5_Deg();
+	afx_msg void Set_5_Deg(); 
 	afx_msg void OnDropFiles(HDROP hDropInfo);
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
-	afx_msg void OnPriv();
+	afx_msg void CallShellScript(CString Path, CString fbat, CString param);
 };

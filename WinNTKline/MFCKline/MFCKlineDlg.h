@@ -6,6 +6,7 @@
 #include "MyOglDrawDlg.h"
 #include "LoginDlg.h"
 #include "Wpf/WpfHost.h"
+#include <crtdbg.h>
 
 // CMFCKlineDlg 对话框
 class CMFCKlineDlg : public CDialogEx

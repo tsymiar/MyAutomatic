@@ -83,7 +83,7 @@ namespace WpfKline
             string rootpath = AppDomain.CurrentDomain.BaseDirectory;
             if (!String.IsNullOrEmpty(rootpath))
             {
-                txtFilePath.Text = rootpath + "SH600747.TXT";
+                txtFilePath.Text = rootpath + "SH600747.DAT";
                 LoadData(txtFilePath.Text);
                 stockSet1.ItemsSource = Data;
             }

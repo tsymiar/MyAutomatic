@@ -29,9 +29,9 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
     <CLRSupport>true</CLRSupport>
-    <PlatformToolset>v140</PlatformToolset>
     <WindowsAppContainer>false</WindowsAppContainer>
     <UseOfMfc>Dynamic</UseOfMfc>
+    <PlatformToolset>v140_xp</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -45,10 +45,10 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
     <UseOfMfc>Dynamic</UseOfMfc>
     <CLRSupport>true</CLRSupport>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -79,11 +79,10 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <CodeAnalysisRuleSet>NativeRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <IncludePath>F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\MFCKline\Index;F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\gSOAPWeb\soap;F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\MFCKline\font;F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\MFCKline;F:\dell-pc\lib\boost\;$(IncludePath)</IncludePath>
-    <ReferencePath>$(ReferencePath)</ReferencePath>
-    <ExecutablePath>$(ExecutablePath)</ExecutablePath>
-    <LibraryPath>F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\MFCKline\font\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(BOOST);$(PATH_VLD)\include;$(SolutionDir)MFCKline;$(SolutionDir)MFCKline\font;$(SolutionDir)MFCKline\Index;$(SolutionDir)gSOAPverify\soap;$(IncludePath)</IncludePath>
+    <LibraryPath>$(PATH_VLD)\lib\Win32;$(SolutionDir)MFCKline\font\lib;$(LibraryPath)</LibraryPath>
     <RunCodeAnalysis>false</RunCodeAnalysis>
+    <IntDir>$(SolutionDir)$(PlatformToolset)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -116,13 +115,14 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DisableSpecificWarnings>
       </DisableSpecificWarnings>
+      <AdditionalIncludeDirectories>%(PATH_VLD)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>NotSet</TargetMachine>
       <AdditionalOptions>/NODEFAULTLIB:"libcmt.lib" %(AdditionalOptions)</AdditionalOptions>
       <AdditionalDependencies>legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>%(PATH_VLD)\lib\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -227,8 +227,10 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\gSOAPverify\soap\stdsoap2.h" />
     <ClInclude Include="boost\boostest.h" />
     <ClInclude Include="Chart\DepthChart.h" />
+    <ClInclude Include="ctl\CWebBrowser2.h" />
     <ClInclude Include="Def\MacroDef.h" />
     <ClInclude Include="dos\DOSCout.h" />
     <ClInclude Include="Font\FontNehe.h" />
@@ -248,17 +250,21 @@
     <ClInclude Include="OGL\OGLKview.h" />
     <ClInclude Include="ogl\texture.h" />
     <ClInclude Include="own\CNMenu.h" />
+    <ClInclude Include="RegistDlg.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="security\encoding.h" />
     <ClInclude Include="security\MD5.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Stock\Stock.h" />
     <ClInclude Include="targetver.h" />
-    <ClInclude Include="web\web.h" />
     <ClInclude Include="Wpf\WpfHost.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\gSOAPverify\soap\soapC.cpp" />
+    <ClCompile Include="..\gSOAPverify\soap\soapClient.cpp" />
+    <ClCompile Include="..\gSOAPverify\soap\stdsoap2.cpp" />
     <ClCompile Include="Chart\DepthChart.cpp" />
+    <ClCompile Include="ctl\CWebBrowser2.cpp" />
     <ClCompile Include="dos\DOSCout.cpp" />
     <ClCompile Include="Font\FontNehe.cc" />
     <ClCompile Include="Index\CPUID.H" />
@@ -271,14 +277,15 @@
     <ClCompile Include="ogl\bitmap.c">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
     </ClCompile>
-    <ClCompile Include="ogl\GlModel.cpp" />
+    <ClCompile Include="ogl\GlModel.cc" />
     <ClCompile Include="ogl\House.cc" />
     <ClCompile Include="ogl\GlF16.cc" />
     <ClCompile Include="OGL\OGLKview.cc" />
     <ClCompile Include="ogl\texture.c">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
     </ClCompile>
-    <ClCompile Include="security\AES.cpp" />
+    <ClCompile Include="RegistDlg.cpp" />
+    <ClCompile Include="security\AES.cc" />
     <ClCompile Include="security\encoding.cc" />
     <ClCompile Include="security\MD5.cc" />
     <ClCompile Include="test\Testingcase.cpp" />
@@ -287,7 +294,8 @@
     <ResourceCompile Include="MFCKline.rc" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\gSOAPWeb\soap\web.nsmap" />
+    <None Include="..\gSOAPverify\soap\myweb.nsmap" />
+    <None Include="ClassDiagram.cd" />
     <None Include="Index\Indexes.inl" />
     <None Include="res\MFCKline.rc2" />
   </ItemGroup>
@@ -341,7 +349,7 @@
   </ImportGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties RESOURCE_FILE="MFCKline.rc" />
+      <UserProperties _x007B_8856F961-340A-11D0-A96B-00C04FD705A2_x007D_="CWebBrowser2" RESOURCE_FILE="MFCKline.rc" />
     </VisualStudio>
   </ProjectExtensions>
 </Project>

@@ -341,7 +341,7 @@ void _stdcall OGLKview::InitGraph(void/*HDC m_hDC*/)
 	diag_staff(dlginfo.mouX, dlginfo.mouY);
 #endif
 #endif // DEBUG
-	buset.m_boostest();
+//	buset.m_boostest();
 #ifdef _CONSOLE||_WINDOWS
 	SetConsoleCtrlHandler(dos.ConsoleHandler, TRUE);
 #endif
@@ -360,7 +360,8 @@ void OGLKview::draw_string(const char* str)
 			++i;
 		++len;
 	}
-	wstring = (wchar_t*)malloc((len + 1)*sizeof(wchar_t));
+	if((wstring = (wchar_t*)malloc((len + 1)*sizeof(wchar_t)))==NULL)
+		return;
 	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, str, -1, wstring, len);
 	wstring[len] = _T('\0');
 	if ((wstring[0] > 0x7f)||(47 < wstring[0] && wstring[0] <= 127))
@@ -379,23 +380,21 @@ void OGLKview::draw_string(const char* str)
 
 int OGLKview::diag_staff(int x,int y)
 {
-	OGLKview okw;
-	OGLKview::Point pt;
-	pt.x = (float)x; 
-	pt.y = (float)y;
+	OGLKview::Point pt = \
+	{ pt.x = (float)x,pt.y = (float)y };
 	glColor3f(1, 1, 1);
 	glViewport(0, viewsize.pty, viewsize.ptw, viewsize.pth);
 	glBegin(GL_LINES);
 	{
-		glVertex2f(-10.0f, okw.xytinker(pt).y);
-		glVertex2f(10.0f, okw.xytinker(pt).y);
+		glVertex2f(-10.0f, this->xytinker(pt).y);
+		glVertex2f(10.0f, this->xytinker(pt).y);
 	}
 	glEnd();
 	glViewport(0, 0, viewsize.ptw, int(viewsize.pth*1.966f));
 	glBegin(GL_LINES);
 	{
-		glVertex2f(okw.xytinker(pt).x, -1.239f);
-		glVertex2f(okw.xytinker(pt).x, 1.17f);
+		glVertex2f(this->xytinker(pt).x, -1.239f);
+		glVertex2f(this->xytinker(pt).x, 1.17f);
 	}
 	glEnd();
 	return y;
