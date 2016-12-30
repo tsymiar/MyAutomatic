@@ -4,7 +4,7 @@
 #include "afxcmn.h"
 #include "afxmt.h"
 #include "afxdialogex.h"
-#include "MyOglDrawDlg.h"
+#include "Index/Indexes.inl"
 // CLoginDlg 对话框
 
 class CLoginDlg : public CDialogEx

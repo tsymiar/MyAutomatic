@@ -8,6 +8,7 @@
 #include "web\myweb.h"
 #include "myweb.nsmap"
 #include "security\MD5.h"
+
 #define M 8
 struct soap soap;
 char ip[] = "192.168.1.3";
@@ -91,14 +92,14 @@ void CLoginDlg::fill_edit(CEdit& edit, const char tmp[], int hexlen)
 				if (i == 0)
 					sprintf(temp, "%02X ", uTmp[0]);
 				if (!(i%16)) 
-					sprintf(temp, "%s %02X\n", sTmp, uTmp[i]);
+					sprintf(temp, "%s %02X\n", (char*)&sTmp, uTmp[i]);
 				else
-					sprintf(temp, "%s %02X", sTmp, uTmp[i]);
+					sprintf(temp, "%s %02X", (char*)&sTmp, uTmp[i]);
 			}
 		}
 		else
 		{
-			sprintf(temp, "%s\r\n%s", sTmp, tmp);
+			sprintf(temp, "%s\r\n%s", (char*)&sTmp, tmp);
 		}
 	edit.SetWindowText(temp);
 	delete[] temp;
@@ -201,13 +202,13 @@ void CLoginDlg::OnBnClickedLogin()
 		STrslt.Format("%s", *soapele.rslt[0]);
 		break;
 	}
+	free(soapele.rslt[0]);
 	AfxMessageBox(STrslt);
 }
 
 void CLoginDlg::OnBnClickedCancel()
 {
 	CDialogEx::OnCancel();
-
 }
 
 void CLoginDlg::OnBnClickedDft80()
@@ -267,7 +268,7 @@ void CLoginDlg::GetiniIPs(char* IPs[])
 
 void CLoginDlg::OnCbnSelchangeIp()
 {
-	CString sip, temp;
+	CString sip;
 	int index = m_combo.GetCurSel();
 	m_combo.GetLBText(index, sip);
 	switch (index)

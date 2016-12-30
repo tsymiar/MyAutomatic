@@ -3,8 +3,8 @@
 #include "MFCKline.h"
 #include "MFCKlineDlg.h"
 #include "afxdialogex.h"
-//#include  <vld.h>
 #ifdef _DEBUG
+#include  <vld.h>
 #define new DEBUG_NEW
 #endif
 
@@ -21,7 +21,9 @@ struct ProcessWindow
 CMFCKlineDlg::CMFCKlineDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(IDD_MFCKLINE_DIALOG, pParent)
 {
-	//_CrtSetBreakAlloc(2222);
+#ifdef _DEBUG
+	_CrtSetBreakAlloc(2222);
+#endif
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
 

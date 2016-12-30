@@ -1,10 +1,11 @@
 #ifndef _INDEXS_H
 #define _INDEXS_H
 
-#include<cfloat>
 #include<cmath>
+#include<cfloat>
 #include<assert.h>
 #include<atlstr.h>
+#include<gl/GL.h>
 
 class Indexes {
 
@@ -51,17 +52,15 @@ public:
 		index.ptr = new char[msg.GetAllocLength() + 1];
 		sprintf(index.ptr, _T("%s"), (LPSTR)(LPCTSTR)msg);
 #endif // _UNICODE
+		char* p = index.ptr;
 		assert(index.ptr != NULL);
-		return index.ptr;
+		return p;
 	}
 public:
 	virtual Indexes::~Indexes()
 	{
 		if (ptr)
-		{
 			ptr = NULL;
-			delete ptr;
-		}
 	}
 };
 #endif
