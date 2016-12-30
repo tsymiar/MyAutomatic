@@ -253,7 +253,7 @@ bool MyOglDrawDlg::GetMarkDatatoDraw()
 					Ogl.DrawKtext(code, pt_code, 20, { 1,1,0 }, "Terminal", false);
 					sprintf(code, _T("%s(%s)<%s>"), div_stock[1], div_stock[0], div_stock[2]);
 					pt_code = { -1.22f,pt_code.y };
-					Ogl.DrawKtext(code, pt_code, 12, { 1,1,1 }, "宋体");
+					Ogl.DrawKtext(code, pt_code, 12, { 1,1,0 }, "宋体");
 					pt_code = { 0.8f,1.189f };
 					*div_stock = NULL;
 				}

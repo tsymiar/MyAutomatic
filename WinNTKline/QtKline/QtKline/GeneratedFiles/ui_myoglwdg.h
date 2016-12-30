@@ -33,7 +33,6 @@ public:
     QMenu *menu;
     QToolBar *mainToolBar;
     QStatusBar *statusBar;
-    QToolBar *toolBar;
 
     void setupUi(QMainWindow *QtKlineClass)
     {
@@ -60,9 +59,6 @@ public:
         statusBar = new QStatusBar(QtKlineClass);
         statusBar->setObjectName(QStringLiteral("statusBar"));
         QtKlineClass->setStatusBar(statusBar);
-        toolBar = new QToolBar(QtKlineClass);
-        toolBar->setObjectName(QStringLiteral("toolBar"));
-        QtKlineClass->addToolBar(Qt::TopToolBarArea, toolBar);
 
         menuBar->addAction(menu->menuAction());
         menu->addSeparator();
@@ -77,7 +73,6 @@ public:
     {
         QtKlineClass->setWindowTitle(QApplication::translate("QtKlineClass", "QtKline", 0));
         menu->setTitle(QApplication::translate("QtKlineClass", "Menu", 0));
-        toolBar->setWindowTitle(QApplication::translate("QtKlineClass", "toolBar", 0));
     } // retranslateUi
 
 };

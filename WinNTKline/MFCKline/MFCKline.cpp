@@ -4,10 +4,6 @@
 #include "MFCKline.h"
 #include "MFCKlineDlg.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#endif
-
 
 // CMFCKlineApp
 
