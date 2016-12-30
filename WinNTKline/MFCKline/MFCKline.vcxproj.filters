@@ -69,9 +69,6 @@
     <ClInclude Include="own\CNMenu.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Index\_string.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="security\encoding.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -109,6 +106,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="RegistDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Index\_string.inl">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Index\plus1second.hhh">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

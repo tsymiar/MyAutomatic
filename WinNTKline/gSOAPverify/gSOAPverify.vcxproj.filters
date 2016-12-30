@@ -1,8 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <None Include="ClassDiagram.cd" />
-    <None Include="soap\myweb.nsmap" />
+    <None Include="fixmysql" />
+    <None Include="Makefile" />
+    <None Include="soap\myweb.nsmap">
+      <Filter>头文件</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="头文件">
@@ -28,6 +31,9 @@
     <ClCompile Include="MyWeb.cc">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="pthdpool\thread_pool.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sql\sqlDB.h">
@@ -36,10 +42,13 @@
     <ClInclude Include="MyWeb.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="thdpool\thread_pool.h">
+    <ClInclude Include="soap\stdsoap2.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="soap\stdsoap2.h">
+    <ClInclude Include="opt\_string.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="pthdpool\thread_pool.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

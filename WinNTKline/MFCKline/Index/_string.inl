@@ -15,13 +15,14 @@ class _string {
 	friend istream& operator >> (istream&, _string&);
 public:
 	_string(const char* str = NULL);//赋值兼默认构造函数（char）
-	_string(const _string& other);//赋值构造函数（String）
+	_string(const _string& other);//赋值构造函数（_string）
 	_string& operator=(const _string& other);
-	_string& operator+(const _string& other)const;
+	_string/*&*/ operator+(const _string& other)const;
 	bool operator==(const _string&);
 	char& operator[](unsigned int);
 	char* _strcpy(char* strDest, const char* strSrc, int N = 1024);
-	char* __cdecl _strcat(char * strDest, const char * strSrc);
+	char* /*__cdecl*/_strcat(char * strDest, const char * strSrc);
+	unsigned char* _strsub(unsigned char* ch, int pos, int len);
 	size_t _strlen(const char* str);
 	char* _strmove(char* w, int m, bool fore=false);
 	char* _charmove(char* w, char c, int b, bool hind = false/*默认向左*/);
@@ -52,6 +53,7 @@ inline _string::_string(const char* str)//inline执行时直接语句替换
 		_strcpy(m_data, str);
 	}
 }
+
 inline _string::_string(const _string& other)
 {
 	if (!other.m_data)//类的成员函数内可以访问同种对象的私有成员（同种类为友元关系的类）
@@ -69,19 +71,38 @@ inline char* _string::_strcpy(char* strDest, const char* strSrc, int N)
 	size_t available = N;
 	char* strDestCopy = strDest;
 	while ((*strDest++ = *strSrc++) != '\0' && --available > 0)
-		NULL;
+		N = (int)NULL;
 	return strDestCopy;//返回字符串以支持链式表达式
 }
 //字符串拼接
-inline char * __cdecl _string::_strcat(char * strDest, const char * strSrc)
+inline char * /*__cdecl*/ _string::_strcat(char * strDest, const char * strSrc)
 {
 	if ((strDest == NULL) || (strSrc == NULL))
 		throw "buffer is empty";
 	char * cp = strDest;
 	while (*cp)
 		cp++; /* find end of strDest */
-	while (*cp++ = *strSrc++); /* Copy strSrc to end of strDest */
-	return(strDest); /* return strDest */
+	while (bool((*cp++ = *strSrc++) != NULL)); /* Copy strSrc to end of strDest */
+	return(strDest);
+}
+//从第pos位开始截取len个字符。
+inline unsigned char* _string::_strsub(unsigned char* ch, int pos, int len)
+{
+	unsigned char* pch = ch;
+	//定义一个字符指针，指向传递进来的ch地址。  
+	unsigned char* subch = (unsigned char*)calloc(sizeof(unsigned char), len + 1);
+	//通过calloc来分配一个len长度的字符数组，返回的是字符指针。  
+	int i;
+	//只有在C99下for循环中才可以声明变量，这里写在外面，提高兼容性。  
+	pch = pch + pos;
+	//是pch指针指向pos位置。  
+	for (i = 0; i<len; i++)
+	{
+		subch[i] = *(pch++);
+		//循环遍历赋值数组。  
+	}
+	subch[len] = '\0';//加上字符串结束符。  
+	return subch;       //返回分配的字符数组地址。  
 }
 //计算字符个数（字符串长度）
 inline size_t _string::_strlen(const char * str)
@@ -223,7 +244,7 @@ inline _string & _string::operator=(const _string & other)
 	return *this;
 }
 
-inline _string & _string::operator+(const _string & other) const
+inline _string /*&*/ _string::operator+(const _string & other) const
 {
 	_string newstring;
 	if (!other.m_data)
@@ -236,7 +257,7 @@ inline _string & _string::operator+(const _string & other) const
 		strcpy(newstring.m_data, m_data);
 		strcat(newstring.m_data, other.m_data);
 	}
-	return newstring;
+	return newstring;//内联函数不该返回局部变量的引用
 }
 
 inline bool _string::operator==(const _string& s)

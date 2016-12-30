@@ -236,7 +236,8 @@
     <ClInclude Include="Font\FontNehe.h" />
     <ClInclude Include="Index\binarytree.h" />
     <ClInclude Include="Index\CommSet.h" />
-    <ClInclude Include="Index\_string.h" />
+    <ClInclude Include="Index\plus1second.hhh" />
+    <ClInclude Include="Index\_string.inl" />
     <ClInclude Include="LoginDlg.h" />
     <ClInclude Include="MFCKline.h" />
     <ClInclude Include="MFCKlineDlg.h" />

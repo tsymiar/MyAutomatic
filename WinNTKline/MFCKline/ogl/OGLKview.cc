@@ -339,9 +339,10 @@ void _stdcall OGLKview::InitGraph(void/*HDC m_hDC*/)
 #if !defined(GLTEST)
 	chart_frame();
 	diag_staff(dlginfo.mouX, dlginfo.mouY);
+#else
+	buset.m_boostest();
 #endif
 #endif // DEBUG
-//	buset.m_boostest();
 #ifdef _CONSOLE||_WINDOWS
 	SetConsoleCtrlHandler(dos.ConsoleHandler, TRUE);
 #endif

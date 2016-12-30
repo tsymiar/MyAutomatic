@@ -13,7 +13,7 @@
 #  ifdef __cplusplus
 extern "C" {
 #  endif /* __cplusplus */
-	int sqlDB(char* usr, char* psw, char* out[]);
+	int sqlDB(int type, char* acc, char* psw, char* out[]);
 #  ifdef __cplusplus
 }
 #  endif

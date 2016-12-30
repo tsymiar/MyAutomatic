@@ -47,7 +47,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'" Label="Configuration">
     <UseDebugLibraries>true</UseDebugLibraries>
-    <ConfigurationType>Makefile</ConfigurationType>
+    <RemoteRootDir>/opt</RemoteRootDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'" Label="Configuration">
     <UseDebugLibraries>false</UseDebugLibraries>
@@ -67,12 +67,18 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+    <TargetExt />
+    <IntDir>$(ProjectDir)</IntDir>
+  </PropertyGroup>
   <ItemGroup>
-    <None Include="ClassDiagram.cd" />
+    <None Include="fixmysql" />
+    <None Include="Makefile" />
     <None Include="soap\myweb.nsmap" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MyWeb.cc" />
+    <ClCompile Include="pthdpool\thread_pool.c" />
     <ClCompile Include="soap\soapC.cpp" />
     <ClCompile Include="soap\soapServer.cpp" />
     <ClCompile Include="soap\stdsoap2.cpp" />
@@ -80,11 +86,23 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MyWeb.h" />
+    <ClInclude Include="opt\_string.h" />
+    <ClInclude Include="pthdpool\thread_pool.h" />
     <ClInclude Include="soap\stdsoap2.h" />
     <ClInclude Include="sql\sqlDB.h" />
-    <ClInclude Include="thdpool\thread_pool.h" />
   </ItemGroup>
-  <ItemDefinitionGroup />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+    <Link>
+      <ShowProgress>true</ShowProgress>
+      <Version>true</Version>
+      <OptimizeforMemory>true</OptimizeforMemory>
+      <VerboseOutput>true</VerboseOutput>
+      <PrintMap>true</PrintMap>
+    </Link>
+    <ClCompile>
+      <Verbose>true</Verbose>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
 </Project>
