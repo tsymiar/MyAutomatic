@@ -30,7 +30,7 @@
 #include	<iostream>
 #include	<fcntl.h>
 #include	<fstream>
-#include	<plus1second.h>
+#include	<plus1second.hhh>
 #ifdef _WIN32//__linux
 #include "..\stdafx.h"
 #ifdef Error //ws2tcpip.h 'Error' redefined.
@@ -52,7 +52,7 @@
 #include	"boost/boostest.h"
 #include	"Index/Indexes.inl"
 #include	"Index/CPUID.H"
-#include	"Index/_string.h"
+#include	"Index/_string.inl"
 #include	"dos/DOSCout.h"
 #include	"Stock/Stock.h"
 #include	"Def/MacroDef.h"
@@ -283,7 +283,7 @@ class BearCharges
 
 	double Max_len(OGLKview::Point Base[_N_]) {
 		double S, max = 0;
-		for (int i = 0; i<_N_; i++)
+		for (int i = 0; i < _N_; i++)
 		{
 			if (i != 0)
 			{

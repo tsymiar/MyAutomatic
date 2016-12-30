@@ -1,0 +1,5 @@
+#!/bin/sh
+echo 重启mysql
+systemctl restart mysqld.service
+echo 输入密码
+mysql -u root -p

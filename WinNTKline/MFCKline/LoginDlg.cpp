@@ -8,13 +8,19 @@
 #include "web\myweb.h"
 #include "myweb.nsmap"
 #include "security\MD5.h"
-
+#define M 8
 struct soap soap;
-char* ip = "192.168.1.17";
+char ip[] = "192.168.1.3";
 CString STrslt;
-char* st[8];
 char cmd[64];
-char m_port[16];
+char m_port[16]; 
+struct SOAPELE {
+	struct soap soap;
+	char addr[256];
+	char cmd[64];
+	char *rslt[8];
+	int err;
+} soapele;
 // CLoginDlg 对话框
 
 IMPLEMENT_DYNAMIC(CLoginDlg, CDialogEx)
@@ -27,6 +33,76 @@ CLoginDlg::CLoginDlg(CWnd* pParent /*=NULL*/)
 
 CLoginDlg::~CLoginDlg()
 {
+}
+
+unsigned char* fix_str(unsigned char* str)
+{
+	for (int i = 0; i<(int)strlen((const char*)str); i++)
+		switch (str[i])
+		{
+		case 0xcc:/*烫 未初始化*/
+		case 0xCD:/*heapk(new)*/
+		case 0xDD://已收回的堆(delete)
+		case 0xFD://隔离（栅栏字节）字节 下标越界
+		case 0xAB://Memory allocated by LocalAlloc()
+		case 0xBAADF00D://	Memory allocated by LocalAlloc() with LMEM_FIXED,\
+						//	but not yet written to.
+		case 0xFEEEFEEE:/*  OS fill heap memory, which was marked for usage,\
+							but wasn't allocated by HeapAlloc() or LocalAlloc()\
+							Or that memory just has been freed by HeapFree().
+						*/
+			str[i] = '\0';
+			break;
+		default:break;
+		}
+	return str;
+}
+
+void fill_edit(CEdit& edit, CString& tmp)
+{
+	CString sTemp;
+	edit.GetWindowText(sTemp);
+	if (sTemp.IsEmpty())
+		sTemp += (tmp + "\r\n");
+	else
+		sTemp += ("\r\n" + tmp);
+	edit.SetWindowText(sTemp);
+	edit.LineScroll(edit.GetLineCount(), 0);
+}
+
+void CLoginDlg::fill_edit(CEdit& edit, const char tmp[], int hexlen)
+{
+	CString sTmp;
+	char* temp = new char[2048];
+	if (edit.m_hWnd == NULL)return;
+	edit.GetWindowText(sTmp);
+	if (sTmp.GetLength() >= 0x7f0)
+		sTmp = "";
+	if (sTmp.IsEmpty())
+	{
+		sprintf(temp, "%s", tmp);
+	}
+	else
+		if (hexlen > 0)
+		{
+			unsigned char* uTmp = (unsigned char*)tmp;
+			for (int i = 0; i < hexlen; i++)
+			{
+				if (i == 0)
+					sprintf(temp, "%02X ", uTmp[0]);
+				if (!(i%16)) 
+					sprintf(temp, "%s %02X\n", sTmp, uTmp[i]);
+				else
+					sprintf(temp, "%s %02X", sTmp, uTmp[i]);
+			}
+		}
+		else
+		{
+			sprintf(temp, "%s\r\n%s", sTmp, tmp);
+		}
+	edit.SetWindowText(temp);
+	delete[] temp;
+	edit.LineScroll(edit.GetLineCount(), 0);
 }
 
 void Ip2Str(CIPAddressCtrl &m_ipAddr, CString &strIP)
@@ -71,30 +147,48 @@ BOOL CLoginDlg::OnInitDialog()
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
+unsigned int _stdcall call_soap_thrd(void* lp)
+{
+	SOAPELE* ele = (SOAPELE*)lp;
+	ele->err = soap_call_api__encrypt(&ele->soap, ele->addr, "", ele->cmd, (char**)&ele->rslt);
+	return ele->err;
+}
+
 void CLoginDlg::OnBnClickedLogin()
 {
-	char dig[32],out[32],addr[256];
+	char dig[32],out[32],addr[256];	
+	memset(&soapele, 0, sizeof(SOAPELE));
 	::GetDlgItemText(this->m_hWnd, IDC_ACNT, m_acnt, 32);
 	::GetDlgItemText(this->m_hWnd, IDC_PSW, m_pswd, 32);
 	::GetDlgItemText(this->m_hWnd, IDC_PORT, m_port, 32);
 	if (!strcmp(m_port, ""))
 	{
-		MessageBox("请输入端口号！");
+		AfxMessageBox("请输入端口号！");
 		return;
 	}
 	md5_str(m_pswd, dig);
 	hex_to_str((unsigned char*)dig, out);
 	sprintf_s(cmd, "Login@acc=%s&psw=%s", m_acnt, get_Hash(out, 16, out));
 	sprintf(addr, "http://%s:%s/myweb.cgi", ip, m_port);
+	soapele.soap = soap;
+	soapele.rslt[0] = (char *)malloc(sizeof(char) * M * 8);
+	for (int i = 1; i < M; i++)
+		soapele.rslt[i] = soapele.rslt[i - 1] + 8;
+	soapele.rslt[0][0] = NULL;
+	memcpy(soapele.cmd, cmd, sizeof(cmd));
+	memcpy(soapele.addr, addr, sizeof(addr));
 	//CloseHandle((HANDLE)_beginthreadex(NULL, 0, \
 	//	(_beginthreadex_proc_type)soap_call_api__encrypt(&soap, addr, "", cmd, st)\
 	//	, NULL, CREATE_SUSPENDED, 0));
-	int err = soap_call_api__encrypt(&soap, addr, "", cmd, st);
-	switch (err)
+	CloseHandle((HANDLE)_beginthreadex(NULL, 0, \
+		(_beginthreadex_proc_type)&call_soap_thrd\
+		, (void *)&soapele, 0, NULL));
+	//int err = soap_call_api__encrypt(&soap, addr, "", cmd, rslt);
+	switch (soapele.err)
 	{
 	case 0:
-		if (st[0] == NULL)
-			STrslt.Format("%s", st[0]);
+		if (*soapele.rslt[0] == '\0')
+			STrslt.Format("返回错误");
 		break;
 	case -1:
 		STrslt.Format("服务崩溃");
@@ -104,11 +198,10 @@ void CLoginDlg::OnBnClickedLogin()
 		STrslt.Format("网络错误");
 		break;
 	default:
-		STrslt.Format("%s", st[0]);
+		STrslt.Format("%s", *soapele.rslt[0]);
 		break;
 	}
-	::PostMessage(this->m_hWnd, WM_MSG_BOX, 0,
-		(LPARAM)netmsg.AllocBuffer(STrslt));
+	AfxMessageBox(STrslt);
 }
 
 void CLoginDlg::OnBnClickedCancel()
@@ -128,7 +221,6 @@ void CLoginDlg::OnStnClickedRegi()
 	CRegistDlg m_crgist(ip);
 	m_crgist.DoModal();
 }
-
 
 HBRUSH CLoginDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 {
@@ -154,21 +246,21 @@ void CLoginDlg::SetCombo()
 {
 	char* IPs[8];
 	CString dftip;
-	dftip.Format("默认(%s)", ip);
+	dftip.Format("默认");
 	m_combo.InsertString(0, _T(dftip));
 	GetiniIPs(IPs);
-	m_combo.InsertString(1, _T("自定义1"));
-	m_combo.InsertString(2, _T("自定义2"));
+	m_combo.InsertString(1, _T("ip1"));
+	m_combo.InsertString(2, _T("ip2"));
 	m_combo.SetCurSel(0);  // 默认选择第一项  
 }
 
 void CLoginDlg::GetiniIPs(char* IPs[])
 {
-#define N 8
 	int index;
+#define N 8
 	CString detail[N] = { _T("") };
-	GetPrivateProfileString(_T("default"), _T("detail"), "", detail[0].GetBuffer(MAX_PATH), MAX_PATH, "cfg//ips.ini");
-	index = GetPrivateProfileInt("default", "index", 10, "cfg//ips.ini") - 10086;	//读入整型值
+	GetPrivateProfileString(_T("dft"), _T("usr"), "", detail[0].GetBuffer(MAX_PATH), MAX_PATH, "cfg//ips.ini");
+	index = GetPrivateProfileInt("dft", "idx", 10, "cfg//ips.ini") - 10086;	//读入整型值
 	CWnd* p1 = GetDlgItem(IDC_ACNT);
 	p1->SetWindowText(detail[0]);
 }
@@ -181,13 +273,13 @@ void CLoginDlg::OnCbnSelchangeIp()
 	switch (index)
 	{
 	case 0:
-		AfxMessageBox(sip);
+		m_ipCtrl.SetAddress(192,168,1,3);
 		break;
 	case 1:
-		AfxMessageBox(sip);
+		MessageBox(sip);
 		break;
 	case 2:
-		AfxMessageBox(sip);
+		MessageBox(sip);
 		break;
 	}
 }

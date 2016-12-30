@@ -424,7 +424,7 @@ LRESULT MyOglDrawDlg::ShowMsgOnly(WPARAM wparam, LPARAM lparam)
 	if (pMsg != NULL)
 	{
 		cmd.Format(_T("%s"), pMsg);
-		MessageBox(cmd);
+		AfxMessageBox(cmd);
 		pMsg = NULL;
 	}
 	return LRESULT();

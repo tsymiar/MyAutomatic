@@ -83,7 +83,7 @@ namespace WpfKline
             string rootpath = AppDomain.CurrentDomain.BaseDirectory;
             if (!String.IsNullOrEmpty(rootpath))
             {
-                txtFilePath.Text = rootpath + "SH600747.DAT";
+                txtFilePath.Text = rootpath + "data/SH600747.DAT";
                 LoadData(txtFilePath.Text);
                 stockSet1.ItemsSource = Data;
             }
@@ -105,7 +105,7 @@ namespace WpfKline
         private void btnOpenFile_Click(object sender, RoutedEventArgs e)
         {
             Microsoft.Win32.OpenFileDialog ofd = new Microsoft.Win32.OpenFileDialog();
-            ofd.Filter = "文本文件(*.txt)|*.txt";
+            ofd.Filter = "数据文件(*.DAT)|*.DAT";
             ofd.RestoreDirectory = true;
             ofd.ShowDialog();
             if (!String.IsNullOrEmpty(ofd.FileName))

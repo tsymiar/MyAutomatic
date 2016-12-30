@@ -1,16 +1,13 @@
 ﻿//
-#include<iostream>
-#include<sys/sysmacros.h>
-#include<sys/types.h>
-#include<linux/errno.h>
 #include<pthread.h>
-#include"sql/sqlDB.h"
 #define HAVE_STRUCT_TIMESPEC
 #define MY_WSDL
 #include"MyWeb.h"
+#include"opt/_string.h"
+#include"sql/sqlDB.h"
 #include"soap/stdsoap2.h"
 #include"soap/myweb.nsmap"
-#include"thdpool/thread_pool.h"
+#include"pthdpool/thread_pool.h"
 //#pragma comment(lib, "pthreads.2/pthreadVC2.lib") 
 //#pragma comment(lib, "WS2_32.lib")
 /*
@@ -196,12 +193,12 @@ int myWeb::movedll()
 	}
 	*/
 	int i = 0;
-	char gc;
+//	char gc;
 	char text[] = "Copying file....\r";
 //	FILE* fl = fopen(_file, "rb"), *mv = fopen(_moving, "a+");
 //	if (!(fl || mv))
 	{
-		for (; i < sizeof(text) - 1; i++)
+		for (; i < (int)sizeof(text) - 1; i++)
 		{
 			putchar(text[i]);
 			sleep(70);
@@ -218,14 +215,14 @@ int myWeb::movedll()
 	return -1;
 }
 
-int main(int argc, char** argv)
+int soap_ser(int argc, char** argv)
 {
 #ifdef MY_DEBUG
 	argc = 3; argv[1] = "8080";
 #endif // MY_DEBUG
 	if(argv[1]==nullptr)
 	{
-		std::cout<<"请输入端口参数 例如：“./gSOAPverify 8080”"<<std::endl;
+		std::cout<<"请输入端口参数 例如：“./gSOAPverify”\n"<<argv[1]<<std::endl;
 		return -1;
 	}
 	struct soap Soap;
@@ -299,11 +296,12 @@ int main(int argc, char** argv)
 				}
 			}
 			//客户端的IP地址
-			fprintf(stderr, "Accepted REMOTE connection. IP = %d92.%d.%d.%d, sockID = %d \n",
-				(int)(((Soap.ip) >> 24) && 0xFF), (int)(((Soap.ip) >> 16) & 0xFF), (int)(((Soap.ip) >> 8) & 0xFF), (int)((Soap.ip) & 0xFF), (int)(Soap.socket));
+			fprintf(stderr, "Accepted REMOTE connection. IP = %d92.%d.%d.%d, sockID = %d \n",\
+				(int)(((Soap.ip) >> 24) && 0xFF), (int)(((Soap.ip) >> 16) & 0xFF), (int)(((Soap.ip) >> 8) & 0xFF),\
+				(int)((Soap.ip) & 0xFF), (int)(Soap.socket));
 			//请求的套接字进入队列，如果队列已满则循环等待
 			while (enqueue(cs, ips[j]) == SOAP_EOM)
-				sleep(1000);
+				usleep(1000);
 			j++;
 			if (j >= MAX_THR)
 				j = 0;
@@ -313,7 +311,7 @@ int main(int argc, char** argv)
 		{
 			while (enqueue(SOAP_INVALID_SOCKET, ips[i]) == SOAP_EOM)
 			{
-				sleep(1000);
+				usleep(1000);
 			}
 		}
 		for (i = 0; i< MAX_THR; i++)
@@ -345,12 +343,44 @@ int api__login_by_key(struct soap *soap, xsd_string usr, xsd_string psw, struct 
 	return key;
 }
 
-int api__encrypt(struct soap *soap, char* input, char** output)
+int api__encrypt(struct soap *soap, char* input, char* output[])
 {
 //	CHEAK;
-	char usr[16];
-	char psw[32];
-	sqlDB(usr,psw,output);
-	printf("[IN]:\t%s\n[OUT]:\t%s\n", input, output);
+	_string str;
+	char acc[16];
+	char psw[16];
+	int type,i=0;
+	char*	cot[4] ={NULL};
+	char*	token = NULL;
+	printf("%s\n",input);
+	token = strtok(input, "@&");
+	while (token != NULL)
+	{
+		cot[i]=token;
+		if(strcmp(cot[i], "Login") == 0)
+			type=0;
+		printf("cot[%d]=%s\n",i,cot[i]);
+		if(strstr(cot[i],"acc="))
+			memcpy(acc,str._strsub((unsigned char*)cot[i],4,strlen((const char*)cot[i])+1),32);
+		else 
+		{
+			if(strstr(cot[i],"psw="))
+				memcpy(psw,str._strsub((unsigned char*)cot[i],4,strlen((const char*)cot[i])+1),32);
+			printf("acc=%s\n",acc);
+		}
+		token = strtok(NULL, "@&");
+		i++;
+	}
+	token = NULL;	
+	printf("acc=%s\tpsw=%s\n",acc,psw);
+	sqlDB(type,acc,psw,output);
+	printf("[OUT]:\t%s\n",output[0]);
+	return 0;
+}
+
+int main(int argc, char* argv[])
+{
+	if(fork()==0)
+		soap_ser(argc,argv);
 	return 0;
 }

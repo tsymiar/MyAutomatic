@@ -17,7 +17,7 @@ using namespace std;
 	unsigned int fieldcount;
 	MYSQL_ROW fetch = NULL;
 
-void dropsql()
+void dptb()
 {
 	string sql = "DROP TABLE " + table;
 
@@ -31,7 +31,7 @@ void dropsql()
 	mysql_server_end();
 }
 
-int sqlDB(char* usr, char* psw, char* out[])
+int sqlDB(int type, char* acc, char* psw, char* out[])
 {
 	if (0 != mysql_library_init(0, NULL, NULL))
 		cout << LL << "lib init fail." << endl;
@@ -43,13 +43,15 @@ int sqlDB(char* usr, char* psw, char* out[])
 		cout << LL << "Connect mysql fail." << endl;	
 	//int Select(char* table, char** RES, const char* factor,...)
 	//"SELECT Name,AGE,sex,email FROM ...";
-	sprintf(sql,"SELECT %s FROM %s",usr,table.c_str());
+	printf("%s[%d]--[ACC]:%s\t[(hash)]:%s\n",LL,type,acc,psw);
+	sprintf(sql,"SELECT %s FROM %s",acc,table.c_str());
+
 	if (0 != mysql_query(&mysql, sql))
 	{
-		mysql_close(&mysql);
 		cout << LL << "Query database fail." << endl;
-	}
-	if (0 == mysql_query(&mysql, sql))
+		dptb();
+		return -1;
+	} else if(type==0)
 	{
 		RES = mysql_store_result(&mysql);
 		num = (int)mysql_num_rows(RES);
@@ -68,10 +70,5 @@ int sqlDB(char* usr, char* psw, char* out[])
 		}
 		return 0;
 	}
-	else {
-		mysql_close(&mysql);
-		cout << LL << "SELECT element fail." << endl;
-		dropsql();
-		return -1;
-	}
+	return 0;
 }

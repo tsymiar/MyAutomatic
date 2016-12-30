@@ -42,4 +42,5 @@ public:
 	afx_msg void OnStnClickedRegi();
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 	afx_msg void OnCbnSelchangeIp();
+	void fill_edit(CEdit& edit, const char tmp[], int hexlen);
 };

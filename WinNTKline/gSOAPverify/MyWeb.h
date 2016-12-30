@@ -1,8 +1,11 @@
 #ifndef MYWEB_H
 #define MYWEB_H
-
+#include <sys/sysmacros.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <linux/errno.h>
+#include <iostream>
+#include <unistd.h>
 #include <fcntl.h>
 //#include <corecrt_io.h>
 

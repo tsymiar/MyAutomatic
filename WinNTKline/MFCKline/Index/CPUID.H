@@ -3,7 +3,7 @@
 #define _CPUID_CPP
 #include <Windows.h>
 #pragma warning (disable:4793)
-#if _MSC_VER>=1400//VC2005+支持intrin.h
+#if _MSC_VER >= 1400//VC2005+支持intrin.h
 #include <intrin.h>
 #endif
 #if defined(_WIN64)
