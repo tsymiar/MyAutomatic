@@ -70,7 +70,7 @@ LoadDIBitmap(const char *filename, /* I - File to load */
 		(*info)->bmiHeader.biBitCount + 7) / 8 *
 		abs((*info)->bmiHeader.biHeight);
 
-	if ((bits = malloc(bitsize)) == NULL)
+	if ((bits = (GLubyte*)malloc(bitsize)) == NULL)
 	{
 		/* Couldn't allocate memory - return NULL! */
 		free(*info);

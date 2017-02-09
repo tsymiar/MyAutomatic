@@ -3,29 +3,32 @@
 #include "ctl/CWebBrowser2.h"
 #include "afxdialogex.h"
 
-// CRegist ¶Ô»°¿ò
+// CRegist å¯¹è¯æ¡†
 
 class CRegistDlg : public CDialogEx
 {
 	DECLARE_DYNAMIC(CRegistDlg)
 
 public:
-	CRegistDlg(char* ip, CWnd* pParent = NULL);   // ±ê×¼¹¹Ôìº¯Êı
+	CRegistDlg(char* ip, CWnd* pParent = NULL);   // æ ‡å‡†æ„é€ å‡½æ•°
 	virtual BOOL OnInitDialog();
 	virtual ~CRegistDlg();
 
-// ¶Ô»°¿òÊı¾İ
+// å¯¹è¯æ¡†æ•°æ®
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_BROWSER };
 #endif
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV Ö§³Ö
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV æ”¯æŒ
 
 	DECLARE_MESSAGE_MAP()
 public:
+	CStatic m_hint;
 	CWebBrowser2 m_browser;
 	char ip[32];
 private:
 	void Init();
+public:
+	virtual BOOL PreTranslateMessage(MSG* pMsg);
 };

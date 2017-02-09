@@ -60,7 +60,6 @@ vector<vector<unsigned char> > storeArray(vector<unsigned char> byte, int tick, 
 		}
 		cout<<endl;
 	}
-
 	cout<<"--------------------------------------------"<<endl;*/
 	return roundArry;
 }
@@ -425,11 +424,10 @@ int aes_main(){
 			printf ("%s",buffer);
 		}
 	}
-	 else cout << "Unable to open file";
-	 cout<<endl;
-	 
-	// printf ("%s",buffer2);
-	 myfile.close();
+	else cout << "Unable to open file";
+	cout<<endl;
+	//printf ("%s",buffer2);
+	myfile.close();
 	int pressEnter;
 	cin >> pressEnter;
 	cin>> pressEnter;

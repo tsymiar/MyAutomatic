@@ -1,3 +1,0 @@
-//头文件防止多重包含：
-//	含MFC类 #pragma once 
-//	其他 #define

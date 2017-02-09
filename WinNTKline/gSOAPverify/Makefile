@@ -22,9 +22,9 @@ install:
 	cd /etc/rc3.d/
 	ln -sf ../init.d/gSOAPverify ./S77_SOAP
 clean:	
-	rm -f *.out gSOAPverify `ls *.o | egrep -v soapC.o stdsoap2.o soapServer.o`
+	rm -f *.out core.*
 clear:
-	rm -f *.o *.out gSOAPverify
+	rm -f *.o *.out core.* gSOAPverify `ls *.o | egrep -v soapC.o stdsoap2.o soapServer.o`
 	rm -f /etc/init.d/gSOAPverify /usr/sbin/gSOAPverify
 	rm -rf S77_SOAP
 	y

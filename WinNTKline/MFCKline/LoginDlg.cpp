@@ -101,7 +101,7 @@ void CLoginDlg::fill_edit(CEdit& edit, const char tmp[], int hexlen)
 		{
 			sprintf(temp, "%s\r\n%s", (char*)&sTmp, tmp);
 		}
-	edit.SetWindowText(temp);
+	edit.SetWindowText((LPCTSTR)temp);
 	delete[] temp;
 	edit.LineScroll(edit.GetLineCount(), 0);
 }
@@ -188,7 +188,7 @@ void CLoginDlg::OnBnClickedLogin()
 	switch (soapele.err)
 	{
 	case 0:
-		if (*soapele.rslt[0] == '\0')
+		if (*soapele.rslt == '\0')
 			STrslt.Format("返回错误");
 		break;
 	case -1:
@@ -199,11 +199,11 @@ void CLoginDlg::OnBnClickedLogin()
 		STrslt.Format("网络错误");
 		break;
 	default:
-		STrslt.Format("%s", *soapele.rslt[0]);
+		STrslt.Format("%s", *soapele.rslt);
 		break;
 	}
 	free(soapele.rslt[0]);
-	AfxMessageBox(STrslt);
+	AfxMessageBox(soapele.rslt[0]);
 }
 
 void CLoginDlg::OnBnClickedCancel()
@@ -260,8 +260,8 @@ void CLoginDlg::GetiniIPs(char* IPs[])
 	int index;
 #define N 8
 	CString detail[N] = { _T("") };
-	GetPrivateProfileString(_T("dft"), _T("usr"), "", detail[0].GetBuffer(MAX_PATH), MAX_PATH, "cfg//ips.ini");
-	index = GetPrivateProfileInt("dft", "idx", 10, "cfg//ips.ini") - 10086;	//读入整型值
+	GetPrivateProfileString(_T("dft"), _T("usr"), (LPCTSTR)"", detail[0].GetBuffer(MAX_PATH), MAX_PATH, (LPCTSTR)"cfg//ips.ini");
+	index = GetPrivateProfileInt((LPCTSTR)"dft", (LPCTSTR)"idx", 10, (LPCTSTR)"cfg//ips.ini") - 10086;	//读入整型值
 	CWnd* p1 = GetDlgItem(IDC_ACNT);
 	p1->SetWindowText(detail[0]);
 }
@@ -277,10 +277,6 @@ void CLoginDlg::OnCbnSelchangeIp()
 		m_ipCtrl.SetAddress(192,168,1,3);
 		break;
 	case 1:
-		MessageBox(sip);
-		break;
-	case 2:
-		MessageBox(sip);
-		break;
+	case 2:	break;
 	}
 }

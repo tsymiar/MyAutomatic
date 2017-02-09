@@ -1,4 +1,4 @@
-﻿#include "Gethttp.h"
+﻿#include "GEThttp.h"
 using namespace std;
 
 void HttpGet()

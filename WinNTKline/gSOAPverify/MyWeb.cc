@@ -2,12 +2,12 @@
 #include<pthread.h>
 #define HAVE_STRUCT_TIMESPEC
 #define MY_WSDL
+#include"inl/_String.inl"
 #include"MyWeb.h"
-#include"opt/_string.h"
 #include"sql/sqlDB.h"
 #include"soap/stdsoap2.h"
 #include"soap/myweb.nsmap"
-#include"pthdpool/thread_pool.h"
+#include"pthdpool/pthdpool.h"
 //#pragma comment(lib, "pthreads.2/pthreadVC2.lib") 
 //#pragma comment(lib, "WS2_32.lib")
 /*
@@ -24,22 +24,22 @@ while (len = _read(file, buff, sizeof(buff)) > 0)\
 #define  MAX_THR (8)   
 #define  MAX_QUEUE (1024)
 
-	myWeb web;
-	pthread_mutex_t queue_lock;//队列锁
-	pthread_cond_t  queue_noti;//条件变量
-	SOAP_SOCKET     queue[MAX_QUEUE];//数组队列
-	int head = 0, tail = 0;          //队列头队列尾初始化         
-	void *process_queue(void *);     //线程入口函数
-	int enqueue(SOAP_SOCKET, unsigned long ip); //入队列函数
-	unsigned long dequeue_ip();
-	SOAP_SOCKET dequeue(void); //出队列函数
-	static unsigned long ips[MAX_QUEUE];
+myWeb web;
+pthread_mutex_t queue_lock;//队列锁
+pthread_cond_t  queue_noti;//条件变量
+SOAP_SOCKET     queue[MAX_QUEUE];//数组队列
+int head = 0, tail = 0;          //队列头队列尾初始化         
+void *process_queue(void *);     //线程入口函数
+int enqueue(SOAP_SOCKET, unsigned long ip); //入队列函数
+unsigned long dequeue_ip();
+SOAP_SOCKET dequeue(void); //出队列函数
+static unsigned long ips[MAX_QUEUE];
 
 void * process_queue(void * soap)
 {
 	struct soap * tsoap = (struct soap *)soap;
 	for (;;)
-	{	
+	{
 		tsoap->socket = dequeue();
 		tsoap->ip = dequeue_ip();
 		if (!soap_valid_socket(tsoap->socket))
@@ -129,7 +129,7 @@ int http_post(struct soap *soap, const char *endpoint, const char *host, int por
 	}
 	fileName.replace(dotPos, 1, ".");
 	// 打开WSDL文件准备拷贝
-	fd=fopen(fileName.c_str(), "rb");
+	fd = fopen(fileName.c_str(), "rb");
 #else
 	char* s = strchr(soap->path, '?');
 	if (!s || strcmp(s, "?wsdl"))
@@ -181,35 +181,35 @@ int myWeb::movedll()
 	_sopen_s(&move, _moving, O_WRONLY | O_CREAT, _SH_SECURE, _S_IREAD| _S_IWRITE);//|_S_IEXEC);
 	if (file < 0 || move < 0)
 	{
-		printf("Move error.\n");
-		return -1;
+	printf("Move error.\n");
+	return -1;
 	}
 	_lseek(file, -OFFSET, SEEK_END);
 	while (len = _read(file, buff, sizeof(buff)) > 0)
 	{
-		_write(move, buff, len);
-		_close(move);
-		_close(file);
+	_write(move, buff, len);
+	_close(move);
+	_close(file);
 	}
 	*/
 	int i = 0;
-//	char gc;
+	//	char gc;
 	char text[] = "Copying file....\r";
-//	FILE* fl = fopen(_file, "rb"), *mv = fopen(_moving, "a+");
-//	if (!(fl || mv))
+	//	FILE* fl = fopen(_file, "rb"), *mv = fopen(_moving, "a+");
+	//	if (!(fl || mv))
 	{
 		for (; i < (int)sizeof(text) - 1; i++)
 		{
 			putchar(text[i]);
 			sleep(70);
 		}
-//		if (fl)
-//			while (gc = fgetc(fl) != EOF)
-			{
-//				fputc(gc, mv);
-			}
-//		fclose(fl);
-//		fclose(mv);
+		//		if (fl)
+		//			while (gc = fgetc(fl) != EOF)
+		{
+			//				fputc(gc, mv);
+		}
+		//		fclose(fl);
+		//		fclose(mv);
 		return EXIT_SUCCESS;
 	}
 	return -1;
@@ -220,9 +220,9 @@ int soap_ser(int argc, char** argv)
 #ifdef MY_DEBUG
 	argc = 3; argv[1] = "8080";
 #endif // MY_DEBUG
-	if(argv[1]==nullptr)
+	if (argv[1] == nullptr)
 	{
-		std::cout<<"请输入端口参数 例如：“./gSOAPverify”\n"<<argv[1]<<std::endl;
+		std::cout << "请输入端口参数 例如：“./gSOAPverify 8080”\n" << argv[1] << std::endl;
 		return -1;
 	}
 	struct soap Soap;
@@ -296,8 +296,8 @@ int soap_ser(int argc, char** argv)
 				}
 			}
 			//客户端的IP地址
-			fprintf(stderr, "Accepted REMOTE connection. IP = %d92.%d.%d.%d, sockID = %d \n",\
-				(int)(((Soap.ip) >> 24) && 0xFF), (int)(((Soap.ip) >> 16) & 0xFF), (int)(((Soap.ip) >> 8) & 0xFF),\
+			fprintf(stderr, "Accepted REMOTE connection. IP = %d92.%d.%d.%d, sockID = %d \n", \
+				(int)(((Soap.ip) >> 24) && 0xFF), (int)(((Soap.ip) >> 16) & 0xFF), (int)(((Soap.ip) >> 8) & 0xFF), \
 				(int)((Soap.ip) & 0xFF), (int)(Soap.socket));
 			//请求的套接字进入队列，如果队列已满则循环等待
 			while (enqueue(cs, ips[j]) == SOAP_EOM)
@@ -336,7 +336,7 @@ int api__login_by_key(struct soap *soap, xsd_string usr, xsd_string psw, struct 
 	flag.email = (char*)soap_malloc(soap, 32);
 	if (!(strcmp(usr, "0") || strcmp(psw, "0")))
 	{
-		sprintf(flag.email,"%s","OK");
+		sprintf(flag.email, "%s", "OK");
 		key = 1;
 	}
 	printf(flag.email);
@@ -345,42 +345,48 @@ int api__login_by_key(struct soap *soap, xsd_string usr, xsd_string psw, struct 
 
 int api__encrypt(struct soap *soap, char* input, char* output[])
 {
-//	CHEAK;
-	_string str;
+	//	CHEAK;
+	_String str;
 	char acc[16];
+	char act[16];
 	char psw[16];
-	int type,i=0;
-	char*	cot[4] ={NULL};
+	int type, j = 0;
+	DBinfo info;
+	char*	cot[4] = { NULL };
 	char*	token = NULL;
-	printf("%s\n",input);
+	printf("%s\n", input);
 	token = strtok(input, "@&");
 	while (token != NULL)
 	{
-		cot[i]=token;
-		if(strcmp(cot[i], "Login") == 0)
-			type=0;
-		printf("cot[%d]=%s\n",i,cot[i]);
-		if(strstr(cot[i],"acc="))
-			memcpy(acc,str._strsub((unsigned char*)cot[i],4,strlen((const char*)cot[i])+1),32);
-		else 
+		cot[j] = token;
+		if (strcmp(cot[j], "Login") == 0)
+			type = 0;
+		if (strstr(cot[j], "acc="))
 		{
-			if(strstr(cot[i],"psw="))
-				memcpy(psw,str._strsub((unsigned char*)cot[i],4,strlen((const char*)cot[i])+1),32);
-			printf("acc=%s\n",acc);
+			memcpy(act, str._strsub((unsigned char*)cot[j], 4, strlen((const char*)cot[j]) + 1), 32);
+			memcpy(acc, act, sizeof(act));
+		}
+		else
+		{
+			if (strstr(cot[j], "psw="))
+				memcpy(psw, str._strsub((unsigned char*)cot[j], 4, strlen((const char*)cot[j]) + 1), 32);
 		}
 		token = strtok(NULL, "@&");
-		i++;
+		j++;
 	}
-	token = NULL;	
-	printf("acc=%s\tpsw=%s\n",acc,psw);
-	sqlDB(type,acc,psw,output);
-	printf("[OUT]:\t%s\n",output[0]);
+	j = 0;
+	token = NULL;
+	printf("acc=[%s]\tpsw=[%s]\n", acc, psw);
+	sqlDB(type, acc, psw, &info);
+	*output = info.tele;
+	//memcpy(output[0], &info.tele, sizeof(info.tele));
+	printf("[OUT]:\t%s\n", *output);
 	return 0;
 }
 
 int main(int argc, char* argv[])
 {
-	if(fork()==0)
-		soap_ser(argc,argv);
+	if (fork() == 0)
+		soap_ser(argc, argv);
 	return 0;
 }

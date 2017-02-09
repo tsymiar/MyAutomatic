@@ -1,37 +1,37 @@
 #include "sqlDB.h"
-
 using namespace std;
 
-	int num;	
-	char sql[64];
-	MYSQL mysql;
-	int port=3306;
-	char host[]="localhost";
-	char user[]="root";
-	char psw123[]="psw123";
-	char db[]="" /*"custominfo"*/;
-	string table="uinfo";
-	char LL[] = ">>>";
-	MYSQL_RES *RES = nullptr;
-	MYSQL_FIELD *field = NULL;
-	unsigned int fieldcount;
-	MYSQL_ROW fetch = NULL;
+int it;
+int num;
+int cnt = 0;
+char sql[64];
+MYSQL mysql;
+int port = 3306;
+pthread_t tid;
+char host[] = "localhost";
+char user[] = "root";
+char psw123[] = "psw123";
+char db[] = "custominfo";
+string table = "t_info";
+char LL[] = ">>>";
+MYSQL_RES *RES = nullptr;
+MYSQL_FIELD *field = NULL;
+unsigned int fieldcount;
+MYSQL_ROW fetch = NULL;
 
-void dptb()
+void* test_connect(void* lp)
 {
-	string sql = "DROP TABLE " + table;
-
-	if (0 != mysql_query(&mysql, sql.c_str()))
+	while (1)
 	{
-		mysql_close(&mysql);
-		cout << LL << "DROP TABLE fail." << endl;
+		if (mysql_ping(&mysql) != 0) {
+			mysql_real_connect(&mysql, host, user, psw123, db, port, NULL, 0);
+		}
+		usleep(10000000);
 	}
-	mysql_free_result(RES);
-	mysql_close(&mysql);
-	mysql_server_end();
+	return lp;
 }
 
-int sqlDB(int type, char* acc, char* psw, char* out[])
+int sqlDB(int type, char* acc, char* psw, DBinfo* info)
 {
 	if (0 != mysql_library_init(0, NULL, NULL))
 		cout << LL << "lib init fail." << endl;
@@ -40,18 +40,23 @@ int sqlDB(int type, char* acc, char* psw, char* out[])
 	if (0 != mysql_options(&mysql, MYSQL_SET_CHARSET_NAME, "GBK"))
 		cout << LL << "MySQL setting fail." << endl;
 	if (NULL == mysql_real_connect(&mysql, host, user, psw123, db, port, NULL, 0))
-		cout << LL << "Connect mysql fail." << endl;	
+		cout << LL << "Connect mysql fail." << endl;
 	//int Select(char* table, char** RES, const char* factor,...)
 	//"SELECT Name,AGE,sex,email FROM ...";
-	printf("%s[%d]--[ACC]:%s\t[(hash)]:%s\n",LL,type,acc,psw);
-	sprintf(sql,"SELECT %s FROM %s",acc,table.c_str());
-
+	printf("%s[%d]--[ACC]:%s\t[(hash)]:%s\n", LL, type, acc, psw);
+	sprintf(sql, "SELECT * FROM %s", table.c_str());
+	if (cnt == 0)
+	{
+		pthread_create(&tid, NULL, test_connect, &it);
+		cnt++;
+	}
 	if (0 != mysql_query(&mysql, sql))
 	{
+		mysql_close(&mysql);
 		cout << LL << "Query database fail." << endl;
-		dptb();
 		return -1;
-	} else if(type==0)
+	}
+	else if (type == 0)
 	{
 		RES = mysql_store_result(&mysql);
 		num = (int)mysql_num_rows(RES);
@@ -64,11 +69,20 @@ int sqlDB(int type, char* acc, char* psw, char* out[])
 		while (NULL != fetch)
 		{
 			for (int i = 0; i < (int)fieldcount; i++) {
-				cout << fetch[i] << "\t\t";
+				if (i == 5)
+					sprintf(info->tele, "%s", fetch[i]);
+				cout << fetch[i] << "\t";
 			}
 			fetch = mysql_fetch_row(RES);
+			cout << endl;
 		}
-		return 0;
+		mysql_free_result(RES);
+	}
+	else {
+		cout << LL << "SELECT element fail." << endl;
+		mysql_close(&mysql);
+		mysql_server_end();
+		return -1;
 	}
 	return 0;
 }
