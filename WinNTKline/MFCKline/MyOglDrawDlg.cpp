@@ -93,7 +93,6 @@ BOOL MyOglDrawDlg::OnInitDialog()
 	HWND m_hWnd = this->GetSafeHwnd();
 	m_hDC = ::GetDC(m_hWnd/*m_tab.GetSafeHwnd()*/);
 	TCPIP* m_net = new TCPIP();
-	CallShellScript(".\\script", "call.bat", NULL);
 	Ogl.SetWindowPixelFormat(m_hDC, m_hWnd);
 	OnPaint();
 	SetCtrl();
@@ -202,7 +201,7 @@ bool MyOglDrawDlg::GetMarkDatatoDraw()
 	GetModuleFileName(NULL, exeFullPath, sizeof(exeFullPath));
 	//CString csDirPath((LPCSTR)exeFullPath);
 	csDirPath.Format("%s", exeFullPath);
-	csDirPath = csDirPath.Left(csDirPath.ReverseFind(_T('\\')))+ "\\data";
+	csDirPath = csDirPath.Left(csDirPath.ReverseFind(_T('\\'))) + "\\data";
 	std::string sSystemPath = csDirPath.GetBuffer(csDirPath.GetLength());
 	csDirPath += "\\*.DAT";
 	FindFirstFile(csDirPath.GetBuffer(), &fileData);
@@ -222,24 +221,26 @@ bool MyOglDrawDlg::GetMarkDatatoDraw()
 		return false;
 	}
 	else {
-		while (getline(Readfile, tmp))
+		while (getline(Readfile, tmp))	// 逐行读
 		{
 			buff = (char*)tmp.c_str();
 			token = strtok_s(buff, "/,\t", &cot);
 			while (token != NULL)
 			{
-				markdata.push_back(token);
+				markdata.push_back(token);// 获取描述
 				token = strtok_s(NULL, "/,\t", &cot);
 			}
 			token = NULL;
+			//5行数据一组，第一组7行
 			if ((markdata.size() <= 7) && (markdata.size()>0))
 			{
+				//前2行是数据格式和说明
 				if (markdata.size() < 3)
 				{
 					Ogl.coding = true;	
 					buff = markdata[0];	
 					title.Format("%s", buff);
-					SetWindowText(title);
+					SetWindowText(title);// 设为窗口标题
 					i = 0;
 					token = strtok_s(buff, " ", &cot);
 					while (token != NULL)
@@ -252,13 +253,14 @@ bool MyOglDrawDlg::GetMarkDatatoDraw()
 					sprintf(code, "%s(%s)", div_stock[1], div_stock[0]);
 					Ogl.DrawKtext(code, pt_code, 20, { 1,1,0 }, "Terminal", false);
 					sprintf(code, _T("%s(%s)<%s>"), div_stock[1], div_stock[0], div_stock[2]);
-					pt_code = { -1.22f,pt_code.y };
+					pt_code = { -1.22f,pt_code.y };// 格式化并输出
 					Ogl.DrawKtext(code, pt_code, 12, { 1,1,0 }, "宋体");
 					pt_code = { 0.8f,1.189f };
 					*div_stock = NULL;
 				}
 				else { 1; }//continue;
-				markdata.clear();
+				markdata.clear();// 清空数据但不释放空间以便重复利用
+				//数据的初始化就绪
 			}
 			else if (markdata.size() > 8)
 			{
@@ -309,7 +311,7 @@ bool MyOglDrawDlg::GetMarkDatatoDraw()
 						ma20.X = (int)totma._20;
 						ma20.M = 1;
 						ma20.N = 20;
-						if (line == 20)
+						if (line - 1 == 20)
 						{
 							tepma._20 = totma._20 / 20;
 							pt_ma20old.x = Pter.x;
@@ -540,8 +542,7 @@ BOOL MyOglDrawDlg::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINF
 {
 #ifdef _DEBUG
 	if (nCode < 0 && nCode != (int)0x8000)
-		TRACE1("Implementation Warning: control notification = $%X.\n",
-			nCode);
+		TRACE1("Implementation Warning: control notification = $%X.\n", nCode);
 #endif
 	if (nCode == CN_COMMAND)
 	{
@@ -575,17 +576,21 @@ BOOL MyOglDrawDlg::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINF
 
 void MyOglDrawDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 {
-	CMenu* p_mPop = new CMenu;
-	//p_mPop->CreatePopupMenu();
-	p_mPop->LoadMenu(IDR_MENU);
-	p_mPop->GetSubMenu(0);
-	//if (p_mPop != NULL)
 	{
-		ClientToScreen(&point);
-		p_mPop->TrackPopupMenu(TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_RIGHTBUTTON, point.x, point.y, pWnd);
+		HINSTANCE hInstance = (HINSTANCE)GetWindowLong(pWnd->m_hWnd, GWL_HINSTANCE);
+		HMENU hMenuTray = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU));
+		HMENU hPopupMenu = GetSubMenu(hMenuTray, 0);
+		TrackPopupMenu(hPopupMenu, TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_RIGHTBUTTON, point.x, point.y, 0, pWnd->m_hWnd, NULL);
 	}
-	p_mPop->Detach();
-	delete p_mPop;
+	{
+		CMenu* p_mPop = new CMenu;
+		p_mPop->LoadMenu(IDR_MENU);
+		p_mPop->GetSubMenu(0);
+		ClientToScreen(&point);
+		p_mPop->TrackPopupMenu(TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_RIGHTBUTTON, point.x - 8, point.y - 60, pWnd); 
+		p_mPop->Detach();
+		delete p_mPop;
+	}
 }
 
 void MyOglDrawDlg::SetBkg()

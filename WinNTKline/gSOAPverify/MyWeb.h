@@ -16,8 +16,8 @@ class myWeb
 public:
 	int len, file = 0, move = 0;
 	unsigned char buff[1024];
-//	char* _file = "./mysql/libmysql.dll";
-//	char* _moving = "../x64/gSOAPWeb/libmysql.dll";
+	//	char* _file = "./mysql/libmysql.dll";
+	//	char* _moving = "../x64/gSOAPWeb/libmysql.dll";
 	inline int movedll();
 };
 #endif

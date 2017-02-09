@@ -548,9 +548,9 @@ int OGLKview::DrawArrow(OGLKview::Point begin)
 
 int OGLKview::DrawDetail(OGLKview::Market market)
 {
-	float y = 0;
+	float y = 0;  
 	char hintx[16];
-	float min=0, step=0, fold=0;
+	float min = 0, step = 1, fold = 1;
 	OGLKview::Point poi, iop;
 	poi.x = 1.234567f;
 	poi.y = 1.17f;

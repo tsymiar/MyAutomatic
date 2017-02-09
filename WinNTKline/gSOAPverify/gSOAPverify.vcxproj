@@ -69,16 +69,20 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <TargetExt />
-    <IntDir>$(ProjectDir)</IntDir>
+    <IntDir>$(ProjectDir)..\Linux\</IntDir>
+    <IncludePath>G:\pthread\Pre-built.2\include;$(IncludePath)</IncludePath>
+    <OutDir>$(ProjectDir)..\Linux\bin\</OutDir>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'" />
   <ItemGroup>
     <None Include="fixmysql" />
+    <None Include="inl\_String.inl" />
     <None Include="Makefile" />
     <None Include="soap\myweb.nsmap" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MyWeb.cc" />
-    <ClCompile Include="pthdpool\thread_pool.c" />
+    <ClCompile Include="pthdpool\pthdpool.cc" />
     <ClCompile Include="soap\soapC.cpp" />
     <ClCompile Include="soap\soapServer.cpp" />
     <ClCompile Include="soap\stdsoap2.cpp" />
@@ -86,8 +90,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MyWeb.h" />
-    <ClInclude Include="opt\_string.h" />
-    <ClInclude Include="pthdpool\thread_pool.h" />
+    <ClInclude Include="pthdpool\pthdpool.h" />
     <ClInclude Include="soap\stdsoap2.h" />
     <ClInclude Include="sql\sqlDB.h" />
   </ItemGroup>

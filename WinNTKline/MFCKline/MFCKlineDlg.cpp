@@ -21,8 +21,8 @@ struct ProcessWindow
 CMFCKlineDlg::CMFCKlineDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(IDD_MFCKLINE_DIALOG, pParent)
 {
-#ifdef _DEBUG
-	_CrtSetBreakAlloc(2222);
+#ifdef DEBUG
+	//_CrtSetBreakAlloc(2222);
 #endif
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -119,6 +119,7 @@ void CMFCKlineDlg::OnLvnItemchangedList(NMHDR *pNMHDR, LRESULT *pResult)
 	POSITION curPos = m_list.GetFirstSelectedItemPosition();
 	const char Open[4][8] = { "K-line","Qt","WPF","OK" };
 	int N = 0;
+	m_Mod.CallShellScript(".\\script", "call.bat", NULL);
 	if(!curPos)
 		::SendMessage(m_hBottom, SB_SETTEXT, 0, (LPARAM)TEXT(Open[3]));
 	else
@@ -201,7 +202,7 @@ LRESULT CMFCKlineDlg::OnItemMsg(WPARAM wParam, LPARAM lParam)
 	switch (lParam)
 	{
 	case 0:
-		OpenGL(lParam);
+		OpenGL(0);
 		break;
 	case 1:
 		OpenQt();

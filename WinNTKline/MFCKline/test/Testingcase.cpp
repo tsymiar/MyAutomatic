@@ -1,3 +1,4 @@
+#include <ios>
 
 template <class Class>
 class MyTest

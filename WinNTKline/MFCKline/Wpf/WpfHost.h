@@ -10,4 +10,3 @@ public:
 	virtual ~WpfHost(){}
 	static WpfKline::MainWindow ^WpfWindow;
 };
-

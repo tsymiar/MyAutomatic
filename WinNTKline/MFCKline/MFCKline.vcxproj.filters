@@ -81,9 +81,6 @@
     <ClInclude Include="LoginDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Index\binarytree.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="ogl\GlF16.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -96,9 +93,6 @@
     <ClInclude Include="boost\boostest.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="NET\Gethttp.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="..\gSOAPverify\soap\stdsoap2.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -108,10 +102,19 @@
     <ClInclude Include="RegistDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Index\_string.inl">
+    <ClInclude Include="NET\IMclient.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Index\plus1second.hhh">
+    <ClInclude Include="NET\GEThttp.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="HOOK\injectDLL.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Index\plus1second.inc">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Index\binarytree-inl.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -137,17 +140,11 @@
     <ClCompile Include="Font\FontNehe.cc">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="ogl\bitmap.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="ogl\texture.c">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="ogl\House.cc">
       <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Index\CPUID.H">
-      <Filter>头文件</Filter>
     </ClCompile>
     <ClCompile Include="security\encoding.cc">
       <Filter>源文件</Filter>
@@ -165,9 +162,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="ogl\GlF16.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="NET\Gethttp.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="security\AES.cc">
@@ -191,6 +185,21 @@
     <ClCompile Include="RegistDlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="ogl\bitmap.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NET\IMclient.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NET\GEThttp.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="HOOK\injectDLL.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Index\CPUID.H">
+      <Filter>头文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="MFCKline.rc">
@@ -206,6 +215,10 @@
     </None>
     <None Include="..\gSOAPverify\soap\myweb.nsmap" />
     <None Include="ClassDiagram.cd" />
+    <None Include="Index\_String-inl.h">
+      <Filter>头文件</Filter>
+    </None>
+    <None Include="ClassDiagram1.cd" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\MFCKline.ico">

@@ -1,19 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.IO;
-using System.Reflection;
-using System.Globalization;
 
 namespace WpfKline
 {
@@ -74,16 +63,16 @@ namespace WpfKline
                 }
             else
             {
-                MessageBox.Show("文件不存在！","警告");
+                System.Windows.MessageBox.Show("文件不存在！","警告");
                 return null;
             }
         }
         private void LoadFile()
         {
-            string rootpath = AppDomain.CurrentDomain.BaseDirectory;
+            string rootpath = System.Windows.Forms.Application.StartupPath;// AppDomain.CurrentDomain.BaseDirectory;
             if (!String.IsNullOrEmpty(rootpath))
             {
-                txtFilePath.Text = rootpath + "data/SH600747.DAT";
+                txtFilePath.Text = rootpath + @"\..\..\..\..\MFCKline\data\SH600747.DAT";
                 LoadData(txtFilePath.Text);
                 stockSet1.ItemsSource = Data;
             }

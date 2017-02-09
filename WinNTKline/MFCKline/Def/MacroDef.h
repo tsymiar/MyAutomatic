@@ -1,7 +1,6 @@
 #ifndef SET_MACRO_H_
 #define SET_MACRO_H_
 
-#include <stdio.h>
 #define _PI_ 3.1415926535897932384626433832795
 
 #define WM_MSG_OGL	WM_USER + 001
@@ -15,24 +14,32 @@
 
 #define fixpixely 0.0035277777777778	//1.27/360
 
-//const class nullptr_t
-//{
-//public:
-//	template<class T>
-//	inline operator T*() const
-//	{
-//		return 0;
-//	}
-//	template<class C, class T>
-//	inline operator T C::*() const
-//	{
-//		return 0;
-//	}
-//private:
-//	void operator&() const;
-//public:
-//	nullptr_t *null;
-//#undef NULL
-//#define NULL null
-//};
+#if 0
+#if !defined(nullptr)
+#if __cplusplus <= 199711L
+#error "Should use --std=c++11 option for compile."
+const class nullptr_t
+{
+public:
+	template<class T>
+	inline operator T*() const
+	{
+		return 0;
+	}
+	template<class C, class T>
+	inline operator T C::*() const
+	{
+		return 0;
+	}
+private:
+	void operator&() const;
+public:
+	nullptr_t *null;
+#undef NULL
+#define NULL null
+};
+#endif
+#endif
+#endif
+
 #endif // !SET_MACRO_H_

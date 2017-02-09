@@ -30,7 +30,7 @@
 #include	<iostream>
 #include	<fcntl.h>
 #include	<fstream>
-#include	<plus1second.hhh>
+#include	<plus1second.inc>
 #ifdef _WIN32//__linux
 #include "..\stdafx.h"
 #ifdef Error //ws2tcpip.h 'Error' redefined.
@@ -52,7 +52,7 @@
 #include	"boost/boostest.h"
 #include	"Index/Indexes.inl"
 #include	"Index/CPUID.H"
-#include	"Index/_string.inl"
+#include	"Index/_String-inl.h"
 #include	"dos/DOSCout.h"
 #include	"Stock/Stock.h"
 #include	"Def/MacroDef.h"
@@ -73,7 +73,7 @@ private:
 	float moveDist;
 	int item0;
 	int pory, widt, heig;
-	_string m_str;
+	_String m_str;
 public:
 	OGLKview();
 	virtual ~OGLKview();
