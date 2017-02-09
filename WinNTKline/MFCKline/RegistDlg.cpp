@@ -1,12 +1,13 @@
-// Regist.cpp : ÊµÏÖÎÄ¼þ
+// Regist.cpp : å®žçŽ°æ–‡ä»¶
 //
 
 #include "stdafx.h"
 #include "MFCKline.h"
 #include "RegistDlg.h"
+#include "HOOK/injectDLL.h"
 
 
-// CRegist ¶Ô»°¿ò
+// CRegist å¯¹è¯æ¡†
 
 IMPLEMENT_DYNAMIC(CRegistDlg, CDialogEx)
 
@@ -30,24 +31,44 @@ void CRegistDlg::DoDataExchange(CDataExchange* pDX)
 
 
 BEGIN_MESSAGE_MAP(CRegistDlg, CDialogEx)
+	ON_WM_SYSCOMMAND()
 END_MESSAGE_MAP()
+
+int ShowBox(HWND hWndParent)
+{
+	HMODULE g_hmodu = LoadLibrary(_T("HOOK/hook.dll"));
+	typedef int(*ADDROC) ();
+	ADDROC ExitWindow = (ADDROC)GetProcAddress(g_hmodu, "ExitWindow");
+
+	if (!ExitWindow)
+	{
+		MessageBox(hWndParent, _T("èŽ·å–å‡½æ•°åœ°å€å¤±è´¥ã€‚"), _T("Error"), MB_OK);
+		return -1;
+	}
+	ExitWindow();
+	return 0;
+}
 
 BOOL CRegistDlg::OnInitDialog()
 {
-	MessageBox("¼´½«µ¯³öµÄ¶Ô»°¿ò£¬Çëµã»÷¡°ÊÇ¡±¡£");
+	MessageBox("å³å°†å¼¹å‡ºçš„å¯¹è¯æ¡†ï¼Œè¯·ç‚¹å‡»â€œæ˜¯â€ã€‚");
 	Init();	
+	//ShowBox(this->m_hWnd);
 	return \
 		CDialogEx::OnInitDialog();
 }
 
-
 void CRegistDlg::Init()
 {
 	CRect cet;
+	CFont font;
 	CString url;
 	int reg_port = 443;
 	COleVariant noAg;
 	GetClientRect(&cet);
+	int ect = cet.right / 3;
+	m_hint.Create("æŒ‰[Esc]é”®å¯é€€å‡ºæœ¬å¯¹è¯æ¡†", WS_VISIBLE, \
+	{ ect, cet.bottom - 40, ect + 170, cet.bottom - 20}, this, ID_STATIC);
 	if (!m_browser.Create(NULL, NULL, WS_VISIBLE, \
 		cet, this, ID_BROSR))return;
 	if (this->ip == nullptr)return;
@@ -55,3 +76,14 @@ void CRegistDlg::Init()
 	m_browser.Navigate(url, &noAg, &noAg, &noAg, &noAg);
 }
 
+
+
+BOOL CRegistDlg::PreTranslateMessage(MSG* pMsg)
+{
+	if (pMsg->message == VK_ESCAPE)
+	{
+		MessageBox("ESC");
+		OnCancel();
+	}
+	return CDialogEx::PreTranslateMessage(pMsg);
+}
