@@ -1,6 +1,7 @@
-#include <stdio.h>
+#include <cstdio>
 #include <iostream>
 #include <fstream>
+#include <cstdlib>
 #ifdef WIN32
 #pragma comment(lib, "WS2_32.lib")
 #include <winsock2.h>
@@ -13,8 +14,8 @@
 #include <pthread.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
 #endif
-#include <stdlib.h>
 #define DEFAULT_PORT 8877
 #define MAX_USERS 200
 #define MAX_ONLINE 100
@@ -22,6 +23,7 @@
 #define MAX_GROUPS 20
 #define ACC_REC "accounts.bin"
 #define DEBUGINFO 0
+using namespace std;
 char Buffer[256];
 int  havemsg, wantquit, c0, c1;
 char tosend[256];
@@ -231,8 +233,8 @@ void monite(void)
 #else
 	int
 #endif
-		recvsock = recvtemp,//Ω” ’
-		sendsock = sendtemp;//∑¢ÀÕ
+		recvsock = recvtemp,//Êé•Êî∂
+		sendsock = sendtemp;//ÂèëÈÄÅ
 	int c, feedback, loggedon = 0;
 	int qq = 1;
 	char buf[256], bufs[256], name[24];
@@ -550,11 +552,12 @@ int main(int argc, char *argv[]) {
 	if (err
 #ifdef WIN32
 		== SOCKET_ERROR) {
-		//cerr<<"WSAStartup failed with error "<<WSAGetLastError()<<endl;
+		cerr<<"WSAStartup failed with error "<<WSAGetLastError()<<endl;
 		WSACleanup();
 #else
 		< 0) {
 #endif
+		cerr<<"errno:\t"<<strerror(errno)<<endl;
 		return -1;
 	}
 	struct sockaddr_in local;
@@ -565,7 +568,7 @@ int main(int argc, char *argv[]) {
 	if (listen_socket
 #ifdef WIN32
 		== INVALID_SOCKET) {
-		//cerr<<"socket() failed with error "<<WSAGetLastError()<<endl;
+		cerr<<"socket() failed with error "<<WSAGetLastError()<<endl;
 		WSACleanup();
 #else
 		< 0) {
@@ -575,21 +578,23 @@ int main(int argc, char *argv[]) {
 	if (bind(listen_socket, (struct sockaddr*)&local, sizeof(local))
 #ifdef WIN32
 		== SOCKET_ERROR) {
-		//cerr<<"bind() failed with error "<<WSAGetLastError()<<endl;
+		cerr<<"bind() failed with error "<<WSAGetLastError()<<endl;
 		WSACleanup();
 #else
 		< 0) {
 #endif
+		cerr<<"errno:\t"<<strerror(errno)<<endl;
 		return -1;
 	}
 	if (listen(listen_socket, 50)
 #ifdef WIN32
 		== SOCKET_ERROR) {
-		//cerr<<"listen() failed with error "<<WSAGetLastError()<<endl;
+		cerr<<"listen() failed with error "<<WSAGetLastError()<<endl;
 		WSACleanup();
 #else
 		< 0) {
 #endif
+		cerr<<"errno:\t"<<strerror(errno)<<endl;
 		return -1;
 	}
 	printf("listening to port %d\n", DEFAULT_PORT);
@@ -602,11 +607,12 @@ int main(int argc, char *argv[]) {
 		if (recvtemp
 #ifdef WIN32
 			== INVALID_SOCKET) {
-			//cerr<<"accept() failed error "<<WSAGetLastError();
+			cerr<<"accept() failed error "<<WSAGetLastError();
 			WSACleanup();
 #else
 			< 0) {
 #endif
+			cerr<<"errno:\t"<<strerror(errno)<<endl;
 			return -1;
 		};
 		if (DEBUGINFO)
@@ -616,12 +622,12 @@ int main(int argc, char *argv[]) {
 		if (sendtemp
 #ifdef WIN32
 			== INVALID_SOCKET) {
-			//cerr<<"accept() failed error "<<WSAGetLastError();
+			cerr<<"accept() failed error "<<WSAGetLastError();
 			WSACleanup();
 #else
 			< 0) {
 #endif
-			return -1;
+			cerr<<"errno:\t"<<strerror(errno)<<endl;
 			return -1;
 		};
 #ifdef __linux
