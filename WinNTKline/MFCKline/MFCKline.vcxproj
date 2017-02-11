@@ -324,8 +324,6 @@
   <ItemGroup>
     <None Include="..\gSOAPverify\soap\myweb.nsmap" />
     <None Include="ClassDiagram.cd" />
-    <None Include="ClassDiagram1.cd" />
-    <None Include="ClassDiagram2.cd" />
     <None Include="Index\Indexes.inl" />
     <None Include="Index\_String-inl.h" />
     <None Include="res\MFCKline.rc2" />
