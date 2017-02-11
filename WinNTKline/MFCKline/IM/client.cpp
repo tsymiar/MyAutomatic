@@ -1,77 +1,77 @@
-#pragma comment(lib, "WS2_32.lib")
-#include <winsock2.h>
-#include <stdio.h>
-#include <iostream>
-#include <fstream>
-#include <string.h>
-#include <conio.h>
+#include "IMClient.h"
 
 using namespace std;
 #define DEFAULT_PORT 8877
-SOCKET in, out;
+
+SOCKET rcv, out;
 int loggedon = 0;
 char lastmsg[256], lastgroup[256];
 CRITICAL_SECTION wrcon;
-void r(void) {
-	char buf[256];
+//参考该函数编写报文处理函数
+void runtime(void* lp) {
 	int feedback;
+	char cmd[256];
+	struct LPR* lpr = (struct LPR*)lp;
 	do {
-		feedback = recv(in, buf, 256, 0);
+		feedback = recv(rcv, cmd, 256, 0);
 		if (!(feedback == 256)) {
 			Sleep(100);
 			printf("connection lost\n");
 			exit(0);
 		};
 		EnterCriticalSection(&wrcon);
-		if (buf[1] == 31) {
-			printf("received from %s:%s\n", (buf + 8), (buf + 32));
-		}
-		else if (buf[1] == 20) {
-			printf("%s\n", (buf + 8));
-		}
-		else if (buf[1] == 21) {
-			printf("%s\n", (buf + 32));
-		}
-		else if (buf[1] == 22) {
-			printf("info of %s\n %s \n", (buf + 8), (buf + 32));
-		}
-		else if (buf[1] == 123) {
-			printf("password changed successfully\n");
-		}
-		else if (buf[1] == 10) {
+		switch (cmd[1]) 
+		{
+		case 10:
 			printf("join to gruop %s successfully\n", (lastgroup + 8));
-		}
-		else if (buf[1] == 11) {
-			printf("join to gruop %s rejected :%s\n", (lastgroup + 8), (buf + 32));
-		}
-		else if (buf[1] == 12) {
+			break;
+		case 11:
+			printf("join to gruop %s rejected :%s\n", (lastgroup + 8), (cmd + 32));
+			break;
+		case 12:
 			printf("create gruop %s successfully\n", (lastgroup + 8));
-		}
-		else if (buf[1] == 13) {
+			break;
+		case 13:
 			printf("create gruop %s rejected\n", (lastgroup + 8));
-		}
-		else if (buf[1] == 14) {
+			break;
+		case 14:
 			printf("leave gruop %s successfully\n", (lastgroup + 8));
-		}
-		else if (buf[1] == 30) {
+			break;
+		case 20:
+			printf("%s\n", (cmd + 8));
+			break;
+		case 21:
+			printf("%s\n", (cmd + 32));
+			break;
+		case 22:
+			printf("info of %s\n %s \n", (cmd + 8), (cmd + 32));
+			break;
+		case 30:
 			printf("you said to %s : %s\n", (lastmsg + 8), (lastmsg + 32));
-		}
-		else if (buf[1] == 32) {
+			break;
+		case 31:
+			printf("received from %s:%s\n", (cmd + 8), (cmd + 32));
+			break;
+		case 32:
 			printf("talk to %s failed\n", (lastmsg + 8));
+			break;
+		case 122:
+			printf("other info %d\n", cmd[1]);
+			break;
+		case 123:
+			printf("password changed successfully\n");
+			break;
+		default:
+			printf("other info %d\n", cmd[1]);
+			break;
 		}
-		else if (buf[1] == 122) {
-		}
-
-
-		else printf("other info %d\n", buf[1]);
 		LeaveCriticalSection(&wrcon);
-
 	} while (1);
 };
-int main(int argc, char *argv[]) {
+
+int InitChat(char argv[], int argc) {
 	WSADATA wsaData;
-	char optionchar, optionstr[24], address[20];
-	char Buffer[256];
+	char address[20];
 	int err = WSAStartup(0x202, &wsaData);
 	if (err == SOCKET_ERROR) {
 		cerr << "WSAStartup failed with error " << WSAGetLastError() << endl;
@@ -81,7 +81,7 @@ int main(int argc, char *argv[]) {
 	InitializeCriticalSection(&wrcon);
 	SetConsoleTitle("chat client");
 	if (argc == 2) {
-		strcpy(address, argv[1]);
+		strcpy(address, argv/*[1]*/);
 	}
 	else {
 		printf("enter server address:");
@@ -98,24 +98,37 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
 	if (connect(out, (struct sockaddr*)&server, sizeof(server)) == SOCKET_ERROR) {
-		cerr << "connect() failed:error " << WSAGetLastError() << WSAECONNREFUSED << endl;
+		cerr << "connect() failed:error " << "[" << WSAGetLastError() << "] " << WSAECONNREFUSED << endl;
 		WSACleanup();
 		return -1;
 	}
-	in = socket(AF_INET, SOCK_STREAM, 0);
+	rcv = socket(AF_INET, SOCK_STREAM, 0);
 	if (out == INVALID_SOCKET) {
 		cerr << "socket() failed with error " << WSAGetLastError() << endl;
 		WSACleanup();
 		return -1;
 	}
-	if (connect(in, (struct sockaddr*)&server, sizeof(server)) == SOCKET_ERROR) {
-		cerr << "connect() failed:error " << WSAGetLastError() << WSAECONNREFUSED << endl;
+	if (connect(rcv, (struct sockaddr*)&server, sizeof(server)) == SOCKET_ERROR) {
+		cerr << "connect() failed:error " << "[" << WSAGetLastError() << "] " << WSAECONNREFUSED << endl;
 		WSACleanup();
 		return -1;
 	}
+	return 0;
+}
+
+int StartChat(int err, void(*func)(void*))
+{
+	if (err != 0)
+		return err;
+	char onechar;
+	struct LPR lpr;
+	DWORD thread_ID;
+	char auxstr[24];
+	char Buffer[256];
+	char optionchar, optionstr[24];
 
 	do {
-		printf("connected to server,logon or reg a new account? (l/r):");
+		printf("Connect to server OK, [logon] or [regist] a new account? (l/r):");
 		fflush(stdin);
 		optionchar = getchar();
 		if (optionchar == 'l') {
@@ -129,7 +142,7 @@ int main(int argc, char *argv[]) {
 			printf("password:");
 			scanf("%s", (Buffer + 32));
 			send(out, Buffer, 256, 0);
-			recv(in, Buffer, 256, 0);
+			recv(rcv, Buffer, 256, 0);
 			if (Buffer[1] == 120) {
 				printf("logged on successfully\n");
 				SetConsoleTitle(title);
@@ -146,7 +159,7 @@ int main(int argc, char *argv[]) {
 			printf("password:");
 			scanf("%s", (Buffer + 32));
 			send(out, Buffer, 256, 0);
-			recv(in, Buffer, 256, 0);
+			recv(rcv, Buffer, 256, 0);
 			if (Buffer[1] == 0)
 				printf("registered succesfully\n");
 			else
@@ -155,14 +168,13 @@ int main(int argc, char *argv[]) {
 		else
 			printf("please in put a valid option\n");
 	} while (loggedon == 0);
-	printf("help command to see help message\n");
-	DWORD thread_ID;
-	CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)(r), NULL, 0, &thread_ID);
-	char onechar;
-	char auxstr[24];
+	printf("type command [help] to see help message\n");
+	lpr.sock = rcv;
+	lpr.wrcon = wrcon;
+	CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)(func), &lpr, 0, &thread_ID);
 	do {
 		fflush(stdin);
-		onechar = getch();
+		onechar = _getch();
 		EnterCriticalSection(&wrcon);
 
 		auxstr[0] = onechar;
@@ -184,7 +196,7 @@ int main(int argc, char *argv[]) {
 												  printf("joingroup groupname password to join a group\nquitgroup groupname to leave a group\n");
 												  printf("user/groupname message to talk to a user or group\npassword newpasswrd to set password\n\n");
 												  */
-			MessageBox(NULL, "quit to quit program\nhelp to show this message\nlist to see online user list\nallgroup to see group list on this server\nmemberof groupname to see user list of this group\nsetinfo newinfo to set personal info\ninfo name  to see introduction of a user\ncreategroup groupname grouppassword to create a new group\njoingroup groupname password to join a group\nquitgroup groupname to leave a group\nuser/groupname message to talk to a user or group\npassword newpasswrd to set password\n", "help message", MB_OK);
+			MessageBox(NULL, "[quit]\nto quit program\n[help]\nto show this message\n[list]\nto see online user list\n[allgroup]\nto see group list on this server\n[memberof groupname]\nto see user list of this group\n[setinfo newinfo]\nto set personal info\n[info name]\nto see introduction of a user\n[creategroup groupname grouppassword]\nto create a new group\n[joingroup groupname password]\nto join a group\n[quitgroup groupname]\nto leave a group\n[user/groupname message]\nto talk to a user or group\n[password newpasswrd]\nto set password\n", "help message", MB_OK);
 		}
 		else if (strcmp(optionstr, "list") == 0) {
 			Buffer[0] = 0;
@@ -253,9 +265,13 @@ int main(int argc, char *argv[]) {
 		LeaveCriticalSection(&wrcon);
 	} while (loggedon == 1);
 	printf("quit now\n");
-	closesocket(in);
+	return 0;
+}
+
+void CloseChat()
+{
+	closesocket(rcv);
 	closesocket(out);
 	WSACleanup();
 	DeleteCriticalSection(&wrcon);
-	return 0;
 }

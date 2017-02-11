@@ -752,14 +752,14 @@ void OGLKview::DrawDash(Point pt[2])
 
 void OGLKview::DrawCurve(OGLKview::Point A[4])
 {
-	Indexes inde;
+	Indexes idx;
 	for (int i = 0; i <= 3; i++) 
 		A[i] = xytinker(A[i]);
 	glColor3f(1, 1, 1);
 	Point Pold = { A[0].x,A[0].y };
 	for (double t = 0.f; t <= 1.f; t += .1f)
 	{
-		Point P = inde.CubicBézier(A, t);
+		Point P = idx.CubicBézier(A, t);
 		glBegin(GL_LINES);
 			glVertex2f(Pold.x, Pold.y);
 			glVertex2f(P.x, P.y);

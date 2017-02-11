@@ -1,4 +1,4 @@
-#ifndef _INDEXS_H
+﻿#ifndef _INDEXS_H
 #define _INDEXS_H
 
 #include<cmath>

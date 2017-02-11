@@ -259,6 +259,7 @@
     <ClInclude Include="dos\DOSCout.h" />
     <ClInclude Include="Font\FontNehe.h" />
     <ClInclude Include="HOOK\injectDLL.h" />
+    <ClInclude Include="IM\IMclient.h" />
     <ClInclude Include="Index\binarytree-inl.h" />
     <ClInclude Include="Index\CommSet.h" />
     <ClInclude Include="Index\plus1second.inc" />
@@ -267,7 +268,6 @@
     <ClInclude Include="MFCKlineDlg.h" />
     <ClInclude Include="MyOglDrawDlg.h" />
     <ClInclude Include="NET\GEThttp.h" />
-    <ClInclude Include="NET\IMclient.h" />
     <ClInclude Include="NET\TCPIP.h" />
     <ClInclude Include="ogl\bitmap.h" />
     <ClInclude Include="ogl\GlModel.h" />
@@ -294,13 +294,13 @@
     <ClCompile Include="dos\DOSCout.cpp" />
     <ClCompile Include="Font\FontNehe.cc" />
     <ClCompile Include="HOOK\injectDLL.cpp" />
+    <ClCompile Include="IM\client.cpp" />
     <ClCompile Include="Index\CPUID.H" />
     <ClCompile Include="LoginDlg.cpp" />
     <ClCompile Include="MFCKline.cpp" />
     <ClCompile Include="MFCKlineDlg.cpp" />
     <ClCompile Include="MyOglDrawDlg.cpp" />
     <ClCompile Include="NET\GEThttp.cpp" />
-    <ClCompile Include="NET\IMclient.cpp" />
     <ClCompile Include="NET\TCPIP.cpp" />
     <ClCompile Include="ogl\bitmap.c">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
@@ -325,6 +325,7 @@
     <None Include="..\gSOAPverify\soap\myweb.nsmap" />
     <None Include="ClassDiagram.cd" />
     <None Include="ClassDiagram1.cd" />
+    <None Include="ClassDiagram2.cd" />
     <None Include="Index\Indexes.inl" />
     <None Include="Index\_String-inl.h" />
     <None Include="res\MFCKline.rc2" />

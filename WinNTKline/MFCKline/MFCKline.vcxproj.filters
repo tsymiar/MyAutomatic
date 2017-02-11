@@ -102,9 +102,6 @@
     <ClInclude Include="RegistDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="NET\IMclient.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="NET\GEThttp.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -115,6 +112,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Index\binarytree-inl.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="IM\IMclient.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -188,9 +188,6 @@
     <ClCompile Include="ogl\bitmap.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="NET\IMclient.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="NET\GEThttp.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -199,6 +196,9 @@
     </ClCompile>
     <ClCompile Include="Index\CPUID.H">
       <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="IM\client.cpp">
+      <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -219,6 +219,7 @@
       <Filter>头文件</Filter>
     </None>
     <None Include="ClassDiagram1.cd" />
+    <None Include="ClassDiagram2.cd" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\MFCKline.ico">
