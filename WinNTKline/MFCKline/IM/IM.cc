@@ -1,8 +1,8 @@
 #include <cstdio>
+#include <cstdlib>
 #include <iostream>
 #include <fstream>
-#include <cstdlib>
-#ifdef WIN32
+#ifdef _WIN32
 #pragma comment(lib, "WS2_32.lib")
 #include <winsock2.h>
 #include <windows.h>
@@ -27,7 +27,7 @@ using namespace std;
 char Buffer[256];
 int  havemsg, wantquit, c0, c1;
 char tosend[256];
-#ifdef WIN32
+#ifdef _WIN32
 WSADATA wsaData;
 SOCKET
 #else
@@ -37,7 +37,7 @@ recvtemp, sendtemp, listen_socket;
 #ifdef __linux
 pthread_mutexattr_t attr;
 #endif
-#ifdef WIN32
+#ifdef _WIN32
 CRITICAL_SECTION
 #else
 pthread_mutex_t
@@ -57,13 +57,13 @@ struct group {
 group groups[MAX_GROUPS];
 struct LINE {
 	char name[24];
-#ifdef WIN32
+#ifdef _WIN32
 	SOCKET
 #else
 	int
 #endif
 		recvsocket;
-#ifdef WIN32
+#ifdef _WIN32
 	SOCKET
 #else
 	int
@@ -71,7 +71,7 @@ struct LINE {
 		sendsocket;
 } online[MAX_ONLINE];
 void dump(void) {
-#ifdef WIN32
+#ifdef _WIN32
 	_flushall();
 #else
 	fflush(stdin);
@@ -81,7 +81,7 @@ void dump(void) {
 	fwrite(users, sizeof(user), MAX_USERS, dumpfile);
 	fwrite(groups, sizeof(group), MAX_GROUPS, dumpfile);
 	fclose(dumpfile);
-#ifdef WIN32
+#ifdef _WIN32
 	_flushall();
 #else
 	fflush(stdin);
@@ -89,7 +89,7 @@ void dump(void) {
 };
 int resume(void) {   //load file system from disk
 	FILE *dumpfile;
-#ifdef WIN32
+#ifdef _WIN32
 	_flushall();
 #else
 	fflush(stdin);
@@ -103,7 +103,7 @@ int resume(void) {   //load file system from disk
 		fclose(dumpfile);
 		return 0;
 	};
-#ifdef WIN32
+#ifdef _WIN32
 	_flushall();
 #else
 	fflush(stdin);
@@ -228,7 +228,7 @@ void *monite(void *arg)
 void monite(void)
 #endif
 {
-#ifdef WIN32
+#ifdef _WIN32
 	SOCKET
 #else
 	int
@@ -259,7 +259,7 @@ void monite(void)
 			}
 			else {
 				bufs[1] = 1;
-				strcpy((buf + 32), "user already exhists");
+				strcpy((buf + 32), "user already exists");
 			};
 			send(sendsock, bufs, 256, 0);
 			if (DEBUGINFO)
@@ -296,7 +296,7 @@ void monite(void)
 	do {
 		feedback = recv(recvsock, buf, 256, 0);
 		if (!(feedback == 256)) {
-			printf("connection with %s lost\n", name);
+			printf("lost connection with %s.\n", name);
 			goto con_err;
 		};
 		if (DEBUGINFO)
@@ -456,14 +456,14 @@ con_err:
 	strcpy(online[feedback].name, "");
 
 con_err1:
-#ifdef WIN32
+#ifdef _WIN32
 	closesocket(recvsock);
 	closesocket(sendsock);
 #else
 	close(recvsock);
 	close(sendsock);
 #endif
-	return NULL;
+	return;
 };
 
 #ifdef __linux
@@ -477,14 +477,14 @@ void control(void)
 	do {
 		scanf("%s", &optionstr);
 		if (strcmp(optionstr, "quit") == 0) {
-#ifdef WIN32
+#ifdef _WIN32
 			closesocket(listen_socket);
 #else
 			close(listen_socket);
 #endif
 			printf("saving accounts data to file %s\n", ACC_REC);
 			dump();
-#ifdef WIN32
+#ifdef _WIN32
 			WSACleanup();
 			DeleteCriticalSection(&sendallow);
 #else
@@ -497,7 +497,7 @@ void control(void)
 			scanf("%s", &name);
 			feedback = user_to_sock(name);
 			if (!(feedback == -1)) {
-#ifdef WIN32
+#ifdef _WIN32
 				closesocket(online[feedback].recvsocket);
 				closesocket(online[feedback].sendsocket);
 #else
@@ -521,7 +521,7 @@ int main(int argc, char *argv[]) {
 		strcpy(groups[0].passwd, "all");
 		strcpy(groups[0].member[0], "admin");
 	}
-#ifdef WIN32
+#ifdef _WIN32
 	InitializeCriticalSection(&sendallow);
 #else
 	pthread_mutexattr_init(&attr);
@@ -529,7 +529,7 @@ int main(int argc, char *argv[]) {
 	pthread_mutex_init(&(sendallow), &attr);
 #endif
 	wantquit = 0;
-#ifdef WIN32
+#ifdef _WIN32
 	SetConsoleTitle((LPCWSTR)"chat server for network design");
 	DWORD
 #else
@@ -539,25 +539,25 @@ int main(int argc, char *argv[]) {
 #ifdef __linux
 	pthread_create(&thread_ID, NULL, control, (void*)-1);
 #else
-#ifdef WIN32
+#ifdef _WIN32
 	CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)(control), NULL, 0, &thread_ID);
 #endif
 #endif
 	int err =
-#ifdef WIN32
+#ifdef _WIN32
 		WSAStartup(0x202, &wsaData);
 #else
 		0;
 #endif
 	if (err
-#ifdef WIN32
+#ifdef _WIN32
 		== SOCKET_ERROR) {
-		cerr<<"WSAStartup failed with error "<<WSAGetLastError()<<endl;
+		cerr << "WSAStartup failed with error " << WSAGetLastError() << endl;
 		WSACleanup();
 #else
 		< 0) {
 #endif
-		cerr<<"errno:\t"<<strerror(errno)<<endl;
+		cerr << "errno:\t" << strerror(errno) << endl;
 		return -1;
 	}
 	struct sockaddr_in local;
@@ -566,9 +566,9 @@ int main(int argc, char *argv[]) {
 	local.sin_port = htons(DEFAULT_PORT);
 	listen_socket = socket(AF_INET, SOCK_STREAM, 0);
 	if (listen_socket
-#ifdef WIN32
+#ifdef _WIN32
 		== INVALID_SOCKET) {
-		cerr<<"socket() failed with error "<<WSAGetLastError()<<endl;
+		cerr << "socket() failed with error " << WSAGetLastError() << endl;
 		WSACleanup();
 #else
 		< 0) {
@@ -576,58 +576,71 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
 	if (bind(listen_socket, (struct sockaddr*)&local, sizeof(local))
-#ifdef WIN32
+#ifdef _WIN32
 		== SOCKET_ERROR) {
-		cerr<<"bind() failed with error "<<WSAGetLastError()<<endl;
+		cerr << "bind() failed with error " << WSAGetLastError() << endl;
 		WSACleanup();
 #else
 		< 0) {
 #endif
-		cerr<<"errno:\t"<<strerror(errno)<<endl;
+		cerr << "errno:\t" << strerror(errno) << endl;
 		return -1;
 	}
 	if (listen(listen_socket, 50)
-#ifdef WIN32
+#ifdef _WIN32
 		== SOCKET_ERROR) {
-		cerr<<"listen() failed with error "<<WSAGetLastError()<<endl;
+		cerr << "listen() failed with error " << WSAGetLastError() << endl;
 		WSACleanup();
 #else
 		< 0) {
 #endif
-		cerr<<"errno:\t"<<strerror(errno)<<endl;
+		cerr << "errno:\t" << strerror(errno) << endl;
 		return -1;
 	}
 	printf("listening to port %d\n", DEFAULT_PORT);
 	struct sockaddr_in from;
-	socklen_t fromlen = (socklen_t)sizeof(from);
+#ifdef _WIN32
+	int
+#else
+	socklen_t
+#endif
+		fromlen = (
+#ifdef _WIN32
+			int
+#else
+			socklen_t
+#endif
+			)sizeof(from);
 	int c = 0;
 	do {
 		recvtemp = accept(listen_socket, (struct sockaddr*)&from, &fromlen);
 
 		if (recvtemp
-#ifdef WIN32
+#ifdef _WIN32
 			== INVALID_SOCKET) {
-			cerr<<"accept() failed error "<<WSAGetLastError();
+			cerr << "accept() failed error " << WSAGetLastError();
 			WSACleanup();
 #else
 			< 0) {
 #endif
-			cerr<<"errno:\t"<<strerror(errno)<<endl;
+			cerr << "errno:\t" << strerror(errno) << endl;
 			return -1;
-		};
+		}
+		else
+			printf("accept() OK.\n");
 		if (DEBUGINFO)
 			printf("1:%d\n", recvtemp);
 		sendtemp = accept(listen_socket, (struct sockaddr*)&from, &fromlen);
 
 		if (sendtemp
-#ifdef WIN32
+#ifdef _WIN32
 			== INVALID_SOCKET) {
-			cerr<<"accept() failed error "<<WSAGetLastError();
+			cerr << "accept() failed error " << WSAGetLastError();
 			WSACleanup();
 #else
 			< 0) {
 #endif
-			cerr<<"errno:\t"<<strerror(errno)<<endl;
+			cerr << "errno:\t" << strerror(errno) << endl;
 			return -1;
 		};
 #ifdef __linux
@@ -637,10 +650,10 @@ int main(int argc, char *argv[]) {
 #endif
 		c++;
 		if (DEBUGINFO)
+		{
 			printf("2:%d\n", sendtemp);
-		if (DEBUGINFO)
-			if (DEBUGINFO)
-				printf("c is : %d", c);
-		} while (!(wantquit));
-		return 0;
+			printf("c is : %d", c);
+		}
+	} while (!(wantquit));
+	return 0;
 }
