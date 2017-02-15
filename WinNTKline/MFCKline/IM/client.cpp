@@ -13,14 +13,14 @@ void runtime(void* lp) {
 	char cmd[256];
 	struct LPR* lpr = (struct LPR*)lp;
 	do {
-		feedback = recv(rcv, cmd, 256, 0);
+		feedback = recv(lpr->sock, cmd, 256, 0);
 		if (!(feedback == 256)) {
 			Sleep(100);
 			printf("connection lost\n");
 			exit(0);
 		};
-		EnterCriticalSection(&wrcon);
-		switch (cmd[1]) 
+		EnterCriticalSection(&lpr->wrcon);
+		switch (cmd[1])
 		{
 		case 10:
 			printf("join to gruop %s successfully\n", (lastgroup + 8));
@@ -65,7 +65,7 @@ void runtime(void* lp) {
 			printf("other info %d\n", cmd[1]);
 			break;
 		}
-		LeaveCriticalSection(&wrcon);
+		LeaveCriticalSection(&lpr->wrcon);
 	} while (1);
 };
 

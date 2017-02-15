@@ -117,6 +117,9 @@
     <ClInclude Include="IM\IMclient.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="IMhideWndDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MFCKline.cpp">
@@ -200,6 +203,9 @@
     <ClCompile Include="IM\client.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="IMhideWndDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="MFCKline.rc">
@@ -218,8 +224,6 @@
     <None Include="Index\_String-inl.h">
       <Filter>头文件</Filter>
     </None>
-    <None Include="ClassDiagram1.cd" />
-    <None Include="ClassDiagram2.cd" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\MFCKline.ico">

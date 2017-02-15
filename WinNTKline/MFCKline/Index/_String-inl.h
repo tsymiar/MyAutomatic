@@ -254,8 +254,8 @@ inline _String /*&*/ _String::operator+(const _String & other) const
 	else
 	{
 		newstring.m_data = new char[strlen(m_data) + strlen(other.m_data) + 1];
-		strcpy(newstring.m_data, m_data);
-		strcat(newstring.m_data, other.m_data);
+		newstring._strcpy(newstring.m_data, m_data);
+		newstring._strcat(newstring.m_data, other.m_data);
 	}
 	return newstring;//内联函数不该返回局部变量的引用
 }

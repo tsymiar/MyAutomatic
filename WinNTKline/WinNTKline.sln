@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26020.0
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MFCKline", "MFCKline\MFCKline.vcxproj", "{C0FF2B6D-EDD9-4E65-8CA8-1C4968F76D48}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -12,7 +12,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "QtKline", "QtKline\QtKline\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WpfKline", "WpfKline\WpfKline\WpfKline.csproj", "{0652C320-7C16-41E3-A864-C70A672705A2}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gSOAPverify", "gSOAPverify\gSOAPverify.vcxproj", "{F09051E8-61C2-4914-80E3-64D51CF27A9E}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gSOAPverify", "gSOAPverify\gSOAPverify.vcxproj", "{896FCF3C-250C-46EC-A419-1B5E27D0DD53}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -61,20 +61,20 @@ Global
 		{0652C320-7C16-41E3-A864-C70A672705A2}.Release|x64.Build.0 = Release|x64
 		{0652C320-7C16-41E3-A864-C70A672705A2}.Release|x86.ActiveCfg = Release|x86
 		{0652C320-7C16-41E3-A864-C70A672705A2}.Release|x86.Build.0 = Release|x86
-		{F09051E8-61C2-4914-80E3-64D51CF27A9E}.Debug|Any CPU.ActiveCfg = Debug|x86
-		{F09051E8-61C2-4914-80E3-64D51CF27A9E}.Debug|ARM.ActiveCfg = Debug|ARM
-		{F09051E8-61C2-4914-80E3-64D51CF27A9E}.Debug|ARM.Build.0 = Debug|ARM
-		{F09051E8-61C2-4914-80E3-64D51CF27A9E}.Debug|x64.ActiveCfg = Debug|x86
-		{F09051E8-61C2-4914-80E3-64D51CF27A9E}.Debug|x64.Build.0 = Debug|x86
-		{F09051E8-61C2-4914-80E3-64D51CF27A9E}.Debug|x86.ActiveCfg = Debug|x86
-		{F09051E8-61C2-4914-80E3-64D51CF27A9E}.Debug|x86.Build.0 = Debug|x86
-		{F09051E8-61C2-4914-80E3-64D51CF27A9E}.Release|Any CPU.ActiveCfg = Release|x86
-		{F09051E8-61C2-4914-80E3-64D51CF27A9E}.Release|ARM.ActiveCfg = Release|ARM
-		{F09051E8-61C2-4914-80E3-64D51CF27A9E}.Release|ARM.Build.0 = Release|ARM
-		{F09051E8-61C2-4914-80E3-64D51CF27A9E}.Release|x64.ActiveCfg = Release|x64
-		{F09051E8-61C2-4914-80E3-64D51CF27A9E}.Release|x64.Build.0 = Release|x64
-		{F09051E8-61C2-4914-80E3-64D51CF27A9E}.Release|x86.ActiveCfg = Release|x86
-		{F09051E8-61C2-4914-80E3-64D51CF27A9E}.Release|x86.Build.0 = Release|x86
+		{896FCF3C-250C-46EC-A419-1B5E27D0DD53}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{896FCF3C-250C-46EC-A419-1B5E27D0DD53}.Debug|ARM.ActiveCfg = Debug|ARM
+		{896FCF3C-250C-46EC-A419-1B5E27D0DD53}.Debug|ARM.Build.0 = Debug|ARM
+		{896FCF3C-250C-46EC-A419-1B5E27D0DD53}.Debug|x64.ActiveCfg = Debug|x64
+		{896FCF3C-250C-46EC-A419-1B5E27D0DD53}.Debug|x64.Build.0 = Debug|x64
+		{896FCF3C-250C-46EC-A419-1B5E27D0DD53}.Debug|x86.ActiveCfg = Debug|x86
+		{896FCF3C-250C-46EC-A419-1B5E27D0DD53}.Debug|x86.Build.0 = Debug|x86
+		{896FCF3C-250C-46EC-A419-1B5E27D0DD53}.Release|Any CPU.ActiveCfg = Release|x86
+		{896FCF3C-250C-46EC-A419-1B5E27D0DD53}.Release|ARM.ActiveCfg = Release|ARM
+		{896FCF3C-250C-46EC-A419-1B5E27D0DD53}.Release|ARM.Build.0 = Release|ARM
+		{896FCF3C-250C-46EC-A419-1B5E27D0DD53}.Release|x64.ActiveCfg = Release|x64
+		{896FCF3C-250C-46EC-A419-1B5E27D0DD53}.Release|x64.Build.0 = Release|x64
+		{896FCF3C-250C-46EC-A419-1B5E27D0DD53}.Release|x86.ActiveCfg = Release|x86
+		{896FCF3C-250C-46EC-A419-1B5E27D0DD53}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -18,9 +18,9 @@
 [Xx]64/
 [Xx]86/
 [Bb]uild/
-[Vv]140_xp/
+[Vv]*_xp/
 MFC/
-bld/
+[Ll]inux/
 [Bb]in/
 [Oo]bj/
 

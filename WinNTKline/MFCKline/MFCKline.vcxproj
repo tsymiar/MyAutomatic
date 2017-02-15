@@ -259,6 +259,7 @@
     <ClInclude Include="dos\DOSCout.h" />
     <ClInclude Include="Font\FontNehe.h" />
     <ClInclude Include="HOOK\injectDLL.h" />
+    <ClInclude Include="IMhideWndDlg.h" />
     <ClInclude Include="IM\IMclient.h" />
     <ClInclude Include="Index\binarytree-inl.h" />
     <ClInclude Include="Index\CommSet.h" />
@@ -294,6 +295,7 @@
     <ClCompile Include="dos\DOSCout.cpp" />
     <ClCompile Include="Font\FontNehe.cc" />
     <ClCompile Include="HOOK\injectDLL.cpp" />
+    <ClCompile Include="IMhideWndDlg.cpp" />
     <ClCompile Include="IM\client.cpp" />
     <ClCompile Include="Index\CPUID.H" />
     <ClCompile Include="LoginDlg.cpp" />
