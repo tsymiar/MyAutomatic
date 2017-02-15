@@ -54,6 +54,7 @@ private:
 	bool dig = true;
 	int item = 65535;
 	HWND m_hBottom;
+	CLoginDlg logdlg;
 public:
 	afx_msg void OnBnClickedOK();
 };

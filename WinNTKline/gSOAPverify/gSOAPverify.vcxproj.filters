@@ -1,16 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <None Include="fixmysql" />
-    <None Include="Makefile" />
-    <None Include="soap\myweb.nsmap">
-      <Filter>头文件</Filter>
-    </None>
-    <None Include="inl\_String.inl">
-      <Filter>头文件</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <Filter Include="头文件">
       <UniqueIdentifier>{f31d4cd6-2829-4fb9-8c2b-b8c94dbf3365}</UniqueIdentifier>
     </Filter>
@@ -19,10 +9,15 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="soap\soapC.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="soap\soapServer.cpp">
+    <None Include="inl\_String.inl">
+      <Filter>头文件</Filter>
+    </None>
+    <None Include="soap\myweb.nsmap">
+      <Filter>头文件</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="MyWeb.cc">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="soap\stdsoap2.cpp">
@@ -31,7 +26,10 @@
     <ClCompile Include="sql\sqlDB.cc">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="MyWeb.cc">
+    <ClCompile Include="soap\soapServer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="soap\soapC.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="pthdpool\pthdpool.cc">
@@ -39,16 +37,25 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="sql\sqlDB.h">
+    <ClInclude Include="MyWeb.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="MyWeb.h">
+    <ClInclude Include="soap\soapH.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="pthdpool\pthdpool.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="sql\sqlDB.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="soap\stdsoap2.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="pthdpool\pthdpool.h">
+    <ClInclude Include="soap\webapi.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="soap\soapStub.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
