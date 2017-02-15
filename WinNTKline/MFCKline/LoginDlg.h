@@ -28,6 +28,7 @@ protected:
 public:
 	afx_msg void OnBnClickedLogin();
 	afx_msg void OnBnClickedCancel();
+	CHAR m_IP[16];
 	char m_acnt[32];
 	char m_pswd[32];
 	Indexes netmsg; 
