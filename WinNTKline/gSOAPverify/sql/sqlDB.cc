@@ -71,7 +71,7 @@ int sqlDB(int type, char* acc, char* psw, DBinfo* info)
 			for (int i = 0; i < (int)fieldcount; i++) {
 				if (i == 5)
 					sprintf(info->tele, "%s", fetch[i]);
-				cout << fetch[i] << "\t";
+				cout << *info->tele << "\t";
 			}
 			fetch = mysql_fetch_row(RES);
 			cout << endl;

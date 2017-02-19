@@ -29,6 +29,7 @@ public:
 	char* _intmove(char* w, int m, int b, bool hind = false);
 	char* _op_order(char * src, char* dst);
 	char* _op_order(char * str);
+	char* _c_str();
 	size_t size() {
 		int len;
 		for (len = 0; m_data[len] != '\0'; len++)
@@ -226,6 +227,11 @@ inline char* _String::_op_order(char * str)
 		str[i] = str[len - i - 1]; str[len - i - 1] = t;
 	}
 	return str;
+}
+
+inline char* _String::_c_str()
+{
+	return m_data;
 }
 
 inline _String & _String::operator=(const _String & other)
