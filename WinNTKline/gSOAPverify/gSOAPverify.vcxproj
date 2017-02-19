@@ -82,8 +82,18 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(ProjectDir)..\..\Linux\bin\$(Platform)\</OutDir>
-    <IntDir>$(ProjectDir)..\..\Linux\obj\$(Platform)\</IntDir>
+    <OutDir>$(ProjectDir)..\Linux\bin\$(Platform)\</OutDir>
+    <IntDir>$(ProjectDir)..\Linux\obj\$(Platform)\</IntDir>
+    <AdditionalSourcesToCopyMapping>$(MSBuildProjectDirectory)\Makefile;$(AdditionalSourcesToCopyMapping)</AdditionalSourcesToCopyMapping>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+    <OutDir>$(ProjectDir)..\Linux\bin\$(Platform)\</OutDir>
+    <IntDir>$(ProjectDir)..\Linux\obj\$(Platform)\</IntDir>
+    <AdditionalSourcesToCopyMapping>$(MSBuildProjectDirectory)\Makefile;$(AdditionalSourcesToCopyMapping)</AdditionalSourcesToCopyMapping>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+    <OutDir>$(ProjectDir)..\Linux\bin\$(Platform)\</OutDir>
+    <IntDir>$(ProjectDir)..\Linux\obj\$(Platform)\</IntDir>
     <AdditionalSourcesToCopyMapping>$(MSBuildProjectDirectory)\Makefile;$(AdditionalSourcesToCopyMapping)</AdditionalSourcesToCopyMapping>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
