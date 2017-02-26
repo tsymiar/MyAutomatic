@@ -166,14 +166,14 @@ inline char* _String::_charmove(char* w, char c, int b, bool hind)
 	int m = c - s;
 	if (hind)
 	{
-		(b > (int)_strlen(w) - m) ? (b = (int)_strlen(w) - m) : NULL;
+		(b > (int)_strlen(w) - m) ? (b = (int)_strlen(w) - m) : 0;
 		for (i = 0; i < b; i++)
 			w[m + i] = c + (i + 1);
 		w[m + b] = c;
 	}
 	else
 	{
-		(b > m) ? (b = m) : NULL;
+		(b > m) ? (b = m) : 0;
 		for (i = 0; i < b; i++)
 			w[m - i] = c - (i + 1);
 		w[m - b] = c;
@@ -187,14 +187,14 @@ inline char* _String::_intmove(char* w, int m, int b, bool hind)
 	m -= 1;
 	if (hind)
 	{
-		(b > (int)_strlen(w) - m) ? (b = (int)_strlen(w) - m) : NULL;
+		(b > (int)_strlen(w) - m) ? (b = (int)_strlen(w) - m) : 0;
 		for (i = 0; i < b; i++)
 			w[m + i] = *w + m + (i + 1);
 		w[m + b] = *w + m;
 	}
 	else
 	{
-		(b > m) ? (b = m) : NULL;
+		(b > m) ? (b = m) : 0;
 		for (i = 0; i < b; i++)
 			w[m - i] = *w + m - (i + 1);
 		w[m - b] = *w + m;

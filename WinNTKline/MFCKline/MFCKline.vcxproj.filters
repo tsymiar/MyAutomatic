@@ -120,6 +120,9 @@
     <ClInclude Include="IMhideWndDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="web\myweb.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MFCKline.cpp">
@@ -219,11 +222,11 @@
     <None Include="Index\Indexes.inl">
       <Filter>头文件</Filter>
     </None>
-    <None Include="..\gSOAPverify\soap\myweb.nsmap" />
     <None Include="ClassDiagram.cd" />
     <None Include="Index\_String-inl.h">
       <Filter>头文件</Filter>
     </None>
+    <None Include="web\myweb.nsmap" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\MFCKline.ico">

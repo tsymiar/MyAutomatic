@@ -7,7 +7,7 @@
   xmlns:api="urn:myweb">
  <SOAP-ENV:Body  SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
   <api:encrypt>
-   <input></input>
+   <in></in>
   </api:encrypt>
  </SOAP-ENV:Body>
 </SOAP-ENV:Envelope>

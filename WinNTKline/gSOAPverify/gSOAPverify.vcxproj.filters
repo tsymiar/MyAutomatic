@@ -9,14 +9,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="inl\_String.inl">
-      <Filter>头文件</Filter>
-    </None>
-    <None Include="soap\myweb.nsmap">
-      <Filter>头文件</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="MyWeb.cc">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -58,5 +50,12 @@
     <ClInclude Include="soap\soapStub.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="inl\_String-inl.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="soap\myweb.nsmap" />
+    <None Include="Makefile" />
   </ItemGroup>
 </Project>

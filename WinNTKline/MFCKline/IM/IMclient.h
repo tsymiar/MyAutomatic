@@ -9,11 +9,18 @@
 #include <string.h>
 #include <conio.h>
 
+struct CHATMSG
+{
+	char lastuser[256];
+	char lastgroup[256];
+};
+
 struct LPR
 {
 	SOCKET sock;
 	CRITICAL_SECTION wrcon;
-	void* p;
+	void* dlg;
+	CHATMSG *msg;
 };
 
 int InitChat(char argv[] = "127.0.0.1" , int argc = 2);

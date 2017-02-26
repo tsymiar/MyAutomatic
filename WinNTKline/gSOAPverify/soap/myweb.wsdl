@@ -26,29 +26,39 @@
     elementFormDefault="unqualified"
     attributeFormDefault="unqualified">
     <import namespace="http://schemas.xmlsoap.org/soap/encoding/"/>
+    <complexType name="result"><!-- api__result -->
+          <sequence>
+            <element name="flag" type="xsd-int" minOccurs="1" maxOccurs="1"/><!-- api__result::flag -->
+            <element name="idx" type="xsd-int" minOccurs="1" maxOccurs="1"/><!-- api__result::idx -->
+            <element name="age" type="xsd-int" minOccurs="1" maxOccurs="1"/><!-- api__result::age -->
+            <element name="tell" type="xsd-string" minOccurs="0" maxOccurs="1" nillable="true"/><!-- api__result::tell -->
+            <element name="email" type="xsd-string" minOccurs="0" maxOccurs="1" nillable="true"/><!-- api__result::email -->
+          </sequence>
+    </complexType>
+    <complexType name="ArrayOfEmp2"><!-- ArrayOfEmp2 -->
+          <sequence>
+            <element name="rslt" type="api:result" minOccurs="1" maxOccurs="1"/><!-- ArrayOfEmp2::rslt -->
+          </sequence>
+    </complexType>
   </schema>
 
 </types>
 
 <message name="encryptRequest">
-  <part name="input" type="xsd:string"/><!-- api__encrypt::input -->
+  <part name="in" type="xsd:string"/><!-- api__encrypt::in -->
 </message>
 
 <message name="encryptResponse">
-  <part name="output" type="xsd:string"/><!-- api__encrypt::output -->
+  <part name="out" type="xsd:string"/><!-- api__encrypt::out -->
 </message>
 
-<message name="login-by-key">
+<message name="login-by-keyRequest">
   <part name="usr" type="xsd-string"/><!-- api__login_by_key::usr -->
   <part name="psw" type="xsd-string"/><!-- api__login_by_key::psw -->
 </message>
 
-<message name="result">
-  <part name="flag" type="xsd-int"/><!-- api__login_by_key::flag -->
-  <part name="id" type="xsd-int"/><!-- api__login_by_key::id -->
-  <part name="age" type="xsd-int"/><!-- api__login_by_key::age -->
-  <part name="user" type="xsd-string"/><!-- api__login_by_key::user -->
-  <part name="email" type="xsd-string"/><!-- api__login_by_key::email -->
+<message name="login-by-keyResponse">
+  <part name="ccc" type="api:ArrayOfEmp2"/><!-- api__login_by_key::ccc -->
 </message>
 
 <portType name="mywebPortType">
@@ -59,8 +69,8 @@
   </operation>
   <operation name="login-by-key">
     <documentation>Service definition of function api__login_by_key</documentation>
-    <input message="tns:login-by-key"/>
-    <output message="tns:result"/>
+    <input message="tns:login-by-keyRequest"/>
+    <output message="tns:login-by-keyResponse"/>
   </operation>
 </portType>
 

@@ -5,8 +5,8 @@ using namespace std;
 
 SOCKET rcv, out;
 int loggedon = 0;
-char lastmsg[256], lastgroup[256];
 CRITICAL_SECTION wrcon;
+
 //参考该函数编写报文处理函数
 void runtime(void* lp) {
 	int feedback;
@@ -16,55 +16,11 @@ void runtime(void* lp) {
 		feedback = recv(lpr->sock, cmd, 256, 0);
 		if (!(feedback == 256)) {
 			Sleep(100);
-			printf("connection lost\n");
+			printf("connection lost.\n");
 			exit(0);
 		};
 		EnterCriticalSection(&lpr->wrcon);
-		switch (cmd[1])
-		{
-		case 10:
-			printf("join to gruop %s successfully\n", (lastgroup + 8));
-			break;
-		case 11:
-			printf("join to gruop %s rejected :%s\n", (lastgroup + 8), (cmd + 32));
-			break;
-		case 12:
-			printf("create gruop %s successfully\n", (lastgroup + 8));
-			break;
-		case 13:
-			printf("create gruop %s rejected\n", (lastgroup + 8));
-			break;
-		case 14:
-			printf("leave gruop %s successfully\n", (lastgroup + 8));
-			break;
-		case 20:
-			printf("%s\n", (cmd + 8));
-			break;
-		case 21:
-			printf("%s\n", (cmd + 32));
-			break;
-		case 22:
-			printf("info of %s\n %s \n", (cmd + 8), (cmd + 32));
-			break;
-		case 30:
-			printf("you said to %s : %s\n", (lastmsg + 8), (lastmsg + 32));
-			break;
-		case 31:
-			printf("received from %s:%s\n", (cmd + 8), (cmd + 32));
-			break;
-		case 32:
-			printf("talk to %s failed\n", (lastmsg + 8));
-			break;
-		case 122:
-			printf("other info %d\n", cmd[1]);
-			break;
-		case 123:
-			printf("password changed successfully\n");
-			break;
-		default:
-			printf("other info %d\n", cmd[1]);
-			break;
-		}
+		'...';
 		LeaveCriticalSection(&lpr->wrcon);
 	} while (1);
 };
@@ -236,21 +192,21 @@ int StartChat(int err, void(*func)(void*))
 			Buffer[0] = 0;
 			Buffer[1] = 11;
 			scanf("%s%s", (Buffer + 8), (Buffer + 32));
-			strcpy((lastgroup + 8), (Buffer + 8));
+			strcpy((lpr.msg->lastgroup + 8), (Buffer + 8));
 			send(out, Buffer, 256, 0);
 		}
 		else if (strcmp(optionstr, "joingroup") == 0) {
 			Buffer[0] = 0;
 			Buffer[1] = 10;
 			scanf("%s%s", (Buffer + 8), (Buffer + 32));
-			strcpy((lastgroup + 8), (Buffer + 8));
+			strcpy((lpr.msg->lastgroup + 8), (Buffer + 8));
 			send(out, Buffer, 256, 0);
 		}
 		else if (strcmp(optionstr, "quitgroup") == 0) {
 			Buffer[0] = 0;
 			Buffer[1] = 12;
 			scanf("%s", (Buffer + 8));
-			strcpy((lastgroup + 8), (Buffer + 8));
+			strcpy((lpr.msg->lastgroup + 8), (Buffer + 8));
 			send(out, Buffer, 256, 0);
 		}
 		else {
@@ -258,8 +214,8 @@ int StartChat(int err, void(*func)(void*))
 			Buffer[1] = 30;
 			strcpy((Buffer + 8), optionstr);
 			gets_s(Buffer + 32, 256);
-			strcpy((lastmsg + 32), (Buffer + 32));
-			strcpy((lastmsg + 8), (Buffer + 8));
+			strcpy((lpr.msg->lastuser + 32), (Buffer + 32));
+			strcpy((lpr.msg->lastuser + 8), (Buffer + 8));
 			send(out, Buffer, 256, 0);
 		};
 		LeaveCriticalSection(&wrcon);

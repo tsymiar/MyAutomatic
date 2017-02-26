@@ -27,10 +27,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <None Include="inl\_String.inl" />
-    <None Include="soap\myweb.nsmap" />
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="MyWeb.cc" />
     <ClCompile Include="pthdpool\pthdpool.cc" />
     <ClCompile Include="soap\soapC.cpp" />
@@ -39,6 +35,7 @@
     <ClCompile Include="sql\sqlDB.cc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="inl\_String-inl.h" />
     <ClInclude Include="MyWeb.h" />
     <ClInclude Include="pthdpool\pthdpool.h" />
     <ClInclude Include="soap\soapH.h" />
@@ -46,6 +43,10 @@
     <ClInclude Include="soap\stdsoap2.h" />
     <ClInclude Include="soap\webapi.h" />
     <ClInclude Include="sql\sqlDB.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Makefile" />
+    <None Include="soap\myweb.nsmap" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{896FCF3C-250C-46EC-A419-1B5E27D0DD53}</ProjectGuid>

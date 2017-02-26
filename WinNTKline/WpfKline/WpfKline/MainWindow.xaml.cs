@@ -72,7 +72,12 @@ namespace WpfKline
             string rootpath = System.Windows.Forms.Application.StartupPath;// AppDomain.CurrentDomain.BaseDirectory;
             if (!String.IsNullOrEmpty(rootpath))
             {
-                txtFilePath.Text = rootpath + @"\..\..\..\..\MFCKline\data\SH600747.DAT";
+                txtFilePath.Text = rootpath +
+#if DEBUG
+                    @"\data\SH600747.DAT";
+#else
+                @"\..\..\..\..\MFCKline\data\SH600747.DAT";
+#endif
                 LoadData(txtFilePath.Text);
                 stockSet1.ItemsSource = Data;
             }

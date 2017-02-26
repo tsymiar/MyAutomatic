@@ -6,12 +6,16 @@
   xmlns:xsd="http://www.w3.org/2001/XMLSchema"
   xmlns:api="urn:myweb">
  <SOAP-ENV:Body  SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
-  <api:result>
-   <flag>0</flag>
-   <id>0</id>
-   <age>0</age>
-   <user></user>
-   <email></email>
-  </api:result>
+  <api:login-by-keyResponse>
+   <ccc>
+    <rslt>
+     <flag>0</flag>
+     <idx>0</idx>
+     <age>0</age>
+     <tell></tell>
+     <email></email>
+    </rslt>
+   </ccc>
+  </api:login-by-keyResponse>
  </SOAP-ENV:Body>
 </SOAP-ENV:Envelope>
