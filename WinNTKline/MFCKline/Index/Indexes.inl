@@ -37,7 +37,7 @@ public:
 		return P;
 	}
 private:
-	char* ptr;
+	char* ptr = nullptr;
 	LONG len;
 public:
 	static char* Indexes::AllocBuffer(CString msg)
@@ -56,11 +56,10 @@ public:
 		assert(index.ptr != NULL);
 		return p;
 	}
-public:
 	virtual Indexes::~Indexes()
 	{
-		if (ptr)
-			ptr = NULL;
+		if (this->ptr)
+			this->ptr = NULL;
 	}
 };
 #endif

@@ -6,24 +6,23 @@
 #include <iostream>
 #include <unistd.h>
 #include <cstdlib>
+#include <cstring>
 #include <string>
-
+#include <cstdio>
+struct DBinfo {
+	int flg;
+	int idx;
+	int age;
+	char* tell;
+	char* email;
+};
 //#pragma comment (lib,"ws2_32.lib")
 //#pragma comment(lib,"mysql/libmysql.lib")
-
-struct DBinfo {
-	int id;
-	char name[16];
-	char psw[16];
-	int age;
-	char email[32];
-	char tele[14];
-};
 
 #  ifdef __cplusplus
 extern "C" {
 #  endif /* __cplusplus */
-	int sqlDB(int type, char* acc, char* psw, DBinfo* info);
+	int sqlDB(int type, char* acc, char* psw, struct DBinfo* info);
 #  ifdef __cplusplus
 }
 #  endif

@@ -4,9 +4,9 @@ SOAP= soapC.o stdsoap2.o soapServer.o
 SQL = -std=c++11 -L/usr/lib/mysql -lmysqlclient
 PTHD= -std=c++11 -lpthread #-lgsoap++#-L/usr/local/gSOAP/lib/libsoap++
 gSOAPverify:$(OUT)
-	g++ -c ./soap/soapC.cpp
-	g++ -c ./soap/stdsoap2.cpp
-	g++ -c ./soap/soapServer.cpp
+	g++ $(FLAG) -c ./soap/soapC.cpp
+	g++ -g -c ./soap/stdsoap2.cpp
+	g++ $(FLAG) -c ./soap/soapServer.cpp
 	g++ $(FLAG) -c ./sql/sqlDB.cc $(SQL)
 	g++ $(FLAG) -c ./MyWeb.cc $(PTHD)
 	g++ $(FLAG) -o gSOAPverify $(SOAP) $(WEB) $(SQL) $(PTHD)
@@ -26,5 +26,5 @@ clean:
 clear:
 	rm -f *.o *.out core.* gSOAPverify `ls *.o | egrep -v soapC.o stdsoap2.o soapServer.o`
 	rm -f /etc/init.d/gSOAPverify /usr/sbin/gSOAPverify
-	rm -rf S77_SOAP
+	rm -rf S77_SOAP \
 	y

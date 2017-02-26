@@ -123,3 +123,4 @@ inline void CNMenu::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 	}
 	m_InfoList.AddTail(info);
 }
+

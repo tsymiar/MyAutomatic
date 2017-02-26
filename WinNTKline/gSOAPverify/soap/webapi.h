@@ -11,12 +11,17 @@ typedef		long	xsd_int;
 
 struct api__result
 {
-	xsd_int flag;
-	xsd_int id;
+	xsd_int flag;	
+	xsd_int idx;
 	xsd_int age;
-	xsd_string user;
+	xsd_string tell;
 	xsd_string email;
 };
 
-int api__encrypt(char* input, char** output);
-int api__login_by_key(xsd_string usr, xsd_string psw, struct api__result &flag);
+struct ArrayOfEmp2
+{
+	struct api__result rslt;
+};
+
+int api__encrypt(char* in, char** out);
+int api__login_by_key(xsd_string usr, xsd_string psw, struct ArrayOfEmp2 &ccc);

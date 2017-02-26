@@ -8,7 +8,6 @@
 #include <string.h>
 #include <assert.h>
 
-
 using namespace std;
 
 class _String {
@@ -30,6 +29,7 @@ public:
 	char* _intmove(char* w, int m, int b, bool hind = false);
 	char* _op_order(char * src, char* dst);
 	char* _op_order(char * str);
+	char* _c_str();
 	size_t size() {
 		int len;
 		for (len = 0; m_data[len] != '\0'; len++)
@@ -148,9 +148,9 @@ inline char* _String::_strmove(char* w, int m, bool fore)
 }
 //单个字符的移动
 /*字符串 w
- *移动的字符 c
- *移动的位数 b
- *移动的方向 hind
+*移动的字符 c
+*移动的位数 b
+*移动的方向 hind
 */
 inline char* _String::_charmove(char* w, char c, int b, bool hind)
 {
@@ -166,14 +166,14 @@ inline char* _String::_charmove(char* w, char c, int b, bool hind)
 	int m = c - s;
 	if (hind)
 	{
-		(b > (int)_strlen(w) - m) ? (b = (int)_strlen(w) - m) : NULL;
+		(b > (int)_strlen(w) - m) ? (b = (int)_strlen(w) - m) : 0;
 		for (i = 0; i < b; i++)
 			w[m + i] = c + (i + 1);
 		w[m + b] = c;
 	}
 	else
 	{
-		(b > m) ? (b = m) : NULL;
+		(b > m) ? (b = m) : 0;
 		for (i = 0; i < b; i++)
 			w[m - i] = c - (i + 1);
 		w[m - b] = c;
@@ -187,14 +187,14 @@ inline char* _String::_intmove(char* w, int m, int b, bool hind)
 	m -= 1;
 	if (hind)
 	{
-		(b > (int)_strlen(w) - m) ? (b = (int)_strlen(w) - m) : NULL;
+		(b > (int)_strlen(w) - m) ? (b = (int)_strlen(w) - m) : 0;
 		for (i = 0; i < b; i++)
 			w[m + i] = *w + m + (i + 1);
 		w[m + b] = *w + m;
 	}
 	else
 	{
-		(b > m) ? (b = m) : NULL;
+		(b > m) ? (b = m) : 0;
 		for (i = 0; i < b; i++)
 			w[m - i] = *w + m - (i + 1);
 		w[m - b] = *w + m;
@@ -229,6 +229,11 @@ inline char* _String::_op_order(char * str)
 	return str;
 }
 
+inline char* _String::_c_str()
+{
+	return m_data;
+}
+
 inline _String & _String::operator=(const _String & other)
 {
 	if (this != &other)
@@ -255,8 +260,8 @@ inline _String /*&*/ _String::operator+(const _String & other) const
 	else
 	{
 		newstring.m_data = new char[strlen(m_data) + strlen(other.m_data) + 1];
-		strcpy(newstring.m_data, m_data);
-		strcat(newstring.m_data, other.m_data);
+		newstring._strcpy(newstring.m_data, m_data);
+		newstring._strcat(newstring.m_data, other.m_data);
 	}
 	return newstring;//内联函数不该返回局部变量的引用
 }

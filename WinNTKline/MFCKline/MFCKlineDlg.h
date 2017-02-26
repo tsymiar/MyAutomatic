@@ -55,6 +55,7 @@ private:
 	int item = 65535;
 	HWND m_hBottom;
 	CLoginDlg logdlg;
+	MyOglDrawDlg *pKDlg;
 public:
 	afx_msg void OnBnClickedOK();
 };

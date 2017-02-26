@@ -2,10 +2,10 @@
 #include<pthread.h>
 #define HAVE_STRUCT_TIMESPEC
 #define MY_WSDL
-#include"inl/_String.inl"
+#include"inl/_String-inl.h"
 #include"MyWeb.h"
 #include"sql/sqlDB.h"
-#include"soap/stdsoap2.h"
+#include"soap/soapStub.h"
 #include"soap/myweb.nsmap"
 #include"pthdpool/pthdpool.h"
 //#pragma comment(lib, "pthreads.2/pthreadVC2.lib") 
@@ -296,7 +296,7 @@ int soap_ser(int argc, char** argv)
 				}
 			}
 			//客户端的IP地址
-			fprintf(stderr, "Accepted REMOTE connection. IP = %d92.%d.%d.%d, sockID = %d \n", \
+			fprintf(stderr, "\033[32mAccepted\033[0m \033[1mREMOTE\033[0m connection. IP = \033[33m%d92.%d.%d.%d\033[0m, sockID = %d \n", \
 				(int)(((Soap.ip) >> 24) && 0xFF), (int)(((Soap.ip) >> 16) & 0xFF), (int)(((Soap.ip) >> 8) & 0xFF), \
 				(int)((Soap.ip) & 0xFF), (int)(Soap.socket));
 			//请求的套接字进入队列，如果队列已满则循环等待
@@ -330,37 +330,46 @@ int soap_ser(int argc, char** argv)
 	return 0;
 }
 
-int api__login_by_key(struct soap *soap, xsd_string usr, xsd_string psw, struct api__result &flag)
+int api__login_by_key(struct soap*, char *usr, char *psw, struct ArrayOfEmp2 &ccc)
 {
 	int key = 0;
-	flag.email = (char*)soap_malloc(soap, 32);
-	if (!(strcmp(usr, "0") || strcmp(psw, "0")))
+	struct DBinfo info;
+	if (!(usr == nullptr || psw == nullptr))
 	{
-		sprintf(flag.email, "%s", "OK");
+		sqlDB(ccc.rslt.flag, usr, psw, &info);
+		if (info.flg == 1)
+		{
+			ccc.rslt.email = info.email;
+			ccc.rslt.tell = info.tell;
+			printf("[OUT]:\temail:%s\ttell:%s\n", ccc.rslt.email, ccc.rslt.tell);
+		}
 		key = 1;
 	}
-	printf(flag.email);
 	return key;
 }
 
-int api__encrypt(struct soap *soap, char* input, char* output[])
+int main(int argc, char* argv[])
+{
+	if (fork() == 0)
+		soap_ser(argc, argv);
+	return 0;
+}
+
+int api__encrypt(struct soap *soap, char* in, char* out[])
 {
 	//	CHEAK;
+	int j = 0;
 	_String str;
 	char acc[16];
 	char act[16];
 	char psw[16];
-	int type, j = 0;
-	DBinfo info;
 	char*	cot[4] = { NULL };
 	char*	token = NULL;
-	printf("%s\n", input);
-	token = strtok(input, "@&");
+	printf("SEND:[%s]\n", in);
+	token = strtok(in, "@&");
 	while (token != NULL)
 	{
 		cot[j] = token;
-		if (strcmp(cot[j], "Login") == 0)
-			type = 0;
 		if (strstr(cot[j], "acc="))
 		{
 			memcpy(act, str._strsub((unsigned char*)cot[j], 4, strlen((const char*)cot[j]) + 1), 32);
@@ -377,16 +386,5 @@ int api__encrypt(struct soap *soap, char* input, char* output[])
 	j = 0;
 	token = NULL;
 	printf("acc=[%s]\tpsw=[%s]\n", acc, psw);
-	sqlDB(type, acc, psw, &info);
-	*output = info.tele;
-	//memcpy(output[0], &info.tele, sizeof(info.tele));
-	printf("[OUT]:\t%s\n", *output);
-	return 0;
-}
-
-int main(int argc, char* argv[])
-{
-	if (fork() == 0)
-		soap_ser(argc, argv);
 	return 0;
 }

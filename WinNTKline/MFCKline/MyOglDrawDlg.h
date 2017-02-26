@@ -63,9 +63,10 @@ public:
 	HICON m_hIcon;
 	HACCEL m_hAcc;
 	CString title;
+	CNMenu menu;
+	GlModel model;
 	CTabCtrl m_tab;
 	CToolBar m_tool;
-	GlModel model;
 	std::vector<char*> markdata;
 	OGLKview::Market trademarket;
 	DepthChart *depth= DepthChart::getDepth();
