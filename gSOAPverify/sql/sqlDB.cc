@@ -3,7 +3,7 @@
 using namespace std;
 
 int it;
-int num;
+int j = 0;
 int cnt = 0;
 char sql[64];
 MYSQL mysql;
@@ -15,19 +15,56 @@ char user[] = "root";
 char psw123[] = "psw123";
 char db[] = "custominfo";
 string table = "myweb";
-char LL[] = ">>>";
+char LL[] = "\033[K>>>";
 MYSQL_RES *RES = nullptr;
 MYSQL_FIELD *field = NULL;
-unsigned int fieldcount;
+unsigned int rownum;
+unsigned int fieldnum;
 MYSQL_ROW fetch = NULL;
+
+bool get_rslt_raw(struct DBinfo* info)
+{
+	RES = mysql_store_result(&mysql);
+	rownum = (int)mysql_num_rows(RES);
+	fieldnum = mysql_num_fields(RES);
+	info->msg = (st_usr_msg*)malloc(sizeof(st_usr_msg));
+	memset(info->msg, 0, sizeof(st_usr_msg));
+	for (unsigned int i = 0; i < fieldnum; i++)
+	{
+		field = mysql_fetch_field_direct(RES, i);
+	}
+	fetch = mysql_fetch_row(RES);
+	while (NULL != fetch)
+	{
+		for (int i = 0; i < (int)fieldnum; i++) {
+			switch (i)
+			{
+			case 3:
+				memcpy(info->msg->email, fetch[i], 32);
+				break;
+			case 4:
+				memcpy(info->msg->tell, fetch[i], 14);
+				break;
+			default:break;
+			}
+		}
+		fetch = mysql_fetch_row(RES);
+		info->flg = true;
+	}
+	mysql_free_result(RES);
+	return info->flg;
+}
 
 void* test_connect(void* lp)
 {
 	while (1)
 	{
 		if (mysql_ping(&mysql) != 0) {
-			if (mysql_real_connect(&mysql, host, user, psw123, db, port, NULL, 0) == 0)
+			if ((mysql_real_connect(&mysql, host, user, psw123, db, port, NULL, 0) == 0) && (j < 9))
+			{
 				cout << LL << "Connect mysql fail." << endl;
+				j++;
+			}
 		}
 		usleep(10000000);
 	}
@@ -65,32 +102,7 @@ int sqlDB(int type, char* acc, char* psw, struct DBinfo* info)
 	}
 	else if (type == 0)
 	{
-		RES = mysql_store_result(&mysql);
-		num = (int)mysql_num_rows(RES);
-		fieldcount = mysql_num_fields(RES);
-		for (unsigned int i = 0; i < fieldcount; i++)
-		{
-			field = mysql_fetch_field_direct(RES, i);
-		}
-		fetch = mysql_fetch_row(RES);
-		while (NULL != fetch)
-		{
-			for (int i = 0; i < (int)fieldcount; i++) {
-				switch (i)
-				{
-				case 3:
-					memcpy(info->email, fetch[i], 32);
-					break;
-				case 4:
-					memcpy(info->tell, fetch[i], 14);
-					break;
-				default:break;
-				}
-			}
-			fetch = mysql_fetch_row(RES);
-			info->flg = 1;
-		}
-		mysql_free_result(RES);
+		get_rslt_raw(info);
 		pthread_mutex_unlock(&sql_lock);
 	}
 	else {
@@ -101,4 +113,9 @@ int sqlDB(int type, char* acc, char* psw, struct DBinfo* info)
 		return -1;
 	}
 	return 0;
+}
+
+void sql_close()
+{
+	mysql_close(&mysql);
 }

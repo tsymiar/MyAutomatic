@@ -1,5 +1,7 @@
-WEB = sqlDB.o MyWeb.o
 FLAG= -Wall -g
+OBJ = ./Linux/obj/
+SYS = sysstuts.o
+WEB = sqlDB.o MyWeb.o
 SOAP= soapC.o stdsoap2.o soapServer.o
 SQL = -std=c++11 -L/usr/lib/mysql -lmysqlclient
 PTHD= -std=c++11 -lpthread #-lgsoap++#-L/usr/local/gSOAP/lib/libsoap++
@@ -7,11 +9,19 @@ gSOAPverify:$(OUT)
 	g++ $(FLAG) -c ./soap/soapC.cpp
 	g++ -g -c ./soap/stdsoap2.cpp
 	g++ $(FLAG) -c ./soap/soapServer.cpp
+	g++ $(FLAG) -c ./sys/sysstuts.cc -std=c++11
 	g++ $(FLAG) -c ./sql/sqlDB.cc $(SQL)
-	g++ $(FLAG) -c ./MyWeb.cc $(PTHD)
-	g++ $(FLAG) -o gSOAPverify $(SOAP) $(WEB) $(SQL) $(PTHD)
+	g++ $(FLAG) -c ./web/MyWeb.cc $(PTHD)
+	g++ $(FLAG) -o gSOAPverify $(SYS) $(SOAP) $(WEB) $(SQL) $(PTHD)
+ifeq ($(OBJ), $(wildcard $(OBJ)))
+	@echo "dir <obj> exists."
+else
+	mkdir $(OBJ)
+endif
+	mv ./*.o $(OBJ)
 all:
 	make
+	killall -9 gSOAPverify
 	./gSOAPverify 8080
 install:
 	make
@@ -24,7 +34,7 @@ install:
 clean:	
 	rm -f *.out core.*
 clear:
-	rm -f *.o *.out core.* gSOAPverify `ls *.o | egrep -v soapC.o stdsoap2.o soapServer.o`
+	rm -rf ./Linux/* *.out core.* gSOAPverify `ls *.o | egrep -v soapC.o stdsoap2.o soapServer.o`
 	rm -f /etc/init.d/gSOAPverify /usr/sbin/gSOAPverify
 	rm -rf S77_SOAP \
 	y
