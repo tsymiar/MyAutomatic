@@ -7,9 +7,9 @@ OGLKview::OGLKview()
 	unfurl = false;
 }
 
-char m_time[32] = {NULL};
-char l_time[32] = {NULL};
-OGLKview::OglAttr attr = {0};
+char m_time[32] = { NULL };
+char l_time[32] = { NULL };
+OGLKview::OglAttr attr = { 0 };
 OGLKview::Item m_ITEM = { 0,0,0,NULL };
 OGLKview::ViewSize viewsize = { 0,0,0,0 };
 OGLKview::Charmarket markchar = { "---","---","---" };
@@ -56,7 +56,7 @@ bool OGLKview::SetWindowPixelFormat(HDC m_hDC, HWND m_hWnd, int pixelformat)
 	};
 	if (!(pixelformat = ChoosePixelFormat(m_hDC, &pfd)))
 	{
-		::PostMessage(m_hWnd,WM_MSG_OGL,0,(LPARAM)index.AllocBuffer(_T("Choose Pixel Format failed !")));
+		::PostMessage(m_hWnd, WM_MSG_OGL, 0, (LPARAM)index.AllocBuffer(_T("Choose Pixel Format failed !")));
 		return false;
 	}
 	if (!SetPixelFormat(m_hDC, pixelformat, &pfd))
@@ -85,7 +85,7 @@ bool OGLKview::SetWindowPixelFormat(HDC m_hDC, HWND m_hWnd, int pixelformat)
 //}
 float Xdeg, Ydeg;
 bool multi0 = false;
-OGLKview::Point mpt,arrow;
+OGLKview::Point mpt, arrow;
 OGLKview::Market fixeddata;
 float proportion, delta = 1;
 float shadowup, shadowdown;
@@ -97,7 +97,7 @@ bool OGLKview::DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool h
 #if _DEBUG
 	glPointSize(3);
 	glBegin(GL_POINTS);
-		glVertex3f(0, 0, 0);
+	glVertex3f(0, 0, 0);
 	glEnd();
 #endif
 	sprintf_s(l_time, "%d-%d-%d", markdata.time.tm_yday, markdata.time.tm_mon, markdata.time.tm_mday);
@@ -106,20 +106,20 @@ bool OGLKview::DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool h
 	mpt.x = (float)dlginfo.mouX;
 	mpt.y = (float)dlginfo.mouY;
 	candlemiddle = Xdeg = pt.x = Okv->Pxtinker(co);
-	fillitem.closing	= markdata.close;
-	fillitem.curprice	= markdata.price;
-	fillitem.gross		= markdata.amount;
-	fillitem.toopen		= markdata.open;
-	fillitem.upadp		= markdata.close - markdata.open;
-	fillitem.closed		= lastmarket.close;
+	fillitem.closing = markdata.close;
+	fillitem.curprice = markdata.price;
+	fillitem.gross = markdata.amount;
+	fillitem.toopen = markdata.open;
+	fillitem.upadp = markdata.close - markdata.open;
+	fillitem.closed = lastmarket.close;
 	markdata.open != 0 ? \
 		(fillitem.uprange = fillitem.upadp / markdata.open) : 0;
-	sprintf(markchar.close,	"%.2f", markdata.close);
-	sprintf(markchar.price,	"%.2f", markdata.price);
-	sprintf(markchar.amount,"%.2f", markdata.amount);
-	sprintf(markchar.open,	"%.2f", markdata.open);
-	sprintf(markchar.high,	"%.2f", markdata.high);
-	sprintf(markchar.low,	"%.2f", markdata.low);
+	sprintf(markchar.close, "%.2f", markdata.close);
+	sprintf(markchar.price, "%.2f", markdata.price);
+	sprintf(markchar.amount, "%.2f", markdata.amount);
+	sprintf(markchar.open, "%.2f", markdata.open);
+	sprintf(markchar.high, "%.2f", markdata.high);
+	sprintf(markchar.low, "%.2f", markdata.low);
 	if (fillitem.higest < markdata.high)
 		fillitem.higest = markdata.high;
 	if (fillitem.lowest < markdata.low)
@@ -129,16 +129,16 @@ bool OGLKview::DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool h
 		multi0 = true;
 	else
 		multi0 = false;
-	fixeddata.open	= Pytinker(markdata.open,	tinkep);
-	fixeddata.close = Pytinker(markdata.close,	tinkep);
-	fixeddata.high	= Pytinker(markdata.high,	tinkep);
-	fixeddata.low	= Pytinker(markdata.low,	tinkep);
+	fixeddata.open = Pytinker(markdata.open, tinkep);
+	fixeddata.close = Pytinker(markdata.close, tinkep);
+	fixeddata.high = Pytinker(markdata.high, tinkep);
+	fixeddata.low = Pytinker(markdata.low, tinkep);
 	if (fillitem.upadp > 0)
 	{
 		limitup = true;
 		glColor3f(1, 0, 0);
-		shadowup	= fixeddata.close;
-		shadowdown	= fixeddata.open;
+		shadowup = fixeddata.close;
+		shadowdown = fixeddata.open;
 	}
 	else if (fillitem.upadp < 0)
 	{
@@ -147,8 +147,8 @@ bool OGLKview::DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool h
 			glColor3f(0, 1, 1);
 		else
 			glColor3f(0.1f, 0.7f, 0.3f);
-		shadowup	= fixeddata.open;
-		shadowdown	= fixeddata.close;
+		shadowup = fixeddata.open;
+		shadowdown = fixeddata.close;
 	}
 	else {
 		glColor3f(1, 1, 1);
@@ -175,8 +175,8 @@ bool OGLKview::DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool h
 		candlemiddle /= 2;
 		candleleft = candleright = candlemiddle;
 		glBegin(GL_LINE);
-			glVertex2f(candlemiddle, shadowup);
-			glVertex2f(candlemiddle, shadowdown);
+		glVertex2f(candlemiddle, shadowup);
+		glVertex2f(candlemiddle, shadowdown);
 		glEnd();
 	}
 	//阴烛
@@ -232,14 +232,14 @@ bool OGLKview::DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool h
 		glEnable(GL_DEPTH_TEST);
 		memcpy(markchar.time, m_time, strlen(m_time));
 		markchar.time[strlen(m_time)] = '\0';
-		sprintf(markchar.time,	"%d.%d.%d", markdata.time.tm_year, markdata.time.tm_mon, markdata.time.tm_mday);
-		sprintf(markchar.amount,"%d",		markdata.amount);
-		sprintf(markchar.price,	"%.0f",		markdata.price);
-		sprintf(markchar.close, "%.2f",		markdata.close);
-		sprintf(markchar.high,	"%.2f",		markdata.high);
-		sprintf(markchar.low,	"%.2f",		markdata.low);
-		sprintf(markchar.open,	"%.2f",		markdata.open);
-		sprintf(markchar.ydeg,	"y=%.3f",	Ydeg);
+		sprintf(markchar.time, "%d.%d.%d", markdata.time.tm_year, markdata.time.tm_mon, markdata.time.tm_mday);
+		sprintf(markchar.amount, "%d", markdata.amount);
+		sprintf(markchar.price, "%.0f", markdata.price);
+		sprintf(markchar.close, "%.2f", markdata.close);
+		sprintf(markchar.high, "%.2f", markdata.high);
+		sprintf(markchar.low, "%.2f", markdata.low);
+		sprintf(markchar.open, "%.2f", markdata.open);
+		sprintf(markchar.ydeg, "y=%.3f", Ydeg);
 	}
 	if ((xytinker(mpt).x >= fixeddata.low) && (xytinker(mpt).x <= fixeddata.high))
 	{
@@ -261,9 +261,9 @@ bool OGLKview::DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool h
 			glTexCoord2f(0.f, 0.f);
 			glVertex2f(candleright, fixeddata.low);
 			glTexCoord2f(1.f, 0.f);
-			glVertex2f(candleleft,	fixeddata.low);
+			glVertex2f(candleleft, fixeddata.low);
 			glTexCoord2f(1.f, 1.f);
-			glVertex2f(candleleft,	float(fixeddata.high + fixpixely));
+			glVertex2f(candleleft, float(fixeddata.high + fixpixely));
 			glTexCoord2f(0.f, 1.f);
 			glVertex2f(candleright, float(fixeddata.high + fixpixely));
 		}
@@ -286,15 +286,15 @@ bool OGLKview::DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool h
 	if ((diff > 0) && dlginfo.bkg)
 	{
 		glBegin(GL_LINES);
-			glVertex2f(candleleft,	-10);
-			glVertex2f(candleleft,	voly);
-			glVertex2f(candleleft,	voly);
-			glVertex2f(candleright, voly);
-			glVertex2f(candleright, voly);
-			glVertex2f(candleright, -10);
+		glVertex2f(candleleft, -10);
+		glVertex2f(candleleft, voly);
+		glVertex2f(candleleft, voly);
+		glVertex2f(candleright, voly);
+		glVertex2f(candleright, voly);
+		glVertex2f(candleright, -10);
 		glEnd();
 	}
-	else { 
+	else {
 		glBegin(GL_QUADS);
 		{
 			glTexCoord2f(0.f, 0.f);
@@ -361,12 +361,12 @@ void OGLKview::draw_string(const char* str)
 			++i;
 		++len;
 	}
-	if((wstring = (wchar_t*)malloc((len + 1)*sizeof(wchar_t)))==NULL)
+	if ((wstring = (wchar_t*)malloc((len + 1) * sizeof(wchar_t))) == NULL)
 		return;
 	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, str, -1, wstring, len);
 	wstring[len] = _T('\0');
-	if ((wstring[0] > 0x7f)||(47 < wstring[0] && wstring[0] <= 127))
-	//if (wstring[0] > 127)
+	if ((wstring[0] > 0x7f) || (47 < wstring[0] && wstring[0] <= 127))
+		//if (wstring[0] > 127)
 		i = 0;
 	else
 		i = -1;//ASCII
@@ -379,10 +379,10 @@ void OGLKview::draw_string(const char* str)
 	glDeleteLists(list, 1);
 }
 
-int OGLKview::diag_staff(int x,int y)
+int OGLKview::diag_staff(int x, int y)
 {
 	OGLKview::Point pt = \
-	{ pt.x = (float)x,pt.y = (float)y };
+	{ pt.x = (float)x, pt.y = (float)y };
 	glColor3f(1, 1, 1);
 	glViewport(0, viewsize.pty, viewsize.ptw, viewsize.pth);
 	glBegin(GL_LINES);
@@ -417,10 +417,10 @@ bool ChartItem(int row, OGLKview::Market market)
 	//if (pt.y <= -0.9f)pt.y = 0.6f;
 	m_ITEM.mode = 1;
 	sprintf_s(listime, "%s", m_time);
-	view.DrawKtext(listime, pt,13);
+	view.DrawKtext(listime, pt, 13);
 	pt.x = 0.9f;
 	sprintf_s(info, "%.2f", m_ITEM.pc_);
-	view.DrawKtext(info, pt,13);
+	view.DrawKtext(info, pt, 13);
 	pt.x = 1.13f;
 	_itoa_s(m_ITEM.mode, info, 10);
 	view.DrawKtext(info, pt, 13);
@@ -430,7 +430,7 @@ bool ChartItem(int row, OGLKview::Market market)
 		m_ITEM.bs = "B";
 		glColor3f(1, 0, 0);
 	}
-	else 
+	else
 	{
 		m_ITEM.bs = "S";
 		glColor3f(0, 1, 0);
@@ -548,7 +548,7 @@ int OGLKview::DrawArrow(OGLKview::Point begin)
 
 int OGLKview::DrawDetail(OGLKview::Market market)
 {
-	float y = 0;  
+	float y = 0;
 	char hintx[16];
 	float min = 0, step = 1, fold = 1;
 	OGLKview::Point poi, iop;
@@ -577,17 +577,17 @@ int OGLKview::DrawDetail(OGLKview::Market market)
 
 	glColor3f(1, 1, 1);
 	glBegin(GL_LINES);
-		glVertex3f(-1.3f, 0.333f, 0);
-		glVertex3f(-1.03f, 0.333f, 0);
+	glVertex3f(-1.3f, 0.333f, 0);
+	glVertex3f(-1.03f, 0.333f, 0);
 
-		glVertex3f(-1.3f, 0.333f, 0);
-		glVertex3f(-1.3f, 1.2417f, 0);
+	glVertex3f(-1.3f, 0.333f, 0);
+	glVertex3f(-1.3f, 1.2417f, 0);
 
-		glVertex3f(-1.3f, 0.333f, 0);
-		glVertex3f(-1.03f, 1.2417f, 0);
+	glVertex3f(-1.3f, 0.333f, 0);
+	glVertex3f(-1.03f, 1.2417f, 0);
 
-		glVertex3f(-1.03f, 1.2417f, 0);
-		glVertex3f(-1.03f, 0.333f, 0);
+	glVertex3f(-1.03f, 1.2417f, 0);
+	glVertex3f(-1.03f, 0.333f, 0);
 	glEnd();
 
 	DrawKtext(l_time, poi, 17, { 0.6f, 0.7f, 0.8f, 0.9f }, "微软雅黑");
@@ -626,8 +626,8 @@ int OGLKview::DrawPoly(OGLKview::Point Pb, OGLKview::Point Pe, OGLKview::Color4f
 	Pe.y = Pytinker(Pe.y, tinkep);
 	glColor3f(color.R, color.G, color.B);
 	glBegin(GL_LINES);
-		glVertex2f(Pb.x, Pb.y);
-		glVertex2f(Pe.x, Pe.y);
+	glVertex2f(Pb.x, Pb.y);
+	glVertex2f(Pe.x, Pe.y);
 	glEnd();
 	return viewport;
 }
@@ -650,7 +650,7 @@ int OGLKview::Data2View(std::vector<struct OGLKview::Market> market, OGLKview::D
 
 void OGLKview::SetBkg(bool b)
 {
-	if(b)
+	if (b)
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	else
 		glClearColor(0.8f, 0.9f, 0.7f, 0.9f);
@@ -753,7 +753,7 @@ void OGLKview::DrawDash(Point pt[2])
 void OGLKview::DrawCurve(OGLKview::Point A[4])
 {
 	Indexes idx;
-	for (int i = 0; i <= 3; i++) 
+	for (int i = 0; i <= 3; i++)
 		A[i] = xytinker(A[i]);
 	glColor3f(1, 1, 1);
 	Point Pold = { A[0].x,A[0].y };
@@ -761,8 +761,8 @@ void OGLKview::DrawCurve(OGLKview::Point A[4])
 	{
 		Point P = idx.CubicBézier(A, t);
 		glBegin(GL_LINES);
-			glVertex2f(Pold.x, Pold.y);
-			glVertex2f(P.x, P.y);
+		glVertex2f(Pold.x, Pold.y);
+		glVertex2f(P.x, P.y);
 		glEnd();
 		Pold = P;
 	}
@@ -779,7 +779,7 @@ void OGLKview::DrawLevel(float mascl, float miscl)
 		if (miscl >= mascl)
 			break;
 		toe.x = 0.6099f;
-		toe.y = i+0.07f;
+		toe.y = i + 0.07f;
 		sprintf_s(c_cl, "%.2f", miscl);
 		DrawKtext(c_cl, toe, 15, { 1,0,1 });
 		miscl += div;
@@ -832,5 +832,5 @@ void OGLKview::Market::show()
 
 OGLKview::~OGLKview()
 {
-	
+
 }

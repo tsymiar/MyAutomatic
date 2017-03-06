@@ -22,6 +22,7 @@
     <ProjectGuid>{C0FF2B6D-EDD9-4E65-8CA8-1C4968F76D48}</ProjectGuid>
     <RootNamespace>MFCKline</RootNamespace>
     <Keyword>MFCProj</Keyword>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -47,7 +48,7 @@
     <CharacterSet>MultiByte</CharacterSet>
     <UseOfMfc>Dynamic</UseOfMfc>
     <CLRSupport>true</CLRSupport>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v140_xp</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -78,7 +79,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <CodeAnalysisRuleSet>NativeRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <IncludePath>$(BOOST);$(PATH_VLD)\include;$(SolutionDir)MFCKline;$(SolutionDir)MFCKline\font;$(SolutionDir)MFCKline\Index;$(SolutionDir)gSOAPverify\soap;$(IncludePath)</IncludePath>
+    <IncludePath>$(BOOST);$(PATH_VLD)\include;$(SolutionDir)MFCKline;$(SolutionDir)MFCKline\font;$(SolutionDir)MFCKline\Index;$(SolutionDir)..\gSOAPverify\soap;$(IncludePath)</IncludePath>
     <LibraryPath>$(PATH_VLD)\lib\Win32;$(SolutionDir)MFCKline\GL\lib;$(SolutionDir)MFCKline\font\lib;G:\Qt\msvc2015_32\5.6\msvc2015\lib;$(LibraryPath)</LibraryPath>
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <LinkIncremental>false</LinkIncremental>
@@ -87,7 +88,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
-    <IntDir>$(Configuration)\</IntDir>
+    <IntDir>$(SolutionDir)MFC\</IntDir>
     <IncludePath>F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\MFCKline\Index;F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\gSOAPWeb\soap;F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\MFCKline\font;F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\MFCKline;F:\dell-pc\lib\boost\;$(IncludePath)</IncludePath>
     <ReferencePath>$(ReferencePath)</ReferencePath>
     <ExecutablePath>$(ExecutablePath)</ExecutablePath>
@@ -288,9 +289,9 @@
     <ClInclude Include="Wpf\WpfHost.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\gSOAPverify\soap\soapC.cpp" />
-    <ClCompile Include="..\gSOAPverify\soap\soapClient.cpp" />
-    <ClCompile Include="..\gSOAPverify\soap\stdsoap2.cpp" />
+    <ClCompile Include="..\..\gSOAPverify\soap\soapC.cpp" />
+    <ClCompile Include="..\..\gSOAPverify\soap\soapClient.cpp" />
+    <ClCompile Include="..\..\gSOAPverify\soap\stdsoap2.cpp" />
     <ClCompile Include="Chart\DepthChart.cpp" />
     <ClCompile Include="ctl\CWebBrowser2.cpp" />
     <ClCompile Include="dos\DOSCout.cpp" />
