@@ -176,15 +176,6 @@
     <ClCompile Include="ogl\GlModel.cc">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\gSOAPverify\soap\soapC.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gSOAPverify\soap\soapClient.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\gSOAPverify\soap\stdsoap2.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="ctl\CWebBrowser2.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -207,6 +198,15 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="IMhideWndDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\gSOAPverify\soap\soapC.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\gSOAPverify\soap\soapClient.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\gSOAPverify\soap\stdsoap2.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

@@ -10,7 +10,7 @@
 class Indexes {
 
 public:
-	Indexes::Indexes(){}
+	Indexes::Indexes() {}
 
 	struct GLColor {
 		GLfloat R;
