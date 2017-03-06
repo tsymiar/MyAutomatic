@@ -24,4 +24,5 @@ struct ArrayOfEmp2
 };
 
 int api__encrypt(char* in, char** out);
-int api__login_by_key(xsd_string usr, xsd_string psw, struct ArrayOfEmp2 &ccc);
+int api__get_server_status(xsd_string cmd, xsd_string& status);
+int api__login_by_key(xsd_string usr, xsd_string psw, struct ArrayOfEmp2& ccc);

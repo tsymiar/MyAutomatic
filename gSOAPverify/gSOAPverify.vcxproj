@@ -27,22 +27,22 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="MyWeb.cc" />
-    <ClCompile Include="pthdpool\pthdpool.cc" />
     <ClCompile Include="soap\soapC.cpp" />
     <ClCompile Include="soap\soapServer.cpp" />
     <ClCompile Include="soap\stdsoap2.cpp" />
     <ClCompile Include="sql\sqlDB.cc" />
+    <ClCompile Include="sys\sysstuts.cc" />
+    <ClCompile Include="web\MyWeb.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="inl\_String-inl.h" />
-    <ClInclude Include="MyWeb.h" />
-    <ClInclude Include="pthdpool\pthdpool.h" />
     <ClInclude Include="soap\soapH.h" />
     <ClInclude Include="soap\soapStub.h" />
     <ClInclude Include="soap\stdsoap2.h" />
     <ClInclude Include="soap\webapi.h" />
     <ClInclude Include="sql\sqlDB.h" />
+    <ClInclude Include="sys\sysstuts.h" />
+    <ClInclude Include="web\MyWeb.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Makefile" />
@@ -83,8 +83,8 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(ProjectDir)..\Linux\bin\$(Platform)\</OutDir>
-    <IntDir>$(ProjectDir)..\Linux\obj\$(Platform)\</IntDir>
+    <OutDir>$(ProjectDir)Linux\bin\$(Platform)\</OutDir>
+    <IntDir>$(ProjectDir)Linux\obj\$(Platform)\</IntDir>
     <AdditionalSourcesToCopyMapping>$(MSBuildProjectDirectory)\Makefile;$(AdditionalSourcesToCopyMapping)</AdditionalSourcesToCopyMapping>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
@@ -93,8 +93,8 @@
     <AdditionalSourcesToCopyMapping>$(MSBuildProjectDirectory)\Makefile;$(AdditionalSourcesToCopyMapping)</AdditionalSourcesToCopyMapping>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
-    <OutDir>$(ProjectDir)..\Linux\bin\$(Platform)\</OutDir>
-    <IntDir>$(ProjectDir)..\Linux\obj\$(Platform)\</IntDir>
+    <OutDir>$(ProjectDir)Linux\bin\$(Platform)\</OutDir>
+    <IntDir>$(ProjectDir)Linux\obj\$(Platform)\</IntDir>
     <AdditionalSourcesToCopyMapping>$(MSBuildProjectDirectory)\Makefile;$(AdditionalSourcesToCopyMapping)</AdditionalSourcesToCopyMapping>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -115,6 +115,7 @@
     </CustomBuildStep>
     <ClCompile>
       <AdditionalOptions>-lpthread -L/usr/lib/mysql -lmysqlclient -lmysqlclient %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>$(PTHD_INC);$(MYSQL_HOME)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

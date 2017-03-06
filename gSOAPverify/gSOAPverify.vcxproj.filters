@@ -9,9 +9,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="MyWeb.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="soap\stdsoap2.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -24,18 +21,15 @@
     <ClCompile Include="soap\soapC.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="pthdpool\pthdpool.cc">
+    <ClCompile Include="web\MyWeb.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="sys\sysstuts.cc">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="MyWeb.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="soap\soapH.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="pthdpool\pthdpool.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="sql\sqlDB.h">
@@ -51,6 +45,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="inl\_String-inl.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="web\MyWeb.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="sys\sysstuts.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

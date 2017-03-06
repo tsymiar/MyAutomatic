@@ -70,6 +70,7 @@ int my_pool_free(my_pool *pool_t) {
     if(pool_t == NULL || pool_t->dispose) {
         return -1;
     }
+    /* 释放线程 任务队列 互斥锁 条件变量 线程池所占内存资源 */
     if(pool_t->thrd_id) {
         free(pool_t->thrd_id);
         free(pool_t->queue);
@@ -82,14 +83,20 @@ int my_pool_free(my_pool *pool_t) {
 
 my_pool* my_pool_init(int thrd_num,int sz_que)
 {
+	my_pool *pool_t = (struct my_pool*) calloc(1, sizeof(pool_t));	//内存的动态存储区中分配1个长度为pool_t的连续空间
+	//static pthread_cond_t cond = PTHREAD_COND_INITIALIZER;	//静态初始化条件变量
+	//static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;	//静态初始化互斥锁
 	pool_t->dispose = false;
 	if (thrd_num < 1) 
 		thrd_num = 1;
 	pool_t->thrd_num = 0;
 	pool_t->queue_size = sz_que;
 	pool_t->cur_thrd_no = 0;
+	//为thrd_id分配thrd_num个pthread_t空间
 	pool_t->thrd_id = (pthread_t *)malloc(sizeof(pthread_t) * thrd_num);
 	pool_t->queue = (my_task_t *)malloc(sizeof(my_task_t) * sz_que);
+	if (pthread_mutex_init(&pool_t->queue_lock, NULL)!=0||	/*动态初始化条件变量*/
+		pthread_cond_init(&pool_t->queue_noti, NULL)!=0	||	/*动态初始化互斥锁*/
 		pool_t->thrd_id==null || pool_t->queue==null)
 		{
 			goto err;

@@ -1,13 +1,12 @@
 ﻿//
-#include<pthread.h>
 #define HAVE_STRUCT_TIMESPEC
 #define MY_WSDL
-#include"inl/_String-inl.h"
-#include"MyWeb.h"
-#include"sql/sqlDB.h"
-#include"soap/soapStub.h"
-#include"soap/myweb.nsmap"
-#include"pthdpool/pthdpool.h"
+#include"../inl/_String-inl.h"
+#include	"MyWeb.h"
+#include"../sql/sqlDB.h"
+#include"../sys/sysstuts.h"
+#include"../soap/soapStub.h"
+#include"../soap/myweb.nsmap"
 //#pragma comment(lib, "pthreads.2/pthreadVC2.lib") 
 //#pragma comment(lib, "WS2_32.lib")
 /*
@@ -19,11 +18,6 @@ _lseek(file, -OFFSET, SEEK_END);\
 while (len = _read(file, buff, sizeof(buff)) > 0)\
 {_write(move, buff, len);_close(move);_close(file);}
 */
-//宏与全局变量的定义
-#define  BACKLOG (64)  
-#define  MAX_THR (8)   
-#define  MAX_QUEUE (1024)
-
 myWeb web;
 pthread_mutex_t queue_lock;//队列锁
 pthread_cond_t  queue_noti;//条件变量
@@ -222,7 +216,8 @@ int soap_ser(int argc, char** argv)
 #endif // MY_DEBUG
 	if (argv[1] == nullptr)
 	{
-		std::cout << "请输入端口参数 例如：“./gSOAPverify 8080”\n" << argv[1] << std::endl;
+		std::cout << "请输入端口参数 例如：“\033[45m./gSOAPverify 8080\033[0m”\n" << argv[1] << std::endl;
+		exit(1);
 		return -1;
 	}
 	struct soap Soap;
@@ -296,7 +291,7 @@ int soap_ser(int argc, char** argv)
 				}
 			}
 			//客户端的IP地址
-			fprintf(stderr, "\033[32mAccepted\033[0m \033[1mREMOTE\033[0m connection. IP = \033[33m%d92.%d.%d.%d\033[0m, sockID = %d \n", \
+			fprintf(stderr, "\033[32mAccepted\033[0m \033[1mREMOTE\033[0m connection. IP = \033[33m%d92.%d.%d.%d\033[0m, socket = %d \n", \
 				(int)(((Soap.ip) >> 24) && 0xFF), (int)(((Soap.ip) >> 16) & 0xFF), (int)(((Soap.ip) >> 8) & 0xFF), \
 				(int)((Soap.ip) & 0xFF), (int)(Soap.socket));
 			//请求的套接字进入队列，如果队列已满则循环等待
@@ -334,17 +329,20 @@ int api__login_by_key(struct soap*, char *usr, char *psw, struct ArrayOfEmp2 &cc
 {
 	int key = 0;
 	struct DBinfo info;
+	st_sys ss;
 	if (!(usr == nullptr || psw == nullptr))
 	{
-		sqlDB(ccc.rslt.flag, usr, psw, &info);
-		if (info.flg == 1)
+		if (sqlDB(ccc.rslt.flag, usr, psw, &info) != 0)
+			info.flg = false;
+		if (info.flg)
 		{
-			ccc.rslt.email = info.email;
-			ccc.rslt.tell = info.tell;
+			ccc.rslt.email = info.msg->email;
+			ccc.rslt.tell = info.msg->tell;
 			printf("[OUT]:\temail:%s\ttell:%s\n", ccc.rslt.email, ccc.rslt.tell);
 		}
 		key = 1;
 	}
+	show_memory((char*)"localhost",&ss);
 	return key;
 }
 
@@ -355,7 +353,7 @@ int main(int argc, char* argv[])
 	return 0;
 }
 
-int api__encrypt(struct soap *soap, char* in, char* out[])
+int api__trans(struct soap *soap, char* in, char* out[])
 {
 	//	CHEAK;
 	int j = 0;
@@ -388,3 +386,14 @@ int api__encrypt(struct soap *soap, char* in, char* out[])
 	printf("acc=[%s]\tpsw=[%s]\n", acc, psw);
 	return 0;
 }
+
+int api__get_server_status(xsd_string cmd, xsd_string& status)
+{
+	return 0;
+}
+
+int api__encrypt(struct soap *soap, char* in, char* out[])
+{
+	return 0;
+}
+

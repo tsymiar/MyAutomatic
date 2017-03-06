@@ -1,15 +1,19 @@
 #ifndef MYWEB_H
 #define MYWEB_H
-#include <sys/sysmacros.h>
-#include <sys/types.h>
+#include <sys/ioctl.h>  
 #include <sys/stat.h>
 #include <linux/errno.h>
-#include <iostream>
-#include <unistd.h>
-#include <fcntl.h>
+#include <fcntl.h>  
+#include <cerrno> 
+#include <cstdlib>  
+#include <pthread.h>
 //#include <corecrt_io.h>
 
-#define OFFSET 10240
+//宏与全局变量的定义
+#define  BACKLOG (64)  
+#define  MAX_THR (8)   
+#define  MAX_QUEUE (1024)
+#define  OFFSET 10240
 
 class myWeb
 {
