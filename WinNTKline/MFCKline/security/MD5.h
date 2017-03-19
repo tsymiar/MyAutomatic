@@ -4,7 +4,6 @@
 
 #include<stdio.h>
 #include<stdlib.h>
-//#include<stdint.h>
 #include<string.h>
 
 #include "encoding.h"
@@ -19,8 +18,6 @@ extern "C"
 	void test_f_md5();
 	void test_s_md5();
 	char* get_Hash(char *md5, int len, char *dst);
-	unsigned short GetCrc16(char* InStr,unsigned int len);
-	unsigned int GetCrc32(char* InStr,unsigned int len);
 
 #ifdef __cplusplus
 }

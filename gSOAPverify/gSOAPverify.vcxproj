@@ -83,8 +83,8 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(ProjectDir)Linux\bin\$(Platform)\</OutDir>
-    <IntDir>$(ProjectDir)Linux\obj\$(Platform)\</IntDir>
+    <OutDir>$(ProjectDir)..\Linux\bin\$(Platform)\</OutDir>
+    <IntDir>$(ProjectDir)..\Linux\obj\$(Platform)\</IntDir>
     <AdditionalSourcesToCopyMapping>$(MSBuildProjectDirectory)\Makefile;$(AdditionalSourcesToCopyMapping)</AdditionalSourcesToCopyMapping>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
@@ -93,8 +93,8 @@
     <AdditionalSourcesToCopyMapping>$(MSBuildProjectDirectory)\Makefile;$(AdditionalSourcesToCopyMapping)</AdditionalSourcesToCopyMapping>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
-    <OutDir>$(ProjectDir)Linux\bin\$(Platform)\</OutDir>
-    <IntDir>$(ProjectDir)Linux\obj\$(Platform)\</IntDir>
+    <OutDir>$(ProjectDir)..\Linux\bin\$(Platform)\</OutDir>
+    <IntDir>$(ProjectDir)..\Linux\obj\$(Platform)\</IntDir>
     <AdditionalSourcesToCopyMapping>$(MSBuildProjectDirectory)\Makefile;$(AdditionalSourcesToCopyMapping)</AdditionalSourcesToCopyMapping>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -117,6 +117,9 @@
       <AdditionalOptions>-lpthread -L/usr/lib/mysql -lmysqlclient -lmysqlclient %(AdditionalOptions)</AdditionalOptions>
       <AdditionalIncludeDirectories>$(PTHD_INC);$(MYSQL_HOME)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+    <ClCompile />
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

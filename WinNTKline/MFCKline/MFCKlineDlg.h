@@ -13,7 +13,7 @@ class CMFCKlineDlg : public CDialogEx
 {
 // 构造
 public:
-	CMFCKlineDlg(CWnd* pParent = NULL);	// 标准构造函数
+	CMFCKlineDlg(bool ok = false, CWnd* pParent = NULL);	// 自定义构造函数
 	~CMFCKlineDlg();
 
 // 对话框数据
@@ -51,11 +51,13 @@ private:
 	void OpenQt();
 	int OpenQtexe();
 private:
-	bool dig = true;
+	bool isok = false;
+	bool tolog = true;
 	int item = 65535;
 	HWND m_hBottom;
 	CLoginDlg logdlg;
-	MyOglDrawDlg *pKDlg;
+	MyOglDrawDlg *pKDlg = NULL;
 public:
 	afx_msg void OnBnClickedOK();
+	afx_msg void OnBnClickedCancel();
 };

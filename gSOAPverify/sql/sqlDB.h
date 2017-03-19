@@ -8,7 +8,13 @@
 #include <cstdlib>
 #include <cstring>
 #include <string>
+#include <vector>
 #include <cstdio>
+#define get_var(v)  (#v)
+//#pragma comment (lib,"ws2_32.lib")
+//#pragma comment(lib,"mysql/libmysql.lib")
+#define FIX
+
 typedef struct st_usr_msg
 {
 	int age;
@@ -19,13 +25,19 @@ typedef struct st_usr_msg
 	void* P;
 } USR_MSG;
 
+typedef struct st_raw
+{
+	int type;
+	char* acc;
+	char* psw;
+} RAW;
+
 struct DBinfo {
 	bool flg;
 	int idx;
+	RAW raw;
 	USR_MSG* msg;
 };
-//#pragma comment (lib,"ws2_32.lib")
-//#pragma comment(lib,"mysql/libmysql.lib")
 
 #  ifdef __cplusplus
 extern "C" {

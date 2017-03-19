@@ -26,8 +26,8 @@ extern "C"
 		char* s_host;
 		char* ss_alias;
 		char* ss_addr;
-		long int l_cpu;
-		long int l_page;
+		long int li_cpu;
+		long int li_page;
 		long long mem_all;
 		long long mem_free;
 	};
