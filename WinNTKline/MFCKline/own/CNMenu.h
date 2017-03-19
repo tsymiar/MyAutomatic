@@ -28,7 +28,6 @@ public:
 	CNMenu() {};
 	virtual ~CNMenu() {};
 	CList<ItemInfo*> m_InfoList;
-	ItemInfo *info = new ItemInfo;
 	virtual void MeasureItem(LPMEASUREITEMSTRUCT /*lpMeasureItemStruct*/);
 	virtual void DrawItem(LPDRAWITEMSTRUCT /*lpDrawItemStruct*/);
 };

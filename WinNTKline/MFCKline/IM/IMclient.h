@@ -9,6 +9,14 @@
 #include <string.h>
 #include <conio.h>
 
+typedef struct IMUSR {
+	char addr[256];
+	char comm[64];
+	char psw[32];
+	char usr[32];
+	int err;
+} st_imusr;
+
 struct CHATMSG
 {
 	char lastuser[256];

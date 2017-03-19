@@ -52,6 +52,14 @@
   <part name="out" type="xsd:string"/><!-- api__encrypt::out -->
 </message>
 
+<message name="get-server-statusRequest">
+  <part name="cmd" type="xsd-string"/><!-- api__get_server_status::cmd -->
+</message>
+
+<message name="get-server-statusResponse">
+  <part name="status" type="xsd-string"/><!-- api__get_server_status::status -->
+</message>
+
 <message name="login-by-keyRequest">
   <part name="usr" type="xsd-string"/><!-- api__login_by_key::usr -->
   <part name="psw" type="xsd-string"/><!-- api__login_by_key::psw -->
@@ -67,6 +75,11 @@
     <input message="tns:encryptRequest"/>
     <output message="tns:encryptResponse"/>
   </operation>
+  <operation name="get-server-status">
+    <documentation>Service definition of function api__get_server_status</documentation>
+    <input message="tns:get-server-statusRequest"/>
+    <output message="tns:get-server-statusResponse"/>
+  </operation>
   <operation name="login-by-key">
     <documentation>Service definition of function api__login_by_key</documentation>
     <input message="tns:login-by-keyRequest"/>
@@ -77,6 +90,15 @@
 <binding name="myweb" type="tns:mywebPortType">
   <SOAP:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
   <operation name="encrypt">
+    <SOAP:operation style="rpc" soapAction=""/>
+    <input>
+          <SOAP:body use="encoded" namespace="urn:myweb" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+    </input>
+    <output>
+          <SOAP:body use="encoded" namespace="urn:myweb" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+    </output>
+  </operation>
+  <operation name="get-server-status">
     <SOAP:operation style="rpc" soapAction=""/>
     <input>
           <SOAP:body use="encoded" namespace="urn:myweb" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>

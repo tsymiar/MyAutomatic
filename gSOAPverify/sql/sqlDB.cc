@@ -21,7 +21,7 @@ MYSQL_FIELD *field = NULL;
 unsigned int rownum;
 unsigned int fieldnum;
 MYSQL_ROW fetch = NULL;
-
+bool get_rslt_new(struct DBinfo* info);
 bool get_rslt_raw(struct DBinfo* info)
 {
 	RES = mysql_store_result(&mysql);
@@ -90,6 +90,11 @@ int sqlDB(int type, char* acc, char* psw, struct DBinfo* info)
 		cnt++;
 	}
 	cout << LL << "[" << type << "]--[ACC]:" << acc << "\t[(hash)]:" << psw << endl;
+#ifdef FIX
+	st_raw raw{ type, acc, psw };
+	info->raw = raw;
+	get_rslt_new(info);
+#else
 	sprintf(sql, "SELECT * FROM %s WHERE psw='%s'", table.c_str(), psw);
 	cout << LL << "SQL:[\033[34m" << sql << "\033[0m]" << endl;
 	pthread_mutex_lock(&sql_lock);
@@ -112,10 +117,55 @@ int sqlDB(int type, char* acc, char* psw, struct DBinfo* info)
 		pthread_mutex_unlock(&sql_lock);
 		return -1;
 	}
+#endif // FIX
 	return 0;
 }
 
 void sql_close()
 {
 	mysql_close(&mysql);
+}
+
+bool get_rslt_new(DBinfo * info)
+{
+	sprintf(sql, "SELECT email,tell FROM %s WHERE psw='%s'" /*AND user='%s'"*/, table.c_str(), info->raw.psw/*, info->raw.acc*/);
+	cout << LL << "SQL:[\033[34m" << sql << "\033[0m]" << endl;
+	pthread_mutex_lock(&sql_lock);
+	if (0 != mysql_query(&mysql, sql))
+	{
+		cout << LL << "Query database fail." << endl;
+		mysql_close(&mysql);
+		pthread_mutex_unlock(&sql_lock);
+		return -1;
+	}
+	else if (info->raw.type == 0)
+	{
+		RES = mysql_store_result(&mysql);
+		info->msg = (st_usr_msg*)malloc(sizeof(st_usr_msg));
+		memset(info->msg, 0, sizeof(st_usr_msg));
+		for (unsigned int i = 0; i < mysql_num_fields(RES); i++)
+			mysql_fetch_field_direct(RES, i);
+		int j = 0;
+		fetch = mysql_fetch_row(RES);
+		while (NULL != fetch)
+		{
+			if (j == 0)
+				memcpy(info->msg->email, fetch[0], 32);
+			else if (j == 1)
+				memcpy(info->msg->tell, fetch[1], 14);
+			j++;
+			fetch = mysql_fetch_row(RES);
+			info->flg = true;
+		}
+		mysql_free_result(RES);
+		pthread_mutex_unlock(&sql_lock);
+		return info->flg;
+	}
+	else {
+		cout << LL << "SELECT element fail." << endl;
+		mysql_close(&mysql);
+		mysql_server_end();
+		pthread_mutex_unlock(&sql_lock);
+		return -1;
+	}
 }

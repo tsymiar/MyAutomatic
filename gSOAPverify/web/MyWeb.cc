@@ -197,6 +197,7 @@ int myWeb::movedll()
 			putchar(text[i]);
 			sleep(70);
 		}
+
 		//		if (fl)
 		//			while (gc = fgetc(fl) != EOF)
 		{
@@ -329,7 +330,6 @@ int api__login_by_key(struct soap*, char *usr, char *psw, struct ArrayOfEmp2 &cc
 {
 	int key = 0;
 	struct DBinfo info;
-	st_sys ss;
 	if (!(usr == nullptr || psw == nullptr))
 	{
 		if (sqlDB(ccc.rslt.flag, usr, psw, &info) != 0)
@@ -342,7 +342,6 @@ int api__login_by_key(struct soap*, char *usr, char *psw, struct ArrayOfEmp2 &cc
 		}
 		key = 1;
 	}
-	show_memory((char*)"localhost",&ss);
 	return key;
 }
 
@@ -387,8 +386,14 @@ int api__trans(struct soap *soap, char* in, char* out[])
 	return 0;
 }
 
-int api__get_server_status(xsd_string cmd, xsd_string& status)
+int api__get_server_status(struct soap *soap, xsd_string cmd, xsd_string& status)
 {
+	st_sys ss;
+	char gt[8];
+	if (memcmp(cmd, "1000", 5) == 0)
+		show_memory((char*)"localhost", &ss);
+	status = gcvt(100.f*ss.mem_free / ss.mem_all, 5, gt);
+	cout << status << endl;
 	return 0;
 }
 

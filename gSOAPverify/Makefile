@@ -13,6 +13,11 @@ gSOAPverify:$(OUT)
 	g++ $(FLAG) -c ./sql/sqlDB.cc $(SQL)
 	g++ $(FLAG) -c ./web/MyWeb.cc $(PTHD)
 	g++ $(FLAG) -o gSOAPverify $(SYS) $(SOAP) $(WEB) $(SQL) $(PTHD)
+ifeq (Linux, $(wildcard Linux))
+	@echo "dir <Linux> exists."
+else
+	mkdir Linux
+endif
 ifeq ($(OBJ), $(wildcard $(OBJ)))
 	@echo "dir <obj> exists."
 else
@@ -20,6 +25,7 @@ else
 endif
 	mv ./*.o $(OBJ)
 all:
+	make clear
 	make
 	killall -9 gSOAPverify
 	./gSOAPverify 8080
@@ -32,9 +38,10 @@ install:
 	cd /etc/rc3.d/
 	ln -sf ../init.d/gSOAPverify ./S77_SOAP
 clean:	
-	rm -f *.out core.*
+	rm -f *.out core.* ./*.o $(OBJ)*.o
 clear:
-	rm -rf ./Linux/* *.out core.* gSOAPverify `ls *.o | egrep -v soapC.o stdsoap2.o soapServer.o`
+	rm -rf ./Linux/* ./*.o *.out core.* gSOAPverify `ls *.o | egrep -v soapC.o stdsoap2.o soapServer.o`
 	rm -f /etc/init.d/gSOAPverify /usr/sbin/gSOAPverify
+	rm -rf Linux
 	rm -rf S77_SOAP \
 	y

@@ -134,6 +134,7 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\gSOAPverify\soap\stdsoap2.h" />
     <ClInclude Include="GeneratedFiles\ui_myoglwdg.h" />
     <CustomBuild Include="myuiobj.h">
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
