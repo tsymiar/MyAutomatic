@@ -262,7 +262,7 @@
     <ClInclude Include="IM\IMclient.h" />
     <ClInclude Include="Index\binarytree-inl.h" />
     <ClInclude Include="Index\CommSet.h" />
-    <ClInclude Include="Index\plus1second.inc" />
+    <ClInclude Include="Index\plus1second" />
     <ClInclude Include="LoginDlg.h" />
     <ClInclude Include="MFCKline.h" />
     <ClInclude Include="MFCKlineDlg.h" />
@@ -318,7 +318,7 @@
     <ClCompile Include="security\AES.cc" />
     <ClCompile Include="security\encoding.cc" />
     <ClCompile Include="security\MD5.cc" />
-    <ClCompile Include="test\Testingcase.cpp" />
+    <ClCompile Include="test\Testcase.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="MFCKline.rc" />

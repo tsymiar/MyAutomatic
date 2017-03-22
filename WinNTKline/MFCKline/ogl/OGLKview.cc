@@ -1,5 +1,7 @@
 ﻿#include "OGLKview.h"
 
+using namespace std;
+
 OGLKview::OGLKview()
 {
 	coding = false;
@@ -30,8 +32,7 @@ int main(int argc, char ** argv)
 	glutMainLoop();
 	return(0);
 }
-#else
-#ifdef _MSC_VER
+#elif _MSC_VER
 bool OGLKview::SetWindowPixelFormat(HDC m_hDC, HWND m_hWnd, int pixelformat)
 {
 	static PIXELFORMATDESCRIPTOR pfd = {
@@ -311,7 +312,6 @@ bool OGLKview::DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool h
 	fillitem.closed = fillitem.closing;
 	return hollow;
 }
-#endif
 #endif
 
 void _stdcall OGLKview::InitGraph(void/*HDC m_hDC*/)
@@ -824,6 +824,187 @@ void OGLKview::DrawKtext(char text[], Point & coor, int size, OGLKview::Color4f 
 	glColor4f(color.R, color.G, color.B, color.A);
 	glRasterPos2f(coor.x, coor.y);
 	draw_string(text);
+}
+///**************GetMarkDatatoDraw()**************///
+int		i = 0;
+int		pti = 0;//绘制曲线时每组下标
+int		line = 0;//当前读取行数
+int		item0 = 0;
+char*	cot = NULL;//切分临时数据
+char*	buff = NULL;
+char*	token = NULL;
+bool	draw5 = false;
+bool	draw10 = false;
+bool	draw20 = false;
+bool	isnext = false;//是否为下一组
+char*	div_stock[3] = { NULL };
+char	ma[32] = { NULL };
+char	dif[32] = { NULL };
+char	dea[32] = { NULL };
+char	rsi[32] = { NULL };
+char	vol[32] = { NULL };
+char	macd[32] = { NULL };
+char	code[64] = { NULL };
+std::vector<Stock::Rsi> str_rsi;
+std::string tmp = " ";
+std::ifstream Readfile;
+std::ostream;
+std::string sWrite;
+const char* writefile;
+Stock::Rsi rise{ 0 }, drop{ 0 }, total{ 0 }, last{ 0 };
+Stock::Sma::MA tepma{ 0 }, totma{ 0 }, yma{ 0 };
+Stock::Sma ma20{ 0 }, ma10{ 0 }, ma5{ 0 };
+OGLKview::Point Pter = { 0 },/*折线的前一个点*/ Pt[4] = { 0 };
+OGLKview::Point pt_vol = { 0 }, pt_dif = { 0 }, pt_dea = { 0 }, pt_rsi = { 0 }, pt_macd = { 0 };
+OGLKview::Point pt_code = { 0.8f,1.189f }, pt_stock = { -1.22f,pt_code.y };
+OGLKview::Point pt_rsi6 = { 0 }, pt_rsi12 = { 0 }, pt_rsi24 = { 0 };
+//MA移动平均线
+OGLKview::Point pt_ma5 = { 0 }, pt_ma10 = { 0 }, pt_ma20 = { 0 };
+OGLKview::Point pt_ma5old = { 0 }, pt_ma10old = { 0 }, pt_ma20old = { 0 };
+//RSA
+OGLKview::Point pt_AB6 = { 0 }, pt_AB12 = { 0 }, pt_AB24 = { 0 };
+OGLKview::Point pt_AB6old = { 0 }, pt_AB12old = { 0 }, pt_AB24old = { 0 };
+///**************END GetMarkDatatoDraw**************///
+bool OGLKview::GetMarkDatatoDraw(void* P, char* title)
+{
+//#if 0
+//	if (this->file != nullptr)
+//	{
+//		sWrite = this->file + std::string(_T("\\MACD.TXT"));
+//		writefile = sWrite.c_str();
+//	}
+	//打开文件流
+	//	Readfile.open(writefile, std::ios::out);
+	Readfile.open(this->file, std::ios::in);
+	if (Readfile.fail())
+	{
+		//只发送一遍失败消息
+		if (failmsg < 1)
+#ifdef _MSC_VER
+			::PostMessage((*(HWND*)P), WM_MSG_OGL, 0, (LPARAM)this->index.AllocBuffer("Reading failure!"));
+#else
+			cout << "Reading failure!" << endl;
+#endif
+		failmsg++;
+		return false;
+	}
+	else {
+		while (getline(Readfile, tmp))	// 逐行读
+		{
+			buff = (char*)tmp.c_str();
+			token = strtok_s(buff, "/,\t", &cot);
+			while (token != NULL)
+			{
+				markdata.push_back(token);// 获取描述
+				token = strtok_s(NULL, "/,\t", &cot);
+			}
+			token = NULL;
+			//5行数据一组，第一组7行
+			if ((markdata.size() <= 7) && (markdata.size()>0))
+			{
+				//前2行是数据格式和说明
+				if (markdata.size() < 3)
+				{
+					this->coding = true;
+					buff = markdata[0];
+					memcpy(title, buff, sizeof(buff));
+#ifdef _MSC_VER
+					if (failmsg <= 3)
+						::PostMessage((*(HWND*)P), WM_MSG_TITLE, 0, (LPARAM)this->index.AllocBuffer(title));
+
+#endif // _MSC_VER
+					i = 0;
+					token = strtok_s(buff, " ", &cot);
+					while (token != NULL)
+					{
+						div_stock[i] = token;
+						token = strtok_s(NULL, " ", &cot);
+						i++;
+					}
+					this->SwitchViewport(0);
+					sprintf(code, "%s(%s)", div_stock[1], div_stock[0]);
+					this->DrawKtext(code, pt_code, 20, { 1,1,0 }, "Terminal", false);
+					sprintf(code, _T("%s(%s)<%s>"), div_stock[1], div_stock[0], div_stock[2]);
+					pt_code = { -1.22f,pt_code.y };// 格式化并输出
+					this->DrawKtext(code, pt_code, 12, { 1,1,0 }, "宋体");
+					pt_code = { 0.8f,1.189f };
+					*div_stock = NULL;
+				}
+				else { 1; }//continue;
+				markdata.clear();// 清空数据但不释放空间以便重复利用
+								 // 数据的初始化就绪
+			}
+			else if (markdata.size() > 8)
+			{
+				//将行情数据临时存储到结构体
+				this->lastmarket = st_stock;
+				st_stock.time.tm_year = atoi(markdata[0]);
+				st_stock.time.tm_mon =	atoi(markdata[1]);
+				st_stock.time.tm_mday = atoi(markdata[2]);
+				st_stock.open =	(float)atof(markdata[3]);
+				st_stock.high = (float)atof(markdata[4]);
+				st_stock.low =	(float)atof(markdata[5]);
+				st_stock.close =(float)atof(markdata[6]);
+				st_stock.amount =		 atoi(markdata[7]);
+				st_stock.price =  (float)atof(markdata[8]);
+				vec_market.push_back(st_stock);
+				//设置初始显示图形数量
+				if (line < this->tinkep.move + this->dlginfo.cycle / this->tinkep.ratio)
+				{
+					if (line > 0)//pti不必分组
+						if (pti > 3)
+						{
+							pti = 0;
+							isnext = true;
+						}
+					line % 20 == 0 ? totma._20 = totma._10 = totma._5 = 0 : (line % 10 == 0 ? totma._10 = totma._5 = 0 : (line % 5 == 0 ? totma._5 = 0 : 1));
+
+					if (line <= 3)
+					{
+						this->dlginfo.line = 1;
+					}
+					else
+						this->dlginfo.line = line - 2;
+					if (this->tinkep.ratio == 0)
+					{
+						Pt[pti].x += 6.5f;
+						Pt[pti].y /= 2;
+					}
+					Pt[pti].x = this->Pxtinker(this->tinkep);
+					Pt[pti].y = (float)atof(markdata[6]);
+					ASSERT(_CrtCheckMemory());
+					this->dlginfo.line <= 1 ? Pter = Pt[0] : Pt[0];
+					if (line >= this->tinkep.move)
+						this->DrawKline(st_stock, this->tinkep);
+					this->DrawPoly(Pter, Pt[pti], { 0.f,1.f,0.f });
+					Pter = Pt[pti];
+					if ((line - 1) % 20 == 0)
+					{
+						ma20.X = (int)totma._20;
+						ma20.M = 1;
+						ma20.N = 20;
+						if (line - 1 == 20)
+						{
+							tepma._20 = totma._20 / 20;
+							pt_ma20old.x = Pter.x;
+							pt_ma20old.y = pt_ma20.y;
+						}
+						else
+						{
+
+						}
+					}
+					pti++;
+				}
+				markdata.clear();
+			}
+			else return false;
+			line++;
+		}
+		this->dlginfo.line = line = 0;
+	}
+	Readfile.close();
+	return true;
 }
 
 void OGLKview::Market::show()

@@ -1,5 +1,6 @@
 ﻿#ifdef _STRING_
 //未使用STL的string类时
+typedef string _String;
 #else
 #ifndef __STRING_
 #define __STRING_

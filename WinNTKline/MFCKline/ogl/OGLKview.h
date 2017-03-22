@@ -25,12 +25,13 @@
 //#include <thread> #error <thread> is not supported when compiling with /clr or /clr:pure.
 #include	<functional>
 #include	<algorithm>
-#include	<stdio.h>
+#include	<cstdio>
 #include	<io.h>
 #include	<iostream>
 #include	<fcntl.h>
 #include	<fstream>
-#include	<plus1second.inc>
+#include	<plus1second>
+#include	<string>
 #ifdef _WIN32//__linux
 #include "..\stdafx.h"
 #ifdef Error //ws2tcpip.h 'Error' redefined.
@@ -213,7 +214,10 @@ private:
 	Point itempt;
 	boostest buset;
 	OGLKview* Okv;
+	std::vector<char*> markdata;
+	Market st_stock;
 	PROCGETCONSOLEWINDOW GetConsoleWindow;
+	std::vector<struct OGLKview::Market > vec_market;
 	OGLKview::Point pt[2] = { { 1.7f,0 },{ -9.0,0 } };
 	bool chart_frame(void);
 	int diag_staff(int x, int y);
@@ -229,6 +233,8 @@ public:
 	FixWhat tinkep;
 	Dlginfo dlginfo;
 	Fillitem fillitem;
+	const char* file;
+	int		failmsg = 0;
 	OGLKview::Market lastmarket;
 	std::map<int, OGLKview::Strmap>stockmap;
 public:
@@ -249,6 +255,7 @@ public:
 	int Data2View(std::vector<struct OGLKview::Market> market, OGLKview::Dlginfo toview);
 	bool SetWindowPixelFormat(HDC m_hDC, HWND m_hWnd, int pixelformat = 0);
 	bool DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool hollow = 1, OGLKview::Point pt = { 0 });
+	bool GetMarkDatatoDraw(void* P, char* title = 0);
 public:
 	float axistinker(int pX)
 	{

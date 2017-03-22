@@ -26,5 +26,9 @@
 *.exe
 *.out
 *.app
+
+#Others
 *.tlog
 *.log
+*.patch
+*-hard

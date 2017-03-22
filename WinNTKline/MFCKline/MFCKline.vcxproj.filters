@@ -105,9 +105,6 @@
     <ClInclude Include="HOOK\injectDLL.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Index\plus1second.inc">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="Index\binarytree-inl.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -121,6 +118,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\..\gSOAPverify\soap\stdsoap2.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Index\plus1second">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -164,9 +164,6 @@
     <ClCompile Include="LoginDlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="test\Testingcase.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="ogl\GlF16.cc">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -207,6 +204,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\..\gSOAPverify\soap\stdsoap2.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="test\Testcase.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
