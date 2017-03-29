@@ -834,8 +834,8 @@ void OGLKview::DrawKtext(char text[], Point & coor, int size, OGLKview::Color4f 
 	HFONT mhfont = CreateFont(size, 0, 0, 0, fw, 0, 0, 0, ANSI_CHARSET,
 		OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
 		DEFAULT_PITCH | FF_SWISS, 
-#ifdef QMyOglWdg_H
-		(LPCSTR)
+#ifdef QMyOglWdg_H | UNICODE
+		(const wchar_t *)
 #endif
 		font
 	);
