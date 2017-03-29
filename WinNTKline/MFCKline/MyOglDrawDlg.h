@@ -2,14 +2,14 @@
 //#include	<afxstat_.h>
 #include	"MFCKline.h"
 #include	"afxdialogex.h"
-#include	"OGL/OGLKview.h"
+#include	"MGL/OGLKview.h"
 #include	"NET/tcpip.h"
 #include	"Def/MacroDef.h"
 #include	"Chart/DepthChart.h"
 #include	"font/FontNehe.h"
 #include	"Index/CommSet.h"
 #include	"own/CNMenu.h"
-#include	"ogl/GlModel.h"
+#include	"mgl/GlModel.h"
 
 using namespace freetype;
 // MyOglDrawDlg 对话框
@@ -65,7 +65,8 @@ public:
 	GlModel model;
 	CTabCtrl m_tab;
 	CToolBar m_tool;
-	DepthChart *depth= DepthChart::getDepth();
+	DepthChart obj;
+	DepthChart *depth= obj.getDepth();
 public:
 	// 重载函数
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
@@ -94,7 +95,6 @@ public:
 	afx_msg LRESULT OnTaskShow(WPARAM wparam, LPARAM lparam);
 	afx_msg LRESULT SetDlgTitle(WPARAM wparam, LPARAM lparam);
 	afx_msg void FloatDrift(char* text);
-	afx_msg void OnQuitDlg();
 	afx_msg void SetDlgBkg();
 	afx_msg void SetDeepDeg(); 
 	void CallShellScript(CString Path, CString fbat, CString param);

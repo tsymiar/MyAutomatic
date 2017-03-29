@@ -1,6 +1,19 @@
 ﻿#include "OGLKview.h"
 
-using namespace std;
+#pragma unmanaged 
+BOOL APIENTRY DllMain(HANDLE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
+{
+	switch (ul_reason_for_call)
+	{
+	case DLL_PROCESS_ATTACH:
+	case DLL_THREAD_ATTACH:
+	case DLL_THREAD_DETACH:
+	case DLL_PROCESS_DETACH:
+		break;
+	}
+	return TRUE;
+}
+
 
 OGLKview::OGLKview()
 {
@@ -17,7 +30,7 @@ OGLKview::ViewSize viewsize = { 0,0,0,0 };
 OGLKview::Charmarket markchar = { "---","---","---" };
 
 #ifdef __linux//||_UNIX
-int main(int argc, char ** argv)
+int myGL(int argc, char ** argv)
 {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_DEPTH | GLUT_RGBA);
@@ -76,7 +89,8 @@ bool OGLKview::SetWindowPixelFormat(HDC m_hDC, HWND m_hWnd, int pixelformat)
 		return false;
 	}
 	HMODULE hKernel32 = GetModuleHandle(_T("kernel32"));
-	GetConsoleWindow = (PROCGETCONSOLEWINDOW)GetProcAddress(hKernel32, _T("GetConsoleWindow"));
+	GetConsoleWindow = (PROCGETCONSOLEWINDOW)GetProcAddress(hKernel32, ("GetConsoleWindow"));
+	this->m_hDlg = m_hWnd;
 	return true;
 }
 //unsigned _stdcall iItem(void* p)
@@ -84,6 +98,8 @@ bool OGLKview::SetWindowPixelFormat(HDC m_hDC, HWND m_hWnd, int pixelformat)
 //	OGLKview* kv = (OGLKview*)p;
 //	TH *th = (TH*)p;
 //}
+using namespace std;
+
 float Xdeg, Ydeg;
 bool multi0 = false;
 OGLKview::Point mpt, arrow;
@@ -91,6 +107,7 @@ OGLKview::Market fixeddata;
 float proportion, delta = 1;
 float shadowup, shadowdown;
 float candlemiddle, candleright, candleleft;
+
 bool OGLKview::DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool hollow, OGLKview::Point pt)
 {
 	//(HANDLE)_beginthreadex(NULL, 0, &iItem, &thd, 0, NULL);
@@ -816,7 +833,12 @@ void OGLKview::DrawKtext(char text[], Point & coor, int size, OGLKview::Color4f 
 		fw = FW_SEMIBOLD;
 	HFONT mhfont = CreateFont(size, 0, 0, 0, fw, 0, 0, 0, ANSI_CHARSET,
 		OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
-		DEFAULT_PITCH | FF_SWISS, font);
+		DEFAULT_PITCH | FF_SWISS, 
+#ifdef QMyOglWdg_H
+		(LPCSTR)
+#endif
+		font
+	);
 	HFONT hOldFont = (HFONT)SelectObject(wglGetCurrentDC(), mhfont);
 	DeleteObject(hOldFont);
 	if (color.A == 0)
@@ -827,16 +849,20 @@ void OGLKview::DrawKtext(char text[], Point & coor, int size, OGLKview::Color4f 
 }
 ///**************GetMarkDatatoDraw()**************///
 int		i = 0;
-int		pti = 0;//绘制曲线时每组下标
+int		li = 0;//绘制曲线时每组下标
 int		line = 0;//当前读取行数
+int		idx = 0;
 int		item0 = 0;
+int		volume;//成交量
+float	maxprice = 0.0f;
+float	minprice = FLT_MAX;
 char*	cot = NULL;//切分临时数据
 char*	buff = NULL;
 char*	token = NULL;
-bool	draw5 = false;
-bool	draw10 = false;
-bool	draw20 = false;
 bool	isnext = false;//是否为下一组
+bool	hadraw5 = false;
+bool	hadraw10 = false;
+bool	hadraw20 = false;
 char*	div_stock[3] = { NULL };
 char	ma[32] = { NULL };
 char	dif[32] = { NULL };
@@ -845,23 +871,35 @@ char	rsi[32] = { NULL };
 char	vol[32] = { NULL };
 char	macd[32] = { NULL };
 char	code[64] = { NULL };
-std::vector<Stock::Rsi> str_rsi;
+char	s_code[] = "股票代码：";
+char	s_ma5[] = "SMA5:";
+char	s_ma10[] = "SMA10:";
+char	s_ma20[] = "SMA20:";
+char	s_dif[] = "DIF:";
+char	s_dea[] = "DEA:";
+char	s_rsa[] = "RSA(6,12,24):";
+char	s_val[] = "成交量 Vol:";
+char	s_macd[] = "MACD(12,26,9)";
+std::vector<Stock::Rsi> strsi;
 std::string tmp = " ";
 std::ifstream Readfile;
 std::ostream;
 std::string sWrite;
 const char* writefile;
-Stock::Rsi rise{ 0 }, drop{ 0 }, total{ 0 }, last{ 0 };
-Stock::Sma::MA tepma{ 0 }, totma{ 0 }, yma{ 0 };
-Stock::Sma ma20{ 0 }, ma10{ 0 }, ma5{ 0 };
+Stock::Rsi total{ 0 },/*分组变量，前一组最后一日收盘价*/last{ 0 },/*N日收盘涨幅和*/frise{ 0 },/*N日收盘跌幅和（绝对值）*/fdrop{ 0 };
+Stock::Sma::MA isma{ 0 },/*今日*/totma{ 0 }, /*昨日*/yma{ 0 };
+Stock::Sma ma20{ 0 }, ma10{ 0 }, ma5{ 0 };//MA均线
 OGLKview::Point Pter = { 0 },/*折线的前一个点*/ Pt[4] = { 0 };
+//一般展示均线
 OGLKview::Point pt_vol = { 0 }, pt_dif = { 0 }, pt_dea = { 0 }, pt_rsi = { 0 }, pt_macd = { 0 };
+//图例文字坐标
 OGLKview::Point pt_code = { 0.8f,1.189f }, pt_stock = { -1.22f,pt_code.y };
+//计算后的RSA
 OGLKview::Point pt_rsi6 = { 0 }, pt_rsi12 = { 0 }, pt_rsi24 = { 0 };
 //MA移动平均线
 OGLKview::Point pt_ma5 = { 0 }, pt_ma10 = { 0 }, pt_ma20 = { 0 };
 OGLKview::Point pt_ma5old = { 0 }, pt_ma10old = { 0 }, pt_ma20old = { 0 };
-//RSA
+//RSI
 OGLKview::Point pt_AB6 = { 0 }, pt_AB12 = { 0 }, pt_AB24 = { 0 };
 OGLKview::Point pt_AB6old = { 0 }, pt_AB12old = { 0 }, pt_AB24old = { 0 };
 ///**************END GetMarkDatatoDraw**************///
@@ -875,13 +913,18 @@ bool OGLKview::GetMarkDatatoDraw(void* P, char* title)
 //	}
 	//打开文件流
 	//	Readfile.open(writefile, std::ios::out);
-	Readfile.open(this->file, std::ios::in);
+	if (P == nullptr || (*(HWND*)P) != this->m_hDlg)
+		P = &this->m_hDlg;
+	if (this->file == nullptr) 
+		return false;
+	else
+		Readfile.open(this->file, std::ios::in);
 	if (Readfile.fail())
 	{
 		//只发送一遍失败消息
 		if (failmsg < 1)
 #ifdef _MSC_VER
-			::PostMessage((*(HWND*)P), WM_MSG_OGL, 0, (LPARAM)this->index.AllocBuffer("Reading failure!"));
+			::PostMessage((*(HWND*)P), WM_MSG_OGL, 0, (LPARAM)this->index.AllocBuffer(_T("Reading failure!")));
 #else
 			cout << "Reading failure!" << endl;
 #endif
@@ -907,12 +950,17 @@ bool OGLKview::GetMarkDatatoDraw(void* P, char* title)
 				{
 					this->coding = true;
 					buff = markdata[0];
-					memcpy(title, buff, sizeof(buff));
+					if (title == NULL)
+					{
+						title = buff;
+						//memcpy();
 #ifdef _MSC_VER
-					if (failmsg <= 3)
-						::PostMessage((*(HWND*)P), WM_MSG_TITLE, 0, (LPARAM)this->index.AllocBuffer(title));
-
+						if (failmsg <= 3)
+							::PostMessage((*(HWND*)P), WM_MSG_TITL, 0, (LPARAM)this->index.AllocBuffer((CString)title));
+#else
+						cout << "[\033[34m" << title << "\033[0m]" << endl;
 #endif // _MSC_VER
+					}
 					i = 0;
 					token = strtok_s(buff, " ", &cot);
 					while (token != NULL)
@@ -924,7 +972,7 @@ bool OGLKview::GetMarkDatatoDraw(void* P, char* title)
 					this->SwitchViewport(0);
 					sprintf(code, "%s(%s)", div_stock[1], div_stock[0]);
 					this->DrawKtext(code, pt_code, 20, { 1,1,0 }, "Terminal", false);
-					sprintf(code, _T("%s(%s)<%s>"), div_stock[1], div_stock[0], div_stock[2]);
+					sprintf(code, ("%s(%s)<%s>"), div_stock[1], div_stock[0], div_stock[2]);
 					pt_code = { -1.22f,pt_code.y };// 格式化并输出
 					this->DrawKtext(code, pt_code, 12, { 1,1,0 }, "宋体");
 					pt_code = { 0.8f,1.189f };
@@ -937,7 +985,6 @@ bool OGLKview::GetMarkDatatoDraw(void* P, char* title)
 			else if (markdata.size() > 8)
 			{
 				//将行情数据临时存储到结构体
-				this->lastmarket = st_stock;
 				st_stock.time.tm_year = atoi(markdata[0]);
 				st_stock.time.tm_mon =	atoi(markdata[1]);
 				st_stock.time.tm_mday = atoi(markdata[2]);
@@ -948,36 +995,69 @@ bool OGLKview::GetMarkDatatoDraw(void* P, char* title)
 				st_stock.amount =		 atoi(markdata[7]);
 				st_stock.price =  (float)atof(markdata[8]);
 				vec_market.push_back(st_stock);
+				this->lastmarket = st_stock;
 				//设置初始显示图形数量
 				if (line < this->tinkep.move + this->dlginfo.cycle / this->tinkep.ratio)
 				{
-					if (line > 0)//pti不必分组
-						if (pti > 3)
+					if (line > 0)//li不必分组
+						if (li > 3)
 						{
-							pti = 0;
+							li = 0;
 							isnext = true;
 						}
-					line % 20 == 0 ? totma._20 = totma._10 = totma._5 = 0 : (line % 10 == 0 ? totma._10 = totma._5 = 0 : (line % 5 == 0 ? totma._5 = 0 : 1));
-
 					if (line <= 3)
 					{
 						this->dlginfo.line = 1;
+						Pter = Pt[0];
+						last.stRSA._6 = last.stRSA._12 = last.stRSA._24 = atof(markdata[6]);
 					}
 					else
 						this->dlginfo.line = line - 2;
+					{//初始化
+						line % 20 == 0 ? totma._20 = totma._10 = totma._5 = 0 : \
+							(line % 10 == 0 ? totma._10 = totma._5 = 0 : \
+							(line % 5 == 0 ? totma._5 = 0 : 1));
+						idx % 24 == 0 ? frise.stRSA._24 = fdrop.stRSA._24 = 0 : \
+							(idx % 12 == 0 ? frise.stRSA._12 = fdrop.stRSA._12 = 0 : \
+							(idx % 6 == 0 ? frise.stRSA._6 = fdrop.stRSA._6 = 0 : 1));
+						line == 24 ? pt_AB24 = Pt[li] : \
+							(line == 20 ? pt_ma20old = Pt[li] : \
+							(line == 12 ? pt_AB12 = Pt[li] : \
+								(line == 10 ? pt_ma10old = Pt[li] : \
+								(line == 6 ? pt_AB6 = Pt[li] : \
+									(line == 5 ? pt_ma5old = Pt[0] : \
+										Pt[i])))));
+					}
+					//SMA加和
+					totma._5 += (atof(markdata[4]) + atof(markdata[5])) / 2;
+					totma._10 += (atof(markdata[4]) + atof(markdata[5])) / 2;
+					totma._20 += (atof(markdata[4]) + atof(markdata[5])) / 2;
+					//比较当前组最大最小交易价格
+					if (maxprice < atof(markdata[4]))
+						maxprice = atof(markdata[4]);
+					if (minprice > atof(markdata[5]))
+						minprice = atof(markdata[5]);
+					if (volume < atoi(markdata[7]))
+						volume = atoi(markdata[7]);
+					//计算RSA
 					if (this->tinkep.ratio == 0)
 					{
-						Pt[pti].x += 6.5f;
-						Pt[pti].y /= 2;
+						Pt[li].x += 6.5f;
+						Pt[li].y /= 2;
 					}
-					Pt[pti].x = this->Pxtinker(this->tinkep);
-					Pt[pti].y = (float)atof(markdata[6]);
+					//瞄点
+					Pt[li].x = this->Pxtinker(this->tinkep);
+					Pt[li].y = (float)atof(markdata[6]);
 					ASSERT(_CrtCheckMemory());
 					this->dlginfo.line <= 1 ? Pter = Pt[0] : Pt[0];
 					if (line >= this->tinkep.move)
 						this->DrawKline(st_stock, this->tinkep);
-					this->DrawPoly(Pter, Pt[pti], { 0.f,1.f,0.f });
-					Pter = Pt[pti];
+					this->DrawPoly(Pter, Pt[li], { 0.f,1.f,0.f });
+					Pter = Pt[li];
+					//绘制MA线
+					line < 20 ? pt_ma20old = pt_ma20 : \
+						(line < 10 ? pt_ma10old = pt_ma10 : \
+						(line < 5 ? pt_ma5old = pt_ma5 : pt_ma5old));
 					if ((line - 1) % 20 == 0)
 					{
 						ma20.X = (int)totma._20;
@@ -985,7 +1065,7 @@ bool OGLKview::GetMarkDatatoDraw(void* P, char* title)
 						ma20.N = 20;
 						if (line - 1 == 20)
 						{
-							tepma._20 = totma._20 / 20;
+							pt_ma20.y = isma._20 = totma._20 / 20;
 							pt_ma20old.x = Pter.x;
 							pt_ma20old.y = pt_ma20.y;
 						}
@@ -993,8 +1073,38 @@ bool OGLKview::GetMarkDatatoDraw(void* P, char* title)
 						{
 
 						}
+						DrawPoly(pt_ma20old, pt_ma20, { 0.9f, 0.0f, 0.9f });
+						pt_ma20old = pt_ma20;
+						hadraw20 = true;
 					}
-					pti++;
+					else if ((line - 1) % 10 == 0)
+					{
+						ma10.X = (int)totma._10;
+						ma10.M = 1;
+						ma10.N = 10;
+						pt_ma10.y = isma._10 = totma._10 / 10;
+						pt_ma10old.x = Pter.x;
+						pt_ma10old.y = pt_ma10.y; 
+						DrawPoly(pt_ma10old, pt_ma10, { 1.f, 1.0f, 0.f });
+						pt_ma10old = pt_ma10;
+						hadraw10 = true;
+					}
+					else if ((line - 1) % 5 == 0)
+					{
+						ma5.X = (int)totma._5;
+						ma5.M = 1;
+						ma5.N = 5;
+						pt_ma5.y = isma._5 = totma._5 / 5;
+						pt_ma5old.x = Pter.x;
+						pt_ma5old.y = pt_ma5.y;
+						DrawPoly(pt_ma5old, pt_ma5, { 1.f, 1.0f, 1.f });
+						pt_ma5old = pt_ma5;
+						hadraw5 = true;
+					}
+					//分组计数
+					idx++;
+					//点计数
+					li++;
 				}
 				markdata.clear();
 			}

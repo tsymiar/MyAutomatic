@@ -33,9 +33,6 @@
     <ClInclude Include="MFCKline.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="OGL\OGLKview.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="Wpf\WpfHost.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -54,15 +51,6 @@
     <ClInclude Include="MyOglDrawDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="ogl\bitmap.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="ogl\texture.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="ogl\House.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="Def\MacroDef.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -79,12 +67,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="LoginDlg.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="ogl\GlF16.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="ogl\GlModel.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Index\CommSet.h">
@@ -123,6 +105,24 @@
     <ClInclude Include="Index\plus1second">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="mgl\bitmap.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="mgl\GlF16.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="mgl\GlModel.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="mgl\House.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="mgl\OGLKview.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="mgl\texture.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MFCKline.cpp">
@@ -140,16 +140,7 @@
     <ClCompile Include="MyOglDrawDlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="OGL\OGLKview.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="Font\FontNehe.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="ogl\texture.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="ogl\House.cc">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="security\encoding.cc">
@@ -164,22 +155,13 @@
     <ClCompile Include="LoginDlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="ogl\GlF16.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="security\AES.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="ogl\GlModel.cc">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="ctl\CWebBrowser2.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="RegistDlg.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="ogl\bitmap.c">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="NET\GEThttp.cpp">
@@ -207,6 +189,24 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="test\Testcase.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="mgl\bitmap.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="mgl\GlF16.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="mgl\GlModel.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="mgl\House.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="mgl\OGLKview.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="mgl\texture.c">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

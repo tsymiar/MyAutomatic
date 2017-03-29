@@ -1,4 +1,4 @@
-﻿#if !defined OGL_KVIEW_H_
+﻿#if !defined(OGL_KVIEW_H_)
 #define OGL_KVIEW_H_
 //#pragma execution_character_set("utf-8")
 //#pragma comment(linker, "/subsystem:\"windows\" /entry:\"mainCRTStartup\"") 
@@ -9,7 +9,11 @@
 #pragma comment(lib, "glew32.lib") 
 #endif
 #ifdef _MSC_VER
-#pragma warning (disable:4067)
+#pragma warning (disable:4091) // “__declspec(dllexport)”: 没有声明变量时忽略“OGLKview”的左侧
+#pragma warning (disable:4098) // 默认库“msvcrtd.lib”与其他库的使用冲突；请使用 /NODEFAULTLIB:library
+#pragma warning (disable:4099) // 未找到 PDB“vc120.pdb”(使用“glew32s.lib(glew.obj)”或在“F:\dell - pc\Documents\GitHub\MyAutomatic\WinNTKline\Release\vc120.pdb”中寻找)；正在链接对象，如同没有调试信息一样
+#pragma warning (disable:4244) // 从“double”转换到“float”，可能丢失数据
+#pragma warning (disable:4248) // 无法解析 typeref 标记(01000011)(为“GLUtesselator”)；映像可能无法运行
 #pragma warning (disable:4477)
 #pragma warning (disable:4996)
 #endif
@@ -30,7 +34,9 @@
 #include	<iostream>
 #include	<fcntl.h>
 #include	<fstream>
+#if 0
 #include	<plus1second>
+#endif
 #include	<string>
 #ifdef _WIN32//__linux
 #include "..\stdafx.h"
@@ -43,21 +49,25 @@
 #include <process.h>
 #endif
 #pragma comment(lib, "freetype.lib") 
-#include	<font/ft2build.h>
-#include	FT_FREETYPE_H  
 #include	<GL/glew.h>  
 #include	<GL/glut.h>
 #include	<GL/freeglut.h> 
 #include	<GL/GLU.h>
 #include	<GL/GL.h>
+#include	<font/ft2build.h>
+#include	"font/freetype/ftglyph.h"
+#include	FT_FREETYPE_H  
+#ifdef BOOST
 #include	"boost/boostest.h"
+#endif // BOOST
 #include	"Index/Indexes.inl"
 #include	"Index/CPUID.H"
 #include	"Index/_String-inl.h"
+#if !defined(QMyOglWdg_H)
 #include	"dos/DOSCout.h"
+#endif
 #include	"Stock/Stock.h"
-#include	"Def/MacroDef.h"
-#include	"font/freetype/ftglyph.h" 
+#include	"Def/MacroDef.h" 
 #ifdef _FILL_
 #define fixpixelx 0.002f
 #else
@@ -65,8 +75,13 @@
 #endif
 //#define GLTEST
 #define _N_ 10
+#ifdef OGL_KVIEW_H_
+#define DLL_KVIEW_API __declspec(dllexport)
+#else
+#define DLL_KVIEW_API __declspec(dllimport)
+#endif
 
-class OGLKview
+DLL_KVIEW_API class OGLKview
 {
 private:
 	bool limitup;//harden涨停
@@ -211,8 +226,11 @@ public:
 	}
 private:
 	HGLRC m_hRC;
+	HWND m_hDlg;
 	Point itempt;
+#ifdef BOOST
 	boostest buset;
+#endif
 	OGLKview* Okv;
 	std::vector<char*> markdata;
 	Market st_stock;
@@ -227,13 +245,15 @@ public:
 	bool unfurl;
 	bool coding;
 	float y_fix = 0;
+#if !defined(QMyOglWdg_H)
 	DOSCout DOS;
+#endif
 	ZOOM Zoom;
 	Indexes index;
 	FixWhat tinkep;
 	Dlginfo dlginfo;
 	Fillitem fillitem;
-	const char* file;
+	const char* file = nullptr;
 	int		failmsg = 0;
 	OGLKview::Market lastmarket;
 	std::map<int, OGLKview::Strmap>stockmap;
@@ -255,7 +275,7 @@ public:
 	int Data2View(std::vector<struct OGLKview::Market> market, OGLKview::Dlginfo toview);
 	bool SetWindowPixelFormat(HDC m_hDC, HWND m_hWnd, int pixelformat = 0);
 	bool DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool hollow = 1, OGLKview::Point pt = { 0 });
-	bool GetMarkDatatoDraw(void* P, char* title = 0);
+	bool GetMarkDatatoDraw(void* P = nullptr, char* title = NULL);
 public:
 	float axistinker(int pX)
 	{
@@ -303,5 +323,6 @@ class BearCharges
 		}
 	}
 };
-
+#undef DLL_KVIEW_API
 #endif // !OGL_KVIEW_H_}
+

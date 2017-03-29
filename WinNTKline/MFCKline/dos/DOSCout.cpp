@@ -2,6 +2,17 @@
 
 DOSCout::DOSCout(){}
 
+void DOSCout::RedirectConsole()
+{
+	int nRet = 0;
+	FILE* fp;
+	AllocConsole();
+	nRet = _open_osfhandle((long)GetStdHandle(STD_OUTPUT_HANDLE), _O_TEXT);
+	fp = _fdopen(nRet, "w");
+	*stdout = *fp;
+	setvbuf(stdout, NULL, _IONBF, 0);
+}
+
 #ifdef _CONSOLE\
 ||_WINDOWS
 
@@ -23,14 +34,43 @@ BOOL WINAPI ConsoleHandler(DWORD msgType)
 	}
 	return g_bExit;
 }
+
+class __TRACE
+{
+	CString szFileAndLine;
+public:
+	__TRACE(LPCTSTR szFile, int nLien)
+	{
+		szFileAndLine.Format(_T("%s(%d): "), szFile, nLien);
+	}
+
+	void __cdecl operator()(LPCTSTR format, ...) const
+	{
+		TCHAR szInfo[1024] = { 0 };
+		va_list arg; va_start(arg, format);
+		_vstprintf_s(szInfo, 1024, format, arg);
+		va_end(arg);
+		OutputDebugString(szFileAndLine);
+		OutputDebugString(szInfo);
+	}
+};
+#ifdef _DEBUG
+#define _TRACE __TRACE(_T(__FILE__), __LINE__)
+#endif
 #endif
 
-void DOSCout::OpenConsole()
+void DOSCout::ExecuteConsole()
 {
 	//#pragma comment(linker,"/subsystem:\"Windows\" /entry:\"mainCRTStartup\"")
 	FILE* stream;
 	AllocConsole();
-	SetConsoleTitle(_T("TextOut"));
+	SetConsoleTitle(
+#ifdef QMyOglWdg_H
+		"TextOut"
+#else
+		_T("TextOut")
+#endif
+	);
 	freopen_s(&stream, "CONIN$", "r+t", stdin);
 	freopen_s(&stream, "CONOUT$", "w+t", stdout);
 	cout << "Press Esc to exit." << endl;

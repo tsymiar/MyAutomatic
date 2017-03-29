@@ -32,11 +32,12 @@
     <WindowsAppContainer>false</WindowsAppContainer>
     <UseOfMfc>Dynamic</UseOfMfc>
     <PlatformToolset>v140_xp</PlatformToolset>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141_clang_c2</PlatformToolset>
+    <PlatformToolset>v140_xp</PlatformToolset>
     <WholeProgramOptimization>false</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
     <UseOfMfc>Dynamic</UseOfMfc>
@@ -95,11 +96,9 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <LibraryPath>$(PATH_VLD)\lib\Win32;$(SolutionDir)MFCKline\GL\lib;$(SolutionDir)MFCKline\font\lib;G:\Qt\msvc2015_32\5.6\msvc2015\lib;$(LibraryPath)</LibraryPath>
-    <IncludePath>$(BOOST);$(PATH_VLD)\include;$(SolutionDir)MFCKline;$(SolutionDir)MFCKline\font;$(SolutionDir)MFCKline\Index;$(SolutionDir)gSOAPverify\soap;$(IncludePath)</IncludePath>
     <CodeAnalysisRuleSet>MixedRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <RunCodeAnalysis>false</RunCodeAnalysis>
-    <IntDir>$(Configuration)\$(PlatformToolset)\</IntDir>
+    <IntDir>$(SolutionDir)MFC\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -189,19 +188,20 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_NON_CONFORMING_SWPRINTFS;_CRT_SECURE_NO_WARNINGS;HAVE_STRUCT_TIMESPEC;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <EnablePREfast>false</EnablePREfast>
       <CompileAsManaged>true</CompileAsManaged>
       <CompileAs>CompileAsCpp</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(BOOST);$(PTHD_INC);$(SolutionDir)MFCKline;$(SolutionDir)MFCKline\VLD;$(SolutionDir)MFCKline\font;$(SolutionDir)MFCKline\Index;$(SolutionDir)..\gSOAPverify\soap;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>%(PATH_VLD)\lib\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)\MFCKline\VLD;$(SolutionDir)MFCKline\GL\lib;$(SolutionDir)MFCKline\font\lib;G:\Qt\msvc2015_32\5.6\msvc2015\lib</AdditionalLibraryDirectories>
       <AdditionalOptions>/SAFESEH:NO %(AdditionalOptions)</AdditionalOptions>
       <AdditionalDependencies>legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <TargetMachine>NotSet</TargetMachine>
@@ -266,15 +266,15 @@
     <ClInclude Include="LoginDlg.h" />
     <ClInclude Include="MFCKline.h" />
     <ClInclude Include="MFCKlineDlg.h" />
+    <ClInclude Include="mgl\bitmap.h" />
+    <ClInclude Include="mgl\GlF16.h" />
+    <ClInclude Include="mgl\GlModel.h" />
+    <ClInclude Include="mgl\House.h" />
+    <ClInclude Include="mgl\OGLKview.h" />
+    <ClInclude Include="mgl\texture.h" />
     <ClInclude Include="MyOglDrawDlg.h" />
     <ClInclude Include="NET\GEThttp.h" />
     <ClInclude Include="NET\TCPIP.h" />
-    <ClInclude Include="ogl\bitmap.h" />
-    <ClInclude Include="ogl\GlModel.h" />
-    <ClInclude Include="ogl\House.h" />
-    <ClInclude Include="ogl\GlF16.h" />
-    <ClInclude Include="OGL\OGLKview.h" />
-    <ClInclude Include="ogl\texture.h" />
     <ClInclude Include="own\CNMenu.h" />
     <ClInclude Include="RegistDlg.h" />
     <ClInclude Include="Resource.h" />
@@ -301,19 +301,15 @@
     <ClCompile Include="LoginDlg.cpp" />
     <ClCompile Include="MFCKline.cpp" />
     <ClCompile Include="MFCKlineDlg.cpp" />
+    <ClCompile Include="mgl\bitmap.c" />
+    <ClCompile Include="mgl\GlF16.cc" />
+    <ClCompile Include="mgl\GlModel.cc" />
+    <ClCompile Include="mgl\House.cc" />
+    <ClCompile Include="mgl\OGLKview.cc" />
+    <ClCompile Include="mgl\texture.c" />
     <ClCompile Include="MyOglDrawDlg.cpp" />
     <ClCompile Include="NET\GEThttp.cpp" />
     <ClCompile Include="NET\TCPIP.cpp" />
-    <ClCompile Include="ogl\bitmap.c">
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
-    </ClCompile>
-    <ClCompile Include="ogl\GlModel.cc" />
-    <ClCompile Include="ogl\House.cc" />
-    <ClCompile Include="ogl\GlF16.cc" />
-    <ClCompile Include="OGL\OGLKview.cc" />
-    <ClCompile Include="ogl\texture.c">
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
-    </ClCompile>
     <ClCompile Include="RegistDlg.cpp" />
     <ClCompile Include="security\AES.cc" />
     <ClCompile Include="security\encoding.cc" />

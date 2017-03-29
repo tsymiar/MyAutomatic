@@ -34,11 +34,11 @@ public:
 		float close;
 		int volume;
 		int price;
-	};
-	struct RSI {
-		float _6;
-		float _12;
-		float _24;
+		struct RSI {
+			float _6;
+			float _12;
+			float _24;
+		} stRSA;
 	};
 //functions
 public:
