@@ -1,6 +1,7 @@
 ﻿#ifdef _STRING_
+#include <string>
 //未使用STL的string类时
-typedef string _String;
+typedef std::string _String;
 #else
 #ifndef __STRING_
 #define __STRING_

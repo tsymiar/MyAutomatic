@@ -15,5 +15,3 @@ void CommSet<Myclass>::ColrSet(COLORREF color)
 {
 
 }
-
-

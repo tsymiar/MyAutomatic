@@ -4,6 +4,8 @@ using System.Text;
 using System.Windows;
 using System.IO;
 
+#pragma warning disable 1591
+
 namespace WpfKline
 {
     /// <summary>

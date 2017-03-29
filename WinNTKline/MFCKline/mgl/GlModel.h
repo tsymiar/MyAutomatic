@@ -6,8 +6,8 @@
 #include <gl\gl.h>
 #include <gl\glu.h>
 #include "Def\MacroDef.h"
-#include "ogl\GlF16.h"
-#include "ogl\House.h"
+#include "mgl\GlF16.h"
+#include "mgl\House.h"
 #include "GL\glaux.h"
 //链接器——》输入——》附加依赖项：legacy_studio_definitions.lib
 #pragma comment(lib, "glaux.lib") 
