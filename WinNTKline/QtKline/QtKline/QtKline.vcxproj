@@ -82,7 +82,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\MFCKline\dos\DOSCout.cpp" />
     <ClCompile Include="..\..\MFCKline\mgl\OGLKview.cc" />
     <ClCompile Include="GeneratedFiles\Debug\moc_myoglwdg.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -97,6 +96,7 @@
       </PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MyOglWdg.cpp" />
     <ClCompile Include="myuiobj.cpp" />
   </ItemGroup>
   <ItemGroup>

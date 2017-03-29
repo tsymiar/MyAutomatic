@@ -48,7 +48,7 @@
     <ClCompile Include="..\..\MFCKline\mgl\OGLKview.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\MFCKline\dos\DOSCout.cpp">
+    <ClCompile Include="MyOglWdg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
