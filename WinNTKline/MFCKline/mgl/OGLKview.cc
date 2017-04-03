@@ -366,7 +366,7 @@ void _stdcall OGLKview::InitGraph(void/*HDC m_hDC*/)
 	//SwapBuffers(m_hDC);
 }
 
-void OGLKview::draw_string(const char* str)
+void OGLKview::print_string(const char* str)
 {
 	int len = 0, i;
 	wchar_t* wstring;
@@ -379,7 +379,10 @@ void OGLKview::draw_string(const char* str)
 		++len;
 	}
 	if ((wstring = (wchar_t*)malloc((len + 1) * sizeof(wchar_t))) == NULL)
+	{
+		free(wstring);
 		return;
+	}
 	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, str, -1, wstring, len);
 	wstring[len] = _T('\0');
 	if ((wstring[0] > 0x7f) || (47 < wstring[0] && wstring[0] <= 127))
@@ -831,21 +834,26 @@ void OGLKview::DrawKtext(char text[], Point & coor, int size, OGLKview::Color4f 
 		fw = FW_MEDIUM;
 	else
 		fw = FW_SEMIBOLD;
-	HFONT mhfont = CreateFont(size, 0, 0, 0, fw, 0, 0, 0, ANSI_CHARSET,
-		OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
-		DEFAULT_PITCH | FF_SWISS, 
-#ifdef QMyOglWdg_H | UNICODE
-		(const wchar_t *)
+#if !defined(_UNICODE)
+#define _UNICODE
 #endif
+	HFONT mhfont = CreateFontW(size, 0, 0, 0, fw, 0, 0, 0, ANSI_CHARSET,
+		OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
+		DEFAULT_PITCH | FF_SWISS,
+//#ifdef Q_OS_WIN32
+		(const wchar_t *)
+//#else
 		font
+//#endif
 	);
+#undef _UNICODE
 	HFONT hOldFont = (HFONT)SelectObject(wglGetCurrentDC(), mhfont);
 	DeleteObject(hOldFont);
 	if (color.A == 0)
 		color.A = 1;
 	glColor4f(color.R, color.G, color.B, color.A);
 	glRasterPos2f(coor.x, coor.y);
-	draw_string(text);
+	print_string(text);
 }
 ///**************GetMarkDatatoDraw()**************///
 int		i = 0;
@@ -1123,5 +1131,4 @@ void OGLKview::Market::show()
 
 OGLKview::~OGLKview()
 {
-
 }

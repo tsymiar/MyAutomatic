@@ -27,12 +27,11 @@ QMyOglWdg::~QMyOglWdg()
 void QMyOglWdg::initializeGL()
 {
 	kv.InitGraph();
+	kv.GetMarkDatatoDraw();
 }
 
 void QMyOglWdg::paintGL()
 {
-
-	kv.GetMarkDatatoDraw();
 	glBindTexture(GL_TEXTURE_2D, texture[filter]);
 	xRot += xSpeed;
 	yRot += ySpeed;
