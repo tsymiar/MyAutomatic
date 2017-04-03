@@ -65,11 +65,7 @@ void DOSCout::ExecuteConsole()
 	FILE* stream;
 	AllocConsole();
 	SetConsoleTitle(
-#ifdef QMyOglWdg_H
-		"TextOut"
-#else
 		_T("TextOut")
-#endif
 	);
 	freopen_s(&stream, "CONIN$", "r+t", stdin);
 	freopen_s(&stream, "CONOUT$", "w+t", stdout);

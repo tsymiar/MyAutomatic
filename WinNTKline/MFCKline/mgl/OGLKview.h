@@ -63,7 +63,7 @@
 #include	"Index/Indexes.inl"
 #include	"Index/CPUID.H"
 #include	"Index/_String-inl.h"
-#if !defined(QMyOglWdg_H)
+#if !defined(QT_VERSION)
 #include	"dos/DOSCout.h"
 #endif
 #include	"Stock/Stock.h"
@@ -239,14 +239,14 @@ private:
 	OGLKview::Point pt[2] = { { 1.7f,0 },{ -9.0,0 } };
 	bool chart_frame(void);
 	int diag_staff(int x, int y);
-	void draw_string(const char* str);
+	void print_string(const char* str);
 	void GetChangeMatrix(float &angel, float &x, float &y, float &z);
 public:
 	bool unfurl;
 	bool coding;
 	float y_fix = 0;
-#if !defined(QMyOglWdg_H)
-	DOSCout DOS;
+#if !defined(QT_VERSION)
+	//DOSCout DOS;
 #endif
 	ZOOM Zoom;
 	Indexes index;

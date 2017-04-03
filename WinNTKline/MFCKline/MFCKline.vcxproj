@@ -32,7 +32,7 @@
     <WindowsAppContainer>false</WindowsAppContainer>
     <UseOfMfc>Dynamic</UseOfMfc>
     <PlatformToolset>v140_xp</PlatformToolset>
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>

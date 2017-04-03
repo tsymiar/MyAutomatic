@@ -4,10 +4,10 @@
 #include	"afxdialogex.h"
 #include	"MGL/OGLKview.h"
 #include	"NET/tcpip.h"
-#include	"Def/MacroDef.h"
 #include	"Chart/DepthChart.h"
 #include	"font/FontNehe.h"
 #include	"Index/CommSet.h"
+#include	"dos/DOSCout.h"
 #include	"own/CNMenu.h"
 #include	"mgl/GlModel.h"
 
@@ -65,8 +65,9 @@ public:
 	GlModel model;
 	CTabCtrl m_tab;
 	CToolBar m_tool;
-	DepthChart obj;
-	DepthChart *depth= obj.getDepth();
+	DOSCout Dos;
+	DepthChart object;
+	DepthChart *depth= object.getDepth();
 public:
 	// 重载函数
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
@@ -101,4 +102,5 @@ public:
 	char* GetFirstData();
 	auto GetPrivMem();
 	int GetMarkDatatoDraw();
+	afx_msg void OnSetbkg();
 };
