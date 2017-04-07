@@ -60,9 +60,9 @@
 #ifdef BOOST
 #include	"boost/boostest.h"
 #endif // BOOST
-#include	"Index/Indexes.inl"
-#include	"Index/CPUID.H"
-#include	"Index/_String-inl.h"
+#include	"Idx/Initialise.inl"
+#include	"Idx/CPUID.H"
+#include	"Idx/_String-inl.h"
 #if !defined(QT_VERSION)
 #include	"dos/DOSCout.h"
 #endif
@@ -187,8 +187,8 @@ public:
 		std::string code;
 		std::string info;
 	}Strmap;
-	typedef Indexes::GLPoint Point;
-	typedef Indexes::GLColor Color4f;
+	typedef Initialise::GLPoint Point;
+	typedef Initialise::GLColor Color4f;
 public:
 	std::list<struct OGLKview::Market> OGLKview::Vec2List(std::vector<struct OGLKview::Market> marvec)
 	{
@@ -249,7 +249,7 @@ public:
 	//DOSCout DOS;
 #endif
 	ZOOM Zoom;
-	Indexes index;
+	Initialise index;
 	FixWhat tinkep;
 	Dlginfo dlginfo;
 	Fillitem fillitem;

@@ -6,7 +6,7 @@
 #include	"NET/tcpip.h"
 #include	"Chart/DepthChart.h"
 #include	"font/FontNehe.h"
-#include	"Index/CommSet.h"
+#include	"Idx/CommSet.h"
 #include	"dos/DOSCout.h"
 #include	"own/CNMenu.h"
 #include	"mgl/GlModel.h"

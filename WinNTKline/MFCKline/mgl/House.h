@@ -7,7 +7,7 @@
 #include <Windows.h>
 #include <GL/glu.h>
 #include "../GL/glaux.h"
-#include "../Index/Indexes.inl"
+#include "../Idx/Initialise.inl"
 #include "../Def/MacroDef.h"
 
 #define INTS int
@@ -116,11 +116,11 @@ public:
 	int m_GLPixelIndex;
 	// Mouse position and button.
 	int oldmx = 0, oldmy = 0, mb;
-	typedef Indexes::GLPoint Point;
-	typedef Indexes::GLColor Color3f;
+	typedef Initialise::GLPoint Point;
+	typedef Initialise::GLColor Color3f;
 protected:
 	int wide, tall;
-	Indexes index;
+	Initialise index;
 
 	TEXTURE_2D    **TextureList;
 	OBJECT	      *ObjectList;		/* ObjectList[0]:isolated surfaces*/

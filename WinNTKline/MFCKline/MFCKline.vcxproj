@@ -122,6 +122,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <Optimization>MaxSpeed</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <MinimalRebuild>false</MinimalRebuild>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -258,11 +259,13 @@
     <ClInclude Include="dos\DOSCout.h" />
     <ClInclude Include="Font\FontNehe.h" />
     <ClInclude Include="HOOK\injectDLL.h" />
+    <ClInclude Include="Idx\binarytree-inl.h" />
+    <ClInclude Include="Idx\CommSet.h" />
+    <ClInclude Include="Idx\CPUID.H" />
+    <ClInclude Include="Idx\_MACRO_.h" />
+    <ClInclude Include="Idx\_String-inl.h" />
     <ClInclude Include="IMhideWndDlg.h" />
     <ClInclude Include="IM\IMclient.h" />
-    <ClInclude Include="Index\binarytree-inl.h" />
-    <ClInclude Include="Index\CommSet.h" />
-    <ClInclude Include="Index\plus1second" />
     <ClInclude Include="LoginDlg.h" />
     <ClInclude Include="MFCKline.h" />
     <ClInclude Include="MFCKlineDlg.h" />
@@ -297,7 +300,6 @@
     <ClCompile Include="HOOK\injectDLL.cpp" />
     <ClCompile Include="IMhideWndDlg.cpp" />
     <ClCompile Include="IM\client.cpp" />
-    <ClCompile Include="Index\CPUID.H" />
     <ClCompile Include="LoginDlg.cpp" />
     <ClCompile Include="MFCKline.cpp" />
     <ClCompile Include="MFCKlineDlg.cpp" />
@@ -321,8 +323,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram.cd" />
-    <None Include="Index\Indexes.inl" />
-    <None Include="Index\_String-inl.h" />
+    <None Include="Idx\Initialise.inl" />
+    <None Include="Idx\plus1second" />
     <None Include="res\MFCKline.rc2" />
     <None Include="web\myweb.nsmap" />
   </ItemGroup>
