@@ -27,7 +27,7 @@ void runtime(void* lp) {
 
 int InitChat(char argv[], int argc) {
 	WSADATA wsaData;
-	char address[20];
+	char addr[16];
 	int err = WSAStartup(0x202, &wsaData);
 	if (err == SOCKET_ERROR) {
 		cerr << "WSAStartup failed with error " << WSAGetLastError() << endl;
@@ -37,15 +37,19 @@ int InitChat(char argv[], int argc) {
 	InitializeCriticalSection(&wrcon);
 	SetConsoleTitle("chat client");
 	if (argc == 2) {
-		strcpy(address, argv/*[1]*/);
+		strcpy_s(addr, argv/*[1]*/);
 	}
 	else {
-		printf("enter server address:");
-		scanf("%s", &address);
+		printf_s("enter server address:");
+		scanf_s("%s", &addr, (unsigned)_countof(addr));
 	};
 	struct sockaddr_in server;
 	server.sin_family = AF_INET;
-	server.sin_addr.s_addr = inet_addr(address);
+#ifdef _TESTDLG_
+	inet_pton(AF_INET,addr, (PVOID*)&server.sin_addr.s_addr);
+#else
+	server.sin_addr.s_addr = inet_addr(addr);
+#endif
 	server.sin_port = htons(DEFAULT_PORT);
 	out = socket(AF_INET, SOCK_STREAM, 0);
 	if (out == INVALID_SOCKET) {
@@ -72,17 +76,14 @@ int InitChat(char argv[], int argc) {
 	return 0;
 }
 
-int StartChat(int err, void(*func)(void*))
+unsigned int __stdcall Chat_Msg(void* func)
 {
-	if (err != 0)
-		return err;
 	char onechar;
 	struct LPR lpr;
-	DWORD thread_ID;
+	unsigned int thread_ID;
 	char auxstr[24];
 	char Buffer[256];
-	char optionchar, optionstr[24];
-
+	char optionchar, optionstr[24] = { NULL };
 	do {
 		printf("Connect to server OK, [logon] or [regist] a new account? (l/r):");
 		fflush(stdin);
@@ -91,12 +92,12 @@ int StartChat(int err, void(*func)(void*))
 			Buffer[0] = 0;
 			Buffer[1] = (char)120;
 			printf("user name:");
-			scanf("%s", (Buffer + 8));
+			scanf_s("%s", (Buffer + 8), (unsigned)_countof(Buffer));
 			char title[30];
-			strcpy(title, "chat client,logged on as ");
-			strcat(title, (Buffer + 8));
+			strcpy_s(title, "chat client,logged on as ");
+			strcat_s(title, (Buffer + 8));
 			printf("password:");
-			scanf("%s", (Buffer + 32));
+			scanf_s("%s", (Buffer + 32), 256);
 			send(out, Buffer, 256, 0);
 			recv(rcv, Buffer, 256, 0);
 			if (Buffer[1] == 120) {
@@ -111,9 +112,9 @@ int StartChat(int err, void(*func)(void*))
 			Buffer[0] = 0;
 			Buffer[1] = 0;
 			printf("name want to use:");
-			scanf("%s", (Buffer + 8));
+			scanf_s("%s", (Buffer + 8), (unsigned)_countof(Buffer));
 			printf("password:");
-			scanf("%s", (Buffer + 32));
+			scanf_s("%s", (Buffer + 32), (unsigned)_countof(Buffer));
 			send(out, Buffer, 256, 0);
 			recv(rcv, Buffer, 256, 0);
 			if (Buffer[1] == 0)
@@ -127,7 +128,7 @@ int StartChat(int err, void(*func)(void*))
 	printf("type command [help] to see help message\n");
 	lpr.sock = rcv;
 	lpr.wrcon = wrcon;
-	CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)(func), &lpr, 0, &thread_ID);
+	_beginthreadex(NULL, 0, (_beginthreadex_proc_type)(func), &lpr, 0, &thread_ID);
 	do {
 		fflush(stdin);
 		onechar = _getch();
@@ -136,7 +137,7 @@ int StartChat(int err, void(*func)(void*))
 		auxstr[0] = onechar;
 		auxstr[1] = 0;
 		fflush(stdin);
-		scanf("%s", optionstr);
+		scanf_s("%s", optionstr, (unsigned)_countof(optionstr));
 		// strcat(auxstr,optionstr);
 		// strcpy(optionstr,auxstr);
 		if (strcmp(optionstr, "quit") == 0) {
@@ -167,7 +168,7 @@ int StartChat(int err, void(*func)(void*))
 		else if (strcmp(optionstr, "memberof") == 0) {
 			Buffer[0] = 0;
 			Buffer[1] = 16;
-			scanf("%s", (Buffer + 8));
+			scanf_s("%s", (Buffer + 8), (unsigned)_countof(Buffer));
 			send(out, Buffer, 256, 0);
 		}
 		else if (strcmp(optionstr, "setinfo") == 0) {
@@ -179,49 +180,58 @@ int StartChat(int err, void(*func)(void*))
 		else if (strcmp(optionstr, "info") == 0) {
 			Buffer[0] = 0;
 			Buffer[1] = 21;
-			scanf("%s", (Buffer + 8));
+			scanf_s("%s", (Buffer + 8), (unsigned)_countof(Buffer));
 			send(out, Buffer, 256, 0);
 		}
 		else if (strcmp(optionstr, "password") == 0) {
 			Buffer[0] = 0;
 			Buffer[1] = 122;
-			scanf("%s", (Buffer + 8));
+			scanf_s("%s", (Buffer + 8), (unsigned)_countof(Buffer));
 			send(out, Buffer, 256, 0);
 		}
 		else if (strcmp(optionstr, "creategroup") == 0) {
 			Buffer[0] = 0;
 			Buffer[1] = 11;
-			scanf("%s%s", (Buffer + 8), (Buffer + 32));
-			strcpy((lpr.msg->lastgroup + 8), (Buffer + 8));
+			scanf_s("%s%s", (Buffer + 8), (unsigned)_countof(Buffer), (Buffer + 32), (unsigned)_countof(Buffer));
+			strcpy_s((lpr.msg->lastgroup + 8), 256, (Buffer + 8));
 			send(out, Buffer, 256, 0);
 		}
 		else if (strcmp(optionstr, "joingroup") == 0) {
 			Buffer[0] = 0;
 			Buffer[1] = 10;
-			scanf("%s%s", (Buffer + 8), (Buffer + 32));
-			strcpy((lpr.msg->lastgroup + 8), (Buffer + 8));
+			scanf_s("%s%s", (Buffer + 8), (unsigned)_countof(Buffer), (Buffer + 32), (unsigned)_countof(Buffer));
+			strcpy_s((lpr.msg->lastgroup + 8), 256, (Buffer + 8));
 			send(out, Buffer, 256, 0);
 		}
 		else if (strcmp(optionstr, "quitgroup") == 0) {
 			Buffer[0] = 0;
 			Buffer[1] = 12;
-			scanf("%s", (Buffer + 8));
-			strcpy((lpr.msg->lastgroup + 8), (Buffer + 8));
+			scanf_s("%s", (Buffer + 8), 256);
+			strcpy_s((lpr.msg->lastgroup + 8), 256, (Buffer + 8));
 			send(out, Buffer, 256, 0);
 		}
 		else {
 			Buffer[0] = 0;
 			Buffer[1] = 30;
-			strcpy((Buffer + 8), optionstr);
+			if (optionstr[0] != NULL)
+				strcpy_s((Buffer + 8), 24, optionstr);
 			gets_s(Buffer + 32, 256);
-			strcpy((lpr.msg->lastuser + 32), (Buffer + 32));
-			strcpy((lpr.msg->lastuser + 8), (Buffer + 8));
+			strcpy_s((lpr.msg->lastuser + 32), 256, (Buffer + 32));
+			strcpy_s((lpr.msg->lastuser + 8), 256, (Buffer + 8));
 			send(out, Buffer, 256, 0);
 		};
 		LeaveCriticalSection(&wrcon);
 	} while (loggedon == 1);
 	printf("quit now\n");
 	return 0;
+}
+
+int StartChat(int err, void(*func)(void*))
+{
+	if (err != 0)
+		return err;
+	else
+		return _beginthreadex(NULL, 0, Chat_Msg, func, 0, NULL);
 }
 
 void CloseChat()

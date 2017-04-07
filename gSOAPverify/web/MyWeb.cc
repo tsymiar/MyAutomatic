@@ -338,7 +338,10 @@ int api__login_by_key(struct soap*, char *usr, char *psw, struct ArrayOfEmp2 &cc
 		{
 			ccc.rslt.email = info.msg->email;
 			ccc.rslt.tell = info.msg->tell;
-			printf("[OUT]:\temail:%s\ttell:%s\n", ccc.rslt.email, ccc.rslt.tell);
+			printf("[OUT]:\temail:%s\t", ccc.rslt.email);
+			if (strlen(ccc.rslt.tell) != 0)
+				cout << "tell:" << ccc.rslt.tell;
+			cout << endl;
 		}
 		key = 1;
 	}

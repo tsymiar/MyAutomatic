@@ -1,5 +1,5 @@
-﻿#ifndef _INDEXS_H
-#define _INDEXS_H
+﻿#ifndef _INITIALISE_H
+#define _INITIALISE_H
 
 #include<cmath>
 #include<cfloat>
@@ -7,10 +7,10 @@
 #include<atlstr.h>
 #include<gl/GL.h>
 
-class Indexes {
+class Initialise {
 
 public:
-	Indexes::Indexes() {}
+	Initialise::Initialise() {}
 
 	struct GLColor {
 		GLfloat R;
@@ -40,9 +40,9 @@ private:
 	char* ptr = nullptr;
 	LONG len;
 public:
-	static char* Indexes::AllocBuffer(CString msg)
+	static char* Initialise::AllocBuffer(CString msg)
 	{
-		Indexes index;
+		Initialise index;
 #ifdef _UNICODE
 		index.len = WideCharToMultiByte(CP_ACP, 0, msg, -1, NULL, 0, NULL, NULL);
 		index.ptr = new char[index.len + 1];
@@ -50,13 +50,13 @@ public:
 		WideCharToMultiByte(CP_ACP, 0, msg, -1, index.ptr, index.len + 1, NULL, NULL);
 #else
 		index.ptr = new char[msg.GetAllocLength() + 1];
-		sprintf(index.ptr, _T("%s"), (LPSTR)(LPCTSTR)msg);
+		sprintf_s(index.ptr, 1024, _T("%s"), (LPSTR)(LPCTSTR)msg);
 #endif // _UNICODE
 		char* p = index.ptr;
 		assert(index.ptr != NULL);
 		return p;
 	}
-	virtual Indexes::~Indexes()
+	virtual Initialise::~Initialise()
 	{
 		if (this->ptr)
 			this->ptr = NULL;

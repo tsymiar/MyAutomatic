@@ -69,9 +69,6 @@
     <ClInclude Include="LoginDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Index\CommSet.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="boost\boostest.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -87,9 +84,6 @@
     <ClInclude Include="HOOK\injectDLL.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Index\binarytree-inl.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="IM\IMclient.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -100,9 +94,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\..\gSOAPverify\soap\stdsoap2.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Index\plus1second">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="mgl\bitmap.h">
@@ -121,6 +112,21 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="mgl\texture.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Idx\_String-inl.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Idx\binarytree-inl.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Idx\CommSet.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Idx\CPUID.H">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Idx\_MACRO_.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -170,9 +176,6 @@
     <ClCompile Include="HOOK\injectDLL.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Index\CPUID.H">
-      <Filter>头文件</Filter>
-    </ClCompile>
     <ClCompile Include="IM\client.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -219,14 +222,14 @@
     <None Include="res\MFCKline.rc2">
       <Filter>资源文件</Filter>
     </None>
-    <None Include="Index\Indexes.inl">
-      <Filter>头文件</Filter>
-    </None>
     <None Include="ClassDiagram.cd" />
-    <None Include="Index\_String-inl.h">
+    <None Include="web\myweb.nsmap" />
+    <None Include="Idx\plus1second">
       <Filter>头文件</Filter>
     </None>
-    <None Include="web\myweb.nsmap" />
+    <None Include="Idx\Initialise.inl">
+      <Filter>头文件</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\MFCKline.ico">

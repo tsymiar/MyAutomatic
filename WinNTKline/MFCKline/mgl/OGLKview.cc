@@ -772,7 +772,7 @@ void OGLKview::DrawDash(Point pt[2])
 
 void OGLKview::DrawCurve(OGLKview::Point A[4])
 {
-	Indexes idx;
+	Initialise idx;
 	for (int i = 0; i <= 3; i++)
 		A[i] = xytinker(A[i]);
 	glColor3f(1, 1, 1);
@@ -1056,7 +1056,7 @@ bool OGLKview::GetMarkDatatoDraw(void* P, char* title)
 					//瞄点
 					Pt[li].x = this->Pxtinker(this->tinkep);
 					Pt[li].y = (float)atof(markdata[6]);
-					ASSERT(_CrtCheckMemory());
+					ASSERT(!_CrtCheckMemory());
 					this->dlginfo.line <= 1 ? Pter = Pt[0] : Pt[0];
 					if (line >= this->tinkep.move)
 						this->DrawKline(st_stock, this->tinkep);
@@ -1131,4 +1131,5 @@ void OGLKview::Market::show()
 
 OGLKview::~OGLKview()
 {
+
 }

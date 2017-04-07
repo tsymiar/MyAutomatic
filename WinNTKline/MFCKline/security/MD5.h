@@ -15,9 +15,9 @@ extern "C"
 
 	void md5_str(char *input, char *output);
 	void md5_file(FILE *fp, char out[]);
+	char* get_Hash(char *md5, int len, char *dst);
 	void test_f_md5();
 	void test_s_md5();
-	char* get_Hash(char *md5, int len, char *dst);
 
 #ifdef __cplusplus
 }
