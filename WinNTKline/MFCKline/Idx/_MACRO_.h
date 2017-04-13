@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <cstdio>
 
 
 #define PT_MAKE_STR(x)    { #x, PT_MAKE_STR_ESC(x) }

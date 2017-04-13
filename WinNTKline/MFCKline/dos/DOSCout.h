@@ -2,12 +2,12 @@
 #define DOS_COUT_H_
 
 #include <io.h>
-#include <stdio.h>
 #include <fcntl.h>
-#include <iostream>
 #include <windows.h>
 #include <tchar.h>
 #include <conio.h>
+#include <cstdio>
+#include <iostream>
 
 #if !defined(_DEBUG)
 #define _TRACE(...) __noop 

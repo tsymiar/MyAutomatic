@@ -1,7 +1,7 @@
 #ifndef GLF16_H
 #define GLF16_H
-#include <math.h>
-#include <stdio.h>
+#include <cmath>
+#include <cstdio>
 #include "texture.h"
 
 #ifdef __cplusplus

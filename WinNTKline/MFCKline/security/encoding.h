@@ -1,9 +1,9 @@
 #ifndef ENCODING_H
 #define ENCODING_H
-#include <stddef.h>
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstddef>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #ifdef _LIBICONV_H
 	#include<iconv.h>
 	#ifdef _MSC_VER

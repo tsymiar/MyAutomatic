@@ -1,9 +1,9 @@
 #pragma once
+#include <cstdio>
+#include <cstdlib>
+#include <cmath>
+#include <ctime>
 #include <tchar.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <time.h>
 #include <Windows.h>
 #include <GL/glu.h>
 #include "../GL/glaux.h"

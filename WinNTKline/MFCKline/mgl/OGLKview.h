@@ -31,10 +31,10 @@
 #include	<functional>
 #include	<algorithm>
 #include	<cstdio>
-#include	<io.h>
 #include	<iostream>
-#include	<fcntl.h>
 #include	<fstream>
+#include	<io.h>
+#include	<fcntl.h>
 #if 0
 #include	<plus1second>
 #endif
