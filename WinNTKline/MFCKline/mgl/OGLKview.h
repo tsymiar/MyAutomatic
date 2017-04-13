@@ -14,7 +14,8 @@
 #pragma warning (disable:4099) // 未找到 PDB“vc120.pdb”(使用“glew32s.lib(glew.obj)”或在“F:\dell - pc\Documents\GitHub\MyAutomatic\WinNTKline\Release\vc120.pdb”中寻找)；正在链接对象，如同没有调试信息一样
 #pragma warning (disable:4244) // 从“double”转换到“float”，可能丢失数据
 #pragma warning (disable:4248) // 无法解析 typeref 标记(01000011)(为“GLUtesselator”)；映像可能无法运行
-#pragma warning (disable:4477)
+#pragma warning (disable:4305) // “-=”: 从“double”到“GLfloat”截断
+#pragma warning (disable:4477) // “sprintf_s”: 格式字符串“%s”需要类型“char *”的参数，但可变参数 1 拥有了类型“int”
 #pragma warning (disable:4996)
 #endif
 #define NO_WARN_MBCS_MFC_DEPRECATION

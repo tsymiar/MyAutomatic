@@ -54,9 +54,6 @@
     <ClInclude Include="Def\MacroDef.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="own\CNMenu.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="security\encoding.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -127,6 +124,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Idx\_MACRO_.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="own\COwnCtl.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -210,6 +210,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="mgl\texture.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="own\COwnCtl.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

@@ -8,7 +8,7 @@
 #include	"font/FontNehe.h"
 #include	"Idx/CommSet.h"
 #include	"dos/DOSCout.h"
-#include	"own/CNMenu.h"
+#include	"own/COwnCtl.h"
 #include	"mgl/GlModel.h"
 
 using namespace freetype;
@@ -61,10 +61,10 @@ public:
 	HICON m_hIcon;
 	HACCEL m_hAcc;
 	CString title;
-	CNMenu menu;
 	GlModel model;
 	CTabCtrl m_tab;
 	CToolBar m_tool;
+	CMyMenu menu;
 	DOSCout Dos;
 	DepthChart object;
 	DepthChart *depth= object.getDepth();

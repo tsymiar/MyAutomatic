@@ -30,4 +30,6 @@ public:
 	DECLARE_MESSAGE_MAP()
 };
 
+#ifdef CMFCKlineApp
 extern CMFCKlineApp theApp;
+#endif

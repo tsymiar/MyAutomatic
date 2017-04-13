@@ -4,7 +4,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#ifdef __linux
 #include <unistd.h>
+#endif
 #include <openssl/idea.h>
 #include <openssl/rsa.h>
 #include <openssl/pem.h>

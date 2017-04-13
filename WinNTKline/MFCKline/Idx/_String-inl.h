@@ -2,6 +2,29 @@
 #include <string>
 //未使用STL的string类时
 typedef std::string _String;
+
+inline unsigned char* fix_strerr(unsigned char* str)
+{
+	for (int i = 0; i<(int)strlen((const char*)str); i++)
+		switch (str[i])
+		{
+		case 0xcc:/*烫 未初始化*/
+		case 0xCD:/*heapk(new)*/
+		case 0xDD://已收回的堆(delete)
+		case 0xFD://隔离（栅栏字节）字节 下标越界
+		case 0xAB://Memory allocated by LocalAlloc()
+		case 0xBAADF00D://	Memory allocated by LocalAlloc() with LMEM_FIXED,\
+																								//	but not yet written to.
+		case 0xFEEEFEEE:/*  OS fill heap memory, which was marked for usage,\
+						but wasn't allocated by HeapAlloc() or LocalAlloc()\
+						Or that memory just has been freed by HeapFree().
+						*/
+			str[i] = '\0';
+			break;
+		default:break;
+		}
+	return str;
+}
 #else
 #ifndef __STRING_
 #define __STRING_

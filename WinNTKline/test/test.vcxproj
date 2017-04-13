@@ -24,6 +24,7 @@
     <RootNamespace>test</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.14393.0</WindowsTargetPlatformVersion>
     <Keyword>MFCProj</Keyword>
+    <ProjectName>testAPIs</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -94,11 +95,10 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_TESTDLG_;WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\gSOAPverify\soap;$(SolutionDir)MFCKline\VLD;$(SolutionDir)MFCKline</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\gSOAPverify\soap;$(SolutionDir)MFCKline</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalLibraryDirectories>$(SolutionDir)MFCKline\VLD;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -186,34 +186,42 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <Text Include="ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
+    <ClInclude Include="..\MFCKline\dos\DOSCout.h" />
+    <ClInclude Include="..\MFCKline\IMhideWndDlg.h" />
+    <ClInclude Include="..\MFCKline\LoginDlg.h" />
+    <ClInclude Include="..\MFCKline\RegistDlg.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
-    <ClInclude Include="test.h" />
-    <ClInclude Include="testDlg.h" />
+    <ClInclude Include="testAPIs.h" />
+    <ClInclude Include="testAPIsDlg.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\dos\DOSCout.cpp" />
-    <ClCompile Include="..\IMhideWndDlg.cpp" />
-    <ClCompile Include="..\IM\client.cpp" />
+    <ClCompile Include="..\..\gSOAPverify\soap\soapC.cpp" />
+    <ClCompile Include="..\..\gSOAPverify\soap\soapClient.cpp" />
+    <ClCompile Include="..\..\gSOAPverify\soap\stdsoap2.cpp" />
+    <ClCompile Include="..\MFCKline\dos\DOSCout.cpp" />
+    <ClCompile Include="..\MFCKline\IMhideWndDlg.cpp" />
+    <ClCompile Include="..\MFCKline\IM\client.cpp" />
+    <ClCompile Include="..\MFCKline\LoginDlg.cpp" />
+    <ClCompile Include="..\MFCKline\RegistDlg.cpp" />
+    <ClCompile Include="..\MFCKline\security\encoding.cc" />
+    <ClCompile Include="..\MFCKline\security\MD5.cc" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="test.cpp" />
-    <ClCompile Include="testDlg.cpp" />
+    <ClCompile Include="testAPIs.cpp" />
+    <ClCompile Include="testAPIsDlg.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\MFCKline.rc" />
-    <ResourceCompile Include="test.rc" />
+    <ResourceCompile Include="..\MFCKline\MFCKline.rc" />
+    <ResourceCompile Include="testAPIs.rc" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="res\test.rc2" />
+    <None Include="res\testAPIs.rc2" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\res\bmp00001.bmp" />
@@ -221,10 +229,7 @@
     <Image Include="..\res\icon1.ico" />
     <Image Include="..\res\MFCKline.ico" />
     <Image Include="..\res\top1_h.bmp" />
-    <Image Include="res\test.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <Manifest Include="..\res\windows.manifest" />
+    <Image Include="res\testAPIs.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,5 +1,5 @@
-#ifndef TRANSCODING_H
-#define TRANSCODING_H
+#ifndef ENCODING_H
+#define ENCODING_H
 #include <stddef.h>
 #include <string.h>
 #include <stdio.h>

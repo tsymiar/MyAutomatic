@@ -6,9 +6,9 @@
 class DepthChart
 {
 private:
-	void fillitem();
-	void drawList(void);
-	void fillAskbid(OGLKview::Point pt);
+	void fillItem();
+	void fillList(void);
+	void fillAskBid(OGLKview::Point pt);
 private:
 	float Py, Pm;
 	int hour = 0;

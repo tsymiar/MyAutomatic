@@ -70,8 +70,5 @@
     <ClInclude Include="GeneratedFiles\ui_myoglwdg.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\gSOAPverify\soap\stdsoap2.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>

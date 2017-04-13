@@ -44,12 +44,12 @@
 
 </types>
 
-<message name="encryptRequest">
-  <part name="in" type="xsd:string"/><!-- api__encrypt::in -->
+<message name="transRequest">
+  <part name="msg" type="xsd:string"/><!-- api__trans::msg -->
 </message>
 
-<message name="encryptResponse">
-  <part name="out" type="xsd:string"/><!-- api__encrypt::out -->
+<message name="transResponse">
+  <part name="rtn" type="xsd:string"/><!-- api__trans::rtn -->
 </message>
 
 <message name="get-server-statusRequest">
@@ -70,10 +70,10 @@
 </message>
 
 <portType name="mywebPortType">
-  <operation name="encrypt">
-    <documentation>Service definition of function api__encrypt</documentation>
-    <input message="tns:encryptRequest"/>
-    <output message="tns:encryptResponse"/>
+  <operation name="trans">
+    <documentation>Service definition of function api__trans</documentation>
+    <input message="tns:transRequest"/>
+    <output message="tns:transResponse"/>
   </operation>
   <operation name="get-server-status">
     <documentation>Service definition of function api__get_server_status</documentation>
@@ -89,7 +89,7 @@
 
 <binding name="myweb" type="tns:mywebPortType">
   <SOAP:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
-  <operation name="encrypt">
+  <operation name="trans">
     <SOAP:operation style="rpc" soapAction=""/>
     <input>
           <SOAP:body use="encoded" namespace="urn:myweb" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>

@@ -7,11 +7,4 @@ template <typename Myclass> class CommSet : public Myclass
 public:
 	CommSet<Myclass>() {};
 	virtual ~CommSet<Myclass>() {};
-	void ColrSet(COLORREF color);
 };
-
-template <typename Myclass>
-void CommSet<Myclass>::ColrSet(COLORREF color)
-{
-
-}

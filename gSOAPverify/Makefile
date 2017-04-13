@@ -25,9 +25,9 @@ else
 endif
 	mv ./*.o $(OBJ)
 all:
+	if[ `ps -fe| grep gSOAPverify | grep -v grep` -eq 0 ];then killall -9 gSOAPverify;else echo "making gSOAPverify.";fi
 	make clear
 	make
-	killall -9 gSOAPverify
 	./gSOAPverify 8080
 install:
 	make
@@ -40,8 +40,8 @@ install:
 clean:	
 	rm -f *.out core.* ./*.o $(OBJ)*.o
 clear:
-	rm -rf ./Linux/* ./*.o *.out core.* gSOAPverify `ls *.o | egrep -v soapC.o stdsoap2.o soapServer.o`
+	rm -f ./*.o *.out core.* gSOAPverify `ls *.o | egrep -v soapC.o stdsoap2.o soapServer.o`
 	rm -f /etc/init.d/gSOAPverify /usr/sbin/gSOAPverify
-	rm -rf Linux
+	`rm -rf ./Linux/`
 	rm -rf S77_SOAP \
 	y
