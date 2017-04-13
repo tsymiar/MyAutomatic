@@ -1,8 +1,8 @@
 ﻿#ifndef GLMODEL_H_
 #define GLMODEL_H_
 #include <windows.h>
-#include <math.h>
-#include <stdio.h>
+#include <cmath>
+#include <cstdio>
 #include <gl\gl.h>
 #include <gl\glu.h>
 #include "Def\MacroDef.h"

@@ -1,11 +1,10 @@
-﻿#ifndef _INITIALISE_H
-#define _INITIALISE_H
+﻿#pragma once
 
-#include<cmath>
-#include<cfloat>
-#include<assert.h>
-#include<atlstr.h>
-#include<gl/GL.h>
+#include <cmath>
+#include <cfloat>
+#include <cassert>
+#include <atlstr.h>
+#include <gl/GL.h>
 
 class Initialise {
 
@@ -62,4 +61,3 @@ public:
 			this->ptr = NULL;
 	}
 };
-#endif

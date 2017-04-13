@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <cstdio>
 #undef   UNICODE 
 #include <Windows.h>
 #include <TlHelp32.h>
