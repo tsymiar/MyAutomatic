@@ -218,7 +218,7 @@ int soap_ser(int argc, char** argv)
 	if (argv[1] == nullptr)
 	{
 		std::cout << "请输入端口参数 例如：“\033[45m./gSOAPverify 8080\033[0m”\n" << argv[1] << std::endl;
-		exit(1);
+		kill(getppid(), SIGALRM);
 		return -1;
 	}
 	struct soap Soap;
@@ -259,7 +259,10 @@ int soap_ser(int argc, char** argv)
 		while (!soap_valid_socket(m))
 		{
 			if (vilid == 0)
-				fprintf(stderr, "Bind port error! \n");
+			{
+				fprintf(stderr, "Bind PORT(%d) \033[31merror\033[0m! \n", port);
+				exit(1);
+			}
 			m = soap_bind(&Soap, NULL, port, BACKLOG);
 			vilid++;
 		}
@@ -326,6 +329,13 @@ int soap_ser(int argc, char** argv)
 	return 0;
 }
 
+int main(int argc, char* argv[])
+{
+	if (fork() == 0)
+		soap_ser(argc, argv);
+	return 0;
+}
+
 int api__login_by_key(struct soap*, char *usr, char *psw, struct ArrayOfEmp2 &ccc)
 {
 	int key = 0;
@@ -348,14 +358,7 @@ int api__login_by_key(struct soap*, char *usr, char *psw, struct ArrayOfEmp2 &cc
 	return key;
 }
 
-int main(int argc, char* argv[])
-{
-	if (fork() == 0)
-		soap_ser(argc, argv);
-	return 0;
-}
-
-int api__trans(struct soap *soap, char* in, char* out[])
+int api__trans(struct soap *soap, char* msg, char* rtn[])
 {
 	//	CHEAK;
 	int j = 0;
@@ -365,8 +368,8 @@ int api__trans(struct soap *soap, char* in, char* out[])
 	char psw[16];
 	char*	cot[4] = { NULL };
 	char*	token = NULL;
-	printf("SEND:[%s]\n", in);
-	token = strtok(in, "@&");
+	printf("SEND:[%s]\n", msg);
+	token = strtok(msg, "@&");
 	while (token != NULL)
 	{
 		cot[j] = token;
@@ -385,7 +388,8 @@ int api__trans(struct soap *soap, char* in, char* out[])
 	}
 	j = 0;
 	token = NULL;
-	printf("acc=[%s]\tpsw=[%s]\n", acc, psw);
+	sprintf(*rtn, "acc=[%s]\tpsw=[%s]\n", acc, psw);
+	cout << *rtn << endl;
 	return 0;
 }
 
@@ -397,11 +401,6 @@ int api__get_server_status(struct soap *soap, xsd_string cmd, xsd_string& status
 		show_memory((char*)"localhost", &ss);
 	status = gcvt(100.f*ss.mem_free / ss.mem_all, 5, gt);
 	cout << status << endl;
-	return 0;
-}
-
-int api__encrypt(struct soap *soap, char* in, char* out[])
-{
 	return 0;
 }
 

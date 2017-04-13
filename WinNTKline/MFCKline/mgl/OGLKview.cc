@@ -14,20 +14,12 @@ BOOL APIENTRY DllMain(HANDLE hModule, DWORD ul_reason_for_call, LPVOID lpReserve
 	return TRUE;
 }
 
-
 OGLKview::OGLKview()
 {
 	coding = false;
 	radius = 1.0f;
 	unfurl = false;
 }
-
-char m_time[32] = { NULL };
-char l_time[32] = { NULL };
-OGLKview::OglAttr attr = { 0 };
-OGLKview::Item m_ITEM = { 0,0,0,NULL };
-OGLKview::ViewSize viewsize = { 0,0,0,0 };
-OGLKview::Charmarket markchar = { "---","---","---" };
 
 #ifdef __linux//||_UNIX
 int myGL(int argc, char ** argv)
@@ -101,12 +93,18 @@ bool OGLKview::SetWindowPixelFormat(HDC m_hDC, HWND m_hWnd, int pixelformat)
 using namespace std;
 
 float Xdeg, Ydeg;
-bool multi0 = false;
-OGLKview::Point mpt, arrow;
-OGLKview::Market fixeddata;
+bool g_multi = false;
 float proportion, delta = 1;
 float shadowup, shadowdown;
 float candlemiddle, candleright, candleleft;
+char g_mktim[16] = { NULL };
+char g_ltime[32] = { NULL };
+OGLKview::Point g_P, arrow;
+OGLKview::Market fixeddata;
+OGLKview::OglAttr attr = { 0 };
+OGLKview::Item g_ITEM = { 0,0,0,NULL };
+OGLKview::ViewSize viewsize = { 0,0,0,0 };
+OGLKview::Charmarket markchars = { "---","---","---" };
 
 bool OGLKview::DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool hollow, OGLKview::Point pt)
 {
@@ -118,11 +116,11 @@ bool OGLKview::DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool h
 	glVertex3f(0, 0, 0);
 	glEnd();
 #endif
-	sprintf_s(l_time, "%d-%d-%d", markdata.time.tm_yday, markdata.time.tm_mon, markdata.time.tm_mday);
+	sprintf_s(g_ltime, "%d-%d-%d", markdata.time.tm_yday, markdata.time.tm_mon, markdata.time.tm_mday);
 	tinkep.datacol = dlginfo.line;// -3;
 	hollow = !dlginfo.bkg;
-	mpt.x = (float)dlginfo.mouX;
-	mpt.y = (float)dlginfo.mouY;
+	g_P.x = (float)dlginfo.mouX;
+	g_P.y = (float)dlginfo.mouY;
 	candlemiddle = Xdeg = pt.x = Okv->Pxtinker(co);
 	fillitem.closing = markdata.close;
 	fillitem.curprice = markdata.price;
@@ -132,21 +130,21 @@ bool OGLKview::DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool h
 	fillitem.closed = lastmarket.close;
 	markdata.open != 0 ? \
 		(fillitem.uprange = fillitem.upadp / markdata.open) : 0;
-	sprintf(markchar.close, "%.2f", markdata.close);
-	sprintf(markchar.price, "%.2f", markdata.price);
-	sprintf(markchar.amount, "%.2f", markdata.amount);
-	sprintf(markchar.open, "%.2f", markdata.open);
-	sprintf(markchar.high, "%.2f", markdata.high);
-	sprintf(markchar.low, "%.2f", markdata.low);
+	sprintf(markchars.close, "%.2f", markdata.close);
+	sprintf(markchars.price, "%.2f", markdata.price);
+	sprintf(markchars.amount, "%.2f", markdata.amount);
+	sprintf(markchars.open, "%.2f", markdata.open);
+	sprintf(markchars.high, "%.2f", markdata.high);
+	sprintf(markchars.low, "%.2f", markdata.low);
 	if (fillitem.higest < markdata.high)
 		fillitem.higest = markdata.high;
 	if (fillitem.lowest < markdata.low)
 		fillitem.lowest = markdata.low;
 	//
 	if (tinkep.ratio < 1)
-		multi0 = true;
+		g_multi = true;
 	else
-		multi0 = false;
+		g_multi = false;
 	fixeddata.open = Pytinker(markdata.open, tinkep);
 	fixeddata.close = Pytinker(markdata.close, tinkep);
 	fixeddata.high = Pytinker(markdata.high, tinkep);
@@ -188,7 +186,7 @@ bool OGLKview::DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool h
 	if (fabs(fillitem.upadp) < 0.01f)
 		fixeddata.open -= 0.009f;
 	//比例超过临界
-	if (multi0)
+	if (g_multi)
 	{
 		candlemiddle /= 2;
 		candleleft = candleright = candlemiddle;
@@ -220,7 +218,9 @@ bool OGLKview::DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool h
 				};
 				glInterleavedArrays(GL_V2F, 0, holldata);
 				glDrawArrays(GL_LINES, 0, 8);
-				assert(_CrtCheckMemory());
+#if !defined(CMfcKView)
+				//assert(_CrtCheckMemory());
+#endif
 			}
 			else
 			{
@@ -239,7 +239,7 @@ bool OGLKview::DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool h
 	}
 	glEnd();
 	Ydeg = (fixeddata.high + fixeddata.low) / 2;
-	if ((xytinker(mpt).x >= candleleft) && (xytinker(mpt).x <= candleright))
+	if ((xytinker(g_P).x >= candleleft) && (xytinker(g_P).x <= candleright))
 	{
 		glColor3f(0.902f, 0.902f, 0.980f);
 		glPointSize(3);
@@ -248,21 +248,21 @@ bool OGLKview::DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool h
 		glVertex2f(candlemiddle, Pytinker(markdata.close, tinkep));
 		glEnd();
 		glEnable(GL_DEPTH_TEST);
-		memcpy(markchar.time, m_time, strlen(m_time));
-		markchar.time[strlen(m_time)] = '\0';
-		sprintf(markchar.time, "%d.%d.%d", markdata.time.tm_year, markdata.time.tm_mon, markdata.time.tm_mday);
-		sprintf(markchar.amount, "%d", markdata.amount);
-		sprintf(markchar.price, "%.0f", markdata.price);
-		sprintf(markchar.close, "%.2f", markdata.close);
-		sprintf(markchar.high, "%.2f", markdata.high);
-		sprintf(markchar.low, "%.2f", markdata.low);
-		sprintf(markchar.open, "%.2f", markdata.open);
-		sprintf(markchar.ydeg, "y=%.3f", Ydeg);
+		memcpy(g_mktim, markchars.time, strlen(markchars.time));
+		g_mktim[strlen(g_mktim)] = '\0';
+		sprintf(markchars.time, "%d.%d.%d", markdata.time.tm_year, markdata.time.tm_mon, markdata.time.tm_mday);
+		sprintf(markchars.amount, "%d", markdata.amount);
+		sprintf(markchars.price, "%.0f", markdata.price);
+		sprintf(markchars.close, "%.2f", markdata.close);
+		sprintf(markchars.high, "%.2f", markdata.high);
+		sprintf(markchars.low, "%.2f", markdata.low);
+		sprintf(markchars.open, "%.2f", markdata.open);
+		sprintf(markchars.ydeg, "y=%.3f", Ydeg);
 	}
-	if ((xytinker(mpt).x >= fixeddata.low) && (xytinker(mpt).x <= fixeddata.high))
+	if ((xytinker(g_P).x >= fixeddata.low) && (xytinker(g_P).x <= fixeddata.high))
 	{
-		sprintf(markchar.hintx, "%.2f", markdata.close);
-		sprintf(markchar.y, "K(y)=%.2f", xytinker(mpt));
+		sprintf(markchars.hintx, "%.2f", markdata.close);
+		sprintf(markchars.y, "K(y)=%.2f", xytinker(g_P));
 	}
 	arrow.y = Pytinker(fillitem.higest, tinkep);
 	if (1/*orighigh>=p_maxpri*/)
@@ -293,7 +293,7 @@ bool OGLKview::DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool h
 	fillitem.closing > fillitem.closed ? glColor3f(1, 0, 0) : \
 		glColor3f(0, 1, 1);
 	float voly = (markdata.amount*pow(10.0f, -8) - 0.7f)*Zoom.z_vol;
-	if (multi0)
+	if (g_multi)
 	{
 		glBegin(GL_LINES);
 		glVertex2f(candlemiddle, voly);
@@ -353,13 +353,13 @@ void _stdcall OGLKview::InitGraph(void/*HDC m_hDC*/)
 		glVertex3f(0, 0, 0);
 	}
 	glEnd();
+#endif // DEBUG
 #if !defined(GLTEST)
 	chart_frame();
 	diag_staff(dlginfo.mouX, dlginfo.mouY);
 #else
 	buset.m_boostest();
 #endif
-#endif // DEBUG
 #ifdef _CONSOLE||_WINDOWS
 	SetConsoleCtrlHandler(dos.ConsoleHandler, TRUE);
 #endif
@@ -369,7 +369,7 @@ void _stdcall OGLKview::InitGraph(void/*HDC m_hDC*/)
 void OGLKview::print_string(const char* str)
 {
 	int len = 0, i;
-	wchar_t* wstring;
+	wchar_t* wstring = NULL;
 	HDC m_hDC = wglGetCurrentDC();
 	GLuint list = glGenLists(1);
 	for (i = 0; str[i] != '\0'; ++i)
@@ -380,7 +380,8 @@ void OGLKview::print_string(const char* str)
 	}
 	if ((wstring = (wchar_t*)malloc((len + 1) * sizeof(wchar_t))) == NULL)
 	{
-		free(wstring);
+		if (wstring != NULL)
+			free(wstring);
 		return;
 	}
 	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, str, -1, wstring, len);
@@ -395,7 +396,8 @@ void OGLKview::print_string(const char* str)
 		wglUseFontBitmapsW(m_hDC, wstring[i], 1, list);
 		glCallList(list);
 	}
-	free(wstring);
+	if (wstring != NULL)
+		free(wstring);
 	glDeleteLists(list, 1);
 }
 
@@ -430,32 +432,32 @@ bool ChartItem(int row, OGLKview::Market market)
 	bool tmp = *((bool*)&view);
 	//GLuint index = 1;
 	//glNewList(index, GL_COMPILE);
-	m_ITEM.pc_ = market.price;
+	g_ITEM.pc_ = market.price;
 	glViewport(0, 100, attr.wide, attr.tall - 100);
 	pt.x = 0.73f;
 	pt.y = 0.6f - 0.08f;
 	//if (pt.y <= -0.9f)pt.y = 0.6f;
-	m_ITEM.mode = 1;
-	sprintf_s(listime, "%s", m_time);
+	g_ITEM.mode = 1;
+	sprintf_s(listime, "%s", g_mktim);
 	view.DrawKtext(listime, pt, 13);
 	pt.x = 0.9f;
-	sprintf_s(info, "%.2f", m_ITEM.pc_);
+	sprintf_s(info, "%.2f", g_ITEM.pc_);
 	view.DrawKtext(info, pt, 13);
 	pt.x = 1.13f;
-	_itoa_s(m_ITEM.mode, info, 10);
+	_itoa_s(g_ITEM.mode, info, 10);
 	view.DrawKtext(info, pt, 13);
 	pt.x = 1.17f;
 	if (tmp)
 	{
-		m_ITEM.bs = "B";
+		g_ITEM.bs = "B";
 		glColor3f(1, 0, 0);
 	}
 	else
 	{
-		m_ITEM.bs = "S";
+		g_ITEM.bs = "S";
 		glColor3f(0, 1, 0);
 	}
-	view.DrawKtext(m_ITEM.bs, pt, 13);
+	view.DrawKtext(g_ITEM.bs, pt, 13);
 	return tmp;
 }
 
@@ -610,7 +612,7 @@ int OGLKview::DrawDetail(OGLKview::Market market)
 	glVertex3f(-1.03f, 0.333f, 0);
 	glEnd();
 
-	DrawKtext(l_time, poi, 17, { 0.6f, 0.7f, 0.8f, 0.9f }, "微软雅黑");
+	DrawKtext(g_ltime, poi, 17, { 0.6f, 0.7f, 0.8f, 0.9f }, "微软雅黑");
 	poi.y = 1.09f;
 	DrawKtext("开盘", poi, 13, { 1,1,1 }, "宋体");
 	poi.y = 0.9f;
@@ -628,13 +630,13 @@ int OGLKview::DrawDetail(OGLKview::Market market)
 		f4 = { 1,0,0 };
 	else
 		f4 = { 0,1,0 };
-	DrawKtext(markchar.open, poi, 13, f4, "微软雅黑");
+	DrawKtext(markchars.open, poi, 13, f4, "微软雅黑");
 	poi.y = 0.8f;
-	DrawKtext(markchar.high, poi, 13, f4, "微软雅黑");
+	DrawKtext(markchars.high, poi, 13, f4, "微软雅黑");
 	poi.y = 0.6f;
-	DrawKtext(markchar.low, poi, 13, f4, "微软雅黑");
+	DrawKtext(markchars.low, poi, 13, f4, "微软雅黑");
 	poi.y = 0.4f;
-	DrawKtext(markchar.close, poi, 13, f4, "微软雅黑");
+	DrawKtext(markchars.close, poi, 13, f4, "微软雅黑");
 	//}
 	return (int)y;
 }
@@ -822,8 +824,8 @@ void OGLKview::DrawItem()
 	itempt.y = 0.007f*item0;
 	if (itempt.y < -1)itempt.y = 0.7f;
 	char listitem[256];
-	sprintf(listitem, "%s\t%f\t%d", m_time, fillitem.closed, 1);
-	OGLKview::DrawKtext(listitem, itempt, 15);
+	sprintf(listitem, "%s\t%f\t%d", g_mktim, fillitem.closed, 1);
+	DrawKtext(listitem, itempt, 15);
 	item0++;
 }
 
@@ -856,60 +858,64 @@ void OGLKview::DrawKtext(char text[], Point & coor, int size, OGLKview::Color4f 
 	print_string(text);
 }
 ///**************GetMarkDatatoDraw()**************///
-int		i = 0;
-int		li = 0;//绘制曲线时每组下标
-int		line = 0;//当前读取行数
-int		idx = 0;
-int		item0 = 0;
-int		volume;//成交量
-float	maxprice = 0.0f;
-float	minprice = FLT_MAX;
-char*	cot = NULL;//切分临时数据
-char*	buff = NULL;
-char*	token = NULL;
-bool	isnext = false;//是否为下一组
-bool	hadraw5 = false;
-bool	hadraw10 = false;
-bool	hadraw20 = false;
-char*	div_stock[3] = { NULL };
-char	ma[32] = { NULL };
-char	dif[32] = { NULL };
-char	dea[32] = { NULL };
-char	rsi[32] = { NULL };
-char	vol[32] = { NULL };
-char	macd[32] = { NULL };
-char	code[64] = { NULL };
-char	s_code[] = "股票代码：";
-char	s_ma5[] = "SMA5:";
-char	s_ma10[] = "SMA10:";
-char	s_ma20[] = "SMA20:";
-char	s_dif[] = "DIF:";
-char	s_dea[] = "DEA:";
-char	s_rsa[] = "RSA(6,12,24):";
-char	s_val[] = "成交量 Vol:";
-char	s_macd[] = "MACD(12,26,9)";
-std::vector<Stock::Rsi> strsi;
-std::string tmp = " ";
-std::ifstream Readfile;
-std::ostream;
-std::string sWrite;
-const char* writefile;
-Stock::Rsi total{ 0 },/*分组变量，前一组最后一日收盘价*/last{ 0 },/*N日收盘涨幅和*/frise{ 0 },/*N日收盘跌幅和（绝对值）*/fdrop{ 0 };
-Stock::Sma::MA isma{ 0 },/*今日*/totma{ 0 }, /*昨日*/yma{ 0 };
-Stock::Sma ma20{ 0 }, ma10{ 0 }, ma5{ 0 };//MA均线
-OGLKview::Point Pter = { 0 },/*折线的前一个点*/ Pt[4] = { 0 };
-//一般展示均线
-OGLKview::Point pt_vol = { 0 }, pt_dif = { 0 }, pt_dea = { 0 }, pt_rsi = { 0 }, pt_macd = { 0 };
-//图例文字坐标
-OGLKview::Point pt_code = { 0.8f,1.189f }, pt_stock = { -1.22f,pt_code.y };
-//计算后的RSA
-OGLKview::Point pt_rsi6 = { 0 }, pt_rsi12 = { 0 }, pt_rsi24 = { 0 };
-//MA移动平均线
-OGLKview::Point pt_ma5 = { 0 }, pt_ma10 = { 0 }, pt_ma20 = { 0 };
-OGLKview::Point pt_ma5old = { 0 }, pt_ma10old = { 0 }, pt_ma20old = { 0 };
-//RSI
-OGLKview::Point pt_AB6 = { 0 }, pt_AB12 = { 0 }, pt_AB24 = { 0 };
-OGLKview::Point pt_AB6old = { 0 }, pt_AB12old = { 0 }, pt_AB24old = { 0 };
+namespace GMDD
+{
+	int		i = 0;
+	int		li = 0;//绘制曲线时每组下标
+	int		line = 0;//当前读取行数
+	int		idx = 0;
+	int		item0 = 0;
+	int		volume;//成交量
+	float	maxprice = 0.0f;
+	float	minprice = FLT_MAX;
+	char*	cot = NULL;//切分临时数据
+	char*	buff = NULL;
+	char*	token = NULL;
+	bool	isnext = false;//是否为下一组
+	bool	hadraw5 = false;
+	bool	hadraw10 = false;
+	bool	hadraw20 = false;
+	char*	div_stock[3] = { NULL };
+	char	ma[32] = { NULL };
+	char	dif[32] = { NULL };
+	char	dea[32] = { NULL };
+	char	rsi[32] = { NULL };
+	char	vol[32] = { NULL };
+	char	macd[32] = { NULL };
+	char	code[64] = { NULL };
+	char	s_code[] = "股票代码：";
+	char	s_ma5[] = "SMA5:";
+	char	s_ma10[] = "SMA10:";
+	char	s_ma20[] = "SMA20:";
+	char	s_dif[] = "DIF:";
+	char	s_dea[] = "DEA:";
+	char	s_rsa[] = "RSA(6,12,24):";
+	char	s_val[] = "成交量 Vol:";
+	char	s_macd[] = "MACD(12,26,9)";
+	std::vector<Stock::Rsi> strsi;
+	std::string tmp = " ";
+	std::ifstream Readfile;
+	std::ostream;
+	std::string sWrite;
+	const char* writefile;
+	Stock::Rsi total{ 0 },/*分组变量，前一组最后一日收盘价*/last{ 0 },/*N日收盘涨幅和*/frise{ 0 },/*N日收盘跌幅和（绝对值）*/fdrop{ 0 };
+	Stock::Sma::MA isma{ 0 },/*今日*/totma{ 0 }, /*昨日*/yma{ 0 };
+	Stock::Sma ma20{ 0 }, ma10{ 0 }, ma5{ 0 };//MA均线
+	OGLKview::Point Pter = { 0 },/*折线的前一个点*/ Pt[4] = { 0 };
+	//一般展示均线
+	OGLKview::Point pt_vol = { 0 }, pt_dif = { 0 }, pt_dea = { 0 }, pt_rsi = { 0 }, pt_macd = { 0 };
+	//图例文字坐标
+	OGLKview::Point pt_code = { 0.8f,1.189f }, pt_stock = { -1.22f,pt_code.y };
+	//计算后的RSA
+	OGLKview::Point pt_rsi6 = { 0 }, pt_rsi12 = { 0 }, pt_rsi24 = { 0 };
+	//MA移动平均线
+	OGLKview::Point pt_ma5 = { 0 }, pt_ma10 = { 0 }, pt_ma20 = { 0 };
+	OGLKview::Point pt_ma5old = { 0 }, pt_ma10old = { 0 }, pt_ma20old = { 0 };
+	//RSI
+	OGLKview::Point pt_AB6 = { 0 }, pt_AB12 = { 0 }, pt_AB24 = { 0 };
+	OGLKview::Point pt_AB6old = { 0 }, pt_AB12old = { 0 }, pt_AB24old = { 0 };
+}
+using namespace GMDD;
 ///**************END GetMarkDatatoDraw**************///
 bool OGLKview::GetMarkDatatoDraw(void* P, char* title)
 {
@@ -1056,7 +1062,9 @@ bool OGLKview::GetMarkDatatoDraw(void* P, char* title)
 					//瞄点
 					Pt[li].x = this->Pxtinker(this->tinkep);
 					Pt[li].y = (float)atof(markdata[6]);
-					ASSERT(!_CrtCheckMemory());
+#if !defined(CMfcKView)
+//					ASSERT(!_CrtCheckMemory());
+#endif // !
 					this->dlginfo.line <= 1 ? Pter = Pt[0] : Pt[0];
 					if (line >= this->tinkep.move)
 						this->DrawKline(st_stock, this->tinkep);

@@ -6,14 +6,14 @@
       <Compartment Name="Nested Types" Collapsed="false" />
     </Compartments>
     <NestedTypes>
-      <Enum Name="CLoginDlg::__unnamed_enum_002d_1">
+      <Enum Name="CLoginDlg::__unnamed_enum_0025_1" Collapsed="true">
         <TypeIdentifier>
           <NewMemberFileName>LoginDlg.h</NewMemberFileName>
         </TypeIdentifier>
       </Enum>
     </NestedTypes>
     <TypeIdentifier>
-      <HashCode>AIAIEAEAAAAACAAAAhAAQAAAAAgAIEAAAAEAAAAQAAA=</HashCode>
+      <HashCode>AIAIEAEAIhAACAgAAhAIRAAgAAgAI0AAYAAAACAQAAA=</HashCode>
       <FileName>LoginDlg.h</FileName>
     </TypeIdentifier>
   </Class>

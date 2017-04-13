@@ -22,7 +22,6 @@
     <ProjectGuid>{C0FF2B6D-EDD9-4E65-8CA8-1C4968F76D48}</ProjectGuid>
     <RootNamespace>MFCKline</RootNamespace>
     <Keyword>MFCProj</Keyword>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -88,10 +87,10 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)MFC\</IntDir>
-    <IncludePath>F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\MFCKline\Index;F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\gSOAPWeb\soap;F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\MFCKline\font;F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\MFCKline;F:\dell-pc\lib\boost\;$(IncludePath)</IncludePath>
+    <IncludePath>$(IncludePath)</IncludePath>
     <ReferencePath>$(ReferencePath)</ReferencePath>
     <ExecutablePath>$(ExecutablePath)</ExecutablePath>
-    <LibraryPath>F:\dell-pc\Documents\GitHub\MyAutomatic\WinNTKline\MFCKline\font\lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
     <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -116,7 +115,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DisableSpecificWarnings>
       </DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>$(BOOST);$(PTHD_INC);$(SolutionDir)MFCKline;$(SolutionDir)MFCKline\VLD;$(SolutionDir)MFCKline\font;$(SolutionDir)MFCKline\Index;$(SolutionDir)..\gSOAPverify\soap;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BOOST);$(OPENSSL);$(PTHD_INC);$(QTDIR)\include;$(SolutionDir)MFCKline;$(SolutionDir)MFCKline\font;$(SolutionDir)MFCKline\Index;$(SolutionDir)..\gSOAPverify\soap;.\GeneratedFiles\$(ConfigurationName);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAs>CompileAsCpp</CompileAs>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -128,11 +127,11 @@
       <SubSystem>Windows</SubSystem>
       <TargetMachine>NotSet</TargetMachine>
       <AdditionalOptions>/NODEFAULTLIB:"libcmt.lib" %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Qt5Core.lib;Qt5Gui.lib;Qt5OpenGL.lib;Qt5Widgets.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <AdditionalLibraryDirectories>$(SolutionDir)\MFCKline\VLD;$(SolutionDir)MFCKline\GL\lib;$(SolutionDir)MFCKline\font\lib;G:\Qt\msvc2015_32\5.6\msvc2015\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(QTDIR)\lib;$(SolutionDir)MFCKline\GL\lib;$(SolutionDir)MFCKline\font\lib</AdditionalLibraryDirectories>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -152,13 +151,14 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <SDLCheck>true</SDLCheck>
       <OmitFramePointers>true</OmitFramePointers>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS;_DEBUG</PreprocessorDefinitions>
       <EnablePREfast>false</EnablePREfast>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DisableSpecificWarnings>
       </DisableSpecificWarnings>
+      <SDLCheck>true</SDLCheck>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalIncludeDirectories>$(BOOST);$(PTHD_INC);$(SolutionDir)MFCKline;$(SolutionDir)MFCKline\VLD;$(SolutionDir)MFCKline\font;$(SolutionDir)MFCKline\Index;$(SolutionDir)..\gSOAPverify\soap;$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtNetwork;$(QTDIR)\include\ActiveQt;$(QTDIR)\include\QtOpenGL;$(QTDIR)\include\QtQuickWidgets;$(QTDIR)\include\QtSerialPort;$(QTDIR)\include\QtSvg;$(QTDIR)\include\QtUiTools;$(QTDIR)\include\QtWebSockets;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtXml;.\GeneratedFiles\$(ConfigurationName);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
@@ -195,14 +195,14 @@
       <CompileAs>CompileAsCpp</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(BOOST);$(PTHD_INC);$(SolutionDir)MFCKline;$(SolutionDir)MFCKline\VLD;$(SolutionDir)MFCKline\font;$(SolutionDir)MFCKline\Index;$(SolutionDir)..\gSOAPverify\soap;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BOOST);$(PTHD_INC);$(SolutionDir)MFCKline;$(SolutionDir)MFCKline\VLD;$(SolutionDir)MFCKline\font;$(SolutionDir)MFCKline\Index;$(SolutionDir)..\gSOAPverify\soap;$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtNetwork;$(QTDIR)\include\ActiveQt;$(QTDIR)\include\QtOpenGL;$(QTDIR)\include\QtQuickWidgets;$(QTDIR)\include\QtSerialPort;$(QTDIR)\include\QtSvg;$(QTDIR)\include\QtUiTools;$(QTDIR)\include\QtWebSockets;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtXml;.\GeneratedFiles\$(ConfigurationName);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)\MFCKline\VLD;$(SolutionDir)MFCKline\GL\lib;$(SolutionDir)MFCKline\font\lib;G:\Qt\msvc2015_32\5.6\msvc2015\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(QTDIR)\lib;$(SolutionDir)\MFCKline\VLD;$(SolutionDir)MFCKline\GL\lib;$(SolutionDir)MFCKline\font\lib</AdditionalLibraryDirectories>
       <AdditionalOptions>/SAFESEH:NO %(AdditionalOptions)</AdditionalOptions>
       <AdditionalDependencies>legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <TargetMachine>NotSet</TargetMachine>
@@ -229,6 +229,8 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(BOOST);$(PTHD_INC);$(SolutionDir)MFCKline;$(SolutionDir)MFCKline\VLD;$(SolutionDir)MFCKline\font;$(SolutionDir)MFCKline\Index;$(SolutionDir)..\gSOAPverify\soap;$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtNetwork;$(QTDIR)\include\ActiveQt;$(QTDIR)\include\QtOpenGL;$(QTDIR)\include\QtQuickWidgets;$(QTDIR)\include\QtSerialPort;$(QTDIR)\include\QtSvg;$(QTDIR)\include\QtUiTools;$(QTDIR)\include\QtWebSockets;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtXml;.\GeneratedFiles\$(ConfigurationName);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CompileAsManaged>true</CompileAsManaged>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -278,7 +280,7 @@
     <ClInclude Include="MyOglDrawDlg.h" />
     <ClInclude Include="NET\GEThttp.h" />
     <ClInclude Include="NET\TCPIP.h" />
-    <ClInclude Include="own\CNMenu.h" />
+    <ClInclude Include="own\COwnCtl.h" />
     <ClInclude Include="RegistDlg.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="security\encoding.h" />
@@ -312,6 +314,7 @@
     <ClCompile Include="MyOglDrawDlg.cpp" />
     <ClCompile Include="NET\GEThttp.cpp" />
     <ClCompile Include="NET\TCPIP.cpp" />
+    <ClCompile Include="own\COwnCtl.cpp" />
     <ClCompile Include="RegistDlg.cpp" />
     <ClCompile Include="security\AES.cc" />
     <ClCompile Include="security\encoding.cc" />

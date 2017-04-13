@@ -27,7 +27,7 @@ void runtime(void* lp) {
 
 int InitChat(char argv[], int argc) {
 	WSADATA wsaData;
-	char addr[16];
+	char ipaddr[16];
 	int err = WSAStartup(0x202, &wsaData);
 	if (err == SOCKET_ERROR) {
 		cerr << "WSAStartup failed with error " << WSAGetLastError() << endl;
@@ -37,18 +37,18 @@ int InitChat(char argv[], int argc) {
 	InitializeCriticalSection(&wrcon);
 	SetConsoleTitle("chat client");
 	if (argc == 2) {
-		strcpy_s(addr, argv/*[1]*/);
+		strcpy_s(ipaddr, argv/*[1]*/);
 	}
 	else {
 		printf_s("enter server address:");
-		scanf_s("%s", &addr, (unsigned)_countof(addr));
+		scanf_s("%s", &ipaddr, (unsigned)_countof(ipaddr));
 	};
 	struct sockaddr_in server;
 	server.sin_family = AF_INET;
 #ifdef _TESTDLG_
-	inet_pton(AF_INET,addr, (PVOID*)&server.sin_addr.s_addr);
+	inet_pton(AF_INET,ipaddr, (PVOID*)&server.sin_addr.s_addr);
 #else
-	server.sin_addr.s_addr = inet_addr(addr);
+	server.sin_addr.s_addr = inet_addr(ipaddr);
 #endif
 	server.sin_port = htons(DEFAULT_PORT);
 	out = socket(AF_INET, SOCK_STREAM, 0);
@@ -83,12 +83,12 @@ unsigned int __stdcall Chat_Msg(void* func)
 	unsigned int thread_ID;
 	char auxstr[24];
 	char Buffer[256];
-	char optionchar, optionstr[24] = { NULL };
+	int optionum = 0x00;
 	do {
-		printf("Connect to server OK, [logon] or [regist] a new account? (l/r):");
-		fflush(stdin);
-		optionchar = getchar();
-		if (optionchar == 'l') {
+		MessageBox(NULL, "Connect to server OK, [login] or [regist] a new account? (l/r):","MESSAGE", MB_OK);
+		switch (optionum)
+		{
+		case 0x01: {//log
 			Buffer[0] = 0;
 			Buffer[1] = (char)120;
 			printf("user name:");
@@ -107,8 +107,8 @@ unsigned int __stdcall Chat_Msg(void* func)
 			}
 			else
 				printf("log on failed\n");
-		}
-		else if (optionchar == 'r') {
+		} break;
+		case (0x02): {//regist
 			Buffer[0] = 0;
 			Buffer[1] = 0;
 			printf("name want to use:");
@@ -121,9 +121,11 @@ unsigned int __stdcall Chat_Msg(void* func)
 				printf("registered succesfully\n");
 			else
 				printf("register failed\n");
-		}
-		else
+		} break;
+		default:
 			printf("please in put a valid option\n");
+			break;
+		}
 	} while (loggedon == 0);
 	printf("type command [help] to see help message\n");
 	lpr.sock = rcv;
@@ -137,16 +139,19 @@ unsigned int __stdcall Chat_Msg(void* func)
 		auxstr[0] = onechar;
 		auxstr[1] = 0;
 		fflush(stdin);
-		scanf_s("%s", optionstr, (unsigned)_countof(optionstr));
+		//scanf_s("%s", optionstr, (unsigned)_countof(optionstr));
 		// strcat(auxstr,optionstr);
 		// strcpy(optionstr,auxstr);
-		if (strcmp(optionstr, "quit") == 0) {
+		switch (optionum)
+		{
+		case 0x03: {//QUIT
 			Buffer[0] = 0;
 			Buffer[1] = (char)121;
 			send(out, Buffer, 256, 0);
 			loggedon = 0;
+			break;
 		}
-		else if (strcmp(optionstr, "help") == 0) {/*
+		case 0x04: {/*//HELP
 												  printf("\nyes,let me help you\n");
 												  printf("quit to quit program\nhelp to show this message\nlist to see online user list\nallgroup to see group list on this server\n");
 												  printf("memberof groupname to see user list of this group\nsetinfo newinfo to set personal info\ninfo name  to see introduction of a user\ncreategroup groupname grouppassword to create a new group\n");
@@ -154,71 +159,91 @@ unsigned int __stdcall Chat_Msg(void* func)
 												  printf("user/groupname message to talk to a user or group\npassword newpasswrd to set password\n\n");
 												  */
 			MessageBox(NULL, "[quit]\nto quit program\n[help]\nto show this message\n[list]\nto see online user list\n[allgroup]\nto see group list on this server\n[memberof groupname]\nto see user list of this group\n[setinfo newinfo]\nto set personal info\n[info name]\nto see introduction of a user\n[creategroup groupname grouppassword]\nto create a new group\n[joingroup groupname password]\nto join a group\n[quitgroup groupname]\nto leave a group\n[user/groupname message]\nto talk to a user or group\n[password newpasswrd]\nto set password\n", "help message", MB_OK);
+			break;
 		}
-		else if (strcmp(optionstr, "list") == 0) {
+		case 0x05: {//LIST
 			Buffer[0] = 0;
 			Buffer[1] = 20;
 			send(out, Buffer, 256, 0);
+			break;
 		}
-		else if (strcmp(optionstr, "allgroup") == 0) {
+		case 0x06://"allgroup"
+		{
 			Buffer[0] = 0;
 			Buffer[1] = 15;
 			send(out, Buffer, 256, 0);
+			break;
 		}
-		else if (strcmp(optionstr, "memberof") == 0) {
+		case 0x07: //"memberof"
+		{
 			Buffer[0] = 0;
 			Buffer[1] = 16;
 			scanf_s("%s", (Buffer + 8), (unsigned)_countof(Buffer));
 			send(out, Buffer, 256, 0);
+			break;
 		}
-		else if (strcmp(optionstr, "setinfo") == 0) {
+		case 0x08:// "setinfo"
+		{
 			Buffer[0] = 0;
 			Buffer[1] = 1;
 			gets_s(Buffer + 32, 256);
 			send(out, Buffer, 256, 0);
+			break;
 		}
-		else if (strcmp(optionstr, "info") == 0) {
+		case 0x09:// "info"
+		{
 			Buffer[0] = 0;
 			Buffer[1] = 21;
 			scanf_s("%s", (Buffer + 8), (unsigned)_countof(Buffer));
 			send(out, Buffer, 256, 0);
+			break;
 		}
-		else if (strcmp(optionstr, "password") == 0) {
+		case 0x0A:// "password"
+		{
 			Buffer[0] = 0;
 			Buffer[1] = 122;
 			scanf_s("%s", (Buffer + 8), (unsigned)_countof(Buffer));
 			send(out, Buffer, 256, 0);
+			break;
 		}
-		else if (strcmp(optionstr, "creategroup") == 0) {
+		case 0x0B:// "creategroup"
+		{
 			Buffer[0] = 0;
 			Buffer[1] = 11;
 			scanf_s("%s%s", (Buffer + 8), (unsigned)_countof(Buffer), (Buffer + 32), (unsigned)_countof(Buffer));
 			strcpy_s((lpr.msg->lastgroup + 8), 256, (Buffer + 8));
 			send(out, Buffer, 256, 0);
+			break;
 		}
-		else if (strcmp(optionstr, "joingroup") == 0) {
+		case 0x0C:// "joingroup"
+		{
 			Buffer[0] = 0;
 			Buffer[1] = 10;
 			scanf_s("%s%s", (Buffer + 8), (unsigned)_countof(Buffer), (Buffer + 32), (unsigned)_countof(Buffer));
 			strcpy_s((lpr.msg->lastgroup + 8), 256, (Buffer + 8));
 			send(out, Buffer, 256, 0);
+			break;
 		}
-		else if (strcmp(optionstr, "quitgroup") == 0) {
+		case 0x0D:// "quitgroup"
+		{
 			Buffer[0] = 0;
 			Buffer[1] = 12;
 			scanf_s("%s", (Buffer + 8), 256);
 			strcpy_s((lpr.msg->lastgroup + 8), 256, (Buffer + 8));
 			send(out, Buffer, 256, 0);
+			break;
 		}
-		else {
+		default: {
 			Buffer[0] = 0;
 			Buffer[1] = 30;
-			if (optionstr[0] != NULL)
-				strcpy_s((Buffer + 8), 24, optionstr);
+			if (optionum != 0x00)
+				sprintf_s(Buffer + 8, 24, "%s", optionum);
 			gets_s(Buffer + 32, 256);
 			strcpy_s((lpr.msg->lastuser + 32), 256, (Buffer + 32));
 			strcpy_s((lpr.msg->lastuser + 8), 256, (Buffer + 8));
 			send(out, Buffer, 256, 0);
+			break;
+		}
 		};
 		LeaveCriticalSection(&wrcon);
 	} while (loggedon == 1);

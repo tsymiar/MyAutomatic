@@ -2,10 +2,14 @@
 #define MYWEB_H
 #include <sys/ioctl.h>  
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <linux/errno.h>
-#include <fcntl.h>  
+#include <signal.h>
+#include <fcntl.h> 
+#include <unistd.h>  
 #include <cerrno> 
-#include <cstdlib>  
+#include <cstdlib> 
+#include <cstdio>
 #include <pthread.h>
 //#include <corecrt_io.h>
 

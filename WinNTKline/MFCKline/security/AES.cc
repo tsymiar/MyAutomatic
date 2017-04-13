@@ -296,7 +296,7 @@ vector<vector<unsigned char> > encypt(vector<vector<unsigned char> > roundKey, v
 	
 return encyptedData;
 }
-int aes_main(){
+int aes_test(){
 	int choice = 0,keyLength = 128,numRounds = 10, countBytes =0, counter = 0, numCoversion = 0;
 	string randomString = "abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 	string defaultKey = "YxK69Rr7Y4TYifBA",stringInput ="";

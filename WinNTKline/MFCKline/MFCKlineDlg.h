@@ -3,10 +3,15 @@
 //
 
 #pragma once
+//#include <QtCore/QTextCodec>
+//#include <QtWidgets/QApplication>
 #include "MyOglDrawDlg.h"
 #include "LoginDlg.h"
 #include "Wpf/WpfHost.h"
 #include <crtdbg.h>
+
+#undef QT_FASTCALL
+//“__fastcall”与“/clr”选项不兼容: 转换为“__stdcall”
 
 // CMFCKlineDlg 对话框
 class CMFCKlineDlg : public CDialogEx

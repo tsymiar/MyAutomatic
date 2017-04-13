@@ -8,7 +8,7 @@ class TCPIP
 public:
 	TCPIP();
 	virtual ~TCPIP();
-	static unsigned int __stdcall ClientThread(void* pParam);
+	static unsigned int __stdcall SimpleClient(void* P);
 private:
 	OGLKview Ogl;
 };

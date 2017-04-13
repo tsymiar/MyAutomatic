@@ -16,9 +16,11 @@
 #include <fstream>
 #include <cstring>
 #include <cstdio>
+#include <map>
+#pragma warning (disable:4477)
 
 typedef struct IMUSR {
-	char addr[256];
+	char addr[MAX_PATH];
 	char comm[64];
 	char psw[32];
 	char usr[32];
