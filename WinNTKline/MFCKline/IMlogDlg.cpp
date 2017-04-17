@@ -1,3 +1,4 @@
+// IMlogDlg.cpp : 实现文件
 //
 
 #include "stdafx.h"
@@ -6,6 +7,7 @@
 #include "afxdialogex.h"
 
 
+// IMlogDlg 对话框
 
 IMPLEMENT_DYNAMIC(IMlogDlg, CDialogEx)
 
