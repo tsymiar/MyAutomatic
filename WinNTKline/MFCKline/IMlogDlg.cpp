@@ -7,7 +7,7 @@
 #include "afxdialogex.h"
 
 
-// IMlogDlg 对话框
+// IMlogDlg 对话�?
 
 IMPLEMENT_DYNAMIC(IMlogDlg, CDialogEx)
 
