@@ -8,7 +8,6 @@
 #include	"font/FontNehe.h"
 #include	"Idx/CommSet.h"
 #include	"dos/DOSCout.h"
-#include	"own/COwnCtl.h"
 #include	"mgl/GlModel.h"
 
 using namespace freetype;
@@ -64,7 +63,6 @@ public:
 	GlModel model;
 	CTabCtrl m_tab;
 	CToolBar m_tool;
-	CMyMenu menu;
 	DOSCout Dos;
 	DepthMarket object;
 	DepthMarket *depth= object.getDepth();

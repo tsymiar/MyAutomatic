@@ -7,6 +7,7 @@
 #include <Resource.h>
 #include <dos\DOSCout.h>
 #include <soapH.h>
+#include "MyOglDrawDlg.h"
 #include "LoginDlg.h"
 #include "IMhideWndDlg.h"
 #include "ctl\CWebBrowser2.h"
@@ -45,6 +46,7 @@ BEGIN_MESSAGE_MAP(CtestAPIsDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_TOIM, &CtestAPIsDlg::OnBnClickedToim)
 	ON_BN_CLICKED(IDC_REGIDST, &CtestAPIsDlg::OnBnClickedRegist)
 	ON_BN_CLICKED(IDC_TESTLOG, &CtestAPIsDlg::OnBnClickedTestlog)
+	ON_BN_CLICKED(IDC_KLINE, &CtestAPIsDlg::OnBnClickedKline)
 END_MESSAGE_MAP()
 
 
@@ -97,7 +99,7 @@ void CtestAPIsDlg::OnBnClickedToim()
 {
 	DOSCout dos;
 	CIMhideWndDlg* m_pIM = new CIMhideWndDlg();
-	dos.RedirectConsole();
+	//dos.RedirectConsole();
 	m_pIM->Create(IDD_IMHIDEWND);
 	m_pIM->ShowWindow(SW_SHOWNORMAL);
 }
@@ -109,6 +111,15 @@ void CtestAPIsDlg::OnBnClickedRegist()
 
 void CtestAPIsDlg::OnBnClickedTestlog()
 {
-	//for (int i = 0; i < 100; i++)
+	for (int i = 0; i < 10; i++)
 		logon.testLogin(&soele);
+}
+
+
+void CtestAPIsDlg::OnBnClickedKline()
+{
+	MyOglDrawDlg* ogl = new MyOglDrawDlg();
+	ogl->Create(IDD_OGLIMG);
+	ogl->ShowWindow(SW_SHOWNORMAL);
+
 }

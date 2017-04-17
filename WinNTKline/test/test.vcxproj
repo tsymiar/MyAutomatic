@@ -77,7 +77,6 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <SourcePath>$(SolutionDir)MFCKline;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -95,10 +94,11 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_TESTDLG_;WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\gSOAPverify\soap;$(SolutionDir)MFCKline</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)MFCKline\font;$(SolutionDir)..\gSOAPverify\soap;$(SolutionDir)MFCKline</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
+      <AdditionalLibraryDirectories>$(SolutionDir)MFCKline\font\lib;$(SolutionDir)MFCKline\GL\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -186,9 +186,14 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\MFCKline\deep\DepthMarket.h" />
     <ClInclude Include="..\MFCKline\dos\DOSCout.h" />
     <ClInclude Include="..\MFCKline\IMhideWndDlg.h" />
+    <ClInclude Include="..\MFCKline\IMlogDlg.h" />
     <ClInclude Include="..\MFCKline\LoginDlg.h" />
+    <ClInclude Include="..\MFCKline\mgl\OGLKview.h" />
+    <ClInclude Include="..\MFCKline\MyOglDrawDlg.h" />
+    <ClInclude Include="..\MFCKline\NET\CTPdev.h" />
     <ClInclude Include="..\MFCKline\RegistDlg.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
@@ -200,10 +205,15 @@
     <ClCompile Include="..\..\gSOAPverify\soap\soapC.cpp" />
     <ClCompile Include="..\..\gSOAPverify\soap\soapClient.cpp" />
     <ClCompile Include="..\..\gSOAPverify\soap\stdsoap2.cpp" />
+    <ClCompile Include="..\MFCKline\deep\DepthMarket.cpp" />
     <ClCompile Include="..\MFCKline\dos\DOSCout.cpp" />
     <ClCompile Include="..\MFCKline\IMhideWndDlg.cpp" />
+    <ClCompile Include="..\MFCKline\IMlogDlg.cpp" />
     <ClCompile Include="..\MFCKline\IM\client.cpp" />
     <ClCompile Include="..\MFCKline\LoginDlg.cpp" />
+    <ClCompile Include="..\MFCKline\mgl\OGLKview.cc" />
+    <ClCompile Include="..\MFCKline\MyOglDrawDlg.cpp" />
+    <ClCompile Include="..\MFCKline\NET\CTPdev.cpp" />
     <ClCompile Include="..\MFCKline\RegistDlg.cpp" />
     <ClCompile Include="..\MFCKline\security\encoding.cc" />
     <ClCompile Include="..\MFCKline\security\MD5.cc" />
