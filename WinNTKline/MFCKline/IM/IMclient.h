@@ -3,9 +3,9 @@
 #pragma comment(lib, "WS2_32.lib")
 
 #ifdef _TESTDLG_
-// /clrÄ£Ê½°üº¬¸ÃÍ·ÎÄ¼ş½«»áµ¼ÖÂ
-// error LNK2022 : ÔªÊı¾İ²Ù×÷Ê§°Ü(8013118D) : ÖØ¸´ÀàĞÍ(group_filter)ÖĞµÄ²¼¾ÖĞÅÏ¢²»Ò»ÖÂ : (0x0200020b)¡£
-// 2>LINK : fatal error LNK1255 : ÓÉÓÚÔªÊı¾İ´íÎó£¬Á´½ÓÊ§°Ü
+// /clræ¨¡å¼åŒ…å«è¯¥å¤´æ–‡ä»¶å°†ä¼šå¯¼è‡´
+// error LNK2022 : å…ƒæ•°æ®æ“ä½œå¤±è´¥(8013118D) : é‡å¤ç±»å‹(group_filter)ä¸­çš„å¸ƒå±€ä¿¡æ¯ä¸ä¸€è‡´ : (0x0200020b)ã€‚
+// 2>LINK : fatal error LNK1255 : ç”±äºå…ƒæ•°æ®é”™è¯¯ï¼Œé“¾æ¥å¤±è´¥
 #include <WS2tcpip.h>
 #else
 #include <winsock2.h>
@@ -17,7 +17,9 @@
 #include <cstring>
 #include <cstdio>
 #include <map>
+
 #pragma warning (disable:4477)
+using namespace std;
 
 typedef struct IMUSR {
 	char addr[MAX_PATH];
@@ -41,8 +43,31 @@ struct LPR
 	CHATMSG *msg;
 };
 
-int InitChat(char argv[] = "127.0.0.1" , int argc = 2);
+struct CMD {
+	int idx; string val;
+};
+
+const CMD cmds[] =
+{
+	{ 0x00,"å‘½ä»¤èœå•" },
+	{ 0x01,"æ³¨å†Œ" },
+	{ 0x02,"ç™»é™†" },
+	{ 0x03,"ç™»å‡º" },
+	{ 0x04,"å¸®åŠ©" },
+	{ 0x05,"å¥½å‹åˆ—è¡¨" },
+	{ 0x06,"ç¾¤" },
+	{ 0x07,"ç¾¤æˆå‘˜" },
+	{ 0x08,"è®¾ç½®æè¿°" },
+	{ 0x09,"æŸ¥è¯¢æè¿°" },
+	{ 0x0A,"è®¾ç½®å¯†ç " },
+	{ 0x0B,"åˆ›å»ºç¾¤" },
+	{ 0x0C,"åŠ å…¥ç¾¤" },
+	{ 0x0D,"é€€ç¾¤" },
+};
+
+int InitChat(char argv[] = "127.0.0.1", int argc = 2);
 int StartChat(int err, void(*func)(void*));
+int SetChatCmd(unsigned int opt);
 void CloseChat();
 
 #endif
