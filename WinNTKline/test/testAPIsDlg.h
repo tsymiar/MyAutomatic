@@ -26,4 +26,5 @@ public:
 	afx_msg void OnBnClickedToim();
 	afx_msg void OnBnClickedRegist();
 	afx_msg void OnBnClickedTestlog();
+	afx_msg void OnBnClickedKline();
 };

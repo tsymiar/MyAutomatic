@@ -1,4 +1,5 @@
-﻿#pragma once
+﻿#if !defined(OWNCTL_H)
+#define OWNCTL_H
 #include <Resource.h>
 #include <afxtempl.h>
 
@@ -46,9 +47,10 @@ public:
 	CMyMenu() {};
 	virtual ~CMyMenu() {};
 	CList<ItemInfo*> m_InfoList;
-	virtual void DrawItem(LPDRAWITEMSTRUCT /*lpDrawItemStruct*/);
-	virtual void MeasureItem(LPMEASUREITEMSTRUCT /*lpMeasureItemStruct*/);
+	virtual void DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct);
+	virtual void MeasureItem(LPMEASUREITEMSTRUCT lpMeasureItemStruct);
 	void AppendItem(UINT id, CString strText, CString strShortcut, UINT iconID, UINT nFlags); 
 	void AppendSubMenu(UINT id, CMyMenu* subMenu, CString strText, UINT iconID, UINT nFlags);
 	void AppendSeparator(UINT nID, UINT nFlags);
 };
+#endif

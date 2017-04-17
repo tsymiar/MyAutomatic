@@ -42,6 +42,21 @@
     <ClInclude Include="testAPIs.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="..\MFCKline\MyOglDrawDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\MFCKline\IMlogDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\MFCKline\mgl\OGLKview.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\MFCKline\NET\CTPdev.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\MFCKline\deep\DepthMarket.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -81,6 +96,21 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="testAPIsDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\MFCKline\MyOglDrawDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\MFCKline\IMlogDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\MFCKline\mgl\OGLKview.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\MFCKline\NET\CTPdev.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\MFCKline\deep\DepthMarket.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
