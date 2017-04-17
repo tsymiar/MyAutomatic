@@ -3,7 +3,7 @@
 
 #include "MGL/OGLKview.h"
 
-class DepthChart
+class DepthMarket
 {
 private:
 	void fillItem();
@@ -17,13 +17,13 @@ private:
 	OGLKview Okv;
 	OGLKview::Color4f color = { 1,1,1,1 };
 public:
-	DepthChart();
+	DepthMarket();
 	void DrawItem(OGLKview::Item item, int col);
 	int DrawItem(OGLKview::Item item, bool mode = false);
 	void FillChart(bool unfurl);
 	void DelItem(int item);
-	DepthChart* getDepth();
-	virtual ~DepthChart();
+	DepthMarket* getDepth();
+	virtual ~DepthMarket();
 public:
 	OGLKview::Item item;
 };

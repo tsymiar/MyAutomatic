@@ -369,21 +369,18 @@ void _stdcall OGLKview::InitGraph(void/*HDC m_hDC*/)
 void OGLKview::print_string(const char* str)
 {
 	int len = 0, i;
-	wchar_t* wstring = NULL;
+	static wchar_t* wstring = NULL;
 	HDC m_hDC = wglGetCurrentDC();
-	GLuint list = glGenLists(1);
-	for (i = 0; str[i] != '\0'; ++i)
+	GLuint list = glGenLists(128);
+	for (; str[len] != '\0'; ++len)
 	{
-		if (IsDBCSLeadByte(str[i]))
-			++i;
-		++len;
+		if (IsDBCSLeadByte(str[len]))
+			++len;
 	}
-	if ((wstring = (wchar_t*)malloc((len + 1) * sizeof(wchar_t))) == NULL)
-	{
-		if (wstring != NULL)
-			free(wstring);
+	len += 1;
+	//wstring = new wchar_t(len);
+	if ((wstring = (wchar_t*)malloc((len) * sizeof(wchar_t))) == NULL)
 		return;
-	}
 	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, str, -1, wstring, len);
 	wstring[len] = _T('\0');
 	if ((wstring[0] > 0x7f) || (47 < wstring[0] && wstring[0] <= 127))
@@ -393,11 +390,14 @@ void OGLKview::print_string(const char* str)
 		i = -1;//ASCII
 	for (; i < len; ++i)
 	{
-		wglUseFontBitmapsW(m_hDC, wstring[i], 1, list);
+		wglUseFontBitmaps(m_hDC, wstring[i], 1, list);
 		glCallList(list);
 	}
 	if (wstring != NULL)
-		free(wstring);
+	{
+//		free(wstring);
+		wstring = NULL;
+	}
 	glDeleteLists(list, 1);
 }
 
@@ -839,14 +839,14 @@ void OGLKview::DrawKtext(char text[], Point & coor, int size, OGLKview::Color4f 
 #if !defined(_UNICODE)
 #define _UNICODE
 #endif
-	HFONT mhfont = CreateFontW(size, 0, 0, 0, fw, 0, 0, 0, ANSI_CHARSET,
+	HFONT mhfont = CreateFont(size, 0, 0, 0, fw, 0, 0, 0, ANSI_CHARSET,
 		OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
 		DEFAULT_PITCH | FF_SWISS,
-//#ifdef Q_OS_WIN32
+#ifdef QT_DLL
 		(const wchar_t *)
-//#else
+#else
 		font
-//#endif
+#endif
 	);
 #undef _UNICODE
 	HFONT hOldFont = (HFONT)SelectObject(wglGetCurrentDC(), mhfont);
@@ -867,7 +867,8 @@ namespace GMDD
 	int		item0 = 0;
 	int		volume;//成交量
 	float	maxprice = 0.0f;
-	float	minprice = FLT_MAX;
+	float	minprice = FLT_MAX; 
+	float	fo = 0;
 	char*	cot = NULL;//切分临时数据
 	char*	buff = NULL;
 	char*	token = NULL;
@@ -889,9 +890,10 @@ namespace GMDD
 	char	s_ma20[] = "SMA20:";
 	char	s_dif[] = "DIF:";
 	char	s_dea[] = "DEA:";
-	char	s_rsa[] = "RSA(6,12,24):";
-	char	s_val[] = "成交量 Vol:";
+	char	s_rsi[] = "RSI(6,12,24):";
+	char	s_vol[] = "成交量 Vol:";
 	char	s_macd[] = "MACD(12,26,9)";
+	Stock stock;
 	std::vector<Stock::Rsi> strsi;
 	std::string tmp = " ";
 	std::ifstream Readfile;
@@ -1117,6 +1119,109 @@ bool OGLKview::GetMarkDatatoDraw(void* P, char* title)
 						pt_ma5old = pt_ma5;
 						hadraw5 = true;
 					}
+					//绘制RSA线
+					pt_AB6.x = pt_AB12.x = pt_AB24.x = 9 - proportion*(3 - line*(proportion + 9)*0.01f + 3.f + .1f);
+					pt_AB6.y = stock.RSI(frise.stRSA._6, fdrop.stRSA._6)*8.33;
+					pt_AB12.y = stock.RSI(frise.stRSA._12, fdrop.stRSA._12)*8.33;
+					pt_AB24.y = stock.RSI(frise.stRSA._24, fdrop.stRSA._24)*8.33;
+					line < 6 ? (pt_AB6old = pt_AB6) : (line <= 12 ? (pt_AB12old = pt_AB12) : (line < 24 ? pt_AB24 = pt_AB24old : pt_AB24old));
+					//RSI6粉红
+					if (line % 6 == 0) {
+						frise.stRSA._6 = stock.RSI(frise.stRSA._6, fdrop.stRSA._6);
+						pt_AB6.y = frise.stRSA._6*8.33;
+						DrawPoly(pt_AB6old, pt_AB6, { 1.f,.75f,.8f });
+						pt_AB6old = pt_AB6;
+					}
+					//RSI12弱红
+					if (line % 12 == 0) {
+						frise.stRSA._12 = stock.RSI(frise.stRSA._12, fdrop.stRSA._12);
+						pt_AB12.y = frise.stRSA._12*8.33;
+						DrawPoly(pt_AB12old, pt_AB12, { .9f,.1f,.3f });
+						pt_AB12old = pt_AB12;
+					}
+					//RSI24紫色
+					if (line % 24 == 0) {
+						frise.stRSA._24 = stock.RSI(frise.stRSA._24, fdrop.stRSA._24);
+						pt_AB24.y = frise.stRSA._24*8.33;
+						DrawPoly(pt_AB24old, pt_AB24, { .9f,0.f,.9f });
+						pt_AB24old = pt_AB24;
+					}
+					//SMA10:
+					pt_ma5 = { -0.7f,1.19f };
+					pt_ma10 = { -0.44f,1.19f };
+					pt_ma20 = { -0.2f,1.19f };
+					//MACD:
+					pt_macd = { -1.22f,-0.44f };
+					//成交量:
+					pt_vol = { pt_macd.x,-0.135f };
+					//DIF:
+					pt_dif = { pt_macd.x + 0.32f,-0.44f };
+					//DEA:
+					pt_dea = { pt_dif.x + 0.2f,-0.44f };
+					//RSI:
+					pt_rsi = { pt_vol.x,-0.74f };
+					//RSI6,12,24
+					pt_rsi6 = { pt_rsi.x + 0.32f,pt_rsi.y };
+					pt_rsi12 = { pt_rsi6.x + 0.32f,pt_rsi6.y };
+					pt_rsi24 = { pt_rsi12.x + 0.32f,pt_rsi12.y };
+					//SM5白色
+					if (hadraw5) {//添加判断条件
+						sprintf_s(ma, "%s%.2f", s_ma5, isma._5);
+						DrawKtext(ma, pt_ma5, 15);
+						hadraw5 = false;
+					}
+					//SM10黄色
+					if (hadraw10) {
+						sprintf_s(ma, "%s%.2f", s_ma10, isma._10);
+						DrawKtext(ma, pt_ma10, 15, { 1.f,1.f,0.f });
+						hadraw10 = false;
+					}
+					//SM20紫色
+					if (hadraw20) {
+						sprintf_s(ma, "%s%.2f", s_ma20, isma._20);
+						DrawKtext(ma, pt_ma20, 15, { 1.f,0.f,1.f });
+						hadraw20 = false;
+					}
+					//成交量Vol红色
+					sprintf_s(vol, "%s%d", s_vol, volume);
+					SwitchViewport(0);
+					DrawKtext(vol, pt_vol, 15, { 1,0,0 });
+					//MACD红
+					sprintf_s(macd, "%s", s_macd);
+					DrawKtext(macd, pt_macd, 15, { 1,0,0 });
+					//DIF深绿
+					sprintf_s(dif, "%s%.2f", s_dif, fo);
+					DrawKtext(macd, pt_macd, 15, { 1,0,0 });
+					//DEA黄色
+					sprintf_s(dea, "%s%.2f", s_dea, fo);
+					DrawKtext(macd, pt_dea, 15, { 1,0,0 });
+					//RSI红色
+					sprintf_s(rsi, "%s%.2f", s_rsi, fo);
+					DrawKtext(rsi, pt_rsi, 15, { 1,0,0 });
+					memset(rsi, 0, sizeof(rsi));
+					//RSI6粉红
+					total.stRSA._6 = stock.RSI(frise.stRSA._6, fdrop.stRSA._6);
+					sprintf_s(rsi, "RSI6:%.3f", frise.stRSA._6);
+					DrawKtext(rsi, pt_rsi6, 15, { 1,0.75f,0.8f });
+					memset(rsi, 0, sizeof(rsi));
+					//RSI12弱红
+					total.stRSA._12 = stock.RSI(frise.stRSA._12, fdrop.stRSA._12);
+					sprintf_s(rsi, "RSI12:%.3f", frise.stRSA._12);
+					DrawKtext(rsi, pt_rsi12, 15, { 0.9f,0.1f,0.3f });
+					memset(rsi, 0, sizeof(rsi));
+					//RSI12紫色
+					total.stRSA._24 = stock.RSI(frise.stRSA._24, fdrop.stRSA._24);
+					sprintf_s(rsi, "RSI24:%.3f", frise.stRSA._24);
+					DrawKtext(rsi, pt_rsi24, 15, { 0.9f,0.f,0.9f });
+					memset(rsi, 0, sizeof(rsi));
+					//刻度视口
+					//插入表格数据
+					//chart.fillList();
+					//chart.fillItem();
+					//标尺虚线
+					//市场详情窗口
+					//if(drawstaff)
+					DrawDetail(st_stock);
 					//分组计数
 					idx++;
 					//点计数

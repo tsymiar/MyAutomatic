@@ -42,9 +42,6 @@
     <ClInclude Include="Stock\Stock.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Chart\DepthChart.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="Font\FontNehe.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -58,9 +55,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="security\MD5.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="NET\TCPIP.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="LoginDlg.h">
@@ -129,6 +123,15 @@
     <ClInclude Include="own\COwnCtl.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="NET\CTPdev.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="IMlogDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="deep\DepthMarket.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MFCKline.cpp">
@@ -138,9 +141,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="dos\DOSCout.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Chart\DepthChart.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="MyOglDrawDlg.cpp">
@@ -153,9 +153,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="security\MD5.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="NET\TCPIP.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="LoginDlg.cpp">
@@ -213,6 +210,18 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="own\COwnCtl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="IM\IM.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NET\CTPdev.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="IMlogDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="deep\DepthMarket.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
