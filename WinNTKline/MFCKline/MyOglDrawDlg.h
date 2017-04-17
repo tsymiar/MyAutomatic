@@ -3,8 +3,8 @@
 #include	"MFCKline.h"
 #include	"afxdialogex.h"
 #include	"MGL/OGLKview.h"
-#include	"NET/tcpip.h"
-#include	"Chart/DepthChart.h"
+#include	"NET/CTPdev.h"
+#include	"deep/DepthMarket.h"
 #include	"font/FontNehe.h"
 #include	"Idx/CommSet.h"
 #include	"dos/DOSCout.h"
@@ -66,8 +66,8 @@ public:
 	CToolBar m_tool;
 	CMyMenu menu;
 	DOSCout Dos;
-	DepthChart object;
-	DepthChart *depth= object.getDepth();
+	DepthMarket object;
+	DepthMarket *depth= object.getDepth();
 public:
 	// 重载函数
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);

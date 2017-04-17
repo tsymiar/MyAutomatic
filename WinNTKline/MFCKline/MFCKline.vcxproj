@@ -115,7 +115,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DisableSpecificWarnings>
       </DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>$(BOOST);$(OPENSSL);$(PTHD_INC);$(QTDIR)\include;$(SolutionDir)MFCKline;$(SolutionDir)MFCKline\font;$(SolutionDir)MFCKline\Index;$(SolutionDir)..\gSOAPverify\soap;.\GeneratedFiles\$(ConfigurationName);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BOOST);$(OPENSSL);$(PTHD_INC);$(QTDIR)\include;$(SolutionDir)MFCKline;$(SolutionDir)MFCKline\mgl;$(SolutionDir)MFCKline\font;$(SolutionDir)MFCKline\Index;$(SolutionDir)..\gSOAPverify\soap;.\GeneratedFiles\$(ConfigurationName);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAs>CompileAsCpp</CompileAs>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -255,8 +255,8 @@
   <ItemGroup>
     <ClInclude Include="..\..\gSOAPverify\soap\stdsoap2.h" />
     <ClInclude Include="boost\boostest.h" />
-    <ClInclude Include="Chart\DepthChart.h" />
     <ClInclude Include="ctl\CWebBrowser2.h" />
+    <ClInclude Include="deep\DepthMarket.h" />
     <ClInclude Include="Def\MacroDef.h" />
     <ClInclude Include="dos\DOSCout.h" />
     <ClInclude Include="Font\FontNehe.h" />
@@ -266,6 +266,7 @@
     <ClInclude Include="Idx\CPUID.H" />
     <ClInclude Include="Idx\_MACRO_.h" />
     <ClInclude Include="Idx\_String-inl.h" />
+    <ClInclude Include="IMlogDlg.h" />
     <ClInclude Include="IMhideWndDlg.h" />
     <ClInclude Include="IM\IMclient.h" />
     <ClInclude Include="LoginDlg.h" />
@@ -279,7 +280,7 @@
     <ClInclude Include="mgl\texture.h" />
     <ClInclude Include="MyOglDrawDlg.h" />
     <ClInclude Include="NET\GEThttp.h" />
-    <ClInclude Include="NET\TCPIP.h" />
+    <ClInclude Include="NET\CTPdev.h" />
     <ClInclude Include="own\COwnCtl.h" />
     <ClInclude Include="RegistDlg.h" />
     <ClInclude Include="Resource.h" />
@@ -295,13 +296,15 @@
     <ClCompile Include="..\..\gSOAPverify\soap\soapC.cpp" />
     <ClCompile Include="..\..\gSOAPverify\soap\soapClient.cpp" />
     <ClCompile Include="..\..\gSOAPverify\soap\stdsoap2.cpp" />
-    <ClCompile Include="Chart\DepthChart.cpp" />
     <ClCompile Include="ctl\CWebBrowser2.cpp" />
+    <ClCompile Include="deep\DepthMarket.cpp" />
     <ClCompile Include="dos\DOSCout.cpp" />
     <ClCompile Include="Font\FontNehe.cc" />
     <ClCompile Include="HOOK\injectDLL.cpp" />
+    <ClCompile Include="IMlogDlg.cpp" />
     <ClCompile Include="IMhideWndDlg.cpp" />
     <ClCompile Include="IM\client.cpp" />
+    <ClCompile Include="IM\IM.cc" />
     <ClCompile Include="LoginDlg.cpp" />
     <ClCompile Include="MFCKline.cpp" />
     <ClCompile Include="MFCKlineDlg.cpp" />
@@ -313,7 +316,7 @@
     <ClCompile Include="mgl\texture.c" />
     <ClCompile Include="MyOglDrawDlg.cpp" />
     <ClCompile Include="NET\GEThttp.cpp" />
-    <ClCompile Include="NET\TCPIP.cpp" />
+    <ClCompile Include="NET\CTPdev.cpp" />
     <ClCompile Include="own\COwnCtl.cpp" />
     <ClCompile Include="RegistDlg.cpp" />
     <ClCompile Include="security\AES.cc" />

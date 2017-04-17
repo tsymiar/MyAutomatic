@@ -1,13 +1,13 @@
-#ifndef _TCPIP_H_
-#define _TCPIP_H_
+#ifndef _CTPDEV_H_
+#define _CTPDEV_H_
 
 #include "MGL/OGLKview.h"
 
-class TCPIP
+class CTPdev
 {
 public:
-	TCPIP();
-	virtual ~TCPIP();
+	CTPdev();
+	virtual ~CTPdev();
 	static unsigned int __stdcall SimpleClient(void* P);
 private:
 	OGLKview Ogl;
