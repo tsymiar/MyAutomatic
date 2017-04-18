@@ -89,7 +89,6 @@ private:
 	float radius;
 	float moveDist;
 	int item0;
-	int pory, widt, heig;
 	_String m_str;
 public:
 	OGLKview();
@@ -260,22 +259,22 @@ public:
 	std::map<int, OGLKview::Strmap>stockmap;
 public:
 	void _stdcall InitGraph(void);
-	void SetBkg(bool b);
 	void DrawItem(void);
-	void SetColor(OGLKview::Color4f color);
 	void DrawDash(OGLKview::Point pt[2]);
 	void DrawCurve(OGLKview::Point A[4]);
 	void DrawLevel(float mascl,float miscl);
-	void AdjustDraw(GLsizei W, GLsizei H, bool b = true);
-	void SwitchViewport(int viewport, OGLKview::ViewSize adjust = {1,1,1,1});
-	void DrawKtext(char text[], Point &coor, int size = 14, OGLKview::Color4f color = {1,1,1,1}, char font[] = "Arial", bool dim=true);
+	void DrawKtext(char text[], Point &coor, int size = 14, OGLKview::Color4f color = { 1,1,1,1 }, char font[] = "Arial", bool dim = true);
 	int DrawCoord(int mX, int mY);
 	int DrawArrow(OGLKview::Point begin);
-	int DrawDetail(OGLKview::Market market);
+	int DrawDetail(OGLKview::Market market, int view = 0);
 	int DrawPoly(OGLKview::Point Pb, OGLKview::Point Pe, OGLKview::Color4f color = {1,1,1}, int viewport = 1);
+	bool DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool hollow = 1, OGLKview::Point pt = { 0 });
+	void AdjustDraw(GLsizei W, GLsizei H, bool b = true);
+	void SwitchViewport(int viewport, OGLKview::ViewSize adjust = {1,1,1,1});
+	void SetBkg(bool b);
+	void SetColor(OGLKview::Color4f color);
 	int Data2View(std::vector<struct OGLKview::Market> market, OGLKview::Dlginfo toview);
 	bool SetWindowPixelFormat(HDC m_hDC, HWND m_hWnd, int pixelformat = 0);
-	bool DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool hollow = 1, OGLKview::Point pt = { 0 });
 	bool GetMarkDatatoDraw(void* P = nullptr, char* title = NULL);
 public:
 	float axistinker(int pX)
