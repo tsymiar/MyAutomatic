@@ -33,6 +33,7 @@
 #include	<cstdio>
 #include	<iostream>
 #include	<fstream>
+#include	<random>
 #include	<io.h>
 #include	<fcntl.h>
 #if 0
@@ -61,7 +62,7 @@
 #ifdef BOOST
 #include	"boost/boostest.h"
 #endif // BOOST
-#include	"Idx/Initialise.inl"
+#include	"Idx/Initialise-inl.h"
 #include	"Idx/CPUID.H"
 #include	"Idx/_String-inl.h"
 #if !defined(QT_VERSION)
@@ -125,7 +126,7 @@ public:
 		int cycle = 222;
 		int mouX;
 		int mouY;
-		int drawstaff;
+		int drawstaff = 0;
 		bool bkg = true;
 		bool leftdown = false;
 	};
@@ -174,10 +175,10 @@ public:
 		float zoom = 1;
 	};
 	struct ViewSize {
-		GLsizei ptx;
-		GLsizei pty;
-		GLsizei ptw; 
-		GLsizei pth;
+		GLsizei tx;
+		GLsizei ty;
+		GLsizei tw; 
+		GLsizei th;
 	};
 	struct ZOOM
 	{
@@ -266,7 +267,7 @@ public:
 	void DrawKtext(char text[], Point &coor, int size = 14, OGLKview::Color4f color = { 1,1,1,1 }, char font[] = "Arial", bool dim = true);
 	int DrawCoord(int mX, int mY);
 	int DrawArrow(OGLKview::Point begin);
-	int DrawDetail(OGLKview::Market market, int view = 0);
+	int DrawDetail(OGLKview::Market market);
 	int DrawPoly(OGLKview::Point Pb, OGLKview::Point Pe, OGLKview::Color4f color = {1,1,1}, int viewport = 1);
 	bool DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool hollow = 1, OGLKview::Point pt = { 0 });
 	void AdjustDraw(GLsizei W, GLsizei H, bool b = true);
@@ -301,28 +302,6 @@ public:
 	}
 };
 
-class BearCharges
-{
-	double Sqrt_sum(int x, int y)
-	{
-		return sqrt(x*x + y*y);
-	}
-
-	double Max_len(OGLKview::Point Base[_N_]) {
-		double S, max = 0;
-		for (int i = 0; i < _N_; i++)
-		{
-			if (i != 0)
-			{
-				S = Sqrt_sum(int(Base[i].x - Base[i - 1].x), int(Base[i].y - Base[i - 1].y));
-				if (max <= S)
-					return S;
-			}
-			else
-				return 0;
-		}
-	}
-};
 #undef DLL_KVIEW_API
 #endif // !OGL_KVIEW_H_}
 

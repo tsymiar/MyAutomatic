@@ -45,7 +45,7 @@ int InitChat(char argv[], int argc) {
 	};
 	struct sockaddr_in server;
 	server.sin_family = AF_INET;
-#ifdef _TESTDLG_
+#ifdef _TESTAPIS_
 	inet_pton(AF_INET,ipaddr, (PVOID*)&server.sin_addr.s_addr);
 #else
 	server.sin_addr.s_addr = inet_addr(ipaddr);

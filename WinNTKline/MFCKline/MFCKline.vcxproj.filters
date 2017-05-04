@@ -132,6 +132,9 @@
     <ClInclude Include="deep\DepthMarket.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Idx\MyAlgorithm.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MFCKline.cpp">
@@ -239,7 +242,7 @@
     <None Include="Idx\plus1second">
       <Filter>头文件</Filter>
     </None>
-    <None Include="Idx\Initialise.inl">
+    <None Include="Idx\Initialise-inl.h">
       <Filter>头文件</Filter>
     </None>
   </ItemGroup>

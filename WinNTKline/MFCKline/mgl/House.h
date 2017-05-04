@@ -7,7 +7,7 @@
 #include <Windows.h>
 #include <GL/glu.h>
 #include "../GL/glaux.h"
-#include "../Idx/Initialise.inl"
+#include "../Idx/Initialise-inl.h"
 #include "../Def/MacroDef.h"
 
 #define INTS int
