@@ -11,4 +11,5 @@ md cfg
 )
 copy ..\MFCKline\cfg .\cfg
 copy ..\MFCKline\data .\data
+copy ..\MFCKline\CTP\*.dll .\
 copy ..\MFCKline\font\lib\*.dll .\

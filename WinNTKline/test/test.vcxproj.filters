@@ -104,13 +104,16 @@
     <ClCompile Include="..\MFCKline\IMlogDlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MFCKline\mgl\OGLKview.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="..\MFCKline\NET\CTPdev.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\MFCKline\deep\DepthMarket.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\MFCKline\mgl\OGLKview.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\MFCKline\NET\ChannelCollector.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

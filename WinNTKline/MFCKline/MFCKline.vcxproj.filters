@@ -135,6 +135,9 @@
     <ClInclude Include="Idx\MyAlgorithm.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="NET\ChannelCollector.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MFCKline.cpp">
@@ -225,6 +228,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="deep\DepthMarket.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NET\ChannelCollector.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
