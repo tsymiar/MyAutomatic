@@ -101,4 +101,5 @@ public:
 	int GetMarkDatatoDraw();
 	afx_msg void OnSetbkg();
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
+	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
 };

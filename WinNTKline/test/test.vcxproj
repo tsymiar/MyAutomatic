@@ -92,13 +92,14 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_TESTAPIS_;WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_TESTAPIS_;_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)MFCKline\font;$(SolutionDir)..\gSOAPverify\soap;$(SolutionDir)MFCKline</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\font;$(SolutionDir)..\gSOAPverify\soap;$(SolutionDir)MFCKline</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalLibraryDirectories>$(SolutionDir)MFCKline\font\lib;$(SolutionDir)MFCKline\GL\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(QTDIR)\lib;$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\font\lib;$(SolutionDir)MFCKline\GL\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Qt5Core.lib;Qt5Gui.lib;Qt5OpenGL.lib;Qt5Widgets.lib;thosttraderapi.lib;thostmduserapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -213,6 +214,7 @@
     <ClCompile Include="..\MFCKline\LoginDlg.cpp" />
     <ClCompile Include="..\MFCKline\mgl\OGLKview.cc" />
     <ClCompile Include="..\MFCKline\MyOglDrawDlg.cpp" />
+    <ClCompile Include="..\MFCKline\NET\ChannelCollector.cpp" />
     <ClCompile Include="..\MFCKline\NET\CTPdev.cpp" />
     <ClCompile Include="..\MFCKline\RegistDlg.cpp" />
     <ClCompile Include="..\MFCKline\security\encoding.cc" />

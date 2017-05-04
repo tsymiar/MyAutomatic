@@ -115,7 +115,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DisableSpecificWarnings>
       </DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>$(BOOST);$(OPENSSL);$(PTHD_INC);$(QTDIR)\include;$(SolutionDir)MFCKline;$(SolutionDir)MFCKline\mgl;$(SolutionDir)MFCKline\font;$(SolutionDir)MFCKline\Index;$(SolutionDir)..\gSOAPverify\soap;.\GeneratedFiles\$(ConfigurationName);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BOOST);$(OPENSSL);$(PTHD_INC);$(QTDIR)\include;$(SolutionDir)MFCKline;$(SolutionDir)MFCKline\mgl;$(SolutionDir)MFCKline\font;$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\Index;$(SolutionDir)..\gSOAPverify\soap;.\GeneratedFiles\$(ConfigurationName);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAs>CompileAsCpp</CompileAs>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -127,11 +127,11 @@
       <SubSystem>Windows</SubSystem>
       <TargetMachine>NotSet</TargetMachine>
       <AdditionalOptions>/NODEFAULTLIB:"libcmt.lib" %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>Qt5Core.lib;Qt5Gui.lib;Qt5OpenGL.lib;Qt5Widgets.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Qt5Core.lib;Qt5Gui.lib;Qt5OpenGL.lib;Qt5Widgets.lib;thosttraderapi.lib;thostmduserapi.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <AdditionalLibraryDirectories>$(QTDIR)\lib;$(SolutionDir)MFCKline\GL\lib;$(SolutionDir)MFCKline\font\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(QTDIR)\lib;$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\GL\lib;$(SolutionDir)MFCKline\font\lib</AdditionalLibraryDirectories>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -282,6 +282,7 @@
     <ClInclude Include="MyOglDrawDlg.h" />
     <ClInclude Include="NET\GEThttp.h" />
     <ClInclude Include="NET\CTPdev.h" />
+    <ClInclude Include="NET\ChannelCollector.h" />
     <ClInclude Include="own\COwnCtl.h" />
     <ClInclude Include="RegistDlg.h" />
     <ClInclude Include="Resource.h" />
@@ -318,6 +319,7 @@
     <ClCompile Include="MyOglDrawDlg.cpp" />
     <ClCompile Include="NET\GEThttp.cpp" />
     <ClCompile Include="NET\CTPdev.cpp" />
+    <ClCompile Include="NET\ChannelCollector.cpp" />
     <ClCompile Include="own\COwnCtl.cpp" />
     <ClCompile Include="RegistDlg.cpp" />
     <ClCompile Include="security\AES.cc" />
