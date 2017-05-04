@@ -18,7 +18,8 @@ class MyOglDrawDlg : public CDialog
 	DECLARE_DYNAMIC(MyOglDrawDlg)
 
 public:
-	MyOglDrawDlg(CWnd* pParent = NULL);   // 标准构造函数
+	MyOglDrawDlg() {};
+	MyOglDrawDlg(const char* sIP, CWnd* pParent = NULL);   // 标准构造函数
 	virtual ~MyOglDrawDlg();
 
 // 对话框数据
@@ -55,6 +56,7 @@ private:
 	void PostNcDestroy();
 	void SetCtrl();
 public:
+	char* ctpIP = NULL;
 	HDC		m_hDC;
 	OGLKview  Ogl;
 	HICON m_hIcon;
@@ -77,9 +79,6 @@ public:
 	afx_msg void OnGetMinMaxInfo(MINMAXINFO* lpMMI);
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
 	afx_msg BOOL OnMouseWheel(UINT nFlags,short zDelta,CPoint pt);
-	afx_msg void OnRButtonDown(UINT nFlags, CPoint point);
-	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
-	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
 	afx_msg BOOL OnSetCursor(CWnd* pWnd,UINT nHitTest,UINT message);
 	afx_msg LRESULT CALLBACK WindowProc(
 		_In_ HWND   hwnd,
@@ -101,4 +100,5 @@ public:
 	auto GetPrivMem();
 	int GetMarkDatatoDraw();
 	afx_msg void OnSetbkg();
+	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 };

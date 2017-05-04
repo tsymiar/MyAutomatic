@@ -2,6 +2,7 @@
 #define _CTPDEV_H_
 
 #include "MGL/OGLKview.h"
+#include "../MyOglDrawDlg.h"
 
 class CTPdev
 {

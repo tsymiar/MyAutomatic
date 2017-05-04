@@ -27,4 +27,8 @@ public:
 	afx_msg void OnBnClickedRegist();
 	afx_msg void OnBnClickedTestlog();
 	afx_msg void OnBnClickedKline();
+	CIPAddressCtrl m_ipAddr;
+	CEdit m_Port;
+	char s_IP[16];
+	CString s_Port;
 };

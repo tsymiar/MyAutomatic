@@ -149,14 +149,14 @@ bool OGLKview::DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool h
 	fixeddata.close = Pytinker(markdata.close, tinkep);
 	fixeddata.high = Pytinker(markdata.high, tinkep);
 	fixeddata.low = Pytinker(markdata.low, tinkep);
-	if (fillitem.upadp > 0)
+	if (fillitem.upadp - 0.f > 0)
 	{
 		limitup = true;
 		glColor3f(1, 0, 0);
 		shadowup = fixeddata.close;
 		shadowdown = fixeddata.open;
 	}
-	else if (fillitem.upadp < 0)
+	else if (fillitem.upadp - 0.f < 0)
 	{
 		limitup = false;
 		if (dlginfo.bkg)
@@ -390,7 +390,11 @@ void OGLKview::print_string(const char* str)
 			++i;
 		++len;
 	}
+#if !defined(_UNICODE)
+#define _UNICODE
 	wstring = (wchar_t*)malloc((len + 1) * sizeof(wchar_t));
+#undef _UNICODE
+#endif
 #endif
 	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, str, -1, wstring, len);
 	wstring[len] = _T('\0');
@@ -403,14 +407,15 @@ void OGLKview::print_string(const char* str)
 	{
 #if !defined(_UNICODE)
 #define _UNICODE
-		wglUseFontBitmapsW(m_hDC, wstring[i], 1, list);
+		if (m_hDC != NULL)
+			wglUseFontBitmapsW(m_hDC, wstring[i], 1, list);
 #undef _UNICODE
 #endif
 		glCallList(list);
 	}
 	if (wstring != NULL)
 	{
-//		free(wstring);
+		free(wstring);
 		wstring = NULL;
 	}
 	glDeleteLists(list, 1);
@@ -421,14 +426,14 @@ int OGLKview::diag_staff(int x, int y)
 	OGLKview::Point pt = \
 	{ pt.x = (float)x, pt.y = (float)y };
 	glColor3f(1, 1, 1);
-	glViewport(0, viewsize.pty, viewsize.ptw, viewsize.pth);
+	glViewport(0, viewsize.ty, viewsize.tw, viewsize.th);
 	glBegin(GL_LINES);
 	{
 		glVertex2f(-10.0f, this->xytinker(pt).y);
 		glVertex2f(10.0f, this->xytinker(pt).y);
 	}
 	glEnd();
-	glViewport(0, 0, viewsize.ptw, int(viewsize.pth*1.966f));
+	glViewport(0, 0, viewsize.tw, int(viewsize.th*1.966f));
 	glBegin(GL_LINES);
 	{
 		glVertex2f(this->xytinker(pt).x, -1.239f);
@@ -583,19 +588,20 @@ int OGLKview::DrawArrow(OGLKview::Point begin)
 	return NumVertices;
 }
 
-int OGLKview::DrawDetail(OGLKview::Market market, int view)
+int OGLKview::DrawDetail(OGLKview::Market market)
 {
 	float y = 0;
-	char hintx[16];
+	static char hintx[16];
 	float min = 0, step = 1, fold = 1;
-	OGLKview::Point poi, iop;
-	poi.x = 1.234567f;
-	poi.y = 1.17f;
-	iop.x = (float)dlginfo.mouX;
-	iop.y = (float)dlginfo.mouY;
+	static OGLKview::Point txcr, mc;
+	txcr.x = -1.234567f;
+	txcr.y = 1.17f;
+	mc.x = (float)dlginfo.mouX;
+	mc.y = (float)dlginfo.mouY;
 	min += (417 - dlginfo.mouY)*(float)fixpixely*step / fold*3.9f;
 	sprintf(hintx, "%.2f", min);
-	SwitchViewport(view);
+	SwitchViewport(1);
+	glDisable(GL_DEPTH_TEST);
 	glColor3f(0, 0, 0);
 	glBegin(GL_QUADS);
 	//↗glVertex3f(x,y,z);
@@ -620,39 +626,73 @@ int OGLKview::DrawDetail(OGLKview::Market market, int view)
 	glVertex3f(-1.3f, 0.333f, 0);
 	glVertex3f(-1.3f, 1.2417f, 0);
 
-	glVertex3f(-1.3f, 0.333f, 0);
+	glVertex3f(-1.3f, 1.2417f, 0);
 	glVertex3f(-1.03f, 1.2417f, 0);
 
 	glVertex3f(-1.03f, 1.2417f, 0);
 	glVertex3f(-1.03f, 0.333f, 0);
 	glEnd();
 
-	DrawKtext(g_ltime, poi, 17, { 0.6f, 0.7f, 0.8f, 0.9f }, "微软雅黑");
-	poi.y = 1.09f;
-	DrawKtext("开盘", poi, 13, { 1,1,1 }, "宋体");
-	poi.y = 0.9f;
-	DrawKtext("最高", poi, 13, { 1,1,1 }, "宋体");
-	poi.y = 0.7f;
-	DrawKtext("最低", poi, 13, { 1,1,1 }, "宋体");
-	poi.y = 0.5f;
-	DrawKtext("收盘", poi, 13, { 1,1,1 }, "宋体");
+	DrawKtext(g_ltime, txcr, 17, { 0.6f, 0.7f, 0.8f, 0.9f }, "微软雅黑");
+	txcr.y = 1.09f;
+	DrawKtext("开盘", txcr, 13, { 1,1,1 }, "宋体");
+	txcr.y = 0.9f;
+	DrawKtext("最高", txcr, 13, { 1,1,1 }, "宋体");
+	txcr.y = 0.7f;
+	DrawKtext("最低", txcr, 13, { 1,1,1 }, "宋体");
+	txcr.y = 0.5f;
+	DrawKtext("收盘", txcr, 13, { 1,1,1 }, "宋体");
 	//方框
 	//if((fixxy(iop).x>marketraw.left)&&(fixxy(iop).x>marketraw.right))
 	//{
-	poi.y = 1.0f;
-	Color4f f4;
+	txcr.y = 1.0f;
+	static Color4f f4;
 	if (limitup)
 		f4 = { 1,0,0 };
 	else
 		f4 = { 0,1,0 };
-	DrawKtext(markchars.open, poi, 13, f4, "微软雅黑");
-	poi.y = 0.8f;
-	DrawKtext(markchars.high, poi, 13, f4, "微软雅黑");
-	poi.y = 0.6f;
-	DrawKtext(markchars.low, poi, 13, f4, "微软雅黑");
-	poi.y = 0.4f;
-	DrawKtext(markchars.close, poi, 13, f4, "微软雅黑");
+	DrawKtext(markchars.open, txcr, 13, f4, "微软雅黑");
+	txcr.y = 0.8f;
+	DrawKtext(markchars.high, txcr, 13, f4, "微软雅黑");
+	txcr.y = 0.6f;
+	DrawKtext(markchars.low, txcr, 13, f4, "微软雅黑");
+	txcr.y = 0.4f;
+	DrawKtext(markchars.close, txcr, 13, f4, "微软雅黑");
 	//}
+	//横轴提示框
+	glColor3f(0, .8f, 1);
+	glBegin(GL_QUADS);
+		glTexCoord2f(0, 0);
+		glVertex3f(1.1f, xytinker(txcr).y, 0);
+		glTexCoord2f(1.f, 0.f);
+		glVertex3f(1.3f, xytinker(txcr).y, 0);
+		glTexCoord2f(1.f, 1.f);
+		if (xytinker(txcr).y + .1f >= 1.2417f)
+			y = xytinker(txcr).y - .1f;
+		else
+			y = xytinker(txcr).y + .1f;
+		glVertex3f(1.3f, y, 0);
+		glTexCoord2f(0.f, 1.f);
+		glVertex3f(1.1f, y, 0);
+	glEnd();
+	glColor3f(1, 1, 1);
+	glBegin(GL_LINES);
+		glVertex3f(1.2409f, xytinker(txcr).y, 0);
+		glVertex3f(1.1f, xytinker(txcr).y, 0);
+		glVertex3f(1.2409f, xytinker(txcr).y, 0);
+		glVertex3f(1.2409f, y, 0);
+		glVertex3f(1.2409f, y, 0);
+		glVertex3f(1.1f, y, 0);
+		glVertex3f(1.1f, y, 0);
+		glVertex3f(1.1f, xytinker(txcr).y, 0);
+	glEnd();
+	txcr.x = 1.13f;
+	if (xytinker(txcr).y + .1f >= 1.2417f)
+		txcr.y = y + .02f;
+	else
+		txcr.y = y - .08f;
+	DrawKtext(hintx, txcr, 13);
+	glEnable(GL_DEPTH_TEST);
 	return (int)y;
 }
 
@@ -705,7 +745,7 @@ void OGLKview::SwitchViewport(int viewport, OGLKview::ViewSize adjust)
 	switch (viewport)
 	{
 	case 0:
-		glViewport(0, 0, attr.wide*adjust.ptw, adjust.pth*attr.tall);
+		glViewport(0, 0, attr.wide*adjust.tw, adjust.th*attr.tall);
 		break;
 	case 1:
 		glViewport(0, int(attr.tall*(1 - 0.539f)), int(attr.wide*0.742f), int(attr.tall / 1.966f));
@@ -981,7 +1021,7 @@ bool OGLKview::GetMarkDatatoDraw(void* P, char* title)
 				//前2行是数据格式和说明
 				if (markdata.size() < 3)
 				{
-					this->coding = true;
+					coding = true;
 					buff = markdata[0];
 					if (title == NULL)
 					{
@@ -1002,12 +1042,12 @@ bool OGLKview::GetMarkDatatoDraw(void* P, char* title)
 						token = strtok_s(NULL, " ", &cot);
 						i++;
 					}
-					this->SwitchViewport(0);
+					SwitchViewport(0);
 					sprintf(code, "%s(%s)", div_stock[1], div_stock[0]);
-					this->DrawKtext(code, pt_code, 20, { 1,1,0 }, "Terminal", false);
+					DrawKtext(code, pt_code, 20, { 1,1,0 }, "Terminal", false);
 					sprintf(code, ("%s(%s)<%s>"), div_stock[1], div_stock[0], div_stock[2]);
 					pt_code = { -1.22f,pt_code.y };// 格式化并输出
-					this->DrawKtext(code, pt_code, 12, { 1,1,0 }, "宋体");
+					DrawKtext(code, pt_code, 12, { 1,1,0 }, "宋体");
 					pt_code = { 0.8f,1.189f };
 					*div_stock = NULL;
 				}
@@ -1030,7 +1070,7 @@ bool OGLKview::GetMarkDatatoDraw(void* P, char* title)
 				vec_market.push_back(st_stock);
 				this->lastmarket = st_stock;
 				//设置初始显示图形数量
-				if (line < this->tinkep.move + this->dlginfo.cycle / this->tinkep.ratio)
+				if (line < tinkep.move + dlginfo.cycle / tinkep.ratio)
 				{
 					if (line > 0)//li不必分组
 						if (li > 3)
@@ -1073,20 +1113,19 @@ bool OGLKview::GetMarkDatatoDraw(void* P, char* title)
 					if (volume < atoi(markdata[7]))
 						volume = atoi(markdata[7]);
 					//计算RSA
-					if (this->tinkep.ratio == 0)
+					if (tinkep.ratio == 0)
 					{
 						Pt[li].x += 6.5f;
 						Pt[li].y /= 2;
 					}
 					//瞄点
-					Pt[li].x = this->Pxtinker(this->tinkep);
-					Pt[li].y = (float)atof(markdata[6]);
+					Pt[li].x =
+						//22 - 2 * tinkep.ratio*(3 - line*(tinkep.ratio + 9)*0.01f + 3.f + tinkep.move*.1f);
+						this->Pxtinker(tinkep);
+					Pt[li].y = (float)atof(markdata[6])/**.9f*/;
 #if !defined(CMfcKView)
 //					ASSERT(!_CrtCheckMemory());
 #endif // !
-					this->dlginfo.line <= 1 ? Pter = Pt[0] : Pt[0];
-					if (line >= this->tinkep.move)
-						this->DrawKline(st_stock, this->tinkep);
 					this->DrawPoly(Pter, Pt[li], { 0.f,1.f,0.f });
 					Pter = Pt[li]; 
 					//绘制MA线
@@ -1108,7 +1147,7 @@ bool OGLKview::GetMarkDatatoDraw(void* P, char* title)
 						{
 
 						}
-						DrawPoly(pt_ma20old, pt_ma20, { 0.9f, 0.0f, 0.9f });
+						DrawPoly(pt_ma20old, pt_ma20, { 0.9f, 0.0f, 0.9f }, 4);
 						pt_ma20old = pt_ma20;
 						hadraw20 = true;
 					}
@@ -1120,7 +1159,7 @@ bool OGLKview::GetMarkDatatoDraw(void* P, char* title)
 						pt_ma10.y = isma._10 = totma._10 / 10;
 						pt_ma10old.x = Pter.x;
 						pt_ma10old.y = pt_ma10.y; 
-						DrawPoly(pt_ma10old, pt_ma10, { 1.f, 1.0f, 0.f });
+						DrawPoly(pt_ma10old, pt_ma10, { 1.f, 1.0f, 0.f }, 4);
 						pt_ma10old = pt_ma10;
 						hadraw10 = true;
 					}
@@ -1132,35 +1171,36 @@ bool OGLKview::GetMarkDatatoDraw(void* P, char* title)
 						pt_ma5.y = isma._5 = totma._5 / 5;
 						pt_ma5old.x = Pter.x;
 						pt_ma5old.y = pt_ma5.y;
-						DrawPoly(pt_ma5old, pt_ma5, { 1.f, 1.0f, 1.f });
+						DrawPoly(pt_ma5old, pt_ma5, { 1.f, 1.0f, 1.f }, 4);
 						pt_ma5old = pt_ma5;
 						hadraw5 = true;
 					}
 					//绘制RSA线
-					pt_AB6.x = pt_AB12.x = pt_AB24.x = 9 - proportion*(3 - line*(proportion + 9)*0.01f + 3.f + .1f);
-					pt_AB6.y = stock.RSI(frise.stRSA._6, fdrop.stRSA._6)*8.33;
-					pt_AB12.y = stock.RSI(frise.stRSA._12, fdrop.stRSA._12)*8.33;
-					pt_AB24.y = stock.RSI(frise.stRSA._24, fdrop.stRSA._24)*8.33;
+					pt_AB6.x = pt_AB12.x = pt_AB24.x = Pxtinker(tinkep); 
+					//9 - tinkep.ratio*(3 - line*(tinkep.ratio + 9)*0.01f + 3.f + tinkep.move*.1f);
+					pt_AB6.y = stock.RSI(frise.stRSA._6, fdrop.stRSA._6)*8.33f;
+					pt_AB12.y = stock.RSI(frise.stRSA._12, fdrop.stRSA._12)*8.33f;
+					pt_AB24.y = stock.RSI(frise.stRSA._24, fdrop.stRSA._24)*8.33f;
 					line < 6 ? (pt_AB6old = pt_AB6) : (line <= 12 ? (pt_AB12old = pt_AB12) : (line < 24 ? pt_AB24 = pt_AB24old : pt_AB24old));
 					//RSI6粉红
 					if (line % 6 == 0) {
 						frise.stRSA._6 = stock.RSI(frise.stRSA._6, fdrop.stRSA._6);
-						pt_AB6.y = frise.stRSA._6*8.33;
-						DrawPoly(pt_AB6old, pt_AB6, { 1.f,.75f,.8f }, 0);
+						pt_AB6.y = frise.stRSA._6*8.33f;
+						DrawPoly(pt_AB6old, pt_AB6, { 1.f,.75f,.8f }, 4);
 						pt_AB6old = pt_AB6;
 					}
 					//RSI12弱红
 					if (line % 12 == 0) {
 						frise.stRSA._12 = stock.RSI(frise.stRSA._12, fdrop.stRSA._12);
-						pt_AB12.y = frise.stRSA._12*8.33;
-						DrawPoly(pt_AB12old, pt_AB12, { .9f,.1f,.3f }, 0);
+						pt_AB12.y = frise.stRSA._12*8.33f;
+						DrawPoly(pt_AB12old, pt_AB12, { .9f,.1f,.3f }, 4);
 						pt_AB12old = pt_AB12;
 					}
 					//RSI24紫色
 					if (line % 24 == 0) {
 						frise.stRSA._24 = stock.RSI(frise.stRSA._24, fdrop.stRSA._24);
-						pt_AB24.y = frise.stRSA._24*8.33;
-						DrawPoly(pt_AB24old, pt_AB24, { .9f,0.f,.9f }, 0);
+						pt_AB24.y = frise.stRSA._24*8.33f;
+						DrawPoly(pt_AB24old, pt_AB24, { .9f,0.f,.9f }, 4);
 						pt_AB24old = pt_AB24;
 					}
 					//SMA10:
@@ -1233,14 +1273,17 @@ bool OGLKview::GetMarkDatatoDraw(void* P, char* title)
 					sprintf_s(rsi, "RSI24:%.3f", frise.stRSA._24);
 					DrawKtext(rsi, pt_rsi24, 15, { 0.9f,0.f,0.9f });
 					memset(rsi, 0, sizeof(rsi));
+					if (line >= tinkep.move)
+					{
+						DrawKline(st_stock, tinkep);
+					}
 					//刻度视口
 					//插入表格数据
 					//FillChart();
 					//标尺虚线
 					//市场详情窗口
-					SwitchViewport(1);
-					//if(...)
-					DrawDetail(st_stock);
+					if (dlginfo.drawstaff > 0)
+						DrawDetail(st_stock);
 					//分组计数
 					idx++;
 					//点计数
@@ -1254,6 +1297,8 @@ bool OGLKview::GetMarkDatatoDraw(void* P, char* title)
 		this->dlginfo.line = line = 0;
 	}
 	Readfile.close();
+	vector<char*>().swap(markdata);
+	std::vector<OGLKview::Market>().swap(vec_market);
 	return true;
 }
 

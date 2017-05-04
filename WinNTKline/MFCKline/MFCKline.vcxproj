@@ -264,6 +264,7 @@
     <ClInclude Include="Idx\binarytree-inl.h" />
     <ClInclude Include="Idx\CommSet.h" />
     <ClInclude Include="Idx\CPUID.H" />
+    <ClInclude Include="Idx\MyAlgorithm.h" />
     <ClInclude Include="Idx\_MACRO_.h" />
     <ClInclude Include="Idx\_String-inl.h" />
     <ClInclude Include="IMlogDlg.h" />
@@ -329,7 +330,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram.cd" />
-    <None Include="Idx\Initialise.inl" />
+    <None Include="Idx\Initialise-inl.h" />
     <None Include="Idx\plus1second" />
     <None Include="res\MFCKline.rc2" />
     <None Include="web\myweb.nsmap" />
