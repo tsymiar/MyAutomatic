@@ -144,10 +144,28 @@
     <Image Include="res\testAPIs.ico">
       <Filter>资源文件</Filter>
     </Image>
+    <Image Include="..\MFCKline\res\MFCKline.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\MFCKline\res\icon1.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\MFCKline\res\graph_line24_h.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\MFCKline\res\bmp00001.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\MFCKline\res\top1_h.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\testAPIs.rc2">
       <Filter>资源文件</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="..\MFCKline\res\windows.manifest" />
   </ItemGroup>
 </Project>

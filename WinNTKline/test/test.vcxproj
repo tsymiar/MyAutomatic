@@ -236,12 +236,20 @@
     <None Include="res\testAPIs.rc2" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="..\MFCKline\res\bmp00001.bmp" />
+    <Image Include="..\MFCKline\res\graph_line24_h.bmp" />
+    <Image Include="..\MFCKline\res\icon1.ico" />
+    <Image Include="..\MFCKline\res\MFCKline.ico" />
+    <Image Include="..\MFCKline\res\top1_h.bmp" />
     <Image Include="..\res\bmp00001.bmp" />
     <Image Include="..\res\graph_line24_h.bmp" />
     <Image Include="..\res\icon1.ico" />
     <Image Include="..\res\MFCKline.ico" />
     <Image Include="..\res\top1_h.bmp" />
     <Image Include="res\testAPIs.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="..\MFCKline\res\windows.manifest" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
