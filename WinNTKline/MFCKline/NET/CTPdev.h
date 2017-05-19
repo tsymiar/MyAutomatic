@@ -4,6 +4,7 @@
 #include "MGL/OGLKview.h"
 #include "ChannelCollector.h"
 #include "../MyOglDrawDlg.h"
+#include "dos\DOSCout.h"
 
 class CTPdev
 {
