@@ -49,6 +49,7 @@ BEGIN_MESSAGE_MAP(CtestAPIsDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_REGIDST, &CtestAPIsDlg::OnBnClickedRegist)
 	ON_BN_CLICKED(IDC_TESTLOG, &CtestAPIsDlg::OnBnClickedTestlog)
 	ON_BN_CLICKED(IDC_KLINE, &CtestAPIsDlg::OnBnClickedKline)
+	ON_BN_CLICKED(IDC_CTP, &CtestAPIsDlg::OnBnClickedCtp)
 END_MESSAGE_MAP()
 
 
@@ -109,9 +110,7 @@ HCURSOR CtestAPIsDlg::OnQueryDragIcon()
 
 void CtestAPIsDlg::OnBnClickedToim()
 {
-	DOSCout dos;
 	CIMhideWndDlg* m_pIM = new CIMhideWndDlg();
-	//dos.RedirectConsole();
 	m_pIM->Create(IDD_IMHIDEWND);
 	m_pIM->ShowWindow(SW_SHOWNORMAL);
 }
@@ -140,4 +139,16 @@ void CtestAPIsDlg::OnBnClickedKline()
 	MyOglDrawDlg* ogl = new MyOglDrawDlg();
 	ogl->Create(IDD_OGLIMG);
 	ogl->ShowWindow(SW_SHOWNORMAL);
+}
+
+
+void CtestAPIsDlg::OnBnClickedCtp()
+{
+	CTPdev* m_ctp = new CTPdev();
+	if (AllocConsole())
+	{
+		freopen("CONOUT$", "w", stdout);
+		CloseHandle((HANDLE)_beginthreadex(NULL, 0, m_ctp->TradeMarket, (void*)this, 0, NULL));
+	}
+	delete m_ctp;
 }

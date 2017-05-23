@@ -320,6 +320,7 @@
     <ClCompile Include="NET\GEThttp.cpp" />
     <ClCompile Include="NET\CTPdev.cpp" />
     <ClCompile Include="NET\ChannelCollector.cpp" />
+    <ClCompile Include="NET\Simulation.cpp" />
     <ClCompile Include="own\COwnCtl.cpp" />
     <ClCompile Include="RegistDlg.cpp" />
     <ClCompile Include="security\AES.cc" />
