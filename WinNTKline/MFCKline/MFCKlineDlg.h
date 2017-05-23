@@ -64,4 +64,5 @@ private:
 public:
 	afx_msg void OnBnClickedOK();
 	afx_msg void OnBnClickedCancel();
+	afx_msg void OnDropFiles(HDROP hDropInfo);
 };

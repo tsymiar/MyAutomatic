@@ -31,4 +31,5 @@ public:
 	CEdit m_Port;
 	char s_IP[16];
 	CString s_Port;
+	afx_msg void OnBnClickedCtp();
 };
