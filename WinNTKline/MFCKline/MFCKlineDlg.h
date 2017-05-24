@@ -1,4 +1,4 @@
-﻿
+
 // MFCKlineDlg.h : 头文件
 //
 

@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <cmath>
 #include <io.h> 
+
 #include "ChannelCollector.h"
 
 using namespace std;
@@ -39,7 +40,7 @@ void sim_test()
 
 			if (n>0)
 			{
-				cout << "准备测试�? << n << "个文件！" << endl;
+				cout << "准备测试�?" << n << "个文件！" << endl;
 
 				string str = file.name;
 				string str0 = "";

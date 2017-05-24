@@ -71,7 +71,7 @@ void DOSCout::ExecuteConsole()
 	freopen_s(&stream, "CONOUT$", "w+t", stdout);
 	cout << "Press Esc to exit." << endl;
 	DeleteMenu(GetSystemMenu(GetConsoleWindow(), FALSE), SC_CLOSE, MF_BYCOMMAND);
-	//×èÈûÖ÷Ïß³Ì
+	//é˜»å¡žä¸»çº¿ç¨‹
 	while (true)
 	{
 		if (_getch() == 27)
