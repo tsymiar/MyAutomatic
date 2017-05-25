@@ -192,10 +192,13 @@
     <ClInclude Include="..\MFCKline\IMhideWndDlg.h" />
     <ClInclude Include="..\MFCKline\IMlogDlg.h" />
     <ClInclude Include="..\MFCKline\LoginDlg.h" />
-    <ClInclude Include="..\MFCKline\mgl\OGLKview.h" />
+    <ClInclude Include="..\MFCKline\mygl\OGLKview.h" />
     <ClInclude Include="..\MFCKline\MyOglDrawDlg.h" />
-    <ClInclude Include="..\MFCKline\NET\CTPdev.h" />
+    <ClInclude Include="..\MFCKline\netwk\ChannelCollector.h" />
+    <ClInclude Include="..\MFCKline\netwk\CTPdev.h" />
     <ClInclude Include="..\MFCKline\RegistDlg.h" />
+    <ClInclude Include="..\MFCKline\resource.h" />
+    <ClInclude Include="..\MFCKline\SetMarkDlg.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -212,13 +215,14 @@
     <ClCompile Include="..\MFCKline\IMlogDlg.cpp" />
     <ClCompile Include="..\MFCKline\IM\client.cpp" />
     <ClCompile Include="..\MFCKline\LoginDlg.cpp" />
-    <ClCompile Include="..\MFCKline\mgl\OGLKview.cc" />
+    <ClCompile Include="..\MFCKline\mygl\OGLKview.cc" />
     <ClCompile Include="..\MFCKline\MyOglDrawDlg.cpp" />
-    <ClCompile Include="..\MFCKline\NET\ChannelCollector.cpp" />
-    <ClCompile Include="..\MFCKline\NET\CTPdev.cpp" />
+    <ClCompile Include="..\MFCKline\netwk\ChannelCollector.cpp" />
+    <ClCompile Include="..\MFCKline\netwk\CTPdev.cpp" />
     <ClCompile Include="..\MFCKline\RegistDlg.cpp" />
     <ClCompile Include="..\MFCKline\security\encoding.cc" />
     <ClCompile Include="..\MFCKline\security\MD5.cc" />
+    <ClCompile Include="..\MFCKline\SetMarkDlg.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -236,6 +240,7 @@
     <None Include="res\testAPIs.rc2" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="..\MFCKline\res\bitmap1.bmp" />
     <Image Include="..\MFCKline\res\bmp00001.bmp" />
     <Image Include="..\MFCKline\res\graph_line24_h.bmp" />
     <Image Include="..\MFCKline\res\icon1.ico" />

@@ -115,7 +115,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DisableSpecificWarnings>
       </DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>$(BOOST);$(OPENSSL);$(PTHD_INC);$(QTDIR)\include;$(SolutionDir)MFCKline;$(SolutionDir)MFCKline\mgl;$(SolutionDir)MFCKline\font;$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\Index;$(SolutionDir)..\gSOAPverify\soap;.\GeneratedFiles\$(ConfigurationName);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BOOST);$(OPENSSL);$(PTHD_INC);$(QTDIR)\include;$(SolutionDir)MFCKline;$(SolutionDir)MFCKline\font;$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\mygl;$(SolutionDir)MFCKline\Index;$(SolutionDir)..\gSOAPverify\soap;.\GeneratedFiles\$(ConfigurationName);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAs>CompileAsCpp</CompileAs>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -127,11 +127,11 @@
       <SubSystem>Windows</SubSystem>
       <TargetMachine>NotSet</TargetMachine>
       <AdditionalOptions>/NODEFAULTLIB:"libcmt.lib" %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>Qt5Core.lib;Qt5Gui.lib;Qt5OpenGL.lib;Qt5Widgets.lib;thosttraderapi.lib;thostmduserapi.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Qt5Core.lib;Qt5Gui.lib;Qt5OpenGL.lib;Qt5Widgets.lib;pthreadVC2.lib;thosttraderapi.lib;thostmduserapi.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <AdditionalLibraryDirectories>$(QTDIR)\lib;$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\GL\lib;$(SolutionDir)MFCKline\font\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(PTHD_LIB86);$(QTDIR)\lib;$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\GL\lib;$(SolutionDir)MFCKline\font\lib</AdditionalLibraryDirectories>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -273,21 +273,24 @@
     <ClInclude Include="LoginDlg.h" />
     <ClInclude Include="MFCKline.h" />
     <ClInclude Include="MFCKlineDlg.h" />
-    <ClInclude Include="mgl\bitmap.h" />
-    <ClInclude Include="mgl\GlF16.h" />
-    <ClInclude Include="mgl\GlModel.h" />
-    <ClInclude Include="mgl\House.h" />
-    <ClInclude Include="mgl\OGLKview.h" />
-    <ClInclude Include="mgl\texture.h" />
+    <ClInclude Include="mygl\bitmap.h" />
+    <ClInclude Include="mygl\GlF16.h" />
+    <ClInclude Include="mygl\GlModel.h" />
+    <ClInclude Include="mygl\House.h" />
+    <ClInclude Include="mygl\OGLKview.h" />
+    <ClInclude Include="mygl\texture.h" />
     <ClInclude Include="MyOglDrawDlg.h" />
-    <ClInclude Include="NET\GEThttp.h" />
-    <ClInclude Include="NET\CTPdev.h" />
-    <ClInclude Include="NET\ChannelCollector.h" />
+    <ClInclude Include="netwk\ChannelCollector.h" />
+    <ClInclude Include="netwk\CTPdev.h" />
+    <ClInclude Include="netwk\GEThttp.h" />
+    <ClInclude Include="netwk\Simulation.h" />
     <ClInclude Include="own\COwnCtl.h" />
+    <ClInclude Include="pthdpool\pthdpool.h" />
     <ClInclude Include="RegistDlg.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="security\encoding.h" />
     <ClInclude Include="security\MD5.h" />
+    <ClInclude Include="SetMarkDlg.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Stock\Stock.h" />
     <ClInclude Include="targetver.h" />
@@ -310,22 +313,24 @@
     <ClCompile Include="LoginDlg.cpp" />
     <ClCompile Include="MFCKline.cpp" />
     <ClCompile Include="MFCKlineDlg.cpp" />
-    <ClCompile Include="mgl\bitmap.c" />
-    <ClCompile Include="mgl\GlF16.cc" />
-    <ClCompile Include="mgl\GlModel.cc" />
-    <ClCompile Include="mgl\House.cc" />
-    <ClCompile Include="mgl\OGLKview.cc" />
-    <ClCompile Include="mgl\texture.c" />
+    <ClCompile Include="mygl\bitmap.c" />
+    <ClCompile Include="mygl\GlF16.cc" />
+    <ClCompile Include="mygl\GlModel.cc" />
+    <ClCompile Include="mygl\House.cc" />
+    <ClCompile Include="mygl\OGLKview.cc" />
+    <ClCompile Include="mygl\texture.c" />
     <ClCompile Include="MyOglDrawDlg.cpp" />
-    <ClCompile Include="NET\GEThttp.cpp" />
-    <ClCompile Include="NET\CTPdev.cpp" />
-    <ClCompile Include="NET\ChannelCollector.cpp" />
-    <ClCompile Include="NET\Simulation.cpp" />
+    <ClCompile Include="netwk\ChannelCollector.cpp" />
+    <ClCompile Include="netwk\CTPdev.cpp" />
+    <ClCompile Include="netwk\GEThttp.cpp" />
+    <ClCompile Include="netwk\Simulation.cpp" />
     <ClCompile Include="own\COwnCtl.cpp" />
+    <ClCompile Include="pthdpool\pthdpool.cc" />
     <ClCompile Include="RegistDlg.cpp" />
     <ClCompile Include="security\AES.cc" />
     <ClCompile Include="security\encoding.cc" />
     <ClCompile Include="security\MD5.cc" />
+    <ClCompile Include="SetMarkDlg.cpp" />
     <ClCompile Include="test\Testcase.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -339,6 +344,7 @@
     <None Include="web\myweb.nsmap" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="res\bitmap1.bmp" />
     <Image Include="res\bmp00001.bmp" />
     <Image Include="res\graph_line24_h.bmp" />
     <Image Include="res\icon1.ico" />

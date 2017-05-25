@@ -145,10 +145,6 @@ void CtestAPIsDlg::OnBnClickedKline()
 void CtestAPIsDlg::OnBnClickedCtp()
 {
 	CTPdev* m_ctp = new CTPdev();
-	if (AllocConsole())
-	{
-		freopen("CONOUT$", "w", stdout);
-		CloseHandle((HANDLE)_beginthreadex(NULL, 0, m_ctp->TradeMarket, (void*)this, 0, NULL));
-	}
+	CloseHandle((HANDLE)_beginthreadex(NULL, 0, m_ctp->TradeMarket, (void*)this, 0, NULL));
 	delete m_ctp;
 }
