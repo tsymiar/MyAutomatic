@@ -1,7 +1,7 @@
 ﻿#ifndef CHART_DEPTH_H_
 #define CHART_DEPTH_H_
 
-#include "MGL/OGLKview.h"
+#include "MYGL/OGLKview.h"
 
 class DepthMarket
 {

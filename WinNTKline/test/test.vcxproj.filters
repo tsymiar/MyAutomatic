@@ -48,13 +48,22 @@
     <ClInclude Include="..\MFCKline\IMlogDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\MFCKline\mgl\OGLKview.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\MFCKline\NET\CTPdev.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="..\MFCKline\deep\DepthMarket.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\MFCKline\mygl\OGLKview.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\MFCKline\netwk\ChannelCollector.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\MFCKline\netwk\CTPdev.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\MFCKline\SetMarkDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\MFCKline\resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -104,16 +113,19 @@
     <ClCompile Include="..\MFCKline\IMlogDlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MFCKline\NET\CTPdev.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="..\MFCKline\deep\DepthMarket.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MFCKline\mgl\OGLKview.cc">
+    <ClCompile Include="..\MFCKline\netwk\ChannelCollector.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MFCKline\NET\ChannelCollector.cpp">
+    <ClCompile Include="..\MFCKline\netwk\CTPdev.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\MFCKline\mygl\OGLKview.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\MFCKline\SetMarkDlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -157,6 +169,9 @@
       <Filter>资源文件</Filter>
     </Image>
     <Image Include="..\MFCKline\res\top1_h.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\MFCKline\res\bitmap1.bmp">
       <Filter>资源文件</Filter>
     </Image>
   </ItemGroup>

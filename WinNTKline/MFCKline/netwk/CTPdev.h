@@ -1,7 +1,7 @@
 #ifndef _CTPDEV_H_
 #define _CTPDEV_H_
 
-#include "MGL/OGLKview.h"
+#include "MYGL/OGLKview.h"
 #include "ChannelCollector.h"
 #include "../MyOglDrawDlg.h"
 #include "dos\DOSCout.h"
