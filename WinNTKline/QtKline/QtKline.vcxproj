@@ -83,7 +83,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\MFCKline\mygl\OGLKview.cc" />
+    <ClCompile Include="..\MFCKline\mygl\OGLKview.cc" />
     <ClCompile Include="GeneratedFiles\Debug\moc_myoglwdg.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -137,6 +137,7 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\MFCKline\mygl\OGLKview.h" />
     <ClInclude Include="GeneratedFiles\ui_myoglwdg.h" />
     <CustomBuild Include="myuiobj.h">
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>

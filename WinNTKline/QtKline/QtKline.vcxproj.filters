@@ -48,7 +48,7 @@
     <ClCompile Include="MyOglWdg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\MFCKline\mygl\OGLKview.cc">
+    <ClCompile Include="..\MFCKline\mygl\OGLKview.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -69,6 +69,9 @@
   <ItemGroup>
     <ClInclude Include="GeneratedFiles\ui_myoglwdg.h">
       <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\MFCKline\mygl\OGLKview.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
