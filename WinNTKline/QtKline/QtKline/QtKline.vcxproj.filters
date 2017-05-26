@@ -45,10 +45,10 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\MFCKline\mgl\OGLKview.cc">
+    <ClCompile Include="MyOglWdg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MyOglWdg.cpp">
+    <ClCompile Include="..\..\MFCKline\mygl\OGLKview.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -50,6 +50,7 @@ BEGIN_MESSAGE_MAP(CtestAPIsDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_TESTLOG, &CtestAPIsDlg::OnBnClickedTestlog)
 	ON_BN_CLICKED(IDC_KLINE, &CtestAPIsDlg::OnBnClickedKline)
 	ON_BN_CLICKED(IDC_CTP, &CtestAPIsDlg::OnBnClickedCtp)
+	ON_BN_CLICKED(IDC_SIMBTN, &CtestAPIsDlg::OnBnClickedSimbtn)
 END_MESSAGE_MAP()
 
 
@@ -147,4 +148,14 @@ void CtestAPIsDlg::OnBnClickedCtp()
 	CTPdev* m_ctp = new CTPdev();
 	CloseHandle((HANDLE)_beginthreadex(NULL, 0, m_ctp->TradeMarket, (void*)this, 0, NULL));
 	delete m_ctp;
+}
+
+
+void CtestAPIsDlg::OnBnClickedSimbtn()
+{
+	if (AllocConsole())
+	{
+		freopen("CONOUT$", "w", stderr);
+		Simulation();
+	}
 }
