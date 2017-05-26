@@ -899,9 +899,8 @@ void OGLKview::DrawKtext(char text[], Point & coor, int size, OGLKview::Color4f 
 		DEFAULT_PITCH | FF_SWISS,
 #ifdef QT_DLL
 		(const wchar_t *)
-#else
-		font
 #endif
+		font
 	);
 #undef _UNICODE
 	HFONT hOldFont = (HFONT)SelectObject(wglGetCurrentDC(), mhfont);

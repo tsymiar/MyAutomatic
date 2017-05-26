@@ -32,4 +32,5 @@ public:
 	char s_IP[16];
 	CString s_Port;
 	afx_msg void OnBnClickedCtp();
+	afx_msg void OnBnClickedSimbtn();
 };

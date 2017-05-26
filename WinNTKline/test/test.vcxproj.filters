@@ -66,6 +66,9 @@
     <ClInclude Include="..\MFCKline\resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="..\MFCKline\netwk\Simulation.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -126,6 +129,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\MFCKline\SetMarkDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\MFCKline\netwk\Simulation.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
