@@ -200,6 +200,7 @@
     <ClInclude Include="..\MFCKline\netwk\ChannelCollector.h" />
     <ClInclude Include="..\MFCKline\netwk\CTPdev.h" />
     <ClInclude Include="..\MFCKline\netwk\Simulation.h" />
+    <ClInclude Include="..\MFCKline\own\Screen-Sharing.h" />
     <ClInclude Include="..\MFCKline\RegistDlg.h" />
     <ClInclude Include="..\MFCKline\resource.h" />
     <ClInclude Include="..\MFCKline\SetMarkDlg.h" />
@@ -224,6 +225,7 @@
     <ClCompile Include="..\MFCKline\netwk\ChannelCollector.cpp" />
     <ClCompile Include="..\MFCKline\netwk\CTPdev.cpp" />
     <ClCompile Include="..\MFCKline\netwk\Simulation.cpp" />
+    <ClCompile Include="..\MFCKline\own\Screen-Sharing.cpp" />
     <ClCompile Include="..\MFCKline\RegistDlg.cpp" />
     <ClCompile Include="..\MFCKline\security\encoding.cc" />
     <ClCompile Include="..\MFCKline\security\MD5.cc" />

@@ -130,8 +130,11 @@ void CtestAPIsDlg::OnBnClickedTestlog()
 	sprintf_s(soele.imusr.usr, 11, "ioscatchme");
 	sprintf_s(soele.imusr.psw, 17, "a6afbbcbf8be7668");
 
-	for (int i = 0; i < 3; i++)
+	for (int i = 0; i < 1000; i++)
+	{
 		logon.testLogin(&soele);
+		Sleep(10);
+	}
 }
 
 

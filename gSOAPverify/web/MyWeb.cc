@@ -28,6 +28,7 @@ int enqueue(SOAP_SOCKET, unsigned long ip); //入队列函数
 unsigned long dequeue_ip();
 SOAP_SOCKET dequeue(void); //出队列函数
 static unsigned long ips[MAX_QUEUE];
+int logcnt = 0;
 
 void * process_queue(void * soap)
 {
@@ -294,10 +295,11 @@ int soap_ser(int argc, char** argv)
 					break;
 				}
 			}
+			logcnt++;
 			//客户端的IP地址
-			fprintf(stderr, "\033[32mAccepted\033[0m \033[1mREMOTE\033[0m connection. IP = \033[33m%d92.%d.%d.%d\033[0m, socket = %d \n", \
+			fprintf(stderr, "\033[32mAccepted\033[0m \033[1mREMOTE\033[0m connection. IP = \033[33m%d92.%d.%d.%d\033[0m, socket = %d, log(%d) \n", \
 				(int)(((Soap.ip) >> 24) && 0xFF), (int)(((Soap.ip) >> 16) & 0xFF), (int)(((Soap.ip) >> 8) & 0xFF), \
-				(int)((Soap.ip) & 0xFF), (int)(Soap.socket));
+				(int)((Soap.ip) & 0xFF), (int)(Soap.socket), logcnt);
 			//请求的套接字进入队列，如果队列已满则循环等待
 			while (enqueue(cs, ips[j]) == SOAP_EOM)
 				usleep(1000);

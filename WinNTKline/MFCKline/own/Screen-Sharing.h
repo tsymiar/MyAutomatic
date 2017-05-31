@@ -2,6 +2,7 @@
 #include <string>
 #include <list>
 #include <gdiplus.h>
+#include <ws2tcpip.h>
 
 using namespace Gdiplus;
 
