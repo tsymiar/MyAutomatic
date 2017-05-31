@@ -135,7 +135,7 @@ public:
 		float bid1;
 		float curprice;
 		float toopen;
-		float upadp;
+		float upadp = .0f;
 		float higest;
 		float uprange;
 		float lowest;
@@ -170,9 +170,10 @@ public:
 	};
 	struct FixWhat {
 		int datacol = 0;
-		int move = 0;
+		int move = 70;
 		float ratio = 1;
 		float zoom = 1;
+		int multi = 1;
 	};
 	struct ViewSize {
 		GLsizei tx;

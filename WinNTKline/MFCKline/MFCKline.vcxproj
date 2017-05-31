@@ -195,16 +195,16 @@
       <CompileAs>CompileAsCpp</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(BOOST);$(PTHD_INC);$(SolutionDir)MFCKline;$(SolutionDir)MFCKline\VLD;$(SolutionDir)MFCKline\font;$(SolutionDir)MFCKline\Index;$(SolutionDir)..\gSOAPverify\soap;$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtNetwork;$(QTDIR)\include\ActiveQt;$(QTDIR)\include\QtOpenGL;$(QTDIR)\include\QtQuickWidgets;$(QTDIR)\include\QtSerialPort;$(QTDIR)\include\QtSvg;$(QTDIR)\include\QtUiTools;$(QTDIR)\include\QtWebSockets;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtXml;.\GeneratedFiles\$(ConfigurationName);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BOOST);$(OPENSSL);$(PTHD_INC);$(QTDIR)\include;$(SolutionDir)MFCKline;$(SolutionDir)MFCKline\font;$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\mygl;$(SolutionDir)MFCKline\Index;$(SolutionDir)..\gSOAPverify\soap;.\GeneratedFiles\$(ConfigurationName);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(QTDIR)\lib;$(SolutionDir)\MFCKline\VLD;$(SolutionDir)MFCKline\GL\lib;$(SolutionDir)MFCKline\font\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(PTHD_LIB86);$(QTDIR)\lib;$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\GL\lib;$(SolutionDir)MFCKline\font\lib</AdditionalLibraryDirectories>
       <AdditionalOptions>/SAFESEH:NO %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Qt5Core.lib;Qt5Gui.lib;Qt5OpenGL.lib;Qt5Widgets.lib;pthreadVC2.lib;thosttraderapi.lib;thostmduserapi.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <TargetMachine>NotSet</TargetMachine>
     </Link>
     <Midl>
@@ -285,6 +285,7 @@
     <ClInclude Include="netwk\GEThttp.h" />
     <ClInclude Include="netwk\Simulation.h" />
     <ClInclude Include="own\COwnCtl.h" />
+    <ClInclude Include="own\Screen-Sharing.h" />
     <ClInclude Include="pthdpool\pthdpool.h" />
     <ClInclude Include="RegistDlg.h" />
     <ClInclude Include="Resource.h" />
@@ -325,6 +326,7 @@
     <ClCompile Include="netwk\GEThttp.cpp" />
     <ClCompile Include="netwk\Simulation.cpp" />
     <ClCompile Include="own\COwnCtl.cpp" />
+    <ClCompile Include="own\Screen-Sharing.cpp" />
     <ClCompile Include="pthdpool\pthdpool.cc" />
     <ClCompile Include="RegistDlg.cpp" />
     <ClCompile Include="security\AES.cc" />
@@ -344,6 +346,7 @@
     <None Include="web\myweb.nsmap" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="res\bit+.bmp" />
     <Image Include="res\bitmap1.bmp" />
     <Image Include="res\bmp00001.bmp" />
     <Image Include="res\graph_line24_h.bmp" />

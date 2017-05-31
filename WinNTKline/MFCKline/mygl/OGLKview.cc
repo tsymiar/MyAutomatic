@@ -92,13 +92,14 @@ bool OGLKview::SetWindowPixelFormat(HDC m_hDC, HWND m_hWnd, int pixelformat)
 //}
 using namespace std;
 
-float Xdeg, Ydeg;
 bool g_multi = false;
+char g_mktim[16] = { NULL };
+char g_ltime[32] = { NULL };
+float Xdeg, Ydeg;
+float diff = 0, voly = 0;
 float proportion, delta = 1;
 float shadowup, shadowdown;
 float candlemiddle, candleright, candleleft;
-char g_mktim[16] = { NULL };
-char g_ltime[32] = { NULL };
 OGLKview::Point g_P, arrow;
 OGLKview::Market fixeddata;
 OGLKview::OglAttr attr = { 0 };
@@ -116,7 +117,7 @@ bool OGLKview::DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool h
 	glVertex3f(0, 0, 0);
 	glEnd();
 #endif
-	sprintf_s(g_ltime, "%d-%d-%d", markdata.time.tm_yday, markdata.time.tm_mon, markdata.time.tm_mday);
+	sprintf_s(g_ltime, "%d-%d-%d", markdata.time.tm_year, markdata.time.tm_mon, markdata.time.tm_mday);
 	tinkep.datacol = dlginfo.line;// -3;
 	hollow = !dlginfo.bkg;
 	g_P.x = (float)dlginfo.mouX;
@@ -289,10 +290,10 @@ bool OGLKview::DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool h
 	}
 	//成交量Vol
 	SwitchViewport(2);
-	float diff = fillitem.closing - fillitem.closed;
-	fillitem.closing > fillitem.closed ? glColor3f(1, 0, 0) : \
+	diff = fillitem.closing - fillitem.closed;
+	(diff - 0.f > 0) ? glColor3f(1, 0, 0) : \
 		glColor3f(0, 1, 1);
-	float voly = (markdata.amount*pow(10.0f, -8) - 0.7f)*Zoom.z_vol;
+	voly = (markdata.amount*pow(10.0f, -8) - 0.7f)*Zoom.z_vol;
 	if (g_multi)
 	{
 		glBegin(GL_LINES);
@@ -590,10 +591,11 @@ int OGLKview::DrawArrow(OGLKview::Point begin)
 
 int OGLKview::DrawDetail(OGLKview::Market market)
 {
-	float y = 0;
+	float x = 0, y = 0;
 	static char hintx[16];
 	float min = 0, step = 1, fold = 1;
 	static OGLKview::Point txcr, mc;
+	static Color4f f4;
 	txcr.x = -1.234567f;
 	txcr.y = 1.17f;
 	mc.x = (float)dlginfo.mouX;
@@ -646,21 +648,55 @@ int OGLKview::DrawDetail(OGLKview::Market market)
 	//if((fixxy(iop).x>marketraw.left)&&(fixxy(iop).x>marketraw.right))
 	//{
 	txcr.y = 1.0f;
-	static Color4f f4;
 	if (limitup)
 		f4 = { 1,0,0 };
 	else
 		f4 = { 0,1,0 };
-	DrawKtext(markchars.open, txcr, 13, f4, "微软雅黑");
+	DrawKtext(markchars.open, txcr, 14, f4, "微软雅黑");
 	txcr.y = 0.8f;
-	DrawKtext(markchars.high, txcr, 13, f4, "微软雅黑");
+	DrawKtext(markchars.high, txcr, 14, f4, "微软雅黑");
 	txcr.y = 0.6f;
-	DrawKtext(markchars.low, txcr, 13, f4, "微软雅黑");
+	DrawKtext(markchars.low, txcr, 14, f4, "微软雅黑");
 	txcr.y = 0.4f;
-	DrawKtext(markchars.close, txcr, 13, f4, "微软雅黑");
+	DrawKtext(markchars.close, txcr, 14, f4, "微软雅黑");
 	//}
-	//横轴提示框
+	glEnable(GL_DEPTH_TEST);
+	//竖轴提示框
+	SwitchViewport(0);
+	glDisable(GL_DEPTH_TEST);
 	glColor3f(0, .8f, 1);
+	glBegin(GL_QUADS);
+		glTexCoord2f(0, 0);
+		glVertex3f(xytinker(txcr).x, -1.2f, 0);
+		glTexCoord2f(1, 0);
+		glVertex3f(xytinker(txcr).x, -1.239f, 0);
+		glTexCoord2f(1, 1);
+		if (xytinker(txcr).x + .1f <= -1.07f)
+			x = xytinker(txcr).x + 0.19f;
+		else
+			x = xytinker(txcr).x - 0.19f;
+		glVertex3f(x, -1.239f, 0);
+		glTexCoord2f(0, 1);
+		glVertex3f(x, -1.2f, 0);
+	glEnd();
+	glColor3f(1, 1, 1);
+	glBegin(GL_LINES);
+		glVertex3f(xytinker(txcr).x, -1.2f, 0);
+		glVertex3f(xytinker(txcr).x, -1.239f, 0);
+		glVertex3f(x, -1.2f, 0);
+		glVertex3f(x, -1.239f, 0);
+		glVertex3f(x, -1.2f, 0);
+		glVertex3f(xytinker(txcr).x, -1.2f, 0);
+		glVertex3f(x, -1.239f, 0);
+		glVertex3f(xytinker(txcr).x, -1.239f, 0);
+	glEnd();
+	txcr.y = 1.23f;
+	if (xytinker(txcr).x + .1f <= -1.07f)
+		txcr.x = x - 1.07f;
+	else
+		txcr.x = x + .01f;
+	DrawKtext(g_ltime, txcr, 15, { 1,1,0,1 }, "宋体");
+	//横轴
 	glBegin(GL_QUADS);
 		glTexCoord2f(0, 0);
 		glVertex3f(1.1f, xytinker(txcr).y, 0);
@@ -691,7 +727,7 @@ int OGLKview::DrawDetail(OGLKview::Market market)
 		txcr.y = y + .02f;
 	else
 		txcr.y = y - .08f;
-	DrawKtext(hintx, txcr, 13);
+	DrawKtext(hintx, txcr, 15, { 1, 1, 0, 1 }, "宋体");
 	glEnable(GL_DEPTH_TEST);
 	return (int)y;
 }
@@ -744,10 +780,10 @@ void OGLKview::SwitchViewport(int viewport, OGLKview::ViewSize adjust)
 {
 	switch (viewport)
 	{
-	case 0:
+	case 0://全局
 		glViewport(0, 0, attr.wide*adjust.tw, adjust.th*attr.tall);
 		break;
-	case 1:
+	case 1://左上
 		glViewport(0, int(attr.tall*(1 - 0.539f)), int(attr.wide*0.742f), int(attr.tall / 1.966f));
 		break;
 	case 2:
@@ -1051,8 +1087,8 @@ bool OGLKview::GetMarkDatatoDraw(void* P, char* title)
 					*div_stock = NULL;
 				}
 				else { 1; }//continue;
-				markdata.clear();// 清空数据但不释放空间以便重复利用
 								 // 数据的初始化就绪
+				markdata.clear();// 清空数据但不释放空间以便重复利用
 			}
 			else if (markdata.size() > 8)
 			{
@@ -1067,7 +1103,6 @@ bool OGLKview::GetMarkDatatoDraw(void* P, char* title)
 				st_stock.amount =		 atoi(markdata[7]);
 				st_stock.price =  (float)atof(markdata[8]);
 				vec_market.push_back(st_stock);
-				this->lastmarket = st_stock;
 				//设置初始显示图形数量
 				if (line < tinkep.move + dlginfo.cycle / tinkep.ratio)
 				{
@@ -1111,12 +1146,7 @@ bool OGLKview::GetMarkDatatoDraw(void* P, char* title)
 						minprice = atof(markdata[5]);
 					if (volume < atoi(markdata[7]))
 						volume = atoi(markdata[7]);
-					//计算RSA
-					if (tinkep.ratio == 0)
-					{
-						Pt[li].x += 6.5f;
-						Pt[li].y /= 2;
-					}
+					this->lastmarket = st_stock;
 					//瞄点
 					Pt[li].x =
 						//22 - 2 * tinkep.ratio*(3 - line*(tinkep.ratio + 9)*0.01f + 3.f + tinkep.move*.1f);
@@ -1125,6 +1155,12 @@ bool OGLKview::GetMarkDatatoDraw(void* P, char* title)
 #if !defined(CMfcKView)
 //					ASSERT(!_CrtCheckMemory());
 #endif // !
+					//计算RSA
+					if (tinkep.ratio == 0)
+					{
+						Pt[li].x += 6.5f;
+						Pt[li].y /= 2;
+					}
 					this->DrawPoly(Pter, Pt[li], { 0.f,1.f,0.f });
 					Pter = Pt[li]; 
 					//绘制MA线
@@ -1295,9 +1331,9 @@ bool OGLKview::GetMarkDatatoDraw(void* P, char* title)
 		}
 		this->dlginfo.line = line = 0;
 	}
-	Readfile.close();
 	vector<char*>().swap(markdata);
 	std::vector<OGLKview::Market>().swap(vec_market);
+	Readfile.close();
 	return true;
 }
 
