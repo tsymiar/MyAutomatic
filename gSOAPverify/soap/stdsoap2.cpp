@@ -2660,22 +2660,27 @@ SOAP_FMAC1
 char*
 SOAP_FMAC2
 soap_first_block(struct soap *soap, struct soap_blist *b)
-{ struct soap_bhead *p, *q, *r;
-  if (!b)
-    b = soap->blist;
-  p = b->head;
-  if (!p)
-    return NULL;
-  r = NULL;
-  do
-  { q = p->next;
-    p->next = r;
-    r = p;
-    p = q;
-  } while (p);
-  b->head = r;
-  DBGLOG(TEST, SOAP_MESSAGE(fdebug, "First block %p\n", r + 1));
-  return (char*)(r + 1);
+{
+	struct soap_bhead *p = NULL, *q, *r;
+	if (!b)
+	{
+		b = soap->blist;
+		p = b->head;
+	}
+	if (!p)
+		return NULL;
+	r = NULL;
+	do
+	{
+		q = p->next;
+		p->next = r;
+		r = p;
+		p = q;
+	} while (p);
+	if (!b)
+		b->head = r;
+	DBGLOG(TEST, SOAP_MESSAGE(fdebug, "First block %p\n", r + 1));
+	return (char*)(r + 1);
 }
 #endif
 
@@ -2686,10 +2691,13 @@ SOAP_FMAC1
 char*
 SOAP_FMAC2
 soap_next_block(struct soap *soap, struct soap_blist *b)
-{ struct soap_bhead *p;
-  if (!b)
-    b = soap->blist;
-  p = b->head;
+{
+	struct soap_bhead *p = NULL;
+if (!b)
+{
+	b = soap->blist;
+	p = b->head;
+}
   if (p)
   { b->head = p->next;
     DBGLOG(TEST, SOAP_MESSAGE(fdebug, "Next block %p, deleting current block\n", b->head ? b->head + 1 : NULL));
@@ -3029,10 +3037,15 @@ soap_match_namespace(struct soap *soap, const char *id1, const char *id2, size_t
   while (np && (strncmp(np->id, id1, n1) || np->id[n1]))
     np = np->next;
   if (np)
-  { if (!(soap->mode & SOAP_XML_IGNORENS) && (n2 > 0 || !np->ns || *np->ns))
-    { if (np->index < 0
-       || ((s = soap->local_namespaces[np->index].id) && (strncmp(s, id2, n2) || (s[n2] && s[n2] != '_'))))
-        return SOAP_NAMESPACE;
+  {
+	  if (!(soap->mode & SOAP_XML_IGNORENS) && (n2 > 0 || !np->ns || *np->ns))
+	  {
+		  if (np->index < 0
+			  || ((s = soap->local_namespaces[np->index].id) && (strncmp(s, id2, n2) || (s[n2] && s[n2] != '_'))))
+		  {
+			  np = NULL;
+			  return SOAP_NAMESPACE;
+		  }
     }
     return SOAP_OK;
   }
@@ -10579,17 +10592,22 @@ soap_element(struct soap *soap, const char *tag, int id, const char *type)
           k = 0; /* no entries */
       }
 #endif
-      while (k-- && ns->id)
-      { const char *t = ns->out;
-        if (!t)
-          t = ns->ns;
-        if (*ns->id && t && *t)
-        { (SOAP_SNPRINTF(soap->tmpbuf, sizeof(soap->tmpbuf), strlen(ns->id) + 6), "xmlns:%s", ns->id);
-          if (soap_attribute(soap, soap->tmpbuf, t))
-            return soap->error;
-        }
-        ns++;
-      }
+	  while (k-- && ns->id)
+	  {
+		  const char *t = ns->out;
+		  if (!t)
+			  t = ns->ns;
+		  if (*ns->id && t && *t)
+		  {
+			  (SOAP_SNPRINTF(soap->tmpbuf, sizeof(soap->tmpbuf), strlen(ns->id) + 6), "xmlns:%s", ns->id);
+			  if (soap_attribute(soap, soap->tmpbuf, t))
+			  {
+				  ns = NULL;
+				  return soap->error;
+			  }
+		  }
+		  ns++;
+	  }
     }
   }
   soap->ns = 1; /* namespace table control: ns = 0 or 2 to start, then 1 to stop dumping the table  */
@@ -12041,8 +12059,12 @@ soap_peek_element(struct soap *soap)
       att = &(*att)->next;
 #endif
     if (t && tp->value)
-    { if (soap_push_namespace(soap, t, tp->value) == NULL)
-        return soap->error;
+	{
+		if (soap_push_namespace(soap, t, tp->value) == NULL)
+		{
+			tp->value = NULL;
+			return soap->error;
+		}
     }
   }
 #ifdef WITH_DOM
