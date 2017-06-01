@@ -21,7 +21,7 @@ protected:
 	void resizeGL(int width, int height);
 	void keyPressEvent(QKeyEvent *e);
 	void loadGLTextures();
-protected:
+private:
 	bool fullscreen;
 	bool light;
 	GLfloat xRot, yRot, zRot;
