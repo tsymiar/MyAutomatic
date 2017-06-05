@@ -77,15 +77,21 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <IntDir>Gen\test\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <IntDir>Gen\test\</IntDir>
+    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <IntDir>Gen\test\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <IntDir>Gen\test\</IntDir>
+    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -94,7 +100,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_TESTAPIS_;_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\font;$(SolutionDir)..\gSOAPverify\soap;$(SolutionDir)MFCKline</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\font;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap;$(SolutionDir)MFCKline</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -119,6 +125,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\font;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap;$(SolutionDir)MFCKline</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -172,6 +179,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\font;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap;$(SolutionDir)MFCKline</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -194,6 +202,7 @@
     <ClInclude Include="..\MFCKline\dos\DOSCout.h" />
     <ClInclude Include="..\MFCKline\IMhideWndDlg.h" />
     <ClInclude Include="..\MFCKline\IMlogDlg.h" />
+    <ClInclude Include="..\MFCKline\IM\IMclient.h" />
     <ClInclude Include="..\MFCKline\LoginDlg.h" />
     <ClInclude Include="..\MFCKline\mygl\OGLKview.h" />
     <ClInclude Include="..\MFCKline\MyOglDrawDlg.h" />
@@ -211,9 +220,9 @@
     <ClInclude Include="testAPIsDlg.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\gSOAPverify\soap\soapC.cpp" />
-    <ClCompile Include="..\..\gSOAPverify\soap\soapClient.cpp" />
-    <ClCompile Include="..\..\gSOAPverify\soap\stdsoap2.cpp" />
+    <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\soapC.cpp" />
+    <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\soapClient.cpp" />
+    <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\stdsoap2.cpp" />
     <ClCompile Include="..\MFCKline\deep\DepthMarket.cpp" />
     <ClCompile Include="..\MFCKline\dos\DOSCout.cpp" />
     <ClCompile Include="..\MFCKline\IMhideWndDlg.cpp" />
@@ -247,21 +256,12 @@
     <None Include="res\testAPIs.rc2" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\MFCKline\res\bitmap1.bmp" />
     <Image Include="..\MFCKline\res\bmp00001.bmp" />
     <Image Include="..\MFCKline\res\graph_line24_h.bmp" />
     <Image Include="..\MFCKline\res\icon1.ico" />
     <Image Include="..\MFCKline\res\MFCKline.ico" />
     <Image Include="..\MFCKline\res\top1_h.bmp" />
-    <Image Include="..\res\bmp00001.bmp" />
-    <Image Include="..\res\graph_line24_h.bmp" />
-    <Image Include="..\res\icon1.ico" />
-    <Image Include="..\res\MFCKline.ico" />
-    <Image Include="..\res\top1_h.bmp" />
     <Image Include="res\testAPIs.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <Manifest Include="..\MFCKline\res\windows.manifest" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

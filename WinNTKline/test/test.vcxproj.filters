@@ -72,6 +72,9 @@
     <ClInclude Include="..\MFCKline\own\Screen-Sharing.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="..\MFCKline\IM\IMclient.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -96,15 +99,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\MFCKline\IMhideWndDlg.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\gSOAPverify\soap\soapC.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\gSOAPverify\soap\soapClient.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\gSOAPverify\soap\stdsoap2.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="testAPIs.cpp">
@@ -140,6 +134,15 @@
     <ClCompile Include="..\MFCKline\own\Screen-Sharing.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\soapC.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\soapClient.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\stdsoap2.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\MFCKline\MFCKline.rc">
@@ -150,21 +153,6 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\res\bmp00001.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="..\res\graph_line24_h.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="..\res\icon1.ico">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="..\res\MFCKline.ico">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="..\res\top1_h.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
     <Image Include="res\testAPIs.ico">
       <Filter>资源文件</Filter>
     </Image>
@@ -183,16 +171,10 @@
     <Image Include="..\MFCKline\res\top1_h.bmp">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="..\MFCKline\res\bitmap1.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\testAPIs.rc2">
       <Filter>资源文件</Filter>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Manifest Include="..\MFCKline\res\windows.manifest" />
   </ItemGroup>
 </Project>

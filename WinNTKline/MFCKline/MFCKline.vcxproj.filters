@@ -13,9 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="ReadMe.txt" />
+    <Filter Include="配置文件">
+      <UniqueIdentifier>{a1f1038d-a651-4f0e-a134-792d5f1143e9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MFCKlineDlg.h">
@@ -79,9 +79,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="web\myweb.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\gSOAPverify\soap\stdsoap2.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Idx\_String-inl.h">
@@ -150,6 +147,9 @@
     <ClInclude Include="own\Screen-Sharing.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\LinuxSrvc\gSOAPverify\soap\stdsoap2.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MFCKline.cpp">
@@ -192,15 +192,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="IMhideWndDlg.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\gSOAPverify\soap\soapC.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\gSOAPverify\soap\soapClient.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\gSOAPverify\soap\stdsoap2.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="test\Testcase.cpp">
@@ -257,6 +248,15 @@
     <ClCompile Include="own\Screen-Sharing.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\soapC.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\soapClient.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\stdsoap2.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="MFCKline.rc">
@@ -267,13 +267,17 @@
     <None Include="res\MFCKline.rc2">
       <Filter>资源文件</Filter>
     </None>
-    <None Include="ClassDiagram.cd" />
-    <None Include="web\myweb.nsmap" />
     <None Include="Idx\plus1second">
       <Filter>头文件</Filter>
     </None>
     <None Include="Idx\Initialise-inl.h">
       <Filter>头文件</Filter>
+    </None>
+    <None Include="ClassDiagram.cd">
+      <Filter>配置文件</Filter>
+    </None>
+    <None Include="web\myweb.nsmap">
+      <Filter>配置文件</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -292,14 +296,18 @@
     <Image Include="res\icon1.ico">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="res\bitmap1.bmp">
-      <Filter>资源文件</Filter>
-    </Image>
     <Image Include="res\bit+.bmp">
       <Filter>资源文件</Filter>
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <Manifest Include="res\windows.manifest" />
+    <Manifest Include="res\windows.manifest">
+      <Filter>配置文件</Filter>
+    </Manifest>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt">
+      <Filter>配置文件</Filter>
+    </Text>
   </ItemGroup>
 </Project>

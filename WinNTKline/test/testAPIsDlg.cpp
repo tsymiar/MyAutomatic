@@ -51,6 +51,7 @@ BEGIN_MESSAGE_MAP(CtestAPIsDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_KLINE, &CtestAPIsDlg::OnBnClickedKline)
 	ON_BN_CLICKED(IDC_CTP, &CtestAPIsDlg::OnBnClickedCtp)
 	ON_BN_CLICKED(IDC_SIMBTN, &CtestAPIsDlg::OnBnClickedSimbtn)
+	ON_BN_CLICKED(IDC_IMSER, &CtestAPIsDlg::OnBnClickedImser)
 END_MESSAGE_MAP()
 
 
@@ -161,4 +162,14 @@ void CtestAPIsDlg::OnBnClickedSimbtn()
 		freopen("CONOUT$", "w", stderr);
 		Simulation();
 	}
+}
+
+void CtestAPIsDlg::OnBnClickedImser()
+{
+	STARTUPINFO si;
+	PROCESS_INFORMATION pi;
+	ZeroMemory(&si, sizeof(si));
+	si.cb = sizeof(si);
+	ZeroMemory(&pi, sizeof(pi));
+	::CreateProcess(_T("..\\Debug\\IM(Win32).exe"), _T("1"), NULL, NULL, false, 0, NULL, NULL, NULL, NULL);
 }

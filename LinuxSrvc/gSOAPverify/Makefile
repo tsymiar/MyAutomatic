@@ -1,5 +1,5 @@
 FLAG= -Wall -g
-OBJ = ./Linux/obj/
+OBJ = ./Gen/obj/
 SYS = sysstuts.o
 WEB = sqlDB.o MyWeb.o
 SOAP= soapC.o stdsoap2.o soapServer.o
@@ -13,10 +13,10 @@ gSOAPverify:$(OUT)
 	g++ $(FLAG) -c ./sql/sqlDB.cc $(SQL)
 	g++ $(FLAG) -c ./web/MyWeb.cc $(PTHD)
 	g++ $(FLAG) -o gSOAPverify $(SYS) $(SOAP) $(WEB) $(SQL) $(PTHD)
-ifeq (Linux, $(wildcard Linux))
-	@echo "dir <Linux> exists."
+ifeq (Gen, $(wildcard Gen))
+	@echo "dir <Gen> exists."
 else
-	mkdir Linux
+	mkdir Gen
 endif
 ifeq ($(OBJ), $(wildcard $(OBJ)))
 	@echo "dir <obj> exists."

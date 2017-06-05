@@ -13,9 +13,6 @@
 #define _TRACE(...) __noop 
 #endif
 
-#pragma warning (disable:4067)
-using namespace std;
-
 class DOSCout
 {
 public:
