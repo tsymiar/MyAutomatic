@@ -7,6 +7,9 @@
     <Filter Include="源文件">
       <UniqueIdentifier>{6ad59e50-c53e-4fb2-822a-1b243e5b0ce7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="其他">
+      <UniqueIdentifier>{660e65d0-55fe-4989-8353-466b91f503ed}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="soap\stdsoap2.cpp">
@@ -55,7 +58,11 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="soap\myweb.nsmap" />
-    <None Include="Makefile" />
+    <None Include="soap\myweb.nsmap">
+      <Filter>头文件</Filter>
+    </None>
+    <None Include="..\Makefile">
+      <Filter>其他</Filter>
+    </None>
   </ItemGroup>
 </Project>

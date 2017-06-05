@@ -361,6 +361,7 @@ void _stdcall OGLKview::InitGraph(void/*HDC m_hDC*/)
 #else
 	buset.m_boostest();
 #endif
+
 #ifdef _CONSOLE||_WINDOWS
 	SetConsoleCtrlHandler(dos.ConsoleHandler, TRUE);
 #endif

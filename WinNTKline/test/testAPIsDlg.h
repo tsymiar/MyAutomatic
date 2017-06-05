@@ -33,4 +33,5 @@ public:
 	CString s_Port;
 	afx_msg void OnBnClickedCtp();
 	afx_msg void OnBnClickedSimbtn();
+	afx_msg void OnBnClickedImser();
 };

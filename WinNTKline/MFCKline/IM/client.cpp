@@ -2,6 +2,8 @@
 
 #define DEFAULT_PORT 8877
 
+using namespace std;
+
 SOCKET rcv, out;
 int loggedon = 0;
 CRITICAL_SECTION wrcon;
@@ -255,10 +257,13 @@ int SetChatCmd(unsigned int opt)
 	return(optionum = opt);
 }
 
-void CloseChat()
+int CloseChat()
 {
-	closesocket(rcv);
-	closesocket(out);
-	WSACleanup();
-	DeleteCriticalSection(&wrcon);
+	int err = 0;
+	if (!closesocket(rcv) && !closesocket(out))
+	{
+		err = WSACleanup();
+		DeleteCriticalSection(&wrcon);
+	}
+	return err;
 }

@@ -1,19 +1,135 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
-  <Class Name="CLoginDlg">
-    <Position X="0.5" Y="0.5" Width="1.5" />
+  <Comment CommentText="    --//">
+    <Position X="8.635" Y="1.146" Height="0.284" Width="0.7" />
+  </Comment>
+  <Comment CommentText="    \\--">
+    <Position X="8.667" Y="2.333" Height="0.284" Width="0.7" />
+  </Comment>
+  <Comment CommentText="    \\--">
+    <Position X="2.646" Y="2.323" Height="0.284" Width="0.7" />
+  </Comment>
+  <Comment CommentText="    --//">
+    <Position X="6.177" Y="1.188" Height="0.284" Width="0.7" />
+  </Comment>
+  <Comment CommentText="---------">
+    <Position X="7.43" Y="1.677" Height="0.284" Width="0.7" />
+  </Comment>
+  <Class Name="OGLKview" Collapsed="true">
+    <Position X="7.75" Y="0.5" Width="1.25" />
     <Compartments>
       <Compartment Name="Nested Types" Collapsed="false" />
     </Compartments>
+    <TypeIdentifier>
+      <HashCode>AEkAAhAhDAJABpABGUCSTgQOIAAAAUEAJglFoJIhAgw=</HashCode>
+      <FileName>mygl\OGLKview.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MyOglDrawDlg" Collapsed="true">
+    <Position X="8.25" Y="1.5" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Nested Types" Collapsed="false" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>GACAAAEAQCEQBgiCg9QSBVpgCDBAUAUgAIYNYEBYADA=</HashCode>
+      <FileName>MyOglDrawDlg.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CIMhideWndDlg" Collapsed="true">
+    <Position X="5.75" Y="1.5" Width="1.5" />
     <NestedTypes>
-      <Enum Name="CLoginDlg::__unnamed_enum_0025_1" Collapsed="true">
+      <Enum Name="CIMhideWndDlg::__unnamed_enum_0009_1" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>IMhideWndDlg.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>GCCAAQEBBCAAoEgASLAAAQBAEChoJABAACAUAAQQQEA=</HashCode>
+      <FileName>IMhideWndDlg.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MarketDataCollector" Collapsed="true">
+    <Position X="9" Y="3.25" Width="1.25" />
+    <TypeIdentifier>
+      <HashCode>IGgAUoEQBgCgZAcggCRAaCcER0QESQiABS8QSIAACU4=</HashCode>
+      <FileName>netwk\ChannelCollector.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CMFCKlineDlg" Collapsed="true">
+    <Position X="0.5" Y="1.5" Width="1.5" />
+    <NestedTypes>
+      <Enum Name="CMFCKlineDlg::__unnamed_enum_0068_1" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>MFCKlineDlg.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>JACIACEAAAAgAAAAAjwAAQEABCBRAAQgAIgAAAAQkEA=</HashCode>
+      <FileName>MFCKlineDlg.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CRegistDlg" Collapsed="true">
+    <Position X="2.25" Y="1.5" Width="1.5" />
+    <NestedTypes>
+      <Enum Name="CRegistDlg::__unnamed_enum_001e_1" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>RegistDlg.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AAgAAAEAEAggAAAAABAAAAAAAACAAAAAQAACAAAAAAA=</HashCode>
+      <FileName>RegistDlg.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CWebBrowser2" Collapsed="true">
+    <Position X="2.25" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>dCgQAJVEAJJAECtMAgARSMAgiQBAFEVQMAFaCgAITwI=</HashCode>
+      <FileName>ctl\CWebBrowser2.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DepthMarket" Collapsed="true">
+    <Position X="9" Y="0.5" Width="1.25" />
+    <TypeIdentifier>
+      <HashCode>BAAAAAgADMAAAAAAAEQAAAAAQAACAACAAACDAAEIgAA=</HashCode>
+      <FileName>deep\DepthMarket.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IMlogDlg" Collapsed="true">
+    <Position X="5.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAABAgBAAAAAAAAAAAAAAAAIEAAAAAAA=</HashCode>
+      <FileName>IMlogDlg.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CTPdev" Collapsed="true">
+    <Position X="8.5" Y="2.75" Width="1.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAwBAAAAAAAAAACAAAAAAAEAAA=</HashCode>
+      <FileName>netwk\CTPdev.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TradeChannel" Collapsed="true">
+    <Position X="7.75" Y="3.25" Width="1.25" />
+    <TypeIdentifier>
+      <HashCode>AAARAABABhACIEAACIQAAUgAVAQIGAAACAQAAgAAQAg=</HashCode>
+      <FileName>netwk\ChannelCollector.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CLoginDlg" Collapsed="true">
+    <Position X="4" Y="1.5" Width="1.5" />
+    <NestedTypes>
+      <Enum Name="CLoginDlg::__unnamed_enum_0010_1" Collapsed="true">
         <TypeIdentifier>
           <NewMemberFileName>LoginDlg.h</NewMemberFileName>
         </TypeIdentifier>
       </Enum>
     </NestedTypes>
     <TypeIdentifier>
-      <HashCode>AIAIEAEAIhAACAgAAhAIRAAgAAgAI0AAYAAAACAQAAA=</HashCode>
+      <HashCode>AIAIGAEAIhAACAgAAhAIRAAAAAgAI0AgYAAAAAAQAAA=</HashCode>
       <FileName>LoginDlg.h</FileName>
     </TypeIdentifier>
   </Class>

@@ -45,7 +45,7 @@
     <ClInclude Include="web\MyWeb.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Makefile" />
+    <None Include="..\Makefile" />
     <None Include="soap\myweb.nsmap" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -67,6 +67,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'" Label="Configuration">
     <UseDebugLibraries>true</UseDebugLibraries>
+    <ConfigurationType>Application</ConfigurationType>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'" Label="Configuration">
     <UseDebugLibraries>false</UseDebugLibraries>
@@ -83,19 +84,37 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(ProjectDir)..\Linux\bin\$(Platform)\</OutDir>
-    <IntDir>$(ProjectDir)..\Linux\obj\$(Platform)\</IntDir>
+    <OutDir>$(ProjectDir)..\Gen\</OutDir>
+    <IntDir>$(ProjectDir)..\Gen\obj\$(Platform)\$(TargetName)\</IntDir>
     <AdditionalSourcesToCopyMapping>$(MSBuildProjectDirectory)\Makefile;$(AdditionalSourcesToCopyMapping)</AdditionalSourcesToCopyMapping>
+    <TargetExt>.a</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
-    <OutDir>$(ProjectDir)..\Linux\bin\$(Platform)\</OutDir>
-    <IntDir>$(ProjectDir)..\Linux\obj\$(Platform)\</IntDir>
+    <OutDir>$(ProjectDir)..\Gen\</OutDir>
+    <IntDir>$(ProjectDir)..\Gen\obj\$(Platform)\$(TargetName)\</IntDir>
     <AdditionalSourcesToCopyMapping>$(MSBuildProjectDirectory)\Makefile;$(AdditionalSourcesToCopyMapping)</AdditionalSourcesToCopyMapping>
+    <TargetExt>.a</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
-    <OutDir>$(ProjectDir)Linux\bin\$(Platform)\</OutDir>
-    <IntDir>$(ProjectDir)Linux\obj\$(Platform)\</IntDir>
-    <AdditionalSourcesToCopyMapping>$(MSBuildProjectDirectory)\Makefile;$(AdditionalSourcesToCopyMapping)</AdditionalSourcesToCopyMapping>
+    <OutDir>$(ProjectDir)..\Gen\</OutDir>
+    <IntDir>$(ProjectDir)..\Gen\obj\$(Platform)\$(TargetName)\</IntDir>
+    <TargetExt>.a</TargetExt>
+    <AdditionalSourcesToCopyMapping>$(ProjectDir)..\Makefile</AdditionalSourcesToCopyMapping>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+    <OutDir>$(ProjectDir)..\Gen\</OutDir>
+    <IntDir>$(ProjectDir)..\Gen\obj\$(Platform)\$(TargetName)\</IntDir>
+    <TargetExt />
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(ProjectDir)..\Gen\</OutDir>
+    <IntDir>$(ProjectDir)..\Gen\obj\$(Platform)\$(TargetName)\</IntDir>
+    <TargetExt />
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
+    <OutDir>$(ProjectDir)..\Gen\</OutDir>
+    <IntDir>$(ProjectDir)..\Gen\obj\$(Platform)\$(TargetName)\</IntDir>
+    <TargetExt />
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Link>
@@ -120,6 +139,9 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <ClCompile />
+    <Link>
+      <LibraryDependencies>pthread;mysqlclient;/usr/lib/mysql;%(LibraryDependencies)</LibraryDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

@@ -9,6 +9,7 @@
 #pragma comment(lib, "glew32.lib") 
 #endif
 #ifdef _MSC_VER
+#pragma warning (disable:4067) // 预处理器指令后有意外标记 - 应输入换行符
 #pragma warning (disable:4091) // “__declspec(dllexport)”: 没有声明变量时忽略“OGLKview”的左侧
 #pragma warning (disable:4098) // 默认库“msvcrtd.lib”与其他库的使用冲突；请使用 /NODEFAULTLIB:library
 #pragma warning (disable:4099) // 未找到 PDB“vc120.pdb”(使用“glew32s.lib(glew.obj)”或在“F:\dell - pc\Documents\GitHub\MyAutomatic\WinNTKline\Release\vc120.pdb”中寻找)；正在链接对象，如同没有调试信息一样
@@ -16,7 +17,7 @@
 #pragma warning (disable:4248) // 无法解析 typeref 标记(01000011)(为“GLUtesselator”)；映像可能无法运行
 #pragma warning (disable:4305) // “-=”: 从“double”到“GLfloat”截断
 #pragma warning (disable:4477) // “sprintf_s”: 格式字符串“%s”需要类型“char *”的参数，但可变参数 1 拥有了类型“int”
-#pragma warning (disable:4996)
+#pragma warning (disable:4996) // error C4996: 'scanf': This function or variable may be unsafe. Consider using scanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS.
 #endif
 #define NO_WARN_MBCS_MFC_DEPRECATION
 #define BUFFER_OFFSET(offset) ((void*)(offset))
@@ -45,7 +46,9 @@
 #ifdef Error //ws2tcpip.h 'Error' redefined.
 #undef Error
 #endif
+#if !defined(_WINDOWS_)
 #include <Windows.h> 
+#endif
 #pragma comment(lib, "WS2_32.lib")
 #include <WinSock2.h>
 #include <process.h>
