@@ -1,6 +1,4 @@
 ﻿//
-#define HAVE_STRUCT_TIMESPEC
-#define MY_WSDL
 #include"../inl/_String-inl.h"
 #include	"MyWeb.h"
 #include"../sql/sqlDB.h"
@@ -18,7 +16,6 @@ _lseek(file, -OFFSET, SEEK_END);\
 while (len = _read(file, buff, sizeof(buff)) > 0)\
 {_write(move, buff, len);_close(move);_close(file);}
 */
-myWeb web;
 pthread_mutex_t queue_lock;//队列锁
 pthread_cond_t  queue_noti;//条件变量
 SOAP_SOCKET     queue[MAX_QUEUE];//数组队列
@@ -29,6 +26,7 @@ unsigned long dequeue_ip();
 SOAP_SOCKET dequeue(void); //出队列函数
 static unsigned long ips[MAX_QUEUE];
 int logcnt = 0;
+myWeb web;
 
 void * process_queue(void * soap)
 {
@@ -102,14 +100,27 @@ unsigned long dequeue_ip()
 	ip = ips[num];
 	return ip;
 }
-#ifdef MY_WSDL
+
+#ifdef MY_HTTPGET
 int http_get(struct soap *soap)
 #else
+int http_get(struct soap *soap)
+{
+	soap_response(soap, SOAP_HTML);
+	soap_send(soap, "<html>Hello I'm WebService.</html>");
+	soap_end_send(soap);
+	return SOAP_OK;
+}
 int http_post(struct soap *soap, const char *endpoint, const char *host, int port, const char *path, const char *action, size_t count)
 #endif
 {
 	FILE* fd = 0;
-#ifndef MY_WSDL
+#ifdef MY_HTTPGET
+	char* s = strchr(soap->path, '?');
+	if (!s || strcmp(s, "?wsdl"))
+		return SOAP_GET_METHOD;
+	fd = fopen("myweb.wsdl", "rb");
+#else
 	// 请求WSDL时，传送相应文件
 	// 获取请求的wsdl文件名
 	std::string fielPath(soap->path);
@@ -118,22 +129,17 @@ int http_post(struct soap *soap, const char *endpoint, const char *host, int por
 
 	// 将?替换为.
 	size_t dotPos = fileName.rfind("?");
-	if (dotPos == -1)
-	{
+	if ((int)dotPos == -1)
 		return 404;
-	}
 	fileName.replace(dotPos, 1, ".");
 	// 打开WSDL文件准备拷贝
 	fd = fopen(fileName.c_str(), "rb");
-#else
-	char* s = strchr(soap->path, '?');
-	if (!s || strcmp(s, "?wsdl"))
-		return SOAP_GET_METHOD;
-	fd = fopen("myweb.wsdl", "rb");
-#endif // MY_WSDL
+#endif // MY_HTTPGET
 	if (!fd)
+	{
 		// HTTP not found error
 		return 404;
+	}
 	// HTTP header with text/xml content
 	soap->http_content = "text/xml";
 	soap_response(soap, SOAP_FILE);
@@ -141,10 +147,7 @@ int http_post(struct soap *soap, const char *endpoint, const char *host, int por
 	{
 		// 从fd中读取数据
 		size_t r = fread(soap->tmpbuf, 1, sizeof(soap->tmpbuf), fd);
-		if (!r)
-		{
-			break;
-		}
+		if (!r)break;
 		if (soap_send_raw(soap, soap->tmpbuf, r))
 		{
 			// can't send, but little we can do about that
@@ -154,18 +157,10 @@ int http_post(struct soap *soap, const char *endpoint, const char *host, int por
 	fclose(fd);
 	soap_end_send(soap);
 	return
-#ifdef MY_WSDL
-		http_get(soap);
-#else
+#ifdef MY_HTTPGET
 		SOAP_OK;
-}
-
-int http_get(struct soap *soap)
-{
-	soap_response(soap, SOAP_HTML);
-	soap_send(soap, "<html>Hello I'm WebService.</html>");
-	soap_end_send(soap);
-	return SOAP_OK;
+#else
+		http_get(soap);
 #endif
 }
 
@@ -225,11 +220,11 @@ int soap_ser(int argc, char** argv)
 	struct soap Soap;
 	//初始化运行时环境
 	soap_init(&Soap);
-#ifdef MY_WSDL
+#ifdef MY_HTTPGET
 	Soap.fget = http_get;
 #else
 	Soap.fpost = http_post;
-#endif // !MY_WSDL
+#endif // !MY_HTTPGET
 	//web.movedll();
 	//设置UTF-8编码
 	soap_set_mode(&Soap, SOAP_C_UTFSTRING);

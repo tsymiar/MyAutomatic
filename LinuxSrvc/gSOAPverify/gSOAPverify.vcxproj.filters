@@ -61,8 +61,16 @@
     <None Include="soap\myweb.nsmap">
       <Filter>头文件</Filter>
     </None>
-    <None Include="..\Makefile">
+    <None Include="Makefile">
       <Filter>其他</Filter>
     </None>
+    <None Include="mysql\fixmysql">
+      <Filter>其他</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="soap\myweb.wsdl">
+      <Filter>其他</Filter>
+    </CustomBuild>
   </ItemGroup>
 </Project>
