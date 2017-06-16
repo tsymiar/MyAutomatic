@@ -13,6 +13,9 @@
 #include <pthread.h>
 //#include <corecrt_io.h>
 
+#define HAVE_STRUCT_TIMESPEC
+#define MY_HTTPGET
+
 //宏与全局变量的定义
 #define  BACKLOG (64)  
 #define  MAX_THR (8)   

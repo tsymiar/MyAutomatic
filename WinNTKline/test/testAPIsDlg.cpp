@@ -112,7 +112,7 @@ HCURSOR CtestAPIsDlg::OnQueryDragIcon()
 
 void CtestAPIsDlg::OnBnClickedToim()
 {
-	CIMhideWndDlg* m_pIM = new CIMhideWndDlg();
+	CIMhideWndDlg* m_pIM = new CIMhideWndDlg((IMUSR*)"127.0.0.1");
 	m_pIM->Create(IDD_IMHIDEWND);
 	m_pIM->ShowWindow(SW_SHOWNORMAL);
 }
@@ -166,10 +166,12 @@ void CtestAPIsDlg::OnBnClickedSimbtn()
 
 void CtestAPIsDlg::OnBnClickedImser()
 {
-	STARTUPINFO si;
-	PROCESS_INFORMATION pi;
-	ZeroMemory(&si, sizeof(si));
-	si.cb = sizeof(si);
-	ZeroMemory(&pi, sizeof(pi));
-	::CreateProcess(_T("..\\Debug\\IM(Win32).exe"), _T("1"), NULL, NULL, false, 0, NULL, NULL, NULL, NULL);
+	STARTUPINFO sInfo;
+	PROCESS_INFORMATION pInfo;
+	ZeroMemory(&pInfo, sizeof(pInfo));
+	ZeroMemory(&sInfo, sizeof(sInfo));
+	sInfo.cb = sizeof(sInfo);
+	sInfo.dwFlags = STARTF_USESHOWWINDOW;
+	sInfo.wShowWindow = SW_SHOWNORMAL;
+	::CreateProcess(_T("..\\Debug\\IM(Win32).exe"), _T("1"), NULL, NULL, false, 0, NULL, NULL, &sInfo, &pInfo);
 }
