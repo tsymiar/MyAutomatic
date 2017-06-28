@@ -10,7 +10,7 @@
 #include "MyOglDrawDlg.h"
 #include "LoginDlg.h"
 #include "IMhideWndDlg.h"
-#include "ctl\CWebBrowser2.h"
+#include "html\CWebBrowser2.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

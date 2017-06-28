@@ -75,6 +75,9 @@
     <ClInclude Include="..\MFCKline\IM\IMclient.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="..\MFCKline\html\MyHtmlView.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -141,6 +144,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\stdsoap2.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\MFCKline\html\MyHtmlView.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

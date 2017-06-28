@@ -65,13 +65,11 @@
     <CustomBuild Include="myuiobj.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="GeneratedFiles\ui_myoglwdg.h">
-      <Filter>Generated Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\MFCKline\mygl\OGLKview.h">
+    <CustomBuild Include="..\MFCKline\mygl\OGLKview.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
+    </CustomBuild>
+    <CustomBuild Include="GeneratedFiles\ui_myoglwdg.h">
+      <Filter>Generated Files</Filter>
+    </CustomBuild>
   </ItemGroup>
 </Project>

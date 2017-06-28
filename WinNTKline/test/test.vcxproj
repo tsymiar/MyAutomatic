@@ -200,6 +200,7 @@
   <ItemGroup>
     <ClInclude Include="..\MFCKline\deep\DepthMarket.h" />
     <ClInclude Include="..\MFCKline\dos\DOSCout.h" />
+    <ClInclude Include="..\MFCKline\html\MyHtmlView.h" />
     <ClInclude Include="..\MFCKline\IMhideWndDlg.h" />
     <ClInclude Include="..\MFCKline\IMlogDlg.h" />
     <ClInclude Include="..\MFCKline\IM\IMclient.h" />
@@ -225,6 +226,7 @@
     <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\stdsoap2.cpp" />
     <ClCompile Include="..\MFCKline\deep\DepthMarket.cpp" />
     <ClCompile Include="..\MFCKline\dos\DOSCout.cpp" />
+    <ClCompile Include="..\MFCKline\html\MyHtmlView.cpp" />
     <ClCompile Include="..\MFCKline\IMhideWndDlg.cpp" />
     <ClCompile Include="..\MFCKline\IMlogDlg.cpp" />
     <ClCompile Include="..\MFCKline\IM\client.cpp" />
