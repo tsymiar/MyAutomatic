@@ -22,13 +22,11 @@
 #define MAX_ONLINE 100
 #define MAX_MENBERS_PER_GROUP 20
 #define MAX_GROUPS 20
-#define ACC_REC "accountss"
+#define ACC_REC "acnts"
 #define DEBUGINFO 0
 //using namespace std;
 //C++11 std与socket.h中bind函数冲突
-char Buffer[256];
-int  havemsg, wantquit, c0, c1;
-char tosend[256];
+int  aimtoquit;
 #ifdef _WIN32
 WSADATA wsaData;
 SOCKET
@@ -45,18 +43,19 @@ CRITICAL_SECTION
 pthread_mutex_t
 #endif
 sendallow;
+
 struct user {
 	char name[24];
 	char passwd[24];
 	char intro[224];
-};
-user users[MAX_USERS];
+}users[MAX_USERS];
+
 struct group {
-	char groupname[24];
+	char name[24];
 	char passwd[24];
 	char member[MAX_MENBERS_PER_GROUP][24];
-};
-group groups[MAX_GROUPS];
+}groups[MAX_GROUPS];
+
 struct LINE {
 	char name[24];
 #ifdef _WIN32
@@ -72,158 +71,17 @@ struct LINE {
 #endif
 		sendsocket;
 } online[MAX_ONLINE];
-void dump(void) {
-#ifdef _WIN32
-	_flushall();
-#else
-	fflush(stdin);
-#endif
-	FILE *dumpfile;
-	dumpfile = fopen(ACC_REC, "w");
-	fwrite(users, sizeof(user), MAX_USERS, dumpfile);
-	fwrite(groups, sizeof(group), MAX_GROUPS, dumpfile);
-	fclose(dumpfile);
-#ifdef _WIN32
-	_flushall();
-#else
-	fflush(stdin);
-#endif
-};
-int resume(void) {   //load file system from disk
-	FILE *dumpfile;
-#ifdef _WIN32
-	_flushall();
-#else
-	fflush(stdin);
-#endif
-	dumpfile = fopen(ACC_REC, "r");
-	if (dumpfile == NULL)
-		return -1;
-	else {
-		fread(users, sizeof(user), MAX_USERS, dumpfile);
-		fread(groups, sizeof(group), MAX_GROUPS, dumpfile);
-		fclose(dumpfile);
-		return 0;
-	};
-#ifdef _WIN32
-	_flushall();
-#else
-	fflush(stdin);
-#endif
-};
-int user_to_sock(char user_name[24]) {
-	int c;
-	char tomatch[24];
-	strcpy(tomatch, user_name);
-	for (c = 0; c<MAX_ONLINE; c++) {
-		if (strcmp(tomatch, online[c].name) == 0)
-			return c;
-	}
-	return -1;
-};
-int adduser(char name[24], char passwd[24]) {
-	int c;
-	char n[24], p[24];
-	strcpy(n, name);
-	strcpy(p, passwd);
-	for (c = 0; c<MAX_USERS; c++) {
-		if (strcmp(n, users[c].name) == 0)
-			return c;
-	};
-	for (c = 0; c<MAX_USERS; c++) {
-		if (strlen(users[c].name) == 0) {
-			strcpy(users[c].name, n);
-			strcpy(users[c].passwd, p);
-			strcpy(users[c].intro, "info not set");
-			return -1;
-		};
-	};
-	return -2;
-};
-int getusernum(char name[24]) {
-	int c;
-	char n[24];
-	strcpy(n, name);
-	for (c = 0; c<MAX_USERS; c++) {
-		if (strcmp(n, users[c].name) == 0)
-			return c;
-	};
-	return -1;
-};
-int auth(char name[24], char passwd[24]) {
-	int c;
-	char n[24], p[24];
-	strcpy(n, name);
-	strcpy(p, passwd);
-	for (c = 0; c<MAX_USERS; c++) {
-		if ((strcmp(n, users[c].name) == 0) && (strcmp(p, users[c].passwd) == 0)) {
-			if (user_to_sock(n) == -1)
-				return 0;   //pass
-			else
-				return 1;   //already online
-		}
-	};
-	return 2;      //wrong name or passwd
-};
-int addgroup(char groupname[24], char passwd[24]) {
-	char n[24], p[24];
-	int c;
-	strcpy(n, groupname);
-	strcpy(p, passwd);
-	for (c = 0; c<MAX_GROUPS; c++) {
-		if (strlen(groups[c].groupname) == 0) {
-			strcpy(groups[c].groupname, n);
-			strcpy(groups[c].passwd, p);
-			return c;
-		};
-	};
-	return -1;
-};
-int findgroupnum(char groupname[24]) {
-	char n[24];
-	int c;
-	strcpy(n, groupname);
-	for (c = 0; c<MAX_GROUPS; c++) {
-		if (strcmp(groups[c].groupname, n) == 0)
-			return c;
-	};
-	return -1;
-};
-int addtogroup(int groupnum, char name[24], char passwd[24]) {
-	char n[24], p[24];
-	int c;
-	strcpy(n, name);
-	strcpy(p, passwd);
-	for (c = 0; c<MAX_MENBERS_PER_GROUP; c++) {
-		if (strcmp(groups[groupnum].member[c], n) == 0)
-			return -1;
-	};
-	for (c = 0; c<MAX_GROUPS; c++) {
-		if ((strlen(groups[groupnum].member[c]) == 0)) {
-			if (strcmp(groups[groupnum].passwd, p) == 0) {
-				strcpy(groups[groupnum].member[c], n);
-				return c;
-			}
-			else
-				return -2;
-		};
-	};
-	return -3;
-};
-int leavegroup(int groupnum, char name[24]) {
-	char n[24];
-	int c;
-	strcpy(n, name);
-	for (c = 0; c<MAX_GROUPS; c++) {
-		if ((strcmp(groups[groupnum].member[c], n) == 0)) {
-			strcpy(groups[groupnum].member[c], "");
-			if (c == 0)
-				strcpy(groups[groupnum].groupname, "");
-			return 0;
-		};
-	};
-	return -1;
-};
+
+void save_acnt();
+int load_acnt(void);
+int new_user(char name[24], char passwd[24]);
+int user_to_line(char user[24]);
+int get_user_idx(char name[24]);
+int user_auth(char name[24], char passwd[24]);
+int host_group(char group[24], char passwd[24]);
+int get_group_idx(char group[24]);
+int join_group(int idx, char name[24], char passwd[24]);
+int leave_group(int idx, char user[24]);
 
 #ifdef __linux
 void *
@@ -239,25 +97,25 @@ monite(void *arg)
 #endif
 		recvsock = recvtemp,//接收
 		sendsock = sendtemp;//发送
-	int c, feedback, loggedon = 0;
+	int c, rtn, loggedon = 0;
 	int qq = 1;
 	char tmp[256], bufs[256], name[24];
 	do {
-		feedback = recv(recvsock, tmp, 256, 0);
-		if (feedback == -1) {
+		rtn = recv(recvsock, tmp, 256, 0);
+		if (rtn == -1) {
 			goto con_err1;
 		};
 		if (DEBUGINFO)
 			printf("rcvd %x,%x\n", tmp[0], tmp[1]);
 		if ((tmp[0] == 0) && (tmp[1] == 0)) {
 			bufs[0] = 1;
-			feedback = adduser((tmp + 8), (tmp + 32));
-			if (feedback == -1) {
+			rtn = new_user((tmp + 8), (tmp + 32));
+			if (rtn == -1) {
 				printf("new user: %s\n", (tmp + 8));
-				addtogroup(0, (tmp + 8), (char*)"all");
+				join_group(0, (tmp + 8), (char*)"all");
 				bufs[1] = 0;
 			}
-			else if (feedback == -2) {
+			else if (rtn == -2) {
 				bufs[1] = 1;
 				strcpy((tmp + 32), "too many users");
 			}
@@ -272,13 +130,13 @@ monite(void *arg)
 		else if ((tmp[0] == 0) && (tmp[1] == 120)) {
 			bufs[0] = 1;
 			strcpy(name, (tmp + 8));
-			feedback = auth((tmp + 8), (tmp + 32));
-			if (feedback == 0) {
+			rtn = user_auth((tmp + 8), (tmp + 32));
+			if (rtn == 0) {
 				printf("%s logged on\n", (tmp + 8));
 				bufs[1] = (char)120;
 				loggedon = 1;
 			}
-			else if (feedback == 1) {
+			else if (rtn == 1) {
 				bufs[1] = (char)121;
 				strcpy((tmp + 32), "already online");
 			}
@@ -298,8 +156,8 @@ monite(void *arg)
 		};
 	};
 	do {
-		feedback = recv(recvsock, tmp, 256, 0);
-		if (!(feedback == 256)) {
+		rtn = recv(recvsock, tmp, 256, 0);
+		if (!(rtn == 256)) {
 			printf("lost connection with %s.\n", name);
 			goto con_err;
 		};
@@ -313,12 +171,12 @@ monite(void *arg)
 			printf("%s quit \n", name);
 		}
 		else if ((tmp[0] == 0) && (tmp[1] == (char)1)) {
-			feedback = getusernum(name);
-			strcpy(users[feedback].intro, (tmp + 32));
+			rtn = get_user_idx(name);
+			strcpy(users[rtn].intro, (tmp + 32));
 		}
 		else if ((tmp[0] == 0) && (tmp[1] == 122)) {
-			feedback = getusernum(name);
-			strcpy(users[feedback].passwd, (tmp + 8));
+			rtn = get_user_idx(name);
+			strcpy(users[rtn].passwd, (tmp + 8));
 			bufs[1] = (char)123;
 			send(sendsock, bufs, 256, 0);
 		}
@@ -341,9 +199,9 @@ monite(void *arg)
 			strcpy((bufs + 32), "groups list:");
 			send(sendsock, bufs, 256, 0);
 			for (c = 0; c<MAX_GROUPS; c++) {
-				if (strlen(groups[c].groupname) >> 0) {
+				if (strlen(groups[c].name) >> 0) {
 					bufs[1] = (char)20;
-					strcpy((bufs + 8), groups[c].groupname);
+					strcpy((bufs + 8), groups[c].name);
 					send(sendsock, bufs, 256, 0);
 				};
 			};
@@ -351,8 +209,8 @@ monite(void *arg)
 
 		else if ((tmp[0] == 0) && (tmp[1] == 16)) {
 			bufs[1] = (char)21;
-			feedback = findgroupnum(tmp + 8);
-			if (feedback == -1) {
+			rtn = get_group_idx(tmp + 8);
+			if (rtn == -1) {
 				strcpy((bufs + 32), "no such group");
 				send(sendsock, bufs, 256, 0);
 			}
@@ -361,34 +219,34 @@ monite(void *arg)
 				send(sendsock, bufs, 256, 0);
 				bufs[1] = 20;
 				for (c = 0; c<MAX_MENBERS_PER_GROUP; c++) {
-					if (strlen(groups[feedback].member[c]) >> 0) {
-						strcpy((bufs + 8), groups[feedback].member[c]);
+					if (strlen(groups[rtn].member[c]) >> 0) {
+						strcpy((bufs + 8), groups[rtn].member[c]);
 						send(sendsock, bufs, 256, 0);
 					};
 				};
 			};
 		}
 		else if ((tmp[0] == 0) && (tmp[1] == 11)) {
-			feedback = addgroup((tmp + 8), (tmp + 32));
-			if (feedback == -1) {
+			rtn = host_group((tmp + 8), (tmp + 32));
+			if (rtn == -1) {
 				strcpy((bufs + 32), "rejected");
 				bufs[1] = 13;
 			}
 			else {
 				printf("new group: %s\n", (tmp + 8));
-				addtogroup(feedback, name, (tmp + 32));
+				join_group(rtn, name, (tmp + 32));
 				bufs[1] = 12;
 			}
 			send(sendsock, bufs, 256, 0);
 		}
 
 		else if ((tmp[0] == 0) && (tmp[1] == 10)) {
-			feedback = addtogroup(findgroupnum(tmp + 8), name, (tmp + 32));
-			if (feedback == -1) {
+			rtn = join_group(get_group_idx(tmp + 8), name, (tmp + 32));
+			if (rtn == -1) {
 				strcpy((bufs + 32), "you have already in this group");
 				bufs[1] = 11;
 			}
-			else if (feedback == -2) {
+			else if (rtn == -2) {
 				strcpy((bufs + 32), "wrong password to this group");
 				bufs[1] = 11;
 			}
@@ -399,8 +257,8 @@ monite(void *arg)
 		}
 
 		else if ((tmp[0] == 0) && (tmp[1] == 12)) {
-			feedback = leavegroup(findgroupnum(tmp + 8), name);
-			if (feedback == 0)
+			rtn = leave_group(get_group_idx(tmp + 8), name);
+			if (rtn == 0)
 				strcpy((bufs + 32), "leave group successfully");
 			else
 				strcpy((bufs + 32), "you are not in this group");
@@ -408,10 +266,10 @@ monite(void *arg)
 			send(sendsock, bufs, 256, 0);
 		}
 		else if ((tmp[0] == 0) && (tmp[1] == 21)) {
-			feedback = getusernum(tmp + 8);
-			if (feedback >= 0) {
+			rtn = get_user_idx(tmp + 8);
+			if (rtn >= 0) {
 				strcpy((bufs + 8), (tmp + 8));
-				strcpy((bufs + 32), users[feedback].intro);
+				strcpy((bufs + 32), users[rtn].intro);
 			}
 			else {
 				strcpy((bufs + 8), "system info");
@@ -421,28 +279,28 @@ monite(void *arg)
 			send(sendsock, bufs, 256, 0);
 		}
 		else if ((tmp[0] == 0) && (tmp[1] == 30)) { //loop1
-			feedback = findgroupnum(tmp + 8);
-			if (feedback == -1) {//feedback=-1
-				feedback = user_to_sock(tmp + 8);
-				if (feedback == -1) {
+			rtn = get_group_idx(tmp + 8);
+			if (rtn == -1) {//rtn=-1
+				rtn = user_to_line(tmp + 8);
+				if (rtn == -1) {
 					bufs[1] = 32;
 				}
 				else {          //loop0
 					bufs[1] = 31;
 					strcpy((bufs + 32), (tmp + 32));
 					strcpy((bufs + 8), name);
-					send(online[feedback].sendsocket, bufs, 256, 0);
+					send(online[rtn].sendsocket, bufs, 256, 0);
 					bufs[1] = 30;
 				};    //loop0
 
 				send(sendsock, bufs, 256, 0);
-			}//feedback=-1
+			}//rtn=-1
 			else {
 				for (c = 0; c<MAX_MENBERS_PER_GROUP; c++) {
-					if (!strlen(groups[feedback].member[c]) == 0)
+					if (!strlen(groups[rtn].member[c]) == 0)
 					{
 						bufs[1] = 31;
-						int sss = user_to_sock(groups[feedback].member[c]);
+						int sss = user_to_line(groups[rtn].member[c]);
 						if (!(sss == -1)) {
 							strcpy((bufs + 32), (tmp + 32));
 							strcpy((bufs + 8), name);
@@ -456,8 +314,8 @@ monite(void *arg)
 		};//else if
 	} while (loggedon == 1);
 con_err:
-	feedback = user_to_sock(name);
-	strcpy(online[feedback].name, "");
+	rtn = user_to_line(name);
+	strcpy(online[rtn].name, "");
 
 con_err1:
 #ifdef _WIN32
@@ -475,10 +333,10 @@ void *
 #else
 unsigned __stdcall 
 #endif
-control(void *arg)
+commands(void *arg)
 {
 	char optionstr[24], name[24];
-	int feedback;
+	int rtn;
 	do {
 		scanf("%s", (char*)&optionstr);
 		if (strcmp(optionstr, "quit") == 0) {
@@ -488,42 +346,42 @@ control(void *arg)
 			close(listen_socket);
 #endif
 			printf("saving accounts data to file %s\n", ACC_REC);
-			dump();
+			save_acnt();
 #ifdef _WIN32
 			WSACleanup();
 			DeleteCriticalSection(&sendallow);
 #else
 			pthread_mutex_destroy(&sendallow);
 #endif
-			wantquit = 1;
+			aimtoquit = 1;
 			exit(0);
 		}
 		if (strcmp(optionstr, "kick") == 0) {
 			scanf("%s", (char*)&name);
-			feedback = user_to_sock(name);
-			if (!(feedback == -1)) {
+			rtn = user_to_line(name);
+			if (!(rtn == -1)) {
 #ifdef _WIN32
-				closesocket(online[feedback].recvsocket);
-				closesocket(online[feedback].sendsocket);
+				closesocket(online[rtn].recvsocket);
+				closesocket(online[rtn].sendsocket);
 #else
-				close(online[feedback].recvsocket);
-				close(online[feedback].sendsocket);
+				close(online[rtn].recvsocket);
+				close(online[rtn].sendsocket);
 #endif
 				printf("user %s kicked !\n", name);
 			};
 		};
-	} while (!(wantquit));
+	} while (!(aimtoquit));
 	return NULL;
 };
 
 int _im_(int argc, char *argv[]) {
 
-	if (!(resume()))
+	if (!(load_acnt()))
 		printf("accounts data loaded from %s\n", ACC_REC);
 	else {
 		strcpy(users[0].name, "admin");
 		strcpy(users[0].passwd, "admin");
-		strcpy(groups[0].groupname, "all");
+		strcpy(groups[0].name, "all");
 		strcpy(groups[0].passwd, "all");
 		strcpy(groups[0].member[0], "admin");
 	}
@@ -534,7 +392,7 @@ int _im_(int argc, char *argv[]) {
 	pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
 	pthread_mutex_init(&(sendallow), &attr);
 #endif
-	wantquit = 0;
+	aimtoquit = 0;
 #ifdef _WIN32
 	SetConsoleTitle((
 #ifdef _UNICODE
@@ -552,7 +410,7 @@ int _im_(int argc, char *argv[]) {
 	pthread_create(&thread_ID, NULL, control, (void*)-1);
 #else
 #ifdef _WIN32
-	_beginthreadex(NULL, 0, control, NULL, 0, &thread_ID);
+	_beginthreadex(NULL, 0, commands, NULL, 0, &thread_ID);
 #endif
 #endif
 	int err =
@@ -666,7 +524,7 @@ int _im_(int argc, char *argv[]) {
 			printf("2:%d\n", sendtemp);
 			printf("c is : %d", c);
 		}
-	} while (!(wantquit));
+	} while (!(aimtoquit));
 	return 0;
 }
 
@@ -685,3 +543,158 @@ int main(
 		_im_(argc, argv);
 	return 0;
 }
+
+//save accounts to file.
+void save_acnt() {
+#ifdef _WIN32
+	_flushall();
+#else
+	fflush(stdin);
+#endif
+	FILE *dumpfile;
+	dumpfile = fopen(ACC_REC, "w");
+	fwrite(users, sizeof(user), MAX_USERS, dumpfile);
+	fwrite(groups, sizeof(group), MAX_GROUPS, dumpfile);
+	fclose(dumpfile);
+#ifdef _WIN32
+	_flushall();
+#else
+	fflush(stdin);
+#endif
+};
+//load file system from disk.
+int load_acnt(void) {
+	FILE *dumpfile;
+#ifdef _WIN32
+	_flushall();
+#else
+	fflush(stdin);
+#endif
+	dumpfile = fopen(ACC_REC, "r");
+	if (dumpfile == NULL)
+		return -1;
+	else {
+		fread(users, sizeof(user), MAX_USERS, dumpfile);
+		fread(groups, sizeof(group), MAX_GROUPS, dumpfile);
+		fclose(dumpfile);
+		return 0;
+	};
+#ifdef _WIN32
+	_flushall();
+#else
+	fflush(stdin);
+#endif
+};
+int new_user(char name[24], char passwd[24]) {
+	int c;
+	char n[24], p[24];
+	strcpy(n, name);
+	strcpy(p, passwd);
+	for (c = 0; c<MAX_USERS; c++) {
+		if (strcmp(n, users[c].name) == 0)
+			return c;
+	};
+	for (c = 0; c<MAX_USERS; c++) {
+		if (strlen(users[c].name) == 0) {
+			strcpy(users[c].name, n);
+			strcpy(users[c].passwd, p);
+			strcpy(users[c].intro, "info not set");
+			return -1;
+		};
+	};
+	return -2;
+};
+int user_to_line(char user[24]) {
+	int c;
+	char tomatch[24];
+	strcpy(tomatch, user);
+	for (c = 0; c<MAX_ONLINE; c++) {
+		if (strcmp(tomatch, online[c].name) == 0)
+			return c;
+	}
+	return -1;
+};
+int get_user_idx(char name[24]) {
+	int c;
+	char n[24];
+	strcpy(n, name);
+	for (c = 0; c<MAX_USERS; c++) {
+		if (strcmp(n, users[c].name) == 0)
+			return c;
+	};
+	return -1;
+};
+int user_auth(char name[24], char passwd[24]) {
+	int c;
+	char n[24], p[24];
+	strcpy(n, name);
+	strcpy(p, passwd);
+	for (c = 0; c<MAX_USERS; c++) {
+		if ((strcmp(n, users[c].name) == 0) && (strcmp(p, users[c].passwd) == 0)) {
+			if (user_to_line(n) == -1)
+				return 0;   //pass
+			else
+				return 1;   //already online
+		}
+	};
+	return 2;      //wrong name or passwd
+};
+int host_group(char group[24], char passwd[24]) {
+	char n[24], p[24];
+	int c;
+	strcpy(n, group);
+	strcpy(p, passwd);
+	for (c = 0; c<MAX_GROUPS; c++) {
+		if (strlen(groups[c].name) == 0) {
+			strcpy(groups[c].name, n);
+			strcpy(groups[c].passwd, p);
+			return c;
+		};
+	};
+	return -1;
+};
+int get_group_idx(char group[24]) {
+	char n[24];
+	int c;
+	strcpy(n, group);
+	for (c = 0; c<MAX_GROUPS; c++) {
+		if (strcmp(groups[c].name, n) == 0)
+			return c;
+	};
+	return -1;
+};
+int join_group(int idx, char name[24], char passwd[24]) {
+	char n[24], p[24];
+	int c;
+	strcpy(n, name);
+	strcpy(p, passwd);
+	for (c = 0; c<MAX_MENBERS_PER_GROUP; c++) {
+		if (strcmp(groups[idx].member[c], n) == 0)
+			return -1;
+	};
+	for (c = 0; c<MAX_GROUPS; c++) {
+		if ((strlen(groups[idx].member[c]) == 0)) {
+			if (strcmp(groups[idx].passwd, p) == 0) {
+				strcpy(groups[idx].member[c], n);
+				return c;
+			}
+			else
+				return -2;
+		};
+	};
+	return -3;
+};
+int leave_group(int idx, char user[24]) {
+	char n[24];
+	int c;
+	strcpy(n, user);
+	for (c = 0; c<MAX_GROUPS; c++) {
+		if ((strcmp(groups[idx].member[c], n) == 0)) {
+			strcpy(groups[idx].member[c], "");
+			if (c == 0)
+				strcpy(groups[idx].name, "");
+			return 0;
+		};
+	};
+	return -1;
+};

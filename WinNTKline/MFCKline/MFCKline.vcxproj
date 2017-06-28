@@ -1,4 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- edited with XMLSpy v2013 (http://www.altova.com) by  () -->
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -88,10 +89,6 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
     <IntDir>$(SolutionDir)MFC\</IntDir>
-    <IncludePath>$(IncludePath)</IncludePath>
-    <ReferencePath>$(ReferencePath)</ReferencePath>
-    <ExecutablePath>$(ExecutablePath)</ExecutablePath>
-    <LibraryPath>$(LibraryPath)</LibraryPath>
     <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -116,9 +113,8 @@
       <PreprocessorDefinitions>_CRT_NON_CONFORMING_SWPRINTFS;_CRT_SECURE_NO_WARNINGS;HAVE_STRUCT_TIMESPEC;_DEBUG;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <EnablePREfast>false</EnablePREfast>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <DisableSpecificWarnings>
-      </DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>$(BOOST);$(OPENSSL);$(PTHD_INC);$(QTDIR)\include;$(SolutionDir)MFCKline;$(SolutionDir)MFCKline\font;$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\mygl;$(SolutionDir)MFCKline\Index;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap;.\GeneratedFiles\$(ConfigurationName);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4819</DisableSpecificWarnings>
+      <AdditionalIncludeDirectories>$(BOOST);$(CEFDIR);$(OPENSSL);$(PTHD_INC);$(QTDIR)\include;$(SolutionDir)MFCKline;$(SolutionDir)MFCKline\font;$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\mygl;$(SolutionDir)MFCKline\Index;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap;.\GeneratedFiles\$(ConfigurationName);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAs>CompileAsCpp</CompileAs>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -130,11 +126,11 @@
       <SubSystem>Windows</SubSystem>
       <TargetMachine>NotSet</TargetMachine>
       <AdditionalOptions>/NODEFAULTLIB:"libcmt.lib" %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>Qt5Core.lib;Qt5Gui.lib;Qt5OpenGL.lib;Qt5Widgets.lib;pthreadVC2.lib;thosttraderapi.lib;thostmduserapi.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libcef.lib;Qt5Gui.lib;Qt5Core.lib;Qt5OpenGL.lib;Qt5Widgets.lib;pthreadVC2.lib;libcef_dll_wrapper.lib;thosttraderapi.lib;thostmduserapi.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <AdditionalLibraryDirectories>$(PTHD_LIB86);$(QTDIR)\lib;$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\GL\lib;$(SolutionDir)MFCKline\font\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(PTHD_LIB86);$(QTDIR)\lib;$(CEFDIR)\$(Configuration);$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\GL\lib;$(SolutionDir)MFCKline\font\lib</AdditionalLibraryDirectories>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -161,15 +157,15 @@
       </DisableSpecificWarnings>
       <SDLCheck>true</SDLCheck>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>$(BOOST);$(OPENSSL);$(PTHD_INC);$(QTDIR)\include;$(SolutionDir)MFCKline;$(SolutionDir)MFCKline\font;$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\mygl;$(SolutionDir)MFCKline\Index;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap;.\GeneratedFiles\$(ConfigurationName);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BOOST);$(OPENSSL);$(PTHD_INC);$(QTDIR)\include;$(CEFDIR);$(SolutionDir)MFCKline;$(SolutionDir)MFCKline\font;$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\mygl;$(SolutionDir)MFCKline\Index;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap;.\GeneratedFiles\$(ConfigurationName);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>NotSet</TargetMachine>
       <AdditionalOptions>/NODEFAULTLIB:"libcmt.lib" %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;cef_sandbox.lib;libcef.lib;libcef_dll_wrapper.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(CEFDIR)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -198,7 +194,7 @@
       <CompileAs>CompileAsCpp</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(BOOST);$(OPENSSL);$(PTHD_INC);$(QTDIR)\include;$(SolutionDir)MFCKline;$(SolutionDir)MFCKline\font;$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\mygl;$(SolutionDir)MFCKline\Index;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap;.\GeneratedFiles\$(ConfigurationName);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BOOST);$(OPENSSL);$(PTHD_INC);$(QTDIR)\include;$(CEFDIR);$(SolutionDir)MFCKline;$(SolutionDir)MFCKline\font;$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\mygl;$(SolutionDir)MFCKline\Index;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap;.\GeneratedFiles\$(ConfigurationName);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -232,8 +228,9 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(BOOST);$(PTHD_INC);$(SolutionDir)MFCKline;$(SolutionDir)MFCKline\VLD;$(SolutionDir)MFCKline\font;$(SolutionDir)MFCKline\Index;$(SolutionDir)..\gSOAPverify\soap;$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtNetwork;$(QTDIR)\include\ActiveQt;$(QTDIR)\include\QtOpenGL;$(QTDIR)\include\QtQuickWidgets;$(QTDIR)\include\QtSerialPort;$(QTDIR)\include\QtSvg;$(QTDIR)\include\QtUiTools;$(QTDIR)\include\QtWebSockets;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtXml;.\GeneratedFiles\$(ConfigurationName);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BOOST);$(OPENSSL);$(PTHD_INC);$(QTDIR)\include;$(CEFDIR);$(SolutionDir)MFCKline;$(SolutionDir)MFCKline\font;$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\mygl;$(SolutionDir)MFCKline\Index;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap;.\GeneratedFiles\$(ConfigurationName);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAsManaged>true</CompileAsManaged>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -258,12 +255,13 @@
   <ItemGroup>
     <ClInclude Include="..\..\LinuxSrvc\gSOAPverify\soap\stdsoap2.h" />
     <ClInclude Include="boost\boostest.h" />
-    <ClInclude Include="ctl\CWebBrowser2.h" />
     <ClInclude Include="deep\DepthMarket.h" />
     <ClInclude Include="Def\MacroDef.h" />
     <ClInclude Include="dos\DOSCout.h" />
     <ClInclude Include="Font\FontNehe.h" />
     <ClInclude Include="HOOK\injectDLL.h" />
+    <ClInclude Include="html\cefWebKit.h" />
+    <ClInclude Include="html\MyHtmlView.h" />
     <ClInclude Include="Idx\binarytree-inl.h" />
     <ClInclude Include="Idx\CommSet.h" />
     <ClInclude Include="Idx\CPUID.H" />
@@ -305,11 +303,12 @@
     <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\soapC.cpp" />
     <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\soapClient.cpp" />
     <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\stdsoap2.cpp" />
-    <ClCompile Include="ctl\CWebBrowser2.cpp" />
     <ClCompile Include="deep\DepthMarket.cpp" />
     <ClCompile Include="dos\DOSCout.cpp" />
     <ClCompile Include="Font\FontNehe.cc" />
     <ClCompile Include="HOOK\injectDLL.cpp" />
+    <ClCompile Include="html\cefWebKit.cpp" />
+    <ClCompile Include="html\MyHtmlView.cpp" />
     <ClCompile Include="IMlogDlg.cpp" />
     <ClCompile Include="IMhideWndDlg.cpp" />
     <ClCompile Include="IM\client.cpp" />

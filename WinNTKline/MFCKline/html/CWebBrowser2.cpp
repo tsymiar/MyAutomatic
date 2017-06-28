@@ -1,4 +1,4 @@
-// CWebBrowser2.cpp : ÓÉ Microsoft Visual C++ ´´½¨µÄ ActiveX ¿Ø¼ş°ü×°Æ÷ÀàµÄ¶¨Òå
+// CWebBrowser2.cpp : ç”± Microsoft Visual C++ åˆ›å»ºçš„ ActiveX æ§ä»¶åŒ…è£…å™¨ç±»çš„å®šä¹‰
 
 
 #include "stdafx.h"
@@ -9,6 +9,6 @@
 
 IMPLEMENT_DYNCREATE(CWebBrowser2, CWnd)
 
-// CWebBrowser2 ÊôĞÔ
+// CWebBrowser2 å±æ€§
 
-// CWebBrowser2 ²Ù×÷
+// CWebBrowser2 æ“ä½œ

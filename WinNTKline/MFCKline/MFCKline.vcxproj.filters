@@ -63,9 +63,6 @@
     <ClInclude Include="boost\boostest.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="ctl\CWebBrowser2.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="RegistDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -150,6 +147,12 @@
     <ClInclude Include="..\..\LinuxSrvc\gSOAPverify\soap\stdsoap2.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="html\cefWebKit.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="html\MyHtmlView.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MFCKline.cpp">
@@ -177,9 +180,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="security\AES.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="ctl\CWebBrowser2.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="RegistDlg.cpp">
@@ -255,6 +255,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\stdsoap2.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="html\cefWebKit.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="html\MyHtmlView.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

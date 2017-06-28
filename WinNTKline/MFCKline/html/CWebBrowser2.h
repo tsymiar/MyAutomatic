@@ -1,4 +1,4 @@
-// CWebBrowser2.h : ÓÉ Microsoft Visual C++ ´´½¨µÄ ActiveX ¿Ø¼ş°ü×°Æ÷ÀàµÄÉùÃ÷
+// CWebBrowser2.h : ç”± Microsoft Visual C++ åˆ›å»ºçš„ ActiveX æ§ä»¶åŒ…è£…å™¨ç±»çš„å£°æ˜
 
 #pragma once
 
@@ -31,10 +31,10 @@ public:
 		pPersist, bStorage, bstrLicKey); 
 	}
 
-// ÌØĞÔ
+// ç‰¹æ€§
 public:
 
-// ²Ù×÷
+// æ“ä½œ
 public:
 
 	void GoBack()

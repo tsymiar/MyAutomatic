@@ -98,10 +98,10 @@ unsigned int __stdcall Chat_Msg(void* func)
 			send(out, sndbuf, 256, 0);
 			recv(rcv, sndbuf, 256, 0);
 			if (sndbuf[1] == 0)
-				MessageBox(NULL, "Registered succesfully.", "Regist", MB_OK);
+				MessageBox(NULL, "Regist succesfully.", "Regist", MB_OK);
 			else
 			{
-				MessageBox(NULL, "Register failed.", "Regist", MB_OK);
+				MessageBox(NULL, "Regist failed.", "Regist", MB_OK);
 			}
 		} break;
 		case (0x02): {//log
