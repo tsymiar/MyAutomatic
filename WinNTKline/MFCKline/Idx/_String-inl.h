@@ -1,4 +1,4 @@
-﻿#ifdef _STRING_
+#ifdef _STRING_
 #include <string>
 //未使用STL的string类时
 typedef std::string _String;
@@ -36,7 +36,7 @@ inline unsigned char* fix_strerr(unsigned char* str)
 using namespace std;
 
 class _String {
-	friend ostream& operator<<(ostream&, _String&);
+	friend ostream& operator<<(ostream&, const _String&);
 	friend istream& operator >> (istream&, _String&);
 public:
 	_String(const char* str = NULL);//赋值兼默认构造函数（char）
@@ -54,7 +54,7 @@ public:
 	char* _intmove(char* w, int m, int b, bool hind = false);
 	char* _op_order(char * src, char* dst);
 	char* _op_order(char * str);
-	char* _c_str();
+	char* _c_str() const;
 	size_t size() {
 		int len;
 		for (len = 0; m_data[len] != '\0'; len++)
@@ -254,7 +254,7 @@ inline char* _String::_op_order(char * str)
 	return str;
 }
 
-inline char* _String::_c_str()
+inline char* _String::_c_str() const
 {
 	return m_data;
 }
@@ -303,7 +303,7 @@ inline char & _String::operator[](unsigned int e)
 	if (e >= 0 && e <= strlen(m_data))
 		return m_data[e];
 }
-inline ostream & operator<<(ostream& os, _String& str)
+inline ostream & operator<<(ostream& os, const _String& str)
 {
 	os << str.m_data;
 	return os;
