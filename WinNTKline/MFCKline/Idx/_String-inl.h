@@ -30,8 +30,9 @@ inline unsigned char* fix_strerr(unsigned char* str)
 #define __STRING_
 #include <iostream>
 #include <iomanip>
-#include <string.h>
-#include <assert.h>
+#include <cstdlib>
+#include <cstring>
+#include <cassert>
 
 using namespace std;
 
