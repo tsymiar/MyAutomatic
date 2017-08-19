@@ -245,7 +245,7 @@ private:
 	bool chart_frame(void);
 	int diag_staff(int x, int y);
 	void print_string(const char* str);
-	void GetChangeMatrix(float &angel, float &x, float &y, float &z);
+	void GetChangeMatrix(float &angel, float &x, float &y, float &z) const;
 public:
 	bool unfurl;
 	bool coding;
@@ -282,11 +282,11 @@ public:
 	bool SetWindowPixelFormat(HDC m_hDC, HWND m_hWnd, int pixelformat = 0);
 	bool GetMarkDatatoDraw(void* P = nullptr, char* title = NULL);
 public:
-	float axistinker(int pX)
+	inline float axistinker(int pX) const
 	{
 		return pX > 680 ? (float)(pX*fixpixelx - 1) : (float)(pX*fixpixely + 1);
 	}
-	float paramtinker(float param)
+	inline float paramtinker(float param) const
 	{
 		return 0.8f*(param*0.16f - 0.8f)*tinkep.move*tinkep.ratio;
 	}
