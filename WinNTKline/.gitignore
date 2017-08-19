@@ -23,7 +23,8 @@ MFC/
 [Ll]inux/
 [Bb]in/
 [Oo]bj/
-[Gg]en
+[Gg]en/
+[Gg]eneratedFiles
 
 # Visual Studio 2015 cache/options directory
 .vs/

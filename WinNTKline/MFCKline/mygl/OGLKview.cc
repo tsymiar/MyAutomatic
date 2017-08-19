@@ -354,14 +354,17 @@ void _stdcall OGLKview::InitGraph(void/*HDC m_hDC*/)
 		glVertex3f(0, 0, 0);
 	}
 	glEnd();
-#endif // DEBUG
-#if !defined(GLTEST)
+#endif // DEBUG 
+#if !defined(GLTEST) 
+#if !defined(QT_DLL)
 	chart_frame();
 	diag_staff(dlginfo.mouX, dlginfo.mouY);
 #else
+#if defined BOOST
 	buset.m_boostest();
 #endif
-
+#endif
+#endif
 #ifdef _CONSOLE||_WINDOWS
 	SetConsoleCtrlHandler(dos.ConsoleHandler, TRUE);
 #endif

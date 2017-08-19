@@ -1,27 +1,51 @@
-﻿#ifdef _STRING_
+#ifdef _STRING_
 #include <string>
 //未使用STL的string类时
 typedef std::string _String;
+
+inline unsigned char* fix_strerr(unsigned char* str)
+{
+	for (int i = 0; i<(int)strlen((const char*)str); i++)
+		switch (str[i])
+		{
+		case 0xcc:/*烫 未初始化*/
+		case 0xCD:/*heapk(new)*/
+		case 0xDD://已收回的堆(delete)
+		case 0xFD://隔离（栅栏字节）字节 下标越界
+		case 0xAB://Memory allocated by LocalAlloc()
+		case 0xBAADF00D://	Memory allocated by LocalAlloc() with LMEM_FIXED,\
+												//	but not yet written to.
+		case 0xFEEEFEEE:/*  OS fill heap memory, which was marked for usage,\
+						but wasn't allocated by HeapAlloc() or LocalAlloc()\
+						Or that memory just has been freed by HeapFree().
+						*/
+			str[i] = '\0';
+			break;
+		default:break;
+		}
+	return str;
+}
 #else
 #ifndef __STRING_
 #define __STRING_
 #include <iostream>
 #include <iomanip>
-#include <string.h>
-#include <assert.h>
+#include <cstdlib>
+#include <cstring>
+#include <cassert>
 
 using namespace std;
 
 class _String {
-	friend ostream& operator<<(ostream&, _String&);
+	friend ostream& operator<<(ostream&, const _String&);
 	friend istream& operator >> (istream&, _String&);
 public:
 	_String(const char* str = NULL);//赋值兼默认构造函数（char）
 	_String(const _String& other);//赋值构造函数（_String）
 	_String& operator=(const _String& other);
-	_String/*&*/ operator+(const _String& other)const;
+	_String/*&*/ operator+(const _String& other);
 	bool operator==(const _String&);
-	char& operator[](unsigned int);
+	char& operator[](unsigned int) const;
 	char* _strcpy(char* strDest, const char* strSrc, int N = 1024);
 	char* /*__cdecl*/_strcat(char * strDest, const char * strSrc);
 	unsigned char* _strsub(unsigned char* ch, int pos, int len);
@@ -31,7 +55,7 @@ public:
 	char* _intmove(char* w, int m, int b, bool hind = false);
 	char* _op_order(char * src, char* dst);
 	char* _op_order(char * str);
-	char* _c_str();
+	char* _c_str() const;
 	size_t size() {
 		int len;
 		for (len = 0; m_data[len] != '\0'; len++)
@@ -231,7 +255,7 @@ inline char* _String::_op_order(char * str)
 	return str;
 }
 
-inline char* _String::_c_str()
+inline char* _String::_c_str() const
 {
 	return m_data;
 }
@@ -252,7 +276,7 @@ inline _String & _String::operator=(const _String & other)
 	return *this;
 }
 
-inline _String /*&*/ _String::operator+(const _String & other) const
+inline _String /*&*/ _String::operator+(const _String & other)
 {
 	_String newstring;
 	if (!other.m_data)
@@ -275,12 +299,12 @@ inline bool _String::operator==(const _String& s)
 	return strcmp(m_data, s.m_data) ? false : true;
 }
 
-inline char & _String::operator[](unsigned int e)
+inline char & _String::operator[](unsigned int e) const
 {
 	if (e >= 0 && e <= strlen(m_data))
 		return m_data[e];
 }
-inline ostream & operator<<(ostream& os, _String& str)
+inline ostream & operator<<(ostream& os, const _String& str)
 {
 	os << str.m_data;
 	return os;
