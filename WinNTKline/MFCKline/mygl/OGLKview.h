@@ -35,13 +35,13 @@
 #include	<iostream>
 #include	<fstream>
 #include	<random>
-#include	<io.h>
 #include	<fcntl.h>
 #if 0
 #include	<plus1second>
 #endif
 #include	<string>
 #ifdef _WIN32//__linux
+#include <io.h>
 #include "..\stdafx.h"
 #ifdef Error //ws2tcpip.h 'Error' redefined.
 #undef Error
@@ -52,6 +52,8 @@
 #pragma comment(lib, "WS2_32.lib")
 #include <WinSock2.h>
 #include <process.h>
+#else
+#include <unistd.h>
 #endif
 #pragma comment(lib, "freetype.lib") 
 #include	<GL/glew.h>  
