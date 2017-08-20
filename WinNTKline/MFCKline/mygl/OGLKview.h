@@ -62,6 +62,9 @@
 #include	<font/ft2build.h>
 #include	"font/freetype/ftglyph.h"
 #include	FT_FREETYPE_H  
+#if !defined QT_DLL
+#include	"GlModel.h"	// QFile error
+#endif
 #ifdef BOOST
 #include	"boost/boostest.h"
 #endif // BOOST
@@ -235,6 +238,9 @@ private:
 	Point itempt;
 #ifdef BOOST
 	boostest buset;
+#endif
+#if !defined QT_DLL
+	GlModel model;
 #endif
 	OGLKview* Okv;
 	std::vector<char*> markdata;

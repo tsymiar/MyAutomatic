@@ -78,6 +78,9 @@
     <ClInclude Include="..\MFCKline\html\MyHtmlView.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="..\MFCKline\html\cefWebKit.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -147,6 +150,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\MFCKline\html\MyHtmlView.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\MFCKline\html\cefWebKit.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

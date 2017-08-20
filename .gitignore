@@ -34,3 +34,5 @@
 *-hard
 *.con
 *.idb
+WinNTKline/QT/QtKline.lib
+WinNTKline/QT/QtKline.exp
