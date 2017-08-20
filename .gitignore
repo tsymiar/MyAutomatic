@@ -34,5 +34,6 @@
 *-hard
 *.con
 *.idb
+LinuxSrvc/Gen/
 WinNTKline/QT/QtKline.lib
 WinNTKline/QT/QtKline.exp
