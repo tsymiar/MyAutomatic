@@ -61,7 +61,7 @@
 #include	<GL/freeglut.h> 
 #include	<GL/GLU.h>
 #include	<GL/GL.h>
-#include	<font/ft2build.h>
+#include	"font/ft2build.h"
 #include	"font/freetype/ftglyph.h"
 #include	FT_FREETYPE_H  
 #if !defined QT_DLL
