@@ -22,14 +22,14 @@
      <rect>
       <x>0</x>
       <y>0</y>
-      <width>601</width>
-      <height>381</height>
+      <width>600</width>
+      <height>400</height>
      </rect>
     </property>
     <property name="maximumSize">
      <size>
-      <width>601</width>
-      <height>381</height>
+      <width>600</width>
+      <height>400</height>
      </size>
     </property>
    </widget>

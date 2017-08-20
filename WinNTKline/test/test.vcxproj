@@ -100,12 +100,13 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_TESTAPIS_;_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\font;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap;$(SolutionDir)MFCKline</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\font;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap;$(SolutionDir)MFCKline;$(CEFDIR)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4819</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalLibraryDirectories>$(QTDIR)\lib;$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\font\lib;$(SolutionDir)MFCKline\GL\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>Qt5Core.lib;Qt5Gui.lib;Qt5OpenGL.lib;Qt5Widgets.lib;thosttraderapi.lib;thostmduserapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(CEFDIR)\$(Configuration);$(QTDIR)\lib;$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\font\lib;$(SolutionDir)MFCKline\GL\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Qt5Core.lib;Qt5Gui.lib;Qt5OpenGL.lib;Qt5Widgets.lib;thosttraderapi.lib;thostmduserapi.lib;libcef.lib;libcef_dll_wrapper.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -120,15 +121,18 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_TESTAPIS_;_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\font;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap;$(SolutionDir)MFCKline</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\font;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap;$(SolutionDir)MFCKline;$(CEFDIR)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4819</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
+      <AdditionalLibraryDirectories>$(CEFDIR)\$(Configuration);$(QTDIR)\lib;$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\font\lib;$(SolutionDir)MFCKline\GL\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Qt5Core.lib;Qt5Gui.lib;Qt5OpenGL.lib;Qt5Widgets.lib;thosttraderapi.lib;thostmduserapi.lib;libcef.lib;libcef_dll_wrapper.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -200,6 +204,7 @@
   <ItemGroup>
     <ClInclude Include="..\MFCKline\deep\DepthMarket.h" />
     <ClInclude Include="..\MFCKline\dos\DOSCout.h" />
+    <ClInclude Include="..\MFCKline\html\cefWebKit.h" />
     <ClInclude Include="..\MFCKline\html\MyHtmlView.h" />
     <ClInclude Include="..\MFCKline\IMhideWndDlg.h" />
     <ClInclude Include="..\MFCKline\IMlogDlg.h" />
@@ -226,6 +231,7 @@
     <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\stdsoap2.cpp" />
     <ClCompile Include="..\MFCKline\deep\DepthMarket.cpp" />
     <ClCompile Include="..\MFCKline\dos\DOSCout.cpp" />
+    <ClCompile Include="..\MFCKline\html\cefWebKit.cpp" />
     <ClCompile Include="..\MFCKline\html\MyHtmlView.cpp" />
     <ClCompile Include="..\MFCKline\IMhideWndDlg.cpp" />
     <ClCompile Include="..\MFCKline\IMlogDlg.cpp" />

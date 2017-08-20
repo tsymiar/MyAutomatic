@@ -18,7 +18,7 @@ public:
 	void GlTexture(bool oo);
 	int LoadGLTexture();
 	void Load__QDU(int wide, int tall);
-	void Model(int wide, int tall, float deltax, float deltay);
+	void Model(int wide, int tall, float deltax = .0f, float deltay = .0f);
 	void House(int wide, int tall);
 };
 class BMP

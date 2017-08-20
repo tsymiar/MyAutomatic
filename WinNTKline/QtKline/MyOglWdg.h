@@ -1,11 +1,12 @@
 #ifndef QMyOglWdg_H
 #define QMyOglWdg_H
 
-#include <OGLKview.h>
+#include <QOglKview>
 #include <QtWidgets/QOpenGLWidget>
-#include <GL/GLU.h>
-#include <QEvent.h>
+#include <QEnterEvent>
 #include <Qgl>
+
+#define GLTEST
 
 class QMyOglWdg : public QGLWidget
 {

@@ -356,13 +356,14 @@ void _stdcall OGLKview::InitGraph(void/*HDC m_hDC*/)
 	glEnd();
 #endif // DEBUG 
 #if !defined(GLTEST) 
-#if !defined(QT_DLL)
 	chart_frame();
 	diag_staff(dlginfo.mouX, dlginfo.mouY);
-#else
 #if defined BOOST
 	buset.m_boostest();
 #endif
+#else
+#if !defined(QT_DLL)
+	model.Model(attr.wide, attr.tall, dlginfo.mouX, dlginfo.mouY);
 #endif
 #endif
 #ifdef _CONSOLE||_WINDOWS
@@ -399,6 +400,8 @@ void OGLKview::print_string(const char* str)
 #define _UNICODE
 	wstring = (wchar_t*)malloc((len + 1) * sizeof(wchar_t));
 #undef _UNICODE
+#else
+	wstring = (wchar_t*)malloc((len + 1) * sizeof(wchar_t));
 #endif
 #endif
 	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, str, -1, wstring, len);

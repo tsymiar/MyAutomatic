@@ -14,7 +14,7 @@ inline unsigned char* fix_strerr(unsigned char* str)
 		case 0xFD://隔离（栅栏字节）字节 下标越界
 		case 0xAB://Memory allocated by LocalAlloc()
 		case 0xBAADF00D://	Memory allocated by LocalAlloc() with LMEM_FIXED,\
-																								//	but not yet written to.
+												//	but not yet written to.
 		case 0xFEEEFEEE:/*  OS fill heap memory, which was marked for usage,\
 						but wasn't allocated by HeapAlloc() or LocalAlloc()\
 						Or that memory just has been freed by HeapFree().
@@ -43,9 +43,9 @@ public:
 	_String(const char* str = NULL);//赋值兼默认构造函数（char）
 	_String(const _String& other);//赋值构造函数（_String）
 	_String& operator=(const _String& other);
-	_String/*&*/ operator+(const _String& other)const;
+	_String/*&*/ operator+(const _String& other);
 	bool operator==(const _String&);
-	char& operator[](unsigned int);
+	char& operator[](unsigned int) const;
 	char* _strcpy(char* strDest, const char* strSrc, int N = 1024);
 	char* /*__cdecl*/_strcat(char * strDest, const char * strSrc);
 	unsigned char* _strsub(unsigned char* ch, int pos, int len);
@@ -276,7 +276,7 @@ inline _String & _String::operator=(const _String & other)
 	return *this;
 }
 
-inline _String /*&*/ _String::operator+(const _String & other) const
+inline _String /*&*/ _String::operator+(const _String & other)
 {
 	_String newstring;
 	if (!other.m_data)
@@ -299,7 +299,7 @@ inline bool _String::operator==(const _String& s)
 	return strcmp(m_data, s.m_data) ? false : true;
 }
 
-inline char & _String::operator[](unsigned int e)
+inline char & _String::operator[](unsigned int e) const
 {
 	if (e >= 0 && e <= strlen(m_data))
 		return m_data[e];
