@@ -407,7 +407,7 @@ int _im_(int argc, char *argv[]) {
 #endif
 		thread_ID;
 #ifdef __linux
-	pthread_create(&thread_ID, NULL, control, (void*)-1);
+	pthread_create(&thread_ID, NULL, commands, (void*)-1);
 #else
 #ifdef _WIN32
 	_beginthreadex(NULL, 0, commands, NULL, 0, &thread_ID);
