@@ -3,12 +3,14 @@
 
 #include <QOglKview>
 #include <QtWidgets/QOpenGLWidget>
+#include <QOpenGLExtraFunctions>
 #include <QEnterEvent>
+#include <QDebug>
 #include <Qgl>
 
 #define GLTEST
 
-class QMyOglWdg : public QGLWidget
+class QMyOglWdg : public QGLWidget//, protected QOpenGLFunctions
 {
 	Q_OBJECT
 
@@ -30,7 +32,9 @@ private:
 	GLfloat xSpeed, ySpeed;
 	GLuint texture[3];
 	GLuint filter;
+#ifdef OGL_KVIEW_H_
 	OGLKview kv;
+#endif
 };
 
 #endif // QMyOglWdg_H
