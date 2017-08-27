@@ -47,13 +47,13 @@ bool OGLKview::SetWindowPixelFormat(HDC m_hDC, HWND m_hWnd, int pixelformat)
 		PFD_SUPPORT_OPENGL |                // 支持OpenGL
 		PFD_DOUBLEBUFFER,                   // 双缓存
 		PFD_TYPE_RGBA,                      // RGBA类型
-		24,									// 24位颜色深度
+		24,                                 // 24位颜色深度
 		0,0,0,0,0,0,                        // 忽略颜色位
 		0,                                  // 无alpha缓存
 		0,                                  // 忽略转换位
 		0,                                  // 无累计缓存
 		0,0,0,0,                            // 忽略累计位
-		32,									// 32位深度缓存
+		32,                                 // 32位深度缓存
 		0,                                  // 无模版缓存
 		0,                                  // 无辅助缓存
 		PFD_MAIN_PLANE,                     // 主层（main layer）
@@ -102,7 +102,7 @@ float shadowup, shadowdown;
 float candlemiddle, candleright, candleleft;
 OGLKview::Point g_P, arrow;
 OGLKview::Market fixeddata;
-OGLKview::OglAttr attr = { 0 };
+OGLKview::OglAttr attr = { 1366,768 };
 OGLKview::Item g_ITEM = { 0,0,0,NULL };
 OGLKview::ViewSize viewsize = { 0,0,0,0 };
 OGLKview::Charmarket markchars = { "---","---","---" };

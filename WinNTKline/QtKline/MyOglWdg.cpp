@@ -3,20 +3,21 @@
 QMyOglWdg::QMyOglWdg(QWidget* parent, const char* name, bool fs)
 	: QGLWidget(parent)
 {
+	setGeometry(400, 200, 640, 480);
 	fullscreen = fs;
-	setGeometry(0, 0, 640, 480);
 	xRot = yRot = zRot = 0.0;
-	zoom = -5.0;
 	xSpeed = ySpeed = 0.0;
+	zoom = -5.0;
 
 	filter = 0;
-
 	light = false;
 
 	setWindowTitle("tsymiar's Tutorial");
 
 	if (fullscreen)
 		showFullScreen();
+
+	initializeGL();
 }
 
 QMyOglWdg::~QMyOglWdg()
@@ -27,14 +28,40 @@ QMyOglWdg::~QMyOglWdg()
 void QMyOglWdg::initializeGL()
 {
 	kv.InitGraph();
-	kv.GetMarkDatatoDraw();
 }
 
 void QMyOglWdg::paintGL()
 {
-	glBindTexture(GL_TEXTURE_2D, texture[filter]);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glLoadIdentity();
+#if !defined(GLTEST)
+	kv.DrawCoord(xRot, yRot);
+	kv.GetMarkDatatoDraw();
+	//glBindTexture(GL_TEXTURE_2D, texture[filter]);
+#else
+	glTranslatef(-1.5, 0.0, -6.0);
+	glBegin(GL_QUADS);
+	glVertex3f(-1.0, 1.0, 0.0);
+	glVertex3f(1.0, 1.0, 0.0);
+	glVertex3f(1.0, -1.0, 0.0);
+	glVertex3f(-1.0, -1.0, 0.0);
+	glEnd();
+
+	glTranslatef(3.0, 0.0, 0.0);
+	glBegin(GL_TRIANGLES);
+
 	xRot += xSpeed;
 	yRot += ySpeed;
+	qDebug() << "(x=" << xRot << ",y=" << yRot << ",z=" << zoom << ")";
+	
+		glColor3f(1.0, 0.0, 0.0);
+		glVertex3f(0.0, 1.0, 0.0);
+		glColor3f(0.0, 1.0, 0.0);
+		glVertex3f(xRot, yRot, 0.0);
+		glColor3f(0.0, 0.0, 1.0);
+		glVertex3f(1.0, yRot, 0.0);
+	glEnd();
+#endif
 }
 
 void QMyOglWdg::resizeGL(int width, int height)
@@ -44,10 +71,22 @@ void QMyOglWdg::resizeGL(int width, int height)
 		height = 1;
 	}
 	glViewport(0, 0, (GLint)width, (GLint)height);
+	//gluPerspective(45.0, (GLfloat)width / (GLfloat)height, 0.1, 100.0);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluPerspective(45.0, (GLfloat)width / (GLfloat)height, 0.1, 100.0);
+	GLdouble aspectRatio = (GLfloat)width / (GLfloat)height;
+	GLdouble zNear = 0.1;
+	GLdouble zFar = 100.0;
+
+	GLdouble rFov = 45.0 * 3.14159265 / 180.0;
+	glFrustum(-zNear * tan(rFov / 2.0) * aspectRatio,
+		zNear * tan(rFov / 2.0) * aspectRatio,
+		-zNear * tan(rFov / 2.0),
+		zNear * tan(rFov / 2.0),
+		zNear, zFar);
+
 	glMatrixMode(GL_MODELVIEW);
+
 	glLoadIdentity();
 }
 
