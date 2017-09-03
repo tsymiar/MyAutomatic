@@ -72,4 +72,9 @@
       <Filter>Generated Files</Filter>
     </CustomBuild>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="mkall.sh">
+      <Filter>Form Files</Filter>
+    </None>
+  </ItemGroup>
 </Project>

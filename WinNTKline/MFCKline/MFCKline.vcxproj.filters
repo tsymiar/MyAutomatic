@@ -153,6 +153,9 @@
     <ClInclude Include="html\MyHtmlView.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Idx\auto_tchar.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MFCKline.cpp">

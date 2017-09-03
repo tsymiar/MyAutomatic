@@ -181,6 +181,9 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -D_MBCS  "-I$(SolutionDir)MFCKline\mygl" "-I$(SolutionDir)MFCKline\font" "-I$(SolutionDir)MFCKline" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtGui" "-I$(QTDIR)\include\QtNetwork" "-I$(QTDIR)\include\ActiveQt" "-I$(QTDIR)\include\QtOpenGL" "-I$(QTDIR)\include\QtQuickWidgets" "-I$(QTDIR)\include\QtSerialPort" "-I$(QTDIR)\include\QtSvg" "-I$(QTDIR)\include\QtUiTools" "-I$(QTDIR)\include\QtWebSockets" "-I$(QTDIR)\include\QtWidgets" "-I$(QTDIR)\include\QtXml"</Command>
     </CustomBuild>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="mkall.sh" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
