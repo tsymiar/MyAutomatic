@@ -1,6 +1,8 @@
 ﻿#ifndef GLMODEL_H_
 #define GLMODEL_H_
+#ifdef _WIN32
 #include <windows.h>
+#endif // _WIN32
 #include <cmath>
 #include <cstdio>
 #include <gl\gl.h>
