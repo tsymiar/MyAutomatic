@@ -262,6 +262,7 @@
     <ClInclude Include="HOOK\injectDLL.h" />
     <ClInclude Include="html\cefWebKit.h" />
     <ClInclude Include="html\MyHtmlView.h" />
+    <ClInclude Include="Idx\auto_tchar.h" />
     <ClInclude Include="Idx\binarytree-inl.h" />
     <ClInclude Include="Idx\CommSet.h" />
     <ClInclude Include="Idx\CPUID.H" />

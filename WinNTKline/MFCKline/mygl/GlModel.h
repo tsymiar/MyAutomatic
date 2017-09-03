@@ -5,12 +5,12 @@
 #endif // _WIN32
 #include <cmath>
 #include <cstdio>
-#include <gl\gl.h>
-#include <gl\glu.h>
-#include "Def\MacroDef.h"
-#include "mygl\GlF16.h"
-#include "mygl\House.h"
-#include "GL\glaux.h"
+#include <GL/gl.h>
+#include <GL/glu.h>
+#include "Def/MacroDef.h"
+#include "mygl/GlF16.h"
+#include "mygl/House.h"
+#include "GL/glaux.h"
 //链接器——》输入——》附加依赖项：legacy_studio_definitions.lib
 #pragma comment(lib, "glaux.lib") 
 
