@@ -879,7 +879,7 @@ void OGLKview::DrawCurve(OGLKview::Point A[4])
 	Point Pold = { A[0].x,A[0].y };
 	for (double t = 0.f; t <= 1.f; t += .1f)
 	{
-		Point P = idx.CubicBézier(A, t);
+		Point P = idx.CubicBezier/*CubicBézier*/(A, t);
 		glBegin(GL_LINES);
 		glVertex2f(Pold.x, Pold.y);
 		glVertex2f(P.x, P.y);
