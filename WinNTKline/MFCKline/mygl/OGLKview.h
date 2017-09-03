@@ -71,7 +71,9 @@
 #include	"boost/boostest.h"
 #endif // BOOST
 #include	"Idx/Initialise-inl.h"
+#ifdef _WIN32
 #include	"Idx/CPUID.H"
+#endif
 #include	"Idx/_String-inl.h"
 #if !defined(QT_VERSION)
 #include	"dos/DOSCout.h"
@@ -90,8 +92,13 @@
 #else
 #define DLL_KVIEW_API __declspec(dllimport)
 #endif
-
-DLL_KVIEW_API class OGLKview
+#ifdef __linux
+#define _stdcall
+#endif
+#ifdef _WIN32
+DLL_KVIEW_API
+#endif
+class OGLKview
 {
 private:
 	bool limitup;//harden涨停
@@ -103,7 +110,9 @@ public:
 	OGLKview();
 	virtual ~OGLKview();
 public:
+#ifdef _WIN32
 	typedef HWND(WINAPI *PROCGETCONSOLEWINDOW)();
+#endif
 	typedef char* SB;
 
 	struct Market {
@@ -200,14 +209,14 @@ public:
 	typedef Initialise::GLPoint Point;
 	typedef Initialise::GLColor Color4f;
 public:
-	std::list<struct OGLKview::Market> OGLKview::Vec2List(std::vector<struct OGLKview::Market> marvec)
+	inline std::list<struct OGLKview::Market> Vec2List(std::vector<struct OGLKview::Market> marvec)
 	{
 		std::list<struct OGLKview::Market> marklist;
 		std::copy_n(std::make_move_iterator(marvec.begin()), marvec.size(), std::back_inserter(marklist));
 		marvec.clear();
 		return marklist;
 	}
-	float OGLKview::SortPrice(std::list<struct OGLKview::Market> market, bool greater)
+	inline float SortPrice(std::list<struct OGLKview::Market> market, bool greater)
 	{
 		if (!greater)
 		{
@@ -222,7 +231,7 @@ public:
 			return it->low;
 		}
 	}
-	std::vector<struct OGLKview::Market> OGLKview::SelectPeriod(std::vector<struct OGLKview::Market> market, unsigned space)
+	inline std::vector<struct OGLKview::Market> SelectPeriod(std::vector<struct OGLKview::Market> market, unsigned space)
 	{
 		std::vector<struct OGLKview::Market>::iterator it = market.begin();
 		if (market.size() > space)
@@ -235,9 +244,11 @@ public:
 		else return market;
 	}
 private:
+#ifdef _WIN32
 	HGLRC m_hRC;
 	HWND m_hDlg;
 	Point itempt;
+#endif
 #ifdef BOOST
 	boostest buset;
 #endif
@@ -247,7 +258,9 @@ private:
 	OGLKview* Okv;
 	std::vector<char*> markdata;
 	Market st_stock;
+#ifdef _WIN32
 	PROCGETCONSOLEWINDOW GetConsoleWindow;
+#endif
 	std::vector<struct OGLKview::Market > vec_market;
 	OGLKview::Point pt[2] = { { 1.7f,0 },{ -9.0,0 } };
 	bool chart_frame(void);
@@ -287,7 +300,9 @@ public:
 	void SetBkg(bool b);
 	void SetColor(OGLKview::Color4f color);
 	int Data2View(std::vector<struct OGLKview::Market> market, OGLKview::Dlginfo toview);
+#ifdef _WIN32	
 	bool SetWindowPixelFormat(HDC m_hDC, HWND m_hWnd, int pixelformat = 0);
+#endif	
 	bool GetMarkDatatoDraw(void* P = nullptr, char* title = NULL);
 public:
 	inline float axistinker(int pX) const
@@ -298,17 +313,17 @@ public:
 	{
 		return 0.8f*(param*0.16f - 0.8f)*tinkep.move*tinkep.ratio;
 	}
-	OGLKview::Point xytinker(OGLKview::Point xy)
+	inline OGLKview::Point xytinker(OGLKview::Point xy)
 	{
 		xy.x = (float)(xy.x*fixpixelx - 1.234f);
 		xy.y = (float)(1.39f - xy.y*fixpixely);
 		return xy;
 	} 
-	float OGLKview::Pxtinker(OGLKview::FixWhat tinker)
+	inline float Pxtinker(OGLKview::FixWhat tinker) const
 	{
 		return (tinker.datacol - tinker.zoom)*tinker.ratio*0.01f-1.F;
 	}
-	float Pytinker(float py, OGLKview::FixWhat tinker)
+	inline float Pytinker(float py, OGLKview::FixWhat tinker) const
 	{
 		return 0.27f*py*tinker.ratio*tinker.zoom + y_fix - 2.1f;
 	}

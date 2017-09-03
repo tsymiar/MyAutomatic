@@ -2,7 +2,9 @@
 #define STOCK_CLASS_H_
 
 class Stock {
-public:	Stock::Stock() {}
+public:	Stock() {}
+//destructor
+	~Stock() {}
 //variables
 private:
 	float alph;
@@ -77,7 +79,5 @@ public:
 	{
 		return (DIF - DEA) * 2;
 	}
-//destructor
-public:	Stock::~Stock() {}
 };
 #endif // !STOCK_CLASS_H_
