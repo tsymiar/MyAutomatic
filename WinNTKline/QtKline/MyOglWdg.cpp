@@ -39,7 +39,11 @@ void QMyOglWdg::paintGL()
 	kv.GetMarkDatatoDraw();
 	//glBindTexture(GL_TEXTURE_2D, texture[filter]);
 #else
-	glTranslatef(-1.5, 0.0, -6.0);
+	xRot += xSpeed;
+	yRot += ySpeed;
+	qDebug() << "(x=" << xRot << ",y=" << yRot << ",z=" << zoom << ")";
+
+	glTranslatef(-1, 0.0, -8.0);
 	glBegin(GL_QUADS);
 	glVertex3f(-1.0, 1.0, 0.0);
 	glVertex3f(1.0, 1.0, 0.0);
@@ -49,17 +53,13 @@ void QMyOglWdg::paintGL()
 
 	glTranslatef(3.0, 0.0, 0.0);
 	glBegin(GL_TRIANGLES);
-
-	xRot += xSpeed;
-	yRot += ySpeed;
-	qDebug() << "(x=" << xRot << ",y=" << yRot << ",z=" << zoom << ")";
 	
 		glColor3f(1.0, 0.0, 0.0);
 		glVertex3f(0.0, 1.0, 0.0);
 		glColor3f(0.0, 1.0, 0.0);
-		glVertex3f(xRot, yRot, 0.0);
+		glVertex3f(-1, -1, 0.0);
 		glColor3f(0.0, 0.0, 1.0);
-		glVertex3f(1.0, yRot, 0.0);
+		glVertex3f(1.0, -1, 0.0);
 	glEnd();
 #endif
 }
