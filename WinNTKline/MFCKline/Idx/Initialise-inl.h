@@ -3,8 +3,10 @@
 #include <cmath>
 #include <cfloat>
 #include <cassert>
+#ifdef _WIN32
 #include <atlstr.h>
-#include <gl/GL.h>
+#endif
+#include <GL/GL.h>
 
 class Initialise {
 
@@ -21,7 +23,7 @@ public:
 		GLfloat x;
 		GLfloat y;
 	};
-	GLPoint CubicBézier(GLPoint A[4], double t)
+	GLPoint  CubicBe/*é*/zier(GLPoint A[4], double t)
 	{
 		GLPoint P;
 

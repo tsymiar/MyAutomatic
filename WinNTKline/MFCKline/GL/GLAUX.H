@@ -52,8 +52,9 @@ Abstract:
  *
  * OpenGL(TM) is a trademark of Silicon Graphics, Inc.
  */
-
+#ifdef _WIN32
 #include <windows.h>
+#endif
 #include <GL/gl.h>
 #include <GL/glu.h>
 
