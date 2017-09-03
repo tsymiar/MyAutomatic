@@ -11,7 +11,7 @@
 class Initialise {
 
 public:
-	Initialise::Initialise() {}
+	Initialise() {}
 
 	struct GLColor {
 		GLfloat R;
@@ -39,9 +39,10 @@ public:
 	}
 private:
 	char* ptr = nullptr;
-	LONG len;
+	long len;
 public:
-	static char* Initialise::AllocBuffer(CString msg)
+#ifdef _WIN32
+	static char* AllocBuffer(CString msg)
 	{
 		Initialise index;
 #ifdef _UNICODE
@@ -57,7 +58,8 @@ public:
 		assert(index.ptr != NULL);
 		return p;
 	}
-	virtual Initialise::~Initialise()
+#endif
+	virtual ~Initialise()
 	{
 		if (this->ptr)
 			this->ptr = NULL;

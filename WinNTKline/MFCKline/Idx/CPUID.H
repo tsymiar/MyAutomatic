@@ -1,10 +1,8 @@
 ﻿// http://msdn.microsoft.com/en-us/library/hskdteyh.aspx
 #ifndef _CPUID_CPP
 #define _CPUID_CPP
-#ifdef _WIN32
-#include <Windows.h>
-#endif
 #pragma warning (disable:4793)
+#include <Windows.h>
 #if _MSC_VER >= 1400//VC2005+支持intrin.h
 #include <intrin.h>
 #endif

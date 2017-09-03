@@ -1,12 +1,12 @@
 #include "myuiobj.h"
 #include <QtPlugin>
-#include <QtWidgets\QApplication>
-#include <QtWidgets\QMessagebox>
+#include <QtWidgets/qmessagebox.h>
 #include "MyOglWdg.h"
 
 // Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)
-
+#ifdef _WIN32
 extern "C" __declspec(dllexport)
+#endif
 int main(int argc, char *argv[])
 {
 	QApplication a(argc, argv);

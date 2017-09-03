@@ -2,11 +2,15 @@
 #define QMyOglWdg_H
 
 #include <QOglKview>
+#if QT_VERSION >= 0x050400
 #include <QtWidgets/QOpenGLWidget>
+#endif
+#if QT_VERSION >= 0x050600
 #include <QOpenGLExtraFunctions>
+#endif
 #include <QEnterEvent>
 #include <QDebug>
-#include <Qgl>
+//#include <QGL>
 
 #define GLTEST
 
