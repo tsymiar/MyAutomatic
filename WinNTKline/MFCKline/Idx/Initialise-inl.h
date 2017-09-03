@@ -23,7 +23,7 @@ public:
 		GLfloat x;
 		GLfloat y;
 	};
-	GLPoint  CubicBe/*é*/zier(GLPoint A[4], double t)
+	GLPoint  /*CubicBézier*/CubicBezier(GLPoint A[4], double t)
 	{
 		GLPoint P;
 
