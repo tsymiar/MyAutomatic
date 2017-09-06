@@ -1,20 +1,20 @@
 #ifndef QMyOglWdg_H
 #define QMyOglWdg_H
 
-#include <QOglKview>
 #if QT_VERSION >= 0x050400
 #include <QtWidgets/QOpenGLWidget>
 #endif
 #if QT_VERSION >= 0x050600
 #include <QOpenGLExtraFunctions>
 #endif
+#include <QtOpenGL/qgl.h>
+#include <QOglKview>
 #include <QEnterEvent>
 #include <QDebug>
-//#include <QGL>
 
 #define GLTEST
 
-class QMyOglWdg : public QGLWidget//, protected QOpenGLFunctions
+class QMyOglWdg : public QGLWidget //, protected QOpenGLFunctions
 {
 	Q_OBJECT
 

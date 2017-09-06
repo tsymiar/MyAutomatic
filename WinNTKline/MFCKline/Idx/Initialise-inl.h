@@ -6,7 +6,6 @@
 #ifdef _WIN32
 #include <atlstr.h>
 #endif
-#include <GL/GL.h>
 
 class Initialise {
 
@@ -14,14 +13,14 @@ public:
 	Initialise() {}
 
 	struct GLColor {
-		GLfloat R;
-		GLfloat G;
-		GLfloat B;
-		GLfloat A;
+		float R;
+		float G;
+		float B;
+		float A;
 	};
 	struct GLPoint {
-		GLfloat x;
-		GLfloat y;
+		float x;
+		float y;
 	};
 	GLPoint  /*CubicBézier*/CubicBezier(GLPoint A[4], double t)
 	{

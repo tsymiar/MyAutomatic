@@ -55,26 +55,29 @@
 #else
 #include <unistd.h>
 #endif
+#ifdef BOOST
+#include	"boost/boostest.h"
+#endif // BOOST
 #pragma comment(lib, "freetype.lib") 
+#ifdef QT_DLL
+#include	</usr/include/GL/glew.h>  
+#include	"font/ft2build.h"
+#include	"font/freetype/ftglyph.h"
+#include	FT_FREETYPE_H  
+//typedef void (GLAPIENTRY * PFNGLBLENDEQUATIONEXTPROC) (GLenum mode);
+#else
 #include	<GL/glew.h>  
 #include	<GL/glut.h>
 #include	<GL/freeglut.h> 
 #include	<GL/GLU.h>
 #include	<GL/GL.h>
-#include	"font/ft2build.h"
-#include	"font/freetype/ftglyph.h"
-#include	FT_FREETYPE_H  
-#if !defined QT_DLL
 #include	"GlModel.h"	// QFile error
 #endif
-#ifdef BOOST
-#include	"boost/boostest.h"
-#endif // BOOST
 #include	"Idx/Initialise-inl.h"
+#include	"Idx/_String-inl.h"
 #ifdef _WIN32
 #include	"Idx/CPUID.H"
 #endif
-#include	"Idx/_String-inl.h"
 #if !defined(QT_VERSION)
 #include	"dos/DOSCout.h"
 #endif
@@ -293,10 +296,10 @@ public:
 	int DrawCoord(int mX, int mY);
 	int DrawArrow(OGLKview::Point begin);
 	int DrawDetail(OGLKview::Market market);
-	int DrawPoly(OGLKview::Point Pb, OGLKview::Point Pe, OGLKview::Color4f color = {1,1,1}, int viewport = 1);
-	bool DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool hollow = 1, OGLKview::Point pt = { 0 });
+	int DrawPoly(OGLKview::Point Pb, OGLKview::Point Pe, OGLKview::Color4f color = {1,1,1,1}, int viewport = 1);
+	bool DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool hollow = 1, OGLKview::Point pt = { 0,0 });
 	void AdjustDraw(GLsizei W, GLsizei H, bool b = true);
-	void SwitchViewport(int viewport, OGLKview::ViewSize adjust = {1,1,1,1});
+	void SwitchViewport(int viewport, OGLKview::ViewSize adjust /*= {1,1,1,1}*/);
 	void SetBkg(bool b);
 	void SetColor(OGLKview::Color4f color);
 	int Data2View(std::vector<struct OGLKview::Market> market, OGLKview::Dlginfo toview);
