@@ -41,7 +41,7 @@
 #endif
 #include	<string>
 #ifdef _WIN32//__linux
-#include <io.h>
+#include	<io.h>
 #include "..\stdafx.h"
 #ifdef Error //ws2tcpip.h 'Error' redefined.
 #undef Error
@@ -55,15 +55,11 @@
 #else
 #include <unistd.h>
 #endif
-#ifdef BOOST
-#include	"boost/boostest.h"
-#endif // BOOST
 #pragma comment(lib, "freetype.lib") 
-#ifdef QT_DLL
+#ifdef __linux
+#ifdef QT_VERSION
 #include	</usr/include/GL/glew.h>  
-#include	"font/ft2build.h"
-#include	"font/freetype/ftglyph.h"
-#include	FT_FREETYPE_H  
+#endif
 //typedef void (GLAPIENTRY * PFNGLBLENDEQUATIONEXTPROC) (GLenum mode);
 #else
 #include	<GL/glew.h>  
@@ -71,12 +67,17 @@
 #include	<GL/freeglut.h> 
 #include	<GL/GLU.h>
 #include	<GL/GL.h>
-#include	"GlModel.h"	// QFile error
 #endif
+#include	<font/ft2build.h>
+#include	"font/freetype/ftglyph.h"
+#include	FT_FREETYPE_H  
+#ifdef BOOST
+#include	"boost/boostest.h"
+#endif // BOOST
 #include	"Idx/Initialise-inl.h"
-#include	"Idx/_String-inl.h"
 #ifdef _WIN32
 #include	"Idx/CPUID.H"
+#include	"Idx/_String-inl.h"
 #endif
 #if !defined(QT_VERSION)
 #include	"dos/DOSCout.h"
@@ -88,7 +89,6 @@
 #else
 #define fixpixelx 0.002f
 #endif
-//#define GLTEST
 #define _N_ 10
 #ifdef OGL_KVIEW_H_
 #define DLL_KVIEW_API __declspec(dllexport)
@@ -255,7 +255,7 @@ private:
 #ifdef BOOST
 	boostest buset;
 #endif
-#if !defined QT_DLL
+#if 0
 	GlModel model;
 #endif
 	OGLKview* Okv;
@@ -275,7 +275,7 @@ public:
 	bool coding;
 	float y_fix = 0;
 #if !defined(QT_VERSION)
-	//DOSCout DOS;
+	DOSCout DOS;
 #endif
 	ZOOM Zoom;
 	Initialise index;
@@ -299,7 +299,11 @@ public:
 	int DrawPoly(OGLKview::Point Pb, OGLKview::Point Pe, OGLKview::Color4f color = {1,1,1,1}, int viewport = 1);
 	bool DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool hollow = 1, OGLKview::Point pt = { 0,0 });
 	void AdjustDraw(GLsizei W, GLsizei H, bool b = true);
-	void SwitchViewport(int viewport, OGLKview::ViewSize adjust /*= {1,1,1,1}*/);
+	void SwitchViewport(int viewport, OGLKview::ViewSize adjust 
+#ifdef _WIN32
+		= {1,1,1,1}
+#endif
+	);
 	void SetBkg(bool b);
 	void SetColor(OGLKview::Color4f color);
 	int Data2View(std::vector<struct OGLKview::Market> market, OGLKview::Dlginfo toview);

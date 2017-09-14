@@ -1,6 +1,7 @@
 #ifndef QMyOglWdg_H
 #define QMyOglWdg_H
 
+#include <QOglKview>
 #if QT_VERSION >= 0x050400
 #include <QtWidgets/QOpenGLWidget>
 #endif
@@ -8,7 +9,6 @@
 #include <QOpenGLExtraFunctions>
 #endif
 #include <QtOpenGL/qgl.h>
-#include <QOglKview>
 #include <QEnterEvent>
 #include <QDebug>
 

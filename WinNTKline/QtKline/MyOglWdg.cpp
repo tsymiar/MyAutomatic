@@ -27,18 +27,28 @@ QMyOglWdg::~QMyOglWdg()
 
 void QMyOglWdg::initializeGL()
 {
-	kv.InitGraph();
+#ifdef  OGL_KVIEW_H_
+	kv.AdjustDraw(640, 480);
+#else
+    glShadeModel(GL_SMOOTH);  
+    glClearColor( 0.0, 0.0, 0.0, 0.0 );  
+    glClearDepth( 1.0 );  
+    glEnable(GL_DEPTH_TEST);  
+    glDepthFunc(GL_LEQUAL);  
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);  
+#endif
 }
 
 void QMyOglWdg::paintGL()
 {
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glLoadIdentity();
-#if !defined(GLTEST)
+#ifdef  OGL_KVIEW_H_
+	kv.InitGraph();
 	kv.DrawCoord(xRot, yRot);
 	kv.GetMarkDatatoDraw();
 	//glBindTexture(GL_TEXTURE_2D, texture[filter]);
 #else
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glLoadIdentity();
 	xRot += xSpeed;
 	yRot += ySpeed;
 	qDebug() << "(x=" << xRot << ",y=" << yRot << ",z=" << zoom << ")";
