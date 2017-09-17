@@ -7,7 +7,7 @@ QMyOglWdg::QMyOglWdg(QWidget* parent, const char* name, bool fs)
 	fullscreen = fs;
 	xRot = yRot = zRot = 0.0;
 	xSpeed = ySpeed = 0.0;
-	zoom = -5.0;
+	zoom = -1.0;
 
 	filter = 0;
 	light = false;
@@ -43,15 +43,15 @@ void QMyOglWdg::paintGL()
 {
 #ifdef  OGL_KVIEW_H_
 	kv.InitGraph();
-	kv.DrawCoord(xRot, yRot);
-	kv.GetMarkDatatoDraw();
+	kv.DrawCoord(0, 0);
+	kv.GetMarkDatatoDraw("../MFCKline/data/SH600747.DAT");
 	//glBindTexture(GL_TEXTURE_2D, texture[filter]);
+	xRot += xSpeed;
+	yRot += ySpeed;
+	qDebug() << "(x=" << xSpeed << ",y=" << ySpeed << ",z=" << zoom << ")";
 #else
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
-	xRot += xSpeed;
-	yRot += ySpeed;
-	qDebug() << "(x=" << xRot << ",y=" << yRot << ",z=" << zoom << ")";
 
 	glTranslatef(-1, 0.0, -8.0);
 	glBegin(GL_QUADS);
@@ -71,6 +71,7 @@ void QMyOglWdg::paintGL()
 		glColor3f(0.0, 0.0, 1.0);
 		glVertex3f(1.0, -1, 0.0);
 	glEnd();
+	qDebug() << "(x=" << xSpeed << ",y=" << ySpeed << ",z=" << zoom << ")";
 #endif
 }
 
@@ -81,14 +82,13 @@ void QMyOglWdg::resizeGL(int width, int height)
 		height = 1;
 	}
 	glViewport(0, 0, (GLint)width, (GLint)height);
-	//gluPerspective(45.0, (GLfloat)width / (GLfloat)height, 0.1, 100.0);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	GLdouble aspectRatio = (GLfloat)width / (GLfloat)height;
+	GLdouble aspectRatio = (GLfloat)height / (GLfloat)width;
 	GLdouble zNear = 0.1;
 	GLdouble zFar = 100.0;
 
-	GLdouble rFov = 45.0 * 3.14159265 / 180.0;
+	GLdouble rFov = 45.0 * _PI_ / 180.0;
 	glFrustum(-zNear * tan(rFov / 2.0) * aspectRatio,
 		zNear * tan(rFov / 2.0) * aspectRatio,
 		-zNear * tan(rFov / 2.0),
@@ -137,32 +137,33 @@ void QMyOglWdg::keyPressEvent(QKeyEvent * e)
 		}
 		updateGL();
 		break;
-	case Qt::Key_Period:
-		zoom -= 0.2;
+	case Qt::Key_Up:	//¡ü
+		xSpeed += 0.01f;
 		updateGL();
 		break;
-	case Qt::Key_PageUp:
-		zoom += 0.2;
+	case Qt::Key_Down:	//¡ý
+		xSpeed -= 0.01f;
 		updateGL();
 		break;
-	case Qt::Key_Up:
-		xSpeed -= 0.01;
+	case Qt::Key_Right:	//¡ú
+		ySpeed += 0.01f;
 		updateGL();
 		break;
-	case Qt::Key_Down:
-		xSpeed += 0.01;
+	case Qt::Key_Left:	//¡û
+		ySpeed -= 0.01f;
 		updateGL();
 		break;
-	case Qt::Key_Right:
-		ySpeed += 0.01;
+	case Qt::Key_Period:	//.
+		zoom += 0.1f;
 		updateGL();
-		break;
-	case Qt::Key_Left:
-		ySpeed -= 0.01;
+		break;	
+	case Qt::Key_Comma:	//,
+		zoom -= 0.1f;
 		updateGL();
 		break;
 	case Qt::Key_Escape:
 		close();
+		break;
 	}
 }
 

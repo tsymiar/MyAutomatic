@@ -1,7 +1,7 @@
 #ifndef QMyOglWdg_H
 #define QMyOglWdg_H
 
-#include <QOglKview>
+//#include <QOglKview>
 #if QT_VERSION >= 0x050400
 #include <QtWidgets/QOpenGLWidget>
 #endif
@@ -12,7 +12,9 @@
 #include <QEnterEvent>
 #include <QDebug>
 
-#define GLTEST
+#ifndef _PI_
+#define _PI_ 3.14159265f
+#endif
 
 class QMyOglWdg : public QGLWidget //, protected QOpenGLFunctions
 {
