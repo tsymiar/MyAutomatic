@@ -1017,7 +1017,7 @@ namespace GMDD
 ///**************END GetMarkDatatoDraw**************///
 
 
-bool OGLKview::GetMarkDatatoDraw(void* P, char* title)
+bool OGLKview::GetMarkDatatoDraw(const char* file, void* P, char* title)
 {
 	using namespace GMDD;
 //#if 0
@@ -1030,10 +1030,14 @@ bool OGLKview::GetMarkDatatoDraw(void* P, char* title)
 	//	Readfile.open(writefile, std::ios::out);
 	if (P == nullptr || (*(HWND*)P) != this->m_hDlg)
 		P = &this->m_hDlg;
-	if (this->file == nullptr) 
+	if (file == nullptr && file == "")
 		return false;
 	else
+	{
+		if (file != "")
+			this->file = const_cast<char*>(file);
 		Readfile.open(this->file, std::ios::in);
+	}
 	if (Readfile.fail())
 	{
 		//只发送一遍失败消息

@@ -282,7 +282,7 @@ public:
 	FixWhat tinkep;
 	Dlginfo dlginfo;
 	Fillitem fillitem;
-	const char* file = nullptr;
+	char* file = nullptr;
 	int		failmsg = 0;
 	OGLKview::Market lastmarket;
 	std::map<int, OGLKview::Strmap>stockmap;
@@ -310,7 +310,7 @@ public:
 #ifdef _WIN32	
 	bool SetWindowPixelFormat(HDC m_hDC, HWND m_hWnd, int pixelformat = 0);
 #endif	
-	bool GetMarkDatatoDraw(void* P = nullptr, char* title = NULL);
+	bool GetMarkDatatoDraw(const char* file = "", void* P = nullptr, char* title = NULL);
 public:
 	inline float axistinker(int pX) const
 	{
