@@ -101,9 +101,9 @@ BuildF16(int wide, int tall)
 	};
 
 	/* Load the texture images */
-	F16Texture[0] = TextureLoad("bmp/camoflage.bmp", GL_FALSE, GL_NEAREST,
+	F16Texture[0] = TextureLoad("image/camoflage.bmp", GL_FALSE, GL_NEAREST,
 		GL_NEAREST, GL_REPEAT);
-	F16Texture[1] = TextureLoad("bmp/tail.bmp", GL_FALSE, GL_NEAREST,
+	F16Texture[1] = TextureLoad("image/TAIL.BMP", GL_FALSE, GL_NEAREST,
 		GL_NEAREST, GL_REPEAT);
 
 	/* Then build the F-16 body */

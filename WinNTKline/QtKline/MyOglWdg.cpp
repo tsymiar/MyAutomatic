@@ -1,28 +1,31 @@
 #include "MyOglWdg.h"
 
-QMyOglWdg::QMyOglWdg(QWidget* parent, const char* name, bool fs)
-	: QGLWidget(parent)
+QMyOglWdg::QMyOglWdg(const char* title, bool fs)
 {
 	setGeometry(400, 200, 640, 480);
 	fullscreen = fs;
-	xRot = yRot = zRot = 0.0;
-	xSpeed = ySpeed = 0.0;
-	zoom = -1.0;
+	xPos = yPos = zPos = 0.0;
+	xRate = yRate = 0.0;
+	zZoom = -1.0;
 
-	filter = 0;
 	light = false;
 
-	setWindowTitle("tsymiar's Tutorial");
+	setWindowTitle(title);
 
 	if (fullscreen)
 		showFullScreen();
 
 	initializeGL();
+
+	timer = new QTimer(this);
+	connect(timer, SIGNAL(timeout()), this, SLOT(timerDone()));
+	timer->start(100 / 24);
 }
 
 QMyOglWdg::~QMyOglWdg()
 {
-
+	if (timer->isActive())
+		timer->stop();
 }
 
 void QMyOglWdg::initializeGL()
@@ -30,12 +33,7 @@ void QMyOglWdg::initializeGL()
 #ifdef  OGL_KVIEW_H_
 	kv.AdjustDraw(640, 480);
 #else
-    glShadeModel(GL_SMOOTH);  
-    glClearColor( 0.0, 0.0, 0.0, 0.0 );  
-    glClearDepth( 1.0 );  
-    glEnable(GL_DEPTH_TEST);  
-    glDepthFunc(GL_LEQUAL);  
-    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);  
+	loadGLTextures();
 #endif
 }
 
@@ -45,25 +43,24 @@ void QMyOglWdg::paintGL()
 	kv.InitGraph();
 	kv.DrawCoord(0, 0);
 	kv.GetMarkDatatoDraw("../MFCKline/data/SH600747.DAT");
-	//glBindTexture(GL_TEXTURE_2D, texture[filter]);
-	xRot += xSpeed;
-	yRot += ySpeed;
-	qDebug() << "(x=" << xSpeed << ",y=" << ySpeed << ",z=" << zoom << ")";
+	xPos += xRate;
+	yPos += yRate;
+	qDebug() << "(x=" << xRate << ",y=" << yRate << ",z=" << zZoom << ")";
 #else
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
 
-	glTranslatef(-1, 0.0, -8.0);
+	glTranslatef(-1.0, 0.0, -8.0);
 	glBegin(GL_QUADS);
-	glVertex3f(-1.0, 1.0, 0.0);
+	glVertex3f(0.0, 1.0, 0.0);
 	glVertex3f(1.0, 1.0, 0.0);
-	glVertex3f(1.0, -1.0, 0.0);
-	glVertex3f(-1.0, -1.0, 0.0);
+	glVertex3f(1.0, 0.0, 0.0);
+	glVertex3f(0.0, 0.0, 0.0);
 	glEnd();
 
-	glTranslatef(3.0, 0.0, 0.0);
+	glTranslatef(3.0, yRate, -8.0);
 	glBegin(GL_TRIANGLES);
-	
 		glColor3f(1.0, 0.0, 0.0);
 		glVertex3f(0.0, 1.0, 0.0);
 		glColor3f(0.0, 1.0, 0.0);
@@ -71,7 +68,12 @@ void QMyOglWdg::paintGL()
 		glColor3f(0.0, 0.0, 1.0);
 		glVertex3f(1.0, -1, 0.0);
 	glEnd();
-	qDebug() << "(x=" << xSpeed << ",y=" << ySpeed << ",z=" << zoom << ")";
+
+	if (yRate > 5.55)
+		yRate = 5.55;
+	if (yRate < -5.55)
+		yRate = -5.55;
+	qDebug() << "(x=" << xRate << ",y=" << yRate << ",z=" << zZoom << ")";
 #endif
 }
 
@@ -113,7 +115,7 @@ void QMyOglWdg::keyPressEvent(QKeyEvent * e)
 		else
 		{
 			showNormal();
-			setGeometry(0, 0, 640, 480);
+			setGeometry(400, 200, 640, 480);
 		}
 		updateGL();
 		break;
@@ -129,36 +131,32 @@ void QMyOglWdg::keyPressEvent(QKeyEvent * e)
 		}
 		updateGL();
 		break;
-	case Qt::Key_F:
-		filter += 1;;
-		if (filter > 2)
-		{
-			filter = 0;
-		}
-		updateGL();
-		break;
-	case Qt::Key_Up:	//¡ü
-		xSpeed += 0.01f;
-		updateGL();
-		break;
-	case Qt::Key_Down:	//¡ý
-		xSpeed -= 0.01f;
-		updateGL();
-		break;
 	case Qt::Key_Right:	//¡ú
-		ySpeed += 0.01f;
+		xRate += 0.01f;
 		updateGL();
 		break;
 	case Qt::Key_Left:	//¡û
-		ySpeed -= 0.01f;
+		xRate -= 0.01f;
 		updateGL();
 		break;
-	case Qt::Key_Period:	//.
-		zoom += 0.1f;
+	case Qt::Key_Up:	//¡ü
+		yRate += 0.01f;
+		updateGL();
+		break;
+	case Qt::Key_Down:	//¡ý
+		yRate -= 0.01f;
+		updateGL();
+		break;
+	case Qt::Key_Plus:	//+
+		zZoom += 0.1f;
 		updateGL();
 		break;	
-	case Qt::Key_Comma:	//,
-		zoom -= 0.1f;
+	case Qt::Key_Minus:	//-
+		zZoom -= 0.1f;
+		updateGL();
+		break;
+	case Qt::Key_Space:
+		yRate += 0.3f;
 		updateGL();
 		break;
 	case Qt::Key_Escape:
@@ -167,30 +165,11 @@ void QMyOglWdg::keyPressEvent(QKeyEvent * e)
 	}
 }
 
-void QMyOglWdg::loadGLTextures()
+void QMyOglWdg::timerDone()
 {
-	QImage tex, buf;
-	if (!buf.load("./data/test.bmp"))
-	{
-		qWarning("Could not read image file, using single-color instead.");
-		QImage dummy(128, 128, QImage::Format_RGB32);
-		dummy.fill(QColor("green").rgb());
-		buf = dummy;
-	}
-	tex = QGLWidget::convertToGLFormat(buf);
-
-	glGenTextures(3, &texture[0]);
-	glBindTexture(GL_TEXTURE_2D, texture[0]);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexImage2D(GL_TEXTURE_2D, 0, 3, tex.width(), tex.height(), 0,
-		GL_RGBA, GL_UNSIGNED_BYTE, tex.bits());
-	glBindTexture(GL_TEXTURE_2D, texture[1]);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, 3, tex.width(), tex.height(), 0,
-		GL_RGBA, GL_UNSIGNED_BYTE, tex.bits());
-	glBindTexture(GL_TEXTURE_2D, texture[2]);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+	yRate -= 0.01;
+	if (yRate < 0)
+		yRate = 0;
+	updateGL();
+	QCoreApplication::processEvents(QEventLoop::AllEvents);
 }

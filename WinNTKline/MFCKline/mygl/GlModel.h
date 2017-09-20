@@ -5,6 +5,7 @@
 #endif // _WIN32
 #include <cmath>
 #include <cstdio>
+#include <iostream>
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include "Def/MacroDef.h"
@@ -23,15 +24,20 @@ public:
 	void Model(int wide, int tall, float deltax = .0f, float deltay = .0f);
 	void House(int wide, int tall);
 };
+
 class BMP
 {
+	friend class GlModel;
 public:
+	BMP(const char *FileName);
+	virtual ~BMP();
+	GLint getTex();
+private:
 	unsigned long horizon; //横
 	unsigned long vertical;//竖
-	char *Data;  //放置图像数据
-	bool Load(char *filename);
+	char *Data = NULL;  //放置图像数据
 	GLuint texture;
 	void TexSet();
-	BMP(char *FileName);
+	bool Load(const char *filename);
 };
 #endif // !GLMODEL_H_
