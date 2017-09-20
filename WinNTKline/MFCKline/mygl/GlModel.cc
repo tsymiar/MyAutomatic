@@ -7,12 +7,26 @@ float _dX, _dY;
 int W, H;
 House house;
 
-BMP::BMP(char *FileName) {
+BMP::BMP(const char *FileName) {
 	Load(FileName);
 	TexSet();
 }
 
-bool BMP::Load(char *FileName) {
+BMP::~BMP()
+{
+	if (Data != NULL)
+	{
+		free(Data);
+		Data = NULL;
+	}
+}
+
+GLint BMP::getTex()
+{
+	return texture;
+}
+
+bool BMP::Load(const char *FileName) {
 	FILE *File;
 	unsigned long size;
 	unsigned long i;
@@ -21,49 +35,49 @@ bool BMP::Load(char *FileName) {
 	char temp;							// 颜色
 										//打开图片
 	if (fopen_s(&File, FileName, "rb") != 0) {
-		printf("图片不存在");
+		std::cout << "图片不存在" << std::endl;
 		return false;
 	}
 	//移动至横向
 	fseek(File, 18, SEEK_CUR);
 	//读取横向
 	if ((i = fread(&horizon, 4, 1, File)) != 1) {
-		printf("读取失败");
+		std::cout << "横向读取失败" << std::endl;
 		return false;
 	}
 	//读取纵向
 	if ((i = fread(&vertical, 4, 1, File)) != 1) {
-		printf("读取失败");
+		std::cout << "纵向读取失败" << std::endl;
 		return false;
 	}
 	//计算图像的尺寸
 	size = horizon * vertical * 3;
 	if ((fread(&planes, 2, 1, File)) != 1) {   //bmp填1
-		printf("读取失败");
+		std::cout << "计算尺寸错误" << std::endl;
 		return false;
 	}
 	if (planes != 1) {
-		printf("不是bmp图像");
+		std::cout << "不是bmp图像" << std::endl;
 		return false;
 	}
 	//读取像素值
 	if ((i = fread(&bpp, 2, 1, File)) != 1) {
-		printf("读取像素值失败");
+		std::cout << "读取像素值失败" << std::endl;
 		return false;
 	}
 	if (bpp != 24) {//如果不是24bpp的话失败
-		printf("不是24bit图像");
+		std::cout << "不是24bit图像" << std::endl;
 		return false;
 	}
 	//跳过24bit，监测RGB数据
 	fseek(File, 24, SEEK_CUR);    //读取数据
 	Data = (char *)malloc(size);
 	if (Data == NULL) {
-		printf("内存量不能锁定");
+		std::cout << "内存量不能锁定" << std::endl;
 		return false;
 	}
 	if ((i = fread(Data, size, 1, File)) != 1) {
-		printf("不能读取数据");
+		std::cout << "不能读取数据" << std::endl;
 		return false;
 	}
 	for (i = 0; i<size; i += 3) { //bgr -> rgb
@@ -84,7 +98,7 @@ void BMP::TexSet()
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-AUX_RGBImageRec *LoadBMP(char *Filename) 
+AUX_RGBImageRec *LoadBMP(char *Filename)
 {
 	FILE *File = NULL;                                // File Handle
 	if (!Filename)                                  // Make Sure A Filename Was Given
@@ -206,10 +220,10 @@ int GlModel::LoadGLTexture()                                    // Load Bitmaps 
 	for (int i = 0; i<NUM; i++)
 		memset(TextureImage, i, sizeof(void *) * 1);        // Set The Pointer To NULL
 															// Load The Bitmap, Check For Errors, If Bitmap's Not Found Quit
-	if ((TextureImage[0] = LoadBMP("bmp/qdu.bmp")) &&
-		(TextureImage[1] = LoadBMP("bmp/outdoor.bmp")) && (TextureImage[2] = LoadBMP("bmp/ball.bmp")))
+	if ((TextureImage[0] = LoadBMP("image/qdu.bmp")) &&
+		(TextureImage[1] = LoadBMP("image/outdoor.bmp")) && (TextureImage[2] = LoadBMP("image/bkg.bmp")))
 	{
-		load= TRUE;                            // Set The Status To TRUE
+		load = TRUE;                            // Set The Status To TRUE
 		for (int k = 0; k<NUM; k++)
 		{
 			glGenTextures(1, &texture[k]);
@@ -220,7 +234,7 @@ int GlModel::LoadGLTexture()                                    // Load Bitmaps 
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, TextureImage[k]->sizeX, TextureImage[k]->sizeY, 0, GL_RGB, GL_UNSIGNED_BYTE, TextureImage[k]->data);
 		}
 	}
-	else 
+	else
 		return NUM;
 	for (int j = 0; j<NUM; j++)
 	{
@@ -239,7 +253,7 @@ int GlModel::LoadGLTexture()                                    // Load Bitmaps 
 void GlModel::Load__QDU(int wide, int tall)
 {
 	glOrtho(0, wide, tall, 0, -1, 1);
-	BMP *bmp = new BMP("bmp/qdu.bmp");
+	BMP *bmp = new BMP("image/qdu.bmp");
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	glOrtho(0.0, wide, tall, 0.0, -1.0, 1.0);
@@ -253,11 +267,11 @@ void GlModel::Load__QDU(int wide, int tall)
 	glTexCoord2f(1.0f, 0.0f); glVertex2d(wide, 0);
 	glEnd();
 	glDisable(GL_ALPHA_TEST);
-	glDisable(GL_TEXTURE_2D);		
+	glDisable(GL_TEXTURE_2D);
 	delete bmp;
 }
 
-void GlModel::Model(int wide, int tall,float deltax, float deltay)
+void GlModel::Model(int wide, int tall, float deltax, float deltay)
 {
 	_dX = deltax;
 	_dY = deltay;

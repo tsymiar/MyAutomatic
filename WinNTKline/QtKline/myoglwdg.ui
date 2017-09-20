@@ -17,7 +17,7 @@
    <bool>false</bool>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <widget class="QMyOglWdg" name="openGLWidget">
+   <widget class="QMaterial" name="openGLWidget">
     <property name="geometry">
      <rect>
       <x>0</x>
@@ -65,9 +65,9 @@
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
   <customwidget>
-   <class>QMyOglWdg</class>
+   <class>QMaterial</class>
    <extends>QOpenGLWidget</extends>
-   <header>MyOglWdg.h</header>
+   <header>Material.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

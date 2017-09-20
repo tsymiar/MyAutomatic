@@ -10,7 +10,7 @@ extern "C" __declspec(dllexport)
 int main(int argc, char *argv[])
 {
 	QApplication a(argc, argv);
-	QMyOglWdg w(0, 0);
+	QMyOglWdg w("flappy TRIANGLE");
 	a.setActiveWindow(&w);
 	w.show();
 	return a.exec();

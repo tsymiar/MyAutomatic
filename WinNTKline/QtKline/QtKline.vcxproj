@@ -98,6 +98,7 @@
       </PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Material.cpp" />
     <ClCompile Include="MyOglWdg.cpp" />
     <ClCompile Include="myuiobj.cpp" />
   </ItemGroup>
@@ -183,6 +184,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="mkall.sh" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Material.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
