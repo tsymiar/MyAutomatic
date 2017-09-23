@@ -48,6 +48,7 @@ public:
 	char& operator[](unsigned int) const;
 	char* _strcpy(char* strDest, const char* strSrc, int N = 1024);
 	char* /*__cdecl*/_strcat(char * strDest, const char * strSrc);
+	char* _itoa(int num, char *str, int radix);
 	unsigned char* _strsub(unsigned char* ch, int pos, int len);
 	size_t _strlen(const char* str);
 	char* _strmove(char* w, int m, bool fore = false);
@@ -252,6 +253,42 @@ inline char* _String::_op_order(char * str)
 		t = str[i];
 		str[i] = str[len - i - 1]; str[len - i - 1] = t;
 	}
+	return str;
+}
+
+inline char* _String::_itoa(int num, char *str, int radix)
+{
+	if (num == 0)
+	{
+		str[0] = '0'; str[1] = '/0';
+		return str;
+	}
+	char  string[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	char* ptr = str;
+	int i; int j;
+	int value = num;
+	if (num<0) num = -num;
+	while (num >= radix)
+	{
+		*ptr++ = string[num % radix];
+		num /= radix;
+	}
+	if (num)
+	{
+		*ptr++ = string[num];
+		*ptr = '/0';
+	}
+	int n = j = ptr - str - 1;
+	for (i = 0; i <(ptr - str) / 2; i++)
+	{
+		int temp = str[i]; str[i] = str[j]; str[j--] = temp;
+	}
+	if (value<0)
+	{
+		for (j = n; j >= 0; --j) str[j + 1] = str[j];
+		str[0] = '-';
+	}
+	str[n + 2] = '/0';
 	return str;
 }
 

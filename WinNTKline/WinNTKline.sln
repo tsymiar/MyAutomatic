@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.12
+VisualStudioVersion = 15.0.26730.16
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MFCKline", "MFCKline\MFCKline.vcxproj", "{C0FF2B6D-EDD9-4E65-8CA8-1C4968F76D48}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -138,5 +138,8 @@ Global
 		{896FCF3C-250C-46EC-A419-1B5E27D0DD53} = {9AF30FB0-9135-4EBA-B07E-16B1F1D98C76}
 		{28813B8F-EA1E-4039-9BDE-11F0EB52986C} = {9AF30FB0-9135-4EBA-B07E-16B1F1D98C76}
 		{6B864007-F9E8-4469-92BA-2387CCEB1573} = {929677BC-1A53-4CD4-B120-259D6A7FDBDB}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {93EEEDB3-53AB-4CDD-B9D0-EA6E1F28D058}
 	EndGlobalSection
 EndGlobal

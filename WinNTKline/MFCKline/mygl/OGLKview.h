@@ -63,11 +63,11 @@
 //typedef void (GLAPIENTRY * PFNGLBLENDEQUATIONEXTPROC) (GLenum mode);
 #else
 #include	<GL/glew.h>  
+#endif
 #include	<GL/glut.h>
 #include	<GL/freeglut.h> 
 #include	<GL/GLU.h>
 #include	<GL/GL.h>
-#endif
 #include	<font/ft2build.h>
 #include	"font/freetype/ftglyph.h"
 #include	FT_FREETYPE_H  
@@ -77,8 +77,8 @@
 #include	"Idx/Initialise-inl.h"
 #ifdef _WIN32
 #include	"Idx/CPUID.H"
-#include	"Idx/_String-inl.h"
 #endif
+#include	"Idx/_String-inl.h"
 #if !defined(QT_VERSION)
 #include	"dos/DOSCout.h"
 #endif
@@ -101,6 +101,12 @@
 #ifdef _WIN32
 DLL_KVIEW_API
 #endif
+#ifdef __linux
+#include "SDL_text.h"
+#define sprintf_s sprintf
+#define _itoa_s _String s;s._itoa
+#endif
+
 class OGLKview
 {
 private:
@@ -250,8 +256,8 @@ private:
 #ifdef _WIN32
 	HGLRC m_hRC;
 	HWND m_hDlg;
-	Point itempt;
 #endif
+	Point itempt;
 #ifdef BOOST
 	boostest buset;
 #endif
@@ -269,6 +275,9 @@ private:
 	bool chart_frame(void);
 	int diag_staff(int x, int y);
 	void print_string(const char* str);
+#ifdef __linux
+	int myGL(int argc, char ** argv);
+#endif
 	void GetChangeMatrix(float &angel, float &x, float &y, float &z) const;
 public:
 	bool unfurl;
@@ -287,22 +296,26 @@ public:
 	OGLKview::Market lastmarket;
 	std::map<int, OGLKview::Strmap>stockmap;
 public:
+#ifdef __linux
+	static
+#endif
 	void _stdcall InitGraph(void);
+#ifdef __linux
+	static
+#endif
+	void AdjustDraw(GLsizei W, GLsizei H);
 	void DrawItem(void);
 	void DrawDash(OGLKview::Point pt[2]);
 	void DrawCurve(OGLKview::Point A[4]);
 	void DrawLevel(float mascl,float miscl);
-	void DrawKtext(char text[], Point &coor, int size = 14, OGLKview::Color4f color = { 1,1,1,1 }, char font[] = "Arial", bool dim = true);
+	int DrawKtext(char text[], Point &coor, int size = 14, OGLKview::Color4f color = { 1,1,1,1 }, char font[] = "Arial", bool dim = true);
 	int DrawCoord(int mX, int mY);
 	int DrawArrow(OGLKview::Point begin);
 	int DrawDetail(OGLKview::Market market);
 	int DrawPoly(OGLKview::Point Pb, OGLKview::Point Pe, OGLKview::Color4f color = {1,1,1,1}, int viewport = 1);
 	bool DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool hollow = 1, OGLKview::Point pt = { 0,0 });
-	void AdjustDraw(GLsizei W, GLsizei H, bool b = true);
 	void SwitchViewport(int viewport, OGLKview::ViewSize adjust 
-#ifdef _WIN32
 		= {1,1,1,1}
-#endif
 	);
 	void SetBkg(bool b);
 	void SetColor(OGLKview::Color4f color);
