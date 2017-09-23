@@ -1,6 +1,7 @@
 #include "Material.h"
 
-QMaterial::QMaterial(QWidget* parent): QGLWidget(parent)
+QMaterial::QMaterial(QWidget* parent)
+	: QGLWidget(parent)
 {
 }
 
