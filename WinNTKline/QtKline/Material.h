@@ -1,6 +1,8 @@
 #pragma once
 
-//#include <QOglKview>
+#ifdef K_line
+#include <QOglKview>
+#endif
 #if QT_VERSION >= 0x050400
 #include <QtWidgets/QOpenGLWidget>
 #endif

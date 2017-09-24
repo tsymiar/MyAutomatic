@@ -23,11 +23,11 @@ private:
 	GLfloat xRate, yRate;
 	GLfloat zZoom;
 	QTimer *timer = NULL;
-private slots:
-	void timerDone();
 #ifdef OGL_KVIEW_H_
 	OGLKview kv;
 #endif
+private slots:
+	void timerDone();
 };
 
 #endif // QMyOglWdg_H

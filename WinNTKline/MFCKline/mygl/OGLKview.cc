@@ -389,6 +389,7 @@ void _stdcall OGLKview::InitGraph(void/*HDC m_hDC*/)
 	//SwapBuffers(m_hDC);
 }
 
+#ifdef _WIN32
 void OGLKview::print_string(const char* str)
 {
 	int len = 0, i;
@@ -445,6 +446,7 @@ void OGLKview::print_string(const char* str)
 	}
 	glDeleteLists(list, 1);
 }
+#endif
 
 int OGLKview::diag_staff(int x, int y)
 {
@@ -564,6 +566,7 @@ int OGLKview::DrawCoord(int mX, int mY)
 	return m7;
 }
 
+
 int OGLKview::DrawArrow(OGLKview::Point begin)
 {
 	enum VAO_IDs { Triangles, NumVAOs };
@@ -586,6 +589,7 @@ int OGLKview::DrawArrow(OGLKview::Point begin)
 	};
 	const GLuint NumVertices = sizeof(vertices) / sizeof(GLfloat);
 
+#ifdef _glew_h_  
 	glewExperimental = GL_TRUE;
 	GLenum glewError = glewInit();
 
@@ -610,7 +614,7 @@ int OGLKview::DrawArrow(OGLKview::Point begin)
 	glVertex2f(begin.x, begin.y);
 	glVertex2f(end.x, end.y);
 	glEnd();
-
+#endif
 	return NumVertices;
 }
 
@@ -973,7 +977,6 @@ int OGLKview::DrawKtext(char text[], Point & coor, int size, OGLKview::Color4f c
 	glRasterPos2f(coor.x, coor.y);
 	print_string(text);
 #elif __linux 
-	GLuint texture;
 	GLfloat texcoord[4];
 	GLfloat texMinX, texMinY;
 	GLfloat texMaxX, texMaxY;
@@ -991,9 +994,9 @@ int OGLKview::DrawKtext(char text[], Point & coor, int size, OGLKview::Color4f c
 	else
 		TTF_SetFontStyle(ttffont, TTF_STYLE_NORMAL);
 	if (text[0] > 127)
-		message = TTF_RenderUTF8_Solid(font, text, textColor);//hanzi
+		message = TTF_RenderUTF8_Solid(ttffont, text, textColor);//hanzi
 	else
-		message = TTF_RenderText_Solid(font, text, textColor);//ascii         
+		message = TTF_RenderText_Solid(ttffont, text, textColor);//ascii         
 	GLuint texture = SDL_GL_LoadTexture(message, texcoord);
 	/* Make texture coordinates easy to understand */
 	texMinX = texcoord[0];
@@ -1001,7 +1004,7 @@ int OGLKview::DrawKtext(char text[], Point & coor, int size, OGLKview::Color4f c
 	texMaxX = texcoord[2];
 	texMaxY = texcoord[3];
 	/* Show the text */
-	SDL_GL_Enter2DMode();
+	SDL_GL_Enter2DMode(attr.wide, attr.tall);
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glBegin(GL_TRIANGLE_STRIP);
 	glTexCoord2f(texMinX, texMinY); glVertex2i(50 * coor.x, 50 * coor.y);
