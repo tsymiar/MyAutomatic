@@ -8,10 +8,8 @@ int SDL_GL_init()
 	return TTF_Init();
 }
 
-void SDL_GL_Enter2DMode()
+void SDL_GL_Enter2DMode(int w, int h)
 {
-	SDL_Surface *screen = SDL_GetVideoSurface();
-
 	/* Note, there may be other things you need to change,
 	depending on how you have your OpenGL state set up.
 	*/
@@ -23,13 +21,13 @@ void SDL_GL_Enter2DMode()
 	/* This allows alpha blending of 2D textures with the scene */
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glViewport(0, 0, screen->w, screen->h);
+	glViewport(0, 0, w, h);
 
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
 	glLoadIdentity();
 
-	glOrtho(0.0, (GLdouble)screen->w, (GLdouble)screen->h, 0.0, 0.0, 1.0);
+	glOrtho(0.0, (GLdouble)w, (GLdouble)h, 0.0, 0.0, 1.0);
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glLoadIdentity();

@@ -58,16 +58,20 @@
 #pragma comment(lib, "freetype.lib") 
 #ifdef __linux
 #ifdef QT_VERSION
-#include	</usr/include/GL/glew.h>  
+#if !defined(K_line)
+#include	</usr/include/GL/glew.h> //note off 
+#endif
 #endif
 //typedef void (GLAPIENTRY * PFNGLBLENDEQUATIONEXTPROC) (GLenum mode);
 #else
 #include	<GL/glew.h>  
 #endif
 #include	<GL/glut.h>
-#include	<GL/freeglut.h> 
+#include	<GL/freeglut.h>
+#ifdef _WIN32 
 #include	<GL/GLU.h>
 #include	<GL/GL.h>
+#endif
 #include	<font/ft2build.h>
 #include	"font/freetype/ftglyph.h"
 #include	FT_FREETYPE_H  
@@ -269,12 +273,12 @@ private:
 	Market st_stock;
 #ifdef _WIN32
 	PROCGETCONSOLEWINDOW GetConsoleWindow;
+	void print_string(const char* str);
 #endif
 	std::vector<struct OGLKview::Market > vec_market;
 	OGLKview::Point pt[2] = { { 1.7f,0 },{ -9.0,0 } };
 	bool chart_frame(void);
 	int diag_staff(int x, int y);
-	void print_string(const char* str);
 #ifdef __linux
 	int myGL(int argc, char ** argv);
 #endif

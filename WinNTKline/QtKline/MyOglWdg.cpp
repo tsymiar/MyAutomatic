@@ -9,9 +9,11 @@ QMyOglWdg::QMyOglWdg(const char* title, bool fs)
 	zZoom = -1.0;
 
 	light = false;
-
+#ifdef K_line
+	setWindowTitle("K_line");
+#else
 	setWindowTitle(title);
-
+#endif
 	if (fullscreen)
 		showFullScreen();
 
