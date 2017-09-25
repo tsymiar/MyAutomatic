@@ -115,7 +115,7 @@ class OGLKview
 {
 private:
 	bool limitup;//harden涨停
-	float radius;
+	float radius = 1.0f;
 	float moveDist;
 	int item0;
 	_String m_str;
@@ -261,6 +261,9 @@ private:
 	HGLRC m_hRC;
 	HWND m_hDlg;
 #endif
+#ifdef __linux
+	TTF_Font *ttffont = NULL;
+#endif 
 	Point itempt;
 #ifdef BOOST
 	boostest buset;
@@ -284,9 +287,9 @@ private:
 #endif
 	void GetChangeMatrix(float &angel, float &x, float &y, float &z) const;
 public:
-	bool unfurl;
-	bool coding;
 	float y_fix = 0;
+	bool unfurl = false;
+	bool coding = false;
 #if !defined(QT_VERSION)
 	DOSCout DOS;
 #endif

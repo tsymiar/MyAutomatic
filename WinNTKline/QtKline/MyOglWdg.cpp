@@ -45,9 +45,7 @@ void QMyOglWdg::paintGL()
 	kv.InitGraph();
 	kv.DrawCoord(0, 0);
 	kv.GetMarkDatatoDraw("../MFCKline/data/SH600747.DAT");
-	xPos += xRate;
-	yPos += yRate;
-	qDebug() << "(x=" << xRate << ",y=" << yRate << ",z=" << zZoom << ")";
+	qDebug() << "(" << kv.lastmarket.price << ")";
 #else
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -70,6 +68,9 @@ void QMyOglWdg::paintGL()
 		glColor3f(0.0, 0.0, 1.0);
 		glVertex3f(1.0, -1, 0.0);
 	glEnd();
+	
+	xPos += xRate;
+	yPos += yRate;
 
 	if (yRate > 5.55)
 		yRate = 5.55;

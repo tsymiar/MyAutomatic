@@ -17,12 +17,7 @@ BOOL APIENTRY DllMain(HANDLE hModule, DWORD ul_reason_for_call, LPVOID lpReserve
 }
 #endif
 
-OGLKview::OGLKview()
-{
-	coding = false;
-	radius = 1.0f;
-	unfurl = false;
-}
+OGLKview::OGLKview() { ;}
 
 #ifdef __linux//||_UNIX
 int OGLKview::myGL(int argc, char ** argv)
@@ -528,7 +523,6 @@ int OGLKview::DrawCoord(int mX, int mY)
 	int	msgid[4];
 	char coor[16];
 	char brand[64];
-	char cpuattr[64];
 	OGLKview::Point pt = { 0,1.19f };
 	glViewport(0, 0, attr.wide, attr.tall);
 	int m0 = mX / 1000;
@@ -557,12 +551,13 @@ int OGLKview::DrawCoord(int mX, int mY)
 	coor[15] = '\0';
 	DrawKtext(coor, pt, 14, { 1,1,0 });
 #ifdef _WIN32
+	char cpuattr[64];
 	cpu_getbrand(brand);
 	__cpuidex(msgid, 0, 0);
 	sprintf_s(cpuattr, "CPU0:%d-%s", msgid[1], brand);
-#endif
 	pt = { -0.9f,1.19f };
 	DrawKtext(cpuattr, pt, 14, { 1,1,0 });
+#endif
 	return m7;
 }
 
@@ -983,7 +978,8 @@ int OGLKview::DrawKtext(char text[], Point & coor, int size, OGLKview::Color4f c
 	SDL_Color textColor = { 256 * color.R, 256 * color.G, 256 * color.B };
 	SDL_Surface *message = NULL;
 	SDL_GL_init();
-	TTF_Font *ttffont = TTF_OpenFont("../MFCKline/font/simfang.ttf", size);
+	if (ttffont == NULL)
+		ttffont = TTF_OpenFont("../MFCKline/font/simfang.ttf", size);
 	if (ttffont == NULL)
 	{
 		fprintf(stderr, "font open failure %s\n", SDL_GetError());
@@ -1016,9 +1012,6 @@ int OGLKview::DrawKtext(char text[], Point & coor, int size, OGLKview::Color4f c
 
 	SDL_GL_SwapBuffers();
 	SDL_FreeSurface(message);
-	TTF_CloseFont(ttffont); //Close the font that was used
-	TTF_Quit();             //Quit SDL_ttf
-	SDL_Quit();             //Quit SDL
 #endif
 	return 0;
 }
@@ -1426,5 +1419,9 @@ void OGLKview::Market::show()
 
 OGLKview::~OGLKview()
 {
-
+#ifdef __linux
+	TTF_CloseFont(ttffont); //Close the font that was used
+	TTF_Quit();             //Quit SDL_ttf
+	SDL_Quit();             //Quit SDL
+#endif
 }
