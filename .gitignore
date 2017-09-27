@@ -28,12 +28,14 @@
 *.app
 
 #Others
+LinuxSrvc/Gen
+QtCases/GeneratedFiles
 *.tlog
 *.log
 *.patch
 *-hard
 *.con
 *.idb
-LinuxSrvc/Gen/
-WinNTKline/QT/QtKline.lib
-WinNTKline/QT/QtKline.exp
+*.ipch
+*.suo
+*.db
