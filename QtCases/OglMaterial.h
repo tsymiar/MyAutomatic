@@ -15,8 +15,6 @@
 #include <QEnterEvent>
 #include <QEventLoop>
 #include <QTimer>
-#include <gl/GLU.h> 
-#include <gl/GL.h> 
 #include <QDebug>
 
 #ifndef _PI_
