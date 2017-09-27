@@ -53,6 +53,7 @@ void OpenGLWindow::keyPressEvent(QKeyEvent * e)
 			glEnable(GL_LIGHTING);
 		}
 		break;
+#ifndef _VBO_
 	case Qt::Key_Right:	//→
 		xPos += 0.01f;
 		setX(xPos);
@@ -81,7 +82,7 @@ void OpenGLWindow::keyPressEvent(QKeyEvent * e)
 		sPos += 0.3f;
 		setS(sPos);
 		break;
-#ifdef _VBO_
+#else
 	case Qt::Key_A:
 		getProject().rotate(1, 0, 1, 0);
 		break;
@@ -104,6 +105,7 @@ void OpenGLWindow::keyPressEvent(QKeyEvent * e)
 
 void OpenGLWindow::timerDone()
 {
+#ifndef _VBO_	
 	sPos -= 0.01f;
 	if (sPos < -1)
 		sPos = -1;
@@ -112,4 +114,5 @@ void OpenGLWindow::timerDone()
 	setS(sPos);
 	update();
 	QCoreApplication::processEvents(QEventLoop::AllEvents);
+#endif
 }

@@ -2,7 +2,7 @@
 if [ -f "Makefile" ]; then
 	make clean
 fi
-g++ -c ../MFCKline/mygl/SDL_text.cc -lGL -lSDL
+g++ -c ../WinNTKline/MFCKline/mygl/SDL_text.cc -lGL -lSDL
 qmake -o Makefile QtCases.pro
 for ui in `ls *.ui`
 do
