@@ -4,9 +4,7 @@ OpenGLWindow::OpenGLWindow(const char* title, bool fs)
 {
 	setGeometry(400, 200, 640, 480);
 	fullscreen = fs;
-	xPos = yPos = zPos = 0.0;
-	xRate = yRate = 0.0;
-	zZoom = -1.0;
+	xPos = yPos = zPos = sPos = 0.0;
 
 	light = false;
 #ifdef K_line
@@ -16,9 +14,6 @@ OpenGLWindow::OpenGLWindow(const char* title, bool fs)
 #endif
 	if (fullscreen)
 		showFullScreen();
-
-	initializeGL();
-
 	timer = new QTimer(this);
 	connect(timer, SIGNAL(timeout()), this, SLOT(timerDone()));
 	timer->start(100 / 24);
@@ -30,83 +25,9 @@ OpenGLWindow::~OpenGLWindow()
 		timer->stop();
 }
 
-void OpenGLWindow::initializeGL()
-{
-#ifdef  OGL_KVIEW_H_
-	kv.AdjustDraw(640, 480);
-#else
-	loadGLTextures();
-#endif
-}
-
-void OpenGLWindow::paintGL()
-{
-#ifdef  OGL_KVIEW_H_
-	kv.InitGraph();
-	kv.DrawCoord(0, 0);
-	kv.GetMarkDatatoDraw("../MFCKline/data/SH600747.DAT");
-	qDebug() << "(" << kv.lastmarket.price << ")";
-#else
-
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glLoadIdentity();
-
-	glTranslatef(-1.0, 0.0, -8.0);
-	glBegin(GL_QUADS);
-	glVertex3f(0.0, 1.0, 0.0);
-	glVertex3f(1.0, 1.0, 0.0);
-	glVertex3f(1.0, 0.0, 0.0);
-	glVertex3f(0.0, 0.0, 0.0);
-	glEnd();
-
-	glTranslatef(3.0, yRate, -8.0);
-	glBegin(GL_TRIANGLES);
-		glColor3f(1.0, 0.0, 0.0);
-		glVertex3f(0.0, 1.0, 0.0);
-		glColor3f(0.0, 1.0, 0.0);
-		glVertex3f(-1, -1, 0.0);
-		glColor3f(0.0, 0.0, 1.0);
-		glVertex3f(1.0, -1, 0.0);
-	glEnd();
-	
-	xPos += xRate;
-	yPos += yRate;
-
-	if (yRate > 5.55)
-		yRate = 5.55;
-	if (yRate < -5.55)
-		yRate = -5.55;
-	qDebug() << "(x=" << xRate << ",y=" << yRate << ",z=" << zZoom << ")";
-#endif
-}
-
-void OpenGLWindow::resizeGL(int width, int height)
-{
-	if (height == 0)
-	{
-		height = 1;
-	}
-	glViewport(0, 0, (GLint)width, (GLint)height);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	GLdouble aspectRatio = (GLfloat)height / (GLfloat)width;
-	GLdouble zNear = 0.1;
-	GLdouble zFar = 100.0;
-
-	GLdouble rFov = 45.0 * _PI_ / 180.0;
-	glFrustum(-zNear * tan(rFov / 2.0) * aspectRatio,
-		zNear * tan(rFov / 2.0) * aspectRatio,
-		-zNear * tan(rFov / 2.0),
-		zNear * tan(rFov / 2.0),
-		zNear, zFar);
-
-	glMatrixMode(GL_MODELVIEW);
-
-	glLoadIdentity();
-}
-
 void OpenGLWindow::keyPressEvent(QKeyEvent * e)
 {
+	qDebug() << "+++ keyPressEvent" << "(" << QString("%1").arg(e->key()) << ") +++";
 	switch (e->key())
 	{
 	case Qt::Key_F2:
@@ -120,7 +41,6 @@ void OpenGLWindow::keyPressEvent(QKeyEvent * e)
 			showNormal();
 			setGeometry(400, 200, 640, 480);
 		}
-		updateGL();
 		break;
 	case Qt::Key_L:
 		light = !light;
@@ -132,47 +52,64 @@ void OpenGLWindow::keyPressEvent(QKeyEvent * e)
 		{
 			glEnable(GL_LIGHTING);
 		}
-		updateGL();
 		break;
-	case Qt::Key_Right:	//°˙
-		xRate += 0.01f;
-		updateGL();
+	case Qt::Key_Right:	//‚Üí
+		xPos += 0.01f;
+		setX(xPos);
 		break;
-	case Qt::Key_Left:	//°˚
-		xRate -= 0.01f;
-		updateGL();
+	case Qt::Key_Left:	//‚Üê
+		xPos -= 0.01f;
+		setX(xPos);
 		break;
-	case Qt::Key_Up:	//°¸
-		yRate += 0.01f;
-		updateGL();
+	case Qt::Key_Up:	//‚Üë
+		yPos += 0.01f;
+		setY(yPos);
 		break;
-	case Qt::Key_Down:	//°˝
-		yRate -= 0.01f;
-		updateGL();
+	case Qt::Key_Down:	//‚Üì
+		yPos -= 0.01f;
+		setY(yPos);
 		break;
 	case Qt::Key_Plus:	//+
-		zZoom += 0.1f;
-		updateGL();
-		break;	
+		zPos += 0.1f;
+		setZ(zPos);
+		break;
 	case Qt::Key_Minus:	//-
-		zZoom -= 0.1f;
-		updateGL();
+		zPos -= 0.1f;
+		setZ(zPos);
 		break;
 	case Qt::Key_Space:
-		yRate += 0.3f;
-		updateGL();
+		sPos += 0.3f;
+		setS(sPos);
 		break;
+#ifdef _VBO_
+	case Qt::Key_A:
+		getProject().rotate(1, 0, 1, 0);
+		break;
+	case Qt::Key_D:
+		getProject().rotate(-1, 0, 1, 0);
+		break;
+	case Qt::Key_W:
+		getProject().rotate(1, 1, 0, 0);
+		break;
+	case Qt::Key_S:
+		getProject().rotate(-1, 1, 0, 0);
+		break;
+#endif
 	case Qt::Key_Escape:
 		close();
 		break;
 	}
+	update();
 }
 
 void OpenGLWindow::timerDone()
 {
-	yRate -= 0.01;
-	if (yRate < 0)
-		yRate = 0;
-	updateGL();
+	sPos -= 0.01f;
+	if (sPos < -1)
+		sPos = -1;
+	if (sPos > 5.55)
+		sPos = 5.55;
+	setS(sPos);
+	update();
 	QCoreApplication::processEvents(QEventLoop::AllEvents);
 }
