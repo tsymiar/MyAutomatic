@@ -30,6 +30,7 @@
 #Others
 LinuxSrvc/Gen
 QtCases/GeneratedFiles
+*/Debug
 *.tlog
 *.log
 *.patch
@@ -39,3 +40,4 @@ QtCases/GeneratedFiles
 *.ipch
 *.suo
 *.db
+*.pdb

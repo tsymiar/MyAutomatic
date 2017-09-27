@@ -2,6 +2,9 @@
 <ui version="4.0">
  <class>QtCasesClass</class>
  <widget class="QMainWindow" name="QtCasesClass">
+  <property name="windowModality">
+   <enum>Qt::ApplicationModal</enum>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -67,7 +70,7 @@
   <customwidget>
    <class>QOglMaterial</class>
    <extends>QOpenGLWidget</extends>
-   <header>OglMaterial.h</header>
+   <header location="global">OglMaterial.h</header>
   </customwidget>
  </customwidgets>
  <resources/>
