@@ -1,6 +1,6 @@
-#include "MyOglWdg.h"
+#include "OpenGLWindow.h"
 
-QMyOglWdg::QMyOglWdg(const char* title, bool fs)
+OpenGLWindow::OpenGLWindow(const char* title, bool fs)
 {
 	setGeometry(400, 200, 640, 480);
 	fullscreen = fs;
@@ -24,13 +24,13 @@ QMyOglWdg::QMyOglWdg(const char* title, bool fs)
 	timer->start(100 / 24);
 }
 
-QMyOglWdg::~QMyOglWdg()
+OpenGLWindow::~OpenGLWindow()
 {
 	if (timer->isActive())
 		timer->stop();
 }
 
-void QMyOglWdg::initializeGL()
+void OpenGLWindow::initializeGL()
 {
 #ifdef  OGL_KVIEW_H_
 	kv.AdjustDraw(640, 480);
@@ -39,7 +39,7 @@ void QMyOglWdg::initializeGL()
 #endif
 }
 
-void QMyOglWdg::paintGL()
+void OpenGLWindow::paintGL()
 {
 #ifdef  OGL_KVIEW_H_
 	kv.InitGraph();
@@ -80,7 +80,7 @@ void QMyOglWdg::paintGL()
 #endif
 }
 
-void QMyOglWdg::resizeGL(int width, int height)
+void OpenGLWindow::resizeGL(int width, int height)
 {
 	if (height == 0)
 	{
@@ -105,7 +105,7 @@ void QMyOglWdg::resizeGL(int width, int height)
 	glLoadIdentity();
 }
 
-void QMyOglWdg::keyPressEvent(QKeyEvent * e)
+void OpenGLWindow::keyPressEvent(QKeyEvent * e)
 {
 	switch (e->key())
 	{
@@ -168,7 +168,7 @@ void QMyOglWdg::keyPressEvent(QKeyEvent * e)
 	}
 }
 
-void QMyOglWdg::timerDone()
+void OpenGLWindow::timerDone()
 {
 	yRate -= 0.01;
 	if (yRate < 0)

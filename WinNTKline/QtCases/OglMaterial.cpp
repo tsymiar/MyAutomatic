@@ -1,15 +1,15 @@
-#include "Material.h"
+#include "OglMaterial.h"
 
-QMaterial::QMaterial(QWidget* parent)
+QOglMaterial::QOglMaterial(QWidget* parent)
 	: QGLWidget(parent)
 {
 }
 
-QMaterial::~QMaterial()
+QOglMaterial::~QOglMaterial()
 {
 }
 
-void QMaterial::loadGLTextures()
+void QOglMaterial::loadGLTextures()
 {
 	QImage tex, buf;
 	if (!buf.load("../MFCKline/image/atlas.png"))

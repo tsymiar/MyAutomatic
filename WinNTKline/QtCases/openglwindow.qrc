@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/QtCases">
+        <file>openglwindow.ui</file>
+    </qresource>
+</RCC>

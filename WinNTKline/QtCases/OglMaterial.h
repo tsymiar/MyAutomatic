@@ -1,5 +1,4 @@
 #pragma once
-
 #ifdef K_line
 #include <QOglKview>
 #endif
@@ -20,11 +19,11 @@
 #define _PI_ 3.14159265f
 #endif
 
-class QMaterial : public QGLWidget
+class QOglMaterial : public QGLWidget
 {
 public:
-	QMaterial(QWidget* parent = 0);
-	virtual ~QMaterial();
+	QOglMaterial(QWidget* parent = 0);
+	virtual ~QOglMaterial();
 	void loadGLTextures();
 private:
 	GLuint texture[3];
