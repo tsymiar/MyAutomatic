@@ -1,7 +1,7 @@
-#include "myuiobj.h"
+#include "gluiobj.h"
 #include <QtPlugin>
 #include <QtWidgets/qmessagebox.h>
-#include "MyOglWdg.h"
+#include "OpenGLWindow.h"
 
 // Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)
 #ifdef _WIN32
@@ -10,7 +10,7 @@ extern "C" __declspec(dllexport)
 int main(int argc, char *argv[])
 {
 	QApplication a(argc, argv);
-	QMyOglWdg w("flappy TRIANGLE");
+	OpenGLWindow w("flappy TRIANGLE");
 	a.setActiveWindow(&w);
 	w.show();
 	return a.exec();

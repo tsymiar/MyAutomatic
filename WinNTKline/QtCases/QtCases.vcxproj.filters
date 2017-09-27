@@ -30,59 +30,53 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="GeneratedFiles\qrc_myoglwdg.cpp">
-      <Filter>Generated Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GeneratedFiles\Debug\moc_myoglwdg.cpp">
-      <Filter>Generated Files\Debug</Filter>
-    </ClCompile>
-    <ClCompile Include="myuiobj.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GeneratedFiles\Debug\moc_myuiobj.cpp">
-      <Filter>Generated Files\Debug</Filter>
-    </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MyOglWdg.cpp">
+    <ClCompile Include="gluiobj.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\MFCKline\mygl\OGLKview.cc">
+    <ClCompile Include="OpenGLWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Material.cpp">
+    <ClCompile Include="OglMaterial.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_openglwindow.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\qrc_openglwindow.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_gluiobj.cpp">
+      <Filter>Generated Files\Debug</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="MyOglWdg.h">
+    <CustomBuild Include="gluiobj.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
-    <CustomBuild Include="myoglwdg.ui">
-      <Filter>Form Files</Filter>
+    <CustomBuild Include="OpenGLWindow.h">
+      <Filter>Header Files</Filter>
     </CustomBuild>
-    <CustomBuild Include="myoglwdg.qrc">
+    <CustomBuild Include="openglwindow.qrc">
       <Filter>Resource Files</Filter>
     </CustomBuild>
-    <CustomBuild Include="myuiobj.h">
-      <Filter>Header Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\MFCKline\mygl\OGLKview.h">
-      <Filter>Header Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="GeneratedFiles\ui_myoglwdg.h">
+    <CustomBuild Include="GeneratedFiles\ui_openglwindow.h">
       <Filter>Generated Files</Filter>
     </CustomBuild>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="mkall.sh">
+    <CustomBuild Include="openglwindow.ui">
       <Filter>Form Files</Filter>
-    </None>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Material.h">
+    <ClInclude Include="OglMaterial.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="mkallcase.sh">
+      <Filter>Form Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

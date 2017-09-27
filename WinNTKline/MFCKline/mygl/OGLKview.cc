@@ -567,8 +567,6 @@ int OGLKview::DrawArrow(OGLKview::Point begin)
 	enum VAO_IDs { Triangles, NumVAOs };
 	enum Buffer_IDs { ArrayBuffer, NumBuffers };
 	enum Attrib_IDs { vPosition = 0 };
-	GLuint  VAOs[NumVAOs];
-	GLuint  Buffers[NumBuffers];
 	OGLKview::Point end, pt[2];
 
 	glColor3f(1, 1, 1);
@@ -585,6 +583,8 @@ int OGLKview::DrawArrow(OGLKview::Point begin)
 	const GLuint NumVertices = sizeof(vertices) / sizeof(GLfloat);
 
 #ifdef _glew_h_  
+	GLuint  VAOs[NumVAOs];
+	GLuint  Buffers[NumBuffers];
 	glewExperimental = GL_TRUE;
 	GLenum glewError = glewInit();
 

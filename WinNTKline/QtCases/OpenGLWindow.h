@@ -1,15 +1,15 @@
-#ifndef QMyOglWdg_H
-#define QMyOglWdg_H
+#ifndef OpenGLWindow_H
+#define OpenGLWindow_H
 
-#include "Material.h"
+#include "OglMaterial.h"
 
-class QMyOglWdg : public QMaterial //, protected QOpenGLFunctions
+class OpenGLWindow : public QOglMaterial //, protected QOpenGLFunctions
 {
 	Q_OBJECT
 
 public:
-	QMyOglWdg(const char* title = "tsymiar's Tutorial", bool fs = false);
-	~QMyOglWdg();
+	OpenGLWindow(const char* title = "tsymiar's Tutorial", bool fs = false);
+	~OpenGLWindow();
 
 protected:
 	void initializeGL();
@@ -30,4 +30,4 @@ private slots:
 	void timerDone();
 };
 
-#endif // QMyOglWdg_H
+#endif // OpenGLWindow_H

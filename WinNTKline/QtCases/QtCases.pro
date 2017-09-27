@@ -3,8 +3,8 @@ MYGL=../MFCKline/mygl
 DEFINES += QT_VERSION
 INCLUDEPATH += /usr/include/GL /usr/include/qt5 
 INCLUDEPATH += ../MFCKline ../MFCKline/mygl ../MFCKline/font
-HEADERS = Material.h MyOglWdg.h myuiobj.h $${MYGL}/OGLKview.h $${MYGL}/SDL_text.h
-SOURCES = main.cpp MyOglWdg.cpp myuiobj.cpp Material.cpp $${MYGL}/OGLKview.cc $${MYGL}/SDL_text.cc
+HEADERS = OglMaterial.h OpenGLWindow.h gluiobj.h $${MYGL}/OGLKview.h $${MYGL}/SDL_text.h
+SOURCES = main.cpp OpenGLWindow.cpp gluiobj.cpp OglMaterial.cpp $${MYGL}/OGLKview.cc $${MYGL}/SDL_text.cc
 QMAKE_CXXFLAGS += -std=c++0x
 LIBS += -lSDL_image \
 	-lSDL_ttf \

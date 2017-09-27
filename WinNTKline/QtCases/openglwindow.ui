@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>QtKlineClass</class>
- <widget class="QMainWindow" name="QtKlineClass">
+ <class>QtCasesClass</class>
+ <widget class="QMainWindow" name="QtCasesClass">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -11,13 +11,13 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>QtKline</string>
+   <string>QtCases</string>
   </property>
   <property name="autoFillBackground">
    <bool>false</bool>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <widget class="QMaterial" name="openGLWidget">
+   <widget class="QOglMaterial" name="openGLWidget">
     <property name="geometry">
      <rect>
       <x>0</x>
@@ -65,9 +65,9 @@
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
   <customwidget>
-   <class>QMaterial</class>
+   <class>QOglMaterial</class>
    <extends>QOpenGLWidget</extends>
-   <header>Material.h</header>
+   <header>OglMaterial.h</header>
   </customwidget>
  </customwidgets>
  <resources/>
