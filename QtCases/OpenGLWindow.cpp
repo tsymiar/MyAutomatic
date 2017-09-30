@@ -17,6 +17,7 @@ OpenGLWindow::OpenGLWindow(const char* title, bool fs)
 	timer = new QTimer(this);
 	connect(timer, SIGNAL(timeout()), this, SLOT(timerDone()));
 	timer->start(100 / 24);
+	setMouseTracking(true);
 }
 
 OpenGLWindow::~OpenGLWindow()
@@ -27,7 +28,12 @@ OpenGLWindow::~OpenGLWindow()
 
 void OpenGLWindow::keyPressEvent(QKeyEvent * e)
 {
-	qDebug() << "+++ keyPressEvent" << "(" << QString("%1").arg(e->key()) << ") +++";
+	qDebug() << "+++ key" << 
+		QString("x=%1; y=%2; z=%3")
+		.arg(xPos)
+		.arg(yPos)
+		.arg(zPos)
+		<< "+++";
 	switch (e->key())
 	{
 	case Qt::Key_F2:
@@ -101,6 +107,12 @@ void OpenGLWindow::keyPressEvent(QKeyEvent * e)
 		break;
 	}
 	update();
+}
+
+void OpenGLWindow::mouseMoveEvent(QMouseEvent * e)
+{
+	setmX(e->x());
+	setmY(e->y());
 }
 
 void OpenGLWindow::timerDone()

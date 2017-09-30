@@ -13,7 +13,8 @@ QOglMaterial::QOglMaterial(QWidget *parent)
 	setFormat(format);
 #else
 	xRate = yRate = zZoom = 0;
-	sHigh = -1;
+	tHigh = -1;
+	mX = mY = 0;
 #endif
 }
 
@@ -95,7 +96,7 @@ void QOglMaterial::initVbo()
 void QOglMaterial::initializeGL()
 {
 	qDebug("+++ initializeGL +++");
-	/* 0. 初始化函数，使得函数可以使用 */
+	/* 0. 初始化函数，使得GL函数可以使用 */
 	initializeOpenGLFunctions();
 #ifdef _VBO_
 	/* 创建项目对象链接着色器 */
@@ -143,7 +144,7 @@ void QOglMaterial::initializeGL()
 #else
 	loadGLTextures();
 #endif
-#endif
+#endif // _VBO_
 }
 
 void QOglMaterial::resizeGL(int width, int height)
@@ -231,7 +232,7 @@ void QOglMaterial::paintGL()
 	glVertex3f(0.0 + xRate, 0.0 + yRate, zZoom);
 	glEnd();
 
-	glTranslatef(3, sHigh, -8.0);
+	glTranslatef(3, tHigh, -8.0);
 	glBegin(GL_TRIANGLES);
 	glColor3f(1.0, 0.0, 0.0);
 	glVertex3f(0.0, 1.0, 0.0);
@@ -241,9 +242,22 @@ void QOglMaterial::paintGL()
 	glVertex3f(1.0, -1, 0.0);
 	glEnd();
 
-	qDebug() << "(x=" << xRate << ",y=" << yRate << ",z=" << zZoom << ",s=" << sHigh << ")";
+	glDisable(GL_DEPTH_TEST);
+	QPainter painter;
+	painter.begin(this);
+	QPen pen;
+	pen.setColor(Qt::cyan);
+	painter.setPen(pen);
+	QString coord = QString("(x=%1,y=%2,t=%3)")
+		.arg(mX)
+		.arg(mY)
+		.arg(tHigh);
+	painter.drawText(10, 20, coord);
+	painter.end();
+	glEnable(GL_DEPTH_TEST);
+
 #endif
-#endif
+#endif // OGL_KVIEW_H_
 }
 
 #ifndef _VBO_
