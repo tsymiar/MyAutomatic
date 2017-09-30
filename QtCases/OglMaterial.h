@@ -61,10 +61,13 @@ private:
 	inline void setX(GLfloat x) { xRate = x; }
 	inline void setY(GLfloat y) { yRate = y; }
 	inline void setZ(GLfloat z) { zZoom = z; }
-	inline void setS(GLfloat s) { sHigh = s; }
+	inline void setS(GLfloat s) { tHigh = s; }
+	inline void setmX(int x) { mX = x; }
+	inline void setmY(int y) { mY = y; }
 private:
 	GLuint texture[3];
-	GLfloat xRate, yRate, zZoom, sHigh;
+	GLfloat xRate, yRate, zZoom, tHigh;
+	int mX, mY;
 #endif
 #endif
 };

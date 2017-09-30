@@ -12,6 +12,7 @@ public:
 	~OpenGLWindow();
 protected:
 	void keyPressEvent(QKeyEvent *e);
+	void mouseMoveEvent(QMouseEvent *e);
 private:
 	bool fullscreen;
 	bool light;
