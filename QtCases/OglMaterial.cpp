@@ -4,7 +4,7 @@
 QOglMaterial::QOglMaterial(QWidget *parent)
 	: QOpenGLWidget(parent)
 {
-#ifdef _VBO_
+#ifdef _GLVBO_
 	QSurfaceFormat format;
 	format.setDepthBufferSize(24);
 	format.setStencilBufferSize(8);
@@ -22,7 +22,7 @@ QOglMaterial::~QOglMaterial()
 {
 }
 
-#ifdef _VBO_
+#ifdef _GLVBO_
 /* 1.1 着色器代码 */
 /* *********************************************
 *   顶点着色器定义一个输入，它是 4 个成员的矢量 vPosition。
@@ -98,7 +98,7 @@ void QOglMaterial::initializeGL()
 	qDebug("+++ initializeGL +++");
 	/* 0. 初始化函数，使得GL函数可以使用 */
 	initializeOpenGLFunctions();
-#ifdef _VBO_
+#ifdef _GLVBO_
 	/* 创建项目对象链接着色器 */
 	/* 1. 初始化最大的任务是装载顶点和片段着色器 */
 	program = new QOpenGLShaderProgram(this);
@@ -144,12 +144,12 @@ void QOglMaterial::initializeGL()
 #else
 	loadGLTextures();
 #endif
-#endif // _VBO_
+#endif // _GLVBO_
 }
 
 void QOglMaterial::resizeGL(int width, int height)
 {
-#ifdef _VBO_
+#ifdef _GLVBO_
 	/* 2.1 viewport 设定窗口的原点 origin (x, y)、宽度和高度 */
 	glViewport(0, 0, width, height);
 
@@ -194,7 +194,7 @@ void QOglMaterial::paintGL()
 	qDebug() << "(" << kv.lastmarket.price << ")";
 #else
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-#ifdef _VBO_
+#ifdef _GLVBO_
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
 	///< shader传入模型视图矩阵
@@ -260,7 +260,7 @@ void QOglMaterial::paintGL()
 #endif // OGL_KVIEW_H_
 }
 
-#ifndef _VBO_
+#ifndef _GLVBO_
 void QOglMaterial::loadGLTextures()
 {
 	QImage tex, buf;
