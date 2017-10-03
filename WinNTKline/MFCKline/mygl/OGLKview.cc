@@ -2,7 +2,7 @@
 
 #pragma unmanaged 
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 BOOL APIENTRY DllMain(HANDLE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
 {
 	switch (ul_reason_for_call)
@@ -108,7 +108,7 @@ OGLKview::ViewSize viewsize = { 0,0,0,0 };
 OGLKview::Charmarket markchars = { "---","---","---" };
 #ifdef __linux
 #define _Strtok strtok_r
-#elif _WIN32
+#elif _MSC_VER
 #define _Strtok strtok_s
 #endif
 
@@ -550,7 +550,7 @@ int OGLKview::DrawCoord(int mX, int mY)
 	coor[14] = ')';
 	coor[15] = '\0';
 	DrawKtext(coor, pt, 14, { 1,1,0 });
-#ifdef _WIN32
+#ifdef _MSC_VER
 	char cpuattr[64];
 	cpu_getbrand(brand);
 	__cpuidex(msgid, 0, 0);
@@ -958,7 +958,7 @@ int OGLKview::DrawKtext(char text[], Point & coor, int size, OGLKview::Color4f c
 	HFONT mhfont = CreateFont(size, 0, 0, 0, fw, 0, 0, 0, ANSI_CHARSET,
 		OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
 		DEFAULT_PITCH | FF_SWISS,
-#ifdef QT_VERSION
+#ifdef _UNICODE
 		(const wchar_t *)
 #endif
 		font
@@ -1107,7 +1107,7 @@ bool OGLKview::GetMarkDatatoDraw(const char* file, void* P, char* title)
 	{
 		//只发送一遍失败消息
 		if (failmsg < 1)
-#ifdef _MSC_VER
+#ifdef _WIN32
 			::PostMessage((*(HWND*)P), WM_MSG_OGL, 0, (LPARAM)this->index.AllocBuffer(_T("Reading failure!")));
 #else
 			cout << "Reading failure!" << endl;
@@ -1138,7 +1138,7 @@ bool OGLKview::GetMarkDatatoDraw(const char* file, void* P, char* title)
 					{
 						title = buff;
 						//memcpy();
-#ifdef _MSC_VER
+#ifdef _WIN32
 						if (failmsg <= 3)
 							::PostMessage((*(HWND*)P), WM_MSG_TITL, 0, (LPARAM)this->index.AllocBuffer((CString)title));
 #else

@@ -40,7 +40,7 @@
 #include	<plus1second>
 #endif
 #include	<string>
-#ifdef _WIN32//__linux
+#ifdef _MSC_VER//__linux
 #include	<io.h>
 #include "..\stdafx.h"
 #ifdef Error //ws2tcpip.h 'Error' redefined.
@@ -102,7 +102,7 @@
 #ifdef __linux
 #define _stdcall
 #endif
-#ifdef _WIN32
+#ifdef _MSC_VER
 DLL_KVIEW_API
 #endif
 #ifdef __linux
@@ -291,7 +291,9 @@ public:
 	bool unfurl = false;
 	bool coding = false;
 #if !defined(QT_VERSION)
+#if !defined(_WIN32)
 	DOSCout DOS;
+#endif
 #endif
 	ZOOM Zoom;
 	Initialise index;
@@ -327,7 +329,7 @@ public:
 	void SetBkg(bool b);
 	void SetColor(OGLKview::Color4f color);
 	int Data2View(std::vector<struct OGLKview::Market> market, OGLKview::Dlginfo toview);
-#ifdef _WIN32	
+#ifdef _MSC_VER	
 	bool SetWindowPixelFormat(HDC m_hDC, HWND m_hWnd, int pixelformat = 0);
 #endif	
 	bool GetMarkDatatoDraw(const char* file = "", void* P = nullptr, char* title = NULL);

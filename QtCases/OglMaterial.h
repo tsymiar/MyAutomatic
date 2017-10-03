@@ -21,7 +21,7 @@
 #define _PI_ 3.14159265f
 #endif
 
-//#define _VBO_
+//#define _GLVBO_
 
 class QOglMaterial : public QOpenGLWidget, protected QOpenGLFunctions // QOpenGLFunctions_4_3_Compatibility
 {
@@ -34,7 +34,7 @@ protected:
 	void paintGL();
 	void resizeGL(int width, int height);
 	void loadGLTextures();
-#ifdef _VBO_
+#ifdef _GLVBO_
 	void initVbo();
 	inline QMatrix4x4 getProject() const { return m_projection; }
 private:
@@ -54,20 +54,19 @@ private:
 	///< 顶点、索引、颜色 -> buffer的标识
 	GLuint verVbo, v_indexVbo, colorVbo;
 #else
+private:
 #ifdef OGL_KVIEW_H_
-	private：
 		OGLKview kv;
-#else
+#endif
+#endif
+	GLuint texture[3];
+	GLfloat xRate, yRate, zZoom, tHigh;
+	int mX, mY;
+public:
 	inline void setX(GLfloat x) { xRate = x; }
 	inline void setY(GLfloat y) { yRate = y; }
 	inline void setZ(GLfloat z) { zZoom = z; }
 	inline void setS(GLfloat s) { tHigh = s; }
 	inline void setmX(int x) { mX = x; }
 	inline void setmY(int y) { mY = y; }
-private:
-	GLuint texture[3];
-	GLfloat xRate, yRate, zZoom, tHigh;
-	int mX, mY;
-#endif
-#endif
 };

@@ -59,7 +59,7 @@ void OpenGLWindow::keyPressEvent(QKeyEvent * e)
 			glEnable(GL_LIGHTING);
 		}
 		break;
-#ifndef _VBO_
+#ifndef _GLVBO_
 	case Qt::Key_Right:	//→
 		xPos += 0.01f;
 		setX(xPos);
@@ -117,7 +117,7 @@ void OpenGLWindow::mouseMoveEvent(QMouseEvent * e)
 
 void OpenGLWindow::timerDone()
 {
-#ifndef _VBO_	
+#ifndef _GLVBO_	
 	sPos -= 0.01f;
 	if (sPos < -1)
 		sPos = -1;

@@ -3,7 +3,7 @@
 #include <cmath>
 #include <cfloat>
 #include <cassert>
-#ifdef _WIN32
+#ifdef _MSC_VER
 #include <atlstr.h>
 #endif
 
@@ -40,7 +40,7 @@ private:
 	char* ptr = nullptr;
 	long len;
 public:
-#ifdef _WIN32
+#ifdef _MSC_VER
 	static char* AllocBuffer(CString msg)
 	{
 		Initialise index;
