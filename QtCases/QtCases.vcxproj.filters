@@ -51,6 +51,9 @@
     <ClCompile Include="GeneratedFiles\Debug\moc_gluiobj.cpp">
       <Filter>Generated Files\Debug</Filter>
     </ClCompile>
+    <ClCompile Include="ShowPNG.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="gluiobj.h">
@@ -71,6 +74,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="OglMaterial.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ShowPNG.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

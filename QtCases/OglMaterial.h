@@ -16,6 +16,7 @@
 #include <QEventLoop>
 #include <QTimer>
 #include <QDebug>
+#include "ShowPNG.h"
 
 #ifndef _PI_
 #define _PI_ 3.14159265f
@@ -33,7 +34,6 @@ protected:
 	void initializeGL();
 	void paintGL();
 	void resizeGL(int width, int height);
-	void loadGLTextures();
 #ifdef _GLVBO_
 	void initVbo();
 	inline QMatrix4x4 getProject() const { return m_projection; }
@@ -59,9 +59,9 @@ private:
 		OGLKview kv;
 #endif
 #endif
-	GLuint texture[3];
 	GLfloat xRate, yRate, zZoom, tHigh;
 	int mX, mY;
+	ShowPNG png;
 public:
 	inline void setX(GLfloat x) { xRate = x; }
 	inline void setY(GLfloat y) { yRate = y; }

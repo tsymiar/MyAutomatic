@@ -110,7 +110,7 @@ unsigned int __stdcall Chat_Msg(void* func)
 			printf("user name:");
 			scanf_s("%s", (sndbuf + 8), (unsigned)_countof(sndbuf));
 			char title[30];
-			strcpy_s(title, "chat client,logged on as ");
+			strcpy_s(title, "chat client, logged on as ");
 			strcat_s(title, (sndbuf + 8));
 			printf("password:");
 			scanf_s("%s", (sndbuf + 32), 256);
