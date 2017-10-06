@@ -61,34 +61,34 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
-    <OutDir>$(ProjectDir)..\Gen\</OutDir>
-    <IntDir>$(ProjectDir)..\Gen\obj\$(Platform)\$(TargetName)\</IntDir>
+    <OutDir>$(ProjectDir)..\bin\</OutDir>
+    <IntDir>$(ProjectDir)..\Obj\$(Platform)\$(TargetName)\</IntDir>
     <TargetExt>.a</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <TargetExt />
-    <IntDir>$(ProjectDir)..\Gen\obj\$(Platform)\$(TargetName)\</IntDir>
-    <OutDir>$(ProjectDir)..\Gen\</OutDir>
+    <IntDir>$(ProjectDir)..\Obj\$(Platform)\$(TargetName)\</IntDir>
+    <OutDir>$(ProjectDir)..\bin\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
     <TargetExt />
-    <IntDir>$(ProjectDir)..\Gen\obj\$(Platform)\$(TargetName)\</IntDir>
-    <OutDir>$(ProjectDir)..\Gen\</OutDir>
+    <IntDir>$(ProjectDir)..\Obj\$(Platform)\$(TargetName)\</IntDir>
+    <OutDir>$(ProjectDir)..\bin\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
     <TargetExt />
-    <OutDir>$(ProjectDir)..\Gen\</OutDir>
-    <IntDir>$(ProjectDir)..\Gen\obj\$(Platform)\$(TargetName)\</IntDir>
+    <OutDir>$(ProjectDir)..\bin\</OutDir>
+    <IntDir>$(ProjectDir)..\Obj\$(Platform)\$(TargetName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <TargetExt>.a</TargetExt>
-    <IntDir>$(ProjectDir)..\Gen\obj\$(Platform)\$(TargetName)\</IntDir>
-    <OutDir>$(ProjectDir)..\Gen\</OutDir>
+    <IntDir>$(ProjectDir)..\Obj\$(Platform)\$(TargetName)\</IntDir>
+    <OutDir>$(ProjectDir)..\bin\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <TargetExt>.a</TargetExt>
-    <IntDir>$(ProjectDir)..\Gen\obj\$(Platform)\$(TargetName)\</IntDir>
-    <OutDir>$(ProjectDir)..\Gen\</OutDir>
+    <IntDir>$(ProjectDir)..\Obj\$(Platform)\$(TargetName)\</IntDir>
+    <OutDir>$(ProjectDir)..\bin\</OutDir>
   </PropertyGroup>
   <ItemGroup>
     <ClCompile Include="..\..\WinNTKline\MFCKline\IM\IM.cc" />

@@ -958,12 +958,12 @@ int OGLKview::DrawKtext(char text[], Point & coor, int size, OGLKview::Color4f c
 	HFONT mhfont = CreateFont(size, 0, 0, 0, fw, 0, 0, 0, ANSI_CHARSET,
 		OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
 		DEFAULT_PITCH | FF_SWISS,
+#undef _UNICODE
 #ifdef _UNICODE
 		(const wchar_t *)
 #endif
 		font
 	);
-#undef _UNICODE
 	HFONT hOldFont = (HFONT)SelectObject(wglGetCurrentDC(), mhfont);
 	DeleteObject(hOldFont);
 	if (color.A == 0)

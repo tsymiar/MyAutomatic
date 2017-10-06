@@ -77,20 +77,20 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IntDir>Gen\test\</IntDir>
+    <IntDir>Obj\test\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IntDir>Gen\test\</IntDir>
+    <IntDir>Obj\test\</IntDir>
     <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IntDir>Gen\test\</IntDir>
+    <IntDir>Obj\test\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IntDir>Gen\test\</IntDir>
+    <IntDir>Obj\test\</IntDir>
     <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -100,13 +100,13 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_TESTAPIS_;_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\font;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap;$(SolutionDir)MFCKline;$(CEFDIR)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(libPNG);$(CEFDIR);$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\font;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap;$(SolutionDir)MFCKline</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4819</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalLibraryDirectories>$(CEFDIR)\$(Configuration);$(QTDIR)\lib;$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\font\lib;$(SolutionDir)MFCKline\GL\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>Qt5Core.lib;Qt5Gui.lib;Qt5OpenGL.lib;Qt5Widgets.lib;thosttraderapi.lib;thostmduserapi.lib;libcef.lib;libcef_dll_wrapper.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(libPNG)\lib\$(Configuration);$(CEFDIR)\$(Configuration);$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\font\lib;$(SolutionDir)MFCKline\GL\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glu32.lib;opengl32.lib;libpng16.lib;zlib.lib;thosttraderapi.lib;thostmduserapi.lib;libcef.lib;libcef_dll_wrapper.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>

@@ -88,36 +88,36 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(ProjectDir)..\Gen\</OutDir>
-    <IntDir>$(ProjectDir)..\Gen\obj\$(Platform)\$(TargetName)\</IntDir>
+    <OutDir>$(ProjectDir)..\bin\</OutDir>
+    <IntDir>$(ProjectDir)..\Obj\$(Platform)\$(TargetName)\</IntDir>
     <AdditionalSourcesToCopyMapping>$(MSBuildProjectDirectory)\Makefile;$(MSBuildProjectDirectory)\mysql\fixmysql;$(MSBuildProjectDirectory)\soap\myweb.wsdl;$(AdditionalSourcesToCopyMapping)</AdditionalSourcesToCopyMapping>
     <TargetExt>.a</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
-    <OutDir>$(ProjectDir)..\Gen\</OutDir>
-    <IntDir>$(ProjectDir)..\Gen\obj\$(Platform)\$(TargetName)\</IntDir>
+    <OutDir>$(ProjectDir)..\bin\</OutDir>
+    <IntDir>$(ProjectDir)..\Obj\$(Platform)\$(TargetName)\</IntDir>
     <AdditionalSourcesToCopyMapping>$(MSBuildProjectDirectory)\Makefile;$(AdditionalSourcesToCopyMapping)</AdditionalSourcesToCopyMapping>
     <TargetExt>.a</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
-    <OutDir>$(ProjectDir)..\Gen\</OutDir>
-    <IntDir>$(ProjectDir)..\Gen\obj\$(Platform)\$(TargetName)\</IntDir>
+    <OutDir>$(ProjectDir)..\bin\</OutDir>
+    <IntDir>$(ProjectDir)..\Obj\$(Platform)\$(TargetName)\</IntDir>
     <AdditionalSourcesToCopyMapping>$(ProjectDir)..\Makefile</AdditionalSourcesToCopyMapping>
     <TargetExt />
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
-    <OutDir>$(ProjectDir)..\Gen\</OutDir>
-    <IntDir>$(ProjectDir)..\Gen\obj\$(Platform)\$(TargetName)\</IntDir>
+    <OutDir>$(ProjectDir)..\bin\</OutDir>
+    <IntDir>$(ProjectDir)..\Obj\$(Platform)\$(TargetName)\</IntDir>
     <TargetExt />
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(ProjectDir)..\Gen\</OutDir>
-    <IntDir>$(ProjectDir)..\Gen\obj\$(Platform)\$(TargetName)\</IntDir>
+    <OutDir>$(ProjectDir)..\bin\</OutDir>
+    <IntDir>$(ProjectDir)..\Obj\$(Platform)\$(TargetName)\</IntDir>
     <TargetExt />
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
-    <OutDir>$(ProjectDir)..\Gen\</OutDir>
-    <IntDir>$(ProjectDir)..\Gen\obj\$(Platform)\$(TargetName)\</IntDir>
+    <OutDir>$(ProjectDir)..\bin\</OutDir>
+    <IntDir>$(ProjectDir)..\Obj\$(Platform)\$(TargetName)\</IntDir>
     <TargetExt />
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

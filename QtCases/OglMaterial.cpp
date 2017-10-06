@@ -1,5 +1,4 @@
 #include "OglMaterial.h"
-#include <QtOpenGL/qgl.h>
 
 QOglMaterial::QOglMaterial(QWidget *parent)
 	: QOpenGLWidget(parent)
@@ -142,7 +141,7 @@ void QOglMaterial::initializeGL()
 #ifdef  OGL_KVIEW_H_
 	kv.AdjustDraw(640, 480);
 #else
-	loadGLTextures();
+	png.getPixels("../WinNTKline/MFCKline/image/atlas.png");
 #endif
 #endif // _GLVBO_
 }
@@ -194,6 +193,7 @@ void QOglMaterial::paintGL()
 	qDebug() << "(" << kv.lastmarket.price << ")";
 #else
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	png.Show();
 #ifdef _GLVBO_
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
@@ -259,34 +259,3 @@ void QOglMaterial::paintGL()
 #endif
 #endif // OGL_KVIEW_H_
 }
-
-#ifndef _GLVBO_
-void QOglMaterial::loadGLTextures()
-{
-	QImage tex, buf;
-	if (!buf.load("../MFCKline/image/atlas.png"))
-	{
-		qWarning("Could not read image file, using single-color instead.");
-		QImage dummy(128, 128, QImage::Format_RGB32);
-		dummy.fill(QColor("darkCyan").rgb());
-		buf = dummy;
-	}
-
-	tex = QGLWidget::convertToGLFormat(buf);
-
-	glGenTextures(3, &texture[0]);
-	glBindTexture(GL_TEXTURE_2D, texture[0]);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexImage2D(GL_TEXTURE_2D, 0, 3, tex.width(), tex.height(), 0,
-		GL_RGBA, GL_UNSIGNED_BYTE, tex.bits());
-	glBindTexture(GL_TEXTURE_2D, texture[1]);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, 3, tex.width(), tex.height(), 0,
-		GL_RGBA, GL_UNSIGNED_BYTE, tex.bits());
-	glBindTexture(GL_TEXTURE_2D, texture[2]);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-}
-#endif // 
