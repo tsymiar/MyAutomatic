@@ -92,6 +92,23 @@ void QOglMaterial::initVbo()
 }
 #endif
 
+void QOglMaterial::coord()
+{
+	glDisable(GL_DEPTH_TEST);
+	QPainter painter;
+	painter.begin(this);
+	QPen pen;
+	pen.setColor(Qt::yellow);
+	painter.setPen(pen);
+	QString coord = QString("(x=%1,y=%2,t=%3)")
+		.arg(mX)
+		.arg(mY)
+		.arg(tHigh);
+	painter.drawText(10, 20, coord);
+	painter.end();
+	glEnable(GL_DEPTH_TEST);
+}
+
 void QOglMaterial::initializeGL()
 {
 	qDebug("+++ initializeGL +++");
@@ -141,7 +158,7 @@ void QOglMaterial::initializeGL()
 #ifdef  OGL_KVIEW_H_
 	kv.AdjustDraw(640, 480);
 #else
-	png.getPixels("../WinNTKline/MFCKline/image/atlas.png");
+	png.setPixels("../WinNTKline/MFCKline/image/atlas.png");
 #endif
 #endif // _GLVBO_
 }
@@ -193,7 +210,7 @@ void QOglMaterial::paintGL()
 	qDebug() << "(" << kv.lastmarket.price << ")";
 #else
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	png.Show();
+	glLoadIdentity();
 #ifdef _GLVBO_
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
@@ -222,7 +239,8 @@ void QOglMaterial::paintGL()
 	glDisableVertexAttribArray(vertexLocation);
 	glDisableVertexAttribArray(clorLocation);
 #else
-	glLoadIdentity();
+	png.Show();
+	this->coord();
 
 	glTranslatef(-1.0, 0, -8.0);
 	glBegin(GL_QUADS);
@@ -241,20 +259,6 @@ void QOglMaterial::paintGL()
 	glColor3f(0.0, 0.0, 1.0);
 	glVertex3f(1.0, -1, 0.0);
 	glEnd();
-
-	glDisable(GL_DEPTH_TEST);
-	QPainter painter;
-	painter.begin(this);
-	QPen pen;
-	pen.setColor(Qt::cyan);
-	painter.setPen(pen);
-	QString coord = QString("(x=%1,y=%2,t=%3)")
-		.arg(mX)
-		.arg(mY)
-		.arg(tHigh);
-	painter.drawText(10, 20, coord);
-	painter.end();
-	glEnable(GL_DEPTH_TEST);
 
 #endif
 #endif // OGL_KVIEW_H_
