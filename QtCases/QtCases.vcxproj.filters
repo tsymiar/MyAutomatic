@@ -84,5 +84,8 @@
     <None Include="mkallcase.sh">
       <Filter>Form Files</Filter>
     </None>
+    <None Include="QtCases.pro">
+      <Filter>Form Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -166,6 +166,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="mkallcase.sh" />
+    <None Include="QtCases.pro" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="OglMaterial.h" />

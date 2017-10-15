@@ -12,9 +12,9 @@ class ShowPNG
 public:
 	ShowPNG();
 	~ShowPNG();
+	int setPixels(const char* filename);
 	void Show();
 	void Show(const char* filename);
-	int getPixels(const char* filename);
 private:
 	GLuint texture[3] = { NULL };
 private:

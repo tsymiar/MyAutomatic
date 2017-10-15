@@ -62,6 +62,7 @@ private:
 	GLfloat xRate, yRate, zZoom, tHigh;
 	int mX, mY;
 	ShowPNG png;
+	void coord();
 public:
 	inline void setX(GLfloat x) { xRate = x; }
 	inline void setY(GLfloat y) { yRate = y; }

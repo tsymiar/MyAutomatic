@@ -12,9 +12,9 @@ unsigned char* pixels = NULL;
 png_uint_32 width, height;
 int color_type;
 
-//»ñÈ¡Ã¿Ò»ĞĞËùÓÃµÄ×Ö½ÚÊı£¬ĞèÒª´Õ×ã4µÄ±¶Êı  
+//è·å–æ¯ä¸€è¡Œæ‰€ç”¨çš„å­—èŠ‚æ•°ï¼Œéœ€è¦å‡‘è¶³4çš„å€æ•°  
 int getRowBytes(int width) {
-	//¸ÕºÃÊÇ4µÄ±¶Êı  
+	//åˆšå¥½æ˜¯4çš„å€æ•°  
 	if ((width * 3) % 4 == 0) {
 		return width * 3;
 	}
@@ -23,21 +23,7 @@ int getRowBytes(int width) {
 	}
 }
 
-//ÏÔÊ¾Í¼Æ¬  
-void ShowPNG::Show() {
-	glClear(GL_COLOR_BUFFER_BIT); 
-	glTranslatef(-1.0, 0, -8.0);
-	//Í¼Æ¬ÊÇ·ñÓĞÍ¸Ã÷¶È  
-	if (color_type == PNG_COLOR_TYPE_RGB) {
-		glDrawPixels(width, height, GL_RGB, GL_UNSIGNED_BYTE, pixels);
-	}
-	else if (color_type == PNG_COLOR_TYPE_RGBA) {
-		glDrawPixels(width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-	}
-	glFlush();
-}
-
-int ShowPNG::getPixels(const char* filename)
+int ShowPNG::setPixels(const char* filename)
 {
 	png_structp png_ptr;
 	png_infop info_ptr;
@@ -71,16 +57,17 @@ int ShowPNG::getPixels(const char* filename)
 	}
 	/* Set up the input control if you are using standard C streams */
 	png_init_io(png_ptr, fp);
-	//¶ÁÈ¡PNGÎÄ¼ş  
+	//è¯»å–PNGæ–‡ä»¶  
 	png_read_png(png_ptr, info_ptr, PNG_TRANSFORM_EXPAND, 0);
-	//»ñÈ¡PNGÍ¼Æ¬Ïà¹ØĞÅÏ¢  
+	//è·å–PNGå›¾ç‰‡ç›¸å…³ä¿¡æ¯  
 	png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
 		NULL, NULL, NULL);
 	qDebug() << "[" << width << "*" << height << "]";
-
-	//»ñµÃËùÓĞPNGÊı¾İ  
+	width = width / 2 + 222;
+	height /= 2;
+	//è·å¾—æ‰€æœ‰PNGæ•°æ®  
 	png_bytep* row_pointers = png_get_rows(png_ptr, info_ptr);
-	//¼ÆËãpixel´óĞ¡  
+	//è®¡ç®—pixelå¤§å°  
 	unsigned int size = 0;
 	if (color_type == PNG_COLOR_TYPE_RGB) {
 		size = getRowBytes(width) * height;
@@ -91,12 +78,12 @@ int ShowPNG::getPixels(const char* filename)
 	else {
 		return EXIT_FAILURE;
 	}
-	//ÉêÇë¶Ñ¿Õ¼ä  
+	//ç”³è¯·å †ç©ºé—´  
 	pixels = (unsigned char*)malloc(size);
 	int i;
 	for (i = 0; i < height; i++) {
-		//¿½±´Ã¿ĞĞµÄÊı¾İµ½pixel£¬  
-		//openglÔ­µãÔÚÏÂ·½£¬¿½±´Ê±Òªµ¹ÖÃÒ»ÏÂ  
+		//æ‹·è´æ¯è¡Œçš„æ•°æ®åˆ°pixelï¼Œ  
+		//openglåŸç‚¹åœ¨ä¸‹æ–¹ï¼Œæ‹·è´æ—¶è¦å€’ç½®ä¸€ä¸‹  
 		if (color_type == PNG_COLOR_TYPE_RGB) {
 			memcpy(pixels + getRowBytes(width) * i, row_pointers[height - i - 1], width * 3);
 		}
@@ -112,95 +99,95 @@ int ShowPNG::getPixels(const char* filename)
 GLuint ShowPNG::CreateTextureFromPng(const char* filename)
 {
 	unsigned char header[8];     //8  
-	int k;   //Ñ­»·¼ÆÊı  
-	GLuint textureID; //ÌùÍ¼Ãû×Ö  
-	int width, height; //¼ÇÂ¼Í¼Æ¬µ½¿íºÍ¸ß  
-	png_byte color_type; //Í¼Æ¬µ½ÀàĞÍ£¨»áÓÃÔÚÊÇ·ñÊÇ¿ªÆôÀ´Í¨µÀ£©  
-	png_byte bit_depth; //×Ö½ÚÉî¶È  
+	int k;   //å¾ªç¯è®¡æ•°  
+	GLuint textureID; //è´´å›¾åå­—  
+	int width, height; //è®°å½•å›¾ç‰‡åˆ°å®½å’Œé«˜  
+	png_byte color_type; //å›¾ç‰‡åˆ°ç±»å‹ï¼ˆä¼šç”¨åœ¨æ˜¯å¦æ˜¯å¼€å¯æ¥é€šé“ï¼‰  
+	png_byte bit_depth; //å­—èŠ‚æ·±åº¦  
 
-	png_structp png_ptr; //Í¼Æ¬  
-	png_infop info_ptr; //Í¼Æ¬µÄĞÅÏ¢  
-	int number_of_passes; //¸ôĞĞÉ¨Ãè  
-	png_bytep * row_pointers;//Í¼Æ¬µÄÊı¾İÄÚÈİ  
-	int row, col, pos;  //¸Ä±äpngÏñËØÅÅÁĞµÄÎÊÌâ¡£  
+	png_structp png_ptr; //å›¾ç‰‡  
+	png_infop info_ptr; //å›¾ç‰‡çš„ä¿¡æ¯  
+	int number_of_passes; //éš”è¡Œæ‰«æ  
+	png_bytep * row_pointers;//å›¾ç‰‡çš„æ•°æ®å†…å®¹  
+	int row, col, pos;  //æ”¹å˜pngåƒç´ æ’åˆ—çš„é—®é¢˜ã€‚  
 	GLubyte *rgba;
 
-	FILE *fp = fopen(filename, "rb");//ÒÔÖ»¶ÁĞÎÊ½´ò¿ªÎÄ¼şÃûÎªfile_nameµÄÎÄ¼ş  
-	if (NULL == fp)//×ö³öÏàÓ¦¿ÉÄÜµÄ´íÎó´¦Àí  
+	FILE *fp = fopen(filename, "rb");//ä»¥åªè¯»å½¢å¼æ‰“å¼€æ–‡ä»¶åä¸ºfile_nameçš„æ–‡ä»¶  
+	if (NULL == fp)//åšå‡ºç›¸åº”å¯èƒ½çš„é”™è¯¯å¤„ç†  
 	{
-		printf("error: %s\n", strerror(errno));//¹Ø±Õ´ò¿ªµÄÎÄ¼ş£¡¸ø³öÄ¬ÈÏÌùÍ¼  
-		return 0;//Ó¦¸Ãµ÷ÓÃÒ»¸öÉú³ÉÄ¬ÈÏÌùÍ¼·µ»ØIDµÄº¯Êı  
+		printf("error: %s\n", strerror(errno));//å…³é—­æ‰“å¼€çš„æ–‡ä»¶ï¼ç»™å‡ºé»˜è®¤è´´å›¾  
+		return 0;//åº”è¯¥è°ƒç”¨ä¸€ä¸ªç”Ÿæˆé»˜è®¤è´´å›¾è¿”å›IDçš„å‡½æ•°  
 	}
-	//¶ÁÈ¡ÎÄ¼şÍ·ÅĞ¶ÏÊÇ·ñÊÇPNG¸ñÊ½Í¼Æ¬.²»ÊÇÔò×ö³öÏàÓ¦´¦Àí  
+	//è¯»å–æ–‡ä»¶å¤´åˆ¤æ–­æ˜¯å¦æ˜¯PNGæ ¼å¼å›¾ç‰‡.ä¸æ˜¯åˆ™åšå‡ºç›¸åº”å¤„ç†  
 	fread(header, 1, 8, fp);
 	if (png_sig_cmp(header, 0, 8))
 	{
 		fclose(fp);
-		return 0; //Ã¿¸ö´íÎó´¦Àí¶¼ÊÇÒ»ÑùµÄ£¡  
+		return 0; //æ¯ä¸ªé”™è¯¯å¤„ç†éƒ½æ˜¯ä¸€æ ·çš„ï¼  
 	}
 
-	//¸ù¾İlibpngµÄlibpng-manual.txtµÄËµÃ÷Ê¹ÓÃÎÄµµ ½ÓÏÂÀ´±ØĞë³õÊ¼»¯png_structp ºÍ png_infop  
-	png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL); //ºóÈı¸öÊÇ°ó¶¨´íÎóÒÔ¼°¾¯¸æµÄº¯ÊıÕâÀïÉèÖÃÎª¿Õ  
-	if (!png_ptr)//×ö³öÏàÓ¦µ½³õÊ¼»¯Ê§°ÜµÄ´¦Àí  
+	//æ ¹æ®libpngçš„libpng-manual.txtçš„è¯´æ˜ä½¿ç”¨æ–‡æ¡£ æ¥ä¸‹æ¥å¿…é¡»åˆå§‹åŒ–png_structp å’Œ png_infop  
+	png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL); //åä¸‰ä¸ªæ˜¯ç»‘å®šé”™è¯¯ä»¥åŠè­¦å‘Šçš„å‡½æ•°è¿™é‡Œè®¾ç½®ä¸ºç©º  
+	if (!png_ptr)//åšå‡ºç›¸åº”åˆ°åˆå§‹åŒ–å¤±è´¥çš„å¤„ç†  
 	{
 		fclose(fp);
 		return 0;
 	}
-	//¸ù¾İ³õÊ¼»¯µÄpng_ptr³õÊ¼»¯png_infop  
+	//æ ¹æ®åˆå§‹åŒ–çš„png_ptråˆå§‹åŒ–png_infop  
 	info_ptr = png_create_info_struct(png_ptr);
 
 	if (!info_ptr)
 	{
-		//³õÊ¼»¯Ê§°ÜÒÔºóÏú»Ùpng_structp  
+		//åˆå§‹åŒ–å¤±è´¥ä»¥åé”€æ¯png_structp  
 		png_destroy_read_struct(&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
 		fclose(fp);
 		return 0;
 	}
 
-	//°´ÕÕlibpng¸øµ½µÄËµÃ÷ÎÈ¶¨²½Öè´íÎó´¦Àí
+	//æŒ‰ç…§libpngç»™åˆ°çš„è¯´æ˜ç¨³å®šæ­¥éª¤é”™è¯¯å¤„ç†
 	if (setjmp(png_jmpbuf(png_ptr)))
 	{
-		//ÊÍ·ÅÕ¼ÓÃµÄÄÚ´æ£¡È»ºó¹Ø±ÕÎÄ¼ş·µ»ØÒ»¸öÌùÍ¼ID
+		//é‡Šæ”¾å ç”¨çš„å†…å­˜ï¼ç„¶åå…³é—­æ–‡ä»¶è¿”å›ä¸€ä¸ªè´´å›¾ID
 		png_destroy_read_struct(&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
 		fclose(fp);
 		return 0;
 	}
-	//Í¨¹ıi/o¶¨ÖÆº¯Êıpng_init_io´ò¿ªÎÄ¼ş 
+	//é€šè¿‡i/oå®šåˆ¶å‡½æ•°png_init_ioæ‰“å¼€æ–‡ä»¶ 
 	png_init_io(png_ptr, fp);
-	//¸æËßlibpngÎÄ¼ş´ÓµÚ¼¸¸ö¿ªÊ¼missing  
+	//å‘Šè¯‰libpngæ–‡ä»¶ä»ç¬¬å‡ ä¸ªå¼€å§‹missing  
 	png_set_sig_bytes(png_ptr, 8);
-	//¼òµ¥µÄ²Ù×÷¶ÁÈ¡Êµ¼ÊÍ¼Æ¬ĞÅÏ¢
+	//ç®€å•çš„æ“ä½œè¯»å–å®é™…å›¾ç‰‡ä¿¡æ¯
 	png_read_info(png_ptr, info_ptr);
-	//»ñµÃÍ¼Æ¬µ½ĞÅÏ¢ width height ÑÕÉ«ÀàĞÍ  ×Ö½ÚÉî¶È  
+	//è·å¾—å›¾ç‰‡åˆ°ä¿¡æ¯ width height é¢œè‰²ç±»å‹  å­—èŠ‚æ·±åº¦  
 	width = png_get_image_width(png_ptr, info_ptr);
 	height = png_get_image_height(png_ptr, info_ptr);
 	color_type = png_get_color_type(png_ptr, info_ptr);
-	//Èç¹ûÍ¼Æ¬´øÓĞalphaÍ¨µÀµ÷ÓÃ  
+	//å¦‚æœå›¾ç‰‡å¸¦æœ‰alphaé€šé“è°ƒç”¨  
 	// if (color_type == PNG_COLOR_TYPE_RGB_ALPHA)  
 	// png_set_swap_alpha(png_ptr);  
 	bit_depth = png_get_bit_depth(png_ptr, info_ptr);
-	//¸ôĞĞÉ¨ÃèÍ¼Æ¬ 
+	//éš”è¡Œæ‰«æå›¾ç‰‡ 
 	number_of_passes = png_set_interlace_handling(png_ptr);
-	//½«¶ÁÈ¡µ½µÄĞÅÏ¢¸üĞÂµ½info_ptr  
+	//å°†è¯»å–åˆ°çš„ä¿¡æ¯æ›´æ–°åˆ°info_ptr  
 	png_read_update_info(png_ptr, info_ptr);
-	//¶ÁÎÄ¼ş  
+	//è¯»æ–‡ä»¶  
 	if (setjmp(png_jmpbuf(png_ptr))) {
 		fclose(fp);
 		return 0;
 	}
 	rgba = (GLubyte*)malloc(width * height * 4);
-	//Ê¹ÓÃ¶¯Ì¬Êı×é  ÉèÖÃ³¤¶È  
+	//ä½¿ç”¨åŠ¨æ€æ•°ç»„  è®¾ç½®é•¿åº¦  
 	row_pointers = (png_bytep*)malloc(sizeof(png_bytep) * height);
 
 	for (k = 0; k < height; k++)
 		row_pointers[k] = NULL;
 
-	//Í¨¹ıÉ¨ÃèÁ÷ÀïÃæµÄÃ¿Ò»ĞĞ½«µÃµ½µÄÊı¾İ¸³Öµ¸ø¶¯Ì¬Êı×é         
+	//é€šè¿‡æ‰«ææµé‡Œé¢çš„æ¯ä¸€è¡Œå°†å¾—åˆ°çš„æ•°æ®èµ‹å€¼ç»™åŠ¨æ€æ•°ç»„         
 	for (k = 0; k<height; k++)
 		//row_pointers[k] = (png_byte*) malloc(png_get_rowbytes(png_ptr,info_ptr));  
 		row_pointers[k] = (png_bytep)png_malloc(png_ptr, png_get_rowbytes(png_ptr,
 			info_ptr));
-	//ÓÉÓÚPNGµÄÏñËØÊÇÓÉ ×ó-ÓÒ-´Ó¶¥µ½µ× ¶øÌùÍ¼ĞèÒªµÄÏñËØ¶¼ÊÇ ×ó-ÓÒ-´Óµ×µ½¶¥ µÄËùÒÔĞèÒª°ÑÏñËØÄÚÈİ½øĞĞÒ»¸ö´ÓĞÂÅÅÁĞ ¶ÁÍ¼Æ¬  
+	//ç”±äºPNGçš„åƒç´ æ˜¯ç”± å·¦-å³-ä»é¡¶åˆ°åº• è€Œè´´å›¾éœ€è¦çš„åƒç´ éƒ½æ˜¯ å·¦-å³-ä»åº•åˆ°é¡¶ çš„æ‰€ä»¥éœ€è¦æŠŠåƒç´ å†…å®¹è¿›è¡Œä¸€ä¸ªä»æ–°æ’åˆ— è¯»å›¾ç‰‡  
 	png_read_image(png_ptr, row_pointers);
 
 	pos = (width * height * 4) - (4 * width);
@@ -216,15 +203,15 @@ GLuint ShowPNG::CreateTextureFromPng(const char* filename)
 		pos = (pos - (width * 4) * 2);
 	}
 
-	//¿ªÆôÎÆÀíÌùÍ¼ÌØĞ§  
+	//å¼€å¯çº¹ç†è´´å›¾ç‰¹æ•ˆ  
 	glEnable(GL_TEXTURE_2D);
-	//´´½¨ÎÆÀí   
+	//åˆ›å»ºçº¹ç†   
 	glGenTextures(1, &textureID);
-	//°ó¶¨ÎÆÀí  
-	glBindTexture(GL_TEXTURE_2D, textureID); //½«ÎÆÀí°ó¶¨µ½Ãû×Ö  
-											 //ÉèÖÃÌùÍ¼ºÍÎÆÀíµÄ»ìºÏĞ§¹û Ä¬ÈÏÖ»ÓÃÎÆÀí  
+	//ç»‘å®šçº¹ç†  
+	glBindTexture(GL_TEXTURE_2D, textureID); //å°†çº¹ç†ç»‘å®šåˆ°åå­—  
+											 //è®¾ç½®è´´å›¾å’Œçº¹ç†çš„æ··åˆæ•ˆæœ é»˜è®¤åªç”¨çº¹ç†  
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
-	//ÉèÖÃÎÆÀíËùÓÃµ½Í¼Æ¬Êı¾İ  
+	//è®¾ç½®çº¹ç†æ‰€ç”¨åˆ°å›¾ç‰‡æ•°æ®  
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba);
 
 	//glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);  
@@ -287,3 +274,17 @@ void ShowPNG::Show(const char* filename)
 	glDisable(GL_TEXTURE_2D);
 }
 
+//æ˜¾ç¤ºå›¾ç‰‡  
+void ShowPNG::Show() {
+	glDisable(GL_DEPTH_TEST);
+	glClear(GL_COLOR_BUFFER_BIT);
+	//å›¾ç‰‡æ˜¯å¦æœ‰é€æ˜åº¦  
+	if (color_type == PNG_COLOR_TYPE_RGB) {
+		glDrawPixels(width, height, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+	}
+	else if (color_type == PNG_COLOR_TYPE_RGBA) {
+		glDrawPixels(width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+	}
+	glFlush();
+	glEnable(GL_DEPTH_TEST);
+}
