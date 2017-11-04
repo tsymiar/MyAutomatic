@@ -1,17 +1,17 @@
 #pragma once
-#include <png.h>  
-#include <zlib.h>
 #include <cmath>  
 #include <cstdarg>
 #include <iostream> 
+#include <png.h>  
+#include <zlib.h>
 #include <QtOpenGL/QGL>
 #include <QDebug>
 
-class ShowPNG
+class ShowImage
 {
 public:
-	ShowPNG();
-	~ShowPNG();
+	ShowImage();
+	~ShowImage();
 	int setPixels(const char* filename);
 	void Show();
 	void Show(const char* filename);

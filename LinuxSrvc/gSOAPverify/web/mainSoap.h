@@ -1,5 +1,5 @@
-#ifndef MYWEB_H
-#define MYWEB_H
+#ifndef mainSoap_H
+#define mainSoap_H
 #include <sys/ioctl.h>  
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -22,7 +22,7 @@
 #define  MAX_QUEUE (1024)
 #define  OFFSET 10240
 
-class myWeb
+class mainSoap
 {
 public:
 	int len, file = 0, move = 0;

@@ -2,7 +2,7 @@
 
 OpenGLWindow::OpenGLWindow(const char* title, bool fs)
 {
-	setGeometry(400, 200, 640, 480);
+	setGeometry(400, 200, 287, 512);
 	fullscreen = fs;
 	xPos = yPos = zPos = sPos = 0.0;
 
@@ -28,7 +28,7 @@ OpenGLWindow::~OpenGLWindow()
 
 void OpenGLWindow::keyPressEvent(QKeyEvent * e)
 {
-	qDebug() << "+++ key" << 
+	qDebug() << "+++ key(" << e->key() << ")" <<
 		QString("x=%1; y=%2; z=%3")
 		.arg(xPos)
 		.arg(yPos)

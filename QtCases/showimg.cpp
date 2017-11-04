@@ -1,10 +1,10 @@
-#include "ShowPNG.h"
+#include "showimg.h"
 
-ShowPNG::ShowPNG()
+ShowImage::ShowImage()
 {
 }
 
-ShowPNG::~ShowPNG()
+ShowImage::~ShowImage()
 {
 }
 
@@ -23,7 +23,7 @@ int getRowBytes(int width) {
 	}
 }
 
-int ShowPNG::setPixels(const char* filename)
+int ShowImage::setPixels(const char* filename)
 {
 	png_structp png_ptr;
 	png_infop info_ptr;
@@ -63,8 +63,8 @@ int ShowPNG::setPixels(const char* filename)
 	png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
 		NULL, NULL, NULL);
 	qDebug() << "[" << width << "*" << height << "]";
-	width = width / 2 + 222;
-	height /= 2;
+	width = width / 2 + 520;
+	height= height /2 + 234;
 	//获得所有PNG数据  
 	png_bytep* row_pointers = png_get_rows(png_ptr, info_ptr);
 	//计算pixel大小  
@@ -96,7 +96,7 @@ int ShowPNG::setPixels(const char* filename)
 	return EXIT_SUCCESS;
 }
 
-GLuint ShowPNG::CreateTextureFromPng(const char* filename)
+GLuint ShowImage::CreateTextureFromPng(const char* filename)
 {
 	unsigned char header[8];     //8  
 	int k;   //循环计数  
@@ -222,7 +222,7 @@ GLuint ShowPNG::CreateTextureFromPng(const char* filename)
 	return textureID;
 }
 
-void ShowPNG::loadGLTextures(const char* filename)
+void ShowImage::loadGLTextures(const char* filename)
 {
 	if (filename == NULL)
 		return;
@@ -257,7 +257,7 @@ void ShowPNG::loadGLTextures(const char* filename)
 #endif
 }
 
-void ShowPNG::Show(const char* filename)
+void ShowImage::Show(const char* filename)
 {
 	if (filename == NULL)
 		return;
@@ -275,9 +275,8 @@ void ShowPNG::Show(const char* filename)
 }
 
 //显示图片  
-void ShowPNG::Show() {
+void ShowImage::Show() {
 	glDisable(GL_DEPTH_TEST);
-	glClear(GL_COLOR_BUFFER_BIT);
 	//图片是否有透明度  
 	if (color_type == PNG_COLOR_TYPE_RGB) {
 		glDrawPixels(width, height, GL_RGB, GL_UNSIGNED_BYTE, pixels);

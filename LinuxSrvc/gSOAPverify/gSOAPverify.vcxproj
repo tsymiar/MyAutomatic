@@ -32,7 +32,7 @@
     <ClCompile Include="soap\stdsoap2.cpp" />
     <ClCompile Include="sql\sqlDB.cc" />
     <ClCompile Include="sys\sysstuts.cc" />
-    <ClCompile Include="web\MyWeb.cc" />
+    <ClCompile Include="web\mainSoap.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="inl\_String-inl.h" />
@@ -42,7 +42,7 @@
     <ClInclude Include="soap\webapi.h" />
     <ClInclude Include="sql\sqlDB.h" />
     <ClInclude Include="sys\sysstuts.h" />
-    <ClInclude Include="web\MyWeb.h" />
+    <ClInclude Include="web\mainSoap.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Makefile" />
@@ -88,36 +88,36 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(ProjectDir)..\bin\</OutDir>
-    <IntDir>$(ProjectDir)..\Obj\$(Platform)\$(TargetName)\</IntDir>
+    <OutDir>$(ProjectDir)bin\</OutDir>
+    <IntDir>$(ProjectDir)..\obj\$(Platform)\$(TargetName)\</IntDir>
     <AdditionalSourcesToCopyMapping>$(MSBuildProjectDirectory)\Makefile;$(MSBuildProjectDirectory)\mysql\fixmysql;$(MSBuildProjectDirectory)\soap\myweb.wsdl;$(AdditionalSourcesToCopyMapping)</AdditionalSourcesToCopyMapping>
     <TargetExt>.a</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
-    <OutDir>$(ProjectDir)..\bin\</OutDir>
-    <IntDir>$(ProjectDir)..\Obj\$(Platform)\$(TargetName)\</IntDir>
+    <OutDir>$(ProjectDir)bin\</OutDir>
+    <IntDir>$(ProjectDir)..\obj\$(Platform)\$(TargetName)\</IntDir>
     <AdditionalSourcesToCopyMapping>$(MSBuildProjectDirectory)\Makefile;$(AdditionalSourcesToCopyMapping)</AdditionalSourcesToCopyMapping>
     <TargetExt>.a</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
-    <OutDir>$(ProjectDir)..\bin\</OutDir>
-    <IntDir>$(ProjectDir)..\Obj\$(Platform)\$(TargetName)\</IntDir>
+    <OutDir>$(ProjectDir)bin\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)..\obj\$(Platform)\$(TargetName)\</IntDir>
     <AdditionalSourcesToCopyMapping>$(ProjectDir)..\Makefile</AdditionalSourcesToCopyMapping>
     <TargetExt />
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
-    <OutDir>$(ProjectDir)..\bin\</OutDir>
-    <IntDir>$(ProjectDir)..\Obj\$(Platform)\$(TargetName)\</IntDir>
+    <OutDir>$(ProjectDir)bin\</OutDir>
+    <IntDir>$(ProjectDir)..\obj\$(Platform)\$(TargetName)\</IntDir>
     <TargetExt />
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(ProjectDir)..\bin\</OutDir>
-    <IntDir>$(ProjectDir)..\Obj\$(Platform)\$(TargetName)\</IntDir>
+    <OutDir>$(ProjectDir)bin\</OutDir>
+    <IntDir>$(ProjectDir)..\obj\$(Platform)\$(TargetName)\</IntDir>
     <TargetExt />
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
-    <OutDir>$(ProjectDir)..\bin\</OutDir>
-    <IntDir>$(ProjectDir)..\Obj\$(Platform)\$(TargetName)\</IntDir>
+    <OutDir>$(ProjectDir)bin\</OutDir>
+    <IntDir>$(ProjectDir)..\obj\$(Platform)\$(TargetName)\</IntDir>
     <TargetExt />
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
