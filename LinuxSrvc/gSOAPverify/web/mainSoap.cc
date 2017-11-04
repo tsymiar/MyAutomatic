@@ -119,7 +119,7 @@ int http_post(struct soap *soap, const char *endpoint, const char *host, int por
 	char* s = strchr(soap->path, '?');
 	if (!s || strcmp(s, "?wsdl"))
 		return SOAP_GET_METHOD;
-	fd = fopen("mainSoap.wsdl", "rb");
+	fd = fopen("myweb.wsdl", "rb");
 #else
 	// 请求WSDL时，传送相应文件
 	// 获取请求的wsdl文件名
