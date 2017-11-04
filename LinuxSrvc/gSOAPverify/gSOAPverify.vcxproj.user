@@ -5,4 +5,7 @@
     <DebuggerFlavor>LinuxDebugger</DebuggerFlavor>
     <DebugChildProcesses>true</DebugChildProcesses>
   </PropertyGroup>
+  <PropertyGroup>
+    <ShowAllFiles>false</ShowAllFiles>
+  </PropertyGroup>
 </Project>

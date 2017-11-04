@@ -16,7 +16,7 @@
 #include <QEventLoop>
 #include <QTimer>
 #include <QDebug>
-#include "ShowPNG.h"
+#include "showimg.h"
 
 #ifndef _PI_
 #define _PI_ 3.14159265f
@@ -61,7 +61,7 @@ private:
 #endif
 	GLfloat xRate, yRate, zZoom, tHigh;
 	int mX, mY;
-	ShowPNG png;
+	ShowImage png;
 	void coord();
 public:
 	inline void setX(GLfloat x) { xRate = x; }

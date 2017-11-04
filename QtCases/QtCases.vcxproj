@@ -98,7 +98,7 @@
     <ClCompile Include="OglMaterial.cpp" />
     <ClCompile Include="OpenGLWindow.cpp" />
     <ClCompile Include="gluiobj.cpp" />
-    <ClCompile Include="ShowPNG.cpp" />
+    <ClCompile Include="showimg.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="OpenGLWindow.h">
@@ -170,7 +170,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="OglMaterial.h" />
-    <ClInclude Include="ShowPNG.h" />
+    <ClInclude Include="showimg.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

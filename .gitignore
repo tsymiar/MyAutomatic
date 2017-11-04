@@ -28,7 +28,7 @@
 *.app
 
 #Others
-LinuxSrvc/Gen
+LinuxSrvc/gSOAPverify/bin
 QtCases/GeneratedFiles
 */Debug
 *.tlog

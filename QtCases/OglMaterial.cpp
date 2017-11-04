@@ -184,7 +184,7 @@ void QOglMaterial::resizeGL(int width, int height)
 	glViewport(0, 0, (GLint)width, (GLint)height);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	GLdouble aspectRatio = (GLfloat)height / (GLfloat)width;
+	GLdouble aspectRatio = (GLfloat)width / (GLfloat)height;
 	GLdouble zNear = 0.1;
 	GLdouble zFar = 100.0;
 
@@ -239,6 +239,7 @@ void QOglMaterial::paintGL()
 	glDisableVertexAttribArray(vertexLocation);
 	glDisableVertexAttribArray(clorLocation);
 #else
+	glTranslatef(0, 0, 0);
 	png.Show();
 	this->coord();
 

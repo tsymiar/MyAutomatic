@@ -1,10 +1,10 @@
-GEN = ../Gen
-OBJ = $(GEN)/obj/
+GEN = `pwd`/bin
+OBJ = ../obj/
 PRJ = $(OBJ)gSOAPverify/
 FILE= ./soap/myweb.wsdl
 FLAG= -Wall -g
 SYS = sysstuts.o
-WEB = sqlDB.o MyWeb.o
+WEB = sqlDB.o mainSoap.o
 SOAP= soapC.o stdsoap2.o soapServer.o
 SQL = -std=c++11 -L/usr/lib/mysql -lmysqlclient
 PTHD= -std=c++11 -lpthread #-lgsoap++#-L/usr/local/gSOAP/lib/libsoap++
@@ -14,28 +14,15 @@ gSOAPverify:$(OUT)
 	g++ $(FLAG) -c ./soap/soapServer.cpp
 	g++ $(FLAG) -c ./sys/sysstuts.cc -std=c++11
 	g++ $(FLAG) -c ./sql/sqlDB.cc $(SQL)
-	g++ $(FLAG) -c ./web/MyWeb.cc $(PTHD)
-ifeq ($(GEN)/, $(wildcard $(GEN)/))
-	@echo "$(GEN)."
-else
-	mkdir $(GEN)/
-endif
+	g++ $(FLAG) -c ./web/mainSoap.cc $(PTHD)
+	[ -z "$(ls $(GEN) &> /dev/null)" ] && mkdir $(GEN) || echo "exist"
 	g++ $(FLAG) -o $(GEN)/gSOAPverify $(SYS) $(SOAP) $(WEB) $(SQL) $(PTHD)
-ifeq ($(PRJ), $(wildcard $(PRJ)))
-	@echo "dir <$(OBJ)> exists."
-else
-ifneq ($(OBJ), $(wildcard $(OBJ)))
-	mkdir $(OBJ) 
-endif
-	mkdir $(PRJ)
-endif
-ifeq ($(FILE), $(wildcard $(FILE)))
-	cp $(FILE) $(GEN)/
-else
-	@echo "file <$(FILE)> don't exist."
-endif
+	$(shell if [ -f $(FILE) ]; then cp $(FILE) $(GEN)/ ;else @echo "file <$(FILE)> don't exist.";fi;)
+	$(shell if [ -d $(PRJ) ]; then rm -rf $(OBJ);fi;)
+	mkdir $(OBJ) $(PRJ)
 	mv ./*.o $(PRJ)
-all:
+	@echo make OK
+all: 
 	if[ `ps -fe| grep gSOAPverify | grep -v grep` -eq 0 ];then killall -9 gSOAPverify;else echo "making gSOAPverify.";fi
 	make clear
 	make
@@ -53,6 +40,6 @@ clean:
 clear:
 	rm -f ./*.o $(GEN)/*.a $(GEN)/*.out $(GEN)/core.* $(PRJ)*.o $(GEN)/gSOAPverify `ls *.o | egrep -v soapC.o stdsoap2.o soapServer.o`
 	rm -f /etc/init.d/gSOAPverify /usr/sbin/gSOAPverify
-	rm -rf $(GEN)
+	rm -rf $(GEN) $(OBJ)
 	rm -rf S77_SOAP \
 	y

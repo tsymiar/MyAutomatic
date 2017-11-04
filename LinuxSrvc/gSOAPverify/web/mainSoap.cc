@@ -1,6 +1,6 @@
 ﻿//
 #include"../inl/_String-inl.h"
-#include	"MyWeb.h"
+#include	"mainSoap.h"
 #include"../sql/sqlDB.h"
 #include"../sys/sysstuts.h"
 #include"../soap/soapStub.h"
@@ -26,7 +26,7 @@ unsigned long dequeue_ip();
 SOAP_SOCKET dequeue(void); //出队列函数
 static unsigned long ips[MAX_QUEUE];
 int logcnt = 0;
-myWeb web;
+mainSoap web;
 
 void * process_queue(void * soap)
 {
@@ -119,7 +119,7 @@ int http_post(struct soap *soap, const char *endpoint, const char *host, int por
 	char* s = strchr(soap->path, '?');
 	if (!s || strcmp(s, "?wsdl"))
 		return SOAP_GET_METHOD;
-	fd = fopen("myweb.wsdl", "rb");
+	fd = fopen("mainSoap.wsdl", "rb");
 #else
 	// 请求WSDL时，传送相应文件
 	// 获取请求的wsdl文件名
@@ -164,7 +164,7 @@ int http_post(struct soap *soap, const char *endpoint, const char *host, int por
 #endif
 }
 
-int myWeb::movedll()
+int mainSoap::movedll()
 {
 	/*
 	_sopen_s(&file, _file, O_RDONLY, SH_DENYNO, _S_IREAD);
