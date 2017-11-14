@@ -30,6 +30,9 @@
 #Others
 LinuxSrvc/gSOAPverify/bin
 QtCases/GeneratedFiles
+QtCases/Makefile
+QtCases/moc_*
+QtCases/ui_*
 */Debug
 *.tlog
 *.log
@@ -41,3 +44,4 @@ QtCases/GeneratedFiles
 *.suo
 *.db
 *.pdb
+QtCases/QtCases

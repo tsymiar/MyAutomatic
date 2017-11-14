@@ -23,7 +23,6 @@
 #define MAX_MENBERS_PER_GROUP 20
 #define MAX_GROUPS 20
 #define ACC_REC "acnts"
-#define DEBUGINFO 0
 //using namespace std;
 //C++11 std与socket.h中bind函数冲突
 int  aimtoquit;
@@ -105,8 +104,9 @@ monite(void *arg)
 		if (rtn == -1) {
 			goto con_err1;
 		};
-		if (DEBUGINFO)
-			printf("rcvd %x,%x\n", tmp[0], tmp[1]);
+#ifdef DEBUGINFO
+		printf("rcvd %x,%x\n", tmp[0], tmp[1]);
+#endif
 		if ((tmp[0] == 0) && (tmp[1] == 0)) {
 			bufs[0] = 1;
 			rtn = new_user((tmp + 8), (tmp + 32));
@@ -124,8 +124,9 @@ monite(void *arg)
 				strcpy((tmp + 32), "user already exists");
 			};
 			send(sendsock, bufs, 256, 0);
-			if (DEBUGINFO)
-				printf("%d and %d \n", bufs[0], bufs[1]);
+#ifdef DEBUGINFO
+			printf("%d and %d \n", bufs[0], bufs[1]);
+#endif
 		}
 		else if ((tmp[0] == 0) && (tmp[1] == 120)) {
 			bufs[0] = 1;
@@ -161,8 +162,9 @@ monite(void *arg)
 			printf("lost connection with %s.\n", name);
 			goto con_err;
 		};
-		if (DEBUGINFO)
-			printf("rcvd %d,%d\n", tmp[0], tmp[1]);
+#ifdef DEBUGINFO
+		printf("rcvd %d,%d\n", tmp[0], tmp[1]);
+#endif
 		bufs[0] = 1;
 		if ((tmp[0] == 0) && (tmp[1] == (char)121)) {
 			bufs[1] = (char)122;
@@ -331,7 +333,7 @@ con_err1:
 #ifdef __linux
 void *
 #else
-unsigned __stdcall 
+unsigned __stdcall
 #endif
 commands(void *arg)
 {
@@ -498,8 +500,9 @@ int _im_(int argc, char *argv[]) {
 		}
 		else
 			printf("accept() OK.\n");
-		if (DEBUGINFO)
-			printf("1:%d\n", recvtemp);
+#ifdef DEBUGINFO
+		printf("1:%d\n", recvtemp);
+#endif
 		sendtemp = accept(listen_socket, (struct sockaddr*)&from, &fromlen);
 
 		if (sendtemp
@@ -519,14 +522,15 @@ int _im_(int argc, char *argv[]) {
 		_beginthreadex(NULL, 0, monite, NULL, 0, &thread_ID);
 #endif
 		c++;
-		if (DEBUGINFO)
+#ifdef DEBUGINFO
 		{
 			printf("2:%d\n", sendtemp);
-			printf("c is : %d", c);
+			printf("c is : %d\n", c);
 		}
-	} while (!(aimtoquit));
-	return 0;
-}
+#endif
+		} while (!(aimtoquit));
+		return 0;
+		}
 
 int main(
 #ifdef __linux
@@ -540,7 +544,7 @@ int main(
 	int argc = 1;
 	char* argv[] = { NULL };
 #endif
-		_im_(argc, argv);
+	_im_(argc, argv);
 	return 0;
 }
 

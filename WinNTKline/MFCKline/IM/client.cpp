@@ -7,7 +7,7 @@ using namespace std;
 SOCKET rcv, out;
 int loggedon = 0;
 CRITICAL_SECTION wrcon;
-int optionum = 0x00;
+st_imusr info;
 
 //参考该函数编写报文处理函数
 void runtime(void* lp) {
@@ -27,7 +27,7 @@ void runtime(void* lp) {
 	} while (1);
 };
 
-int InitChat(char argv[], int argc) {
+int InitChat(st_imusr* imusr) {
 	WSADATA wsaData;
 	static char ipaddr[16];
 	int err = WSAStartup(0x202, &wsaData);
@@ -38,12 +38,17 @@ int InitChat(char argv[], int argc) {
 	}
 	InitializeCriticalSection(&wrcon);
 	SetConsoleTitle("chat client");
-	if (argc == 2) {
-		strcpy_s(ipaddr, argv/*[1]*/);
+	if (imusr == NULL) {
+		strcpy_s(ipaddr, "127.0.0.1");
 	}
 	else {
-		printf_s("enter server address:");
-		scanf_s("%s", &ipaddr, (unsigned)_countof(ipaddr));
+		if (imusr->addr[0] == NULL) 
+			strcpy_s(ipaddr, "127.0.0.1");
+		else
+		{
+			printf_s("enter server address:");
+			scanf_s("%s", &ipaddr, (unsigned)_countof(ipaddr));
+		}
 	};
 	struct sockaddr_in server;
 	server.sin_family = AF_INET;
@@ -84,52 +89,53 @@ unsigned int __stdcall Chat_Msg(void* func)
 	struct LPR lpr;
 	unsigned int thread_ID;
 	static char auxstr[24];
-	static char sndbuf[256]; 
-	do {
-		switch (optionum)
+	static char sndbuf[256];
+	while(info.err==0)
+	switch (info.optionum)
+	{
+	case 0x01: //Regist
+	{
+		sndbuf[0] = 0;
+		sndbuf[1] = 0;
+		printf("name want to use:");
+		scanf_s("%s", (sndbuf + 8), (unsigned)_countof(sndbuf));
+		printf("password:");
+		scanf_s("%s", (sndbuf + 32), (unsigned)_countof(sndbuf));
+		send(out, sndbuf, 256, 0);
+		recv(rcv, sndbuf, 256, 0);
+		if (sndbuf[1] == 0)
+			MessageBox(NULL, "Regist succesfully.", "Regist", MB_OK);
+		else
 		{
-		case 0x01: {//Regist
-			sndbuf[0] = 0;
-			sndbuf[1] = 0;
-			printf("name want to use:");
-			scanf_s("%s", (sndbuf + 8), (unsigned)_countof(sndbuf));
-			printf("password:");
-			scanf_s("%s", (sndbuf + 32), (unsigned)_countof(sndbuf));
-			send(out, sndbuf, 256, 0);
-			recv(rcv, sndbuf, 256, 0);
-			if (sndbuf[1] == 0)
-				MessageBox(NULL, "Regist succesfully.", "Regist", MB_OK);
-			else
-			{
-				MessageBox(NULL, "Regist failed.", "Regist", MB_OK);
-			}
-		} break;
-		case (0x02): {//log
-			sndbuf[0] = 0;
-			sndbuf[1] = (char)120;
-			printf("user name:");
-			scanf_s("%s", (sndbuf + 8), (unsigned)_countof(sndbuf));
-			char title[30];
-			strcpy_s(title, "chat client, logged on as ");
-			strcat_s(title, (sndbuf + 8));
-			printf("password:");
-			scanf_s("%s", (sndbuf + 32), 256);
-			send(out, sndbuf, 256, 0);
-			recv(rcv, sndbuf, 256, 0);
-			if (sndbuf[1] == 120) {
-				MessageBox(NULL, "Logged on successfully.", "Log", MB_OK);
-				SetConsoleTitle(title);
-				loggedon = 1;
-			}
-			else
-				MessageBox(NULL, "Log on failed.", "Log", MB_OK);
-		} break;
-		case 0x00: break;
-		default:
-			MessageBox(NULL, "Please input a valid option.", "Log", MB_OKCANCEL);
-			break;
+			MessageBox(NULL, "Regist failed.", "Regist", MB_OK);
 		}
-	} while (loggedon == 0);
+	}
+	case (0x02): //log
+	{
+		sndbuf[0] = 0;
+		sndbuf[1] = (char)120;
+		printf("user name:");
+		scanf_s("%s", (sndbuf + 8), (unsigned)_countof(sndbuf));
+		char title[30];
+		strcpy_s(title, "chat client, logged on as ");
+		strcat_s(title, (sndbuf + 8));
+		printf("password:");
+		scanf_s("%s", (sndbuf + 32), 256);
+		send(out, sndbuf, 256, 0);
+		recv(rcv, sndbuf, 256, 0);
+		if (sndbuf[1] == 120) {
+			MessageBox(NULL, "Logged on successfully.", "Log", MB_OK);
+			SetConsoleTitle(title);
+			loggedon = 1;
+		}
+		else
+			MessageBox(NULL, "Log on failed.", "Log", MB_OK);
+	}
+	case 0x00: break;
+	default:
+		MessageBox(NULL, "Please set a valid commond.", "Log", MB_OKCANCEL);
+		break;
+	}
 	lpr.sock = rcv;
 	lpr.wrcon = wrcon;
 	_beginthreadex(NULL, 0, (_beginthreadex_proc_type)func, &lpr, 0, &thread_ID);
@@ -141,7 +147,7 @@ unsigned int __stdcall Chat_Msg(void* func)
 		auxstr[0] = onechar;
 		auxstr[1] = 0;
 		fflush(stdin);
-		switch (optionum)
+		switch (info.optionum)
 		{
 		case 0x03: {//QUIT
 			sndbuf[0] = 0;
@@ -150,7 +156,8 @@ unsigned int __stdcall Chat_Msg(void* func)
 			loggedon = 0;
 			break;
 		}
-		case 0x04: {//HELP
+		case 0x04: //HELP
+		{
 			MessageBox(NULL, "[QIUT]\nto quit program\n[help]\nto show this message\n[list]\nto see online user list\n[allgroup]\nto see group list on this server\n[memberof groupname]\nto see user list of this group\n[setinfo newinfo]\nto set personal info\n[info name]\nto see introduction of a user\n[creategroup groupname grouppassword]\nto create a new group\n[joingroup groupname password]\nto join a group\n[quitgroup groupname]\nto leave a group\n[user/groupname message]\nto talk to a user or group\n[password newpasswrd]\nto set password\n", "HELP message", MB_OK);
 			break;
 		}
@@ -226,11 +233,13 @@ unsigned int __stdcall Chat_Msg(void* func)
 			send(out, sndbuf, 256, 0);
 			break;
 		}
-		default: {
+		case 0: break;
+		default: 
+		{
 			sndbuf[0] = 0;
 			sndbuf[1] = 30;
-			if (optionum != 0x00)
-				sprintf_s(sndbuf + 8, 24, "%s", optionum);
+			if (info.optionum != 0x00)
+				sprintf_s(sndbuf + 8, 24, "%x", info.optionum);
 			gets_s(sndbuf + 32, 256);
 			strcpy_s((lpr.msg->lastuser + 32), 256, (sndbuf + 32));
 			strcpy_s((lpr.msg->lastuser + 8), 256, (sndbuf + 8));
@@ -252,9 +261,9 @@ int StartChat(int err, void(*func)(void*))
 		return _beginthreadex(NULL, 0, Chat_Msg, func, 0, NULL);
 }
 
-int SetChatCmd(unsigned int opt)
+int SetChatCmd(unsigned int cmd)
 {
-	return(optionum = opt);
+	return(info.optionum = cmd);
 }
 
 int CloseChat()
