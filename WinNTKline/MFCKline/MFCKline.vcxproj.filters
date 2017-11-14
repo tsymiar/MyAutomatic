@@ -266,6 +266,9 @@
     <ClCompile Include="html\MyHtmlView.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="opencv\mat_test.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="MFCKline.rc">

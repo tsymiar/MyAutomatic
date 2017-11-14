@@ -447,8 +447,8 @@ int OGLKview::diag_staff(int x, int y)
 {
 	OGLKview::Point pt = \
 	{ pt.x = (float)x, pt.y = (float)y };
-	glColor3f(1, 1, 1);
 	glViewport(0, viewsize.ty, viewsize.tw, viewsize.th);
+	glColor3f(1, 1, 1);
 	glBegin(GL_LINES);
 	{
 		glVertex2f(-10.0f, this->xytinker(pt).y);
