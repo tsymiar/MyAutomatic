@@ -291,6 +291,7 @@
     <ClInclude Include="netwk\CTPdev.h" />
     <ClInclude Include="netwk\GEThttp.h" />
     <ClInclude Include="netwk\Simulation.h" />
+    <ClInclude Include="opencv\CvimgMat.h" />
     <ClInclude Include="own\COwnCtl.h" />
     <ClInclude Include="own\Screen-Sharing.h" />
     <ClInclude Include="pthdpool\pthdpool.h" />
@@ -333,7 +334,7 @@
     <ClCompile Include="netwk\CTPdev.cpp" />
     <ClCompile Include="netwk\GEThttp.cpp" />
     <ClCompile Include="netwk\Simulation.cpp" />
-    <ClCompile Include="opencv\mat_test.cpp" />
+    <ClCompile Include="opencv\CvimgMat.cc" />
     <ClCompile Include="own\COwnCtl.cpp" />
     <ClCompile Include="own\Screen-Sharing.cpp" />
     <ClCompile Include="pthdpool\pthdpool.cc" />

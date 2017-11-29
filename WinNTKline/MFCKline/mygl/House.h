@@ -13,7 +13,7 @@
 #include "../Def/MacroDef.h"
 
 #define INTS int
-#define REAL float
+#define REAL float /* 4 byte 		*/
 #define __error   0
 #define NoError   1
 #define FALSE     0
@@ -40,8 +40,7 @@
 #define INT2U	unsigned short		/* 2 byte unsigned int	*/
 #define	INT4S	signed   long		/* 4 byte signed int	*/
 #define	INT4U	unsigned long		/* 4 byte unsigned int	*/
-#define INT8U	unsigned long	long	/* 8 byte unsigned int	*/
-#define	FLOAT	float			/* 4 byte 		*/
+#define INT8U	unsigned long	long	/* 8 byte unsigned int	*/		
 
 /* for material type	*/
 #define DIFFUSE		1
