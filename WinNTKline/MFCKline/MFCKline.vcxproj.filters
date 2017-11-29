@@ -156,6 +156,9 @@
     <ClInclude Include="Idx\auto_tchar.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="opencv\CvimgMat.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MFCKline.cpp">
@@ -266,7 +269,7 @@
     <ClCompile Include="html\MyHtmlView.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="opencv\mat_test.cpp">
+    <ClCompile Include="opencv\CvimgMat.cc">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
