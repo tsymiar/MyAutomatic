@@ -155,6 +155,9 @@
     <ClCompile Include="..\MFCKline\html\cefWebKit.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\MFCKline\opencv\CvimgMat.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\MFCKline\MFCKline.rc">

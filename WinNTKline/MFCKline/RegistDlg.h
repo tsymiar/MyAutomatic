@@ -31,6 +31,8 @@ public:
 	//CWebBrowser2 m_browser;
 	char m_IP[32];
 	CStatic m_hint;
+	LOGFONT m_lf;
+	CFont m_font;
 	CToolTipCtrl m_Mytip;
 	CefRefPtr<CEFWebKit> m_cWebClient;
 private:
