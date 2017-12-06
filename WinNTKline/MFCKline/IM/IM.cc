@@ -32,7 +32,7 @@ SOCKET
 #else
 int
 #endif
-recvtemp, sendtemp, listen_socket;
+listen_socket, recv_socket, send_socket;
 #ifdef __linux
 pthread_mutexattr_t attr;
 #endif
@@ -62,13 +62,13 @@ struct LINE {
 #else
 	int
 #endif
-		recvsocket;
+		sock_r;
 #ifdef _WIN32
 	SOCKET
 #else
 	int
 #endif
-		sendsocket;
+		sock_s;
 } online[MAX_ONLINE];
 
 void save_acnt();
@@ -94,226 +94,213 @@ monite(void *arg)
 #else
 	int
 #endif
-		recvsock = recvtemp,//接收
-		sendsock = sendtemp;//发送
+		r_sock = recv_socket,//接收
+		s_sock = send_socket;//发送
 	int c, rtn, loggedon = 0;
 	int qq = 1;
 	char tmp[256], bufs[256], name[24];
 	do {
-		rtn = recv(recvsock, tmp, 256, 0);
+		rtn = recv(r_sock, tmp, 256, 0);
 		if (rtn == -1) {
 			goto con_err1;
 		};
 #ifdef DEBUGINFO
-		printf("rcvd %x,%x\n", tmp[0], tmp[1]);
-#endif
+		printf("1rcv[%0x,%0x]:%s\n", tmp[0], tmp[1], tmp + 8);
+#endif  // tmp inc--8 bit crc_head, 24 bit username, 24 bit password.
 		if ((tmp[0] == 0) && (tmp[1] == 0)) {
-			bufs[0] = 1;
+			bufs[0] = bufs[1] = 0;
 			rtn = new_user((tmp + 8), (tmp + 32));
-			if (rtn == -1) {
+			if (rtn == (bufs[2] = -1)) {
 				printf("new user: %s\n", (tmp + 8));
 				join_group(0, (tmp + 8), (char*)"all");
-				bufs[1] = 0;
 			}
-			else if (rtn == -2) {
-				bufs[1] = 1;
-				strcpy((tmp + 32), "too many users");
+			else if (rtn == (bufs[2] = -2)) {
+				strcpy((bufs + 8), "too many users");
 			}
 			else {
-				bufs[1] = 1;
-				strcpy((tmp + 32), "user already exists");
+				bufs[2] = -3;
+				strcpy((bufs + 8), "user already exists");
 			};
-			send(sendsock, bufs, 256, 0);
+			send(s_sock, bufs, strlen(bufs) + 1, 0);
 #ifdef DEBUGINFO
-			printf("%d and %d \n", bufs[0], bufs[1]);
+			printf("bufs[%0x,%0x]:%s\n", bufs[0], bufs[1], bufs + 8);
 #endif
 		}
-		else if ((tmp[0] == 0) && (tmp[1] == 120)) {
-			bufs[0] = 1;
+		else if ((tmp[0] == 0) && (tmp[1] == 0x1)) {
+			bufs[0] = 0;
+			bufs[1] = 1;
+			bufs[2] = rtn = user_auth((tmp + 8), (tmp + 32));
 			strcpy(name, (tmp + 8));
-			rtn = user_auth((tmp + 8), (tmp + 32));
 			if (rtn == 0) {
 				printf("%s logged on\n", (tmp + 8));
-				bufs[1] = (char)120;
 				loggedon = 1;
 			}
-			else if (rtn == 1) {
-				bufs[1] = (char)121;
-				strcpy((tmp + 32), "already online");
+			else if (rtn == (bufs[1] = 1)) {
+				strcpy((tmp + 8), "already online");
 			}
 			else {
-				bufs[1] = (char)121;
-				strcpy((tmp + 32), "wrong name or password");
+				strcpy((tmp + 8), "wrong name or password");
 			};
-			send(sendsock, bufs, 256, 0);
+			send(s_sock, bufs, 256, 0);
 		}
 	} while (loggedon == 0);
 	for (c = 0; c<MAX_ONLINE; c++) {
 		if (strlen(online[c].name) == 0) {
-			online[c].recvsocket = recvsock;
-			online[c].sendsocket = sendsock;
+			online[c].sock_r = r_sock;
+			online[c].sock_s = s_sock;
 			strcpy(online[c].name, tmp + 8);
 			break;
 		};
 	};
 	do {
-		rtn = recv(recvsock, tmp, 256, 0);
+		rtn = recv(r_sock, tmp, 256, 0);
 		if (!(rtn == 256)) {
 			printf("lost connection with %s.\n", name);
 			goto con_err;
 		};
 #ifdef DEBUGINFO
-		printf("rcvd %d,%d\n", tmp[0], tmp[1]);
+		printf("2rcv[%x,%x]:%s\n", tmp[0], tmp[1], tmp + 8);
 #endif
-		bufs[0] = 1;
-		if ((tmp[0] == 0) && (tmp[1] == (char)121)) {
-			bufs[1] = (char)122;
-			loggedon = 0;
-			send(sendsock, bufs, 256, 0);
-			printf("%s quit \n", name);
-		}
-		else if ((tmp[0] == 0) && (tmp[1] == (char)1)) {
-			rtn = get_user_idx(name);
-			strcpy(users[rtn].intro, (tmp + 32));
-		}
-		else if ((tmp[0] == 0) && (tmp[1] == 122)) {
-			rtn = get_user_idx(name);
-			strcpy(users[rtn].passwd, (tmp + 8));
-			bufs[1] = (char)123;
-			send(sendsock, bufs, 256, 0);
-		}
-
-		else if ((tmp[0] == 0) && (tmp[1] == 20)) {
-			bufs[1] = (char)21;
-			strcpy((bufs + 32), "onlien user list:");
-			send(sendsock, bufs, 256, 0);
-			for (c = 0; c<MAX_ONLINE; c++) {
-				if (strlen(online[c].name) >> 0) {
-					bufs[1] = (char)20;
-					strcpy((bufs + 8), online[c].name);
-					send(sendsock, bufs, 256, 0);
-				};
-			};
-		}
-
-		else if ((tmp[0] == 0) && (tmp[1] == 15)) {
-			bufs[1] = (char)21;
-			strcpy((bufs + 32), "groups list:");
-			send(sendsock, bufs, 256, 0);
-			for (c = 0; c<MAX_GROUPS; c++) {
-				if (strlen(groups[c].name) >> 0) {
-					bufs[1] = (char)20;
-					strcpy((bufs + 8), groups[c].name);
-					send(sendsock, bufs, 256, 0);
-				};
-			};
-		}
-
-		else if ((tmp[0] == 0) && (tmp[1] == 16)) {
-			bufs[1] = (char)21;
-			rtn = get_group_idx(tmp + 8);
-			if (rtn == -1) {
-				strcpy((bufs + 32), "no such group");
-				send(sendsock, bufs, 256, 0);
-			}
-			else {
-				strcpy((bufs + 32), "users of this group:");
-				send(sendsock, bufs, 256, 0);
-				bufs[1] = 20;
-				for (c = 0; c<MAX_MENBERS_PER_GROUP; c++) {
-					if (strlen(groups[rtn].member[c]) >> 0) {
-						strcpy((bufs + 8), groups[rtn].member[c]);
-						send(sendsock, bufs, 256, 0);
+		memcpy(bufs, tmp, 2);
+		if (tmp[0] == 0)
+		{
+			switch (tmp[1])
+			{
+			case 0x3:
+			{
+				bufs[2] = 0;
+				loggedon = 0;
+				send(s_sock, bufs, 256, 0);
+				printf("%s quit \n", name);
+			} break;
+			case 0x4:
+			{
+				bufs[2] = 0;
+				rtn = get_user_idx(name);
+				strcpy(users[rtn].intro, (tmp + 32));
+				send(s_sock, bufs, 256, 0);
+			} break;
+			case 0x5:
+			{
+				bufs[2] = 0;
+				rtn = get_user_idx(name);
+				strcpy(users[rtn].passwd, (tmp + 32));
+				send(s_sock, bufs, 256, 0);
+			} break;
+			case 0x6:
+			{
+				bufs[2] = 0;
+				strcpy((bufs + 8), "onlien user list:");
+				send(s_sock, bufs, 256, 0);
+				for (c = 0; c < MAX_ONLINE; c++) {
+					if (strlen(online[c].name) >> 0) {
+						bufs[2] = c;
+						strcpy((bufs + 8), online[c].name);
+						send(s_sock, bufs, 256, 0);
 					};
 				};
-			};
-		}
-		else if ((tmp[0] == 0) && (tmp[1] == 11)) {
-			rtn = host_group((tmp + 8), (tmp + 32));
-			if (rtn == -1) {
-				strcpy((bufs + 32), "rejected");
-				bufs[1] = 13;
-			}
-			else {
-				printf("new group: %s\n", (tmp + 8));
-				join_group(rtn, name, (tmp + 32));
-				bufs[1] = 12;
-			}
-			send(sendsock, bufs, 256, 0);
-		}
-
-		else if ((tmp[0] == 0) && (tmp[1] == 10)) {
-			rtn = join_group(get_group_idx(tmp + 8), name, (tmp + 32));
-			if (rtn == -1) {
-				strcpy((bufs + 32), "you have already in this group");
-				bufs[1] = 11;
-			}
-			else if (rtn == -2) {
-				strcpy((bufs + 32), "wrong password to this group");
-				bufs[1] = 11;
-			}
-			else {
-				bufs[1] = 10;
-			};
-			send(sendsock, bufs, 256, 0);
-		}
-
-		else if ((tmp[0] == 0) && (tmp[1] == 12)) {
-			rtn = leave_group(get_group_idx(tmp + 8), name);
-			if (rtn == 0)
-				strcpy((bufs + 32), "leave group successfully");
-			else
-				strcpy((bufs + 32), "you are not in this group");
-			bufs[1] = 14;
-			send(sendsock, bufs, 256, 0);
-		}
-		else if ((tmp[0] == 0) && (tmp[1] == 21)) {
-			rtn = get_user_idx(tmp + 8);
-			if (rtn >= 0) {
-				strcpy((bufs + 8), (tmp + 8));
-				strcpy((bufs + 32), users[rtn].intro);
-			}
-			else {
-				strcpy((bufs + 8), "system info");
-				strcpy((bufs + 32), "no such user");
-			}
-			bufs[1] = 22;
-			send(sendsock, bufs, 256, 0);
-		}
-		else if ((tmp[0] == 0) && (tmp[1] == 30)) { //loop1
-			rtn = get_group_idx(tmp + 8);
-			if (rtn == -1) {//rtn=-1
-				rtn = user_to_line(tmp + 8);
+			} break;
+			case 0x7:
+			{
+				bufs[2] = 0;
+				strcpy((bufs + 8), "groups list:");
+				send(s_sock, bufs, 256, 0);
+				for (c = 0; c < MAX_GROUPS; c++) {
+					if (strlen(groups[c].name) >> 0) {
+						bufs[1] = c;
+						strcpy((bufs + 8), groups[c].name);
+						send(s_sock, bufs, 256, 0);
+					};
+				};
+			} break;
+			case 0x8:
+			{
+				bufs[2] = rtn = get_group_idx(tmp + 8);
 				if (rtn == -1) {
-					bufs[1] = 32;
+					strcpy((bufs + 8), "no such group");
 				}
-				else {          //loop0
-					bufs[1] = 31;
-					strcpy((bufs + 32), (tmp + 32));
-					strcpy((bufs + 8), name);
-					send(online[rtn].sendsocket, bufs, 256, 0);
-					bufs[1] = 30;
-				};    //loop0
-
-				send(sendsock, bufs, 256, 0);
-			}//rtn=-1
-			else {
-				for (c = 0; c<MAX_MENBERS_PER_GROUP; c++) {
-					if (!strlen(groups[rtn].member[c]) == 0)
-					{
-						bufs[1] = 31;
-						int sss = user_to_line(groups[rtn].member[c]);
-						if (!(sss == -1)) {
-							strcpy((bufs + 32), (tmp + 32));
-							strcpy((bufs + 8), name);
-							send(online[sss].sendsocket, bufs, 256, 0);
-						}//if sss
-					}//if strlen
-				}//for
-				bufs[1] = 30;
-				send(sendsock, bufs, 256, 0);
-			}//else
-		};//else if
+				else {
+					strcpy((bufs + 8), "users of this group:");
+					for (c = 0; c < MAX_MENBERS_PER_GROUP; c++) {
+						if (strlen(groups[rtn].member[c]) >> 0) {
+							strcpy((bufs + 8 * (c + 1)), groups[rtn].member[c]);
+						};
+					};
+				};
+				send(s_sock, bufs, 256, 0);
+			} break;
+			case 0x9:
+			{
+				bufs[2] = rtn = host_group((tmp + 8), (tmp + 32));
+				if (rtn == -1) {
+					strcpy((bufs + 8), "rejected");
+				}
+				else {
+					printf("new group: %s\n", (tmp + 8));
+					join_group(rtn, name, (tmp + 32));
+				}
+				send(s_sock, bufs, 256, 0);
+			} break;
+			case 0xA:
+			{
+				bufs[2] = rtn = join_group(get_group_idx(tmp + 8), name, (tmp + 32));
+				if (rtn == -1) {
+					strcpy((bufs + 8), "you have already in this group");
+				}
+				else if (rtn == -2) {
+					strcpy((bufs + 8), "wrong password to this group");
+				}
+				send(s_sock, bufs, 256, 0);
+			} break;
+			case 0xB:
+			{
+				bufs[2] = rtn = leave_group(get_group_idx(tmp + 8), name);
+				if (rtn == 0)
+					strcpy((bufs + 8), "leave group successfully");
+				else
+					strcpy((bufs + 8), "you are not in this group");
+				send(s_sock, bufs, 256, 0);
+			} break;
+			case 0xC:
+			{
+				bufs[2] = rtn = get_user_idx(tmp + 8);
+				if (rtn >= 0) {
+					strcpy((bufs + 8), (tmp + 8));
+					strcpy((bufs + 32), users[rtn].intro);
+				}
+				else {
+					strcpy((bufs + 8), "system info: no such user! ");
+				}
+				send(s_sock, bufs, 256, 0);
+			} break;
+			case 0xD:
+			{ //loop1
+				bufs[2] = rtn = get_group_idx(tmp + 8);
+				if (rtn == -1) {//rtn=-1
+					if (-1 != (bufs[2] = user_to_line(tmp + 8))) {
+						strcpy((bufs + 8), name);
+						strcpy((bufs + 32), (tmp + 32));
+						send(online[rtn].sock_s, bufs, 256, 0);
+					};    //loop0
+				}//rtn=-1
+				else {
+					for (c = 0; c < MAX_MENBERS_PER_GROUP; c++) {
+						if (!strlen(groups[rtn].member[c]) == 0)
+						{
+							bufs[2] = -3;
+							int sss = user_to_line(groups[rtn].member[c]);
+							if (!(sss == -1)) {
+								strcpy((bufs + 8), name);
+								strcpy((bufs + 32), (tmp + 32));
+								send(online[sss].sock_s, bufs, 256, 0);
+							}//if sss
+						}//if strlen
+					}//for
+					send(s_sock, bufs, 256, 0);
+				}//else
+			} break;
+			}
+		}
 	} while (loggedon == 1);
 con_err:
 	rtn = user_to_line(name);
@@ -321,11 +308,11 @@ con_err:
 
 con_err1:
 #ifdef _WIN32
-	closesocket(recvsock);
-	closesocket(sendsock);
+	closesocket(r_sock);
+	closesocket(s_sock);
 #else
-	close(recvsock);
-	close(sendsock);
+	close(r_sock);
+	close(s_sock);
 #endif
 	return NULL;
 };
@@ -363,11 +350,11 @@ commands(void *arg)
 			rtn = user_to_line(name);
 			if (!(rtn == -1)) {
 #ifdef _WIN32
-				closesocket(online[rtn].recvsocket);
-				closesocket(online[rtn].sendsocket);
+				closesocket(online[rtn].sock_r);
+				closesocket(online[rtn].sock_s);
 #else
-				close(online[rtn].recvsocket);
-				close(online[rtn].sendsocket);
+				close(online[rtn].sock_r);
+				close(online[rtn].sock_s);
 #endif
 				printf("user %s kicked !\n", name);
 			};
@@ -485,9 +472,9 @@ int _im_(int argc, char *argv[]) {
 			)sizeof(from);
 	int c = 0;
 	do {
-		recvtemp = accept(listen_socket, (struct sockaddr*)&from, &fromlen);
+		recv_socket = accept(listen_socket, (struct sockaddr*)&from, &fromlen);
 
-		if (recvtemp
+		if (recv_socket
 #ifdef _WIN32
 			== INVALID_SOCKET) {
 			std::cerr << "accept() failed error " << WSAGetLastError();
@@ -501,11 +488,11 @@ int _im_(int argc, char *argv[]) {
 		else
 			printf("accept() OK.\n");
 #ifdef DEBUGINFO
-		printf("1:%d\n", recvtemp);
+		printf("1: %d\n", recv_socket);
 #endif
-		sendtemp = accept(listen_socket, (struct sockaddr*)&from, &fromlen);
+		send_socket = accept(listen_socket, (struct sockaddr*)&from, &fromlen);
 
-		if (sendtemp
+		if (send_socket
 #ifdef _WIN32
 			== INVALID_SOCKET) {
 			std::cerr << "accept() failed error " << WSAGetLastError();
@@ -524,11 +511,11 @@ int _im_(int argc, char *argv[]) {
 		c++;
 #ifdef DEBUGINFO
 		{
-			printf("2:%d\n", sendtemp);
-			printf("c is : %d\n", c);
+			printf("2: %d\n", send_socket);
 		}
 #endif
 		} while (!(aimtoquit));
+		printf("c = %d\n", c);
 		return 0;
 		}
 

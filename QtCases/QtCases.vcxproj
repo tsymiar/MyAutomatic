@@ -62,7 +62,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <OutputFile>$(OutDir)\$(ProjectName).exe</OutputFile>
-      <AdditionalLibraryDirectories>$(OPENCV)\lib\$(Configuration);$(libPNG)\lib\$(Configuration);$(QTDIR)\lib;$(QTDIR)\plugins\platforms;$(SolutionDir)MFCKline\GL\lib;$(SolutionDir)MFCKline\font\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(QTDIR)\lib;$(QTDIR)\plugins\platforms;$(libPNG)\lib\$(Configuration);$(OPENCV)\lib\$(Configuration);$(SolutionDir)MFCKline\GL\lib;$(SolutionDir)MFCKline\font\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>qtmaind.lib;Qt5Cored.lib;Qt5Guid.lib;Qt5Networkd.lib;Qt5AxContainerd.lib;Qt5AxBased.lib;Qt5OpenGLd.lib;Qt5QuickWidgetsd.lib;Qt5SerialPortd.lib;Qt5Svgd.lib;Qt5UiToolsd.lib;Qt5WebSocketsd.lib;Qt5Widgetsd.lib;Qt5Xmld.lib;opengl32.lib;glu32.lib;libpng16.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/FORCE:MULTIPLE %(AdditionalOptions)</AdditionalOptions>

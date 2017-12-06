@@ -100,13 +100,13 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_TESTAPIS_;_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(libPNG);$(CEFDIR);$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\font;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap;$(SolutionDir)MFCKline</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(libPNG);$(CEFDIR);$(OPENCV)\include;$(SolutionDir)MFCKline;$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\font;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4819</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalLibraryDirectories>$(libPNG)\lib\$(Configuration);$(CEFDIR)\$(Configuration);$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\font\lib;$(SolutionDir)MFCKline\GL\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glu32.lib;opengl32.lib;libpng16.lib;zlib.lib;thosttraderapi.lib;thostmduserapi.lib;libcef.lib;libcef_dll_wrapper.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\GL\lib;$(SolutionDir)MFCKline\font\lib;$(CEFDIR)\$(Configuration);$(libPNG)\lib\$(Configuration);$(OPENCV)\lib\$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glu32.lib;opengl32.lib;libpng16.lib;zlib.lib;thosttraderapi.lib;thostmduserapi.lib;libcef.lib;libcef_dll_wrapper.lib;opencv_calib3d330d.lib;opencv_highgui330d.lib;opencv_photo330d.lib;opencv_video330d.lib;opencv_core330d.lib;opencv_imgcodecs330d.lib;opencv_shape330d.lib;opencv_videoio330d.lib;opencv_dnn330d.lib;opencv_imgproc330d.lib;opencv_stitching330d.lib;opencv_videostab330d.lib;opencv_features2d330d.lib;opencv_ml330d.lib;opencv_superres330d.lib;opencv_flann330d.lib;opencv_objdetect330d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -243,6 +243,7 @@
     <ClCompile Include="..\MFCKline\netwk\ChannelCollector.cpp" />
     <ClCompile Include="..\MFCKline\netwk\CTPdev.cpp" />
     <ClCompile Include="..\MFCKline\netwk\Simulation.cpp" />
+    <ClCompile Include="..\MFCKline\opencv\CvimgMat.cc" />
     <ClCompile Include="..\MFCKline\own\Screen-Sharing.cpp" />
     <ClCompile Include="..\MFCKline\RegistDlg.cpp" />
     <ClCompile Include="..\MFCKline\security\encoding.cc" />

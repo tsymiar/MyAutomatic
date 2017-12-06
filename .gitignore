@@ -45,3 +45,5 @@ QtCases/ui_*
 *.db
 *.pdb
 QtCases/QtCases
+*.merged
+*.recipe
