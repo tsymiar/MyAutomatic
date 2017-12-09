@@ -3,21 +3,22 @@ OBJ = ../obj/
 PRJ = $(OBJ)gSOAPverify/
 FILE= ./soap/myweb.wsdl
 FLAG= -Wall -g
-SYS = sysstuts.o
+SYS = sysstatus.o
 WEB = sqlDB.o mainSoap.o
 SOAP= soapC.o stdsoap2.o soapServer.o
 SQL = -std=c++11 -L/usr/lib/mysql -lmysqlclient
 PTHD= -std=c++11 -lpthread #-lgsoap++#-L/usr/local/gSOAP/lib/libsoap++
+FLAG += -DMY_DEBUG
 gSOAPverify:$(OUT)
 	g++ $(FLAG) -c ./soap/soapC.cpp
 	g++ -g -c ./soap/stdsoap2.cpp
 	g++ $(FLAG) -c ./soap/soapServer.cpp
-	g++ $(FLAG) -c ./sys/sysstuts.cc -std=c++11
+	g++ $(FLAG) -c ./sys/sysstatus.cc -std=c++11
 	g++ $(FLAG) -c ./sql/sqlDB.cc $(SQL)
 	g++ $(FLAG) -c ./web/mainSoap.cc $(PTHD)
 	[ -z "$(ls $(GEN) &> /dev/null)" ] && mkdir $(GEN) || echo "exist"
 	g++ $(FLAG) -o $(GEN)/gSOAPverify $(SYS) $(SOAP) $(WEB) $(SQL) $(PTHD)
-	$(shell if [ -f $(FILE) ]; then cp $(FILE) $(GEN)/ ;else @echo "file <$(FILE)> don't exist.";fi;)
+	$(shell if [ -f $(FILE) ]; then if [ -d $(GEN) ]; then cp $(FILE) $(GEN)/;fi;else @echo "file <$(FILE)> don't exist.";fi;)
 	$(shell if [ -d $(PRJ) ]; then rm -rf $(OBJ);fi;)
 	mkdir $(OBJ) $(PRJ)
 	mv ./*.o $(PRJ)

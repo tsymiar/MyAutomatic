@@ -2,7 +2,7 @@
 #include"../inl/_String-inl.h"
 #include	"mainSoap.h"
 #include"../sql/sqlDB.h"
-#include"../sys/sysstuts.h"
+#include"../sys/sysstatus.h"
 #include"../soap/soapStub.h"
 #include"../soap/myweb.nsmap"
 //#pragma comment(lib, "pthreads.2/pthreadVC2.lib") 
@@ -209,7 +209,7 @@ int mainSoap::movedll()
 int soap_ser(int argc, char** argv)
 {
 #ifdef MY_DEBUG
-	argc = 3; argv[1] = "8080";
+	argc = 3; argv[1] = (char*)"8080";
 #endif // MY_DEBUG
 	if (argv[1] == nullptr)
 	{

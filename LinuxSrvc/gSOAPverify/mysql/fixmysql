@@ -1,7 +1,8 @@
 #!/bin/sh
 echo 重启mysql
+sudo mysqld stop
 sudo /etc/init.d/mysql restart
 echo mysqld_safe
 sudo mysqld_safe --user=mysql --skip-grant-tables --skip-networking
-echo 输入密码
+echo 输入mysql密码
 sudo mysql -u root -p
