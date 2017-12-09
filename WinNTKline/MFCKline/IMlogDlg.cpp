@@ -36,6 +36,9 @@ void IMlogDlg::PostNcDestroy()
 
 void IMlogDlg::OnBnClickedOk()
 {
+	GetDlgItem(IDC_ACNT)->GetWindowText(m_strAcnt);
+	GetDlgItem(IDC_PSW)->GetWindowText(m_strPsw);
+	SetLogInfo((LPSTR)(LPCSTR)m_strAcnt, (LPSTR)(LPCSTR)m_strPsw);
 	CDialogEx::OnOK();
 	//GetDlgItem(IDC_LISTFRND)->ShowWindow(SW_SHOW);
 }
