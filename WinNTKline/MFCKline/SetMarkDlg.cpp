@@ -21,6 +21,15 @@ BEGIN_MESSAGE_MAP(SetMarkDlg, CDialogEx)
 	ON_BN_CLICKED(IDOK, &SetMarkDlg::OnBnClickedOk)
 END_MESSAGE_MAP()
 
+int SetMarkDlg::SetTitle(CString title)
+{
+	if (!title.IsEmpty())
+		::SetWindowText(this->m_hWnd, title);
+	else
+		return 1;
+	return 0;
+}
+
 CString & SetMarkDlg::GetMark(CString& text, CString& title)
 {
 	if (!title.IsEmpty())

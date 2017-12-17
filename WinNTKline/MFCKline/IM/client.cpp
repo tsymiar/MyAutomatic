@@ -92,6 +92,7 @@ unsigned int __stdcall Chat_Msg(void* func)
 	static char rcvbuf[256];
 	dlgmsg.sock = rcv;
 	dlgmsg.wrcon = wrcon;
+	int rcvlen, curlen = 0;
 	_beginthreadex(NULL, 0, (_beginthreadex_proc_type)func, &dlgmsg, 0, &thread_ID);
 	while (info.err == 0)
 	{
@@ -110,15 +111,18 @@ unsigned int __stdcall Chat_Msg(void* func)
 			char title[64];
 			sndbuf[0] = 0;
 			sndbuf[1] = 0x1;
-			strcpy_s(title, "Successfully login as ");
-			memcpy(title + 22, info.usr, 24);
+			strcpy_s(title, "Successfully log in as ");
+			memcpy(title + 24, info.usr, 24);
 			memcpy(sndbuf + 8, info.usr, 24);
 			memcpy(sndbuf + 32, info.psw, 24);
 			send(out, sndbuf, 256, 0);
-			recv(rcv, rcvbuf, 256, 0);
+			rcvlen = recv(rcv, rcvbuf, 256, 0);
 			if (rcvbuf[2] == 0) {
-				MessageBox(NULL, title, "Login", MB_OK);
-				SetConsoleTitle(title);
+				if (curlen != rcvlen && rcvlen != 0)
+				{
+					MessageBox(NULL, title, "Login", MB_OK);
+					SetConsoleTitle(title);
+				}
 				loggedon = 1;
 				break;
 			}
@@ -269,6 +273,7 @@ unsigned int __stdcall Chat_Msg(void* func)
 			return 0;
 		}
 		};
+		curlen = rcvlen;
 		LeaveCriticalSection(&wrcon);
 	}
 	return 0;
@@ -289,9 +294,15 @@ int SetChatCmd(unsigned int cmd)
 
 int SetLogInfo(char * usr, char * psw)
 {
+	memset(info.usr, 0, 24); 
+	memset(info.psw, 0, 24);
 	memcpy(info.usr, usr, strlen(usr) + 1);
 	memcpy(info.psw, psw, strlen(psw) + 1);
-	return 0;
+	char logmsg[64] = { 0,0x01 };
+	memcpy(logmsg + 8, info.usr, 24);
+	memcpy(logmsg + 32, info.psw, 24);
+	send(out, logmsg, 64, 0);
+	return loggedon;
 }
 
 int CloseChat()

@@ -20,6 +20,8 @@ IMlogDlg::~IMlogDlg()
 void IMlogDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_ACNT, m_editUsr);
+	DDX_Control(pDX, IDC_PSW, m_editPsw);
 }
 
 BEGIN_MESSAGE_MAP(IMlogDlg, CDialogEx)
@@ -33,12 +35,20 @@ void IMlogDlg::PostNcDestroy()
 	delete this;
 }
 
+BOOL IMlogDlg::OnInitDialog()
+{
+	CDialogEx::OnInitDialog();
+	m_editUsr.SetLimitText(24);
+	m_editPsw.SetLimitText(24);
+	return 0;
+}
+
 
 void IMlogDlg::OnBnClickedOk()
 {
 	GetDlgItem(IDC_ACNT)->GetWindowText(m_strAcnt);
 	GetDlgItem(IDC_PSW)->GetWindowText(m_strPsw);
-	SetLogInfo((LPSTR)(LPCSTR)m_strAcnt, (LPSTR)(LPCSTR)m_strPsw);
-	CDialogEx::OnOK();
+	if (SetLogInfo((LPSTR)(LPCSTR)m_strAcnt, (LPSTR)(LPCSTR)m_strPsw))
+		CDialogEx::OnOK();
 	//GetDlgItem(IDC_LISTFRND)->ShowWindow(SW_SHOW);
 }
