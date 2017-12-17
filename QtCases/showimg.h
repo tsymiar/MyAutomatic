@@ -2,10 +2,9 @@
 #include <cmath>  
 #include <cstdarg>
 #include <iostream> 
-#include <png.h>  
-#include <zlib.h>
 #include <QtOpenGL/QGL>
 #include <QDebug>
+#include <png.h>
 
 class ShowImage
 {
