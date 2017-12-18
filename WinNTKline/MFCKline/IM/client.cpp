@@ -5,25 +5,25 @@
 using namespace std;
 
 SOCKET rcv, out;
-int loggedon = 0;
+int logstatus = 0;
 CRITICAL_SECTION wrcon;
 st_imusr info;
 
 //参考该函数编写报文处理函数
 void runtime(void* lp) {
 	int feedback;
-	static char cmd[256];
-	struct LPR* lpr = (struct LPR*)lp;
+	static char buff[256];
+	struct CRITICALMSG* msg = (struct CRITICALMSG*)lp;
 	do {
-		feedback = recv(lpr->sock, cmd, 256, 0);
+		feedback = recv(msg->sock, buff, 256, 0);
 		if (!(feedback == 256)) {
 			Sleep(100);
-			printf("connection lost.\n");
+			MessageBox(NULL, "connection lost.", "client", MB_OK);
 			exit(0);
 		};
-		EnterCriticalSection(&lpr->wrcon);
+		EnterCriticalSection(&msg->wrcon);
 		'...';
-		LeaveCriticalSection(&lpr->wrcon);
+		LeaveCriticalSection(&msg->wrcon);
 	} while (1);
 };
 
@@ -85,15 +85,17 @@ int InitChat(st_imusr* imusr) {
 
 unsigned int __stdcall Chat_Msg(void* func)
 {
-	struct LPR dlgmsg = { NULL };
+	struct CRITICALMSG sockmsg = { NULL };
 	unsigned int thread_ID;
 	static char auxstr[24];
+	static char title[64];
 	static char sndbuf[256];
 	static char rcvbuf[256];
-	dlgmsg.sock = rcv;
-	dlgmsg.wrcon = wrcon;
+	sockmsg.sock = rcv;
+	sockmsg.wrcon = wrcon;
 	int rcvlen, curlen = 0;
-	_beginthreadex(NULL, 0, (_beginthreadex_proc_type)func, &dlgmsg, 0, &thread_ID);
+	int k = 0;
+	_beginthreadex(NULL, 0, (_beginthreadex_proc_type)func, &sockmsg, 0, &thread_ID);
 	while (info.err == 0)
 	{
 		EnterCriticalSection(&wrcon);
@@ -102,175 +104,130 @@ unsigned int __stdcall Chat_Msg(void* func)
 		auxstr[0] = onechar;
 		auxstr[1] = 0;
 		fflush(stdin);*/
-		switch (info.optionum)
+		if (k == 0)
+		{
+			memset(sndbuf, 0, 256);
+			send(out, sndbuf, 256, 0);
+			k++;
+			if (k == INT_MAX)
+				k = 1;
+		}
+		rcvlen = recv(rcv, rcvbuf, 256, 0);
+		sndbuf[0] = 0;
+		sndbuf[1] = info.optionum;
+		switch (sndbuf[1])
 		{
 		case 0:
 			continue;
-		case 0x01: //log
-		{
-			char title[64];
-			sndbuf[0] = 0;
-			sndbuf[1] = 0x1;
-			strcpy_s(title, "Successfully log in as ");
-			memcpy(title + 24, info.usr, 24);
-			memcpy(sndbuf + 8, info.usr, 24);
-			memcpy(sndbuf + 32, info.psw, 24);
-			send(out, sndbuf, 256, 0);
-			rcvlen = recv(rcv, rcvbuf, 256, 0);
-			if (rcvbuf[2] == 0) {
+		case 1:
+			if (info.usr != NULL)
+				strcpy_s(title, info.usr);
+			if (rcvbuf[2] == 0x30) {
 				if (curlen != rcvlen && rcvlen != 0)
-				{
-					MessageBox(NULL, title, "Login", MB_OK);
 					SetConsoleTitle(title);
-				}
-				loggedon = 1;
-				break;
+				logstatus = 1;
+				continue;
 			}
-			else
-				return info.err = -1;
-		}
+			break;
 		case 0x03: //QUIT
 		{
-			sndbuf[0] = 0;
-			sndbuf[1] = char(3);
 			send(out, sndbuf, 256, 0);
-			if (rcvbuf[2] == 0)
+			if (rcvbuf[2] == 0x30)
 			{
-				loggedon = 0;
+				logstatus = 0;
 				break;
 			}
 			else
 			{
 				MessageBox(NULL, "exit error!", "Quit", MB_OK);
-				return rcvbuf[1];
+				return info.err = -1;
 			}
 		}
 		case 0x05: //LIST
 		{
-			if (loggedon)
+			if (logstatus)
 			{
-				sndbuf[0] = 0;
-				sndbuf[1] = 5;
 				send(out, sndbuf, 256, 0);
 				break;
 			}
-			else return -1;
+			else continue;
 		}
-		case 0x06://"allgroup"
+		case 0x06://"ALL"
 		{
-			if (loggedon)
+			if (logstatus)
 			{
-				sndbuf[0] = 0;
-				sndbuf[1] = 6;
 				send(out, sndbuf, 256, 0);
 				break;
 			}
-			else return -1;
+			else continue;
 		}
 		case 0x07: //"memberof"
 		{
-			if (loggedon)
+			if (logstatus)
 			{
-				sndbuf[0] = 0;
-				sndbuf[1] = 7;
 				scanf_s("%s", (sndbuf + 8), (unsigned)_countof(sndbuf));
 				send(out, sndbuf, 256, 0);
 				break;
 			}
-			else return -1;
+			else continue;
 		}
-		case 0x08:// "setmsg"
+		case 0x08:// "HOST"
 		{
-			if (loggedon)
+			if (logstatus)
 			{
-				sndbuf[0] = 0;
-				sndbuf[1] = 8;
+				scanf_s("%s%s", (sndbuf + 8), (unsigned)_countof(sndbuf), (sndbuf + 32), (unsigned)_countof(sndbuf));
+				strcpy_s((sockmsg.msg->lastgrop + 8), 256, (sndbuf + 8));
+				send(out, sndbuf, 256, 0);
+				break;
+			}
+			else continue;
+		}
+		case 0x09:// "JOIN"
+		{
+			if (logstatus)
+			{
+				scanf_s("%s%s", (sndbuf + 8), (unsigned)_countof(sndbuf), (sndbuf + 32), (unsigned)_countof(sndbuf));
+				strcpy_s((sockmsg.msg->lastgrop + 8), 256, (sndbuf + 8));
+				send(out, sndbuf, 256, 0);
+				break;
+			}
+			else continue;
+		}
+		case 0x0A:// "quit"
+		{
+			if (logstatus)
+			{
+				scanf_s("%s", (sndbuf + 8), 256);
+				strcpy_s((sockmsg.msg->lastgrop + 8), 256, (sndbuf + 8));
+				send(out, sndbuf, 256, 0);
+				break;
+			}
+			else continue;
+		}
+		case 0x0B:
+		{
+			if (logstatus)
+			{
 				gets_s(sndbuf + 32, 256);
 				send(out, sndbuf, 256, 0);
 				break;
 			}
-			else return -1;
-		}
-		case 0x09:// "getmsg"
-		{
-			if (loggedon)
-			{
-				sndbuf[0] = 0;
-				sndbuf[1] = 9;
-				scanf_s("%s", (sndbuf + 8), (unsigned)_countof(sndbuf));
-				send(out, sndbuf, 256, 0);
-				break;
-			}
-			else return -1;
-		}
-		case 0x0A:// "password"
-		{
-			if (loggedon)
-			{
-				sndbuf[0] = 0;
-				sndbuf[1] = 0x0A;
-				scanf_s("%s", (sndbuf + 8), (unsigned)_countof(sndbuf));
-				send(out, sndbuf, 256, 0);
-				break;
-			}
-			else return -1;
-		}
-		case 0x0B:// "creategroup"
-		{
-			if (loggedon)
-			{
-				sndbuf[0] = 0;
-				sndbuf[1] = 0x0B;
-				scanf_s("%s%s", (sndbuf + 8), (unsigned)_countof(sndbuf), (sndbuf + 32), (unsigned)_countof(sndbuf));
-				strcpy_s((dlgmsg.msg->lastgrop + 8), 256, (sndbuf + 8));
-				send(out, sndbuf, 256, 0);
-				break;
-			}
-			else return -1;
-		}
-		case 0x0C:// "joingroup"
-		{
-			if (loggedon)
-			{
-				sndbuf[0] = 0;
-				sndbuf[1] = 0x0C;
-				scanf_s("%s%s", (sndbuf + 8), (unsigned)_countof(sndbuf), (sndbuf + 32), (unsigned)_countof(sndbuf));
-				strcpy_s((dlgmsg.msg->lastgrop + 8), 256, (sndbuf + 8));
-				send(out, sndbuf, 256, 0);
-				break;
-			}
-			else return -1;
-		}
-		case 0x0D:// "quitgroup"
-		{
-			if (loggedon)
-			{
-				sndbuf[0] = 0;
-				sndbuf[1] = 0x0D;
-				scanf_s("%s", (sndbuf + 8), 256);
-				strcpy_s((dlgmsg.msg->lastgrop + 8), 256, (sndbuf + 8));
-				send(out, sndbuf, 256, 0);
-				break;
-			}
-			else return -1;
+			else continue;
 		}
 		default:
 		{
-			sndbuf[0] = 0;
-			if (info.optionum != 0x00)
-				sprintf_s(sndbuf + 1, 4, "%x", info.optionum);
-			else
+			if (info.optionum == 0x0)
 			{
-				MessageBox(NULL, "Log failed.", "default", MB_OK);
+				MessageBox(NULL, "Logged failed.", "default", MB_OK);
 				return -1;
 			}
-			if (dlgmsg.msg->lastuser && dlgmsg.msg->lastgrop)
+			if (sockmsg.msg->lastuser && sockmsg.msg->lastgrop)
 			{
-				memcpy(sndbuf + 8, dlgmsg.msg->lastuser, 24);
-				memcpy(sndbuf + 32, dlgmsg.msg->lastgrop, 24);
+				memcpy(sndbuf + 8, sockmsg.msg->lastuser, 24);
+				memcpy(sndbuf + 32, sockmsg.msg->lastgrop, 24);
 			}
 			send(out, sndbuf, 256, 0);
-			return 0;
+			break;
 		}
 		};
 		curlen = rcvlen;
@@ -287,22 +244,27 @@ int StartChat(int err, void(*func)(void*))
 		return _beginthreadex(NULL, 0, Chat_Msg, func, 0, NULL);
 }
 
-int SetChatCmd(unsigned int cmd)
+int SetOptCmd(unsigned int cmd)
 {
 	return(info.optionum = cmd);
 }
 
 int SetLogInfo(char * usr, char * psw)
 {
-	memset(info.usr, 0, 24); 
+	char logmsg[64] = { 0,0x01 };
+	memset(info.usr, 0, 24);
 	memset(info.psw, 0, 24);
 	memcpy(info.usr, usr, strlen(usr) + 1);
 	memcpy(info.psw, psw, strlen(psw) + 1);
-	char logmsg[64] = { 0,0x01 };
 	memcpy(logmsg + 8, info.usr, 24);
 	memcpy(logmsg + 32, info.psw, 24);
 	send(out, logmsg, 64, 0);
-	return loggedon;
+	return logstatus;
+}
+
+int SetStatus()
+{
+	return (logstatus = 0);
 }
 
 int CloseChat()

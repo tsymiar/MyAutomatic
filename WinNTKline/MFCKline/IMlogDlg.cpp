@@ -38,8 +38,8 @@ void IMlogDlg::PostNcDestroy()
 BOOL IMlogDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
-	m_editUsr.SetLimitText(24);
-	m_editPsw.SetLimitText(24);
+	m_editUsr.SetLimitText(20);
+	m_editPsw.SetLimitText(20);
 	return 0;
 }
 
@@ -50,5 +50,6 @@ void IMlogDlg::OnBnClickedOk()
 	GetDlgItem(IDC_PSW)->GetWindowText(m_strPsw);
 	if (SetLogInfo((LPSTR)(LPCSTR)m_strAcnt, (LPSTR)(LPCSTR)m_strPsw))
 		CDialogEx::OnOK();
+	SetStatus();
 	//GetDlgItem(IDC_LISTFRND)->ShowWindow(SW_SHOW);
 }
