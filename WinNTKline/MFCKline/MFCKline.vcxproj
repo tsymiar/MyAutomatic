@@ -320,6 +320,7 @@
     <ClCompile Include="IMhideWndDlg.cpp" />
     <ClCompile Include="IM\client.cpp" />
     <ClCompile Include="IM\IM.cc" />
+    <ClCompile Include="IM\TCPsocket.cpp" />
     <ClCompile Include="LoginDlg.cpp" />
     <ClCompile Include="MFCKline.cpp" />
     <ClCompile Include="MFCKlineDlg.cpp" />

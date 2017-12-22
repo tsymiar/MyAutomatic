@@ -24,10 +24,10 @@
     <ClCompile Include="soap\soapC.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="sys\sysstuts.cc">
+    <ClCompile Include="web\mainSoap.cc">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="web\mainSoap.cc">
+    <ClCompile Include="sys\sysstatus.cc">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -50,10 +50,10 @@
     <ClInclude Include="inl\_String-inl.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="sys\sysstuts.h">
+    <ClInclude Include="web\mainSoap.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="web\mainSoap.h">
+    <ClInclude Include="sys\sysstatus.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
