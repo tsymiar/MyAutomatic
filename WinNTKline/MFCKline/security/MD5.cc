@@ -4,6 +4,14 @@ typedef unsigned char *POINTER;
 typedef unsigned short int uint2_t;
 typedef unsigned long int uint4_t;
 
+#ifdef _MSC_VER
+#pragma warning (disable:4003)
+#define fgets(f,l,s) gets_s(f)
+#else
+#define gets_s(foo) fgets(foo,sizeof(foo),stdin)
+#define strcpy_s strcpy
+#endif
+
 typedef struct
 {
 	uint4_t state[4];
@@ -272,7 +280,7 @@ void md5_f_set(unsigned int x[])
 	D += d;
 }
 
-void md5_file(FILE *fp, char out[])
+void md5_file(FILE *fp, char dst[])
 {
 	unsigned i, len, flen[2], x[16];
 	fseek(fp, 0, SEEK_END);  //文件指针转到文件末尾
@@ -293,8 +301,12 @@ void md5_file(FILE *fp, char out[])
 	memcpy(x + 14, flen, 8);    //文件末尾加入原文件的bit长度
 	md5_f_set(x);
 	fclose(fp);
-	sprintf_s(out, 32, "%08x%08x%08x%08x", PP(A), PP(B), PP(C), PP(D));  //高低位逆反输出
-	printf("MD5Code:%s\n", out);
+#ifdef _MSC_VER
+	sprintf_s(dst, 33, "%08x%08x%08x%08x", PP(A), PP(B), PP(C), PP(D));  //高低位逆反输出
+#else
+	sprintf(dst, "%08x%08x%08x%08x", PP(A), PP(B), PP(C), PP(D));
+#endif
+	printf("MD5Code: %s\n", dst);
 }
 
 void md5_str(char *input, char *output)
@@ -325,42 +337,50 @@ void test_s_md5()
 	int i;
 	char out[64];
 	char digest[16];
-	char encrypt[200];
+	char encrypt[256];
 	while (1)
 	{
-		printf("请输入要计算MD5值的字符串:");
-#ifdef _MSC_VER
+		printf("请输入要计算MD5值的字符串: ");
 		gets_s(encrypt);
-#else
-		gets(encrypt);
-#endif
-		printf("加密结果:");
+		if (encrypt[strlen(encrypt) - 1] == '\n')
+			encrypt[strlen(encrypt) - 1] = '\0';
+		printf("计算值: ");
 		md5_str(encrypt, digest);
 		for (i = 0; i < 16; i++) //16位无符号整数
-			printf("%02x", (unsigned char)digest[i]);
+			printf("%02X", (unsigned char)digest[i]);
 		printf("\n");
 		hex_to_str((unsigned char*)digest, out);
-		printf("32字节：%s\n", out);
-		printf("16字节：\t%s\n", get_Hash(out, 16, out));
+		printf("32字节: %s\n", out);
+		printf("16字节: \t%s\n", get_Hash(out, 16, out));
 		//getchar();
 	}
 }
 
 void test_f_md5()
 {
-	char filename[200];   //文件名
-	char out[128];
-	FILE *fp;
+	char filename[216]; //文件名
+	char md5[128];
+	FILE *fp = NULL;
 	while (1) {
-		printf("Input file:");
-#ifdef _MSC_VER
-		gets_s(filename);  //用get函数,避免scanf以空格分割数据,
-#else
-		fgets(filename, 1024, fp);
-#endif
-		if (filename[0] == 34) filename[strlen(filename) - 1] = 0, strcpy_s(filename, filename + 1);  //支持文件拖曳,但会多出双引号,这里是处理多余的双引号
+		printf("Input file: ");
+		gets_s(filename);  //用get函数,避免scanf以空格分割数据
+						   //支持文件拖曳,但会多出双引号,该句处理多余的双引号
+		if (filename[0] == 34)
+			filename[strlen(filename) - 1] = 0, strcpy_s(filename, filename + 1);
+		if (filename[strlen(filename) - 1] == 0xA)
+			filename[strlen(filename) - 1] = '\0';
 		if (!strcmp(filename, "exit")) exit(0); //输入exit退出
-		if (fopen_s(&fp, filename, "rb") != 0) { printf("Can not open this file!\n"); continue; }  //以二进制打开文件
-		md5_file(fp, out);
+#ifdef _MSC_VER
+		if (fopen_s(&fp, filename, "rb") != 0)
+#else 
+		if (!(fp = fopen(filename, "rb")))
+#endif
+		{
+			printf("Can't open this file!\n");
+			continue;
+		}
+		else
+			//以二进制打开文件
+			md5_file(fp, md5);
 	}
 }
