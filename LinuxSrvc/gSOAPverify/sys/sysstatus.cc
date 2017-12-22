@@ -1,4 +1,4 @@
-#include "sysstuts.h"
+#include "sysstatus.h"
 
 int show_memory(char* ip, st_sys* sys)
 {

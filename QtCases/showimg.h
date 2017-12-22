@@ -4,6 +4,7 @@
 #include <iostream> 
 #include <QtOpenGL/QGL>
 #include <QDebug>
+#include<../zlib-1.2.8/zlib.h>
 #include <png.h>
 
 class ShowImage

@@ -10,12 +10,13 @@
 #include <conio.h>
 #else
 #include <netinet/in.h>
-#include <sys/socket.h>
-#include <sys/types.h>  
+#include <sys/socket.h> 
+#include <sys/types.h> 
 #include <pthread.h>
 #include <unistd.h>
 #include <cstring>
 #include <cerrno>
+//#include <arpe/inet.h>  
 #endif
 #define DEFAULT_PORT 8877
 #define MAX_USERS 300
@@ -42,6 +43,12 @@ CRITICAL_SECTION
 pthread_mutex_t
 #endif
 sendallow;
+#ifdef __linux
+#define addr_out(ip) inet_ntop(ip)
+#endif
+#ifdef _WIN32
+#define addr_out(ip) inet_ntoa(ip)
+#endif
 
 struct user {
 	char name[24];
@@ -174,7 +181,7 @@ monite(void *arg)
 	};
 	do {
 		flg = recv(rcv_sock, tmp, 256, 0);
-		if (flg != 256)
+		if (flg < 256)
 			goto con_err;
 		if (flg == -1) {
 			printf("lost connection with %s.\n", name);
@@ -504,7 +511,6 @@ int _im_(int argc, char *argv[]) {
 	int c = 0;
 	do {
 		recv_socket = accept(listen_socket, (struct sockaddr*)&from, &fromlen);
-
 		if (recv_socket
 #ifdef _WIN32
 			== INVALID_SOCKET) {
@@ -517,7 +523,7 @@ int _im_(int argc, char *argv[]) {
 			return -1;
 		}
 		else
-			printf("accept() OK.\n");
+			printf("accept() [%s] OK.\n", addr_out(from.sin_addr));
 #ifdef _DEBUG
 		printf("1: %d\n", recv_socket);
 #endif
