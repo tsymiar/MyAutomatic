@@ -47,3 +47,4 @@ QtCases/ui_*
 QtCases/QtCases
 *.merged
 *.recipe
+/.vs

@@ -15,6 +15,7 @@ IMlogDlg::IMlogDlg(CWnd* pParent /*=NULL*/)
 
 IMlogDlg::~IMlogDlg()
 {
+	delete this;
 }
 
 void IMlogDlg::DoDataExchange(CDataExchange* pDX)
@@ -32,7 +33,6 @@ END_MESSAGE_MAP()
 
 void IMlogDlg::PostNcDestroy()
 {
-	delete this;
 }
 
 BOOL IMlogDlg::OnInitDialog()
