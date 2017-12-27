@@ -102,14 +102,14 @@ int CvimgMat::g_limImage(Mat imgSrc, const String alphapng, int threshold)
 {
 	double alphaVal = 0.3;
 	double betaVal = (1.0 - alphaVal);
-	Mat alphaImage, mixImage;
+	Mat alphaImage, limImage;
 	alphaImage = imread(alphapng);
 	if (!alphaImage.data)
 	{
 		printf("error imread alphaImage！\n");
 		return -1;
 	}
-	addWeighted(imgSrc, alphaVal, alphaImage, betaVal, 0.0, mixImage);
+	addWeighted(imgSrc, alphaVal, alphaImage, betaVal, 0.0, limImage);
 	namedWindow("Threshold", 1);
 	imshow("Threshold", imgSrc);
 	createTrackbar("thresh:", "Threshold", &threshold, 255, on_ThreshTrackBar, &imgSrc);
