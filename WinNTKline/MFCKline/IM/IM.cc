@@ -50,6 +50,15 @@ sendallow;
 #define addr_out(ip) inet_ntoa(ip)
 #endif
 
+struct msg {
+	char _0_ = '\0';
+	char idx;
+	char ret[2];
+	char rsv[4];
+	char usr[24];
+	char key[24];
+};
+
 struct user {
 	char name[24];
 	char psw[24];

@@ -249,6 +249,11 @@ int SetOptCmd(unsigned int cmd)
 	return(info.optionum = cmd);
 }
 
+int transMsg(char* msg)
+{
+	return send(out, msg, 256, 0);
+}
+
 int SetLogInfo(char * usr, char * psw)
 {
 	char logmsg[64] = { 0,0x01 };
