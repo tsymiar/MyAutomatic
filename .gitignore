@@ -23,9 +23,9 @@
 *.res*
 *.suo
 *.tlog
-*.txt
 *.user
 *.XML
+.*/
 LinuxSrvc/
 QtCases/
 WinNTKline/
