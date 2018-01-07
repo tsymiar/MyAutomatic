@@ -16,7 +16,7 @@
 #include <unistd.h>
 #include <cstring>
 #include <cerrno>
-//#include <arpe/inet.h>  
+#include <arpa/inet.h>  
 #endif
 #define DEFAULT_PORT 8877
 #define MAX_USERS 300
@@ -43,12 +43,6 @@ CRITICAL_SECTION
 pthread_mutex_t
 #endif
 sendallow;
-#ifdef __linux
-#define addr_out(ip) inet_ntop(ip)
-#endif
-#ifdef _WIN32
-#define addr_out(ip) inet_ntoa(ip)
-#endif
 
 struct msg {
 	char _0_ = '\0';
@@ -518,6 +512,7 @@ int _im_(int argc, char *argv[]) {
 #endif
 			)sizeof(from);
 	int c = 0;
+	char IPdotdec[16];
 	do {
 		recv_socket = accept(listen_socket, (struct sockaddr*)&from, &fromlen);
 		if (recv_socket
@@ -532,7 +527,14 @@ int _im_(int argc, char *argv[]) {
 			return -1;
 		}
 		else
-			printf("accept() [%s] OK.\n", addr_out(from.sin_addr));
+		{
+#ifdef __linux
+			inet_ntop(AF_INET, (void *)&from.sin_addr, IPdotdec, 16);
+#else
+			memcpy(IPdotdec, inet_ntoa(from.sin_addr), 16);
+#endif
+			printf("accept() [%s] OK.\n", IPdotdec);
+		}
 #ifdef _DEBUG
 		printf("1: %d\n", recv_socket);
 #endif
