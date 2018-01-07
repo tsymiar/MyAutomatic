@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27004.2010
+VisualStudioVersion = 15.0.27130.2010
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MFCKline", "MFCKline\MFCKline.vcxproj", "{C0FF2B6D-EDD9-4E65-8CA8-1C4968F76D48}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -26,7 +26,20 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IM(Win32)", "test\IM\IM.vcx
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "QtCases", "..\QtCases\QtCases.vcxproj", "{B12702AD-ABFB-343A-A199-8E24837244A3}"
 EndProject
-Project("{911E67C6-3D85-4FCE-B560-20A9C3E3FF48}") = "cmd", "C:\WINDOWS\System32\cmd.exe", "{EC7EBEAB-1598-475F-BF77-55D7D99BBC43}"
+Project("{911E67C6-3D85-4FCE-B560-20A9C3E3FF48}") = "cmd", "C:\Windows\System32\cmd.exe", "{EC7EBEAB-1598-475F-BF77-55D7D99BBC43}"
+	ProjectSection(DebuggerProjectSystem) = preProject
+		PortSupplier = 00000000-0000-0000-0000-000000000000
+		Executable = C:\Windows\System32\cmd.exe
+		RemoteMachine = DESKTOP-LSVFS7T
+		StartingDirectory = C:\Windows\System32
+		Environment = 默认值
+		LaunchingEngine = 00000000-0000-0000-0000-000000000000
+		UseLegacyDebugEngines = No
+		LaunchSQLEngine = No
+		AttachLaunchAction = No
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CV4", "CV4i\CV4i.vcxproj", "{8FFF2EFE-1196-43BA-A3F3-A0B377628DAF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -136,6 +149,18 @@ Global
 		{EC7EBEAB-1598-475F-BF77-55D7D99BBC43}.Release|ARM.ActiveCfg = Release|x64
 		{EC7EBEAB-1598-475F-BF77-55D7D99BBC43}.Release|x64.ActiveCfg = Release|x64
 		{EC7EBEAB-1598-475F-BF77-55D7D99BBC43}.Release|x86.ActiveCfg = Release|x64
+		{8FFF2EFE-1196-43BA-A3F3-A0B377628DAF}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{8FFF2EFE-1196-43BA-A3F3-A0B377628DAF}.Debug|ARM.ActiveCfg = Debug|Win32
+		{8FFF2EFE-1196-43BA-A3F3-A0B377628DAF}.Debug|x64.ActiveCfg = Debug|x64
+		{8FFF2EFE-1196-43BA-A3F3-A0B377628DAF}.Debug|x64.Build.0 = Debug|x64
+		{8FFF2EFE-1196-43BA-A3F3-A0B377628DAF}.Debug|x86.ActiveCfg = Debug|Win32
+		{8FFF2EFE-1196-43BA-A3F3-A0B377628DAF}.Debug|x86.Build.0 = Debug|Win32
+		{8FFF2EFE-1196-43BA-A3F3-A0B377628DAF}.Release|Any CPU.ActiveCfg = Release|Win32
+		{8FFF2EFE-1196-43BA-A3F3-A0B377628DAF}.Release|ARM.ActiveCfg = Release|Win32
+		{8FFF2EFE-1196-43BA-A3F3-A0B377628DAF}.Release|x64.ActiveCfg = Release|x64
+		{8FFF2EFE-1196-43BA-A3F3-A0B377628DAF}.Release|x64.Build.0 = Release|x64
+		{8FFF2EFE-1196-43BA-A3F3-A0B377628DAF}.Release|x86.ActiveCfg = Release|Win32
+		{8FFF2EFE-1196-43BA-A3F3-A0B377628DAF}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -149,6 +174,7 @@ Global
 		{6B864007-F9E8-4469-92BA-2387CCEB1573} = {929677BC-1A53-4CD4-B120-259D6A7FDBDB}
 		{B12702AD-ABFB-343A-A199-8E24837244A3} = {748D08E6-622E-4CD2-9AC7-7766F288389B}
 		{EC7EBEAB-1598-475F-BF77-55D7D99BBC43} = {748D08E6-622E-4CD2-9AC7-7766F288389B}
+		{8FFF2EFE-1196-43BA-A3F3-A0B377628DAF} = {929677BC-1A53-4CD4-B120-259D6A7FDBDB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {93EEEDB3-53AB-4CDD-B9D0-EA6E1F28D058}
