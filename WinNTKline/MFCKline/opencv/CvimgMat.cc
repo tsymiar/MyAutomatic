@@ -1,7 +1,15 @@
 #include "CvimgMat.h"
 
 #pragma warning (disable:4474)
-using namespace cv;
+using namespace cv; 
+Mat image;
+const cv::String dstPng =
+#ifdef CV4i
+"../MFCKline/image/timg.png"
+#else
+"../image/timg.png"
+#endif
+;
 
 void createAlphaMat(Mat &mat)
 {
@@ -18,26 +26,39 @@ void createAlphaMat(Mat &mat)
 	}
 }
 
-static void on_ROITrackBar(int alpha, void* usrdata)
+static void on_ROITrackBar(int weight, void* usrdata)
 {
-	Mat dst, src1 = *(Mat*)(usrdata);
-	addWeighted(src1, alpha / 255.0, src1, 1.0 - alpha / 255.0, 0.0, dst);
-	imshow("ROI", dst);
-}
-
-static void on_ThreshTrackBar(int old, void* usrdata)
-{
-	Mat dst, src = *(Mat*)(usrdata);
-	// 二值化 
-	threshold(src, dst, old, 255, 0);
-	imshow("Threshold", dst);
+	Mat dst, *src1 = NULL;
+	int len = sizeof(Mat);
+	src1 = (Mat*)malloc(len);
+	memset(src1, 0, len);
+	src1 = src1->data ? (Mat*)memcpy(src1, usrdata, len) : &imread(dstPng);
+	if (!src1->data)
+		printf("data error in on_ROITrackBar(src1 is null)!\n");
+	else
+	{
+		addWeighted(*src1, weight / 255.0, *src1, 1.0 - (weight / 255.0), 0.0, dst);
+		imshow("ROI", dst);
+	}
 }
 
 static void on_BilateralTrackBar(int d, void* usrdata)
 {
-	Mat dst, src = *(Mat*)(usrdata);
-	bilateralFilter(src, dst, d, d * 2, d / 2);
+	Mat dst, *src = (Mat*)(usrdata);
+	if (src->flags < 0)
+		src = &image;
+	bilateralFilter(*src, dst, d, d * 2, d / 2);
 	imshow("Bilateral", dst);
+}
+
+static void on_ThreshTrackBar(int old, void* usrdata)
+{
+	Mat dst, *src = (Mat*)(usrdata);
+	// 二值化 
+	if (src->flags < 0)
+		src = &image;
+	threshold(*src, dst, old, 255, 0);
+	imshow("Threshold", dst);
 }
 
 int CvimgMat::saveMat2PNG(int w, int h, const String& name)
@@ -51,26 +72,27 @@ int CvimgMat::saveMat2PNG(int w, int h, const String& name)
 		imwrite(name, mat, compression_params);
 	}
 	catch (std::runtime_error& ex) {
-		fprintf(stderr, "error trans jpeg to PNG：%s\n", ex.what());
+		fprintf(stderr, "error trans jpeg to PNG: %s\n", ex.what());
 		return -1;
 	}
 	fprintf(stdout, "save alpha data of PNG.\n");
 	return 0;
 }
 
-Mat CvimgMat::g_srcImage(const String& img)
+Mat CvimgMat::getImageMat(const String& img, int flg)
 {
-	Mat g_srcImage, Image1;
-	g_srcImage = imread(img, CV_LOAD_IMAGE_ANYDEPTH | CV_LOAD_IMAGE_ANYCOLOR);
-	if (!g_srcImage.data)
-		printf("error imread g_srcImage！\n");
+	Mat dst, src = imread(img, CV_LOAD_IMAGE_ANYDEPTH | CV_LOAD_IMAGE_ANYCOLOR);
+	if (flg == 0)
+		src = imread(img, 0);
+	if (!src.data)
+		printf("error imread g_rawImage!\n");
 	else
 	{
-		Image1 = g_srcImage.clone();
-		namedWindow("g_srcImage", WINDOW_NORMAL);
-		imshow("g_srcImage", g_srcImage);
+		dst = src.clone();
+		namedWindow("Raw image", WINDOW_NORMAL);
+		imshow("Raw image", src);
 	}
-	return Image1;
+	return dst;
 }
 
 int CvimgMat::g_roiImage(const String & bkg, const String & mask, int defaultval)
@@ -79,15 +101,15 @@ int CvimgMat::g_roiImage(const String & bkg, const String & mask, int defaultval
 	Mat logImage = imread(mask);
 	if (!roiImage.data)
 	{
-		printf("error imread roiImage！\n");
+		printf("error imread roiImage!\n");
 		return -1;
 	}
 	if (!logImage.data)
 	{
-		printf("error imread roiImage！\n");
+		printf("error imread logImage!\n");
 		return -1;
 	}
-	Mat imageROI = roiImage(Rect(0, 200, logImage.cols, logImage.rows));
+	Mat imageROI = roiImage(Rect(0, 100, logImage.cols, logImage.rows));
 	Mat imageMask = imread(mask, 0);
 	//将掩膜拷贝到ROI   
 	logImage.copyTo(imageROI, imageMask);
@@ -98,30 +120,18 @@ int CvimgMat::g_roiImage(const String & bkg, const String & mask, int defaultval
 	return 0;
 }
 
-int CvimgMat::g_limImage(Mat imgSrc, const String alphapng, int threshold)
-{
-	double alphaVal = 0.3;
-	double betaVal = (1.0 - alphaVal);
-	Mat alphaImage, limImage;
-	alphaImage = imread(alphapng);
-	if (!alphaImage.data)
-	{
-		printf("error imread alphaImage！\n");
-		return -1;
-	}
-	addWeighted(imgSrc, alphaVal, alphaImage, betaVal, 0.0, limImage);
-	namedWindow("Threshold", 1);
-	imshow("Threshold", imgSrc);
-	createTrackbar("thresh:", "Threshold", &threshold, 255, on_ThreshTrackBar, &imgSrc);
-	fprintf(stdout, "threshold for g_srcImage OK.\n");
-	return 0;
-}
-
+// size(dpi) of image must same as img2
 int CvimgMat::g_mixImage(const String & img1, const String & img2, double alpha)
 {
 	Mat mixImage;
 	Mat image1 = imread(img1);
-	Mat image2 = imread(img2);
+	Mat image2 = imread(img2);	
+	if (image1.cols != image2.cols || image2.rows != image1.rows)
+	{
+		printf("g_mixImage: mismatch image's size!(%d,%d)->(%d,%d)\n", \
+			image1.cols, image1.rows, image2.cols, image2.rows);
+		return -2;
+	}
 	namedWindow("Mixed Weights", 0);
 	addWeighted(image1, alpha, image2, 1.0 - alpha, 0.0, mixImage);
 	imshow("Mixed Weights", mixImage);
@@ -129,9 +139,32 @@ int CvimgMat::g_mixImage(const String & img1, const String & img2, double alpha)
 	return 0;
 }
 
-int CvimgMat::g_bilImage(Mat imgSrc, int bilateralval)
+int CvimgMat::g_limImage(Mat imgSrc, const String alphapng)
+{
+	double alphaVal = 0.3;
+	double betaVal = (1.0 - alphaVal);
+	Mat alphaImage, limImage;
+	alphaImage = imread(alphapng);
+	if (alphaImage.cols != imgSrc.cols || imgSrc.rows != alphaImage.rows)
+	{
+		printf("g_limImage: mismatch image's size!(%d,%d)->(%d,%d)\n", \
+			alphaImage.cols, alphaImage.rows, imgSrc.cols, imgSrc.rows);
+		return -2;
+	}
+	if (!alphaImage.data)
+	{
+		printf("error imread alphaImage!\n");
+		return -1;
+	}
+	addWeighted(imgSrc, alphaVal, alphaImage, betaVal, 0.0, limImage);
+	imshow("limImage", limImage);
+	return 0;
+}
+
+int CvimgMat::g_bilImage(Mat imgSrc, int& bilateralval)
 {
 	namedWindow("Bilateral", 0);
+	imshow("Bilateral", imgSrc);
 	createTrackbar("val:", "Bilateral", &bilateralval, 50, on_BilateralTrackBar, &imgSrc);
 	fprintf(stdout, "BilateralFilter load OK.\n");
 	return 0;
@@ -156,21 +189,47 @@ int CvimgMat::g_aveImage(Mat imgSrc, Size ksize)
 	return 0;
 }
 
+int CvimgMat::g_eshImage(Mat imgSrc)
+{
+	Mat imgDst;
+	int posTrackBar = 16;
+	cvtColor(imgSrc, imgDst, CV_BGR2GRAY);
+	namedWindow("Threshold");
+	imshow("Threshold", imgSrc);
+	createTrackbar("thresh:", "Threshold", &posTrackBar, 255, on_ThreshTrackBar, &imgSrc);
+	fprintf(stdout, "threshold for g_rawImage OK.\n");
+	return 0;
+}
+
 int CvimgMat::cvmat_test()
 {
-	const cv::String bkgImg = "../image/qdu.bmp";
-	const cv::String srcJpg = "../image/timg.jpg";
-	const cv::String dstPng = "../image/timg.png";
+	const cv::String bkgImg =
+#ifdef CV4i
+		"../MFCKline/image/qdu.bmp"
+#else
+		"../image/qdu.bmp"
+#endif
+		;
+	const cv::String srcJpg = 
+#ifdef CV4i
+		"../MFCKline/image/timg.jpg"
+#else
+		"../image/timg.jpg"
+#endif
+		;
 
-	Mat image=g_srcImage(srcJpg);
-	saveMat2PNG(480, 480, dstPng);
-
-	g_roiImage(bkgImg, dstPng);
+	image = getImageMat(srcJpg);
+	saveMat2PNG(100, 100, dstPng);
+	int bilval = 8;
+	int weight = 64;
+	float alpha = 0.5f;
+	g_roiImage(bkgImg, dstPng, weight);
+	g_mixImage(srcJpg, dstPng, alpha);
 	g_limImage(image, dstPng);
-	g_mixImage(srcJpg, dstPng, 0.5);
-	g_bilImage(image, 8);
-	g_medImage(image, 3);
+	g_bilImage(image, bilval);
+	g_medImage(image);
 	g_aveImage(image);
+	g_eshImage(image);
 
 	waitKey(60000);
 	return 0;
