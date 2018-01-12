@@ -1,10 +1,10 @@
 #include "CvimgMat.h"
 
 #pragma warning (disable:4474)
-using namespace cv; 
+using namespace cv;
 Mat image;
 const cv::String dstPng =
-#ifdef CV4i
+#ifdef CVML
 "../MFCKline/image/timg.png"
 #else
 "../image/timg.png"
@@ -125,7 +125,7 @@ int CvimgMat::g_mixImage(const String & img1, const String & img2, double alpha)
 {
 	Mat mixImage;
 	Mat image1 = imread(img1);
-	Mat image2 = imread(img2);	
+	Mat image2 = imread(img2);
 	if (image1.cols != image2.cols || image2.rows != image1.rows)
 	{
 		printf("g_mixImage: mismatch image's size!(%d,%d)->(%d,%d)\n", \
@@ -204,14 +204,14 @@ int CvimgMat::g_eshImage(Mat imgSrc)
 int CvimgMat::cvmat_test()
 {
 	const cv::String bkgImg =
-#ifdef CV4i
+#ifdef CVML
 		"../MFCKline/image/qdu.bmp"
 #else
 		"../image/qdu.bmp"
 #endif
 		;
-	const cv::String srcJpg = 
-#ifdef CV4i
+	const cv::String srcJpg =
+#ifdef CVML
 		"../MFCKline/image/timg.jpg"
 #else
 		"../image/timg.jpg"
