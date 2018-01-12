@@ -153,11 +153,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\MFCKline\opencv\CvimgMat.cc" />
+    <ClCompile Include="..\MfcUtil\opencv\CvimgMat.cc" />
     <ClCompile Include="CvMl.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\MFCKline\opencv\CvimgMat.h" />
+    <ClInclude Include="..\MfcUtil\opencv\CvimgMat.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

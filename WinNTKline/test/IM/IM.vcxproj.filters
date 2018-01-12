@@ -7,7 +7,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\MFCKline\IM\IM.cc">
+    <ClCompile Include="..\..\MfcUtil\IM\IM.cc">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

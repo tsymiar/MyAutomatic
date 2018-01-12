@@ -1,0 +1,413 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- edited with XMLSpy v2013 (http://www.altova.com) by  () -->
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{C0FF2B6D-EDD9-4E65-8CA8-1C4968F76D48}</ProjectGuid>
+    <RootNamespace>MFCKline</RootNamespace>
+    <Keyword>MFCProj</Keyword>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
+    <CLRSupport>true</CLRSupport>
+    <WindowsAppContainer>false</WindowsAppContainer>
+    <UseOfMfc>Dynamic</UseOfMfc>
+    <PlatformToolset>v140_xp</PlatformToolset>
+    <ConfigurationType>Application</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140_xp</PlatformToolset>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+    <UseOfMfc>Dynamic</UseOfMfc>
+    <CLRSupport>true</CLRSupport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
+    <UseOfMfc>Dynamic</UseOfMfc>
+    <CLRSupport>true</CLRSupport>
+    <PlatformToolset>v140_xp</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Dynamic</UseOfMfc>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CLRSupport>true</CLRSupport>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <CodeAnalysisRuleSet>NativeRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
+    <LinkIncremental>false</LinkIncremental>
+    <IntDir>$(SolutionDir)MFC\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(SolutionDir)MFC\</IntDir>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <CodeAnalysisRuleSet>MixedRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
+    <IntDir>$(SolutionDir)MFC\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(IncludePath)</IncludePath>
+    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(SolutionDir)MFC\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <OmitFramePointers>false</OmitFramePointers>
+      <PreprocessorDefinitions>_CRT_NON_CONFORMING_SWPRINTFS;_CRT_SECURE_NO_WARNINGS;HAVE_STRUCT_TIMESPEC;_DEBUG;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <EnablePREfast>false</EnablePREfast>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <DisableSpecificWarnings>4793;4819</DisableSpecificWarnings>
+      <AdditionalIncludeDirectories>$(BOOST);$(CEFDIR);$(OPENSSL);$(QTDIR)\include;$(OPENCV)\include;$(PTHREAD)\include;$(SolutionDir)MfcUtil;$(SolutionDir)MfcUtil\font;$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\mygl;$(SolutionDir)MfcUtil\Index;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap;.\GeneratedFiles\$(ConfigurationName);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <Optimization>MaxSpeed</Optimization>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <MinimalRebuild>false</MinimalRebuild>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <TargetMachine>NotSet</TargetMachine>
+      <AdditionalOptions>/NODEFAULTLIB:"libcmt.lib" %(AdditionalOptions)</AdditionalOptions>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <AdditionalLibraryDirectories>$(PTHD_LIB86);$(QTDIR)\lib;$(CEFDIR)\$(Configuration);$(OPENCV)\lib\$(Configuration);$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\GL\lib;$(SolutionDir)MfcUtil\font\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opencv_calib3d330d.lib;opencv_highgui330d.lib;opencv_photo330d.lib;opencv_video330d.lib;opencv_core330d.lib;opencv_imgcodecs330d.lib;opencv_shape330d.lib;opencv_videoio330d.lib;opencv_dnn330d.lib;opencv_imgproc330d.lib;opencv_stitching330d.lib;opencv_videostab330d.lib;opencv_features2d330d.lib;opencv_ml330d.lib;opencv_superres330d.lib;opencv_flann330d.lib;opencv_objdetect330d.lib;Qt5Gui.lib;Qt5Core.lib;Qt5OpenGL.lib;Qt5Widgets.lib;pthreadVC2.lib;libcef.lib;libcef_dll_wrapper.lib;thosttraderapi.lib;thostmduserapi.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <Midl>
+      <MkTypLibCompatible>false</MkTypLibCompatible>
+      <ValidateAllParameters>true</ValidateAllParameters>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </Midl>
+    <ResourceCompile />
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <ProjectReference>
+      <UseLibraryDependencyInputs>true</UseLibraryDependencyInputs>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <OmitFramePointers>true</OmitFramePointers>
+      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS;_DEBUG</PreprocessorDefinitions>
+      <EnablePREfast>false</EnablePREfast>
+      <DisableSpecificWarnings>
+      </DisableSpecificWarnings>
+      <SDLCheck>true</SDLCheck>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalIncludeDirectories>$(BOOST);$(CEFDIR);$(OPENSSL);$(QTDIR)\include;$(OPENCV)\include;$(PTHREAD)\include;$(SolutionDir)MfcUtil;$(SolutionDir)MfcUtil\font;$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\mygl;$(SolutionDir)MfcUtil\Index;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap;.\GeneratedFiles\$(ConfigurationName);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <TargetMachine>NotSet</TargetMachine>
+      <AdditionalOptions>/NODEFAULTLIB:"libcmt.lib" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalLibraryDirectories>$(PTHD_LIB86);$(QTDIR)\lib;$(CEFDIR)\$(Configuration);$(OPENCV)\lib\$(Configuration);$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\GL\lib;$(SolutionDir)MfcUtil\font\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opencv_calib3d330d.lib;opencv_highgui330d.lib;opencv_photo330d.lib;opencv_video330d.lib;opencv_core330d.lib;opencv_imgcodecs330d.lib;opencv_shape330d.lib;opencv_videoio330d.lib;opencv_dnn330d.lib;opencv_imgproc330d.lib;opencv_stitching330d.lib;opencv_videostab330d.lib;opencv_features2d330d.lib;opencv_ml330d.lib;opencv_superres330d.lib;opencv_flann330d.lib;opencv_objdetect330d.lib;Qt5Gui.lib;Qt5Core.lib;Qt5OpenGL.lib;Qt5Widgets.lib;pthreadVC2.lib;libcef.lib;libcef_dll_wrapper.lib;thosttraderapi.lib;thostmduserapi.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <Midl>
+      <MkTypLibCompatible>false</MkTypLibCompatible>
+      <ValidateAllParameters>true</ValidateAllParameters>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </Midl>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <ProjectReference>
+      <UseLibraryDependencyInputs>true</UseLibraryDependencyInputs>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_CRT_NON_CONFORMING_SWPRINTFS;_CRT_SECURE_NO_WARNINGS;HAVE_STRUCT_TIMESPEC;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <EnablePREfast>false</EnablePREfast>
+      <CompileAsManaged>true</CompileAsManaged>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(BOOST);$(CEFDIR);$(OPENSSL);$(QTDIR)\include;$(OPENCV)\include;$(PTHREAD)\include;$(SolutionDir)MfcUtil;$(SolutionDir)MfcUtil\font;$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\mygl;$(SolutionDir)MfcUtil\Index;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap;.\GeneratedFiles\$(ConfigurationName);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(PTHD_LIB86);$(QTDIR)\lib;$(CEFDIR)\$(Configuration);$(OPENCV)\lib\$(Configuration);$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\GL\lib;$(SolutionDir)MfcUtil\font\lib</AdditionalLibraryDirectories>
+      <AdditionalOptions>/SAFESEH:NO %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>libcef.lib;Qt5Gui.lib;Qt5Core.lib;Qt5OpenGL.lib;Qt5Widgets.lib;pthreadVC2.lib;cef_sandbox.lib;libcef_dll_wrapper.lib;thosttraderapi.lib;thostmduserapi.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <TargetMachine>NotSet</TargetMachine>
+    </Link>
+    <Midl>
+      <MkTypLibCompatible>false</MkTypLibCompatible>
+      <ValidateAllParameters>true</ValidateAllParameters>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x0804</Culture>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <ProjectReference>
+      <UseLibraryDependencyInputs>true</UseLibraryDependencyInputs>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(BOOST);$(CEFDIR);$(OPENSSL);$(QTDIR)\include;$(OPENCV)\include;$(PTHREAD)\include;$(SolutionDir)MfcUtil;$(SolutionDir)MfcUtil\font;$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\mygl;$(SolutionDir)MfcUtil\Index;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap;.\GeneratedFiles\$(ConfigurationName);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CompileAsManaged>true</CompileAsManaged>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(PTHD_LIB86);$(QTDIR)\lib;$(CEFDIR)\$(Configuration);$(OPENCV)\lib\$(Configuration);$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\GL\lib;$(SolutionDir)MfcUtil\font\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opencv_calib3d330.lib;opencv_highgui330.lib;opencv_photo330.lib;opencv_video330.lib;opencv_core330.lib;opencv_imgcodecs330.lib;opencv_shape330.lib;opencv_videoio330.lib;opencv_dnn330.lib;opencv_imgproc330.lib;opencv_stitching330.lib;opencv_videostab330.lib;opencv_features2d330.lib;opencv_ml330.lib;opencv_superres330.lib;opencv_flann330.lib;opencv_objdetect330.lib;opencv_ts330.lib;Qt5Gui.lib;Qt5Core.lib;Qt5OpenGL.lib;Qt5Widgets.lib;pthreadVC2.lib;libcef.lib;cef_sandbox.lib;libcef_dll_wrapper.lib;thosttraderapi.lib;thostmduserapi.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <Midl>
+      <MkTypLibCompatible>false</MkTypLibCompatible>
+      <ValidateAllParameters>true</ValidateAllParameters>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x0804</Culture>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <ProjectReference>
+      <UseLibraryDependencyInputs>true</UseLibraryDependencyInputs>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\LinuxSrvc\gSOAPverify\soap\stdsoap2.h" />
+    <ClInclude Include="boost\boostest.h" />
+    <ClInclude Include="deep\DepthMarket.h" />
+    <ClInclude Include="Def\MacroDef.h" />
+    <ClInclude Include="dos\DOSCout.h" />
+    <ClInclude Include="Font\FontNehe.h" />
+    <ClInclude Include="HOOK\injectDLL.h" />
+    <ClInclude Include="html\cefWebKit.h" />
+    <ClInclude Include="html\MyHtmlView.h" />
+    <ClInclude Include="Idx\auto_tchar.h" />
+    <ClInclude Include="Idx\binarytree-inl.h" />
+    <ClInclude Include="Idx\CommSet.h" />
+    <ClInclude Include="Idx\CPUID.H" />
+    <ClInclude Include="Idx\MyAlgorithm.h" />
+    <ClInclude Include="Idx\_MACRO_.h" />
+    <ClInclude Include="Idx\_String-inl.h" />
+    <ClInclude Include="IMlogDlg.h" />
+    <ClInclude Include="IMhideWndDlg.h" />
+    <ClInclude Include="IM\IMclient.h" />
+    <ClInclude Include="LoginDlg.h" />
+    <ClInclude Include="MFCKline.h" />
+    <ClInclude Include="MFCKlineDlg.h" />
+    <ClInclude Include="mygl\bitmap.h" />
+    <ClInclude Include="mygl\GlF16.h" />
+    <ClInclude Include="mygl\GlModel.h" />
+    <ClInclude Include="mygl\House.h" />
+    <ClInclude Include="mygl\OGLKview.h" />
+    <ClInclude Include="mygl\texture.h" />
+    <ClInclude Include="MyOglDrawDlg.h" />
+    <ClInclude Include="netwk\ChannelCollector.h" />
+    <ClInclude Include="netwk\CTPdev.h" />
+    <ClInclude Include="netwk\GEThttp.h" />
+    <ClInclude Include="netwk\Simulation.h" />
+    <ClInclude Include="opencv\CvimgMat.h" />
+    <ClInclude Include="own\COwnCtl.h" />
+    <ClInclude Include="own\Screen-Sharing.h" />
+    <ClInclude Include="pthdpool\pthdpool.h" />
+    <ClInclude Include="RegistDlg.h" />
+    <ClInclude Include="Resource.h" />
+    <ClInclude Include="security\encoding.h" />
+    <ClInclude Include="security\MD5.h" />
+    <ClInclude Include="SettingsDlg.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="Stock\Stock.h" />
+    <ClInclude Include="targetver.h" />
+    <ClInclude Include="web\myweb.h" />
+    <ClInclude Include="WPF\WPFhost.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\soapC.cpp" />
+    <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\soapClient.cpp" />
+    <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\stdsoap2.cpp" />
+    <ClCompile Include="deep\DepthMarket.cpp" />
+    <ClCompile Include="dos\DOSCout.cpp" />
+    <ClCompile Include="Font\FontNehe.cc" />
+    <ClCompile Include="HOOK\injectDLL.cpp" />
+    <ClCompile Include="html\cefWebKit.cpp" />
+    <ClCompile Include="html\MyHtmlView.cpp" />
+    <ClCompile Include="IMlogDlg.cpp" />
+    <ClCompile Include="IMhideWndDlg.cpp" />
+    <ClCompile Include="IM\client.cpp" />
+    <ClCompile Include="IM\IM.cc" />
+    <ClCompile Include="IM\TCPsocket.cpp" />
+    <ClCompile Include="LoginDlg.cpp" />
+    <ClCompile Include="MFCKline.cpp" />
+    <ClCompile Include="MFCKlineDlg.cpp" />
+    <ClCompile Include="mygl\bitmap.c" />
+    <ClCompile Include="mygl\GlF16.cc" />
+    <ClCompile Include="mygl\GlModel.cc" />
+    <ClCompile Include="mygl\House.cc" />
+    <ClCompile Include="mygl\OGLKview.cc" />
+    <ClCompile Include="mygl\texture.c" />
+    <ClCompile Include="MyOglDrawDlg.cpp" />
+    <ClCompile Include="netwk\ChannelCollector.cpp" />
+    <ClCompile Include="netwk\CTPdev.cpp" />
+    <ClCompile Include="netwk\GEThttp.cpp" />
+    <ClCompile Include="netwk\Simulation.cpp" />
+    <ClCompile Include="opencv\CvimgMat.cc" />
+    <ClCompile Include="own\COwnCtl.cpp" />
+    <ClCompile Include="own\Screen-Sharing.cpp" />
+    <ClCompile Include="pthdpool\pthdpool.cc" />
+    <ClCompile Include="RegistDlg.cpp" />
+    <ClCompile Include="security\AES.cc" />
+    <ClCompile Include="security\encoding.cc" />
+    <ClCompile Include="security\MD5.cc" />
+    <ClCompile Include="SettingsDlg.cpp" />
+    <ClCompile Include="test\Testcase.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="MFCKline.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram.cd" />
+    <None Include="Idx\Initialise-inl.h" />
+    <None Include="Idx\plus1second" />
+    <None Include="res\MFCKline.rc2" />
+    <None Include="web\myweb.nsmap" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\bit+.bmp" />
+    <Image Include="res\bmp00001.bmp" />
+    <Image Include="res\graph_line24_h.bmp" />
+    <Image Include="res\icon1.ico" />
+    <Image Include="res\MFCKline.ico" />
+    <Image Include="res\top1_h.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="AmCharts.Windows.Stock">
+      <HintPath>WPF\AmCharts.Windows.Stock.dll</HintPath>
+    </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework">
+      <HintPath>C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\PresentationFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="System">
+      <HintPath>C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\System.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Core">
+      <HintPath>C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\System.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Data">
+      <HintPath>C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\System.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Data.DataSetExtensions">
+      <HintPath>C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\System.Data.DataSetExtensions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.XML">
+      <HintPath>C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\System.XML.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.Linq">
+      <HintPath>C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\System.Xml.Linq.dll</HintPath>
+    </Reference>
+    <Reference Include="WindowsBase">
+      <HintPath>C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\WindowsBase.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="res\windows.manifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\WPFKline\WPFKline\WPFKline.csproj">
+      <Project>{0652c320-7c16-41e3-a864-c70a672705a2}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties _x007B_8856F961-340A-11D0-A96B-00C04FD705A2_x007D_="CWebBrowser2" RESOURCE_FILE="MFCKline.rc" />
+    </VisualStudio>
+  </ProjectExtensions>
+</Project>
