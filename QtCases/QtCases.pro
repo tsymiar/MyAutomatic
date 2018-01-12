@@ -1,8 +1,8 @@
 #DEFINES += K_line #compile without K-line, to NOTE this line & HEADERS SOURCES include {MYGL}.
-#MYGL=../MFCKline/mygl
+#MYGL=../MfcUtil/mygl
 DEFINES += QT_VERSION
 INCLUDEPATH += /usr/include/GL /usr/include/qt5
-#INCLUDEPATH += ../MFCKline ../MFCKline/mygl ../MFCKline/font
+#INCLUDEPATH += ../MfcUtil ../MfcUtil/mygl ../MfcUtil/font
 HEADERS = OglMaterial.h OpenGLWindow.h gluiobj.h showimg.h #$${MYGL}/OGLKview.h $${MYGL}/SDL_text.h
 SOURCES = main.cpp showimg.cpp OpenGLWindow.cpp gluiobj.cpp OglMaterial.cpp #$${MYGL}/OGLKview.cc $${MYGL}/SDL_text.cc
 QMAKE_CXXFLAGS += -std=c++0x

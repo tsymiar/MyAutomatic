@@ -24,16 +24,16 @@
     <ClInclude Include="Resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\MFCKline\dos\DOSCout.h">
+    <ClInclude Include="..\MfcUtil\dos\DOSCout.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\MFCKline\LoginDlg.h">
+    <ClInclude Include="..\MfcUtil\LoginDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\MFCKline\RegistDlg.h">
+    <ClInclude Include="..\MfcUtil\RegistDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\MFCKline\IMhideWndDlg.h">
+    <ClInclude Include="..\MfcUtil\IMhideWndDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="testAPIsDlg.h">
@@ -42,43 +42,43 @@
     <ClInclude Include="testAPIs.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\MFCKline\MyOglDrawDlg.h">
+    <ClInclude Include="..\MfcUtil\MyOglDrawDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\MFCKline\IMlogDlg.h">
+    <ClInclude Include="..\MfcUtil\IMlogDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\MFCKline\deep\DepthMarket.h">
+    <ClInclude Include="..\MfcUtil\deep\DepthMarket.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\MFCKline\mygl\OGLKview.h">
+    <ClInclude Include="..\MfcUtil\mygl\OGLKview.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\MFCKline\netwk\ChannelCollector.h">
+    <ClInclude Include="..\MfcUtil\netwk\ChannelCollector.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\MFCKline\netwk\CTPdev.h">
+    <ClInclude Include="..\MfcUtil\netwk\CTPdev.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\MFCKline\SetMarkDlg.h">
+    <ClInclude Include="..\MfcUtil\resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\MFCKline\resource.h">
+    <ClInclude Include="..\MfcUtil\netwk\Simulation.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\MFCKline\netwk\Simulation.h">
+    <ClInclude Include="..\MfcUtil\own\Screen-Sharing.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\MFCKline\own\Screen-Sharing.h">
+    <ClInclude Include="..\MfcUtil\IM\IMclient.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\MFCKline\IM\IMclient.h">
+    <ClInclude Include="..\MfcUtil\html\MyHtmlView.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\MFCKline\html\MyHtmlView.h">
+    <ClInclude Include="..\MfcUtil\html\cefWebKit.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\MFCKline\html\cefWebKit.h">
+    <ClInclude Include="..\MfcUtil\SettingsDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -86,25 +86,25 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MFCKline\IM\client.cpp">
+    <ClCompile Include="..\MfcUtil\IM\client.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MFCKline\security\encoding.cc">
+    <ClCompile Include="..\MfcUtil\security\encoding.cc">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MFCKline\security\MD5.cc">
+    <ClCompile Include="..\MfcUtil\security\MD5.cc">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MFCKline\dos\DOSCout.cpp">
+    <ClCompile Include="..\MfcUtil\dos\DOSCout.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MFCKline\LoginDlg.cpp">
+    <ClCompile Include="..\MfcUtil\LoginDlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MFCKline\RegistDlg.cpp">
+    <ClCompile Include="..\MfcUtil\RegistDlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MFCKline\IMhideWndDlg.cpp">
+    <ClCompile Include="..\MfcUtil\IMhideWndDlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="testAPIs.cpp">
@@ -113,31 +113,28 @@
     <ClCompile Include="testAPIsDlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MFCKline\MyOglDrawDlg.cpp">
+    <ClCompile Include="..\MfcUtil\MyOglDrawDlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MFCKline\IMlogDlg.cpp">
+    <ClCompile Include="..\MfcUtil\IMlogDlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MFCKline\deep\DepthMarket.cpp">
+    <ClCompile Include="..\MfcUtil\deep\DepthMarket.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MFCKline\netwk\ChannelCollector.cpp">
+    <ClCompile Include="..\MfcUtil\netwk\ChannelCollector.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MFCKline\netwk\CTPdev.cpp">
+    <ClCompile Include="..\MfcUtil\netwk\CTPdev.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MFCKline\mygl\OGLKview.cc">
+    <ClCompile Include="..\MfcUtil\mygl\OGLKview.cc">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MFCKline\SetMarkDlg.cpp">
+    <ClCompile Include="..\MfcUtil\netwk\Simulation.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MFCKline\netwk\Simulation.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\MFCKline\own\Screen-Sharing.cpp">
+    <ClCompile Include="..\MfcUtil\own\Screen-Sharing.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\soapC.cpp">
@@ -149,18 +146,21 @@
     <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\stdsoap2.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MFCKline\html\MyHtmlView.cpp">
+    <ClCompile Include="..\MfcUtil\html\MyHtmlView.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MFCKline\html\cefWebKit.cpp">
+    <ClCompile Include="..\MfcUtil\html\cefWebKit.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MFCKline\opencv\CvimgMat.cc">
+    <ClCompile Include="..\MfcUtil\opencv\CvimgMat.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\MfcUtil\SettingsDlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\MFCKline\MFCKline.rc">
+    <ResourceCompile Include="..\MfcUtil\MFCKline.rc">
       <Filter>资源文件</Filter>
     </ResourceCompile>
     <ResourceCompile Include="testAPIs.rc">
@@ -171,19 +171,19 @@
     <Image Include="res\testAPIs.ico">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="..\MFCKline\res\MFCKline.ico">
+    <Image Include="..\MfcUtil\res\MFCKline.ico">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="..\MFCKline\res\icon1.ico">
+    <Image Include="..\MfcUtil\res\icon1.ico">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="..\MFCKline\res\graph_line24_h.bmp">
+    <Image Include="..\MfcUtil\res\graph_line24_h.bmp">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="..\MFCKline\res\bmp00001.bmp">
+    <Image Include="..\MfcUtil\res\bmp00001.bmp">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="..\MFCKline\res\top1_h.bmp">
+    <Image Include="..\MfcUtil\res\top1_h.bmp">
       <Filter>资源文件</Filter>
     </Image>
   </ItemGroup>

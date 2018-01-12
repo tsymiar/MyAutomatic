@@ -158,7 +158,7 @@ void QOglMaterial::initializeGL()
 #ifdef  OGL_KVIEW_H_
 	kv.AdjustDraw(640, 480);
 #else
-	png.setPixels("../WinNTKline/MFCKline/image/atlas.png");
+	png.setPixels("../WinNTKline/MfcUtil/image/atlas.png");
 #endif
 #endif // _GLVBO_
 }
@@ -206,7 +206,7 @@ void QOglMaterial::paintGL()
 #ifdef  OGL_KVIEW_H_
 	kv.InitGraph();
 	kv.DrawCoord(0, 0);
-	kv.GetMarkDatatoDraw("../MFCKline/data/SH600747.DAT");
+	kv.GetMarkDatatoDraw("../MfcUtil/data/SH600747.DAT");
 	qDebug() << "(" << kv.lastmarket.price << ")";
 #else
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

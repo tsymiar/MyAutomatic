@@ -25,15 +25,15 @@ Qtcases:
   
 ## [WinNTKline](https://github.com/tsymiar/MyAutomatic/blob/auto-dev/WinNTKline):
 >WinNTKline
->> CV4i
+>> CVML
 ```c
     OpenCV && some Machine Learning learning cases.
 ``` 
->>MFCKline
+>>MfcUtil
 ```c
     A MFC solution to register, log, show K-line, ctp ... etc.
 ```
->>WpfKline
+>>WPFKline
 ```c
     A K-line app used C#.
 ```

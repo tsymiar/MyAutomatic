@@ -77,7 +77,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IntDir>obj\test\</IntDir>
+    <IntDir>testAPIs\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -100,13 +100,13 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_TESTAPIS_;_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(libPNG);$(CEFDIR);$(OPENCV)\include;$(SolutionDir)MFCKline;$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\font;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(libPNG);$(CEFDIR);$(OPENCV)\include;$(SolutionDir)MfcUtil;$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\font;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4819</DisableSpecificWarnings>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalLibraryDirectories>$(CEFDIR)\$(Configuration);$(libPNG)\lib\$(Configuration);$(OPENCV)\lib\$(Configuration);$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\GL\lib;$(SolutionDir)MFCKline\font\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CEFDIR)\$(Configuration);$(libPNG)\lib\$(Configuration);$(OPENCV)\lib\$(Configuration);$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\GL\lib;$(SolutionDir)MfcUtil\font\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>glu32.lib;opengl32.lib;libpng16.lib;zlib.lib;thosttraderapi.lib;thostmduserapi.lib;libcef.lib;libcef_dll_wrapper.lib;opencv_calib3d330d.lib;opencv_highgui330d.lib;opencv_photo330d.lib;opencv_video330d.lib;opencv_core330d.lib;opencv_imgcodecs330d.lib;opencv_shape330d.lib;opencv_videoio330d.lib;opencv_dnn330d.lib;opencv_imgproc330d.lib;opencv_stitching330d.lib;opencv_videostab330d.lib;opencv_features2d330d.lib;opencv_ml330d.lib;opencv_superres330d.lib;opencv_flann330d.lib;opencv_objdetect330d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Midl>
@@ -127,12 +127,12 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_TESTAPIS_;_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(libPNG);$(CEFDIR);$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\font;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap;$(SolutionDir)MFCKline</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(libPNG);$(CEFDIR);$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\font;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap;$(SolutionDir)MfcUtil</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4819</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalLibraryDirectories>$(libPNG)\lib\$(Configuration);$(CEFDIR)\$(Configuration);$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\font\lib;$(SolutionDir)MFCKline\GL\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(libPNG)\lib\$(Configuration);$(CEFDIR)\$(Configuration);$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\font\lib;$(SolutionDir)MfcUtil\GL\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>glu32.lib;opengl32.lib;libpng16.lib;zlib.lib;thosttraderapi.lib;thostmduserapi.lib;libcef.lib;libcef_dll_wrapper.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Midl>
@@ -155,13 +155,13 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(libPNG);$(CEFDIR);$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\font;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap;$(SolutionDir)MFCKline</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(libPNG);$(CEFDIR);$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\font;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap;$(SolutionDir)MfcUtil</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(libPNG)\lib\$(Configuration);$(CEFDIR)\$(Configuration);$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\font\lib;$(SolutionDir)MFCKline\GL\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(libPNG)\lib\$(Configuration);$(CEFDIR)\$(Configuration);$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\font\lib;$(SolutionDir)MfcUtil\GL\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>glu32.lib;opengl32.lib;libpng16.lib;zlib.lib;thosttraderapi.lib;thostmduserapi.lib;libcef.lib;libcef_dll_wrapper.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Midl>
@@ -184,13 +184,13 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(libPNG);$(CEFDIR);$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\font;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap;$(SolutionDir)MFCKline</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(libPNG);$(CEFDIR);$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\font;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap;$(SolutionDir)MfcUtil</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(libPNG)\lib\$(Configuration);$(CEFDIR)\$(Configuration);$(SolutionDir)MFCKline\CTP;$(SolutionDir)MFCKline\font\lib;$(SolutionDir)MFCKline\GL\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(libPNG)\lib\$(Configuration);$(CEFDIR)\$(Configuration);$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\font\lib;$(SolutionDir)MfcUtil\GL\lib</AdditionalLibraryDirectories>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -204,23 +204,23 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\MFCKline\deep\DepthMarket.h" />
-    <ClInclude Include="..\MFCKline\dos\DOSCout.h" />
-    <ClInclude Include="..\MFCKline\html\cefWebKit.h" />
-    <ClInclude Include="..\MFCKline\html\MyHtmlView.h" />
-    <ClInclude Include="..\MFCKline\IMhideWndDlg.h" />
-    <ClInclude Include="..\MFCKline\IMlogDlg.h" />
-    <ClInclude Include="..\MFCKline\IM\IMclient.h" />
-    <ClInclude Include="..\MFCKline\LoginDlg.h" />
-    <ClInclude Include="..\MFCKline\mygl\OGLKview.h" />
-    <ClInclude Include="..\MFCKline\MyOglDrawDlg.h" />
-    <ClInclude Include="..\MFCKline\netwk\ChannelCollector.h" />
-    <ClInclude Include="..\MFCKline\netwk\CTPdev.h" />
-    <ClInclude Include="..\MFCKline\netwk\Simulation.h" />
-    <ClInclude Include="..\MFCKline\own\Screen-Sharing.h" />
-    <ClInclude Include="..\MFCKline\RegistDlg.h" />
-    <ClInclude Include="..\MFCKline\resource.h" />
-    <ClInclude Include="..\MFCKline\SetMarkDlg.h" />
+    <ClInclude Include="..\MfcUtil\deep\DepthMarket.h" />
+    <ClInclude Include="..\MfcUtil\dos\DOSCout.h" />
+    <ClInclude Include="..\MfcUtil\html\cefWebKit.h" />
+    <ClInclude Include="..\MfcUtil\html\MyHtmlView.h" />
+    <ClInclude Include="..\MfcUtil\IMhideWndDlg.h" />
+    <ClInclude Include="..\MfcUtil\IMlogDlg.h" />
+    <ClInclude Include="..\MfcUtil\IM\IMclient.h" />
+    <ClInclude Include="..\MfcUtil\LoginDlg.h" />
+    <ClInclude Include="..\MfcUtil\mygl\OGLKview.h" />
+    <ClInclude Include="..\MfcUtil\MyOglDrawDlg.h" />
+    <ClInclude Include="..\MfcUtil\netwk\ChannelCollector.h" />
+    <ClInclude Include="..\MfcUtil\netwk\CTPdev.h" />
+    <ClInclude Include="..\MfcUtil\netwk\Simulation.h" />
+    <ClInclude Include="..\MfcUtil\own\Screen-Sharing.h" />
+    <ClInclude Include="..\MfcUtil\RegistDlg.h" />
+    <ClInclude Include="..\MfcUtil\resource.h" />
+    <ClInclude Include="..\MfcUtil\SettingsDlg.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -231,25 +231,25 @@
     <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\soapC.cpp" />
     <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\soapClient.cpp" />
     <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\stdsoap2.cpp" />
-    <ClCompile Include="..\MFCKline\deep\DepthMarket.cpp" />
-    <ClCompile Include="..\MFCKline\dos\DOSCout.cpp" />
-    <ClCompile Include="..\MFCKline\html\cefWebKit.cpp" />
-    <ClCompile Include="..\MFCKline\html\MyHtmlView.cpp" />
-    <ClCompile Include="..\MFCKline\IMhideWndDlg.cpp" />
-    <ClCompile Include="..\MFCKline\IMlogDlg.cpp" />
-    <ClCompile Include="..\MFCKline\IM\client.cpp" />
-    <ClCompile Include="..\MFCKline\LoginDlg.cpp" />
-    <ClCompile Include="..\MFCKline\mygl\OGLKview.cc" />
-    <ClCompile Include="..\MFCKline\MyOglDrawDlg.cpp" />
-    <ClCompile Include="..\MFCKline\netwk\ChannelCollector.cpp" />
-    <ClCompile Include="..\MFCKline\netwk\CTPdev.cpp" />
-    <ClCompile Include="..\MFCKline\netwk\Simulation.cpp" />
-    <ClCompile Include="..\MFCKline\opencv\CvimgMat.cc" />
-    <ClCompile Include="..\MFCKline\own\Screen-Sharing.cpp" />
-    <ClCompile Include="..\MFCKline\RegistDlg.cpp" />
-    <ClCompile Include="..\MFCKline\security\encoding.cc" />
-    <ClCompile Include="..\MFCKline\security\MD5.cc" />
-    <ClCompile Include="..\MFCKline\SetMarkDlg.cpp" />
+    <ClCompile Include="..\MfcUtil\deep\DepthMarket.cpp" />
+    <ClCompile Include="..\MfcUtil\dos\DOSCout.cpp" />
+    <ClCompile Include="..\MfcUtil\html\cefWebKit.cpp" />
+    <ClCompile Include="..\MfcUtil\html\MyHtmlView.cpp" />
+    <ClCompile Include="..\MfcUtil\IMhideWndDlg.cpp" />
+    <ClCompile Include="..\MfcUtil\IMlogDlg.cpp" />
+    <ClCompile Include="..\MfcUtil\IM\client.cpp" />
+    <ClCompile Include="..\MfcUtil\LoginDlg.cpp" />
+    <ClCompile Include="..\MfcUtil\mygl\OGLKview.cc" />
+    <ClCompile Include="..\MfcUtil\MyOglDrawDlg.cpp" />
+    <ClCompile Include="..\MfcUtil\netwk\ChannelCollector.cpp" />
+    <ClCompile Include="..\MfcUtil\netwk\CTPdev.cpp" />
+    <ClCompile Include="..\MfcUtil\netwk\Simulation.cpp" />
+    <ClCompile Include="..\MfcUtil\opencv\CvimgMat.cc" />
+    <ClCompile Include="..\MfcUtil\own\Screen-Sharing.cpp" />
+    <ClCompile Include="..\MfcUtil\RegistDlg.cpp" />
+    <ClCompile Include="..\MfcUtil\security\encoding.cc" />
+    <ClCompile Include="..\MfcUtil\security\MD5.cc" />
+    <ClCompile Include="..\MfcUtil\SettingsDlg.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -260,18 +260,18 @@
     <ClCompile Include="testAPIsDlg.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\MFCKline\MFCKline.rc" />
+    <ResourceCompile Include="..\MfcUtil\MFCKline.rc" />
     <ResourceCompile Include="testAPIs.rc" />
   </ItemGroup>
   <ItemGroup>
     <None Include="res\testAPIs.rc2" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\MFCKline\res\bmp00001.bmp" />
-    <Image Include="..\MFCKline\res\graph_line24_h.bmp" />
-    <Image Include="..\MFCKline\res\icon1.ico" />
-    <Image Include="..\MFCKline\res\MFCKline.ico" />
-    <Image Include="..\MFCKline\res\top1_h.bmp" />
+    <Image Include="..\MfcUtil\res\bmp00001.bmp" />
+    <Image Include="..\MfcUtil\res\graph_line24_h.bmp" />
+    <Image Include="..\MfcUtil\res\icon1.ico" />
+    <Image Include="..\MfcUtil\res\MFCKline.ico" />
+    <Image Include="..\MfcUtil\res\top1_h.bmp" />
     <Image Include="res\testAPIs.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
