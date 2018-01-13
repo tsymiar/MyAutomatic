@@ -819,7 +819,8 @@ void OGLKview::SwitchViewport(int viewport, OGLKview::ViewSize adjust)
 	case 4:
 		glViewport(0, int(attr.tall*0.1f), int(attr.wide*0.72f), int(attr.tall*0.11f));
 		break;
-	default:	break;
+	default:	
+		break;
 	}
 }
 
