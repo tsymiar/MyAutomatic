@@ -1,44 +1,44 @@
-// CMytestView.cpp : 实现文件
+// CMarketView.cpp : 实现文件
 //
 
 #include "../stdafx.h"
 #include "../MarketClient.h"
-#include "CMytestView.h"
+#include "CMarketView.h"
 
 
-// CMytestView
+// CMarketView
 
-IMPLEMENT_DYNCREATE(CMytestView, CFormView)
+IMPLEMENT_DYNCREATE(CMarketView, CFormView)
 
-CMytestView::CMytestView()
+CMarketView::CMarketView()
 	: CFormView(IDD_FORMVIEW)
 {
 
 }
 
-CMytestView::~CMytestView()
+CMarketView::~CMarketView()
 {
 }
 
-void CMytestView::DoDataExchange(CDataExchange* pDX)
+void CMarketView::DoDataExchange(CDataExchange* pDX)
 {
 	CFormView::DoDataExchange(pDX);
 }
 
-BEGIN_MESSAGE_MAP(CMytestView, CFormView)
+BEGIN_MESSAGE_MAP(CMarketView, CFormView)
 END_MESSAGE_MAP()
 
 
-// CMytestView 诊断
+// CMarketView 诊断
 
 #ifdef _DEBUG
-void CMytestView::AssertValid() const
+void CMarketView::AssertValid() const
 {
 	CFormView::AssertValid();
 }
 
 #ifndef _WIN32_WCE
-void CMytestView::Dump(CDumpContext& dc) const
+void CMarketView::Dump(CDumpContext& dc) const
 {
 	CFormView::Dump(dc);
 }
@@ -46,7 +46,7 @@ void CMytestView::Dump(CDumpContext& dc) const
 #endif //_DEBUG
 
 
-void CMytestView::OnInitialUpdate()
+void CMarketView::OnInitialUpdate()
 {
 	
 }
@@ -64,9 +64,9 @@ BOOL ::CreateChildrenWindow()
 	//test.DoModal();
 	if (!m_mySplitter.CreateStatic(this, 1, 2))//切割客户区为1行2列
 		return FALSE;
-	if (!m_mySplitter.CreateView(0, 0, RUNTIME_CLASS(CMytestView), CSize(0, 0), NULL)) //第一行第一列展示的View视图
+	if (!m_mySplitter.CreateView(0, 0, RUNTIME_CLASS(CMarketView), CSize(0, 0), NULL)) //View视图
 		return FALSE;
-	if (!m_mySplitter.CreateView(0, 1, RUNTIME_CLASS(CMytestView), CSize(0, 0), NULL)) //第一行第二列展示的View视图
+	if (!m_mySplitter.CreateView(0, 1, RUNTIME_CLASS(CMarketView), CSize(0, 0), NULL))
 		return FALSE;
 	CRect ect;
 	GetClientRect(&ect);//获取客户区的大小

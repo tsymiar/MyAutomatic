@@ -1,14 +1,14 @@
 #pragma once
 
-// CMytestView 窗体视图
+// CMarketView 窗体视图
 
-class CMytestView : public CFormView
+class CMarketView : public CFormView
 {
-	DECLARE_DYNCREATE(CMytestView)
+	DECLARE_DYNCREATE(CMarketView)
 
 protected:
-	CMytestView();           // 动态创建所使用的受保护的构造函数
-	virtual ~CMytestView();
+	CMarketView();           // 动态创建所使用的受保护的构造函数
+	virtual ~CMarketView();
 
 public:
 #ifdef AFX_DESIGN_TIME
