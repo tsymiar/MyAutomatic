@@ -267,12 +267,16 @@
     <None Include="res\testAPIs.rc2" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="..\MfcUtil\res\bit+.bmp" />
     <Image Include="..\MfcUtil\res\bmp00001.bmp" />
     <Image Include="..\MfcUtil\res\graph_line24_h.bmp" />
     <Image Include="..\MfcUtil\res\icon1.ico" />
     <Image Include="..\MfcUtil\res\MFCKline.ico" />
     <Image Include="..\MfcUtil\res\top1_h.bmp" />
     <Image Include="res\testAPIs.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="..\MfcUtil\res\windows.manifest" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

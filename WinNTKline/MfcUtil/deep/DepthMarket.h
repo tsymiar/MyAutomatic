@@ -22,6 +22,7 @@ public:
 	DepthMarket();
 	void FillChart(bool unfurl);
 	void DrawItem(OGLKview::Item item, int col);
+	void DrawBackground();
 	int DrawItem(OGLKview::Item item, bool mode = false);
 	void DelItem(int item);
 	DepthMarket* getDepth();

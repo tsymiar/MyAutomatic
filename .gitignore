@@ -29,11 +29,13 @@
 
 #Others
 LinuxSrvc/gSOAPverify/bin
+WinNTKline/test/testAPIs
 QtCases/GeneratedFiles
-QtCases/Makefile
+QtCases/QtCases
 QtCases/moc_*
 QtCases/ui_*
 */Debug
+/.vs
 *.tlog
 *.log
 *.patch
@@ -44,7 +46,5 @@ QtCases/ui_*
 *.suo
 *.db
 *.pdb
-QtCases/QtCases
 *.merged
 *.recipe
-/.vs

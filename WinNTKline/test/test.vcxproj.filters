@@ -186,10 +186,16 @@
     <Image Include="..\MfcUtil\res\top1_h.bmp">
       <Filter>资源文件</Filter>
     </Image>
+    <Image Include="..\MfcUtil\res\bit+.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\testAPIs.rc2">
       <Filter>资源文件</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="..\MfcUtil\res\windows.manifest" />
   </ItemGroup>
 </Project>
