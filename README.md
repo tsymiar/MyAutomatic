@@ -24,6 +24,7 @@ Qtcases:
   #####  [QtCases](https://github.com/tsymiar/MyAutomatic/tree/auto-dev/QtCases) qt with OpenGL.
   
 ## [WinNTKline](https://github.com/tsymiar/MyAutomatic/blob/auto-dev/WinNTKline):
+######  [Microsoft .NET Framework 3.5](https://www.microsoft.com/en-US/download/details.aspx?id=25150)
 >WinNTKline
 >> CVML
 ```c
