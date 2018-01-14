@@ -18,12 +18,12 @@
     <ClCompile Include="CvMl.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MfcUtil\opencv\CvimgMat.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\MfcUtil\opencv\CvimgMat.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\MfcUtil\py\CPyTensor.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
