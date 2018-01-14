@@ -28,6 +28,7 @@
 *.app
 
 #Others
+WinNTKline/MfcUtil/image/timg.png
 LinuxSrvc/gSOAPverify/bin
 WinNTKline/test/testAPIs
 QtCases/GeneratedFiles
