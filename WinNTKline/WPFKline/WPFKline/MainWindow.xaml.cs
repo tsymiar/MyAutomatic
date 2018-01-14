@@ -65,7 +65,8 @@ namespace WPFKline
                 }
             else
             {
-                System.Windows.MessageBox.Show("文件不存在！","警告");
+                DirectoryInfo fileInfo = new DirectoryInfo(fileName);
+                System.Windows.MessageBox.Show("No such [" + fileInfo.Name + "] file!", "WARN");
                 return null;
             }
         }
@@ -78,7 +79,7 @@ namespace WPFKline
 #if DEBUG
                     @"\data\SH600747.DAT";
 #else
-                @"\..\..\..\..\MFCKline\data\SH600747.DAT";
+                @"\..\..\..\..\MfcUtil\data\SH600747.DAT";
 #endif
                 LoadData(txtFilePath.Text);
                 stockSet1.ItemsSource = Data;
@@ -101,7 +102,7 @@ namespace WPFKline
         private void btnOpenFile_Click(object sender, RoutedEventArgs e)
         {
             Microsoft.Win32.OpenFileDialog ofd = new Microsoft.Win32.OpenFileDialog();
-            ofd.Filter = "数据文件(*.DAT)|*.DAT";
+            ofd.Filter = "coord(*.DAT)|*.DAT";
             ofd.RestoreDirectory = true;
             ofd.ShowDialog();
             if (!String.IsNullOrEmpty(ofd.FileName))
