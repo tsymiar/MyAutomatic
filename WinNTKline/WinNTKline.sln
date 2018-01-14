@@ -11,13 +11,14 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gSOAPverify", "..\LinuxSrvc
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IM", "..\LinuxSrvc\IM\IM.vcxproj", "{28813B8F-EA1E-4039-9BDE-11F0EB52986C}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "LinuxSrvc", "LinuxSrvc", "{9AF30FB0-9135-4EBA-B07E-16B1F1D98C76}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Linux", "Linux", "{9AF30FB0-9135-4EBA-B07E-16B1F1D98C76}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Mix", "Mix", "{929677BC-1A53-4CD4-B120-259D6A7FDBDB}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "K-line", "K-line", "{748D08E6-622E-4CD2-9AC7-7766F288389B}"
 	ProjectSection(SolutionItems) = preProject
 		..\README.md = ..\README.md
+		MfcUtil\res\windows.manifest = MfcUtil\res\windows.manifest
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IM(Win32)", "test\IM\IM.vcxproj", "{6B864007-F9E8-4469-92BA-2387CCEB1573}"

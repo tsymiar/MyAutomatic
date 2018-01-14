@@ -217,6 +217,7 @@
     <ClInclude Include="..\MfcUtil\netwk\ChannelCollector.h" />
     <ClInclude Include="..\MfcUtil\netwk\CTPdev.h" />
     <ClInclude Include="..\MfcUtil\netwk\Simulation.h" />
+    <ClInclude Include="..\MfcUtil\opencv\CvimgMat.h" />
     <ClInclude Include="..\MfcUtil\own\Screen-Sharing.h" />
     <ClInclude Include="..\MfcUtil\RegistDlg.h" />
     <ClInclude Include="..\MfcUtil\resource.h" />

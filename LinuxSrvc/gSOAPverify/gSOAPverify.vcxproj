@@ -88,13 +88,13 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(ProjectDir)bin\</OutDir>
+    <OutDir>$(ProjectDir)bin\$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)..\obj\$(Platform)\$(TargetName)\</IntDir>
     <AdditionalSourcesToCopyMapping>$(MSBuildProjectDirectory)\Makefile;$(MSBuildProjectDirectory)\mysql\fixmysql;$(MSBuildProjectDirectory)\soap\myweb.wsdl;$(AdditionalSourcesToCopyMapping)</AdditionalSourcesToCopyMapping>
     <TargetExt>.a</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
-    <OutDir>$(ProjectDir)bin\</OutDir>
+    <OutDir>$(ProjectDir)bin\$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)..\obj\$(Platform)\$(TargetName)\</IntDir>
     <AdditionalSourcesToCopyMapping>$(MSBuildProjectDirectory)\Makefile;$(AdditionalSourcesToCopyMapping)</AdditionalSourcesToCopyMapping>
     <TargetExt>.a</TargetExt>
@@ -106,17 +106,17 @@
     <TargetExt />
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
-    <OutDir>$(ProjectDir)bin\</OutDir>
+    <OutDir>$(ProjectDir)bin\$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)..\obj\$(Platform)\$(TargetName)\</IntDir>
     <TargetExt />
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(ProjectDir)bin\</OutDir>
+    <OutDir>$(ProjectDir)bin\$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)..\obj\$(Platform)\$(TargetName)\</IntDir>
     <TargetExt />
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
-    <OutDir>$(ProjectDir)bin\</OutDir>
+    <OutDir>$(ProjectDir)bin\$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)..\obj\$(Platform)\$(TargetName)\</IntDir>
     <TargetExt />
   </PropertyGroup>
@@ -144,7 +144,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <ClCompile />
     <Link>
-      <LibraryDependencies>pthread;/usr/lib/mysql;mysqlclient;%(LibraryDependencies)</LibraryDependencies>
+      <LibraryDependencies>pthread;mysql;%(LibraryDependencies)</LibraryDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

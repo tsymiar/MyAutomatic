@@ -81,6 +81,9 @@
     <ClInclude Include="..\MfcUtil\SettingsDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="..\MfcUtil\opencv\CvimgMat.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -152,10 +155,10 @@
     <ClCompile Include="..\MfcUtil\html\cefWebKit.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MfcUtil\opencv\CvimgMat.cc">
+    <ClCompile Include="..\MfcUtil\SettingsDlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MfcUtil\SettingsDlg.cpp">
+    <ClCompile Include="..\MfcUtil\opencv\CvimgMat.cc">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

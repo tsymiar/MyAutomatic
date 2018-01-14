@@ -153,10 +153,10 @@
     <ClInclude Include="Idx\auto_tchar.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="opencv\CvimgMat.h">
+    <ClInclude Include="SettingsDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="SettingsDlg.h">
+    <ClInclude Include="opencv\CvimgMat.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -266,13 +266,13 @@
     <ClCompile Include="html\MyHtmlView.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="opencv\CvimgMat.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="IM\TCPsocket.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="SettingsDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="opencv\CvimgMat.cc">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
