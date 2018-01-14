@@ -19,5 +19,6 @@ struct CvimgMat {
 	int g_eshImage(cv::Mat imgSrc);
 	int cvmat_test();
 };
-
+#ifdef CVML
 #include "CvimgMat.cc"
+#endif
