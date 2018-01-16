@@ -128,7 +128,7 @@ void sql_close()
 
 bool get_rslt_new(DBinfo * info)
 {
-	sprintf(sql, "SELECT email,tell FROM %s WHERE psw='%s'" /*AND user='%s'"*/, table.c_str(), info->raw.psw/*, info->raw.acc*/);
+	sprintf(sql, "SELECT email,tell FROM %s WHERE `psw`='%s'" /*AND user='%s'"*/, table.c_str(), info->raw.psw/*, info->raw.acc*/);
 	cout << LL << "SQL:[\033[34m" << sql << "\033[0m]" << endl;
 	pthread_mutex_lock(&sql_lock);
 	if (0 != mysql_query(&mysql, sql))
