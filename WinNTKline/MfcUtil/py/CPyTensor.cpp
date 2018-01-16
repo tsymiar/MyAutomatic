@@ -1,4 +1,4 @@
-#include "CPyTensor.h"
+#include "CPyTensor.hpp"
 
 CPyTensor::CPyTensor()
 {

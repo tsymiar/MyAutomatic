@@ -1,4 +1,4 @@
-#include "CvimgMat.h"
+#include "CvimgMat.hpp"
 
 #pragma warning (disable:4474)
 using namespace cv;
