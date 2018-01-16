@@ -1,8 +1,8 @@
 //CVML
 #ifdef WIN32
-#include "../MfcUtil/opencv/CvimgMat.h"
+#include "../MfcUtil/opencv/CvimgMat.hpp"
 #else
-#include "../MfcUtil/py/CPyTensor.h"
+#include "../MfcUtil/py/CPyTensor.hpp"
 #endif
 
 int main()
