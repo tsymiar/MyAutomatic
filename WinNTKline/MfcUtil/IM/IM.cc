@@ -26,23 +26,33 @@
 #define ACC_REC "acnts"
 //using namespace std;
 //C++11 std与socket.h中bind函数冲突
-int  aimtoquit;
 #ifdef _WIN32
-WSADATA wsaData;
-SOCKET
-#else
-int
+typedef int type_len;
+typedef SOCKET type_socket;
+#ifndef pthread_t
+typedef unsigned int pthread_t;
 #endif
-listen_socket, recv_socket, send_socket;
-#ifdef __linux
+typedef unsigned int type_thread_func;
+#define flush_all() _flushall()
+#else
+typedef int type_socket;
+typedef socklen_t type_len; 
+typedef void *type_thread_func;
+#define flush_all() fflush(stdin)
+#define closesocket(socket) close(socket)
 pthread_mutexattr_t attr;
 #endif
+
 #ifdef _WIN32
+WSADATA wsaData;
 CRITICAL_SECTION
 #else
 pthread_mutex_t
 #endif
 sendallow;
+
+type_socket listen_socket, recv_socket, send_socket;
+int  aimtoquit;
 
 struct msg {
 	char _0_ = '\0';
@@ -67,22 +77,31 @@ struct group {
 
 struct LINE {
 	char user[24];
-#ifdef _WIN32
-	SOCKET
-#else
-	int
-#endif
-		sock_rcv;
-#ifdef _WIN32
-	SOCKET
-#else
-	int
-#endif
-		sock_snd;
+	type_socket sock_rcv;
+	type_socket sock_snd;
 } online[MAX_ONLINE];
 
+
+int _im_(int argc, char *argv[]);
+
+int main(
+#ifdef __linux
+	int argc, char* argv[]
+#endif
+)
+{
+#ifdef __linux
+	if (fork() == 0)
+#else
+	int argc = 1;
+	char* argv[] = { NULL };
+#endif
+	_im_(argc, argv);
+	return 0;
+}
+
 void save_acnt();
-int load_acnt(void);
+int load_acnt();
 int new_user(char usr[24], char psw[24]);
 int user_to_line(char user[24]);
 int get_user_idx(char user[24]);
@@ -92,22 +111,12 @@ int get_group_idx(char group[24]);
 int join_group(int idx, char usr[24], char psw[24]);
 int leave_group(int idx, char usr[24]);
 
-#ifdef __linux
-void *
-#else
-unsigned __stdcall
-#endif
-monite(void *arg)
+type_thread_func monite(void *arg)
 {
-#ifdef _WIN32
-	SOCKET
-#else
-	int
-#endif
-		rcv_sock = recv_socket,//接收
+	type_socket rcv_sock = recv_socket,//接收
 		snd_sock = send_socket;//发送
 	int c, flg, rtn;
-	int qq = 0, loggedon = 0;
+	int qq = 0, logged = 0;
 	char name[24], bufs[256], tmp[256];
 	do {
 		memset(name, 0, sizeof(name));
@@ -159,7 +168,7 @@ monite(void *arg)
 			sprintf(bufs + 2, "%x", (rtn = user_auth((tmp + 8), (tmp + 32))));
 			strcpy(name, (tmp + 8));
 			if (rtn == 0) {
-				loggedon = 1;
+				logged = 1;
 				sprintf(bufs + 8, "[%s] logged on.\n", (tmp + 8));
 			}
 			else if (rtn == 1) {
@@ -173,208 +182,197 @@ monite(void *arg)
 		}
 		// set cur qq as last flg;
 		qq = flg;
-	} while (loggedon == 0);
-	for (c = 0; c<MAX_ONLINE; c++) {
-		if (strlen(online[c].user) == 0) {
-			online[c].sock_rcv = rcv_sock;
-			online[c].sock_snd = snd_sock;
-			strcpy(online[c].user, tmp + 8);
-			break;
+		for (c = 0; c<MAX_ONLINE; c++) {
+			if (strlen(online[c].user) == 0) {
+				online[c].sock_rcv = rcv_sock;
+				online[c].sock_snd = snd_sock;
+				strcpy(online[c].user, tmp + 8);
+				break;
+			};
 		};
-	};
-	do {
-		flg = recv(rcv_sock, tmp, 256, 0);
-		if (flg < 256)
-			goto con_err;
-		if (flg == -1) {
-			printf("lost connection with %s.\n", name);
-			goto con_err1;
-		};
+		while (logged) {
+			flg = recv(rcv_sock, tmp, 256, 0);
+			if (flg < 256)
+				goto con_err;
+			if (flg == -1) {
+				printf("lost connection with %s.\n", name);
+				goto con_err1;
+			};
 #ifdef _DEBUG
-		if (qq != flg && flg != 0)
-			printf("2rcv[%x,%x]:%s\n", tmp[0], tmp[1], tmp + 8);
-		qq = flg;
+			if (qq != flg && flg != 0)
+				printf("2rcv[%x,%x]:%s\n", tmp[0], tmp[1], tmp + 8);
+			qq = flg;
 #endif
-		memcpy(bufs, tmp, 2);
-		if (tmp[0] == 0)
-		{
-			switch (tmp[1])
+			memcpy(bufs, tmp, 2);
+			if (tmp[0] == 0)
 			{
-			case 0x3:
-			{
-				bufs[2] = 0x0;
-				loggedon = 0;
-				sprintf(bufs + 8, "%s quit.\n", name);
-				send(snd_sock, bufs, 256, 0);
-			} return 0;
-			case 0x4:
-			{
-				bufs[2] = 0x0;
-				rtn = get_user_idx(name);
-				strcpy(users[rtn].intro, (tmp + 32));
-				send(snd_sock, bufs, 256, 0);
-			} break;
-			case 0x5:
-			{
-				bufs[2] = 0x0;
-				rtn = get_user_idx(name);
-				strcpy(users[rtn].psw, (tmp + 32));
-				send(snd_sock, bufs, 256, 0);
-			} break;
-			case 0x6:
-			{
-				bufs[2] = 0x0;
-				strcpy((bufs + 8), "users online list:");
-				send(snd_sock, bufs, 256, 0);
-				for (c = 0; c < MAX_ONLINE; c++) {
-					if (strlen(online[c].user) >> 0) {
-						sprintf(bufs + 2, "%x", c);
-						strcpy((bufs + 8 * (c + 1)), online[c].user);
-						send(snd_sock, bufs, 256, 0);
-					};
-				};
-			} break;
-			case 0x7:
-			{
-				bufs[2] = 0x0;
-				strcpy((bufs + 8), "groups list:");
-				send(snd_sock, bufs, 256, 0);
-				for (c = 0; c < MAX_GROUPS; c++) {
-					if (strlen(groups[c].ngrp) >> 0) {
-						bufs[1] = c;
-						strcpy((bufs + 8 * (c + 1)), groups[c].ngrp);
-						send(snd_sock, bufs, 256, 0);
-					};
-				};
-			} break;
-			case 0x8:
-			{
-				rtn = get_group_idx(tmp + 8);
-				sprintf(bufs, "%x", rtn);
-				if (rtn == -1) {
-					strcpy((bufs + 8), "no such group.\n");
-				}
-				else {
-					strcpy((bufs + 8), "users of this group:");
-					for (c = 0; c < MAX_MENBERS_PER_GROUP; c++) {
-						if (strlen(groups[rtn].members[c]) >> 0) {
-							strcpy((bufs + 8 * (c + 1)), groups[rtn].members[c]);
+				switch (tmp[1])
+				{
+				case 0x3:
+				{
+					bufs[2] = 0x0;
+					logged = 0;
+					sprintf(bufs + 8, "%s quit.\n", name);
+					send(snd_sock, bufs, 256, 0);
+				} return 0;
+				case 0x4:
+				{
+					bufs[2] = 0x0;
+					rtn = get_user_idx(name);
+					strcpy(users[rtn].intro, (tmp + 32));
+					send(snd_sock, bufs, 256, 0);
+				} break;
+				case 0x5:
+				{
+					bufs[2] = 0x0;
+					rtn = get_user_idx(name);
+					strcpy(users[rtn].psw, (tmp + 32));
+					send(snd_sock, bufs, 256, 0);
+				} break;
+				case 0x6:
+				{
+					bufs[2] = 0x0;
+					strcpy((bufs + 8), "users online list:");
+					send(snd_sock, bufs, 256, 0);
+					for (c = 0; c < MAX_ONLINE; c++) {
+						if (strlen(online[c].user) >> 0) {
+							sprintf(bufs + 2, "%x", c);
+							strcpy((bufs + 8 * (c + 1)), online[c].user);
+							send(snd_sock, bufs, 256, 0);
 						};
 					};
-				};
-				send(snd_sock, bufs, 256, 0);
-			} break;
-			case 0x9:
-			{
-				rtn = host_group((tmp + 8), (tmp + 32));
-				sprintf(bufs, "%x", rtn);
-				if (rtn == -1) {
-					strcpy((bufs + 8), "rejected");
-				}
-				else {
-					join_group(rtn, name, (tmp + 32));
-					sprintf(bufs + 8, "new group: %s.\n", (tmp + 8));
-				}
-				send(snd_sock, bufs, 256, 0);
-			} break;
-			case 0xA:
-			{
-				rtn = join_group(get_group_idx(tmp + 8), name, (tmp + 32));
-				sprintf(bufs, "%x", rtn);
-				if (rtn == -1) {
-					strcpy((bufs + 8), "you have already in this group.\n");
-				}
-				else if (rtn == -2) {
-					strcpy((bufs + 8), "wrong password to this group.\n");
-				}
-				send(snd_sock, bufs, 256, 0);
-			} break;
-			case 0xB:
-			{
-				rtn = leave_group(get_group_idx(tmp + 8), name);
-				sprintf(bufs, "%x", rtn);
-				if (rtn == 0)
-					strcpy((bufs + 8), "leave group successfully.\n");
-				else
-					strcpy((bufs + 8), "you are not in this group.\n");
-				send(snd_sock, bufs, 256, 0);
-			} break;
-			case 0xC:
-			{
-				rtn = get_user_idx(tmp + 8);
-				sprintf(bufs, "%x", rtn);
-				if (rtn >= 0) {
-					strcpy((bufs + 8), (tmp + 8));
-					strcpy((bufs + 32), users[rtn].intro);
-				}
-				else {
-					strcpy((bufs + 8), "system info:\nNo such user!\n");
-				}
-				send(snd_sock, bufs, 256, 0);
-			} break;
-			case 0xD:
-			{ //loop1
-				rtn = get_group_idx(tmp + 8);
-				sprintf(bufs, "%x", rtn);
-				if (rtn == -1) {//rtn=-1
-					if (-1 != user_to_line(tmp + 8)) {
-						sprintf(bufs, "%x", -1);
-						strcpy((bufs + 8), name);
-						strcpy((bufs + 32), (tmp + 32));
-						send(online[rtn].sock_snd, bufs, 256, 0);
-					};    //loop0
-				}//rtn=-1
-				else {
-					for (c = 0; c < MAX_MENBERS_PER_GROUP; c++) {
-						if (!strlen(groups[rtn].members[c]) == 0)
-						{
-							sprintf(bufs, "%x", -3);
-							int sss = user_to_line(groups[rtn].members[c]);
-							if (!(sss == -1)) {
-								strcpy((bufs + 8), name);
-								strcpy((bufs + 32), (tmp + 32));
-								send(online[sss].sock_snd, bufs, 256, 0);
-							}//if sss
-						}//if strlen
-					}//for
+				} break;
+				case 0x7:
+				{
+					bufs[2] = 0x0;
+					strcpy((bufs + 8), "groups list:");
 					send(snd_sock, bufs, 256, 0);
-				}//else
-			} break;
+					for (c = 0; c < MAX_GROUPS; c++) {
+						if (strlen(groups[c].ngrp) >> 0) {
+							bufs[1] = c;
+							strcpy((bufs + 8 * (c + 1)), groups[c].ngrp);
+							send(snd_sock, bufs, 256, 0);
+						};
+					};
+				} break;
+				case 0x8:
+				{
+					rtn = get_group_idx(tmp + 8);
+					sprintf(bufs, "%x", rtn);
+					if (rtn == -1) {
+						strcpy((bufs + 8), "no such group.\n");
+					}
+					else {
+						strcpy((bufs + 8), "users of this group:");
+						for (c = 0; c < MAX_MENBERS_PER_GROUP; c++) {
+							if (strlen(groups[rtn].members[c]) >> 0) {
+								strcpy((bufs + 8 * (c + 1)), groups[rtn].members[c]);
+							};
+						};
+					};
+					send(snd_sock, bufs, 256, 0);
+				} break;
+				case 0x9:
+				{
+					rtn = host_group((tmp + 8), (tmp + 32));
+					sprintf(bufs, "%x", rtn);
+					if (rtn == -1) {
+						strcpy((bufs + 8), "rejected");
+					}
+					else {
+						join_group(rtn, name, (tmp + 32));
+						sprintf(bufs + 8, "new group: %s.\n", (tmp + 8));
+					}
+					send(snd_sock, bufs, 256, 0);
+				} break;
+				case 0xA:
+				{
+					rtn = join_group(get_group_idx(tmp + 8), name, (tmp + 32));
+					sprintf(bufs, "%x", rtn);
+					if (rtn == -1) {
+						strcpy((bufs + 8), "you have already in this group.\n");
+					}
+					else if (rtn == -2) {
+						strcpy((bufs + 8), "wrong password to this group.\n");
+					}
+					send(snd_sock, bufs, 256, 0);
+				} break;
+				case 0xB:
+				{
+					rtn = leave_group(get_group_idx(tmp + 8), name);
+					sprintf(bufs, "%x", rtn);
+					if (rtn == 0)
+						strcpy((bufs + 8), "leave group successfully.\n");
+					else
+						strcpy((bufs + 8), "you are not in this group.\n");
+					send(snd_sock, bufs, 256, 0);
+				} break;
+				case 0xC:
+				{
+					rtn = get_user_idx(tmp + 8);
+					sprintf(bufs, "%x", rtn);
+					if (rtn >= 0) {
+						strcpy((bufs + 8), (tmp + 8));
+						strcpy((bufs + 32), users[rtn].intro);
+					}
+					else {
+						strcpy((bufs + 8), "system info:\nNo such user!\n");
+					}
+					send(snd_sock, bufs, 256, 0);
+				} break;
+				case 0xD:
+				{ //loop1
+					rtn = get_group_idx(tmp + 8);
+					sprintf(bufs, "%x", rtn);
+					if (rtn == -1) {//rtn=-1
+						if (-1 != user_to_line(tmp + 8)) {
+							sprintf(bufs, "%x", -1);
+							strcpy((bufs + 8), name);
+							strcpy((bufs + 32), (tmp + 32));
+							send(online[rtn].sock_snd, bufs, 256, 0);
+						};    //loop0
+					}//rtn=-1
+					else {
+						for (c = 0; c < MAX_MENBERS_PER_GROUP; c++) {
+							if (!strlen(groups[rtn].members[c]) == 0)
+							{
+								sprintf(bufs, "%x", -3);
+								int sss = user_to_line(groups[rtn].members[c]);
+								if (!(sss == -1)) {
+									strcpy((bufs + 8), name);
+									strcpy((bufs + 32), (tmp + 32));
+									send(online[sss].sock_snd, bufs, 256, 0);
+								}//if sss
+							}//if strlen
+						}//for
+						send(snd_sock, bufs, 256, 0);
+					}//else
+				} break;
+				default: break;
+				}
 			}
-		}
-	} while (loggedon == 1);
+		};
+	} while (!logged);
+	
 con_err:
 	rtn = user_to_line(name);
 	strcpy(online[rtn].user, "");
 
 con_err1:
-#ifdef _WIN32
 	closesocket(rcv_sock);
 	closesocket(snd_sock);
-#else
-	close(rcv_sock);
-	close(snd_sock);
-#endif
+
 	return NULL;
 };
 
-#ifdef __linux
-void *
-#else
-unsigned __stdcall
-#endif
-commands(void *arg)
+type_thread_func commands(void *arg)
 {
 	char optionstr[24], name[24];
 	int rtn;
 	do {
 		scanf("%s", (char*)&optionstr);
 		if (strcmp(optionstr, "quit") == 0) {
-#ifdef _WIN32
 			closesocket(listen_socket);
-#else
-			close(listen_socket);
-#endif
 			printf("saving accounts data to file %s.\n", ACC_REC);
 			save_acnt();
 #ifdef _WIN32
@@ -390,13 +388,8 @@ commands(void *arg)
 			scanf("%s", (char*)&name);
 			rtn = user_to_line(name);
 			if (!(rtn == -1)) {
-#ifdef _WIN32
 				closesocket(online[rtn].sock_rcv);
 				closesocket(online[rtn].sock_snd);
-#else
-				close(online[rtn].sock_rcv);
-				close(online[rtn].sock_snd);
-#endif
 				printf("user %s kicked !\n", name);
 			};
 		};
@@ -431,23 +424,16 @@ int _im_(int argc, char *argv[]) {
 		LPCSTR
 #endif
 		)"chat server for network design");
-	unsigned int
-#else
-	pthread_t
 #endif
-		thread_ID;
-#ifdef __linux
+	pthread_t thread_ID;
+#ifdef _WIN32
+	_beginthreadex(NULL, 0, (_beginthreadex_proc_type)commands, NULL, 0, &thread_ID);
+#else
 	pthread_create(&thread_ID, NULL, commands, (void*)-1);
-#else
-#ifdef _WIN32
-	_beginthreadex(NULL, 0, commands, NULL, 0, &thread_ID);
 #endif
-#endif
-	int err =
+	int err = 0;
 #ifdef _WIN32
-		WSAStartup(0x202, &wsaData);
-#else
-		0;
+	err = WSAStartup(0x202, &wsaData);
 #endif
 	if (err
 #ifdef _WIN32
@@ -499,18 +485,7 @@ int _im_(int argc, char *argv[]) {
 	}
 	printf("listening to port %d.\n", DEFAULT_PORT);
 	struct sockaddr_in from;
-#ifdef _WIN32
-	int
-#else
-	socklen_t
-#endif
-		fromlen = (
-#ifdef _WIN32
-			int
-#else
-			socklen_t
-#endif
-			)sizeof(from);
+	type_len fromlen = (type_len)sizeof(from);
 	int c = 0;
 	char IPdotdec[16];
 	do {
@@ -551,64 +526,33 @@ int _im_(int argc, char *argv[]) {
 			std::cerr << "errno:\t" << strerror(errno) << std::endl;
 			return -1;
 		};
-#ifdef __linux
-		pthread_create(&thread_ID, NULL, monite, (void*)-1);
+#ifdef _WIN32
+		_beginthreadex(NULL, 0, (_beginthreadex_proc_type)monite, NULL, 0, &thread_ID);
 #else
-		_beginthreadex(NULL, 0, monite, NULL, 0, &thread_ID);
+		pthread_create(&thread_ID, NULL, monite, (void*)-1);
 #endif
 		c++;
 #ifdef _DEBUG
-		{
-			printf("2: %d\n", send_socket);
-		}
+		printf("2: %d\n", send_socket);
 #endif
 		} while (!(aimtoquit));
 		printf("c = %d\n", c);
 		return 0;
 		}
-
-int main(
-#ifdef __linux
-	int argc, char* argv[]
-#endif
-)
-{
-#ifdef __linux
-	if (fork() == 0)
-#else
-	int argc = 1;
-	char* argv[] = { NULL };
-#endif
-	_im_(argc, argv);
-	return 0;
-}
-
 //save accounts to file.
 void save_acnt() {
-#ifdef _WIN32
-	_flushall();
-#else
-	fflush(stdin);
-#endif
+	flush_all();
 	FILE *dumpfile;
 	dumpfile = fopen(ACC_REC, "w");
 	fwrite(users, sizeof(user), MAX_USERS, dumpfile);
 	fwrite(groups, sizeof(group), MAX_GROUPS, dumpfile);
 	fclose(dumpfile);
-#ifdef _WIN32
-	_flushall();
-#else
-	fflush(stdin);
-#endif
+	flush_all();
 };
 //load file system from disk.
-int load_acnt(void) {
+int load_acnt() {
 	FILE *dumpfile;
-#ifdef _WIN32
-	_flushall();
-#else
-	fflush(stdin);
-#endif
+	flush_all();
 	dumpfile = fopen(ACC_REC, "r");
 	if (dumpfile == NULL)
 		return -1;
@@ -618,11 +562,7 @@ int load_acnt(void) {
 		fclose(dumpfile);
 		return 0;
 	};
-#ifdef _WIN32
-	_flushall();
-#else
-	fflush(stdin);
-#endif
+	flush_all();
 };
 int new_user(char usr[24], char psw[24]) {
 	if (usr[0] == '\0')
