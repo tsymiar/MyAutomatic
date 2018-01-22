@@ -20,10 +20,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\MfcUtil\py\CPyTensor.hpp">
+    <ClInclude Include="..\MfcUtil\opencv\CvimgMat.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\MfcUtil\opencv\CvimgMat.hpp">
+    <ClInclude Include="..\MfcUtil\tensor\CPyTensor.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
