@@ -172,7 +172,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\MfcUtil\opencv\CvimgMat.hpp" />
-    <ClInclude Include="..\MfcUtil\py\CPyTensor.hpp" />
+    <ClInclude Include="..\MfcUtil\tensor\CPyTensor.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

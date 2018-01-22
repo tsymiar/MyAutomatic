@@ -5,9 +5,9 @@ using namespace cv;
 Mat image;
 const cv::String dstPng =
 #ifdef CVML
-"../MfcUtil/image/timg.png"
+"../MfcUtil/image/taoxi.png"
 #else
-"../image/timg.png"
+"../image/taoxi.png"
 #endif
 ;
 
@@ -212,14 +212,14 @@ int CvimgMat::cvmat_test()
 		;
 	const cv::String srcJpg =
 #ifdef CVML
-		"../MfcUtil/image/timg.jpg"
+		"../MfcUtil/image/taoxi.jpg"
 #else
-		"../image/timg.jpg"
+		"../image/taoxi.jpg"
 #endif
 		;
 
 	image = getImageMat(srcJpg);
-	saveMat2PNG(100, 100, dstPng);
+	saveMat2PNG(90, 90, dstPng);
 	int bilval = 8;
 	int weight = 64;
 	float alpha = 0.5f;
