@@ -159,6 +159,9 @@
     <ClInclude Include="opencv\CvimgMat.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Idx\Timer.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MFCKline.cpp">
