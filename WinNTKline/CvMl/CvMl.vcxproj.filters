@@ -27,4 +27,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\MfcUtil\tensor\object_detect.py">
+      <Filter>资源文件</Filter>
+    </None>
+  </ItemGroup>
 </Project>

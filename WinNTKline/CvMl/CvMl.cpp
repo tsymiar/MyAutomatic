@@ -2,7 +2,10 @@
 #ifdef WIN32
 #include "../MfcUtil/opencv/CvimgMat.hpp"
 #else
-#include "../MfcUtil/py/CPyTensor.hpp"
+#ifdef _DEBUG
+#error Only Release can work normally!
+#endif
+#include "../MfcUtil/tensor/CPyTensor.hpp"
 #endif
 
 int main()
