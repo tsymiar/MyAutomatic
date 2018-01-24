@@ -17,7 +17,7 @@ LinuxSrvc:
     
     just run `g++ IM.cc -std=c++11 -lpthread` if using linux.
     
-    someone may see [IM.cc](https://raw.githubusercontent.com/tsymiar/MyAutomatic/auto-dev/WinNTKline/MFCKline/IM/IM.cc) also, the source code.
+    someone may see [IM.cc](https://raw.githubusercontent.com/tsymiar/MyAutomatic/auto-dev/WinNTKline/MfcUtil/IM/IM.cc) also, the source code.
     
 Qtcases:
 -------
