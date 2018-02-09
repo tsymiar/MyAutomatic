@@ -147,9 +147,6 @@
     <ClInclude Include="html\cefWebKit.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="html\MyHtmlView.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="Idx\auto_tchar.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -160,6 +157,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Idx\Timer.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="html\MfcHtmlView.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -266,9 +266,6 @@
     <ClCompile Include="html\cefWebKit.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="html\MyHtmlView.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="IM\TCPsocket.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -276,6 +273,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="opencv\CvimgMat.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="html\MfcHtmlView.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

@@ -266,7 +266,7 @@
     <ClInclude Include="Font\FontNehe.h" />
     <ClInclude Include="HOOK\injectDLL.h" />
     <ClInclude Include="html\cefWebKit.h" />
-    <ClInclude Include="html\MyHtmlView.h" />
+    <ClInclude Include="html\MfcHtmlView.h" />
     <ClInclude Include="Idx\auto_tchar.h" />
     <ClInclude Include="Idx\binarytree-inl.h" />
     <ClInclude Include="Idx\CommSet.h" />
@@ -316,7 +316,7 @@
     <ClCompile Include="Font\FontNehe.cc" />
     <ClCompile Include="HOOK\injectDLL.cpp" />
     <ClCompile Include="html\cefWebKit.cpp" />
-    <ClCompile Include="html\MyHtmlView.cpp" />
+    <ClCompile Include="html\MfcHtmlView.cpp" />
     <ClCompile Include="IMlogDlg.cpp" />
     <ClCompile Include="IMhideWndDlg.cpp" />
     <ClCompile Include="IM\client.cpp" />
