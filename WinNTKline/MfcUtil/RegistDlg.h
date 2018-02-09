@@ -1,7 +1,7 @@
 #pragma once
 
 //#include "html/CWebBrowser2.h"
-#include "html/MyHtmlView.h"
+#include "html/MfcHtmlView.h"
 #include "html/cefWebKit.h"
 #include "afxdialogex.h"
 
@@ -27,7 +27,7 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 public:
-	CMyHtmlView* m_HTMLPage = NULL;
+	CMfcHtmlView * m_HTMLPage = NULL;
 	//CWebBrowser2 m_browser;
 	char m_IP[32];
 	CStatic m_hint;

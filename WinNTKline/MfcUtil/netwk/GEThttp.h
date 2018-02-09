@@ -3,4 +3,4 @@
 #include <wininet.h>
 #include <string>
 
-CString HttpGet(string& sRequest, string sPort = "443");
+CString HttpGet(std::string& sRequest, std::string sPort = "443");

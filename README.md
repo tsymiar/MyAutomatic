@@ -13,7 +13,7 @@ LinuxSrvc:
      ```
      this is a `SOAP-server` to login the project.
 *  [IM](https://github.com/tsymiar/MyAutomatic/tree/auto-dev/LinuxSrvc/IM)
-    Should compile with `Visual Studio 2017` on Windows;
+    should compile with `Visual Studio 2017` on Windows;
     
     just run `g++ IM.cc -std=c++11 -lpthread` if using linux.
     

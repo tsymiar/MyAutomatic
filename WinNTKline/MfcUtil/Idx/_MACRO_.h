@@ -321,7 +321,7 @@ const MACRO_T g_vc[] =
 
 #ifdef _DEBUG
 #if (defined(__BORLANDC__))
-	{ "_DEBUG", "#" },
+{ "_DEBUG", "#" },
 #else
 	PT_MAKE_STR(_DEBUG),
 #endif
@@ -441,7 +441,7 @@ const MACRO_T g_vc[] =
 
 #ifdef _WCHAR_T_DEFINED
 #if (defined(__BORLANDC__))
-	{ "_WCHAR_T_DEFINED", "#" },
+{ "_WCHAR_T_DEFINED", "#" },
 #else
 	PT_MAKE_STR(_WCHAR_T_DEFINED),
 #endif
@@ -559,7 +559,7 @@ const MACRO_T g_borland[] =
 
 #ifdef _WCHAR_T
 #if (defined(__BORLANDC__))
-	{ "_WCHAR_T", "#" },
+{ "_WCHAR_T", "#" },
 #else
 	PT_MAKE_STR(_WCHAR_T),
 #endif
@@ -567,7 +567,7 @@ const MACRO_T g_borland[] =
 
 #ifdef _WCHAR_T_DEFINED
 #if (defined(__BORLANDC__))
-	{ "_WCHAR_T_DEFINED", "#" },
+{ "_WCHAR_T_DEFINED", "#" },
 #else
 	PT_MAKE_STR(_WCHAR_T_DEFINED),
 #endif
@@ -622,7 +622,7 @@ const MACRO_T g_intel_win[] =
 
 #ifdef _INC_STDIO
 #if (defined(__BORLANDC__))
-	{ "_INC_STDIO", "#" },
+{ "_INC_STDIO", "#" },
 #else
 	PT_MAKE_STR(_INC_STDIO),
 #endif
@@ -698,7 +698,7 @@ const MACRO_T g_intel_win[] =
 
 #ifdef _SIZE_T_DEFINED
 #if (defined(__BORLANDC__))
-	{ "_SIZE_T_DEFINED", "#" },
+{ "_SIZE_T_DEFINED", "#" },
 #else
 	PT_MAKE_STR(_SIZE_T_DEFINED),
 #endif
@@ -714,7 +714,7 @@ const MACRO_T g_intel_win[] =
 
 #ifdef _WCHAR_T_DEFINED
 #if (defined(__BORLANDC__))
-	{ "_WCHAR_T_DEFINED", "#" },
+{ "_WCHAR_T_DEFINED", "#" },
 #else
 	PT_MAKE_STR(_WCHAR_T_DEFINED),
 #endif
@@ -722,7 +722,7 @@ const MACRO_T g_intel_win[] =
 
 #ifdef _WCTYPE_T_DEFINED
 #if (defined(__BORLANDC__))
-	{ "_WCTYPE_T_DEFINED", "#" },
+{ "_WCTYPE_T_DEFINED", "#" },
 #else
 	PT_MAKE_STR(_WCTYPE_T_DEFINED),
 #endif

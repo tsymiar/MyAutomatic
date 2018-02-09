@@ -3,40 +3,40 @@
 
 #include "stdafx.h"
 #include "MFCKline.h"
-#include "MyHtmlView.h"
+#include "MfcHtmlView.h"
 
 // CHTMLDlg
 
-IMPLEMENT_DYNCREATE(CHTMLDlg, CHtmlView)
+IMPLEMENT_DYNCREATE(CMfcHTML, CHtmlView)
 
-CHTMLDlg::CHTMLDlg(){}
+CMfcHTML::CMfcHTML(){}
 
-CHTMLDlg::~CHTMLDlg(){}
+CMfcHTML::~CMfcHTML(){ delete this; }
 
-void CHTMLDlg::DoDataExchange(CDataExchange* pDX)
+void CMfcHTML::DoDataExchange(CDataExchange* pDX)
 {
 	CHtmlView::DoDataExchange(pDX);
 }
 
-BEGIN_MESSAGE_MAP(CHTMLDlg, CHtmlView)
+BEGIN_MESSAGE_MAP(CMfcHTML, CHtmlView)
 END_MESSAGE_MAP()
 
 
 // CHTMLDlg 诊断
 
 #ifdef _DEBUG
-void CHTMLDlg::AssertValid() const
+void CMfcHTML::AssertValid() const
 {
 	CHtmlView::AssertValid();
 }
 
-void CHTMLDlg::Dump(CDumpContext& dc) const
+void CMfcHTML::Dump(CDumpContext& dc) const
 {
 	CHtmlView::Dump(dc);
 }
 #endif //_DEBUG
 /*
-BOOL CHTMLDlg::CreateControlSite(COleControlContainer * pContainer, COleControlSite ** ppSite, UINT, REFCLSID)
+BOOL CMfcHTML::CreateControlSite(COleControlContainer * pContainer, COleControlSite ** ppSite, UINT, REFCLSID)
 {
 	*ppSite = new CDocHostSite(pContainer, this);
 	return (*ppSite) ? TRUE : FALSE;
@@ -51,7 +51,7 @@ HRESULT CDocHostSite::XDocHostUIHandler::ShowContextMenu(DWORD dwID,
 	return pThis->m_pView->OnShowContextMenu(dwID, ppt, pcmdtReserved, pdispReserved);
 }
 */
-BOOL CHTMLDlg::CreateFromDialog(CWnd* pDlgWnd)
+BOOL CMfcHTML::CreateFromDialog(CWnd* pDlgWnd)
 {
 	CRect rc;
 	pDlgWnd->GetClientRect(&rc);
@@ -68,7 +68,7 @@ BOOL CHTMLDlg::CreateFromDialog(CWnd* pDlgWnd)
 	}
 }
 
-int CHTMLDlg::OnMouseActivate(CWnd* pDesktopWnd, UINT nHitTest, UINT message)
+int CMfcHTML::OnMouseActivate(CWnd* pDesktopWnd, UINT nHitTest, UINT message)
 {
 	// TODO: Add your message handler code here and/or call default 
 
@@ -78,7 +78,7 @@ int CHTMLDlg::OnMouseActivate(CWnd* pDesktopWnd, UINT nHitTest, UINT message)
 	//return CHtmlView::OnMouseActivate(pDesktopWnd, nHitTest, message); 
 }
 
-void CHTMLDlg::OnNavigateError(LPCTSTR lpszURL, LPCTSTR lpszFrame,
+void CMfcHTML::OnNavigateError(LPCTSTR lpszURL, LPCTSTR lpszFrame,
 	DWORD dwError, BOOL *pbCancel)
 {
 	if (200 != dwError && 0 == _tcscmp(this->GetLocationURL(), lpszURL))

@@ -4,15 +4,15 @@
 #error "Windows CE 不支持 CHtmlView。"
 #endif 
 
-// CMyHtmlView Html 视图
+// CMfcHtmlView Html 视图
 #include "Def\MacroDef.h"
 
-class CHTMLDlg : public CHtmlView
+class CMfcHTML : public CHtmlView
 {
-	DECLARE_DYNCREATE(CHTMLDlg)
+	DECLARE_DYNCREATE(CMfcHTML)
 protected:
-	CHTMLDlg();           // 动态创建所使用的受保护的构造函数
-	virtual ~CHTMLDlg();
+	CMfcHTML();           // 动态创建所使用的受保护的构造函数
+	virtual ~CMfcHTML();
 public:
 #ifdef _DEBUG
 	virtual void AssertValid() const;
@@ -28,4 +28,4 @@ public:
 	afx_msg void OnNavigateError(LPCTSTR lpszURL, LPCTSTR lpszFrame, DWORD dwError, BOOL *pbCancel);
 };
 
-class CMyHtmlView : public CHTMLDlg {};
+class CMfcHtmlView : public CMfcHTML {};
