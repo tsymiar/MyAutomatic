@@ -2,12 +2,12 @@
 
 #pragma once
 
-class CtestAPIsDlg : public CDialogEx
+class CtestUtilsDlg : public CDialogEx
 {
 
 public:
-	CtestAPIsDlg(CWnd* pParent = NULL);
-	~CtestAPIsDlg();
+	CtestUtilsDlg(CWnd* pParent = NULL);
+	~CtestUtilsDlg();
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_TEST_DIALOG };
 #endif

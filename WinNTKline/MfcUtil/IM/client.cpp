@@ -52,7 +52,7 @@ int InitChat(st_imusr* imusr) {
 	};
 	struct sockaddr_in server;
 	server.sin_family = AF_INET;
-#ifdef _TESTAPIS_
+#ifdef _UTILAPIS_
 	inet_pton(AF_INET, ipaddr, (PVOID*)&server.sin_addr.s_addr);
 #else
 	server.sin_addr.s_addr = inet_addr(ipaddr);

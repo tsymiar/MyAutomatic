@@ -1,8 +1,8 @@
 //
 
 #include "stdafx.h"
-#include "testAPIs.h"
-#include "testAPIsDlg.h"
+#include "testUtils.h"
+#include "testUtilsDlg.h"
 #include "afxdialogex.h"
 #include <Resource.h>
 #include <dos\DOSCout.h>
@@ -25,37 +25,37 @@ CLoginDlg logon;
 IMPLEMENT_DYNCREATE(CWebBrowser2, CWnd)
 
 
-CtestAPIsDlg::CtestAPIsDlg(CWnd* pParent /*=NULL*/)
+CtestUtilsDlg::CtestUtilsDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(IDD_TEST_DIALOG, pParent)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
 
-CtestAPIsDlg::~CtestAPIsDlg()
+CtestUtilsDlg::~CtestUtilsDlg()
 {
 }
 
-void CtestAPIsDlg::DoDataExchange(CDataExchange* pDX)
+void CtestUtilsDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_IPCTRL, m_ipAddr);
 	DDX_Control(pDX, IDC_MPORT, m_Port);
 }
 
-BEGIN_MESSAGE_MAP(CtestAPIsDlg, CDialogEx)
+BEGIN_MESSAGE_MAP(CtestUtilsDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
-	ON_BN_CLICKED(IDC_TOIM, &CtestAPIsDlg::OnBnClickedToim)
-	ON_BN_CLICKED(IDC_REGIDST, &CtestAPIsDlg::OnBnClickedRegist)
-	ON_BN_CLICKED(IDC_TESTLOG, &CtestAPIsDlg::OnBnClickedTestlog)
-	ON_BN_CLICKED(IDC_KLINE, &CtestAPIsDlg::OnBnClickedKline)
-	ON_BN_CLICKED(IDC_CTP, &CtestAPIsDlg::OnBnClickedCtp)
-	ON_BN_CLICKED(IDC_SIMBTN, &CtestAPIsDlg::OnBnClickedSimbtn)
-	ON_BN_CLICKED(IDC_IMSER, &CtestAPIsDlg::OnBnClickedImser)
+	ON_BN_CLICKED(IDC_TOIM, &CtestUtilsDlg::OnBnClickedToim)
+	ON_BN_CLICKED(IDC_REGIDST, &CtestUtilsDlg::OnBnClickedRegist)
+	ON_BN_CLICKED(IDC_TESTLOG, &CtestUtilsDlg::OnBnClickedTestlog)
+	ON_BN_CLICKED(IDC_KLINE, &CtestUtilsDlg::OnBnClickedKline)
+	ON_BN_CLICKED(IDC_CTP, &CtestUtilsDlg::OnBnClickedCtp)
+	ON_BN_CLICKED(IDC_SIMBTN, &CtestUtilsDlg::OnBnClickedSimbtn)
+	ON_BN_CLICKED(IDC_IMSER, &CtestUtilsDlg::OnBnClickedImser)
 END_MESSAGE_MAP()
 
 
-BOOL CtestAPIsDlg::OnInitDialog()
+BOOL CtestUtilsDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
 
@@ -80,7 +80,7 @@ BOOL CtestAPIsDlg::OnInitDialog()
 }
 
 
-void CtestAPIsDlg::OnPaint()
+void CtestUtilsDlg::OnPaint()
 {
 	if (IsIconic())
 	{
@@ -104,26 +104,26 @@ void CtestAPIsDlg::OnPaint()
 }
 
 
-HCURSOR CtestAPIsDlg::OnQueryDragIcon()
+HCURSOR CtestUtilsDlg::OnQueryDragIcon()
 {
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
 
-void CtestAPIsDlg::OnBnClickedToim()
+void CtestUtilsDlg::OnBnClickedToim()
 {
 	CIMhideWndDlg* m_pIM = new CIMhideWndDlg((IMUSR*)"127.0.0.1");
 	m_pIM->Create(IDD_IMHIDEWND);
 	m_pIM->ShowWindow(SW_SHOWNORMAL);
 }
 
-void CtestAPIsDlg::OnBnClickedRegist()
+void CtestUtilsDlg::OnBnClickedRegist()
 {
 	m_ipAddr.GetWindowText(s_IP, 16);
 	logon.testRegist(s_IP);
 }
 
-void CtestAPIsDlg::OnBnClickedTestlog()
+void CtestUtilsDlg::OnBnClickedTestlog()
 {
 	m_Port.GetWindowText(s_Port); 
 	m_ipAddr.GetWindowText(s_IP, 16);
@@ -139,7 +139,7 @@ void CtestAPIsDlg::OnBnClickedTestlog()
 }
 
 
-void CtestAPIsDlg::OnBnClickedKline()
+void CtestUtilsDlg::OnBnClickedKline()
 {
 	MyOglDrawDlg* ogl = new MyOglDrawDlg();
 	ogl->Create(IDD_OGLIMG);
@@ -147,7 +147,7 @@ void CtestAPIsDlg::OnBnClickedKline()
 }
 
 
-void CtestAPIsDlg::OnBnClickedCtp()
+void CtestUtilsDlg::OnBnClickedCtp()
 {
 	CTPdev* m_ctp = new CTPdev();
 	CloseHandle((HANDLE)_beginthreadex(NULL, 0, m_ctp->TradeMarket, (void*)this, 0, NULL));
@@ -155,7 +155,7 @@ void CtestAPIsDlg::OnBnClickedCtp()
 }
 
 
-void CtestAPIsDlg::OnBnClickedSimbtn()
+void CtestUtilsDlg::OnBnClickedSimbtn()
 {
 	if (AllocConsole())
 	{
@@ -164,7 +164,7 @@ void CtestAPIsDlg::OnBnClickedSimbtn()
 	}
 }
 
-void CtestAPIsDlg::OnBnClickedImser()
+void CtestUtilsDlg::OnBnClickedImser()
 {
 	STARTUPINFO sInfo;
 	PROCESS_INFORMATION pInfo;
