@@ -24,7 +24,7 @@
     <RootNamespace>test</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
     <Keyword>MFCProj</Keyword>
-    <ProjectName>testAPIs</ProjectName>
+    <ProjectName>testUtils</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -77,20 +77,20 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IntDir>testAPIs\</IntDir>
+    <IntDir>testUtils\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IntDir>obj\test\</IntDir>
+    <IntDir>testUtils\</IntDir>
     <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IntDir>obj\test\</IntDir>
+    <IntDir>testUtils\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IntDir>obj\test\</IntDir>
+    <IntDir>testUtils\</IntDir>
     <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -98,7 +98,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_TESTAPIS_;_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_UTILAPIS_;_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(libPNG);$(CEFDIR);$(OPENCV)\include;$(SolutionDir)MfcUtil;$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\font;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4819</DisableSpecificWarnings>
@@ -125,7 +125,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_TESTAPIS_;_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_UTILAPIS_;_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(libPNG);$(CEFDIR);$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\font;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap;$(SolutionDir)MfcUtil</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4819</DisableSpecificWarnings>
@@ -225,8 +225,8 @@
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
-    <ClInclude Include="testAPIs.h" />
-    <ClInclude Include="testAPIsDlg.h" />
+    <ClInclude Include="testUtils.h" />
+    <ClInclude Include="testUtilsDlg.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\soapC.cpp" />
@@ -235,7 +235,7 @@
     <ClCompile Include="..\MfcUtil\deep\DepthMarket.cpp" />
     <ClCompile Include="..\MfcUtil\dos\DOSCout.cpp" />
     <ClCompile Include="..\MfcUtil\html\cefWebKit.cpp" />
-    <ClCompile Include="..\MfcUtil\html\MyHtmlView.cpp" />
+    <ClCompile Include="..\MfcUtil\html\MfcHtmlView.cpp" />
     <ClCompile Include="..\MfcUtil\IMhideWndDlg.cpp" />
     <ClCompile Include="..\MfcUtil\IMlogDlg.cpp" />
     <ClCompile Include="..\MfcUtil\IM\client.cpp" />
@@ -257,15 +257,15 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="testAPIs.cpp" />
-    <ClCompile Include="testAPIsDlg.cpp" />
+    <ClCompile Include="testUtils.cpp" />
+    <ClCompile Include="testUtilsDlg.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\MfcUtil\MFCKline.rc" />
-    <ResourceCompile Include="testAPIs.rc" />
+    <ResourceCompile Include="testUtils.rc" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="res\testAPIs.rc2" />
+    <None Include="res\testUtils.rc2" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\MfcUtil\res\bit+.bmp" />
@@ -274,7 +274,7 @@
     <Image Include="..\MfcUtil\res\icon1.ico" />
     <Image Include="..\MfcUtil\res\MFCKline.ico" />
     <Image Include="..\MfcUtil\res\top1_h.bmp" />
-    <Image Include="res\testAPIs.ico" />
+    <Image Include="res\testUtils.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
