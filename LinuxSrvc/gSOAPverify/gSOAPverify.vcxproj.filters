@@ -47,13 +47,13 @@
     <ClInclude Include="soap\soapStub.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="inl\_String-inl.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="web\mainSoap.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="sys\sysstatus.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="util\_String-inl.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

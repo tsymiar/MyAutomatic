@@ -78,9 +78,6 @@
     <ClInclude Include="web\myweb.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Idx\_String-inl.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="Idx\binarytree-inl.h">
       <Filter>头文件</Filter>
     </ClInclude>

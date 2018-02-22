@@ -274,7 +274,6 @@
     <ClInclude Include="Idx\MyAlgorithm.h" />
     <ClInclude Include="Idx\Timer.hpp" />
     <ClInclude Include="Idx\_MACRO_.h" />
-    <ClInclude Include="Idx\_String-inl.h" />
     <ClInclude Include="IMlogDlg.h" />
     <ClInclude Include="IMhideWndDlg.h" />
     <ClInclude Include="IM\IMclient.h" />

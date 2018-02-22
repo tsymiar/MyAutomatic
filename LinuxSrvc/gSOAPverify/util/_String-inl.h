@@ -13,8 +13,8 @@ inline unsigned char* fix_strerr(unsigned char* str)
 		case 0xDD://已收回的堆(delete)
 		case 0xFD://隔离（栅栏字节）字节 下标越界
 		case 0xAB://Memory allocated by LocalAlloc()
-		case 0xBAADF00D://	Memory allocated by LocalAlloc() with LMEM_FIXED,
-				//	but not yet written to.
+		case 0xBAADF00D://	Memory allocated by LocalAlloc() with LMEM_FIXED,\
+																		//	but not yet written to.
 		case 0xFEEEFEEE:/*  OS fill heap memory, which was marked for usage,\
 						but wasn't allocated by HeapAlloc() or LocalAlloc()\
 						Or that memory just has been freed by HeapFree().
@@ -48,6 +48,7 @@ public:
 	char& operator[](unsigned int) const;
 	char* _strcpy(char* strDest, const char* strSrc, int N = 1024);
 	char* /*__cdecl*/_strcat(char * strDest, const char * strSrc);
+	char* _itoa(int num, char *str, int radix);
 	unsigned char* _strsub(unsigned char* ch, int pos, int len);
 	size_t _strlen(const char* str);
 	char* _strmove(char* w, int m, bool fore = false);
@@ -91,7 +92,7 @@ inline _String::_String(const _String& other)
 		_strcpy(m_data, other.m_data);
 	}
 }
-//字符串拷贝函数
+//字符串拷贝
 inline char* _String::_strcpy(char* strDest, const char* strSrc, int N)
 {
 	assert((strDest != NULL) && (strSrc != NULL));
@@ -112,7 +113,7 @@ inline char * /*__cdecl*/ _String::_strcat(char * strDest, const char * strSrc)
 	while (bool((*cp++ = *strSrc++) != false)); /* Copy strSrc to end of strDest */
 	return(strDest);
 }
-//从第pos位开始截取len个字符。
+//从第pos位开始截取ch的len个字符。
 inline unsigned char* _String::_strsub(unsigned char* ch, int pos, int len)
 {
 	unsigned char* pch = ch;
@@ -172,12 +173,13 @@ inline char* _String::_strmove(char* w, int m, bool fore)
 	w[len] = '\0';
 	return w;
 }
+/**
 //单个字符的移动
-/*字符串 w
-*移动的字符 c
-*移动的位数 b
-*移动的方向 hind
-*/
+  * 字符串 w
+  * 移动的字符 c
+  * 移动的位数 b
+  * 移动的方向 hind(后)
+  */
 inline char* _String::_charmove(char* w, char c, int b, bool hind)
 {
 	int i = 0;
@@ -206,7 +208,8 @@ inline char* _String::_charmove(char* w, char c, int b, bool hind)
 	}
 	return w;
 }
-//m:字符位置
+// 单个字符的移动
+// m: 字符位置
 inline char* _String::_intmove(char* w, int m, int b, bool hind)
 {
 	int i = 0;
@@ -252,6 +255,42 @@ inline char* _String::_op_order(char * str)
 		t = str[i];
 		str[i] = str[len - i - 1]; str[len - i - 1] = t;
 	}
+	return str;
+}
+
+inline char* _String::_itoa(int num, char *str, int radix)
+{
+	if (num == 0)
+	{
+		str[0] = '0'; str[1] = '/0';
+		return str;
+	}
+	char  string[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	char* ptr = str;
+	int i; int j;
+	int value = num;
+	if (num<0) num = -num;
+	while (num >= radix)
+	{
+		*ptr++ = string[num % radix];
+		num /= radix;
+	}
+	if (num)
+	{
+		*ptr++ = string[num];
+		*ptr = '/0';
+	}
+	int n = j = ptr - str - 1;
+	for (i = 0; i <(ptr - str) / 2; i++)
+	{
+		int temp = str[i]; str[i] = str[j]; str[j--] = temp;
+	}
+	if (value<0)
+	{
+		for (j = n; j >= 0; --j) str[j + 1] = str[j];
+		str[0] = '-';
+	}
+	str[n + 2] = '/0';
 	return str;
 }
 
