@@ -82,7 +82,7 @@
 #ifdef _WIN32
 #include	"Idx/CPUID.H"
 #endif
-#include	"Idx/_String-inl.h"
+#include	"../../../LinuxSrvc/gSOAPverify/util/_String-inl.h"
 #if !defined(QT_VERSION)
 #include	"dos/DOSCout.h"
 #endif
