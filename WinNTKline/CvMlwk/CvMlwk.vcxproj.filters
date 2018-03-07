@@ -13,23 +13,35 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="脚本">
+      <UniqueIdentifier>{7886ced8-fd0b-448d-abdb-59d042aed9c3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CvMl.cpp">
+    <ClCompile Include="CvmlMain.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\MfcUtil\tensor\ShannonEntropy.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\MfcUtil\opencv\CvimgMat.cc">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\MfcUtil\opencv\CvimgMat.hpp">
+    <ClInclude Include="..\MfcUtil\tensor\CPyTensor.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\MfcUtil\tensor\CPyTensor.hpp">
+    <ClInclude Include="..\MfcUtil\tensor\ShannonEntropy.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\MfcUtil\opencv\CvimgMat.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\MfcUtil\tensor\object_detect.py">
-      <Filter>资源文件</Filter>
+      <Filter>脚本</Filter>
     </None>
   </ItemGroup>
 </Project>
