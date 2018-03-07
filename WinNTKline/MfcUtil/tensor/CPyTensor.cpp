@@ -1,5 +1,3 @@
-#include "CPyTensor.hpp"
-
 CPyTensor::CPyTensor()
 {
 	Py_Initialize();
