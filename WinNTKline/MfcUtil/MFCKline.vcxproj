@@ -272,6 +272,7 @@
     <ClInclude Include="Idx\CommSet.h" />
     <ClInclude Include="Idx\CPUID.H" />
     <ClInclude Include="Idx\MyAlgorithm.h" />
+    <ClInclude Include="Idx\Singleton.hpp" />
     <ClInclude Include="Idx\Timer.hpp" />
     <ClInclude Include="Idx\_MACRO_.h" />
     <ClInclude Include="IMlogDlg.h" />
