@@ -22,8 +22,8 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{8FFF2EFE-1196-43BA-A3F3-A0B377628DAF}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>CvMl</RootNamespace>
-    <ProjectName>CvMl</ProjectName>
+    <RootNamespace>CvMlwk</RootNamespace>
+    <ProjectName>CvMlwk</ProjectName>
     <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -73,20 +73,20 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IntDir>$(SolutionDir)CvMl\CvMl.tlog\</IntDir>
+    <IntDir>$(SolutionDir)CvMlwk\CvMlwk.tlog\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IntDir>$(SolutionDir)CvMl\CvMl.tlog\</IntDir>
+    <IntDir>$(SolutionDir)CvMlwk\CvMlwk.tlog\</IntDir>
     <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IntDir>$(SolutionDir)CvMl\CvMl.tlog\</IntDir>
+    <IntDir>$(SolutionDir)CvMlwk\CvMlwk.tlog\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IntDir>$(SolutionDir)CvMl\CvMl.tlog\</IntDir>
+    <IntDir>$(SolutionDir)CvMlwk\CvMlwk.tlog\</IntDir>
     <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -166,11 +166,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="CvMl.cpp" />
+    <ClCompile Include="..\MfcUtil\opencv\CvimgMat.cc">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\MfcUtil\tensor\ShannonEntropy.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="CvmlMain.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\MfcUtil\opencv\CvimgMat.hpp" />
+    <ClInclude Include="..\MfcUtil\opencv\CvimgMat.h" />
     <ClInclude Include="..\MfcUtil\tensor\CPyTensor.hpp" />
+    <ClInclude Include="..\MfcUtil\tensor\ShannonEntropy.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\MfcUtil\tensor\object_detect.py" />
