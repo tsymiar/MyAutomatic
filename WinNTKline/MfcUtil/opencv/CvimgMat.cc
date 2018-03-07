@@ -1,5 +1,4 @@
-#include "CvimgMat.hpp"
-
+#include "CvimgMat.h"
 #pragma warning (disable:4474)
 using namespace cv;
 Mat image;
@@ -89,8 +88,11 @@ Mat CvimgMat::getImageMat(const String& img, int flg)
 	else
 	{
 		dst = src.clone();
-		namedWindow("Raw image", WINDOW_NORMAL);
-		imshow("Raw image", src);
+		if (flg == -1)
+		{
+			namedWindow("Raw image", WINDOW_NORMAL);
+			imshow("Raw image", src);
+		}
 	}
 	return dst;
 }

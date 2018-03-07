@@ -8,7 +8,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 
 struct CvimgMat {
-	cv::Mat getImageMat(const cv::String& img, int flg = 1);
+	cv::Mat getImageMat(const cv::String& img, int flg = -1);
 	int saveMat2PNG(int w, int h, const cv::String& name);
 	int g_roiImage(const cv::String& bkg, const cv::String& mask, int threshval = 8);
 	int g_mixImage(const cv::String& img1, const cv::String& img2, double alpha);
@@ -19,6 +19,3 @@ struct CvimgMat {
 	int g_eshImage(cv::Mat imgSrc);
 	int cvmat_test();
 };
-#ifdef CVML
-#include "CvimgMat.cc"
-#endif
