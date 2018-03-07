@@ -63,30 +63,30 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <OutDir>$(ProjectDir)bin\$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)..\obj\$(Platform)\$(TargetName)\</IntDir>
-    <TargetExt>.a</TargetExt>
+    <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <TargetExt />
+    <TargetExt>.exe</TargetExt>
     <IntDir>$(ProjectDir)..\obj\$(Platform)\$(TargetName)\</IntDir>
     <OutDir>$(ProjectDir)bin\$(Platform)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
-    <TargetExt />
+    <TargetExt>.exe</TargetExt>
     <IntDir>$(ProjectDir)..\obj\$(Platform)\$(TargetName)\</IntDir>
     <OutDir>$(ProjectDir)bin\$(Platform)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
-    <TargetExt />
+    <TargetExt>.exe</TargetExt>
     <OutDir>$(ProjectDir)bin\$(Platform)\</OutDir>
     <IntDir>$(ProjectDir)..\obj\$(Platform)\$(TargetName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
-    <TargetExt>.a</TargetExt>
+    <TargetExt>.exe</TargetExt>
     <IntDir>$(ProjectDir)..\obj\$(Platform)\$(TargetName)\</IntDir>
     <OutDir>$(ProjectDir)bin\$(Platform)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <TargetExt>.a</TargetExt>
+    <TargetExt>.exe</TargetExt>
     <IntDir>$(ProjectDir)..\obj\$(Platform)\$(TargetName)\</IntDir>
     <OutDir>$(ProjectDir)bin\$(Platform)\</OutDir>
   </PropertyGroup>
