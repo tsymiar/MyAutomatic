@@ -71,7 +71,6 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'" Label="Configuration">
     <UseDebugLibraries>true</UseDebugLibraries>
-    <ConfigurationType>Application</ConfigurationType>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'" Label="Configuration">
     <UseDebugLibraries>false</UseDebugLibraries>
@@ -88,37 +87,37 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(ProjectDir)bin\$(Configuration)\</OutDir>
-    <IntDir>$(ProjectDir)..\obj\$(Platform)\$(TargetName)\</IntDir>
+    <IntDir>$(ProjectDir)..\obj\$(TargetName)\</IntDir>
     <AdditionalSourcesToCopyMapping>$(MSBuildProjectDirectory)\Makefile;$(MSBuildProjectDirectory)\mysql\fixmysql;$(MSBuildProjectDirectory)\soap\myweb.wsdl;$(AdditionalSourcesToCopyMapping)</AdditionalSourcesToCopyMapping>
-    <TargetExt>.a</TargetExt>
+    <TargetExt>.exe</TargetExt>
+    <OutDir>$(ProjectDir)bin\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
-    <OutDir>$(ProjectDir)bin\$(Configuration)\</OutDir>
-    <IntDir>$(ProjectDir)..\obj\$(Platform)\$(TargetName)\</IntDir>
+    <IntDir>$(ProjectDir)..\obj\$(TargetName)\</IntDir>
     <AdditionalSourcesToCopyMapping>$(MSBuildProjectDirectory)\Makefile;$(AdditionalSourcesToCopyMapping)</AdditionalSourcesToCopyMapping>
     <TargetExt>.a</TargetExt>
+    <OutDir>$(ProjectDir)bin\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
-    <OutDir>$(ProjectDir)bin\$(Configuration)\</OutDir>
-    <IntDir>$(ProjectDir)..\obj\$(Platform)\$(TargetName)\</IntDir>
+    <IntDir>$(ProjectDir)..\obj\$(TargetName)\</IntDir>
     <AdditionalSourcesToCopyMapping>$(ProjectDir)..\Makefile</AdditionalSourcesToCopyMapping>
     <TargetExt />
+    <OutDir>$(ProjectDir)bin\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
-    <OutDir>$(ProjectDir)bin\$(Configuration)\</OutDir>
-    <IntDir>$(ProjectDir)..\obj\$(Platform)\$(TargetName)\</IntDir>
+    <IntDir>$(ProjectDir)..\obj\$(TargetName)\</IntDir>
     <TargetExt />
+    <OutDir>$(ProjectDir)bin\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IntDir>$(ProjectDir)..\obj\$(TargetName)\</IntDir>
+    <TargetExt>.exe</TargetExt>
     <OutDir>$(ProjectDir)bin\$(Configuration)\</OutDir>
-    <IntDir>$(ProjectDir)..\obj\$(Platform)\$(TargetName)\</IntDir>
-    <TargetExt />
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
-    <OutDir>$(ProjectDir)bin\$(Configuration)\</OutDir>
-    <IntDir>$(ProjectDir)..\obj\$(Platform)\$(TargetName)\</IntDir>
+    <IntDir>$(ProjectDir)..\obj\$(TargetName)\</IntDir>
     <TargetExt />
+    <OutDir>$(ProjectDir)bin\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Link>
@@ -144,8 +143,14 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <ClCompile />
     <Link>
-      <LibraryDependencies>pthread;mysql;%(LibraryDependencies)</LibraryDependencies>
+      <LibraryDependencies>mysql;mysqlclient;pthread;%(LibraryDependencies)</LibraryDependencies>
     </Link>
+    <ClCompile>
+      <CppLanguageStandard>gnu++11</CppLanguageStandard>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile />
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

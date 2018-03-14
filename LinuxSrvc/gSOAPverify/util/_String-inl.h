@@ -13,8 +13,8 @@ inline unsigned char* fix_strerr(unsigned char* str)
 		case 0xDD://已收回的堆(delete)
 		case 0xFD://隔离（栅栏字节）字节 下标越界
 		case 0xAB://Memory allocated by LocalAlloc()
-		case 0xBAADF00D://	Memory allocated by LocalAlloc() with LMEM_FIXED,\
-																		//	but not yet written to.
+		case 0xBAADF00D://	Memory allocated by LocalAlloc() with LMEM_FIXED,
+						//	but not yet written to.
 		case 0xFEEEFEEE:/*  OS fill heap memory, which was marked for usage,\
 						but wasn't allocated by HeapAlloc() or LocalAlloc()\
 						Or that memory just has been freed by HeapFree().
@@ -33,6 +33,10 @@ inline unsigned char* fix_strerr(unsigned char* str)
 #include <cstdlib>
 #include <cstring>
 #include <cassert>
+
+#define Conn(x,y) x##y
+// #define ToChar(x) #@x
+#define ToString(x) #x
 
 using namespace std;
 
@@ -262,7 +266,7 @@ inline char* _String::_itoa(int num, char *str, int radix)
 {
 	if (num == 0)
 	{
-		str[0] = '0'; str[1] = '/0';
+		str[0] = '0'; str[1] = '\0';
 		return str;
 	}
 	char  string[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -278,7 +282,7 @@ inline char* _String::_itoa(int num, char *str, int radix)
 	if (num)
 	{
 		*ptr++ = string[num];
-		*ptr = '/0';
+		*ptr = '\0';
 	}
 	int n = j = ptr - str - 1;
 	for (i = 0; i <(ptr - str) / 2; i++)
@@ -290,7 +294,7 @@ inline char* _String::_itoa(int num, char *str, int radix)
 		for (j = n; j >= 0; --j) str[j + 1] = str[j];
 		str[0] = '-';
 	}
-	str[n + 2] = '/0';
+	str[n + 2] = '\0';
 	return str;
 }
 
