@@ -8,6 +8,8 @@
 #include <fcntl.h>		//O_RDWR
 #include <unistd.h>
 #include <errno.h>
+#include <memory.h>
+#include <string.h>
 #include <sys/mman.h>	//unistd.h and sys/mman.h are needed by mmap function
 #include <stdbool.h>	//false and true
 #include <sys/ioctl.h>
@@ -23,7 +25,7 @@ typedef struct _v4l2_struct
 	struct v4l2_format format;
 	struct v4l2_buffer argp;
 	struct v4l2_requestbuffers req;
-	struct st_buf {
+	struct _st_buf {
 		void *start;
 		unsigned int length;
 	}*buffers;
@@ -115,7 +117,7 @@ int v4l2_mapping_buffers(v4l2_device *v4l2_obj, __u32 count)
 	v4l2_obj->req.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	v4l2_obj->req.memory = V4L2_MEMORY_MMAP;
 	ioctl(v4l2_obj->v4l_fd, VIDIOC_REQBUFS, &v4l2_obj->req);
-	v4l2_obj->buffers = (struct st_buf*)calloc(v4l2_obj->req.count, sizeof(*v4l2_obj->buffers));
+	v4l2_obj->buffers = (struct _st_buf*)calloc(v4l2_obj->req.count, sizeof(*v4l2_obj->buffers));
 	for (unsigned int i = 0; i < v4l2_obj->req.count; ++i) {
 		memset(&v4l2_obj->argp, 0, sizeof(v4l2_obj->v4l_fd));
 		v4l2_obj->argp.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -131,7 +133,7 @@ int v4l2_mapping_buffers(v4l2_device *v4l2_obj, __u32 count)
 		if (MAP_FAILED == v4l2_obj->buffers[i].start)
 			exit(-1);
 	}
-	return 0;
+	return count;
 }
 
 unsigned int v4l2_set_queue(v4l2_device *v4l2_obj, __u32 count)
@@ -144,23 +146,21 @@ unsigned int v4l2_set_queue(v4l2_device *v4l2_obj, __u32 count)
 		v4l2_obj->argp.index = i;
 		ioctl(v4l2_obj->v4l_fd, VIDIOC_QBUF, &v4l2_obj->argp);
 	}
-	type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-	ioctl(v4l2_obj->v4l_fd, VIDIOC_STREAMON, &type);
+	v4l2_obj->argp.type = type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+	v4l2_obj->argp.memory = V4L2_MEMORY_MMAP;
+	ioctl(v4l2_obj->v4l_fd, VIDIOC_STREAMON, &v4l2_obj->argp.type);
 	return i;
 }
 
 int v4l2_save_got_frame(v4l2_device *v4l2_obj, char* flag)
 {
-	v4l2_obj->argp.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-	v4l2_obj->argp.memory = V4L2_MEMORY_MMAP;
-	ioctl(v4l2_obj->v4l_fd, VIDIOC_DQBUF, &v4l2_obj->argp);
 	char file[126];
 	snprintf(file, strlen(flag) + 1, "%s%d", flag, v4l2_obj->argp.index);
 	int yuv = open(file, O_WRONLY | O_CREAT, 00700);
 	int result = write(yuv, v4l2_obj->buffers[v4l2_obj->argp.index].start,
 		(v4l2_obj->width ? : 640) * (v4l2_obj->height ? : 480));
 	close(yuv);
-	printf("Save picture as [%s].\n", file);
+	printf("Save picture as [ %s ](%x).\n", file, v4l2_obj->buffers);
 	return result;
 }
 
