@@ -7,7 +7,7 @@ CThostFtdcTraderApi *TRDAPI;
 
 CTPdev::CTPdev() {}
 
-CTPdev::~CTPdev() { delete this; }
+CTPdev::~CTPdev() {}
 
 unsigned int __stdcall CTPdev::SimpleClient(void* P)
 {
@@ -66,6 +66,8 @@ unsigned int __stdcall CTPdev::SimpleClient(void* P)
 		send(clientSock, buffer, strlen(buffer) + 1, 0);//·¢ËÍÊý¾Ý
 		j++;
 	}
+	if (m_ctp != nullptr)
+		delete m_ctp;
 	closesocket(clientSock);
 	WSACleanup();
 	return 0;

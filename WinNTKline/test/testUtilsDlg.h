@@ -27,11 +27,20 @@ public:
 	afx_msg void OnBnClickedRegist();
 	afx_msg void OnBnClickedTestlog();
 	afx_msg void OnBnClickedKline();
+	afx_msg void OnBnClickedCtp();
+	afx_msg void OnBnClickedSimbtn();
+	afx_msg void OnBnClickedImser();
+private:
 	CIPAddressCtrl m_ipAddr;
 	CEdit m_Port;
 	char s_IP[16];
 	CString s_Port;
-	afx_msg void OnBnClickedCtp();
-	afx_msg void OnBnClickedSimbtn();
-	afx_msg void OnBnClickedImser();
+	inline void checkLeak(void* ptr)
+	{
+		if (ptr != nullptr)
+			delete ptr;
+	};
+public:
+	afx_msg void OnBnClickedOk();
+	afx_msg void OnBnClickedCancel();
 };

@@ -21,9 +21,6 @@
     <ClInclude Include="targetver.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Resource.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="..\MfcUtil\dos\DOSCout.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -54,9 +51,6 @@
     <ClInclude Include="..\MfcUtil\netwk\CTPdev.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\MfcUtil\resource.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="..\MfcUtil\netwk\Simulation.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -82,6 +76,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="testUtilsDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
