@@ -11,7 +11,7 @@ IMPLEMENT_DYNCREATE(CMfcHTML, CHtmlView)
 
 CMfcHTML::CMfcHTML(){}
 
-CMfcHTML::~CMfcHTML(){ delete this; }
+CMfcHTML::~CMfcHTML(){}
 
 void CMfcHTML::DoDataExchange(CDataExchange* pDX)
 {

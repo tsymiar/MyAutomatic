@@ -16,14 +16,19 @@
 #define new DEBUG_NEW
 #endif
 
-struct SOELE {
+#define LOOP_TIME 1
+
+struct SOELEM {
 	struct soap soap;
 	struct IMUSR imusr;
-} soele;
+} soelem;
 
-CLoginDlg logon;
+CLoginDlg logon; 
+CTPdev* m_ctp = nullptr;
+MyOglDrawDlg *ogl = nullptr;
+CIMhideWndDlg *m_pIM = nullptr;
+
 IMPLEMENT_DYNCREATE(CWebBrowser2, CWnd)
-
 
 CtestUtilsDlg::CtestUtilsDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(IDD_TEST_DIALOG, pParent)
@@ -52,6 +57,8 @@ BEGIN_MESSAGE_MAP(CtestUtilsDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_CTP, &CtestUtilsDlg::OnBnClickedCtp)
 	ON_BN_CLICKED(IDC_SIMBTN, &CtestUtilsDlg::OnBnClickedSimbtn)
 	ON_BN_CLICKED(IDC_IMSER, &CtestUtilsDlg::OnBnClickedImser)
+	ON_BN_CLICKED(IDOK, &CtestUtilsDlg::OnBnClickedOk)
+	ON_BN_CLICKED(IDCANCEL, &CtestUtilsDlg::OnBnClickedCancel)
 END_MESSAGE_MAP()
 
 
@@ -112,7 +119,7 @@ HCURSOR CtestUtilsDlg::OnQueryDragIcon()
 
 void CtestUtilsDlg::OnBnClickedToim()
 {
-	CIMhideWndDlg* m_pIM = new CIMhideWndDlg((IMUSR*)"127.0.0.1");
+	m_pIM = new CIMhideWndDlg((IMUSR*)"127.0.0.1");
 	m_pIM->Create(IDD_IMHIDEWND);
 	m_pIM->ShowWindow(SW_SHOWNORMAL);
 }
@@ -127,13 +134,13 @@ void CtestUtilsDlg::OnBnClickedTestlog()
 {
 	m_Port.GetWindowText(s_Port); 
 	m_ipAddr.GetWindowText(s_IP, 16);
-	sprintf_s(soele.imusr.addr, 64, "http://%s:%d/myweb.cgi", s_IP, atoi(s_Port));
-	sprintf_s(soele.imusr.usr, 11, "ioscatchme");
-	sprintf_s(soele.imusr.psw, 17, "a6afbbcbf8be7668");
+	sprintf_s(soelem.imusr.addr, 64, "http://%s:%d/myweb.cgi", s_IP, atoi(s_Port));
+	sprintf_s(soelem.imusr.usr, 11, "ioscatchme");
+	sprintf_s(soelem.imusr.psw, 17, "a6afbbcbf8be7668");
 
-	//for (int i = 0; i < 1000; i++)
+	for (int i = 0; i < LOOP_TIME; i++)
 	{
-		logon.testLogin(&soele);
+		logon.testLogin(&soelem);
 		Sleep(10);
 	}
 }
@@ -141,7 +148,7 @@ void CtestUtilsDlg::OnBnClickedTestlog()
 
 void CtestUtilsDlg::OnBnClickedKline()
 {
-	MyOglDrawDlg* ogl = new MyOglDrawDlg();
+	ogl = new MyOglDrawDlg();
 	ogl->Create(IDD_OGLIMG);
 	ogl->ShowWindow(SW_SHOWNORMAL);
 }
@@ -149,9 +156,8 @@ void CtestUtilsDlg::OnBnClickedKline()
 
 void CtestUtilsDlg::OnBnClickedCtp()
 {
-	CTPdev* m_ctp = new CTPdev();
+	m_ctp = new CTPdev();
 	CloseHandle((HANDLE)_beginthreadex(NULL, 0, m_ctp->TradeMarket, (void*)this, 0, NULL));
-	delete m_ctp;
 }
 
 
@@ -174,4 +180,18 @@ void CtestUtilsDlg::OnBnClickedImser()
 	sInfo.dwFlags = STARTF_USESHOWWINDOW;
 	sInfo.wShowWindow = SW_SHOWNORMAL;
 	::CreateProcess(_T("..\\Debug\\IM(Win32).exe"), _T("1"), NULL, NULL, false, 0, NULL, NULL, &sInfo, &pInfo);
+}
+
+
+void CtestUtilsDlg::OnBnClickedOk()
+{
+	checkLeak(ogl);
+	checkLeak(m_ctp);
+	checkLeak(m_pIM);
+	CDialog::OnOK();
+}
+
+void CtestUtilsDlg::OnBnClickedCancel()
+{
+	OnBnClickedOk();
 }

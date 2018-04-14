@@ -220,7 +220,6 @@
     <ClInclude Include="..\MfcUtil\opencv\CvimgMat.h" />
     <ClInclude Include="..\MfcUtil\own\Screen-Sharing.h" />
     <ClInclude Include="..\MfcUtil\RegistDlg.h" />
-    <ClInclude Include="..\MfcUtil\resource.h" />
     <ClInclude Include="..\MfcUtil\SettingsDlg.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
