@@ -105,11 +105,11 @@
       <FileName>IMlogDlg.h</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="CTPdev" Collapsed="true">
+  <Class Name="CTPclient" Collapsed="true">
     <Position X="8.5" Y="2.75" Width="1.25" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAAAAAAwBAAAAAAAAAACAAAAAAAEAAA=</HashCode>
-      <FileName>netwk\CTPdev.h</FileName>
+      <FileName>netwk\CTPclient.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="TradeChannel" Collapsed="true">

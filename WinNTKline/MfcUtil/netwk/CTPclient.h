@@ -1,14 +1,14 @@
-#ifndef _CTPDEV_H_
-#define _CTPDEV_H_
+#ifndef _CTPCLIENT_H_
+#define _CTPCLIENT_H_
 
 #include "../MyOglDrawDlg.h"
 
-class CTPdev
+class CTPclient
 {
 public:
 	OGLKview Ogl;
-	CTPdev();
-	virtual ~CTPdev();
+	CTPclient();
+	virtual ~CTPclient();
 	static unsigned int __stdcall SimpleClient(void* P);
 	static unsigned int __stdcall TradeMarket(void* P);
 };

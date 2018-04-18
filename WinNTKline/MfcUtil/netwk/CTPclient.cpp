@@ -1,22 +1,22 @@
-#include "CTPdev.h"
+#include "CTPclient.h"
 #include "ChannelCollector.h"
 
 extern bool net_exit;
 struct st_TThostFtdc STFTDC; 
 CThostFtdcTraderApi *TRDAPI;
 
-CTPdev::CTPdev() {}
+CTPclient::CTPclient() {}
 
-CTPdev::~CTPdev() {}
+CTPclient::~CTPclient() {}
 
-unsigned int __stdcall CTPdev::SimpleClient(void* P)
+unsigned int __stdcall CTPclient::SimpleClient(void* P)
 {
 	//线程要调用的函数
 	int err;
 	int j = 0;
 	SOCKET clientSock;
 	WSADATA wsaData;//WSAata存储系统传回的关于WinSocket的信息
-	CTPdev *m_ctp = new CTPdev;
+	CTPclient *m_ctp = new CTPclient;
 	MyOglDrawDlg* m_hWnd = (MyOglDrawDlg*)P;
 	if (m_hWnd->ctpIP == NULL)return NULL;
 	OGLKview::Point pnt = { 0,0 };
@@ -73,7 +73,7 @@ unsigned int __stdcall CTPdev::SimpleClient(void* P)
 	return 0;
 }
 
-unsigned int __stdcall CTPdev::TradeMarket(void* P)
+unsigned int __stdcall CTPclient::TradeMarket(void* P)
 {
 	MyOglDrawDlg* m_hWnd = (MyOglDrawDlg*)P;
 	TradeChannel trade;
@@ -89,7 +89,7 @@ unsigned int __stdcall CTPdev::TradeMarket(void* P)
 	TRDAPI->Init();
 	TRDAPI->Join();
 	str.Format(_T("%d"), tdChnl->getRtn());
-	CTPdev *m_ctp = new CTPdev;
+	CTPclient *m_ctp = new CTPclient;
 	if (m_hWnd->m_hWnd != NULL)
 		::PostMessage(m_hWnd->m_hWnd, WM_MSG_BOX, 0,
 		(LPARAM)m_ctp->Ogl.index.AllocBuffer(str));

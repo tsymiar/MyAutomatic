@@ -289,7 +289,7 @@
     <ClInclude Include="mygl\texture.h" />
     <ClInclude Include="MyOglDrawDlg.h" />
     <ClInclude Include="netwk\ChannelCollector.h" />
-    <ClInclude Include="netwk\CTPdev.h" />
+    <ClInclude Include="netwk\CTPclient.h" />
     <ClInclude Include="netwk\GEThttp.h" />
     <ClInclude Include="netwk\Simulation.h" />
     <ClInclude Include="opencv\CvimgMat.h" />
@@ -319,8 +319,8 @@
     <ClCompile Include="html\MfcHtmlView.cpp" />
     <ClCompile Include="IMlogDlg.cpp" />
     <ClCompile Include="IMhideWndDlg.cpp" />
-    <ClCompile Include="IM\client.cpp" />
     <ClCompile Include="IM\IM.cc" />
+    <ClCompile Include="IM\IMclient.cpp" />
     <ClCompile Include="IM\TCPsocket.cpp" />
     <ClCompile Include="LoginDlg.cpp" />
     <ClCompile Include="MFCKline.cpp" />
@@ -333,7 +333,7 @@
     <ClCompile Include="mygl\texture.c" />
     <ClCompile Include="MyOglDrawDlg.cpp" />
     <ClCompile Include="netwk\ChannelCollector.cpp" />
-    <ClCompile Include="netwk\CTPdev.cpp" />
+    <ClCompile Include="netwk\CTPclient.cpp" />
     <ClCompile Include="netwk\GEThttp.cpp" />
     <ClCompile Include="netwk\Simulation.cpp" />
     <ClCompile Include="opencv\CvimgMat.cc" />

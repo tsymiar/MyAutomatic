@@ -86,9 +86,6 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MfcUtil\IM\client.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="..\MfcUtil\security\encoding.cc">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -117,9 +114,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\MfcUtil\netwk\ChannelCollector.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\MfcUtil\netwk\CTPdev.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\MfcUtil\mygl\OGLKview.cc">
@@ -156,6 +150,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="testUtils.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\MfcUtil\netwk\CTPclient.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\MfcUtil\IM\IMclient.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

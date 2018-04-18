@@ -95,14 +95,17 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <Optimization>Disabled</Optimization>
+      <Optimization>MaxSpeed</Optimization>
       <PreprocessorDefinitions>_UTILAPIS_;_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(libPNG);$(CEFDIR);$(OPENCV)\include;$(SolutionDir)MfcUtil;$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\font;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4819</DisableSpecificWarnings>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <StringPooling>true</StringPooling>
+      <MinimalRebuild>true</MinimalRebuild>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -228,27 +231,57 @@
     <ClInclude Include="testUtilsDlg.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\soapC.cpp" />
-    <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\soapClient.cpp" />
-    <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\stdsoap2.cpp" />
-    <ClCompile Include="..\MfcUtil\deep\DepthMarket.cpp" />
-    <ClCompile Include="..\MfcUtil\dos\DOSCout.cpp" />
-    <ClCompile Include="..\MfcUtil\html\cefWebKit.cpp" />
+    <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\soapC.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\soapClient.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\stdsoap2.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\MfcUtil\deep\DepthMarket.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\MfcUtil\dos\DOSCout.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\MfcUtil\html\cefWebKit.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\MfcUtil\html\MfcHtmlView.cpp" />
     <ClCompile Include="..\MfcUtil\IMhideWndDlg.cpp" />
     <ClCompile Include="..\MfcUtil\IMlogDlg.cpp" />
-    <ClCompile Include="..\MfcUtil\IM\client.cpp" />
+    <ClCompile Include="..\MfcUtil\IM\IMclient.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\MfcUtil\LoginDlg.cpp" />
-    <ClCompile Include="..\MfcUtil\mygl\OGLKview.cc" />
+    <ClCompile Include="..\MfcUtil\mygl\OGLKview.cc">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\MfcUtil\MyOglDrawDlg.cpp" />
-    <ClCompile Include="..\MfcUtil\netwk\ChannelCollector.cpp" />
-    <ClCompile Include="..\MfcUtil\netwk\CTPdev.cpp" />
-    <ClCompile Include="..\MfcUtil\netwk\Simulation.cpp" />
-    <ClCompile Include="..\MfcUtil\opencv\CvimgMat.cc" />
-    <ClCompile Include="..\MfcUtil\own\Screen-Sharing.cpp" />
+    <ClCompile Include="..\MfcUtil\netwk\ChannelCollector.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\MfcUtil\netwk\CTPclient.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\MfcUtil\netwk\Simulation.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\MfcUtil\opencv\CvimgMat.cc">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\MfcUtil\own\Screen-Sharing.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\MfcUtil\RegistDlg.cpp" />
-    <ClCompile Include="..\MfcUtil\security\encoding.cc" />
-    <ClCompile Include="..\MfcUtil\security\MD5.cc" />
+    <ClCompile Include="..\MfcUtil\security\encoding.cc">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\MfcUtil\security\MD5.cc">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\MfcUtil\SettingsDlg.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
