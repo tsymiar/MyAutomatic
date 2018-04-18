@@ -24,7 +24,7 @@ struct SOELEM {
 } soelem;
 
 CLoginDlg logon; 
-CTPdev* m_ctp = nullptr;
+CTPclient* m_ctp = nullptr;
 MyOglDrawDlg *ogl = nullptr;
 CIMhideWndDlg *m_pIM = nullptr;
 
@@ -156,7 +156,7 @@ void CtestUtilsDlg::OnBnClickedKline()
 
 void CtestUtilsDlg::OnBnClickedCtp()
 {
-	m_ctp = new CTPdev();
+	m_ctp = new CTPclient();
 	CloseHandle((HANDLE)_beginthreadex(NULL, 0, m_ctp->TradeMarket, (void*)this, 0, NULL));
 }
 

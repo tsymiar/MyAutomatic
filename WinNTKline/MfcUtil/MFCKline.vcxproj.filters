@@ -108,9 +108,6 @@
     <ClInclude Include="netwk\ChannelCollector.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="netwk\CTPdev.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="netwk\GEThttp.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -162,6 +159,9 @@
     <ClInclude Include="Idx\Singleton.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="netwk\CTPclient.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MFCKline.cpp">
@@ -197,9 +197,6 @@
     <ClCompile Include="HOOK\injectDLL.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="IM\client.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="IMhideWndDlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -222,9 +219,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="netwk\ChannelCollector.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="netwk\CTPdev.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="netwk\GEThttp.cpp">
@@ -276,6 +270,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="html\MfcHtmlView.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="netwk\CTPclient.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="IM\IMclient.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
