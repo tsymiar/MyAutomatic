@@ -11,7 +11,7 @@ QOglMaterial::QOglMaterial(QWidget *parent)
 	format.setProfile(QSurfaceFormat::CoreProfile);
 	setFormat(format);
 #else
-	xRate = yRate = zZoom = 0;
+	xVal = yVal = zZoom = 0;
 	tHigh = -1;
 	mX = mY = 0;
 #endif
@@ -105,6 +105,25 @@ void QOglMaterial::coord()
 		.arg(mY)
 		.arg(tHigh);
 	painter.drawText(10, 20, coord);
+	painter.end();
+	glEnable(GL_DEPTH_TEST);
+}
+
+void QOglMaterial::textout(int left, int upon, QColor color, float th, QString family)
+{
+	glDisable(GL_DEPTH_TEST);
+	QPen pen;
+	pen.setColor(color);
+	QFont font;
+	if (family.isNull())
+		family = font.defaultFamily();
+	font.setFamily(family);
+	QPainter painter;
+	painter.begin(this);
+	painter.setPen(pen);
+	painter.setFont(font);
+	painter.scale(th, th);
+	painter.drawText(left, upon, text);
 	painter.end();
 	glEnable(GL_DEPTH_TEST);
 }
@@ -241,26 +260,34 @@ void QOglMaterial::paintGL()
 #else
 	glTranslatef(0, 0, 0);
 	png.Show();
-	this->coord();
 
-	glTranslatef(-1.0, 0, -8.0);
-	glBegin(GL_QUADS);
-	glVertex3f(0.0 + xRate, 0.5 + yRate, zZoom);
-	glVertex3f(0.5 + xRate, 0.5 + yRate, zZoom);
-	glVertex3f(0.5 + xRate, 0.0 + yRate, zZoom);
-	glVertex3f(0.0 + xRate, 0.0 + yRate, zZoom);
-	glEnd();
+	if (bingo) 
+	{
+		textout(30, 40, Qt::red, 3, "Helvetica");
+	}
+	else 
+	{
+		coord();
+		textout();
 
-	glTranslatef(3, tHigh, -8.0);
-	glBegin(GL_TRIANGLES);
-	glColor3f(1.0, 0.0, 0.0);
-	glVertex3f(0.0, 1.0, 0.0);
-	glColor3f(0.0, 1.0, 0.0);
-	glVertex3f(-1, -1, 0.0);
-	glColor3f(0.0, 0.0, 1.0);
-	glVertex3f(1.0, -1, 0.0);
-	glEnd();
+		glTranslatef(-1.0, 0, -8.0);
+		glBegin(GL_QUADS);
+		glVertex3f(0.0 + xVal, 0.5 + yVal, zZoom);
+		glVertex3f(0.5 + xVal, 0.5 + yVal, zZoom);
+		glVertex3f(0.5 + xVal, 0.0 + yVal, zZoom);
+		glVertex3f(0.0 + xVal, 0.0 + yVal, zZoom);
+		glEnd();
 
+		glTranslatef(3, tHigh, -8.0);
+		glBegin(GL_TRIANGLES);
+		glColor3f(1.0, 0.0, 0.0);
+		glVertex3f(0.0, 1.0, 0.0);
+		glColor3f(0.0, 1.0, 0.0);
+		glVertex3f(-1, -1, 0.0);
+		glColor3f(0.0, 0.0, 1.0);
+		glVertex3f(1.0, -1, 0.0);
+		glEnd();
+	}
 #endif
 #endif // OGL_KVIEW_H_
 }

@@ -46,7 +46,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Makefile" />
-    <None Include="mysql\fixmysql.sh" />
+    <None Include="mysql\mysql.sh" />
+    <None Include="shadowsocks.sh" />
     <None Include="soap\myweb.nsmap" />
   </ItemGroup>
   <ItemGroup>

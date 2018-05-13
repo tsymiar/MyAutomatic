@@ -4,7 +4,7 @@ OpenGLWindow::OpenGLWindow(const char* title, bool fs)
 {
 	setGeometry(400, 200, 287, 512);
 	fullscreen = fs;
-	xPos = yPos = zPos = sPos = 0.0;
+	x = y = z = h = 0.0;
 
 	light = false;
 #ifdef K_line
@@ -30,9 +30,9 @@ void OpenGLWindow::keyPressEvent(QKeyEvent * e)
 {
 	qDebug() << "+++ key(" << e->key() << ")" <<
 		QString("x=%1; y=%2; z=%3")
-		.arg(xPos)
-		.arg(yPos)
-		.arg(zPos)
+		.arg(x)
+		.arg(y)
+		.arg(z)
 		<< "+++";
 	switch (e->key())
 	{
@@ -61,32 +61,32 @@ void OpenGLWindow::keyPressEvent(QKeyEvent * e)
 		break;
 #ifndef _GLVBO_
 	case Qt::Key_Right:	//→
-		xPos += 0.01f;
-		setX(xPos);
+		x += 0.01f;
+		setXval(x);
 		break;
 	case Qt::Key_Left:	//←
-		xPos -= 0.01f;
-		setX(xPos);
+		x -= 0.01f;
+		setXval(x);
 		break;
 	case Qt::Key_Up:	//↑
-		yPos += 0.01f;
-		setY(yPos);
+		y += 0.01f;
+		setYval(y);
 		break;
 	case Qt::Key_Down:	//↓
-		yPos -= 0.01f;
-		setY(yPos);
+		y -= 0.01f;
+		setYval(y);
 		break;
 	case Qt::Key_Plus:	//+
-		zPos += 0.1f;
-		setZ(zPos);
+		z += 0.1f;
+		setZoom(z);
 		break;
 	case Qt::Key_Minus:	//-
-		zPos -= 0.1f;
-		setZ(zPos);
+		z -= 0.1f;
+		setZoom(z);
 		break;
 	case Qt::Key_Space:
-		sPos += 0.3f;
-		setS(sPos);
+		h += 0.3f;
+		setHigh(h);
 		break;
 #else
 	case Qt::Key_A:
@@ -111,19 +111,24 @@ void OpenGLWindow::keyPressEvent(QKeyEvent * e)
 
 void OpenGLWindow::mouseMoveEvent(QMouseEvent * e)
 {
-	setmX(e->x());
-	setmY(e->y());
+	setXloc(e->x());
+	setYloc(e->y());
 }
 
 void OpenGLWindow::timerDone()
 {
 #ifndef _GLVBO_	
-	sPos -= 0.01f;
-	if (sPos < -1)
-		sPos = -1;
-	if (sPos > 5.55)
-		sPos = 5.55;
-	setS(sPos);
+	h -= 0.01f;
+	if (h < -1)
+		h = -1;
+	if (h > 5.55)
+		h = 5.55;
+	setHigh(h);
+	if (fabs(h - getH()) < 0.01)
+	{
+		setText("bingo!");
+		setBingo();
+	}
 	update();
 	QCoreApplication::processEvents(QEventLoop::AllEvents);
 #endif

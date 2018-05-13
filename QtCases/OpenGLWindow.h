@@ -16,7 +16,7 @@ protected:
 private:
 	bool fullscreen;
 	bool light;
-	GLfloat xPos, yPos, zPos, sPos;
+	GLfloat x, y, z, h;
 	QTimer *timer = NULL;
 	private slots:
 	void timerDone();

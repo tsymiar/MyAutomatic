@@ -6,7 +6,8 @@ FLAG= -Wall -g
 SYS = sysstatus.o
 WEB = sqlDB.o mainSoap.o
 SOAP= soapC.o stdsoap2.o soapServer.o
-SQL = -std=c++11 -L/usr/lib/mysql -lmysqlclient
+BIT = $(shell if [ `getconf LONG_BIT` -eq '64' ];then echo 64;fi;)
+SQL = -std=c++11 -L/usr/lib$(BIT)/mysql -lmysqlclient
 PTHD= -std=c++11 -lpthread #-lgsoap++#-L/usr/local/gSOAP/lib/libsoap++
 FLAG += -DMY_DEBUG
 gSOAPverify:$(OUT)
