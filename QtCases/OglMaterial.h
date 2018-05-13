@@ -21,6 +21,7 @@
 #ifndef _PI_
 #define _PI_ 3.14159265f
 #endif
+#define EPSILON 0.000001
 
 //#define _GLVBO_
 
@@ -59,15 +60,21 @@ private:
 		OGLKview kv;
 #endif
 #endif
-	GLfloat xRate, yRate, zZoom, tHigh;
+	GLfloat xVal, yVal, zZoom, tHigh;
 	int mX, mY;
 	ShowImage png;
 	void coord();
+	QString text;
+	void textout(int left = 10, int upon = 40, QColor color = Qt::yellow, float th = 1, QString family = nullptr);
+	bool bingo = false;
 public:
-	inline void setX(GLfloat x) { xRate = x; }
-	inline void setY(GLfloat y) { yRate = y; }
-	inline void setZ(GLfloat z) { zZoom = z; }
-	inline void setS(GLfloat s) { tHigh = s; }
-	inline void setmX(int x) { mX = x; }
-	inline void setmY(int y) { mY = y; }
+	inline void setXval(GLfloat x) { xVal = x; }
+	inline void setYval(GLfloat y) { yVal = y; }
+	inline void setZoom(GLfloat z) { zZoom = z; }
+	inline void setHigh(GLfloat h) { tHigh = h; }
+	inline void setXloc(int x) { mX = x; }
+	inline void setYloc(int y) { mY = y; }
+	inline GLfloat getH() { return yVal + 0.5; }
+	inline void setText(QString text) { this->text = text; }
+	inline void setBingo(bool bingo = true) { this->bingo = bingo; }
 };
