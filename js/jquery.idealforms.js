@@ -1138,8 +1138,7 @@ var _defaults = {
   customFilters: {},
   customFlags: {},
   globalFlags: '',
-  onSuccess: function(e) {    
-		alert('表单已提交，点击确定跳转...') 
+  onSuccess: function(e) {
 		if (navigator.userAgent.indexOf("MSIE") > 0) {   
             if (navigator.userAgent.indexOf("MSIE 6.0") > 0) { 
 				//
@@ -1325,7 +1324,7 @@ $.extend( IdealForms.prototype, {
 
     // Adjust labels
     var labels = formElements.labels
-    labels.removeAttr('style').width( Utils.getMaxWidth( labels ) )
+    labels.removeAttr('style').width( Utils.getMaxWidth( labels ) * 2 )
 
     // Adjust headings and separators
     if ( self.$tabs.length ) {

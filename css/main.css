@@ -1,0 +1,22 @@
+body{font:normal 4px/2.0 Arial, Helvetica, Free Sans, sans-serif;color: #222;background:url(pattern.png);overflow-y:scroll;padding:60px 0 0 0;}
+#main-form{width:320px;margin:0 auto;border:1px solid #ccc;padding:3em;border-radius:3px;box-shadow:0 0 2px rgba(0,0.1,0,.2);}
+#comments{width:300px;height:100px;}
+    
+.title{
+    background-color : #fff;
+    color: #ff0000;
+    font-size: 13px;
+    text-align:center;
+}
+#content{
+    color: black;
+    font-size: 11px;
+    text-align:center;
+}
+.hide{
+    color: blue;
+    float: right;
+    cursor: pointer;
+    font-family: Microsoft JhengHei;
+    padding-right : 8px;
+}

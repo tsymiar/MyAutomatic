@@ -1,135 +1,88 @@
 <!DOCTYPE html>
-<!--[if IE 8 ]> <html lang="en" class="ie8"> <![endif]-->
-<!--[if IE 9 ]> <html lang="en" class="ie9"> <![endif]-->
-<!--[if (gt IE 9)|!(IE)]><!--> <html lang="en"> <!--<![endif]-->
+<!--[if (gt IE 9)|!(IE)]><!--> 
+<html lang="en">
+<!--<![endif]-->
+<!--[if lt IE 9]><html lang="en" class="ie9"><![endif]-->
 <head>
-<meta name="viewport" content="width=device-width,initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge" />
-<script type="application/x-javascript"> 
-addEventListener("load", function() { setTimeout(hideURLbar, 0); }, false); 
-function hideURLbar(){ window.scrollTo(0,1); } 
-</script>
-<title>注册</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>注册</title>
 
-<!--[if lt IE 9]>
-<script src="js/html5shiv.js"></script>
-<![endif]-->
+    <!--[if lt IE 9]>
+    <script src="js/html5shiv.js"></script>
+    <![endif]-->
 
-
-<link href="css/normalize.css" rel="stylesheet"/>
-<link href="css/jquery-ui.css" rel="stylesheet"/>
-<link href="css/jquery.idealforms.min.css" rel="stylesheet" media="screen"/>
-
-<style type="text/css">
-body{font:normal 4px/2.0 Arial, Helvetica, Free Sans, sans-serif;color: #222;background:url(pattern.png);overflow-y:scroll;padding:60px 0 0 0;}
-#my-form{width:320px;margin:0 auto;border:1px solid #ccc;padding:3em;border-radius:3px;box-shadow:0 0 2px rgba(0,0.1,0,.2);}
-#comments{width:300px;height:100px;}
-</style>
+    <link href="css/normalize.css" rel="stylesheet"/>
+    <link href="css/jquery-ui.css" rel="stylesheet"/>
+    <link href="css/jquery.idealforms.min.css" rel="stylesheet" media="screen"/>
+    <link href="css/main.css" rel="stylesheet"/>
 </head>
 <body>
-
-<div class="row">
-  <div class="eightcol last">
-    <!-- Begin Form -->
-    <form id="my-form" action="trans/service.php?action=register" method="post" enctype="multipart/form-data">
-    <section name="滚动鼠标查看更多">
-        <div>
-			<label style="width: 64px;">用户名:</label>
-			<input id="username" name="user[name]" data-ideal="required username" type="text"/>
-		</div>
-        <div>
-			<label>密码:</label>
-			<input id="passwd" name="user[pass]" data-ideal="required passwd" type="password"/>
-		</div>
-        <div>
-			<label>邮箱:</label>
-			<input id="email" name="user[mail]" data-ideal="required email" type="email"/>
-		</div>
-        <div>
-			<label>出生日期:<br/></label>
-			<input name="date" class="datepicker" data-ideal="date" type="text" placeholder="mm/dd/yy"/>
-		</div>
-        <div>
-			<label>上传头像:<br/></label>
-			<input id="file" name="file" multiple type="file"/>
-		</div>
-        <div>
-			<label class="ideal-label" style="/* width: 64px; */">个人主页:</label>
-			<input name="website" data-ideal="url" type="text"/>
-		</div>
-		<div>
-			<label>邮编:</label>
-			<input type="text" name="zip" data-ideal="zip"/>
-		</div>
-        <div>
-			<label>备注:</label>
-			<textarea id="comments" name="comments"></textarea>
-		</div>
-	</section>
-	<div style="text-align:left;">
-		<a href="tencent://message/?uin=909006258" target="_blank">
-		<!--a href="http://wpa.qq.com/msgrd?v=3&uin=909006258&site=qq&menu=yes" target="_blank"-->
-			<img alt=" " src="https://pub.idqqimg.com/qconn/wpa/button/button_old_161.gif" title="点此Q我" border="0">
-		</a>
-	</div>
-    <div><hr/></div>
-    <div>
-		<!--input type="button" value="submit" onclick="showResp()" /-->
-		<button type="submit" value='1'>提交</button>
-		<button id="reset" type="button">重置</button>
-		<label id="dontjump" style="font-size:10px;font-family:Arial;"> </label>
+    
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.8.3.min.js"></script>
+    <script type="text/javascript" src="js/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="js/jquery.idealforms.js"></script>
+    <script type="text/javascript" src="js/crypto.aes.js"></script>
+    <script type="text/javascript" src="js/common.js"></script>
+    <script type="text/javascript" src="js/main.js"></script>
+    
+    <div class="clazz_pop_div" id="id_pop_div"></div>
+    
+    <div class="row">
+        <div class="eightcol last">
+            <!-- Begin Form -->
+            <form id="main-form" action="javascript:void(0);" method="post" enctype="multipart/form-data">
+                <section name="滚动鼠标查看更多">
+                    <div>
+                        <label style="width: 64px;">用户名:</label>
+                        <input id="username" name="user[name]" data-ideal="required username" type="text"/>
+                    </div>
+                    <div>
+                        <label>密码:</label>
+                        <input id="passwd" name="user[pass]" data-ideal="required passwd" type="password"/>
+                    </div>
+                    <div>
+                        <label>邮箱:</label>
+                        <input id="email" name="user[mail]" data-ideal="required email" type="email"/>
+                    </div>
+                    <div>
+                        <label>出生日期:<br/></label>
+                        <input id="date" name="date" class="datepicker" data-ideal="date" type="text" placeholder="mm/dd/yy"/>
+                    </div>
+                    <div>
+                        <label>上传头像:<br/></label>
+                        <input id="icon" name="file" multiple type="file"/>
+                    </div>
+                    <div>
+                        <label class="ideal-label" style="/* width: 64px; */">个人主页:</label>
+                        <input id="website" name="website" data-ideal="url" type="text"/>
+                    </div>
+                    <div>
+                        <label>邮编:</label>
+                        <input id="zip" type="text" name="zip" data-ideal="zip"/>
+                    </div>
+                    <div>
+                        <label>备注:</label>
+                        <textarea id="comments" name="comments"></textarea>
+                    </div>
+                </section>
+                <div style="text-align:left;">
+                    <a href="tencent://message/?uin=909006258" target="_blank">
+                        <!--a href="http://wpa.qq.com/msgrd?v=3&uin=909006258&site=qq&menu=yes" target="_blank"-->
+                        <img alt=" " src="https://pub.idqqimg.com/qconn/wpa/button/button_old_161.gif" title="点此Q我" border="0">
+                    </a>
+                </div>
+                <div><hr/></div>
+                <div>
+                    <!--<input type="button" value="submit" onclick="click2Submit()" />-->
+                    <button id="request" onclick='click2Submit()'>提交</button>
+                    <button id="reset" type="button">重置</button><br>
+                    <label id="dontjump" style="font-size:10px;font-family:Arial;"></label>
+                </div>
+            </form>
+            <!-- End Form -->
+        </div>
     </div>
-    </form>
-    <!-- End Form -->
-  </div>
-</div>
-<script type="text/javascript" src="https://code.jquery.com/jquery-1.8.3.min.js"></script>
-<script type="text/javascript" src="js/jquery-ui.min.js"></script>
-<script type="text/javascript" src="js/jquery.idealforms.js"></script>
-<script type="text/javascript">
-var options = {
-	onFail: function(){
-		alert( $myform.getInvalid().length +'处必填未完成.' )
-	},
-	inputs: {
-		// look at line 38
-		'user[name]': {
-			filters: 'required username',
-			data: {
-			//ajax: { url:'validate.php' }
-			}
-		},
-		'file': {
-			filters: 'extension',
-			data: { extension: ['jpg'] }
-		},
-		'comments': {
-			filters: 'min max',
-			data: { min: 50, max: 200 }
-		},
-		'states': {
-			filters: 'exclude',
-			data: { exclude: ['default'] },
-			errors : {
-				exclude: '.'
-			}
-		},
-		'langs[]': {
-			filters: 'min max',
-			data: { min: 2, max: 3 },
-			errors: {
-				min: 'Check at least <strong>2</strong> options.',
-				max: 'No more than <strong>3</strong> options allowed.'
-			}
-		}
-	}
-};
-var $myform = $('#my-form').idealforms(options).data('idealforms');
-$('#reset').click(function(){
-	$myform.reset().fresh().focusFirst()
-});
-$myform.focusFirst();
-</script>
 </body>
 </html>
