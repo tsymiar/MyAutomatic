@@ -22,43 +22,46 @@ class HandleBase {
         $json["message"] = "No such method.";
         $json = json_encode($json, JSON_PRETTY_PRINT);
         echo $json;
-     }
+    }
 }
 
 class Regist extends HandleBase{
     public static function handle_request(){
         $register = array();
         if($_SERVER["REQUEST_METHOD"] === "POST" 
-            && ($register['user'] = $_POST['username'])){
-            $register['psw'] = $_POST['passwd'];
+            && ($enc_key = $_POST['username'])){
+            $enc_val = $_POST['passwd'];
+            $psw = Crypto::aes_decrypt($enc_val, $enc_key);
+            $register['user'] = $enc_key;
+            $register['psw'] = substr(md5($psw),8,16);
             $register['email'] = $_POST['email'];
             foreach($register as $k=>$val){
-                 //echo array_values($register)['$k'];
+                //echo array_values($register)['$k'];
             }
             // echo json_encode($register, JSON_PRETTY_PRINT);
-             $usrid = DBUtil::user_register(User::$table, $register);
-                        switch($usrid){
-                            case 0:
-                 echo "ERROR: user register.";
-                 return;
-                            case -1:
-                                echo "ERROR: user exist.";
-                 return;
-                            case -2:
-                                echo "ERROR: database.";
-                 return;
-                        }
+            $usrid = DBUtil::user_register(User::$table, $register);
+            switch($usrid){
+                case 0:
+                    User::errReport("user register");
+                    return;
+                case -1:
+                    User::errReport("user exist");
+                    return;
+                case -2:
+                    User::errReport("database");
+                    return;
+            }
             $js_arr = array();
             $js_arr['img'] = $_POST['icon'];
             $js_arr['date'] = $_POST['date'];
             $js_arr['zip'] = $_POST['zip'];
             $js_arr['site'] = $_POST['website'];
-                        $js_arr['`desc`'] = $_POST['comments'];
-             $err = DBUtil::user_update(User::$table, $js_arr, $usrid);
-             if($err <= 0){
-                 echo "ERROR: user update.";
-                 return;
-             }
+            $js_arr['`desc`'] = $_POST['comments'];
+            $err = DBUtil::user_update(User::$table, $js_arr, $usrid);
+            if($err <= 0){
+                User::errReport("user update");
+                return;
+            }
             $js_arr['user'] = $register;
             $js_arr['code'] = 200;
             $js_arr['message'] = "OK";
@@ -69,25 +72,25 @@ class Regist extends HandleBase{
 
 class FileLoad extends HandleBase{
     public static function handle_request(){
-            $action = isset($_REQUEST["action"]) ? $_REQUEST["action"] : NULL;
-            switch($action){
-                    case ACTION_FILE_UPTOLOAD:
-                            self::handle_file_uptoload();
-                             break;
-                     case ACTION_FILE_DOWNLOAD:
-                            self::handle_file_download();
-                             break;
-                     default :
-                             self::handle_empty();
-                             break;
-             }
+        $action = isset($_REQUEST["action"]) ? $_REQUEST["action"] : NULL;
+        switch($action){
+            case ACTION_FILE_UPTOLOAD:
+                    self::handle_file_uptoload();
+                    break;
+             case ACTION_FILE_DOWNLOAD:
+                    self::handle_file_download();
+                    break;
+             default :
+                    self::handle_empty();
+                    break;
+        }
     }
 
     private static function create_folders($dir){
         return is_dir($dir) or (self::create_folders(dirname($dir)) and mkdir($dir, 0777));
      }
 
-      private static function handle_file_uptoload(){
+    private static function handle_file_uptoload(){
         // Check if the form was submitted
         if($_SERVER["REQUEST_METHOD"] === "POST"){
             // Check if file was uploaded without errors
@@ -115,7 +118,7 @@ class FileLoad extends HandleBase{
                 $dir="upload";
                 self::create_folders($dir);
                 if (!is_dir($dir)) {
-                    echo "mkdir fail, may cause by limits of authority.\n";
+                    User::errReport("mkdir fail, may cause by limits of authority");
                 }else{
                     /*if(file_exists("upload/".$_FILES["file"]["name"])){
                             echo $_FILES["file"]["name"]." is already exists."."\n";
@@ -124,7 +127,7 @@ class FileLoad extends HandleBase{
                     if ($rslt) {
                         echo "Stored in: ".ROOT_PATH."/upload/".$_FILES["file"]["name"]."\n";
                     } else {
-                        echo "ERROR: move_uploaded_file ".strval($rslt)."\n";
+                        User::errReport("move_uploaded_file ".strval($rslt));
                     }
                 }
                 /*
@@ -133,13 +136,12 @@ class FileLoad extends HandleBase{
                 }
                 */
             } else {
-                echo "Check File ERROR: ".$_FILES["file"]["error"];
+                User::errReport("Check File ".$_FILES["file"]["error"]);
             }
         }
     }
 
     private static function handle_file_download(){
-
         set_time_limit(0);
         // OS base dir </> is "../../../"(should base on httpd configure)
         // eg. server path </lib> here is <../../../lib>
@@ -149,7 +151,7 @@ class FileLoad extends HandleBase{
         //$file_extension = $file_pathinfo['extension'];
         $handle = fopen($fpath,"rb");
         if (FALSE === $handle){
-            exit("open file error.");
+            exit("ERROR: open file.");
         }
         $filesize = filesize($fpath);
 
@@ -166,8 +168,8 @@ class FileLoad extends HandleBase{
             flush();    //send data to browser
         }
         fclose($handle);
-            }
     }
+}
 
 // main
 $action = isset($_REQUEST["action"]) ? $_REQUEST["action"] : NULL;
@@ -190,8 +192,7 @@ if(strpos($action, "file") === false){
         default:
             $ret = array();
             $ret["status"] = false;
-            $ret = json_encode($ret, JSON_PRETTY_PRINT);
-            echo $ret;
+            echo json_encode($ret, JSON_PRETTY_PRINT);
             break;
     }
 } else {

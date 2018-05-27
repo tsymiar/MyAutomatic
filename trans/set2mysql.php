@@ -30,16 +30,17 @@ function insert($table, $array){
     // mysqli_query($link, $sql);
     for ($i = 1; $i < count($array); $i++)
     {
-            $vol =  array_keys($array)[$i];
-            $vlu = array_values($array)[$i];
-            $sql = "update {$table} set {$vol}='{$vlu}' where id={$id};";
-            mysqli_query($link, $sql);
-        }
+        $vol =  array_keys($array)[$i];
+        $vlu = array_values($array)[$i];
+        $sql = "update {$table} set {$vol}='{$vlu}' where id={$id};";
+        mysqli_query($link, $sql);
+    }
     return mysqli_insert_id($link);
 }
 
 function one_param_query($conn, $sql, $param, $type = "s"){
-    if ($stmt = mysqli_prepare($conn, $sql)){
+    $stmt = mysqli_prepare($conn, $sql);
+    if ($stmt){
         $stmt->bind_param($type, $param);
         $stmt->execute();
         $rslt = $stmt->get_result();
@@ -56,7 +57,8 @@ function select_images($table)
     global $link;
     $value = "";
     $sql = "select img from ? order by id, name";
-    if($rslt = one_param_query($link, $sql, $table)){
+    $rslt = one_param_query($link, $sql, $table);
+    if($rslt){
         $val = mysqli_fetch_assoc($link, $rslt);
         $value = array_pop($val);
     } else {
@@ -68,8 +70,9 @@ function select_images($table)
     // encode json string as php array
     // $jscnt = utf8_encode($jscnt);
     $jsarr = json_decode($jscnt,true);
-    if (!is_array($jsarr))
+    if (!is_array($jsarr)) {
         die("set data as php array NOT successful.\n");
+    }
     // connect with mysql
     connect();
     // 2-dimensional array
@@ -84,11 +87,12 @@ function select_images($table)
             }
         }
     }
-    if($flag == 0)
-    echo "fill data of ".$file." OK.\n";
+    if ($flag == 0) {
+        echo "fill data of " . $file . " OK.\n";
+    }
     // select_images(DB_TABLE);
     if(!$link){
         mysqli_close($link);
     }
-?>
+
 

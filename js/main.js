@@ -1,8 +1,10 @@
+
 var $form_elem = null;
+
 $(document).ready(function(){
     var options = {
         onFail: function(){
-            alert("您还有"+ $form_elem.getInvalid().length +'处必填项未完成！' )
+            alert("您还有"+ $form_elem.getInvalid().length +'处必填项未完成！');
         },
         inputs: {
             // look at line 41
@@ -41,7 +43,7 @@ $(document).ready(function(){
     function hideURLbar(){ window.scrollTo(0,1); } 
     $form_elem = $('#main-form').idealforms(options).data('idealforms');
     $('#reset').click(function(){
-        $form_elem.reset().fresh().focusFirst()
+        $form_elem.reset().fresh().focusFirst();
     });
     $form_elem.focusFirst();
 });
@@ -57,17 +59,13 @@ var formArray = new Array(
     "comments"
 );
 
-function aes_encrypt(psw, key){
-    return CryptoJS.AES.encrypt(psw,key).toString();
-}
-
 function pop_hide(){
     setPopDivNoScroll("clazz_pop_div", "id_pop_div", false);
 }
 
 function click2Submit(){
     $("#dontjump").html("");
-    if($form_elem == null || $form_elem.getInvalid().length >= 1){
+    if($form_elem === null || $form_elem.getInvalid().length >= 1){
         return;
     }
     var key = null;
@@ -78,18 +76,18 @@ function click2Submit(){
     for(var i=0; i<formArray.length; i++){
         var arrKey = formArray[i];
         arrVal = $("#"+arrKey).val();
-        if(arrKey == "username"){
+        if(arrKey === "username"){
             key = arrVal;
         }
-        if(arrKey == "passwd"){
-            if(key != null){
+        if(arrKey === "passwd"){
+            if(key !== null){
                 arrVal = aes_encrypt(arrVal,key);
             }
         }
-        if(arrKey == "icon"){
+        if(arrKey === "icon"){
             icon = arrVal = $(".ideal-file-filename").val();
         }
-        if(i == formArray.length-1){
+        if(i === formArray.length-1){
             param += (arrKey + "=" + arrVal);
         }else{
             param += (arrKey+"="+arrVal+"&");
@@ -97,17 +95,17 @@ function click2Submit(){
     }
     nativeXMLHttp("POST", link, param, function(rsp_text){
             if(rsp_text){
-                if(rsp_text.indexOf("ERROR") == -1){
+                if(rsp_text.indexOf("ERROR:") !== -1 || rsp_text.indexOf("error") !== -1){
+                    setPopDivNoScroll("clazz_pop_div", "id_pop_div", true, rsp_text);
+                }else{
                     var json = JSON.parse(rsp_text);
-                    if(json.code == 200){
+                    if(json.code === 200){
                         alert(json.message);
                     }
-                }else{
-                    setPopDivNoScroll("clazz_pop_div", "id_pop_div", true, rsp_text);
                 }
             }
         });
-    if(icon != null && icon != ""){
+    if(icon !== null && icon !== ""){
         UpladFile("icon", "trans/service.php?action=file_uptoload");
     }
 }

@@ -1,8 +1,142 @@
 
+/* global $fn, CryptoJS */
+
+CryptoJS.pad.ZeroPadding={pad:function(a,c){var b=4*c;a.clamp();a.sigBytes+=b-(a.sigBytes%b||b)},unpad:function(a){for(var c=a.words,b=a.sigBytes-1;!(c[b>>>2]>>>24-8*(b%4)&255);)b--;a.sigBytes=b+1}};
+
+//var iv = CryptoJS.enc.Hex.parse(CryptoJS.lib.WordArray.random(128 / 8).toString(CryptoJS.enc.Hex));
+
+var Base64 = {
+    // private property
+    _keyStr: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
+    // public method for encoding
+    encode: function(input) {
+        var output = "";
+        var chr1, chr2, chr3, enc1, enc2, enc3, enc4;
+        var i = 0;
+        input = Base64._utf8_encode(input);
+        while (i < input.length) {
+            chr1 = input.charCodeAt(i++);
+            chr2 = input.charCodeAt(i++);
+            chr3 = input.charCodeAt(i++);
+            enc1 = chr1 >> 2;
+            enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
+            enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
+            enc4 = chr3 & 63;
+            if (isNaN(chr2)) {
+                enc3 = enc4 = 64;
+            } else if (isNaN(chr3)) {
+                enc4 = 64;
+            }
+            output = output + this._keyStr.charAt(enc1) + this._keyStr.charAt(enc2) + this._keyStr.charAt(enc3) + this._keyStr.charAt(enc4);
+        }
+        return output;
+    },
+    // public method for decoding
+    decode: function(input) {
+        var output = "";
+        var chr1, chr2, chr3;
+        var enc1, enc2, enc3, enc4;
+        var i = 0;
+        input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
+        while (i < input.length) {
+            enc1 = this._keyStr.indexOf(input.charAt(i++));
+            enc2 = this._keyStr.indexOf(input.charAt(i++));
+            enc3 = this._keyStr.indexOf(input.charAt(i++));
+            enc4 = this._keyStr.indexOf(input.charAt(i++));
+            chr1 = (enc1 << 2) | (enc2 >> 4);
+            chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
+            chr3 = ((enc3 & 3) << 6) | enc4;
+            output = output + String.fromCharCode(chr1);
+            if (enc3 !== 64) {
+                output = output + String.fromCharCode(chr2);
+            }
+            if (enc4 !== 64) {
+                output = output + String.fromCharCode(chr3);
+            }
+        }
+        output = Base64._utf8_decode(output);
+        return output;
+    },
+    // private method for UTF-8 encoding
+    _utf8_encode: function(string) {
+        string = string.replace(/\r\n/g, "\n");
+        var utftext = "";
+        for (var n = 0; n < string.length; n++) {
+            var c = string.charCodeAt(n);
+            if (c < 128) {
+                utftext += String.fromCharCode(c);
+            } else if ((c > 127) && (c < 2048)) {
+                utftext += String.fromCharCode((c >> 6) | 192);
+                utftext += String.fromCharCode((c & 63) | 128);
+            } else {
+                utftext += String.fromCharCode((c >> 12) | 224);
+                utftext += String.fromCharCode(((c >> 6) & 63) | 128);
+                utftext += String.fromCharCode((c & 63) | 128);
+            }
+        }
+        return utftext;
+    },
+    // private method for UTF-8 decoding
+    _utf8_decode: function(utftext) {
+        var string = "";
+        var i = 0;
+        var c = c1 = c2 = 0;
+        while (i < utftext.length) {
+            c = utftext.charCodeAt(i);
+            if (c < 128) {
+                string += String.fromCharCode(c);
+                i++;
+            } else if ((c > 191) && (c < 224)) {
+                c2 = utftext.charCodeAt(i + 1);
+                string += String.fromCharCode(((c & 31) << 6) | (c2 & 63));
+                i += 2;
+            } else {
+                c2 = utftext.charCodeAt(i + 1);
+                c3 = utftext.charCodeAt(i + 2);
+                string += String.fromCharCode(((c & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63));
+                i += 3;
+            }
+        }
+        return string;
+    }
+};
+
+const iv = CryptoJS.enc.Base64.parse(Base64.encode('a6afbbcbf8be7668')); 
+
+function format_parse(key) {
+    while (key.length < 16) {
+        key = key + '\u0000';
+    }
+    return key;
+}
+
+function aes_encrypt(psw, key){
+    key = CryptoJS.enc.Utf8.parse(format_parse(md5(key)));
+    var raws = CryptoJS.enc.Utf8.parse(psw);//CryptoJS.pad.Pkcs7
+    var encrypted = CryptoJS.AES.encrypt(raws, key, { 
+        iv: iv,
+        padding: CryptoJS.pad.ZeroPadding, 
+        mode: CryptoJS.mode.CBC 
+    });
+    return Base64.encode(encrypted.toString());
+}
+
+function aes_decrypt(enc, key){
+    key = CryptoJS.enc.Utf8.parse(md5(key));
+    var encHex = Base64.decode(enc);
+    var decrypt = CryptoJS.AES.decrypt(encHex, key, { 
+        iv: iv,
+        padding: CryptoJS.pad.ZeroPadding, 
+        mode: CryptoJS.mode.CBC 
+    });
+    var decryptedStr = decrypt.toString(CryptoJS.enc.Utf8); 
+    return decryptedStr;
+}
+
 function array2Json(o) {
     var r = [];
-    if (typeof o == "string") return "\"" + o.replace(/([\'\"\\])/g, "\\$1").replace(/(\n)/g, "\\n").replace(/(\r)/g, "\\r").replace(/(\t)/g, "\\t") + "\"";
-    if (typeof o == "object") {
+    if (typeof o === "string") return "\"" + o.replace(/([\'\"\\])/g, "\\$1").replace(/(\n)/g, "\\n").replace(/(\r)/g, "\\r").replace(/(\t)/g, "\\t") + "\"";
+    if (typeof o === "object") {
         if (!o.sort) {
             for (var i in o)
                 r.push(i + ":" + arrayToJson(o[i]));
@@ -51,15 +185,17 @@ function nativeXMLHttp(method, link, param, callback) {
     xmlhttp.setRequestHeader("Content-Type","application/x-www-form-urlencoded;charset=utf-8");
     xmlhttp.send(param);
     xmlhttp.onreadystatechange = function() {
-    if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-        if (typeof (callback) == "function") { 
-            callback(xmlhttp.responseText);
-        }
-        }else if(xmlhttp.status == 401){
+        if(xmlhttp.readyState === 4 && xmlhttp.status === 200) {
+            if (typeof (callback) === "function") { 
+                callback(xmlhttp.responseText);
+            }
+        }else if(xmlhttp.status === 401){
             location.reload(true);
-        }else if(xmlhttp.status == 405){
-			alert("405 Not Allowed");
-		}
+        }else if(xmlhttp.status === 405){
+            alert("405 Not Allowed");
+        }else if(xmlhttp.status === 500){
+            alert("Internal Server Error");
+        }
     };
 }
 
@@ -71,12 +207,12 @@ function requestJson(method, link, callback, json){
         data: json,
         dataType:"json",
         success:function(data){
-            if (typeof (callback) == "function") { 
+            if (typeof (callback) === "function") { 
                 callback(data);
             }
         },
         error:function(jqXHR){
-             if(jqXHR.status == "Unauthorized"){
+             if(jqXHR.status === "Unauthorized"){
                  
              }else{
                  alert(jqXHR.status);
@@ -85,10 +221,10 @@ function requestJson(method, link, callback, json){
     });
 }
 
-function setPopDivNoScroll(clazz_pop_div, id_pop_div, display, text, top, bottom, width, height, top_id, btm_elem){
+function setPopDivNoScroll(clazz_pop_div, id_pop_div, display, text, top, left, width, height, top_id, btm_elem){
     var div_pop = "";
     try{
-        div_pop = document.getElementById(id_pop_div)
+        div_pop = document.getElementById(id_pop_div);
     }catch(e){
         console.log("get "+id_pop_div+" element error\n"+e);
         return;
@@ -118,11 +254,19 @@ function setPopDivNoScroll(clazz_pop_div, id_pop_div, display, text, top, bottom
     };
     div_pop.style.setProperty('position', 'absolute', 'important');
     winNode.css(css);
+    if(left){
+        winNode.css({left:left});
+    }
     winNode.on('click','');
     div_pop.style.display = 'block';
+    if(text){
+        if(text.length > 290){
+            text = text.substring(0,290) + " ...";
+        }
+    }
     winNode.html(
         '<div class="title">提示 !<span class="hide" onclick="pop_hide()">X</span></div>' +
-        '<div id="content">'+ text +'</div>'
+        '<div id="content" style="word-wrap:break-word">'+ text +'</div>'
     );
     if(display && typeof(display) === "boolean"){
         var clazz = $('.'+clazz_pop_div);
@@ -198,7 +342,7 @@ function setPopDivNoScroll(clazz_pop_div, id_pop_div, display, text, top, bottom
                         t.css('cursor', 'default');
                     }
                 });
-            }
+            };
         })(document);
         $(document).ready(function(){
             winNode.Drag();
@@ -242,8 +386,8 @@ function UpladFile(elem, url) {
 function uploadComplete(evt) {
     //服务断接收完文件返回的结果
     var rsp_text = evt.target.responseText;
-    if(rsp_text.indexOf("ERROR:") != -1){
-		setPopDivNoScroll("clazz_pop_div", "id_pop_div", true, rsp_text);
+    if(rsp_text.indexOf("ERROR:") !== -1){
+        setPopDivNoScroll("clazz_pop_div", "id_pop_div", true, rsp_text);
         return;
     }
     alert(rsp_text);
@@ -263,7 +407,7 @@ function progressFunction(evt) {
     var percentageDiv = document.getElementById("percentage");
     // event.total是需要传输的总字节，event.loaded是已经传输的字节。如果event.lengthComputable不为真，则event.total等于0
     if (evt.lengthComputable) {//
-        if(progressBar == null){
+        if(progressBar === null){
             return;
         }
         progressBar.max = evt.total;
@@ -292,6 +436,6 @@ function progressFunction(evt) {
     //剩余时间
     var resttime = ((evt.total-evt.loaded)/bspeed).toFixed(1);
     time.innerHTML = '，速度：'+speed+units+'，剩余时间：'+resttime+'s';
-    if(bspeed==0)
-		time.innerHTML = '上传已取消';
+    if(bspeed===0)
+        time.innerHTML = '上传已取消';
 }
