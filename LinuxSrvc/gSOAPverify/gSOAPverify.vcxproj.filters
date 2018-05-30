@@ -70,6 +70,9 @@
     <None Include="shadowsocks.sh">
       <Filter>其他</Filter>
     </None>
+    <None Include="mysql\custominfo.sql">
+      <Filter>其他</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="soap\myweb.wsdl">

@@ -33,8 +33,8 @@ public:
 private:
 	CIPAddressCtrl m_ipAddr;
 	CEdit m_Port;
-	char s_IP[16];
-	CString s_Port;
+	char a_IP[16];
+	CString a_Port;
 	inline void checkLeak(void* ptr)
 	{
 		if (ptr != nullptr)
