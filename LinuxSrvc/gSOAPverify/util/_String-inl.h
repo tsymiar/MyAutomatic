@@ -114,7 +114,7 @@ inline char * /*__cdecl*/ _String::_strcat(char * strDest, const char * strSrc)
 	char * cp = strDest;
 	while (*cp)
 		cp++; /* find end of strDest */
-	while (bool((*cp++ = *strSrc++) != false)); /* Copy strSrc to end of strDest */
+	while (bool((*cp++ = *strSrc++) != '\0')); /* Copy strSrc to end of strDest */
 	return(strDest);
 }
 //从第pos位开始截取ch的len个字符。

@@ -69,18 +69,18 @@ BOOL CtestUtilsDlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);
 	SetIcon(m_hIcon, FALSE);
 
-	m_ipAddr.GetWindowText(s_IP, 16);
-	if (s_IP[0] == '\0' || s_IP[0] == '\x30')
+	m_ipAddr.GetWindowText(a_IP, 16);
+	if (a_IP[0] == '\0' || a_IP[0] == '\x30')
 	{
 		m_ipAddr.SetAddress(192, 168, 1, 3);
-		sprintf_s(s_IP, 16, "192.168.1.3");
+		sprintf_s(a_IP, 16, "192.168.1.3");
 	}
 
-	m_Port.GetWindowText(s_Port);
-	if (s_Port.IsEmpty())
+	m_Port.GetWindowText(a_Port);
+	if (a_Port.IsEmpty())
 	{
-		s_Port = "8080";
-		m_Port.SetWindowText(s_Port);
+		a_Port = "8080";
+		m_Port.SetWindowText(a_Port);
 	}
 
 	return TRUE;
@@ -119,22 +119,24 @@ HCURSOR CtestUtilsDlg::OnQueryDragIcon()
 
 void CtestUtilsDlg::OnBnClickedToim()
 {
-	m_pIM = new CIMhideWndDlg((IMUSR*)"127.0.0.1");
+	m_ipAddr.GetWindowText(a_IP, 16);
+	memcpy(soelem.imusr.IP, a_IP, 16);
+	m_pIM = new CIMhideWndDlg(&soelem.imusr);
 	m_pIM->Create(IDD_IMHIDEWND);
 	m_pIM->ShowWindow(SW_SHOWNORMAL);
 }
 
 void CtestUtilsDlg::OnBnClickedRegist()
 {
-	m_ipAddr.GetWindowText(s_IP, 16);
-	logon.testRegist(s_IP);
+	m_ipAddr.GetWindowText(a_IP, 16);
+	logon.testRegist(a_IP);
 }
 
 void CtestUtilsDlg::OnBnClickedTestlog()
 {
-	m_Port.GetWindowText(s_Port); 
-	m_ipAddr.GetWindowText(s_IP, 16);
-	sprintf_s(soelem.imusr.addr, 64, "http://%s:%d/myweb.cgi", s_IP, atoi(s_Port));
+	m_Port.GetWindowText(a_Port); 
+	m_ipAddr.GetWindowText(a_IP, 16);
+	sprintf_s(soelem.imusr.addr, 64, "http://%s:%d/myweb.cgi", a_IP, atoi(a_Port));
 	sprintf_s(soelem.imusr.usr, 11, "ioscatchme");
 	sprintf_s(soelem.imusr.psw, 17, "a6afbbcbf8be7668");
 

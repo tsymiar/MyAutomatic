@@ -38,17 +38,13 @@ int InitChat(st_imusr* imusr) {
 	}
 	InitializeCriticalSection(&wrcon);
 	SetConsoleTitle("chat client");
-	if (imusr == NULL) {
+	if (imusr->IP[0] == '\0') {
 		strcpy_s(ipaddr, "127.0.0.1");
 	}
 	else {
-		if (imusr->addr[0] == NULL)
-			strcpy_s(ipaddr, "127.0.0.1");
-		else
-		{
 			printf_s("enter server address:");
 			scanf_s("%s", &ipaddr, (unsigned)_countof(ipaddr));
-		}
+			memcpy(&ipaddr, imusr->IP, 16);
 	};
 	struct sockaddr_in server;
 	server.sin_family = AF_INET;

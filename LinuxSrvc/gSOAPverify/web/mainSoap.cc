@@ -335,10 +335,11 @@ int main(int argc, char* argv[])
 
 int api__login_by_key(struct soap*, char *usr, char *psw, struct ArrayOfEmp2 &ccc)
 {
-	int key = 0;
+	int key = -1;
 	struct DBinfo info;
 	if (!(usr == nullptr || psw == nullptr))
 	{
+		ccc.rslt.flag = 1;
 		if (sqlDB(ccc.rslt.flag, usr, psw, &info) != 0)
 			info.flg = false;
 		if (info.flg)
@@ -349,8 +350,8 @@ int api__login_by_key(struct soap*, char *usr, char *psw, struct ArrayOfEmp2 &cc
 			if (strlen(ccc.rslt.tell) != 0)
 				cout << "tell:" << ccc.rslt.tell;
 			cout << endl;
+			key = 0;
 		}
-		key = 1;
 	}
 	return key;
 }

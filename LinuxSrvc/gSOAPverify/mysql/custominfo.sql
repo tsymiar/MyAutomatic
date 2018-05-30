@@ -15,17 +15,19 @@
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
+USE custominfo;
+
 --
--- Table structure for table `myweb`
+-- Table structure for table `glkline`
 --
 
-DROP TABLE IF EXISTS `myweb`;
+DROP TABLE IF EXISTS `glkline`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `myweb` (
-  `idx` int(11) unsigned NOT NULL,
+CREATE TABLE `glkline` (
+  `idx` int(11) unsigned zerofill NOT NULL AUTO_INCREMENT,
   `user` varchar(24) NOT NULL,
-  `psw` varchar(24) NOT NULL,
+  `psw` varchar(64) NOT NULL,
   `img` varchar(32) DEFAULT NULL,
   `sex` char(4) DEFAULT NULL,
   `age` int(3) DEFAULT NULL,
@@ -36,17 +38,17 @@ CREATE TABLE `myweb` (
   `site` varchar(64) DEFAULT NULL,
   `desc` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`idx`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `myweb`
+-- Dumping data for table `glkline`
 --
 
-LOCK TABLES `myweb` WRITE;
-/*!40000 ALTER TABLE `myweb` DISABLE KEYS */;
-INSERT INTO `myweb` VALUES (0,'ioscatchme','a6afbbcbf8be7668',NULL,'m',22,NULL,'13700000001','2017-12-07','shenyun_n@foxmail.com','www.shenyun.link',NULL),(1,'ccccc','88888',NULL,NULL,NULL,NULL,NULL,'2017-12-07',NULL,NULL,NULL);
-/*!40000 ALTER TABLE `myweb` ENABLE KEYS */;
+LOCK TABLES `glkline` WRITE;
+/*!40000 ALTER TABLE `glkline` DISABLE KEYS */;
+INSERT INTO `glkline` VALUES (0,'ioscatchme','a6afbbcbf8be7668',NULL,'m',22,NULL,'13700000001','2017-12-07','shenyun_n@foxmail.com','www.shenyun.link',NULL),(1,'ccccc','88888',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+/*!40000 ALTER TABLE `glkline` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 

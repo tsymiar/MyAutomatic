@@ -12,9 +12,9 @@ pthread_t tid;
 pthread_mutex_t sql_lock;
 char host[] = "localhost";
 char user[] = "root";
-char psw123[] = "psw123";
+char psw[] = "Psw123$";
 char db[] = "custominfo";
-string table = "myweb";
+string table = "glkline";
 char LL[] = "\033[K>>>";
 MYSQL_RES *RES = nullptr;
 MYSQL_FIELD *field = NULL;
@@ -60,7 +60,7 @@ void* test_connect(void* lp)
 	while (1)
 	{
 		if (mysql_ping(&mysql) != 0) {
-			if ((mysql_real_connect(&mysql, host, user, psw123, db, port, NULL, 0) == 0) && (j < 9))
+			if ((mysql_real_connect(&mysql, host, user, psw, db, port, NULL, 0) == 0) && (j < 9))
 			{
 				cout << LL << "Connect mysql fail." << endl;
 				j++;
@@ -80,9 +80,9 @@ int sqlDB(int type, char* acc, char* psw, struct DBinfo* info)
 			cout << LL << "lib init fail." << endl;
 		if (NULL == mysql_init(&mysql))
 			cout << LL << "MySQL init fail." << endl;
-		if (0 != mysql_options(&mysql, MYSQL_SET_CHARSET_NAME, "GBK"))
+		if (0 != mysql_options(&mysql, MYSQL_SET_CHARSET_NAME, "UTF-8"))
 			cout << LL << "MySQL setting fail." << endl;
-		if (NULL == mysql_real_connect(&mysql, host, user, psw123, db, port, NULL, 0))
+		if (NULL == mysql_real_connect(&mysql, host, user, psw, db, port, NULL, 0))
 			cout << LL << "Connect mysql fail." << endl;
 		//int Select(char* table, char** RES, const char* factor,...)
 		//"SELECT Name,AGE,sex,email FROM ...";
