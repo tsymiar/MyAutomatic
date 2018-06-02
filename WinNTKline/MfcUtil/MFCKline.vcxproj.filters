@@ -162,6 +162,9 @@
     <ClInclude Include="netwk\CTPclient.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="opencv\opencv2\opencv_modules.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MFCKline.cpp">
@@ -298,6 +301,9 @@
       <Filter>配置文件</Filter>
     </None>
     <None Include="web\myweb.nsmap">
+      <Filter>配置文件</Filter>
+    </None>
+    <None Include="cfg\ips.ini">
       <Filter>配置文件</Filter>
     </None>
   </ItemGroup>

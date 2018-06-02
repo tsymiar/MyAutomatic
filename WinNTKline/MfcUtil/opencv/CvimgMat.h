@@ -4,8 +4,7 @@
 #ifdef REAL
 #undef REAL
 #endif
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/opencv.hpp>
 
 struct CvimgMat {
 	cv::Mat getImageMat(const cv::String& img, int flg = -1);

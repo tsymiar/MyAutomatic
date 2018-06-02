@@ -335,13 +335,14 @@ int main(int argc, char* argv[])
 
 int api__login_by_key(struct soap*, char *usr, char *psw, struct ArrayOfEmp2 &ccc)
 {
-	int key = -1;
 	struct DBinfo info;
+	ccc.rslt.flag = -3;
 	if (!(usr == nullptr || psw == nullptr))
 	{
-		ccc.rslt.flag = 1;
-		if (sqlDB(ccc.rslt.flag, usr, psw, &info) != 0)
+		if (sqlDB(0, usr, psw, &info) != 200) {
 			info.flg = false;
+			ccc.rslt.flag = -2;
+		}
 		if (info.flg)
 		{
 			ccc.rslt.email = info.msg->email;
@@ -350,10 +351,10 @@ int api__login_by_key(struct soap*, char *usr, char *psw, struct ArrayOfEmp2 &cc
 			if (strlen(ccc.rslt.tell) != 0)
 				cout << "tell:" << ccc.rslt.tell;
 			cout << endl;
-			key = 0;
+			ccc.rslt.flag = 200;
 		}
 	}
-	return key;
+	return 0;
 }
 
 int api__trans(struct soap *soap, char* msg, char* rtn[])

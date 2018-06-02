@@ -9,8 +9,10 @@ echo
 )else (
 md cfg
 )
-copy ..\MfcUtil\cfg .\cfg
+copy ..\MfcUtil\cfg\*.ini .\cfg
+copy ..\MfcUtil\cfg\*.dll .\
 copy ..\MfcUtil\data .\data
 copy ..\MfcUtil\cef\*.dll .\
 copy ..\MfcUtil\CTP\*.dll .\
+copy ..\MfcUtil\WPF\*.dll .\
 copy ..\MfcUtil\font\lib\*.dll .\
