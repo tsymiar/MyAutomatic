@@ -114,7 +114,7 @@
       <EnablePREfast>false</EnablePREfast>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DisableSpecificWarnings>4793;4819</DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>$(BOOST);$(CEFDIR);$(OPENSSL);$(QTDIR)\include;$(OPENCV)\include;$(PTHREAD)\include;$(SolutionDir)MfcUtil;$(SolutionDir)MfcUtil\font;$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\mygl;$(SolutionDir)MfcUtil\Index;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap;.\GeneratedFiles\$(ConfigurationName);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BOOST);$(CEFDIR);$(OPENSSL);$(QTDIR)\include;$(OPENCV)\include;$(PTHREAD)\include;$(SolutionDir)MfcUtil;$(SolutionDir)MfcUtil\font;$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\mygl;$(SolutionDir)MfcUtil\Index;$(SolutionDir)MfcUtil\opencv;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap;.\GeneratedFiles\$(ConfigurationName);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAs>CompileAsCpp</CompileAs>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -293,6 +293,7 @@
     <ClInclude Include="netwk\GEThttp.h" />
     <ClInclude Include="netwk\Simulation.h" />
     <ClInclude Include="opencv\CvimgMat.h" />
+    <ClInclude Include="opencv\opencv2\opencv_modules.hpp" />
     <ClInclude Include="own\COwnCtl.h" />
     <ClInclude Include="own\Screen-Sharing.h" />
     <ClInclude Include="pthdpool\pthdpool.h" />
@@ -351,6 +352,7 @@
     <ResourceCompile Include="MFCKline.rc" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="cfg\ips.ini" />
     <None Include="ClassDiagram.cd" />
     <None Include="Idx\Initialise-inl.h" />
     <None Include="Idx\plus1second" />
