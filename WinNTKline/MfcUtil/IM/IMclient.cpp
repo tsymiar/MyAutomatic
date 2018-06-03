@@ -110,7 +110,7 @@ unsigned int __stdcall Chat_Msg(void* func)
 		}
 		rcvlen = recv(rcv, rcvbuf, 256, 0);
 		sndbuf[0] = 0;
-		sndbuf[1] = info.optionum;
+		sndbuf[1] = info.option;
 		switch (sndbuf[1])
 		{
 		case 0:
@@ -212,7 +212,7 @@ unsigned int __stdcall Chat_Msg(void* func)
 		}
 		default:
 		{
-			if (info.optionum == 0x0)
+			if (info.option == 0x0)
 			{
 				MessageBox(NULL, "Logged failed.", "default", MB_OK);
 				return -1;
@@ -242,7 +242,7 @@ int StartChat(int err, void(*func)(void*))
 
 int SetOptCmd(unsigned int cmd)
 {
-	return(info.optionum = cmd);
+	return(info.option = cmd);
 }
 
 int transMsg(char* msg)

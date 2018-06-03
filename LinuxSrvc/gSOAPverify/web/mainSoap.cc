@@ -362,33 +362,45 @@ int api__trans(struct soap *soap, char* msg, char* rtn[])
 	//	CHEAK;
 	int j = 0;
 	_String str;
-	char acc[16];
-	char act[16];
-	char psw[16];
-	char*	cot[4] = { NULL };
+	struct PARAM {
+		char key[16];
+		char value[16];
+	};
+	char*	curstr[4] = { NULL };
 	char*	token = NULL;
-	printf("SEND:[%s]\n", msg);
+	struct PARAM params[8];
+	char *text[8] = { msg };
+	int noeq = str.find_char(text, '=');
+	printf("GET:[%s][%d]\n", msg, noeq);
 	token = strtok(msg, "@&");
+	for (int i = 0; i < 8; i++) {
+		text[i] = (char*)malloc(64);
+	}
+	if (memcmp(token, "trans", 6) != 0 || strlen(token) > strlen("trans")) 
+	{
+		memset(text[0], 0, 64);
+		memcpy(text[0], "illegal commond!", 17);
+		return -1;
+	}
 	while (token != NULL)
 	{
-		cot[j] = token;
-		if (strstr(cot[j], "acc="))
+		curstr[j] = token;
+		if (strstr(curstr[j], "=") != NULL)
 		{
-			memcpy(act, str._strsub((unsigned char*)cot[j], 4, strlen((const char*)cot[j]) + 1), 32);
-			memcpy(acc, act, sizeof(act));
+			str._strcut((unsigned char*)curstr[j], '=', params[j].key, params[j].value);
+			j++;
 		}
-		else
-		{
-			if (strstr(cot[j], "psw="))
-				memcpy(psw, str._strsub((unsigned char*)cot[j], 4, strlen((const char*)cot[j]) + 1), 32);
-		}
-		token = strtok(NULL, "@&");
-		j++;
+		token = strtok(NULL, "&");
+	}
+	for (int k = 0; k < j; k++)
+	{
+		sprintf(text[k], "param(%d):%s[%s]", k, params[k].key, params[k].value);
 	}
 	j = 0;
 	token = NULL;
-	sprintf(*rtn, "acc=[%s]\tpsw=[%s]\n", acc, psw);
-	cout << *rtn << endl;
+	rtn = (char**)malloc(64);
+	memcpy(rtn, *text, 64);
+	cout << rtn << endl;
 	return 0;
 }
 

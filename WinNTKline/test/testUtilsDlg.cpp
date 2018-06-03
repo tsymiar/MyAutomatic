@@ -72,8 +72,8 @@ BOOL CtestUtilsDlg::OnInitDialog()
 	m_ipAddr.GetWindowText(a_IP, 16);
 	if (a_IP[0] == '\0' || a_IP[0] == '\x30')
 	{
-		m_ipAddr.SetAddress(192, 168, 1, 3);
 		sprintf_s(a_IP, 16, "192.168.1.3");
+		m_ipAddr.SetAddress(ntohl(inet_addr(a_IP)));
 	}
 
 	m_Port.GetWindowText(a_Port);
@@ -137,9 +137,7 @@ void CtestUtilsDlg::OnBnClickedTestlog()
 	m_Port.GetWindowText(a_Port); 
 	m_ipAddr.GetWindowText(a_IP, 16);
 	sprintf_s(soelem.imusr.addr, 64, "http://%s:%d/myweb.cgi", a_IP, atoi(a_Port));
-	sprintf_s(soelem.imusr.usr, 11, "ioscatchme");
-	sprintf_s(soelem.imusr.psw, 17, "a6afbbcbf8be7668");
-
+	sprintf_s(soelem.imusr.comm, 28, "trans@&acc=local&test=8888");
 	for (int i = 0; i < LOOP_TIME; i++)
 	{
 		logon.testLogin(&soelem);

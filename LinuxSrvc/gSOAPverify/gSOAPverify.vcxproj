@@ -45,10 +45,10 @@
     <ClInclude Include="web\mainSoap.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="file\custominfo.sql" />
+    <None Include="file\mysql.sh" />
+    <None Include="file\shadowsocks.sh" />
     <None Include="Makefile" />
-    <None Include="mysql\custominfo.sql" />
-    <None Include="mysql\mysql.sh" />
-    <None Include="shadowsocks.sh" />
     <None Include="soap\myweb.nsmap" />
   </ItemGroup>
   <ItemGroup>
@@ -145,7 +145,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <ClCompile />
     <Link>
-      <LibraryDependencies>mysql;mysqlclient;pthread;%(LibraryDependencies)</LibraryDependencies>
+      <LibraryDependencies>/usr/lib/mysql;mysqlclient;pthread;%(LibraryDependencies)</LibraryDependencies>
     </Link>
     <ClCompile>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>

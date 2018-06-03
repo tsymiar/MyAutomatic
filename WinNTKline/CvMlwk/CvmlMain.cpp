@@ -13,7 +13,7 @@ int main()
 #ifdef WIN32
 	const cv::String img = "../MfcUtil/image/taoxi.png";
 	CvimgMat vm;
-#undef CVML
+//#undef CVML
 #ifdef CVML
 	vm.cvmat_test();
 #endif
