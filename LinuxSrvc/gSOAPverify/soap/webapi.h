@@ -23,6 +23,6 @@ struct ArrayOfEmp2
 	struct api__result rslt;
 };
 
-int api__trans(char* msg, char* rtn[]);
+int api__trans(xsd_string msg, xsd_string rtn[]);
 int api__get_server_status(xsd_string cmd, xsd_string& status);
 int api__login_by_key(xsd_string usr, xsd_string psw, struct ArrayOfEmp2& ccc);

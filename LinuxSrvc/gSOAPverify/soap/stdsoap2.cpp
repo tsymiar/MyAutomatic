@@ -17482,12 +17482,13 @@ soap_try_connect_command(struct soap *soap, int http_command, const char *endpoi
       }
       soap_closesock(soap);
       DBGLOG(TEST, SOAP_MESSAGE(fdebug, "Connect/reconnect to '%s' host='%s' path='%s' port=%d\n", endpoint?endpoint:"(null)", soap->host, soap->path, soap->port));
-      if (!soap->keep_alive || !soap_valid_socket(soap->socket))
-      { soap->socket = soap->fopen(soap, endpoint, soap->host, soap->port);
-        if (soap->error)
-          return soap->error;
-        soap->keep_alive = ((soap->omode & SOAP_IO_KEEPALIVE) != 0);
-      }
+	  if (!soap->keep_alive || !soap_valid_socket(soap->socket))
+	  {
+		  soap->socket = soap->fopen(soap, endpoint, soap->host, soap->port);
+		  if (soap->error)
+			  return soap->error;
+		  soap->keep_alive = ((soap->omode & SOAP_IO_KEEPALIVE) != 0);
+	  }
     }
   }
 #ifdef WITH_NTLM

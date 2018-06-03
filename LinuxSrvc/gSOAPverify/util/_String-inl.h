@@ -54,10 +54,12 @@ public:
 	char* /*__cdecl*/_strcat(char * strDest, const char * strSrc);
 	char* _itoa(int num, char *str, int radix);
 	unsigned char* _strsub(unsigned char* ch, int pos, int len);
+	int _strcut(unsigned char* str, char ch, char* str1, char* str2);
 	size_t _strlen(const char* str);
 	char* _strmove(char* w, int m, bool fore = false);
 	char* _charmove(char* w, char c, int b, bool hind = false/*默认向左*/);
 	char* _intmove(char* w, int m, int b, bool hind = false);
+	int find_char(char **str, char ch);
 	char* _op_order(char * src, char* dst);
 	char* _op_order(char * str);
 	char* _c_str() const;
@@ -135,6 +137,21 @@ inline unsigned char* _String::_strsub(unsigned char* ch, int pos, int len)
 	}
 	subch[len] = '\0';//加上字符串结束符。  
 	return subch;       //返回分配的字符数组地址。  
+}
+//截取字符串str内字符ch左右两边的子串。
+inline int _String::_strcut(unsigned char* str, char ch, char* str1, char* str2)
+{
+	char s1[16];
+	char s2[16];
+	unsigned int i = 0;
+	for (i = 0; i < strlen((char*)str); i++)
+		if (str[i] == ch)
+			break;
+	sprintf(s1, "%s", (char*)_strsub(str, 0, i));
+	memcpy(str1, s1, strlen(s1) + 1);
+	sprintf(s2, "%s", (char*)_strsub(str, i + 1, strlen((char*)str) + 1 - i));
+	memcpy(str2, s2, strlen(s2) + 1);
+	return i;
 }
 //计算字符个数（字符串长度）
 inline size_t _String::_strlen(const char * str)
@@ -234,6 +251,24 @@ inline char* _String::_intmove(char* w, int m, int b, bool hind)
 	}
 	return w;
 }
+// 返回字符串数组str含有的字符ch数
+inline int _String::find_char(char **str, char ch)
+{
+	int num = 0;
+	char *string;
+	while ((string = *str++) != NULL)
+	{
+		while (*string != '\0')
+		{
+			if (*string++ == ch)
+			{
+				num++;
+			}
+		}
+	}
+	return num;
+}
+
 //字符串逆序输出
 inline char* _String::_op_order(char * src, char *cst)
 {
