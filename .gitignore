@@ -30,7 +30,7 @@
 #Others
 WinNTKline/MfcUtil/image/timg.png
 LinuxSrvc/gSOAPverify/bin
-WinNTKline/test/testAPIs
+WinNTKline/test/testUtils
 QtCases/GeneratedFiles
 QtCases/QtCases
 QtCases/moc_*

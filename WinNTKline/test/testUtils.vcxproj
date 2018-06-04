@@ -308,6 +308,9 @@
     <Image Include="..\MfcUtil\res\top1_h.bmp" />
     <Image Include="res\testUtils.ico" />
   </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="..\MfcUtil\res\windows.manifest" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

@@ -37,10 +37,10 @@ public:
 	CefRefPtr<CEFWebKit> m_cWebClient;
 private:
 	void InitBrs();
-	void SetTip();
+	void SetTipLatent();
 	void SetCefWeb(RECT rect, CString& url);
-	afx_msg void OnStnDblclickCursor();
 	afx_msg BOOL OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT* pResult);
 public:
+	afx_msg void OnStnDblclickCursor();
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 };
