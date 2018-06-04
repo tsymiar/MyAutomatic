@@ -22,8 +22,14 @@ public:
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
 	DECLARE_MESSAGE_MAP()
+private:
+	CString strJavaScriptCode = "function fnOnError(msg,url,lineno){alert('script error:\\n\\nURL:'+url"
+		"+'\\n\\nMSG:'+msg +'\\n\\nLine:'+lineno+'\\n\\nframes:' + window.frames.length);return true;}window.onerror=fnOnError;";
+	void WalkAllChildPages(CComPtr<IHTMLDocument2> &parentDoc, BSTR m_bstrScript);
+	void ShieldCurrPage(CComPtr<IHTMLDocument2> &parentDoc, BSTR m_bstrScript);
 public:
 	BOOL CreateFromDialog(CWnd* pDlgWnd);
+	virtual void OnNavigateComplete2(LPCTSTR strURL);
 	afx_msg int OnMouseActivate(CWnd* pDesktopWnd, UINT nHitTest, UINT message); 
 	afx_msg void OnNavigateError(LPCTSTR lpszURL, LPCTSTR lpszFrame, DWORD dwError, BOOL *pbCancel);
 };
