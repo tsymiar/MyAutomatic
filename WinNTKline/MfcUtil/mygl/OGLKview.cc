@@ -1028,7 +1028,6 @@ namespace GMDD
 	float	maxprice = 0.0f;
 	float	minprice = FLT_MAX;
 	float	fo = 0;
-	char*	cot = NULL;//切分临时数据
 	char*	buff = NULL;
 	char*	token = NULL;
 	bool	isnext = false;//是否为下一组
@@ -1119,12 +1118,13 @@ bool OGLKview::GetMarkDatatoDraw(const char* file, void* P, char* title)
 	else {
 		while (getline(Readfile, tmp))	// 逐行读
 		{
+			char cotx[64] = { NULL };//切分临时数据
 			buff = (char*)tmp.c_str();
-			token = _Strtok(buff, "/,\t", &cot);
+			token = _Strtok(buff, "/,\t", (char**)&cotx);
 			while (token != NULL)
 			{
 				markdata.push_back(token);// 获取描述
-				token = _Strtok(NULL, "/,\t", &cot);
+				token = _Strtok(NULL, "/,\t", (char**)&cotx);
 			}
 			token = NULL;
 			//5行数据一组，第一组7行
@@ -1147,11 +1147,11 @@ bool OGLKview::GetMarkDatatoDraw(const char* file, void* P, char* title)
 #endif // _MSC_VER
 					}
 					i = 0;
-					token = _Strtok(buff, " ", &cot);
+					token = _Strtok(buff, " ", (char**)&cotx);
 					while (token != NULL)	// 行优先
 					{
 						div_stock[i] = token;
-						token = _Strtok(NULL, " ", &cot);
+						token = _Strtok(NULL, " ", (char**)&cotx);
 						i++;
 					}
 					SwitchViewport(0);
