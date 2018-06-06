@@ -51,7 +51,7 @@ pthread_mutex_t
 #endif
 sendallow;
 
-type_socket listen_socket, recv_socket, send_socket;
+type_socket listen_socket, recv_socket;
 int  aimtoquit;
 
 struct msg {
@@ -113,11 +113,29 @@ int leave_group(int idx, char usr[24]);
 
 type_thread_func monite(void *arg)
 {
-	type_socket rcv_sock = recv_socket,//接收
-		snd_sock = send_socket;//发送
 	int c, flg, rtn;
 	int qq = 0, logged = 0;
 	char name[24], bufs[256], tmp[256];
+	struct sockaddr_in adin;
+	type_len len = (type_len)sizeof(adin);
+	type_socket rcv_sock = recv_socket,//接收
+		snd_sock = //发送
+		accept(listen_socket, (struct sockaddr*)&adin, &len);
+
+	if (snd_sock
+#ifdef _WIN32
+		== INVALID_SOCKET) {
+		std::cerr << "accept() failed error " << WSAGetLastError();
+		WSACleanup();
+#else
+		< 0) {
+#endif
+		std::cerr << "errno:\t" << strerror(errno) << std::endl;
+		return -1;
+	};
+#ifdef _DEBUG
+	printf("2: %d\n", snd_sock);
+#endif
 	do {
 		memset(name, 0, sizeof(name));
 		memset(bufs, 0, 256);
@@ -513,28 +531,12 @@ int _im_(int argc, char *argv[]) {
 #ifdef _DEBUG
 		printf("1: %d\n", recv_socket);
 #endif
-		send_socket = accept(listen_socket, (struct sockaddr*)&from, &fromlen);
-
-		if (send_socket
-#ifdef _WIN32
-			== INVALID_SOCKET) {
-			std::cerr << "accept() failed error " << WSAGetLastError();
-			WSACleanup();
-#else
-			< 0) {
-#endif
-			std::cerr << "errno:\t" << strerror(errno) << std::endl;
-			return -1;
-		};
 #ifdef _WIN32
 		_beginthreadex(NULL, 0, (_beginthreadex_proc_type)monite, NULL, 0, &thread_ID);
 #else
 		pthread_create(&thread_ID, NULL, monite, (void*)-1);
 #endif
 		c++;
-#ifdef _DEBUG
-		printf("2: %d\n", send_socket);
-#endif
 		} while (!(aimtoquit));
 		printf("c = %d\n", c);
 		return 0;

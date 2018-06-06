@@ -15,7 +15,6 @@ IMlogDlg::IMlogDlg(CWnd* pParent /*=NULL*/)
 
 IMlogDlg::~IMlogDlg()
 {
-	delete this;
 }
 
 void IMlogDlg::DoDataExchange(CDataExchange* pDX)
@@ -43,11 +42,49 @@ BOOL IMlogDlg::OnInitDialog()
 	return 0;
 }
 
+bool checkText(CString str)
+{
+	int z0 = 0;
+	int zz = 0;
+	int zZ = 0;
+	int z_ = 0;
+	for (int i = 0; i < str.GetLength(); i++)
+	{
+		char ansi = str[i];
+		if (ansi <= '9' && ansi >= '0')
+		{
+			z0 = 1;
+		}
+		else if (ansi <= 'z' && ansi >= 'a')
+		{
+			zz = 1;
+		}
+		else if (ansi <= 'Z' && ansi >= 'A')
+		{
+			zZ = 1;
+		}
+		else if (ansi > 127)
+		{
+			z_ = 0;
+		}
+		else
+		{
+			z_ = 1;
+		}
+	}
+	return (z0 + zz + zZ + z_ == 4);
+}
 
 void IMlogDlg::OnBnClickedOk()
 {
 	GetDlgItem(IDC_ACNT)->GetWindowText(m_strAcnt);
 	GetDlgItem(IDC_PSW)->GetWindowText(m_strPsw);
+	if (lstrlen(m_strAcnt) < 3) 
+	{
+		AfxMessageBox("请输入3~20个字符。");
+	}else
+		if (!checkText(m_strPsw)) 
+			AfxMessageBox("密码必须是数字、字母和特殊字符的集合！");
 	if (SetLogInfo((LPSTR)(LPCSTR)m_strAcnt, (LPSTR)(LPCSTR)m_strPsw))
 		CDialogEx::OnOK();
 	SetStatus();
