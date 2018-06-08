@@ -1,4 +1,4 @@
-﻿// http://msdn.microsoft.com/en-us/library/hskdteyh.aspx
+// http://msdn.microsoft.com/en-us/library/hskdteyh.aspx
 #ifndef _CPUID_H
 #define _CPUID_H
 #pragma warning (disable:4793)

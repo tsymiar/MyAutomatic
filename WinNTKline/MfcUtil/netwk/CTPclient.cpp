@@ -1,4 +1,4 @@
-#include "CTPclient.h"
+ï»¿#include "CTPclient.h"
 #include "ChannelCollector.h"
 
 extern bool net_exit;
@@ -11,89 +11,89 @@ CTPclient::~CTPclient() {}
 
 unsigned int __stdcall CTPclient::SimpleClient(void* P)
 {
-	//Ïß³ÌÒªµ÷ÓÃµÄº¯Êý
-	int err;
-	int j = 0;
-	SOCKET clientSock;
-	WSADATA wsaData;//WSAata´æ´¢ÏµÍ³´«»ØµÄ¹ØÓÚWinSocketµÄÐÅÏ¢
-	CTPclient *m_ctp = new CTPclient;
-	MyOglDrawDlg* m_hWnd = (MyOglDrawDlg*)P;
-	if (m_hWnd->ctpIP == NULL)return NULL;
-	OGLKview::Point pnt = { 0,0 };
-	int loo[8];
-	CString Str;
-	CString Left;
-	char Buf[50];
-	char buffer[10];
-	WCHAR LPCT[50];
-	SOCKADDR_IN addrSrv;
-	WORD wVersionRequested;
-	//Á¬½ÓÁ½¸öÎÞ·ûºÅ²ÎÊý
-	wVersionRequested = MAKEWORD(1, 1);
-	err = WSAStartup(wVersionRequested, &wsaData);
-	if (err != 0)
-	{
-		::PostMessage(m_hWnd->m_hWnd, WM_MSG_BOX, 0,
-			(LPARAM)m_ctp->Ogl.index.AllocBuffer("·þÎñÆ÷¿ÉÄÜÎ´Æô¶¯£¡"));
-		return -1;
-	}
-	if (LOBYTE(wsaData.wVersion) != 1 || HIBYTE(wsaData.wVersion) != 1)
-	{
-		WSACleanup();
-		return -2;
-	}
-	clientSock = socket(AF_INET, SOCK_STREAM, 0);//AF_INET ±íÊ¾TCP Á¬½Ó
-	addrSrv.sin_addr.S_un.S_addr = inet_addr((const char*)m_hWnd->ctpIP);//±¾»úµØÖ·,·þÎñÆ÷ÔÚ±¾»ú¿ªÆô
-	addrSrv.sin_family = AF_INET;
-	addrSrv.sin_port = htons(6001);//ÉèÖÃ¶Ë¿ÚºÅ
-	connect(clientSock, (SOCKADDR*)&addrSrv, sizeof(SOCKADDR));//Á¬½Ó·þÎñÆ÷
-	while (1)
-	{
-		if (net_exit) { m_hWnd->MessageBox("exit"); return -1; };
-		if (recv(clientSock, Buf, 50, 0) == SOCKET_ERROR)
-		{
-			if (m_hWnd->m_hWnd != NULL)
-				::PostMessage(m_hWnd->m_hWnd, WM_MSG_BOX, 0,
-				(LPARAM)m_ctp->Ogl.index.AllocBuffer("½ÓÊÕÊ§°Ü£¡"));
-			return -3;
-		}//½ÓÊÕÊý¾Ý²¢Ìî³äµ½ÁÐ±í
-		MultiByteToWideChar(CP_ACP, 0, Buf, strlen(Buf) + 1, LPCT, sizeof(LPCT) / sizeof(LPCT[0]));
-		m_ctp->Ogl.DrawKtext(Buf, pnt, 20, { 1,1,1 });
-		loo[0] = Str.Find(_T("."));//²éÕÒµÚÒ»¸ö"."Î»ÖÃ
-		Left = Str.Left(loo[0]);	//½«","×ó±ßµÄÖµÈ¡³ö
-		Str.Format(_T("%s"), LPCT);
-		_ultoa_s(GetCurrentThreadId(), buffer, 10);//µ±Ç°Ïß³Ìid
-		send(clientSock, buffer, strlen(buffer) + 1, 0);//·¢ËÍÊý¾Ý
-		j++;
-	}
-	if (m_ctp != nullptr)
-		delete m_ctp;
-	closesocket(clientSock);
-	WSACleanup();
-	return 0;
+    //çº¿ç¨‹è¦è°ƒç”¨çš„å‡½æ•°
+    int err;
+    int j = 0;
+    SOCKET clientSock;
+    WSADATA wsaData;//WSAataå­˜å‚¨ç³»ç»Ÿä¼ å›žçš„å…³äºŽWinSocketçš„ä¿¡æ¯
+    CTPclient *m_ctp = new CTPclient;
+    MyOglDrawDlg* m_hWnd = (MyOglDrawDlg*)P;
+    if (m_hWnd->ctpIP == NULL)return NULL;
+    OGLKview::Point pnt = { 0,0 };
+    int loo[8];
+    CString Str;
+    CString Left;
+    char Buf[50];
+    char buffer[10];
+    WCHAR LPCT[50];
+    SOCKADDR_IN addrSrv;
+    WORD wVersionRequested;
+    //è¿žæŽ¥ä¸¤ä¸ªæ— ç¬¦å·å‚æ•°
+    wVersionRequested = MAKEWORD(1, 1);
+    err = WSAStartup(wVersionRequested, &wsaData);
+    if (err != 0)
+    {
+        ::PostMessage(m_hWnd->m_hWnd, WM_MSG_BOX, 0,
+            (LPARAM)m_ctp->Ogl.index.AllocBuffer("æœåŠ¡å™¨å¯èƒ½æœªå¯åŠ¨ï¼"));
+        return -1;
+    }
+    if (LOBYTE(wsaData.wVersion) != 1 || HIBYTE(wsaData.wVersion) != 1)
+    {
+        WSACleanup();
+        return -2;
+    }
+    clientSock = socket(AF_INET, SOCK_STREAM, 0);//AF_INET è¡¨ç¤ºTCP è¿žæŽ¥
+    addrSrv.sin_addr.S_un.S_addr = inet_addr((const char*)m_hWnd->ctpIP);//æœ¬æœºåœ°å€,æœåŠ¡å™¨åœ¨æœ¬æœºå¼€å¯
+    addrSrv.sin_family = AF_INET;
+    addrSrv.sin_port = htons(6001);//è®¾ç½®ç«¯å£å·
+    connect(clientSock, (SOCKADDR*)&addrSrv, sizeof(SOCKADDR));//è¿žæŽ¥æœåŠ¡å™¨
+    while (1)
+    {
+        if (net_exit) { m_hWnd->MessageBox("exit"); return -1; };
+        if (recv(clientSock, Buf, 50, 0) == SOCKET_ERROR)
+        {
+            if (m_hWnd->m_hWnd != NULL)
+                ::PostMessage(m_hWnd->m_hWnd, WM_MSG_BOX, 0,
+                (LPARAM)m_ctp->Ogl.index.AllocBuffer("æŽ¥æ”¶å¤±è´¥ï¼"));
+            return -3;
+        }//æŽ¥æ”¶æ•°æ®å¹¶å¡«å……åˆ°åˆ—è¡¨
+        MultiByteToWideChar(CP_ACP, 0, Buf, strlen(Buf) + 1, LPCT, sizeof(LPCT) / sizeof(LPCT[0]));
+        m_ctp->Ogl.DrawKtext(Buf, pnt, 20, { 1,1,1 });
+        loo[0] = Str.Find(_T("."));//æŸ¥æ‰¾ç¬¬ä¸€ä¸ª"."ä½ç½®
+        Left = Str.Left(loo[0]);    //å°†","å·¦è¾¹çš„å€¼å–å‡º
+        Str.Format(_T("%s"), LPCT);
+        _ultoa_s(GetCurrentThreadId(), buffer, 10);//å½“å‰çº¿ç¨‹id
+        send(clientSock, buffer, strlen(buffer) + 1, 0);//å‘é€æ•°æ®
+        j++;
+    }
+    if (m_ctp != nullptr)
+        delete m_ctp;
+    closesocket(clientSock);
+    WSACleanup();
+    return 0;
 }
 
 unsigned int __stdcall CTPclient::TradeMarket(void* P)
 {
-	MyOglDrawDlg* m_hWnd = (MyOglDrawDlg*)P;
-	TradeChannel trade;
-	CString str;
-	if (AllocConsole())
-		freopen("CONOUT$", "w", stderr);
-	TRDAPI = CThostFtdcTraderApi::CreateFtdcTraderApi(STFTDC.FLOW_PATH);
-	TradeChannel *tdChnl = new TradeChannel();
-	TRDAPI->RegisterSpi((CThostFtdcTraderSpi*)tdChnl);
-	TRDAPI->RegisterFront(STFTDC.FRONT_ADDR);
-	TRDAPI->SubscribePrivateTopic(THOST_TERT_QUICK);
-	TRDAPI->SubscribePublicTopic(THOST_TERT_QUICK);
-	TRDAPI->Init();
-	TRDAPI->Join();
-	str.Format(_T("%d"), tdChnl->getRtn());
-	CTPclient *m_ctp = new CTPclient;
-	if (m_hWnd->m_hWnd != NULL)
-		::PostMessage(m_hWnd->m_hWnd, WM_MSG_BOX, 0,
-		(LPARAM)m_ctp->Ogl.index.AllocBuffer(str));
-	delete tdChnl, m_ctp;
-	return 0;
+    MyOglDrawDlg* m_hWnd = (MyOglDrawDlg*)P;
+    TradeChannel trade;
+    CString str;
+    if (AllocConsole())
+        freopen("CONOUT$", "w", stderr);
+    TRDAPI = CThostFtdcTraderApi::CreateFtdcTraderApi(STFTDC.FLOW_PATH);
+    TradeChannel *tdChnl = new TradeChannel();
+    TRDAPI->RegisterSpi((CThostFtdcTraderSpi*)tdChnl);
+    TRDAPI->RegisterFront(STFTDC.FRONT_ADDR);
+    TRDAPI->SubscribePrivateTopic(THOST_TERT_QUICK);
+    TRDAPI->SubscribePublicTopic(THOST_TERT_QUICK);
+    TRDAPI->Init();
+    TRDAPI->Join();
+    str.Format(_T("%d"), tdChnl->getRtn());
+    CTPclient *m_ctp = new CTPclient;
+    if (m_hWnd->m_hWnd != NULL)
+        ::PostMessage(m_hWnd->m_hWnd, WM_MSG_BOX, 0,
+        (LPARAM)m_ctp->Ogl.index.AllocBuffer(str));
+    delete tdChnl, m_ctp;
+    return 0;
 }
 

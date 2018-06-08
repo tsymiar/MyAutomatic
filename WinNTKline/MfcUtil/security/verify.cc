@@ -1,4 +1,4 @@
-﻿#include "verify.h"
+#include "verify.h"
 
 //Hash的前8位与后8位进行异或产生8位字hash1.
 unsigned char* get_hash1(unsigned char* ha,unsigned  char* sh, unsigned char* sa)

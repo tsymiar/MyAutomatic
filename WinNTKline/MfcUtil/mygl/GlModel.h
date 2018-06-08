@@ -1,4 +1,4 @@
-﻿#ifndef GLMODEL_H_
+#ifndef GLMODEL_H_
 #define GLMODEL_H_
 #ifdef _WIN32
 #include <windows.h>

@@ -1,4 +1,4 @@
-﻿#if !defined(OWNCTL_H)
+#if !defined(OWNCTL_H)
 #define OWNCTL_H
 #include <Resource.h>
 #include <afxtempl.h>
