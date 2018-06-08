@@ -18,22 +18,22 @@ struct st_TThostFtdc {
 	const char* FLOW_PATH = "./"/*"*.con"*/;
 	bool ISMULTICAST = false;
 	CThostFtdcTraderApi *TrdApi;
-	TThostFtdcFrontAddrType FRONT_ADDR = "tcp://180.168.146.187:10000";	// Ç°ÖÃµØÖ·
-	TThostFtdcBrokerIDType	BROKER_ID = "88888888";						// ¾­¼Í¹«Ë¾´úÂë
-	TThostFtdcInvestorIDType INVESTOR_ID = "092380";					// ×¢ÒâÊäÈëÄã×Ô¼ºµÄsimnow·ÂÕæÍ¶×ÊÕß£¨ÓÃ»§£©´úÂë
+	TThostFtdcFrontAddrType FRONT_ADDR = "tcp://180.168.146.187:10000";	// å‰ç½®åœ°å€
+	TThostFtdcBrokerIDType	BROKER_ID = "88888888";						// ç»çºªå…¬å¸ä»£ç 
+	TThostFtdcInvestorIDType INVESTOR_ID = "092380";					// æ³¨æ„è¾“å…¥ä½ è‡ªå·±çš„simnowä»¿çœŸæŠ•èµ„è€…ï¼ˆç”¨æˆ·ï¼‰ä»£ç 
 	TThostFtdcUserIDType USER_ID = "tsymiar";
-	TThostFtdcPasswordType  PASSWORD = "Minctp905";						// ×¢ÒâÊäÈëÄã×Ô¼ºµÄsimnow·ÂÕæÓÃ»§ÃÜÂë
-	TThostFtdcInstrumentIDType INSTRUMENT_ID = "i1409";					// ºÏÔ¼´úÂë £¬×¢ÒâÓëÊ±¾ã½ø¸Ä±äºÏÔ¼ID,±ÜÃâÊ¹ÓÃ¹ıÊ±ºÏÔ¼
-	TThostFtdcDirectionType	DIRECTION = THOST_FTDC_D_Sell;				// ÂòÂô·½Ïò
-	TThostFtdcPriceType	LIMIT_PRICE = 2380;								// ¼Û¸ñ
-	TThostFtdcFrontIDType	FRONT_ID;	//Ç°ÖÃ±àºÅ
-	TThostFtdcSessionIDType	SESSION_ID;	//»á»°±àºÅ
-	TThostFtdcOrderRefType	ORDER_REF;	//±¨µ¥ÒıÓÃ
+	TThostFtdcPasswordType  PASSWORD = "Minctp905";						// æ³¨æ„è¾“å…¥ä½ è‡ªå·±çš„simnowä»¿çœŸç”¨æˆ·å¯†ç 
+	TThostFtdcInstrumentIDType INSTRUMENT_ID = "i1409";					// åˆçº¦ä»£ç  ï¼Œæ³¨æ„ä¸æ—¶ä¿±è¿›æ”¹å˜åˆçº¦ID,é¿å…ä½¿ç”¨è¿‡æ—¶åˆçº¦
+	TThostFtdcDirectionType	DIRECTION = THOST_FTDC_D_Sell;				// ä¹°å–æ–¹å‘
+	TThostFtdcPriceType	LIMIT_PRICE = 2380;								// ä»·æ ¼
+	TThostFtdcFrontIDType	FRONT_ID;	//å‰ç½®ç¼–å·
+	TThostFtdcSessionIDType	SESSION_ID;	//ä¼šè¯ç¼–å·
+	TThostFtdcOrderRefType	ORDER_REF;	//æŠ¥å•å¼•ç”¨
 	TThostFtdcAuthCodeType AUTHCODE;
 #ifdef THOST_FTDCMDAPI_H
 	CThostFtdcMdApi *MdApi;
 	struct st_MdData {
-		//ĞĞÇé¶©ÔÄÁĞ±í
+		//è¡Œæƒ…è®¢é˜…åˆ—è¡¨
 		char* Instruments[32] = { "i1409", "jm1409", "j1409", "rb1410","rb1501", "TA409", "l1409","ru1409", "ru1501", "jd1409", "RM409", "m1409","y1501", "p1501","ag1506","ag1412","cu1408","cu1409","IF1409","IF1407" };
 		int		MdMode;
 		bool	ReceiveTick[20];
@@ -47,30 +47,30 @@ struct st_TThostFtdc {
 		double	Q_BarTime_2;		//
 		int		Q_BarTime_1n[20];	//
 
-		double  Mn_open[20][60];	//·ÖÖÓKÏß¿ª
-		double  Mn_high[20][60];	//·ÖÖÓKÏß¸ß
-		double  Mn_low[20][60];		//·ÖÖÓKÏßµÍ
-		double  Mn_close[20][60];	//·ÖÖÓKÏßÊÕ
-		bool	MnKlinesig[20];		//1·ÖÖÓKÏß±êÖ¾
+		double  Mn_open[20][60];	//åˆ†é’ŸKçº¿å¼€
+		double  Mn_high[20][60];	//åˆ†é’ŸKçº¿é«˜
+		double  Mn_low[20][60];		//åˆ†é’ŸKçº¿ä½
+		double  Mn_close[20][60];	//åˆ†é’ŸKçº¿æ”¶
+		bool	MnKlinesig[20];		//1åˆ†é’ŸKçº¿æ ‡å¿—
 
-		double  Day_open[20][60];	//ÈÕKÏß¿ª
-		double  Day_high[20][60];	//ÈÕKÏß¸ß
-		double  Day_low[20][60];	//ÈÕKÏßµÍ
-		double  Day_close[20][60];	//ÈÕKÏßÊÕ
+		double  Day_open[20][60];	//æ—¥Kçº¿å¼€
+		double  Day_high[20][60];	//æ—¥Kçº¿é«˜
+		double  Day_low[20][60];	//æ—¥Kçº¿ä½
+		double  Day_close[20][60];	//æ—¥Kçº¿æ”¶
 
-		char	LogFilePaths[80];				//½»Ò×ÈÕÖ¾
+		char	LogFilePaths[80];				//äº¤æ˜“æ—¥å¿—
 		char	TickFileWritepaths[20][80];		//
 		char	InstrumentID_n[20][10];			//
 		double  InstrumentID_minmove[20];		//
 		double  InstrumentID_diff[20];			//
 
-		double	tick_data[20][10];				//TICK»ù±¾Êı¾İ
-		double	tick_AskPrice1[20][60];			//ÂòÒ»¼Û
-		double	tick_BidPrice1[20][60];			//ÂôÒ»¼Û
-		double	tick_AskVolume1[20][60];		//ÂòÒ»Á¿
-		double	tick_BidVolume1[20][60];		//ÂôÒ»Á¿
-		double	tick_Volume[20][60];			//³É½»Á¿
-		double	tick_OpenInterest[20][60];		//³Ö²ÖÁ¿
+		double	tick_data[20][10];				//TICKåŸºæœ¬æ•°æ®
+		double	tick_AskPrice1[20][60];			//ä¹°ä¸€ä»·
+		double	tick_BidPrice1[20][60];			//å–ä¸€ä»·
+		double	tick_AskVolume1[20][60];		//ä¹°ä¸€é‡
+		double	tick_BidVolume1[20][60];		//å–ä¸€é‡
+		double	tick_Volume[20][60];			//æˆäº¤é‡
+		double	tick_OpenInterest[20][60];		//æŒä»“é‡
 
 		double	Day_CloseProfit[20];
 		double	Day_CloseProfitA[20];
@@ -104,83 +104,83 @@ public:
 private:
 	int iInstrumentID = 1;
 	int iResult = -1;
-	// ½»Ò×Ê±¼ä
-	TThostFtdcDateExprType	TradingDay;								//½»Ò×ÈÕÆÚ
+	// äº¤æ˜“æ—¶é—´
+	TThostFtdcDateExprType	TradingDay;								//äº¤æ˜“æ—¥æœŸ
 
-	bool	JustRun = false;										//ÕıÔÚÆô¶¯±êÖ¾
-	bool	CloseAll = false;										//ÊÕÅÌ±êÖ¾
+	bool	JustRun = false;										//æ­£åœ¨å¯åŠ¨æ ‡å¿—
+	bool	CloseAll = false;										//æ”¶ç›˜æ ‡å¿—
 
-	int		FirstVolume = 0;											//Ç°Ò»´Î³É½»Á¿Êı¾İ
+	int		FirstVolume = 0;											//å‰ä¸€æ¬¡æˆäº¤é‡æ•°æ®
 
-	string	InstrumentID_name = "";	//»º´æTICKºÏÔ¼Ãû³Æ
+	string	InstrumentID_name = "";	//ç¼“å­˜TICKåˆçº¦åç§°
 
-	int		Q_BarTime_1 = 0;		//»º´æTICKÊ±¼ä´Á£ºÃë¼ÆËã
-	double	Q_BarTime_2 = 0;		//»º´æTICKÊ±¼ä´Á£º0.145500
+	int		Q_BarTime_1 = 0;		//ç¼“å­˜TICKæ—¶é—´æˆ³ï¼šç§’è®¡ç®—
+	double	Q_BarTime_2 = 0;		//ç¼“å­˜TICKæ—¶é—´æˆ³ï¼š0.145500
 
-	int		Q_BarTime_1n[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//ºÏÔ¼Ê±¼ä´Á£ºÃë¼ÆËã
-	int		Trade_times[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//¿ª²ÖÊ±¼ä´Á£ºÃë¼ÆËã
+	int		Q_BarTime_1n[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//åˆçº¦æ—¶é—´æˆ³ï¼šç§’è®¡ç®—
+	int		Trade_times[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//å¼€ä»“æ—¶é—´æˆ³ï¼šç§’è®¡ç®—
 
-	char	LogFilePaths[80] = "";			//½»Ò×ÈÕÖ¾
-	char	TickFileWritepaths[20][80] = { "", "", "", "", "", "", "", "", "", "" ,"", "", "", "", "", "", "", "", "", "" };	//TICKÊı¾İ±£´æÎÄ¼şÃû´Î¸ñÊ½£¬ºÏÔ¼Ãû³Æ_ÈÕÆÚ.txt
+	char	LogFilePaths[80] = "";			//äº¤æ˜“æ—¥å¿—
+	char	TickFileWritepaths[20][80] = { "", "", "", "", "", "", "", "", "", "" ,"", "", "", "", "", "", "", "", "", "" };	//TICKæ•°æ®ä¿å­˜æ–‡ä»¶åæ¬¡æ ¼å¼ï¼Œåˆçº¦åç§°_æ—¥æœŸ.txt
 																																//											0		1			2		  3			4		 5		  6		   7		8			9		10		11		12		13		14		15		  16		17	   18		 19
-	char	InstrumentID_n[20][10] = { "i1409", "jm1409", "j1409", "rb1410","rb1501", "TA409", "l1409","ru1409", "ru1501", "jd1409", "RM409", "m1409","y1501", "p1501","ag1506","ag1412","cu1408","cu1409","IF1409","IF1407" };//½»Ò×ºÏÔ¼
+	char	InstrumentID_n[20][10] = { "i1409", "jm1409", "j1409", "rb1410","rb1501", "TA409", "l1409","ru1409", "ru1501", "jd1409", "RM409", "m1409","y1501", "p1501","ag1506","ag1412","cu1408","cu1409","IF1409","IF1407" };//äº¤æ˜“åˆçº¦
 
-	int		InstrumentID_En[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };	//½»Ò×Ê¹ÄÜ =1£¬»áÊµÅÌÏÂµ¥
-	int		InstrumentID_lots[20] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };	//¿ª²ÖÁ¿
+	int		InstrumentID_En[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };	//äº¤æ˜“ä½¿èƒ½ =1ï¼Œä¼šå®ç›˜ä¸‹å•
+	int		InstrumentID_lots[20] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };	//å¼€ä»“é‡
 
-	double  InstrumentID_minmove[20] = { 1, 1, 1, 1, 1, 2, 5, 5, 5, 1, 1, 1, 2, 2, 1, 1, 10, 10, 0.2, 0.2, };	//×îĞ¡±ä¶¯¼ÛÎ»
+	double  InstrumentID_minmove[20] = { 1, 1, 1, 1, 1, 2, 5, 5, 5, 1, 1, 1, 2, 2, 1, 1, 10, 10, 0.2, 0.2, };	//æœ€å°å˜åŠ¨ä»·ä½
 
-	double	Trade_Stopwin[20] = { 30, 30, 30, 20, 20, 30, 30, 120, 120, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30 };			//µ¥´Î¿ª²ÖÖ¹Ó®µã
-	double	Trade_Stoploss[20] = { 30, 30, 30, 20, 20, 30, 30, 180, 180, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30 };			//µ¥´Î¿ª²ÖÖ¹Ëğµã
-	double	Trade_StopCloseProfit[20] = { 30, 30, 30, 10, 10, 30, 30, 110, 110, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30 };	//>Ö¹Ëğ,ÏŞÖÆĞÂ¿ª
-																																//tickÊı¾İ
-	bool	FristTick[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };			//ÊÕµ½µ±ÈÕµÚÒ»¸öÓĞĞ§TICK±ê¼Ç
-	bool	LastTick[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };			//ÊÕµ½µ±ÈÕ×îºóÒ»¸öÓĞĞ§TICK±ê¼Ç
-	bool	ReceiveTick[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//TICKÊı¾İ½ÓÊÕ±ê¼Ç£¬ÔİÎ´Ê¹ÓÃ
+	double	Trade_Stopwin[20] = { 30, 30, 30, 20, 20, 30, 30, 120, 120, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30 };			//å•æ¬¡å¼€ä»“æ­¢èµ¢ç‚¹
+	double	Trade_Stoploss[20] = { 30, 30, 30, 20, 20, 30, 30, 180, 180, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30 };			//å•æ¬¡å¼€ä»“æ­¢æŸç‚¹
+	double	Trade_StopCloseProfit[20] = { 30, 30, 30, 10, 10, 30, 30, 110, 110, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30 };	//>æ­¢æŸ,é™åˆ¶æ–°å¼€
+																																//tickæ•°æ®
+	bool	FristTick[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };			//æ”¶åˆ°å½“æ—¥ç¬¬ä¸€ä¸ªæœ‰æ•ˆTICKæ ‡è®°
+	bool	LastTick[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };			//æ”¶åˆ°å½“æ—¥æœ€åä¸€ä¸ªæœ‰æ•ˆTICKæ ‡è®°
+	bool	ReceiveTick[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//TICKæ•°æ®æ¥æ”¶æ ‡è®°ï¼Œæš‚æœªä½¿ç”¨
 
-	double	tick_data[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//ĞĞÇéÊı¾İ:»ù±¾ĞÅÏ¢
+	double	tick_data[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//è¡Œæƒ…æ•°æ®:åŸºæœ¬ä¿¡æ¯
 
-	double	tick_AskPrice1[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//ĞĞÇéÊı¾İ:±£´æ60¸öTICKÊı¾İ
-	double	tick_BidPrice1[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//ĞĞÇéÊı¾İ:±£´æ60¸öTICKÊı¾İ
-	double	tick_AskVolume1[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//ĞĞÇéÊı¾İ:±£´æ60¸öTICKÊı¾İ
-	double	tick_BidVolume1[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//ĞĞÇéÊı¾İ:±£´æ60¸öTICKÊı¾İ
-	double	tick_Volume[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };			//ĞĞÇéÊı¾İ:±£´æ60¸öTICKÊı¾İ
-	double	tick_OpenInterest[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//ĞĞÇéÊı¾İ:±£´æ60¸öTICKÊı¾İ
+	double	tick_AskPrice1[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//è¡Œæƒ…æ•°æ®:ä¿å­˜60ä¸ªTICKæ•°æ®
+	double	tick_BidPrice1[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//è¡Œæƒ…æ•°æ®:ä¿å­˜60ä¸ªTICKæ•°æ®
+	double	tick_AskVolume1[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//è¡Œæƒ…æ•°æ®:ä¿å­˜60ä¸ªTICKæ•°æ®
+	double	tick_BidVolume1[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//è¡Œæƒ…æ•°æ®:ä¿å­˜60ä¸ªTICKæ•°æ®
+	double	tick_Volume[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };			//è¡Œæƒ…æ•°æ®:ä¿å­˜60ä¸ªTICKæ•°æ®
+	double	tick_OpenInterest[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//è¡Œæƒ…æ•°æ®:ä¿å­˜60ä¸ªTICKæ•°æ®
 
-	double	Sniffer_dataA[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//¼à²âÊı¾İ
-	double	Sniffer_dataB[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//¼à²âÊı¾İ
-	double	Sniffer_dataC[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//¼à²âÊı¾İ
-	double	Sniffer_dataD[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//¼à²âÊı¾İ
+	double	Sniffer_dataA[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//ç›‘æµ‹æ•°æ®
+	double	Sniffer_dataB[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//ç›‘æµ‹æ•°æ®
+	double	Sniffer_dataC[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//ç›‘æµ‹æ•°æ®
+	double	Sniffer_dataD[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//ç›‘æµ‹æ•°æ®
 																										//----------------------
-	double  Day_open[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };			//ÈÕKÏßÊı¾İ¿ª 
-	double  Day_high[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };			//ÈÕKÏßÊı¾İ¸ß
-	double  Day_low[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };			//ÈÕKÏßÊı¾İµÍ
-	double  Day_close[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };			//ÈÕKÏßÊı¾İÊÕ
+	double  Day_open[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };			//æ—¥Kçº¿æ•°æ®å¼€ 
+	double  Day_high[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };			//æ—¥Kçº¿æ•°æ®é«˜
+	double  Day_low[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };			//æ—¥Kçº¿æ•°æ®ä½
+	double  Day_close[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };			//æ—¥Kçº¿æ•°æ®æ”¶
 
-	bool	MnKlinesig[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };			//·ÖÖÓKÏßµÚÒ»¸öTICK±ê¼Ç
-	double  Mn_open[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };			//·ÖÖÓKÏßÊı¾İ¿ª 
-	double  Mn_high[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };			//·ÖÖÓKÏßÊı¾İ¸ß
-	double  Mn_low[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };			//·ÖÖÓKÏßÊı¾İµÍ
-	double  Mn_close[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };			//·ÖÖÓKÏßÊı¾İÊÕ
+	bool	MnKlinesig[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };			//åˆ†é’ŸKçº¿ç¬¬ä¸€ä¸ªTICKæ ‡è®°
+	double  Mn_open[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };			//åˆ†é’ŸKçº¿æ•°æ®å¼€ 
+	double  Mn_high[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };			//åˆ†é’ŸKçº¿æ•°æ®é«˜
+	double  Mn_low[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };			//åˆ†é’ŸKçº¿æ•°æ®ä½
+	double  Mn_close[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };			//åˆ†é’ŸKçº¿æ•°æ®æ”¶
 																										//-----------------------
-	bool	SnifferSignalA[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//Ö¸±ê²ßÂÔÔËËã±ê¼Ç
-	bool	TradingSignalA[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//ÏÂµ¥±ê¼Ç
-	bool	SnifferSignalB[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//Ö¸±ê²ßÂÔÔËËã±ê¼Ç
-	bool	TradingSignalB[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//ÏÂµ¥±ê¼Ç
-																										//»ù±¾¶©µ¥Êı¾İ
-	double	Trade_dataA[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//¶©µ¥Êı¾İ
-	double	Trade_dataB[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//¶©µ¥Êı¾İ
-	double	Trade_dataC[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//¶©µ¥Êı¾İ
-	double	Trade_dataD[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//¶©µ¥Êı¾İ
-																										//²âÊÔ¿ªÆ½²ÖÍ³¼ÆÊı¾İ
-	double	Trade_CloseProfit[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//Æ½²ÖÓ¯¿÷£¬²âÊÔ²ßÂÔÓÃ
-	double	Trade_Closetimes[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//Æ½²Ö´ÎÊı£¬²âÊÔ²ßÂÔÓÃ
-	double	Day_CloseProfit[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//µ±ÈÕÆ½²ÖÊÕÒæ£¬²âÊÔ²ßÂÔÓÃ
-	double	Day_CloseProfitA[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//µ±ÈÕÆ½²ÖÊÕÒæ£¬²âÊÔ²ßÂÔÓÃ
-	double	Day_CloseProfitB[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//µ±ÈÕÆ½²ÖÊÕÒæ£¬²âÊÔ²ßÂÔÓÃ
-	double	Day_TradeNumb[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };			//¿ª²Ö´ÎÊıÍ³¼Æ
+	bool	SnifferSignalA[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//æŒ‡æ ‡ç­–ç•¥è¿ç®—æ ‡è®°
+	bool	TradingSignalA[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//ä¸‹å•æ ‡è®°
+	bool	SnifferSignalB[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//æŒ‡æ ‡ç­–ç•¥è¿ç®—æ ‡è®°
+	bool	TradingSignalB[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//ä¸‹å•æ ‡è®°
+																										//åŸºæœ¬è®¢å•æ•°æ®
+	double	Trade_dataA[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//è®¢å•æ•°æ®
+	double	Trade_dataB[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//è®¢å•æ•°æ®
+	double	Trade_dataC[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//è®¢å•æ•°æ®
+	double	Trade_dataD[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//è®¢å•æ•°æ®
+																										//æµ‹è¯•å¼€å¹³ä»“ç»Ÿè®¡æ•°æ®
+	double	Trade_CloseProfit[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//å¹³ä»“ç›ˆäºï¼Œæµ‹è¯•ç­–ç•¥ç”¨
+	double	Trade_Closetimes[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//å¹³ä»“æ¬¡æ•°ï¼Œæµ‹è¯•ç­–ç•¥ç”¨
+	double	Day_CloseProfit[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//å½“æ—¥å¹³ä»“æ”¶ç›Šï¼Œæµ‹è¯•ç­–ç•¥ç”¨
+	double	Day_CloseProfitA[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//å½“æ—¥å¹³ä»“æ”¶ç›Šï¼Œæµ‹è¯•ç­–ç•¥ç”¨
+	double	Day_CloseProfitB[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//å½“æ—¥å¹³ä»“æ”¶ç›Šï¼Œæµ‹è¯•ç­–ç•¥ç”¨
+	double	Day_TradeNumb[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };			//å¼€ä»“æ¬¡æ•°ç»Ÿè®¡
 public:
-	// ĞĞÇé½Ó¿Ú
+	// è¡Œæƒ…æ¥å£
 	int CtpMarketMainApi();
 public:
 	virtual void OnRspError(CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) override;
@@ -213,7 +213,7 @@ private:
 	time_t lOrderTime;
 	time_t lOrderOkTime;
 public:
-	// ½»Ò×½Ó¿Ú
+	// äº¤æ˜“æ¥å£
 	int CtpTradeMainApi();
 	int getRtn();
 public:
@@ -231,24 +231,24 @@ public:
 	virtual void OnHeartBeatWarning(int nTimeLapse) override;
 	virtual void OnFrontDisconnected(int nReason) override;
 private:
-	///ÓÃ»§µÇÂ½ÇëÇó
+	///ç”¨æˆ·ç™»é™†è¯·æ±‚
 	int CtpTrdReqUserLogin();
-	///Í¶×ÊÕß½áËã½á¹ûÈ·ÈÏ
+	///æŠ•èµ„è€…ç»“ç®—ç»“æœç¡®è®¤
 	void CtpTrdReqSettlementInfoConfirm();
-	///ÇëÇó²éÑ¯ºÏÔ¼
+	///è¯·æ±‚æŸ¥è¯¢åˆçº¦
 	void CtpTrdReqQryInstrument();
-	///ÇëÇó²éÑ¯×Ê½ğÕË»§
+	///è¯·æ±‚æŸ¥è¯¢èµ„é‡‘è´¦æˆ·
 	void CtpTrdReqQryTradingAccount();
-	///ÇëÇó²éÑ¯Í¶×ÊÕß³Ö²Ö
+	///è¯·æ±‚æŸ¥è¯¢æŠ•èµ„è€…æŒä»“
 	void CtpTrdReqQryInvestorPosition();
-	///±¨µ¥Â¼ÈëÇëÇó
+	///æŠ¥å•å½•å…¥è¯·æ±‚
 	void CtpTrdReqOrderInsert();
-	///±¨µ¥²Ù×÷ÇëÇó
+	///æŠ¥å•æ“ä½œè¯·æ±‚
 	void CtpTrdReqOrderAction(CThostFtdcOrderField *pOrder);
-	//ÊÇ·ñÊÕµ½³É¹¦ÏìÓ¦
+	//æ˜¯å¦æ”¶åˆ°æˆåŠŸå“åº”
 	bool IsErrorRspInfo(CThostFtdcRspInfoField *pRspInfo);
-	//ÊÇ·ñÎÒµÄ±¨µ¥»Ø±¨
+	//æ˜¯å¦æˆ‘çš„æŠ¥å•å›æŠ¥
 	bool IsMyOrder(CThostFtdcOrderField *pOrder);
-	//ÊÇ·ñµ±Ç°½»Ò×±¨µ¥
+	//æ˜¯å¦å½“å‰äº¤æ˜“æŠ¥å•
 	bool IsTradingOrder(CThostFtdcOrderField *pOrder);
 };

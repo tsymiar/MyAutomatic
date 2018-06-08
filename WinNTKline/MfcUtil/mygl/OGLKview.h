@@ -1,4 +1,4 @@
-﻿#if !defined(OGL_KVIEW_H_)
+#if !defined(OGL_KVIEW_H_)
 #define OGL_KVIEW_H_
 //#pragma execution_character_set("utf-8")
 //#pragma comment(linker, "/subsystem:\"windows\" /entry:\"mainCRTStartup\"") 

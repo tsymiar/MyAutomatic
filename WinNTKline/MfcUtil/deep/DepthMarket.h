@@ -1,4 +1,4 @@
-﻿#ifndef CHART_DEPTH_H_
+#ifndef CHART_DEPTH_H_
 #define CHART_DEPTH_H_
 
 #include "MYGL/OGLKview.h"

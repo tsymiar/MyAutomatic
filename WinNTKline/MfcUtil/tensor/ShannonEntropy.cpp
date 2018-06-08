@@ -13,10 +13,10 @@ double ShannonEntropy::SingleEntropy(cv::Mat img)
 {
 	double result = 0;
 	double temp[256] = { 0.0 };
-	// ¼ÆËãÃ¿¸öÏñËØµÄÀÛ»ıÖµ
+	// è®¡ç®—æ¯ä¸ªåƒç´ çš„ç´¯ç§¯å€¼
 	for (int m = 0; m<img.rows; m++)
 	{
-		// ÓĞĞ§·ÃÎÊĞĞÁĞ
+		// æœ‰æ•ˆè®¿é—®è¡Œåˆ—
 		const uchar* t = img.ptr<uchar>(m);
 		for (int n = 0; n<img.cols; n++)
 		{
@@ -24,12 +24,12 @@ double ShannonEntropy::SingleEntropy(cv::Mat img)
 			temp[i] = temp[i] + 1;
 		}
 	}
-	// ¼ÆËãÃ¿¸öÏñËØµÄ¸ÅÂÊ
+	// è®¡ç®—æ¯ä¸ªåƒç´ çš„æ¦‚ç‡
 	for (int i = 0; i<256; i++)
 	{
 		temp[i] = temp[i] / (img.rows*img.cols);
 	}
-	// ¼ÆËãĞÅÏ¢ìØ
+	// è®¡ç®—ä¿¡æ¯ç†µ
 	for (int i = 0; i<256; i++)
 	{
 		if (temp[i] == 0.0)
@@ -45,7 +45,7 @@ double ShannonEntropy::CommonEntropy(cv::Mat img1, cv::Mat img2, double img1_ent
 {
 	double result = 0.0;
 	double temp[256][256] = { 0.0 };
-	// ¼ÆËãÁªºÏÍ¼ÏñÏñËØµÄÀÛ»ıÖµ
+	// è®¡ç®—è”åˆå›¾åƒåƒç´ çš„ç´¯ç§¯å€¼
 	for (int m1 = 0, m2 = 0; m1 < img1.rows, m2 < img2.rows; m1++, m2++)
 	{
 		const uchar* t1 = img1.ptr<uchar>(m1);
@@ -56,7 +56,7 @@ double ShannonEntropy::CommonEntropy(cv::Mat img1, cv::Mat img2, double img1_ent
 			temp[i][j] = temp[i][j] + 1;
 		}
 	}
-	// ¼ÆËãÃ¿¸öÁªºÏÏñËØµÄ¸ÅÂÊ
+	// è®¡ç®—æ¯ä¸ªè”åˆåƒç´ çš„æ¦‚ç‡
 	for (int i = 0; i < 256; i++)
 	{
 		for (int j = 0; j < 256; j++)
@@ -76,7 +76,7 @@ double ShannonEntropy::CommonEntropy(cv::Mat img1, cv::Mat img2, double img1_ent
 				result = result - temp[i][j] * (log(temp[i][j]) / log(2.0));
 		}
 	}
-	// µÃµ½Á½·ùÍ¼ÏñµÄ»¥ĞÅÏ¢ìØ
+	// å¾—åˆ°ä¸¤å¹…å›¾åƒçš„äº’ä¿¡æ¯ç†µ
 	img1_entropy = SingleEntropy(img1);
 	img2_entropy = SingleEntropy(img2);
 	result = img1_entropy + img2_entropy - result;

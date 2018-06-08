@@ -1,4 +1,4 @@
-﻿#include "encoding.h"
+#include "encoding.h"
 
 #ifdef _LIBICONV_H
 ///////////////////////////////////////////////////

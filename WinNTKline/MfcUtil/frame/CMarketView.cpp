@@ -1,4 +1,4 @@
-// CMarketView.cpp : ÊµÏÖÎÄ¼ş
+// CMarketView.cpp : å®ç°æ–‡ä»¶
 //
 
 #include "../stdafx.h"
@@ -29,7 +29,7 @@ BEGIN_MESSAGE_MAP(CMarketView, CFormView)
 END_MESSAGE_MAP()
 
 
-// CMarketView Õï¶Ï
+// CMarketView è¯Šæ–­
 
 #ifdef _DEBUG
 void CMarketView::AssertValid() const
@@ -62,15 +62,15 @@ BOOL ::CreateChildrenWindow()
 	//::GetWindowRect(this->m_hWnd, ect);
 	//::SetWindowPos(test.m_hWnd, NULL, ect.left, ect.top, ect.Width(), ect.Height(), SWP_NOZORDER);
 	//test.DoModal();
-	if (!m_mySplitter.CreateStatic(this, 1, 2))//ÇĞ¸î¿Í»§ÇøÎª1ĞĞ2ÁĞ
+	if (!m_mySplitter.CreateStatic(this, 1, 2))//åˆ‡å‰²å®¢æˆ·åŒºä¸º1è¡Œ2åˆ—
 		return FALSE;
-	if (!m_mySplitter.CreateView(0, 0, RUNTIME_CLASS(CMarketView), CSize(0, 0), NULL)) //ViewÊÓÍ¼
+	if (!m_mySplitter.CreateView(0, 0, RUNTIME_CLASS(CMarketView), CSize(0, 0), NULL)) //Viewè§†å›¾
 		return FALSE;
 	if (!m_mySplitter.CreateView(0, 1, RUNTIME_CLASS(CMarketView), CSize(0, 0), NULL))
 		return FALSE;
 	CRect ect;
-	GetClientRect(&ect);//»ñÈ¡¿Í»§ÇøµÄ´óĞ¡
-	int width = ect.Width() + 200;//ÉèÖÃÏÔÊ¾¶Ô»°¿òµÄÇøÓò´óĞ¡
+	GetClientRect(&ect);//è·å–å®¢æˆ·åŒºçš„å¤§å°
+	int width = ect.Width() + 200;//è®¾ç½®æ˜¾ç¤ºå¯¹è¯æ¡†çš„åŒºåŸŸå¤§å°
 	m_mySplitter.SetColumnInfo(0, width, 0);
 	m_mySplitter.RecalcLayout();
 	return TRUE;

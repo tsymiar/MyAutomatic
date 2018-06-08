@@ -1,1438 +1,1438 @@
-#include "Simulation.h"
+ï»¿#include "Simulation.h"
 
 #define EPSILON_E4 (float)(1E-2) 
 #define EPSILON_E5 (float)(1E-3)
 bool testfile = false;
-int simMode = 0;//ÔËĞĞÄ£Ê½Ñ¡Ôñ£¬0=±¾µØ²âÊÔ£¬1=ÊµÅÌÔËĞĞ £¬ÌáÊ¾Common.h£ºÉèÖÃInstrumentID_En=0£¬ÊµÅÌÔÚÏß·ÂÕæÄ£Ê½£¬InstrumentID_En=1£¬ÊµÅÌÔÚÏß½»Ò×Ä£Ê½£¬
+int simMode = 0;//è¿è¡Œæ¨¡å¼é€‰æ‹©ï¼Œ0=æœ¬åœ°æµ‹è¯•ï¼Œ1=å®ç›˜è¿è¡Œ ï¼Œæç¤ºCommon.hï¼šè®¾ç½®InstrumentID_En=0ï¼Œå®ç›˜åœ¨çº¿ä»¿çœŸæ¨¡å¼ï¼ŒInstrumentID_En=1ï¼Œå®ç›˜åœ¨çº¿äº¤æ˜“æ¨¡å¼ï¼Œ
 CThostFtdcTraderApi *usrApi;
 CThostFtdcMdApi *mdApi;
-// ÇëÇó±àºÅ
-int		iRequestID = 0;											//ÇëÇó±àºÅ
-char  FRONT_ADDR_1A[] = "tcp://180.168.212.51:41205";		// Ç°ÖÃµØÖ·1½»Ò×:ÊµÅÌ
-char  FRONT_ADDR_1B[] = "tcp://180.168.212.51:41213";		// Ç°ÖÃµØÖ·1ĞĞÇé:ÊµÅÌ
-															// ½»Ò×Ê±¼ä
-TThostFtdcDateExprType	TradingDay;								//½»Ò×ÈÕÆÚ
+// è¯·æ±‚ç¼–å·
+int        iRequestID = 0;                                            //è¯·æ±‚ç¼–å·
+char  FRONT_ADDR_1A[] = "tcp://180.168.212.51:41205";        // å‰ç½®åœ°å€1äº¤æ˜“:å®ç›˜
+char  FRONT_ADDR_1B[] = "tcp://180.168.212.51:41213";        // å‰ç½®åœ°å€1è¡Œæƒ…:å®ç›˜
+                                                            // äº¤æ˜“æ—¶é—´
+TThostFtdcDateExprType    TradingDay;                                //äº¤æ˜“æ—¥æœŸ
 
-bool	JustRun = false;										//ÕıÔÚÆô¶¯±êÖ¾
-bool	CloseAll = false;										//ÊÕÅÌ±êÖ¾
+bool    JustRun = false;                                        //æ­£åœ¨å¯åŠ¨æ ‡å¿—
+bool    CloseAll = false;                                        //æ”¶ç›˜æ ‡å¿—
 
-int		FirstVolume = 0;											//Ç°Ò»´Î³É½»Á¿Êı¾İ
+int        FirstVolume = 0;                                            //å‰ä¸€æ¬¡æˆäº¤é‡æ•°æ®
 
-string	InstrumentID_name = "";	//»º´æTICKºÏÔ¼Ãû³Æ
+string    InstrumentID_name = "";    //ç¼“å­˜TICKåˆçº¦åç§°
 
-int		Q_BarTime_1 = 0;		//»º´æTICKÊ±¼ä´Á£ºÃë¼ÆËã
-double	Q_BarTime_2 = 0;		//»º´æTICKÊ±¼ä´Á£º0.145500
+int        Q_BarTime_1 = 0;        //ç¼“å­˜TICKæ—¶é—´æˆ³ï¼šç§’è®¡ç®—
+double    Q_BarTime_2 = 0;        //ç¼“å­˜TICKæ—¶é—´æˆ³ï¼š0.145500
 
-int		Q_BarTime_1n[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//ºÏÔ¼Ê±¼ä´Á£ºÃë¼ÆËã
-int		Trade_times[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//¿ª²ÖÊ±¼ä´Á£ºÃë¼ÆËã
+int        Q_BarTime_1n[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //åˆçº¦æ—¶é—´æˆ³ï¼šç§’è®¡ç®—
+int        Trade_times[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //å¼€ä»“æ—¶é—´æˆ³ï¼šç§’è®¡ç®—
 
-char    LogFilePaths[80] = "";			//½»Ò×ÈÕÖ¾
-char	TickFileWritepaths[20][80] = { "", "", "", "", "", "", "", "", "", "" ,"", "", "", "", "", "", "", "", "", "" };	//TICKÊı¾İ±£´æÎÄ¼şÃû´Î¸ñÊ½£¬ºÏÔ¼Ãû³Æ_ÈÕÆÚ.txt
+char    LogFilePaths[80] = "";            //äº¤æ˜“æ—¥å¿—
+char    TickFileWritepaths[20][80] = { "", "", "", "", "", "", "", "", "", "" ,"", "", "", "", "", "", "", "", "", "" };    //TICKæ•°æ®ä¿å­˜æ–‡ä»¶åæ¬¡æ ¼å¼ï¼Œåˆçº¦åç§°_æ—¥æœŸ.txt
 
-																															//											0		1			2		  3			4		 5		  6		   7		8			9		10		11		12		13		14		15		  16		17	   18		 19
-char	InstrumentID_n[20][10] = { "i1409", "jm1409", "j1409", "rb1410","rb1501", "TA409", "l1409","ru1409", "ru1501", "jd1409", "RM409", "m1409","y1501", "p1501","ag1506","ag1412","cu1408","cu1409","IF1409","IF1407" };//½»Ò×ºÏÔ¼
+                                                                                                                            //                                            0        1            2          3            4         5          6           7        8            9        10        11        12        13        14        15          16        17       18         19
+char    InstrumentID_n[20][10] = { "i1409", "jm1409", "j1409", "rb1410","rb1501", "TA409", "l1409","ru1409", "ru1501", "jd1409", "RM409", "m1409","y1501", "p1501","ag1506","ag1412","cu1408","cu1409","IF1409","IF1407" };//äº¤æ˜“åˆçº¦
 
-int		InstrumentID_En[20] = { 0       ,        0,       0,        0,       0,       0,       0,       0,        0,        0,       0,       0,      0,       0,       0,       0,       0,      0,	 0,       0 };	//½»Ò×Ê¹ÄÜ =1£¬»áÊµÅÌÏÂµ¥
-int		InstrumentID_lots[20] = { 1       ,        1,       1,        1,       1,       1,       1,       1,        1,        1,       1,       1,      1,       1,       1,       1,       1,      1,	 1,       1 };	//¿ª²ÖÁ¿
+int        InstrumentID_En[20] = { 0       ,        0,       0,        0,       0,       0,       0,       0,        0,        0,       0,       0,      0,       0,       0,       0,       0,      0,     0,       0 };    //äº¤æ˜“ä½¿èƒ½ =1ï¼Œä¼šå®ç›˜ä¸‹å•
+int        InstrumentID_lots[20] = { 1       ,        1,       1,        1,       1,       1,       1,       1,        1,        1,       1,       1,      1,       1,       1,       1,       1,      1,     1,       1 };    //å¼€ä»“é‡
 
-double  InstrumentID_minmove[20] = { 1       ,        1,       1,        1,       1,       2,       5,       5,        5,        1,       1,       1,      2,       2,       1,       1,      10,     10,   0.2,     0.2, };	//×îĞ¡±ä¶¯¼ÛÎ»
+double  InstrumentID_minmove[20] = { 1       ,        1,       1,        1,       1,       2,       5,       5,        5,        1,       1,       1,      2,       2,       1,       1,      10,     10,   0.2,     0.2, };    //æœ€å°å˜åŠ¨ä»·ä½
 
-double	Trade_Stopwin[20] = { 30       ,      30,      30,       20,      20,      30,      30,     120,      120,       30,      30,      30,     30,      30,      30,      30,      30,     30,    30,      30 };	//µ¥´Î¿ª²ÖÖ¹Ó®µã
-double	Trade_Stoploss[20] = { 30       ,      30,      30,       20,      20,      30,      30,     180,      180,       30,      30,      30,     30,      30,      30,      30,      30,     30,    30,      30 };	//µ¥´Î¿ª²ÖÖ¹Ëğµã
-double	Trade_StopCloseProfit[20] = { 30       ,      30,      30,       10,      10,      30,      30,     110,      110,       30,      30,      30,     30,      30,      30,      30,      30,     30,    30,      30 };	//>Ö¹Ëğ,ÏŞÖÆĞÂ¿ª
-
-
-																																																								//tickÊı¾İ
-bool	FristTick[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//ÊÕµ½µ±ÈÕµÚÒ»¸öÓĞĞ§TICK±ê¼Ç
-bool	LastTick[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//ÊÕµ½µ±ÈÕ×îºóÒ»¸öÓĞĞ§TICK±ê¼Ç
-bool	ReceiveTick[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//TICKÊı¾İ½ÓÊÕ±ê¼Ç£¬ÔİÎ´Ê¹ÓÃ
-
-double	tick_data[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//ĞĞÇéÊı¾İ:»ù±¾ĞÅÏ¢
-
-double	tick_AskPrice1[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//ĞĞÇéÊı¾İ:±£´æ60¸öTICKÊı¾İ
-double	tick_BidPrice1[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//ĞĞÇéÊı¾İ:±£´æ60¸öTICKÊı¾İ
-double	tick_AskVolume1[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//ĞĞÇéÊı¾İ:±£´æ60¸öTICKÊı¾İ
-double	tick_BidVolume1[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//ĞĞÇéÊı¾İ:±£´æ60¸öTICKÊı¾İ
-double	tick_Volume[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//ĞĞÇéÊı¾İ:±£´æ60¸öTICKÊı¾İ
-double	tick_OpenInterest[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//ĞĞÇéÊı¾İ:±£´æ60¸öTICKÊı¾İ
-
-double	Sniffer_dataA[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//¼à²âÊı¾İ
-double	Sniffer_dataB[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//¼à²âÊı¾İ
-double	Sniffer_dataC[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//¼à²âÊı¾İ
-double	Sniffer_dataD[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//¼à²âÊı¾İ
-
-																									//----------------------
-double  Day_open[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//ÈÕKÏßÊı¾İ¿ª 
-double  Day_high[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//ÈÕKÏßÊı¾İ¸ß
-double  Day_low[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//ÈÕKÏßÊı¾İµÍ
-double  Day_close[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//ÈÕKÏßÊı¾İÊÕ
-
-bool	MnKlinesig[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//·ÖÖÓKÏßµÚÒ»¸öTICK±ê¼Ç
-double  Mn_open[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//·ÖÖÓKÏßÊı¾İ¿ª 
-double  Mn_high[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//·ÖÖÓKÏßÊı¾İ¸ß
-double  Mn_low[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//·ÖÖÓKÏßÊı¾İµÍ
-double  Mn_close[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//·ÖÖÓKÏßÊı¾İÊÕ
-
-																								//-----------------------
-bool	SnifferSignalA[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//Ö¸±ê²ßÂÔÔËËã±ê¼Ç
-bool	TradingSignalA[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//ÏÂµ¥±ê¼Ç
-bool	SnifferSignalB[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//Ö¸±ê²ßÂÔÔËËã±ê¼Ç
-bool	TradingSignalB[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//ÏÂµ¥±ê¼Ç
-
-																									//»ù±¾¶©µ¥Êı¾İ
-double	Trade_dataA[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//¶©µ¥Êı¾İ
-double	Trade_dataB[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//¶©µ¥Êı¾İ
-double	Trade_dataC[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//¶©µ¥Êı¾İ
-double	Trade_dataD[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//¶©µ¥Êı¾İ
+double    Trade_Stopwin[20] = { 30       ,      30,      30,       20,      20,      30,      30,     120,      120,       30,      30,      30,     30,      30,      30,      30,      30,     30,    30,      30 };    //å•æ¬¡å¼€ä»“æ­¢èµ¢ç‚¹
+double    Trade_Stoploss[20] = { 30       ,      30,      30,       20,      20,      30,      30,     180,      180,       30,      30,      30,     30,      30,      30,      30,      30,     30,    30,      30 };    //å•æ¬¡å¼€ä»“æ­¢æŸç‚¹
+double    Trade_StopCloseProfit[20] = { 30       ,      30,      30,       10,      10,      30,      30,     110,      110,       30,      30,      30,     30,      30,      30,      30,      30,     30,    30,      30 };    //>æ­¢æŸ,é™åˆ¶æ–°å¼€
 
 
-																									//²âÊÔ¿ªÆ½²ÖÍ³¼ÆÊı¾İ
-double	Trade_CloseProfit[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//Æ½²ÖÓ¯¿÷£¬²âÊÔ²ßÂÔÓÃ
-double	Trade_Closetimes[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//Æ½²Ö´ÎÊı£¬²âÊÔ²ßÂÔÓÃ
-double	Day_CloseProfit[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//µ±ÈÕÆ½²ÖÊÕÒæ£¬²âÊÔ²ßÂÔÓÃ
-double	Day_CloseProfitA[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//µ±ÈÕÆ½²ÖÊÕÒæ£¬²âÊÔ²ßÂÔÓÃ
-double	Day_CloseProfitB[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//µ±ÈÕÆ½²ÖÊÕÒæ£¬²âÊÔ²ßÂÔÓÃ
-double	Day_TradeNumb[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };		//¿ª²Ö´ÎÊıÍ³¼Æ
+                                                                                                                                                                                                                                //tickæ•°æ®
+bool    FristTick[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //æ”¶åˆ°å½“æ—¥ç¬¬ä¸€ä¸ªæœ‰æ•ˆTICKæ ‡è®°
+bool    LastTick[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //æ”¶åˆ°å½“æ—¥æœ€åä¸€ä¸ªæœ‰æ•ˆTICKæ ‡è®°
+bool    ReceiveTick[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //TICKæ•°æ®æ¥æ”¶æ ‡è®°ï¼Œæš‚æœªä½¿ç”¨
+
+double    tick_data[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //è¡Œæƒ…æ•°æ®:åŸºæœ¬ä¿¡æ¯
+
+double    tick_AskPrice1[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //è¡Œæƒ…æ•°æ®:ä¿å­˜60ä¸ªTICKæ•°æ®
+double    tick_BidPrice1[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //è¡Œæƒ…æ•°æ®:ä¿å­˜60ä¸ªTICKæ•°æ®
+double    tick_AskVolume1[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //è¡Œæƒ…æ•°æ®:ä¿å­˜60ä¸ªTICKæ•°æ®
+double    tick_BidVolume1[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //è¡Œæƒ…æ•°æ®:ä¿å­˜60ä¸ªTICKæ•°æ®
+double    tick_Volume[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //è¡Œæƒ…æ•°æ®:ä¿å­˜60ä¸ªTICKæ•°æ®
+double    tick_OpenInterest[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //è¡Œæƒ…æ•°æ®:ä¿å­˜60ä¸ªTICKæ•°æ®
+
+double    Sniffer_dataA[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //ç›‘æµ‹æ•°æ®
+double    Sniffer_dataB[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //ç›‘æµ‹æ•°æ®
+double    Sniffer_dataC[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //ç›‘æµ‹æ•°æ®
+double    Sniffer_dataD[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //ç›‘æµ‹æ•°æ®
+
+                                                                                                    //----------------------
+double  Day_open[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //æ—¥Kçº¿æ•°æ®å¼€ 
+double  Day_high[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //æ—¥Kçº¿æ•°æ®é«˜
+double  Day_low[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //æ—¥Kçº¿æ•°æ®ä½
+double  Day_close[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //æ—¥Kçº¿æ•°æ®æ”¶
+
+bool    MnKlinesig[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //åˆ†é’ŸKçº¿ç¬¬ä¸€ä¸ªTICKæ ‡è®°
+double  Mn_open[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //åˆ†é’ŸKçº¿æ•°æ®å¼€ 
+double  Mn_high[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //åˆ†é’ŸKçº¿æ•°æ®é«˜
+double  Mn_low[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //åˆ†é’ŸKçº¿æ•°æ®ä½
+double  Mn_close[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //åˆ†é’ŸKçº¿æ•°æ®æ”¶
+
+                                                                                                //-----------------------
+bool    SnifferSignalA[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //æŒ‡æ ‡ç­–ç•¥è¿ç®—æ ‡è®°
+bool    TradingSignalA[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //ä¸‹å•æ ‡è®°
+bool    SnifferSignalB[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //æŒ‡æ ‡ç­–ç•¥è¿ç®—æ ‡è®°
+bool    TradingSignalB[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //ä¸‹å•æ ‡è®°
+
+                                                                                                    //åŸºæœ¬è®¢å•æ•°æ®
+double    Trade_dataA[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //è®¢å•æ•°æ®
+double    Trade_dataB[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //è®¢å•æ•°æ®
+double    Trade_dataC[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //è®¢å•æ•°æ®
+double    Trade_dataD[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //è®¢å•æ•°æ®
+
+
+                                                                                                    //æµ‹è¯•å¼€å¹³ä»“ç»Ÿè®¡æ•°æ®
+double    Trade_CloseProfit[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //å¹³ä»“ç›ˆäºï¼Œæµ‹è¯•ç­–ç•¥ç”¨
+double    Trade_Closetimes[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //å¹³ä»“æ¬¡æ•°ï¼Œæµ‹è¯•ç­–ç•¥ç”¨
+double    Day_CloseProfit[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //å½“æ—¥å¹³ä»“æ”¶ç›Šï¼Œæµ‹è¯•ç­–ç•¥ç”¨
+double    Day_CloseProfitA[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //å½“æ—¥å¹³ä»“æ”¶ç›Šï¼Œæµ‹è¯•ç­–ç•¥ç”¨
+double    Day_CloseProfitB[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //å½“æ—¥å¹³ä»“æ”¶ç›Šï¼Œæµ‹è¯•ç­–ç•¥ç”¨
+double    Day_TradeNumb[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //å¼€ä»“æ¬¡æ•°ç»Ÿè®¡
 
 void sim_test()
 {
-	void Simulation_onefile(char  *pathstt);
+    void Simulation_onefile(char  *pathstt);
 
-	_finddata_t file;
-	long lf;
-	int n = 0;
+    _finddata_t file;
+    long lf;
+    int n = 0;
 
-	//ÊäÈëÎÄ¼ş¼ĞÂ·¾¶  
-	if ((lf = _findfirst("..\\Bin\\testdata\\*.*", &file)) == -1)
-		cout << "Not Found!" << endl;
-	else
-	{
-		while (_findnext(lf, &file) == 0)
-		{
-			cout << file.name << endl;
-			Sleep(1000);
+    //è¾“å…¥æ–‡ä»¶å¤¹è·¯å¾„  
+    if ((lf = _findfirst("..\\Bin\\testdata\\*.*", &file)) == -1)
+        cout << "Not Found!" << endl;
+    else
+    {
+        while (_findnext(lf, &file) == 0)
+        {
+            cout << file.name << endl;
+            Sleep(1000);
 
-			if (n>0)
-			{
-				cout << "×¼±¸²âÊÔµÚ" << n << "¸öÎÄ¼ş£¡" << endl;
+            if (n>0)
+            {
+                cout << "å‡†å¤‡æµ‹è¯•ç¬¬" << n << "ä¸ªæ–‡ä»¶ï¼" << endl;
 
-				string str = file.name;
-				string str0 = "";
-				string str2 = ".txt";
+                string str = file.name;
+                string str0 = "";
+                string str2 = ".txt";
 
-				size_t iPos = str.find(".");
-				str0 = str.substr(iPos, 4);
+                size_t iPos = str.find(".");
+                str0 = str.substr(iPos, 4);
 
-				if (str0 == str2.c_str())
-				{
-					testfile = true;
-				}
-				else
-				{
-					testfile = false;
-				}
-				char *str1 = file.name;
-				Simulation_onefile(str1);
-			}
-			n = n + 1;
-		}
-	}
-	_findclose(lf);
+                if (str0 == str2.c_str())
+                {
+                    testfile = true;
+                }
+                else
+                {
+                    testfile = false;
+                }
+                char *str1 = file.name;
+                Simulation_onefile(str1);
+            }
+            n = n + 1;
+        }
+    }
+    _findclose(lf);
 }
 
 void _record0(char *txt)
 {
-	ofstream o_file(LogFilePaths, ios::app);
-	o_file << txt << endl;
-	o_file.close();
+    ofstream o_file(LogFilePaths, ios::app);
+    o_file << txt << endl;
+    o_file.close();
 }
 
-void Sniffer_A12(int i)	//¼àÌıTickÊı¾İÒÔ¼°Ö¸±ê¼ÆËã
+void Sniffer_A12(int i)    //ç›‘å¬Tickæ•°æ®ä»¥åŠæŒ‡æ ‡è®¡ç®—
 {
-	void Sniffer_56(int i);	//
+    void Sniffer_56(int i);    //
 
-	if (!ReceiveTick[i] && fabs(tick_data[i][0] - 1)<0.01)
-	{
-		SnifferSignalA[i] = true;
+    if (!ReceiveTick[i] && fabs(tick_data[i][0] - 1)<0.01)
+    {
+        SnifferSignalA[i] = true;
 
-		bool TradingTimeA = (tick_data[i][2]>0.0910 && tick_data[i][2]<0.1450) || (tick_data[i][2]>0.2105 && tick_data[i][2]<0.2359);
-		bool TradingTimeB = (tick_data[i][2]>0.0910 && tick_data[i][2]<0.1450) || (tick_data[i][2]>0.2105 && tick_data[i][2]<0.2359);
+        bool TradingTimeA = (tick_data[i][2]>0.0910 && tick_data[i][2]<0.1450) || (tick_data[i][2]>0.2105 && tick_data[i][2]<0.2359);
+        bool TradingTimeB = (tick_data[i][2]>0.0910 && tick_data[i][2]<0.1450) || (tick_data[i][2]>0.2105 && tick_data[i][2]<0.2359);
 
-		if (simMode && Mn_close[i][1]> Mn_open[i][1] && TradingTimeA)
-		{
-			Sniffer_dataA[i][0] = 1;
-		}
-		else if (simMode && Mn_close[i][1]< Mn_open[i][1] && TradingTimeA)
-		{
-			Sniffer_dataA[i][0] = 2;
-		}
-		else
-		{
-			Sniffer_dataA[i][0] = 0;
-			SnifferSignalA[i] = false;
-		}
-	}
+        if (simMode && Mn_close[i][1]> Mn_open[i][1] && TradingTimeA)
+        {
+            Sniffer_dataA[i][0] = 1;
+        }
+        else if (simMode && Mn_close[i][1]< Mn_open[i][1] && TradingTimeA)
+        {
+            Sniffer_dataA[i][0] = 2;
+        }
+        else
+        {
+            Sniffer_dataA[i][0] = 0;
+            SnifferSignalA[i] = false;
+        }
+    }
 }
 
-void Sniffer_B12(int i)	//¼àÌıTickÊı¾İÒÔ¼°Ö¸±ê¼ÆËã
+void Sniffer_B12(int i)    //ç›‘å¬Tickæ•°æ®ä»¥åŠæŒ‡æ ‡è®¡ç®—
 {
-	if (!ReceiveTick[i] && fabs(tick_data[i][0] - 1)<0.01)//ru
-	{
-		SnifferSignalB[i] = true;
+    if (!ReceiveTick[i] && fabs(tick_data[i][0] - 1)<0.01)//ru
+    {
+        SnifferSignalB[i] = true;
 
-		bool TradingTimeA = (tick_data[i][2]>0.0910 && tick_data[i][2]<0.1450) || (tick_data[i][2]>0.2105 && tick_data[i][2]<0.2359);
-		bool TradingTimeB = (tick_data[i][2]>0.0910 && tick_data[i][2]<0.1450) || (tick_data[i][2]>0.2105 && tick_data[i][2]<0.2359);
+        bool TradingTimeA = (tick_data[i][2]>0.0910 && tick_data[i][2]<0.1450) || (tick_data[i][2]>0.2105 && tick_data[i][2]<0.2359);
+        bool TradingTimeB = (tick_data[i][2]>0.0910 && tick_data[i][2]<0.1450) || (tick_data[i][2]>0.2105 && tick_data[i][2]<0.2359);
 
-		bool condtion1 = tick_AskPrice1[i][0]>tick_AskPrice1[i][1];
-		bool condtion2 = tick_AskPrice1[i][0]<tick_AskPrice1[i][1];
+        bool condtion1 = tick_AskPrice1[i][0]>tick_AskPrice1[i][1];
+        bool condtion2 = tick_AskPrice1[i][0]<tick_AskPrice1[i][1];
 
-		bool condtion3 = tick_AskPrice1[i][1]>tick_AskPrice1[i][2];
-		bool condtion4 = tick_AskPrice1[i][1]<tick_AskPrice1[i][2];
+        bool condtion3 = tick_AskPrice1[i][1]>tick_AskPrice1[i][2];
+        bool condtion4 = tick_AskPrice1[i][1]<tick_AskPrice1[i][2];
 
-		bool condtion5 = tick_AskPrice1[i][2]>tick_AskPrice1[i][3];
-		bool condtion6 = tick_AskPrice1[i][2]<tick_AskPrice1[i][3];
+        bool condtion5 = tick_AskPrice1[i][2]>tick_AskPrice1[i][3];
+        bool condtion6 = tick_AskPrice1[i][2]<tick_AskPrice1[i][3];
 
 
-		if (condtion1 && 1 && 1 && TradingTimeA)
-		{
-			Sniffer_dataB[i][0] = 5;
-		}
-		else if (condtion2 && 1 && 1 && TradingTimeA)
-		{
-			Sniffer_dataB[i][0] = 6;
-		}
-		else
-		{
-			Sniffer_dataB[i][0] = 0;
-			SnifferSignalB[i] = false;
-		}
-	}
+        if (condtion1 && 1 && 1 && TradingTimeA)
+        {
+            Sniffer_dataB[i][0] = 5;
+        }
+        else if (condtion2 && 1 && 1 && TradingTimeA)
+        {
+            Sniffer_dataB[i][0] = 6;
+        }
+        else
+        {
+            Sniffer_dataB[i][0] = 0;
+            SnifferSignalB[i] = false;
+        }
+    }
 }
 
-void Sniffer()	//¼àÌıTickÊı¾İÒÑ¾­Ö¸±ê¼ÆËã ÊµÅÌÓÃ
+void Sniffer()    //ç›‘å¬Tickæ•°æ®å·²ç»æŒ‡æ ‡è®¡ç®— å®ç›˜ç”¨
 {
-	SYSTEMTIME sys_time;
-	GetLocalTime(&sys_time);
+    SYSTEMTIME sys_time;
+    GetLocalTime(&sys_time);
 
-	void WriteMdConfiguration();
-	void ErasingTradeConfiguration();
+    void WriteMdConfiguration();
+    void ErasingTradeConfiguration();
 
-	double Nowtime = (double)((sys_time.wHour) / 10e1) + (double)((sys_time.wMinute) / 10e3) + (double)((sys_time.wSecond) / 10e5);	//¸ñÊ½Ê±¼ä0.145100
+    double Nowtime = (double)((sys_time.wHour) / 10e1) + (double)((sys_time.wMinute) / 10e3) + (double)((sys_time.wSecond) / 10e5);    //æ ¼å¼æ—¶é—´0.145100
 
-	if (simMode && (tick_data[18][2] >= 0.151459 || tick_data[3][2] >= 0.145959) && Nowtime>0.1518 && Nowtime<0.1520 && CloseAll == false)
-	{
-		cerr << "--->>> " << ff2ss(tick_data[1][1]) << "×¼±¸ÊÕÅÌ!" << endl;
-		cerr << "--->>> " << "WriteMdConfiguration!" << endl;
-		WriteMdConfiguration();				//±¸·İÊı¾İ
-		Sleep(3000);
-		ErasingTradeConfiguration();
-		cerr << "--->>> " << ff2ss(tick_data[1][1]) << "ÊÕÅÌ!" << endl;
-		CloseAll = true;
-	}
-	for (int i = 0; i < 20; i++)
-	{
-		if (simMode)
-		{
-			if (fabs(tick_data[i][0] - 1)<0.01 && ((tick_data[i][2]>0.0913 && i>17) || (tick_data[i][2]>0.0858 && i <= 17)))//i>17ºÏÔ¼ÎªIF
-			{
-				Sniffer_A12(i);
-				Sniffer_B12(i);
-				tick_data[i][0] = 0;
-			}
-		}
-		else
-		{
-			if (fabs(tick_data[i][0] - 1)<0.01)
-			{
-				Sniffer_A12(i);
-				Sniffer_B12(i);
-				tick_data[i][0] = 0;
-			}
-		}
-	}
+    if (simMode && (tick_data[18][2] >= 0.151459 || tick_data[3][2] >= 0.145959) && Nowtime>0.1518 && Nowtime<0.1520 && CloseAll == false)
+    {
+        cerr << "--->>> " << ff2ss(tick_data[1][1]) << "å‡†å¤‡æ”¶ç›˜!" << endl;
+        cerr << "--->>> " << "WriteMdConfiguration!" << endl;
+        WriteMdConfiguration();                //å¤‡ä»½æ•°æ®
+        Sleep(3000);
+        ErasingTradeConfiguration();
+        cerr << "--->>> " << ff2ss(tick_data[1][1]) << "æ”¶ç›˜!" << endl;
+        CloseAll = true;
+    }
+    for (int i = 0; i < 20; i++)
+    {
+        if (simMode)
+        {
+            if (fabs(tick_data[i][0] - 1)<0.01 && ((tick_data[i][2]>0.0913 && i>17) || (tick_data[i][2]>0.0858 && i <= 17)))//i>17åˆçº¦ä¸ºIF
+            {
+                Sniffer_A12(i);
+                Sniffer_B12(i);
+                tick_data[i][0] = 0;
+            }
+        }
+        else
+        {
+            if (fabs(tick_data[i][0] - 1)<0.01)
+            {
+                Sniffer_A12(i);
+                Sniffer_B12(i);
+                tick_data[i][0] = 0;
+            }
+        }
+    }
 }
 
 void TraderA12(double system_times, int i)
 {
-	void SendOrder(TThostFtdcInstrumentIDType FuturesId, int a, int b, int md, int i);
-	void WriteTradeConfiguration();
-	double GetLocalTimeSec1();
-	void _record1(char *txt1, char *txt2, double m, int n, int i);
+    void SendOrder(TThostFtdcInstrumentIDType FuturesId, int a, int b, int md, int i);
+    void WriteTradeConfiguration();
+    double GetLocalTimeSec1();
+    void _record1(char *txt1, char *txt2, double m, int n, int i);
 
-	bool TradingTimeB = (tick_data[i][2]>0.1014 && tick_data[i][2]<0.1400);// || (tick_data[i][2]>0.2105 && tick_data[i][2]<0.2350) ;
-	bool TradingTimeS = (tick_data[i][2]>0.0905 && tick_data[i][2]<0.1400);// || (tick_data[i][2]>0.2105 && tick_data[i][2]<0.2350) ;
+    bool TradingTimeB = (tick_data[i][2]>0.1014 && tick_data[i][2]<0.1400);// || (tick_data[i][2]>0.2105 && tick_data[i][2]<0.2350) ;
+    bool TradingTimeS = (tick_data[i][2]>0.0905 && tick_data[i][2]<0.1400);// || (tick_data[i][2]>0.2105 && tick_data[i][2]<0.2350) ;
 
-	bool Condtion1 = (tick_BidPrice1[i][0] - tick_data[i][9])>20 * InstrumentID_minmove[i] && (tick_data[i][8] - tick_AskPrice1[i][0])>10 * InstrumentID_minmove[i];
-	bool Condtion2 = (tick_data[i][8] - tick_AskPrice1[i][0])>20 * InstrumentID_minmove[i] && (tick_BidPrice1[i][0] - tick_data[i][9])>10 * InstrumentID_minmove[i];
+    bool Condtion1 = (tick_BidPrice1[i][0] - tick_data[i][9])>20 * InstrumentID_minmove[i] && (tick_data[i][8] - tick_AskPrice1[i][0])>10 * InstrumentID_minmove[i];
+    bool Condtion2 = (tick_data[i][8] - tick_AskPrice1[i][0])>20 * InstrumentID_minmove[i] && (tick_BidPrice1[i][0] - tick_data[i][9])>10 * InstrumentID_minmove[i];
 
-	if (Sniffer_dataA[i][0] > 0 && TradingSignalA[i] == false)
-	{
-		SnifferSignalA[i] = false;
-		TradingSignalA[i] = true;
+    if (Sniffer_dataA[i][0] > 0 && TradingSignalA[i] == false)
+    {
+        SnifferSignalA[i] = false;
+        TradingSignalA[i] = true;
 
-		if ((Sniffer_dataA[i][0] == 1 || Sniffer_dataA[i][0] == 98) && TradingTimeB)
-		{
-			if (Trade_dataA[i][2] <-0.5)//ÈçÓĞ·´Ïòµ¥£¬ÏÈÆ½²Ö´¦Àí
-			{
-				SendOrder(InstrumentID_n[i], 0, 3, 1, i);
-				TradingSignalA[i] = false;
+        if ((Sniffer_dataA[i][0] == 1 || Sniffer_dataA[i][0] == 98) && TradingTimeB)
+        {
+            if (Trade_dataA[i][2] <-0.5)//å¦‚æœ‰åå‘å•ï¼Œå…ˆå¹³ä»“å¤„ç†
+            {
+                SendOrder(InstrumentID_n[i], 0, 3, 1, i);
+                TradingSignalA[i] = false;
 
-				Trade_dataA[i][0] = 0;
-				Trade_dataA[i][2] = 0;
-				Trade_dataA[i][3] = 0;
-				Trade_Closetimes[i] = Trade_Closetimes[i] + 1;
-				Day_CloseProfit[i] = Day_CloseProfit[i] + Trade_dataA[i][5] - tick_AskPrice1[i][0];
-				Trade_CloseProfit[i] = Trade_CloseProfit[i] + Trade_dataA[i][5] - tick_AskPrice1[i][0];
-				Trade_dataA[i][5] = tick_AskPrice1[i][0];
-				cerr << "--->>> ±¨µ¥: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "ÂòÆ½" << "_" << Trade_dataA[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
-				if (simMode) { WriteTradeConfiguration(); }
-				_record1("±¨µ¥:", "ÂòÆ½", Trade_dataA[i][5], int(Trade_dataA[i][3]), i);
-			}
+                Trade_dataA[i][0] = 0;
+                Trade_dataA[i][2] = 0;
+                Trade_dataA[i][3] = 0;
+                Trade_Closetimes[i] = Trade_Closetimes[i] + 1;
+                Day_CloseProfit[i] = Day_CloseProfit[i] + Trade_dataA[i][5] - tick_AskPrice1[i][0];
+                Trade_CloseProfit[i] = Trade_CloseProfit[i] + Trade_dataA[i][5] - tick_AskPrice1[i][0];
+                Trade_dataA[i][5] = tick_AskPrice1[i][0];
+                cerr << "--->>> æŠ¥å•: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "ä¹°å¹³" << "_" << Trade_dataA[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
+                if (simMode) { WriteTradeConfiguration(); }
+                _record1("æŠ¥å•:", "ä¹°å¹³", Trade_dataA[i][5], int(Trade_dataA[i][3]), i);
+            }
 
-			if ((fabs(Trade_dataA[i][2]))<0.5 && Day_CloseProfit[i]>-1.6*Trade_StopCloseProfit[i] && Condtion1)
-			{
-				SendOrder(InstrumentID_n[i], 0, 0, 1, i);
-				TradingSignalA[i] = false;
+            if ((fabs(Trade_dataA[i][2]))<0.5 && Day_CloseProfit[i]>-1.6*Trade_StopCloseProfit[i] && Condtion1)
+            {
+                SendOrder(InstrumentID_n[i], 0, 0, 1, i);
+                TradingSignalA[i] = false;
 
-				Trade_dataA[i][0] = 0;
-				Trade_dataA[i][1] = tick_data[i][2];
-				Trade_times[i] = Q_BarTime_1n[i];
-				Trade_dataA[i][2] = 1;
-				Trade_dataA[i][3] = 1;
-				Trade_dataA[i][5] = tick_AskPrice1[i][0];
-				cerr << "--->>> ±¨µ¥: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "Âò¿ª" << "_" << Trade_dataA[i][5] << "_" << Trade_dataA[i][3] << endl;
+                Trade_dataA[i][0] = 0;
+                Trade_dataA[i][1] = tick_data[i][2];
+                Trade_times[i] = Q_BarTime_1n[i];
+                Trade_dataA[i][2] = 1;
+                Trade_dataA[i][3] = 1;
+                Trade_dataA[i][5] = tick_AskPrice1[i][0];
+                cerr << "--->>> æŠ¥å•: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "ä¹°å¼€" << "_" << Trade_dataA[i][5] << "_" << Trade_dataA[i][3] << endl;
 
-				if (simMode) { WriteTradeConfiguration(); }
-				_record1("±¨µ¥:", "Âò¿ª", Trade_dataA[i][5], int(Trade_dataA[i][3]), i);
+                if (simMode) { WriteTradeConfiguration(); }
+                _record1("æŠ¥å•:", "ä¹°å¼€", Trade_dataA[i][5], int(Trade_dataA[i][3]), i);
 
-			}
-		}
-		else if ((Sniffer_dataA[i][0] == 2 || Sniffer_dataA[i][0] == 98) && TradingTimeS)
-		{
-			if (Trade_dataA[i][2] > 0.5)//ÈçÓĞ·´Ïòµ¥£¬ÏÈÆ½²Ö´¦Àí
-			{
-				SendOrder(InstrumentID_n[i], 1, 3, 1, i);
-				TradingSignalA[i] = false;
+            }
+        }
+        else if ((Sniffer_dataA[i][0] == 2 || Sniffer_dataA[i][0] == 98) && TradingTimeS)
+        {
+            if (Trade_dataA[i][2] > 0.5)//å¦‚æœ‰åå‘å•ï¼Œå…ˆå¹³ä»“å¤„ç†
+            {
+                SendOrder(InstrumentID_n[i], 1, 3, 1, i);
+                TradingSignalA[i] = false;
 
-				Trade_dataA[i][0] = 0;
-				Trade_dataA[i][2] = 0;
-				Trade_dataA[i][3] = 0;
-				Trade_Closetimes[i] = Trade_Closetimes[i] + 1;
-				Day_CloseProfit[i] = Day_CloseProfit[i] + tick_BidPrice1[i][0] - Trade_dataA[i][5];
-				Trade_CloseProfit[i] = Trade_CloseProfit[i] + tick_BidPrice1[i][0] - Trade_dataA[i][5];
-				Trade_dataA[i][5] = tick_BidPrice1[i][0];
-				cerr << "--->>> ±¨µ¥: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "ÂôÆ½" << "_" << Trade_dataA[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
-				if (simMode) { WriteTradeConfiguration(); }
-				_record1("±¨µ¥:", "ÂôÆ½", Trade_dataA[i][5], int(Trade_dataA[i][3]), i);
-			}
+                Trade_dataA[i][0] = 0;
+                Trade_dataA[i][2] = 0;
+                Trade_dataA[i][3] = 0;
+                Trade_Closetimes[i] = Trade_Closetimes[i] + 1;
+                Day_CloseProfit[i] = Day_CloseProfit[i] + tick_BidPrice1[i][0] - Trade_dataA[i][5];
+                Trade_CloseProfit[i] = Trade_CloseProfit[i] + tick_BidPrice1[i][0] - Trade_dataA[i][5];
+                Trade_dataA[i][5] = tick_BidPrice1[i][0];
+                cerr << "--->>> æŠ¥å•: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "å–å¹³" << "_" << Trade_dataA[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
+                if (simMode) { WriteTradeConfiguration(); }
+                _record1("æŠ¥å•:", "å–å¹³", Trade_dataA[i][5], int(Trade_dataA[i][3]), i);
+            }
 
-			if ((fabs(Trade_dataA[i][2]))<0.5 &&  Day_CloseProfit[i]>-1.6*Trade_StopCloseProfit[i] && Condtion2)
-			{
-				SendOrder(InstrumentID_n[i], 1, 0, 1, i);
-				TradingSignalA[i] = false;
+            if ((fabs(Trade_dataA[i][2]))<0.5 &&  Day_CloseProfit[i]>-1.6*Trade_StopCloseProfit[i] && Condtion2)
+            {
+                SendOrder(InstrumentID_n[i], 1, 0, 1, i);
+                TradingSignalA[i] = false;
 
-				Trade_dataA[i][0] = 0;
-				Trade_dataA[i][1] = tick_data[i][2];
-				Trade_times[i] = Q_BarTime_1n[i];
-				Trade_dataA[i][2] = -1;
-				Trade_dataA[i][3] = 2;
-				Trade_dataA[i][5] = tick_BidPrice1[i][0];
-				cerr << "--->>> ±¨µ¥: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "Âô¿ª" << "_" << Trade_dataA[i][5] << "_" << Trade_dataA[i][3] << endl;
+                Trade_dataA[i][0] = 0;
+                Trade_dataA[i][1] = tick_data[i][2];
+                Trade_times[i] = Q_BarTime_1n[i];
+                Trade_dataA[i][2] = -1;
+                Trade_dataA[i][3] = 2;
+                Trade_dataA[i][5] = tick_BidPrice1[i][0];
+                cerr << "--->>> æŠ¥å•: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "å–å¼€" << "_" << Trade_dataA[i][5] << "_" << Trade_dataA[i][3] << endl;
 
-				if (simMode) { WriteTradeConfiguration(); }
-				_record1("±¨µ¥:", "Âô¿ª", Trade_dataA[i][5], int(Trade_dataA[i][3]), i);
-			}
-		}
-		else
-		{
-			TradingSignalA[i] = false;
-		}
-	}
+                if (simMode) { WriteTradeConfiguration(); }
+                _record1("æŠ¥å•:", "å–å¼€", Trade_dataA[i][5], int(Trade_dataA[i][3]), i);
+            }
+        }
+        else
+        {
+            TradingSignalA[i] = false;
+        }
+    }
 }
 
 void StopLossA12(double system_times, int i)
 {
-	void SendOrder(TThostFtdcInstrumentIDType FuturesId, int a, int b, int md, int i);
-	void WriteTradeConfiguration();
-	int GetLocalTimeSec2();
-	void _record1(char *txt1, char *txt2, double m, int n, int i);
-	bool stopwinen = true;		//µ÷ÊÔÓÃ
-	bool stoplossen = true;		//µ÷ÊÔÓÃ
+    void SendOrder(TThostFtdcInstrumentIDType FuturesId, int a, int b, int md, int i);
+    void WriteTradeConfiguration();
+    int GetLocalTimeSec2();
+    void _record1(char *txt1, char *txt2, double m, int n, int i);
+    bool stopwinen = true;        //è°ƒè¯•ç”¨
+    bool stoplossen = true;        //è°ƒè¯•ç”¨
 
-	double Mn_D2 = (Mn_open[i][1] + Mn_close[i][1]) / 2;
+    double Mn_D2 = (Mn_open[i][1] + Mn_close[i][1]) / 2;
 
-	//Ö¹Ó®Æ½²Ö
-	if (Trade_dataA[i][2] == 1 && Trade_dataA[i][3] == 1 && (Mn_D2 - Trade_dataA[i][5]) >= Trade_Stopwin[i] && stopwinen)
-	{
-		SendOrder(InstrumentID_n[i], 1, 3, 0, i);
-		TradingSignalA[i] = false;
+    //æ­¢èµ¢å¹³ä»“
+    if (Trade_dataA[i][2] == 1 && Trade_dataA[i][3] == 1 && (Mn_D2 - Trade_dataA[i][5]) >= Trade_Stopwin[i] && stopwinen)
+    {
+        SendOrder(InstrumentID_n[i], 1, 3, 0, i);
+        TradingSignalA[i] = false;
 
-		//Trade_dataA[i][0] = 0;
-		Trade_dataA[i][2] = 0;
-		Trade_dataA[i][3] = 0;
-		Trade_Closetimes[i] = Trade_Closetimes[i] + 1;
-		Day_CloseProfit[i] = Day_CloseProfit[i] + tick_BidPrice1[i][0] - Trade_dataA[i][5];
-		Trade_CloseProfit[i] = Trade_CloseProfit[i] + tick_BidPrice1[i][0] - Trade_dataA[i][5];
-		Trade_dataA[i][5] = tick_BidPrice1[i][0];
-		cerr << "--->>> ±¨µ¥: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "ÂôÆ½Ö¹Ó®" << "_" << Trade_dataA[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
-		if (simMode) { WriteTradeConfiguration(); }
-		_record1("±¨µ¥:", "ÂôÆ½Ö¹Ó®", Trade_dataA[i][5], int(Trade_dataA[i][3]), i);
-	}
-	if (Trade_dataA[i][2] == -1 && Trade_dataA[i][3] == 2 && (Trade_dataA[i][5] - Mn_D2) >= Trade_Stopwin[i] && stopwinen)
-	{
-		SendOrder(InstrumentID_n[i], 0, 3, 0, i);
-		TradingSignalA[i] = false;
+        //Trade_dataA[i][0] = 0;
+        Trade_dataA[i][2] = 0;
+        Trade_dataA[i][3] = 0;
+        Trade_Closetimes[i] = Trade_Closetimes[i] + 1;
+        Day_CloseProfit[i] = Day_CloseProfit[i] + tick_BidPrice1[i][0] - Trade_dataA[i][5];
+        Trade_CloseProfit[i] = Trade_CloseProfit[i] + tick_BidPrice1[i][0] - Trade_dataA[i][5];
+        Trade_dataA[i][5] = tick_BidPrice1[i][0];
+        cerr << "--->>> æŠ¥å•: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "å–å¹³æ­¢èµ¢" << "_" << Trade_dataA[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
+        if (simMode) { WriteTradeConfiguration(); }
+        _record1("æŠ¥å•:", "å–å¹³æ­¢èµ¢", Trade_dataA[i][5], int(Trade_dataA[i][3]), i);
+    }
+    if (Trade_dataA[i][2] == -1 && Trade_dataA[i][3] == 2 && (Trade_dataA[i][5] - Mn_D2) >= Trade_Stopwin[i] && stopwinen)
+    {
+        SendOrder(InstrumentID_n[i], 0, 3, 0, i);
+        TradingSignalA[i] = false;
 
-		//Trade_dataA[i][0] = 0;
-		Trade_dataA[i][2] = 0;
-		Trade_dataA[i][3] = 0;
-		Trade_Closetimes[i] = Trade_Closetimes[i] + 1;
-		Day_CloseProfit[i] = Day_CloseProfit[i] + Trade_dataA[i][5] - tick_AskPrice1[i][0];
-		Trade_CloseProfit[i] = Trade_CloseProfit[i] + Trade_dataA[i][5] - tick_AskPrice1[i][0];
-		Trade_dataA[i][5] = tick_AskPrice1[i][0];
-		cerr << "--->>> ±¨µ¥: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "ÂòÆ½Ö¹Ó®" << "_" << Trade_dataA[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
-		if (simMode) { WriteTradeConfiguration(); }
-		_record1("±¨µ¥:", "ÂòÆ½Ö¹Ó®", Trade_dataA[i][5], int(Trade_dataA[i][3]), i);
-	}
+        //Trade_dataA[i][0] = 0;
+        Trade_dataA[i][2] = 0;
+        Trade_dataA[i][3] = 0;
+        Trade_Closetimes[i] = Trade_Closetimes[i] + 1;
+        Day_CloseProfit[i] = Day_CloseProfit[i] + Trade_dataA[i][5] - tick_AskPrice1[i][0];
+        Trade_CloseProfit[i] = Trade_CloseProfit[i] + Trade_dataA[i][5] - tick_AskPrice1[i][0];
+        Trade_dataA[i][5] = tick_AskPrice1[i][0];
+        cerr << "--->>> æŠ¥å•: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "ä¹°å¹³æ­¢èµ¢" << "_" << Trade_dataA[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
+        if (simMode) { WriteTradeConfiguration(); }
+        _record1("æŠ¥å•:", "ä¹°å¹³æ­¢èµ¢", Trade_dataA[i][5], int(Trade_dataA[i][3]), i);
+    }
 
-	//Ö¹ËğÆ½²Ö
-	if (Trade_dataA[i][2] == 1 && Trade_dataA[i][3] == 1 && (Trade_dataA[i][5] - Mn_D2) >= Trade_Stoploss[i] && stoplossen)
-	{
-		SendOrder(InstrumentID_n[i], 1, 3, 1, i);
-		TradingSignalA[i] = false;
+    //æ­¢æŸå¹³ä»“
+    if (Trade_dataA[i][2] == 1 && Trade_dataA[i][3] == 1 && (Trade_dataA[i][5] - Mn_D2) >= Trade_Stoploss[i] && stoplossen)
+    {
+        SendOrder(InstrumentID_n[i], 1, 3, 1, i);
+        TradingSignalA[i] = false;
 
-		//Trade_dataA[i][0] = 0;
-		Trade_dataA[i][2] = 0;
-		Trade_dataA[i][3] = 0;
-		Trade_Closetimes[i] = Trade_Closetimes[i] + 1;
-		Day_CloseProfit[i] = Day_CloseProfit[i] + tick_BidPrice1[i][0] - Trade_dataA[i][5];
-		Trade_CloseProfit[i] = Trade_CloseProfit[i] + tick_BidPrice1[i][0] - Trade_dataA[i][5];
-		Trade_dataA[i][5] = tick_BidPrice1[i][0];
-		cerr << "--->>> ±¨µ¥: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "ÂôÆ½Ö¹Ëğ" << "_" << Trade_dataA[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
+        //Trade_dataA[i][0] = 0;
+        Trade_dataA[i][2] = 0;
+        Trade_dataA[i][3] = 0;
+        Trade_Closetimes[i] = Trade_Closetimes[i] + 1;
+        Day_CloseProfit[i] = Day_CloseProfit[i] + tick_BidPrice1[i][0] - Trade_dataA[i][5];
+        Trade_CloseProfit[i] = Trade_CloseProfit[i] + tick_BidPrice1[i][0] - Trade_dataA[i][5];
+        Trade_dataA[i][5] = tick_BidPrice1[i][0];
+        cerr << "--->>> æŠ¥å•: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "å–å¹³æ­¢æŸ" << "_" << Trade_dataA[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
 
-		if (simMode) { WriteTradeConfiguration(); }
-		_record1("±¨µ¥:", "ÂôÆ½Ö¹Ëğ", Trade_dataA[i][5], int(Trade_dataA[i][3]), i);
+        if (simMode) { WriteTradeConfiguration(); }
+        _record1("æŠ¥å•:", "å–å¹³æ­¢æŸ", Trade_dataA[i][5], int(Trade_dataA[i][3]), i);
 
-	}
-	if (Trade_dataA[i][2] == -1 && Trade_dataA[i][3] == 2 && (Mn_D2 - Trade_dataA[i][5]) >= Trade_Stoploss[i] && stoplossen)
-	{
-		SendOrder(InstrumentID_n[i], 0, 3, 1, i);
-		TradingSignalA[i] = false;
+    }
+    if (Trade_dataA[i][2] == -1 && Trade_dataA[i][3] == 2 && (Mn_D2 - Trade_dataA[i][5]) >= Trade_Stoploss[i] && stoplossen)
+    {
+        SendOrder(InstrumentID_n[i], 0, 3, 1, i);
+        TradingSignalA[i] = false;
 
-		//Trade_dataA[i][0] = 0;
-		Trade_dataA[i][2] = 0;
-		Trade_dataA[i][3] = 0;
-		Trade_Closetimes[i] = Trade_Closetimes[i] + 1;
-		Day_CloseProfit[i] = Day_CloseProfit[i] + Trade_dataA[i][5] - tick_AskPrice1[i][0];
-		Trade_CloseProfit[i] = Trade_CloseProfit[i] + Trade_dataA[i][5] - tick_AskPrice1[i][0];
-		Trade_dataA[i][5] = tick_AskPrice1[i][0];
-		cerr << "--->>> ±¨µ¥: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "ÂòÆ½Ö¹Ëğ" << "_" << Trade_dataA[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
+        //Trade_dataA[i][0] = 0;
+        Trade_dataA[i][2] = 0;
+        Trade_dataA[i][3] = 0;
+        Trade_Closetimes[i] = Trade_Closetimes[i] + 1;
+        Day_CloseProfit[i] = Day_CloseProfit[i] + Trade_dataA[i][5] - tick_AskPrice1[i][0];
+        Trade_CloseProfit[i] = Trade_CloseProfit[i] + Trade_dataA[i][5] - tick_AskPrice1[i][0];
+        Trade_dataA[i][5] = tick_AskPrice1[i][0];
+        cerr << "--->>> æŠ¥å•: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "ä¹°å¹³æ­¢æŸ" << "_" << Trade_dataA[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
 
-		if (simMode) { WriteTradeConfiguration(); }
-		_record1("±¨µ¥:", "ÂòÆ½Ö¹Ëğ", Trade_dataA[i][5], int(Trade_dataA[i][3]), i);
+        if (simMode) { WriteTradeConfiguration(); }
+        _record1("æŠ¥å•:", "ä¹°å¹³æ­¢æŸ", Trade_dataA[i][5], int(Trade_dataA[i][3]), i);
 
-	}
+    }
 }
 
 void StopEndTime_A(double system_times, int i)
 {
-	void SendOrder(TThostFtdcInstrumentIDType FuturesId, int a, int b, int md, int i);
-	void WriteTradeConfiguration();
-	int GetLocalTimeSec2();
-	void _record1(char *txt1, char *txt2, double m, int n, int i);
+    void SendOrder(TThostFtdcInstrumentIDType FuturesId, int a, int b, int md, int i);
+    void WriteTradeConfiguration();
+    int GetLocalTimeSec2();
+    void _record1(char *txt1, char *txt2, double m, int n, int i);
 
-	bool stopdingshien = false;	//µ÷ÊÔÓÃ
-	int n = 10;					//10·ÖÖÓ¶¨Ê±Æ½²Ö
-	int nowtime = GetLocalTimeSec2();
+    bool stopdingshien = false;    //è°ƒè¯•ç”¨
+    int n = 10;                    //10åˆ†é’Ÿå®šæ—¶å¹³ä»“
+    int nowtime = GetLocalTimeSec2();
 
-	//¶¨Ê±Æ½²Ö
-	if (Trade_dataA[i][2] == 1 && (Q_BarTime_1n[i] - Trade_times[i])>n * 60 && stopdingshien)
-	{
-		SendOrder(InstrumentID_n[i], 1, 3, 0, i);
-		TradingSignalA[i] = false;
+    //å®šæ—¶å¹³ä»“
+    if (Trade_dataA[i][2] == 1 && (Q_BarTime_1n[i] - Trade_times[i])>n * 60 && stopdingshien)
+    {
+        SendOrder(InstrumentID_n[i], 1, 3, 0, i);
+        TradingSignalA[i] = false;
 
-		Trade_dataA[i][0] = 0;
-		Trade_dataA[i][2] = 0;
-		Trade_dataA[i][3] = 0;
-		Trade_Closetimes[i] = Trade_Closetimes[i] + 1;
-		Day_CloseProfit[i] = Day_CloseProfit[i] + tick_BidPrice1[i][0] - Trade_dataA[i][5];
-		Trade_CloseProfit[i] = Trade_CloseProfit[i] + tick_BidPrice1[i][0] - Trade_dataA[i][5];
-		Trade_dataA[i][5] = tick_BidPrice1[i][0];
-		cerr << "--->>> ±¨µ¥: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "ÂôÆ½¶¨Ê±" << "_" << Trade_dataA[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
-		if (simMode) { WriteTradeConfiguration(); }
-		_record1("±¨µ¥:", "ÂôÆ½¶¨Ê±", Trade_dataA[i][5], int(Trade_dataA[i][3]), i);
-	}
-	if (Trade_dataA[i][2] == -1 && (Q_BarTime_1n[i] - Trade_times[i])>n * 60 && stopdingshien)
-	{
-		SendOrder(InstrumentID_n[i], 0, 3, 0, i);
-		TradingSignalA[i] = false;
+        Trade_dataA[i][0] = 0;
+        Trade_dataA[i][2] = 0;
+        Trade_dataA[i][3] = 0;
+        Trade_Closetimes[i] = Trade_Closetimes[i] + 1;
+        Day_CloseProfit[i] = Day_CloseProfit[i] + tick_BidPrice1[i][0] - Trade_dataA[i][5];
+        Trade_CloseProfit[i] = Trade_CloseProfit[i] + tick_BidPrice1[i][0] - Trade_dataA[i][5];
+        Trade_dataA[i][5] = tick_BidPrice1[i][0];
+        cerr << "--->>> æŠ¥å•: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "å–å¹³å®šæ—¶" << "_" << Trade_dataA[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
+        if (simMode) { WriteTradeConfiguration(); }
+        _record1("æŠ¥å•:", "å–å¹³å®šæ—¶", Trade_dataA[i][5], int(Trade_dataA[i][3]), i);
+    }
+    if (Trade_dataA[i][2] == -1 && (Q_BarTime_1n[i] - Trade_times[i])>n * 60 && stopdingshien)
+    {
+        SendOrder(InstrumentID_n[i], 0, 3, 0, i);
+        TradingSignalA[i] = false;
 
-		Trade_dataA[i][0] = 0;
-		Trade_dataA[i][2] = 0;
-		Trade_dataA[i][3] = 0;
-		Trade_Closetimes[i] = Trade_Closetimes[i] + 1;
-		Day_CloseProfit[i] = Day_CloseProfit[i] + Trade_dataA[i][5] - tick_AskPrice1[i][0];
-		Trade_CloseProfit[i] = Trade_CloseProfit[i] + Trade_dataA[i][5] - tick_AskPrice1[i][0];
-		Trade_dataA[i][5] = tick_AskPrice1[i][0];
-		cerr << "--->>> ±¨µ¥: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "ÂòÆ½¶¨Ê±" << "_" << Trade_dataA[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
-		if (simMode) { WriteTradeConfiguration(); }
-		_record1("±¨µ¥:", "ÂòÆ½¶¨Ê±", Trade_dataA[i][5], int(Trade_dataA[i][3]), i);
-	}
+        Trade_dataA[i][0] = 0;
+        Trade_dataA[i][2] = 0;
+        Trade_dataA[i][3] = 0;
+        Trade_Closetimes[i] = Trade_Closetimes[i] + 1;
+        Day_CloseProfit[i] = Day_CloseProfit[i] + Trade_dataA[i][5] - tick_AskPrice1[i][0];
+        Trade_CloseProfit[i] = Trade_CloseProfit[i] + Trade_dataA[i][5] - tick_AskPrice1[i][0];
+        Trade_dataA[i][5] = tick_AskPrice1[i][0];
+        cerr << "--->>> æŠ¥å•: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "ä¹°å¹³å®šæ—¶" << "_" << Trade_dataA[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
+        if (simMode) { WriteTradeConfiguration(); }
+        _record1("æŠ¥å•:", "ä¹°å¹³å®šæ—¶", Trade_dataA[i][5], int(Trade_dataA[i][3]), i);
+    }
 
-	//ÊÕÅÌÆ½²Ö
+    //æ”¶ç›˜å¹³ä»“
 
-	if (Trade_dataA[i][2] == 1 && ((system_times>0.1455 && system_times<0.1456) || (system_times>0.2350 && system_times <= 0.2356)))
-	{
-		SendOrder(InstrumentID_n[i], 1, 3, 0, i);
-		TradingSignalA[i] = false;
+    if (Trade_dataA[i][2] == 1 && ((system_times>0.1455 && system_times<0.1456) || (system_times>0.2350 && system_times <= 0.2356)))
+    {
+        SendOrder(InstrumentID_n[i], 1, 3, 0, i);
+        TradingSignalA[i] = false;
 
-		Trade_dataA[i][0] = 0;
-		Trade_dataA[i][2] = 0;
-		Trade_dataA[i][3] = 0;
-		Trade_Closetimes[i] = Trade_Closetimes[i] + 1;
-		Day_CloseProfit[i] = Day_CloseProfit[i] + tick_BidPrice1[i][0] - Trade_dataA[i][5];
-		Trade_CloseProfit[i] = Trade_CloseProfit[i] + tick_BidPrice1[i][0] - Trade_dataA[i][5];
-		Trade_dataA[i][5] = tick_BidPrice1[i][0];
-		cerr << "--->>> ±¨µ¥: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "ÂôÆ½ÊÕÅÌ" << "_" << Trade_dataA[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
-		_record1("±¨µ¥:", "ÂôÆ½ÊÕÅÌ", Trade_dataA[i][5], int(Trade_dataA[i][3]), i);
-	}
-	if (Trade_dataA[i][2] == -1 && ((system_times>0.1455 && system_times <= 0.1456) || (system_times>0.2350 && system_times <= 0.2356)))
-	{
-		SendOrder(InstrumentID_n[i], 0, 3, 0, i);
-		TradingSignalA[i] = false;
+        Trade_dataA[i][0] = 0;
+        Trade_dataA[i][2] = 0;
+        Trade_dataA[i][3] = 0;
+        Trade_Closetimes[i] = Trade_Closetimes[i] + 1;
+        Day_CloseProfit[i] = Day_CloseProfit[i] + tick_BidPrice1[i][0] - Trade_dataA[i][5];
+        Trade_CloseProfit[i] = Trade_CloseProfit[i] + tick_BidPrice1[i][0] - Trade_dataA[i][5];
+        Trade_dataA[i][5] = tick_BidPrice1[i][0];
+        cerr << "--->>> æŠ¥å•: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "å–å¹³æ”¶ç›˜" << "_" << Trade_dataA[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
+        _record1("æŠ¥å•:", "å–å¹³æ”¶ç›˜", Trade_dataA[i][5], int(Trade_dataA[i][3]), i);
+    }
+    if (Trade_dataA[i][2] == -1 && ((system_times>0.1455 && system_times <= 0.1456) || (system_times>0.2350 && system_times <= 0.2356)))
+    {
+        SendOrder(InstrumentID_n[i], 0, 3, 0, i);
+        TradingSignalA[i] = false;
 
-		Trade_dataA[i][0] = 0;
-		Trade_dataA[i][2] = 0;
-		Trade_dataA[i][3] = 0;
-		Trade_Closetimes[i] = Trade_Closetimes[i] + 1;
-		Day_CloseProfit[i] = Day_CloseProfit[i] + Trade_dataA[i][5] - tick_AskPrice1[i][0];
-		Trade_CloseProfit[i] = Trade_CloseProfit[i] + Trade_dataA[i][5] - tick_AskPrice1[i][0];
-		Trade_dataA[i][5] = tick_AskPrice1[i][0];
-		cerr << "--->>> ±¨µ¥: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "ÂòÆ½ÊÕÅÌ" << "_" << Trade_dataA[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
-		_record1("±¨µ¥:", "ÂòÆ½ÊÕÅÌ", Trade_dataA[i][5], int(Trade_dataA[i][3]), i);
-	}
+        Trade_dataA[i][0] = 0;
+        Trade_dataA[i][2] = 0;
+        Trade_dataA[i][3] = 0;
+        Trade_Closetimes[i] = Trade_Closetimes[i] + 1;
+        Day_CloseProfit[i] = Day_CloseProfit[i] + Trade_dataA[i][5] - tick_AskPrice1[i][0];
+        Trade_CloseProfit[i] = Trade_CloseProfit[i] + Trade_dataA[i][5] - tick_AskPrice1[i][0];
+        Trade_dataA[i][5] = tick_AskPrice1[i][0];
+        cerr << "--->>> æŠ¥å•: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "ä¹°å¹³æ”¶ç›˜" << "_" << Trade_dataA[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
+        _record1("æŠ¥å•:", "ä¹°å¹³æ”¶ç›˜", Trade_dataA[i][5], int(Trade_dataA[i][3]), i);
+    }
 
-	if ((system_times>0.1455 && system_times<0.1459) || (system_times>0.2350 && system_times <= 0.2359))
-	{
-		SnifferSignalA[i] = false;
-	}
+    if ((system_times>0.1455 && system_times<0.1459) || (system_times>0.2350 && system_times <= 0.2359))
+    {
+        SnifferSignalA[i] = false;
+    }
 }
 
 
 void TraderB12(double system_times, int i)
 {
-	void SendOrder(TThostFtdcInstrumentIDType FuturesId, int a, int b, int md, int i);
-	void WriteTradeConfiguration();
-	double GetLocalTimeSec1();
-	void _record1(char *txt1, char *txt2, double m, int n, int i);
+    void SendOrder(TThostFtdcInstrumentIDType FuturesId, int a, int b, int md, int i);
+    void WriteTradeConfiguration();
+    double GetLocalTimeSec1();
+    void _record1(char *txt1, char *txt2, double m, int n, int i);
 
-	bool TradingTimeB = (tick_data[i][2]>0.0920 && tick_data[i][2]<0.1450) || (tick_data[i][2]>0.2105 && tick_data[i][2]<0.2350);
-	bool TradingTimeS = (tick_data[i][2]>0.0920 && tick_data[i][2]<0.1450) || (tick_data[i][2]>0.2105 && tick_data[i][2]<0.2350);
+    bool TradingTimeB = (tick_data[i][2]>0.0920 && tick_data[i][2]<0.1450) || (tick_data[i][2]>0.2105 && tick_data[i][2]<0.2350);
+    bool TradingTimeS = (tick_data[i][2]>0.0920 && tick_data[i][2]<0.1450) || (tick_data[i][2]>0.2105 && tick_data[i][2]<0.2350);
 
-	if (Sniffer_dataB[i][0] > 0 && TradingSignalB[i] == false)
-	{
+    if (Sniffer_dataB[i][0] > 0 && TradingSignalB[i] == false)
+    {
 
-		SnifferSignalB[i] = false;
-		TradingSignalB[i] = true;
+        SnifferSignalB[i] = false;
+        TradingSignalB[i] = true;
 
-		bool fanen = true;		//µ÷ÊÔÓÃ
-		bool duowen = true;		//µ÷ÊÔÓÃ
-		bool kongen = true;		//µ÷ÊÔÓÃ
+        bool fanen = true;        //è°ƒè¯•ç”¨
+        bool duowen = true;        //è°ƒè¯•ç”¨
+        bool kongen = true;        //è°ƒè¯•ç”¨
 
-								//Ğè¼ÓÈë·´ÊÖ²Ù×÷
-		if ((Sniffer_dataB[i][0] == 5 || Sniffer_dataB[i][0] == 98) && Trade_dataB[i][2] == -1 && Trade_dataB[i][3] == 6)
-		{
-			SendOrder(InstrumentID_n[i], 0, 3, 0, i);
-			TradingSignalB[i] = false;
+                                //éœ€åŠ å…¥åæ‰‹æ“ä½œ
+        if ((Sniffer_dataB[i][0] == 5 || Sniffer_dataB[i][0] == 98) && Trade_dataB[i][2] == -1 && Trade_dataB[i][3] == 6)
+        {
+            SendOrder(InstrumentID_n[i], 0, 3, 0, i);
+            TradingSignalB[i] = false;
 
-			Trade_dataB[i][0] = 0;
-			Trade_dataB[i][2] = 0;
-			Trade_dataB[i][3] = 0;
-			Trade_Closetimes[i] = Trade_Closetimes[i] + 1;
-			Day_CloseProfitB[i] = Day_CloseProfitB[i] + Trade_dataB[i][5] - tick_AskPrice1[i][0];
-			Trade_CloseProfit[i] = Trade_CloseProfit[i] + Trade_dataB[i][5] - tick_AskPrice1[i][0];
-			Trade_dataB[i][5] = tick_AskPrice1[i][0];
-			cerr << "--->>> ±¨µ¥: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "ÂòÆ½" << "_" << Trade_dataB[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
-			if (simMode) { WriteTradeConfiguration(); }
-			_record1("±¨µ¥:", "ÂòÆ½", Trade_dataB[i][5], int(Trade_dataB[i][3]), i);
+            Trade_dataB[i][0] = 0;
+            Trade_dataB[i][2] = 0;
+            Trade_dataB[i][3] = 0;
+            Trade_Closetimes[i] = Trade_Closetimes[i] + 1;
+            Day_CloseProfitB[i] = Day_CloseProfitB[i] + Trade_dataB[i][5] - tick_AskPrice1[i][0];
+            Trade_CloseProfit[i] = Trade_CloseProfit[i] + Trade_dataB[i][5] - tick_AskPrice1[i][0];
+            Trade_dataB[i][5] = tick_AskPrice1[i][0];
+            cerr << "--->>> æŠ¥å•: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "ä¹°å¹³" << "_" << Trade_dataB[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
+            if (simMode) { WriteTradeConfiguration(); }
+            _record1("æŠ¥å•:", "ä¹°å¹³", Trade_dataB[i][5], int(Trade_dataB[i][3]), i);
 
-			if (TradingTimeB && fanen && duowen && Day_CloseProfitB[i]>-1 * Trade_StopCloseProfit[i])
-			{
-				SendOrder(InstrumentID_n[i], 0, 0, 0, i);
-				TradingSignalB[i] = false;
+            if (TradingTimeB && fanen && duowen && Day_CloseProfitB[i]>-1 * Trade_StopCloseProfit[i])
+            {
+                SendOrder(InstrumentID_n[i], 0, 0, 0, i);
+                TradingSignalB[i] = false;
 
-				Trade_dataB[i][0] = 0;
-				Trade_dataB[i][1] = tick_data[i][2];
-				Trade_times[i] = Q_BarTime_1n[i];
-				Trade_dataB[i][2] = 1;
-				Trade_dataB[i][3] = 5;
-				Trade_dataB[i][5] = tick_AskPrice1[i][0];
-				cerr << "--->>> ±¨µ¥: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "Âò¿ª" << "_" << Trade_dataB[i][5] << "_" << Trade_dataB[i][3] << endl;
-				if (simMode) { WriteTradeConfiguration(); }
-				_record1("±¨µ¥:", "Âò¿ª", Trade_dataB[i][5], int(Trade_dataB[i][3]), i);
-			}
+                Trade_dataB[i][0] = 0;
+                Trade_dataB[i][1] = tick_data[i][2];
+                Trade_times[i] = Q_BarTime_1n[i];
+                Trade_dataB[i][2] = 1;
+                Trade_dataB[i][3] = 5;
+                Trade_dataB[i][5] = tick_AskPrice1[i][0];
+                cerr << "--->>> æŠ¥å•: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "ä¹°å¼€" << "_" << Trade_dataB[i][5] << "_" << Trade_dataB[i][3] << endl;
+                if (simMode) { WriteTradeConfiguration(); }
+                _record1("æŠ¥å•:", "ä¹°å¼€", Trade_dataB[i][5], int(Trade_dataB[i][3]), i);
+            }
 
-		}
-		else if ((Sniffer_dataB[i][0] == 6 || Sniffer_dataB[i][0] == 98) && Trade_dataB[i][2] == 1 && Trade_dataB[i][3] == 5)
-		{
-			SendOrder(InstrumentID_n[i], 1, 3, 0, i);
-			TradingSignalB[i] = false;
+        }
+        else if ((Sniffer_dataB[i][0] == 6 || Sniffer_dataB[i][0] == 98) && Trade_dataB[i][2] == 1 && Trade_dataB[i][3] == 5)
+        {
+            SendOrder(InstrumentID_n[i], 1, 3, 0, i);
+            TradingSignalB[i] = false;
 
-			Trade_dataB[i][0] = 0;
-			Trade_dataB[i][2] = 0;
-			Trade_dataB[i][3] = 0;
-			Trade_Closetimes[i] = Trade_Closetimes[i] + 1;
-			Day_CloseProfitB[i] = Day_CloseProfitB[i] + tick_BidPrice1[i][0] - Trade_dataB[i][5];
-			Trade_CloseProfit[i] = Trade_CloseProfit[i] + tick_BidPrice1[i][0] - Trade_dataB[i][5];
-			Trade_dataB[i][5] = tick_BidPrice1[i][0];
-			cerr << "--->>> ±¨µ¥: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "ÂôÆ½" << "_" << Trade_dataB[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
-			if (simMode) { WriteTradeConfiguration(); }
-			_record1("±¨µ¥:", "ÂôÆ½", Trade_dataB[i][5], int(Trade_dataB[i][3]), i);
+            Trade_dataB[i][0] = 0;
+            Trade_dataB[i][2] = 0;
+            Trade_dataB[i][3] = 0;
+            Trade_Closetimes[i] = Trade_Closetimes[i] + 1;
+            Day_CloseProfitB[i] = Day_CloseProfitB[i] + tick_BidPrice1[i][0] - Trade_dataB[i][5];
+            Trade_CloseProfit[i] = Trade_CloseProfit[i] + tick_BidPrice1[i][0] - Trade_dataB[i][5];
+            Trade_dataB[i][5] = tick_BidPrice1[i][0];
+            cerr << "--->>> æŠ¥å•: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "å–å¹³" << "_" << Trade_dataB[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
+            if (simMode) { WriteTradeConfiguration(); }
+            _record1("æŠ¥å•:", "å–å¹³", Trade_dataB[i][5], int(Trade_dataB[i][3]), i);
 
-			if (TradingTimeS && fanen   && kongen && Day_CloseProfitB[i]>-1 * Trade_StopCloseProfit[i])
-			{
-				SendOrder(InstrumentID_n[i], 1, 0, 0, i);
-				TradingSignalB[i] = false;
+            if (TradingTimeS && fanen   && kongen && Day_CloseProfitB[i]>-1 * Trade_StopCloseProfit[i])
+            {
+                SendOrder(InstrumentID_n[i], 1, 0, 0, i);
+                TradingSignalB[i] = false;
 
-				Trade_dataB[i][0] = 0;
-				Trade_dataB[i][1] = tick_data[i][2];
-				Trade_times[i] = Q_BarTime_1n[i];
-				Trade_dataB[i][2] = -1;
-				Trade_dataB[i][3] = 6;
-				Trade_dataB[i][5] = tick_BidPrice1[i][0];
-				cerr << "--->>> ±¨µ¥: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "Âô¿ª" << "_" << Trade_dataB[i][5] << "_" << Trade_dataB[i][3] << endl;
-				if (simMode) { WriteTradeConfiguration(); }
-				_record1("±¨µ¥:", "Âô¿ª", Trade_dataB[i][5], int(Trade_dataB[i][3]), i);
-			}
+                Trade_dataB[i][0] = 0;
+                Trade_dataB[i][1] = tick_data[i][2];
+                Trade_times[i] = Q_BarTime_1n[i];
+                Trade_dataB[i][2] = -1;
+                Trade_dataB[i][3] = 6;
+                Trade_dataB[i][5] = tick_BidPrice1[i][0];
+                cerr << "--->>> æŠ¥å•: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "å–å¼€" << "_" << Trade_dataB[i][5] << "_" << Trade_dataB[i][3] << endl;
+                if (simMode) { WriteTradeConfiguration(); }
+                _record1("æŠ¥å•:", "å–å¼€", Trade_dataB[i][5], int(Trade_dataB[i][3]), i);
+            }
 
-		}
-		else if ((Sniffer_dataB[i][0] == 5 || Sniffer_dataB[i][0] == 98) && Trade_dataB[i][2] == 0 && TradingTimeB  && duowen  && Day_CloseProfitB[i]>-1 * Trade_StopCloseProfit[i])
-		{
+        }
+        else if ((Sniffer_dataB[i][0] == 5 || Sniffer_dataB[i][0] == 98) && Trade_dataB[i][2] == 0 && TradingTimeB  && duowen  && Day_CloseProfitB[i]>-1 * Trade_StopCloseProfit[i])
+        {
 
-			SendOrder(InstrumentID_n[i], 0, 0, 0, i);
-			TradingSignalB[i] = false;
+            SendOrder(InstrumentID_n[i], 0, 0, 0, i);
+            TradingSignalB[i] = false;
 
-			Trade_dataB[i][0] = 0;
-			Trade_dataB[i][1] = tick_data[i][2];
-			Trade_times[i] = Q_BarTime_1n[i];
-			Trade_dataB[i][2] = 1;
-			Trade_dataB[i][3] = 5;
-			Trade_dataB[i][5] = tick_AskPrice1[i][0];
-			cerr << "--->>> ±¨µ¥: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "Âò¿ª" << "_" << Trade_dataB[i][5] << "_" << Trade_dataB[i][3] << endl;
-			if (simMode) { WriteTradeConfiguration(); }
-			_record1("±¨µ¥:", "Âò¿ª", Trade_dataB[i][5], int(Trade_dataB[i][3]), i);
+            Trade_dataB[i][0] = 0;
+            Trade_dataB[i][1] = tick_data[i][2];
+            Trade_times[i] = Q_BarTime_1n[i];
+            Trade_dataB[i][2] = 1;
+            Trade_dataB[i][3] = 5;
+            Trade_dataB[i][5] = tick_AskPrice1[i][0];
+            cerr << "--->>> æŠ¥å•: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "ä¹°å¼€" << "_" << Trade_dataB[i][5] << "_" << Trade_dataB[i][3] << endl;
+            if (simMode) { WriteTradeConfiguration(); }
+            _record1("æŠ¥å•:", "ä¹°å¼€", Trade_dataB[i][5], int(Trade_dataB[i][3]), i);
 
-		}
-		else if ((Sniffer_dataB[i][0] == 6 || Sniffer_dataB[i][0] == 98) && Trade_dataB[i][2] == 0 && TradingTimeS  && kongen  && Day_CloseProfitB[i]>-1 * Trade_StopCloseProfit[i])
-		{
+        }
+        else if ((Sniffer_dataB[i][0] == 6 || Sniffer_dataB[i][0] == 98) && Trade_dataB[i][2] == 0 && TradingTimeS  && kongen  && Day_CloseProfitB[i]>-1 * Trade_StopCloseProfit[i])
+        {
 
-			SendOrder(InstrumentID_n[i], 1, 0, 0, i);
-			TradingSignalB[i] = false;
+            SendOrder(InstrumentID_n[i], 1, 0, 0, i);
+            TradingSignalB[i] = false;
 
-			Trade_dataB[i][0] = 0;
-			Trade_dataB[i][1] = tick_data[i][2];
-			Trade_times[i] = Q_BarTime_1n[i];
-			Trade_dataB[i][2] = -1;
-			Trade_dataB[i][3] = 6;
-			Trade_dataB[i][5] = tick_BidPrice1[i][0];
-			cerr << "--->>> ±¨µ¥: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "Âô¿ª" << "_" << Trade_dataB[i][5] << "_" << Trade_dataB[i][3] << endl;
-			if (simMode) { WriteTradeConfiguration(); }
-			_record1("±¨µ¥:", "Âô¿ª", Trade_dataB[i][5], int(Trade_dataB[i][3]), i);
+            Trade_dataB[i][0] = 0;
+            Trade_dataB[i][1] = tick_data[i][2];
+            Trade_times[i] = Q_BarTime_1n[i];
+            Trade_dataB[i][2] = -1;
+            Trade_dataB[i][3] = 6;
+            Trade_dataB[i][5] = tick_BidPrice1[i][0];
+            cerr << "--->>> æŠ¥å•: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "å–å¼€" << "_" << Trade_dataB[i][5] << "_" << Trade_dataB[i][3] << endl;
+            if (simMode) { WriteTradeConfiguration(); }
+            _record1("æŠ¥å•:", "å–å¼€", Trade_dataB[i][5], int(Trade_dataB[i][3]), i);
 
-		}
-		else
-		{
-			TradingSignalB[i] = false;
-		}
-	}
+        }
+        else
+        {
+            TradingSignalB[i] = false;
+        }
+    }
 }
 
 
 void StopLossB12(double system_times, int i)
 {
-	void SendOrder(TThostFtdcInstrumentIDType FuturesId, int a, int b, int md, int i);
-	void WriteTradeConfiguration();
-	int GetLocalTimeSec2();
-	void _record1(char *txt1, char *txt2, double m, int n, int i);
-	bool stopwinen = true;		//µ÷ÊÔÓÃ
-	bool stoplossen = false;		//µ÷ÊÔÓÃ
-	bool stopfanen = false;		//µ÷ÊÔÓÃ
+    void SendOrder(TThostFtdcInstrumentIDType FuturesId, int a, int b, int md, int i);
+    void WriteTradeConfiguration();
+    int GetLocalTimeSec2();
+    void _record1(char *txt1, char *txt2, double m, int n, int i);
+    bool stopwinen = true;        //è°ƒè¯•ç”¨
+    bool stoplossen = false;        //è°ƒè¯•ç”¨
+    bool stopfanen = false;        //è°ƒè¯•ç”¨
 
-								//Ö¹Ó®Æ½²Ö
-	if (Trade_dataB[i][2] == 1 && Trade_dataB[i][3] == 5 && (tick_BidPrice1[i][0] - Trade_dataB[i][5]) >= Trade_Stopwin[i] && stopwinen)
-	{
-		SendOrder(InstrumentID_n[i], 1, 3, 0, i);
-		TradingSignalB[i] = false;
+                                //æ­¢èµ¢å¹³ä»“
+    if (Trade_dataB[i][2] == 1 && Trade_dataB[i][3] == 5 && (tick_BidPrice1[i][0] - Trade_dataB[i][5]) >= Trade_Stopwin[i] && stopwinen)
+    {
+        SendOrder(InstrumentID_n[i], 1, 3, 0, i);
+        TradingSignalB[i] = false;
 
-		//Trade_dataB[i][0] = 0;
-		Trade_dataB[i][2] = 0;
-		Trade_dataB[i][3] = 0;
-		Trade_Closetimes[i] = Trade_Closetimes[i] + 1;
-		Day_CloseProfitB[i] = Day_CloseProfitB[i] + tick_BidPrice1[i][0] - Trade_dataB[i][5];
-		Trade_CloseProfit[i] = Trade_CloseProfit[i] + tick_BidPrice1[i][0] - Trade_dataB[i][5];
-		Trade_dataB[i][5] = tick_BidPrice1[i][0];
-		cerr << "--->>> ±¨µ¥: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "ÂôÆ½Ö¹Ó®" << "_" << Trade_dataB[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
-		if (simMode) { WriteTradeConfiguration(); }
-		_record1("±¨µ¥:", "ÂôÆ½Ö¹Ó®", Trade_dataB[i][5], int(Trade_dataB[i][3]), i);
-	}
-	if (Trade_dataB[i][2] == -1 && Trade_dataB[i][3] == 6 && (Trade_dataB[i][5] - tick_AskPrice1[i][0]) >= Trade_Stopwin[i] && stopwinen)
-	{
-		SendOrder(InstrumentID_n[i], 0, 3, 0, i);
-		TradingSignalB[i] = false;
+        //Trade_dataB[i][0] = 0;
+        Trade_dataB[i][2] = 0;
+        Trade_dataB[i][3] = 0;
+        Trade_Closetimes[i] = Trade_Closetimes[i] + 1;
+        Day_CloseProfitB[i] = Day_CloseProfitB[i] + tick_BidPrice1[i][0] - Trade_dataB[i][5];
+        Trade_CloseProfit[i] = Trade_CloseProfit[i] + tick_BidPrice1[i][0] - Trade_dataB[i][5];
+        Trade_dataB[i][5] = tick_BidPrice1[i][0];
+        cerr << "--->>> æŠ¥å•: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "å–å¹³æ­¢èµ¢" << "_" << Trade_dataB[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
+        if (simMode) { WriteTradeConfiguration(); }
+        _record1("æŠ¥å•:", "å–å¹³æ­¢èµ¢", Trade_dataB[i][5], int(Trade_dataB[i][3]), i);
+    }
+    if (Trade_dataB[i][2] == -1 && Trade_dataB[i][3] == 6 && (Trade_dataB[i][5] - tick_AskPrice1[i][0]) >= Trade_Stopwin[i] && stopwinen)
+    {
+        SendOrder(InstrumentID_n[i], 0, 3, 0, i);
+        TradingSignalB[i] = false;
 
-		//Trade_dataB[i][0] = 0;
-		Trade_dataB[i][2] = 0;
-		Trade_dataB[i][3] = 0;
-		Trade_Closetimes[i] = Trade_Closetimes[i] + 1;
-		Day_CloseProfitB[i] = Day_CloseProfitB[i] + Trade_dataB[i][5] - tick_AskPrice1[i][0];
-		Trade_CloseProfit[i] = Trade_CloseProfit[i] + Trade_dataB[i][5] - tick_AskPrice1[i][0];
-		Trade_dataB[i][5] = tick_AskPrice1[i][0];
-		cerr << "--->>> ±¨µ¥: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "ÂòÆ½Ö¹Ó®" << "_" << Trade_dataB[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
-		if (simMode) { WriteTradeConfiguration(); }
-		_record1("±¨µ¥:", "ÂòÆ½Ö¹Ó®", Trade_dataB[i][5], int(Trade_dataB[i][3]), i);
-	}
+        //Trade_dataB[i][0] = 0;
+        Trade_dataB[i][2] = 0;
+        Trade_dataB[i][3] = 0;
+        Trade_Closetimes[i] = Trade_Closetimes[i] + 1;
+        Day_CloseProfitB[i] = Day_CloseProfitB[i] + Trade_dataB[i][5] - tick_AskPrice1[i][0];
+        Trade_CloseProfit[i] = Trade_CloseProfit[i] + Trade_dataB[i][5] - tick_AskPrice1[i][0];
+        Trade_dataB[i][5] = tick_AskPrice1[i][0];
+        cerr << "--->>> æŠ¥å•: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "ä¹°å¹³æ­¢èµ¢" << "_" << Trade_dataB[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
+        if (simMode) { WriteTradeConfiguration(); }
+        _record1("æŠ¥å•:", "ä¹°å¹³æ­¢èµ¢", Trade_dataB[i][5], int(Trade_dataB[i][3]), i);
+    }
 
-	//Ö¹ËğÆ½²Ö
-	if (Trade_dataB[i][2] == 1 && Trade_dataB[i][3] == 5 && (Trade_dataB[i][5] - tick_BidPrice1[i][0]) >= Trade_Stoploss[i] && stoplossen)
-	{
-		SendOrder(InstrumentID_n[i], 1, 3, 0, i);
-		TradingSignalB[i] = false;
+    //æ­¢æŸå¹³ä»“
+    if (Trade_dataB[i][2] == 1 && Trade_dataB[i][3] == 5 && (Trade_dataB[i][5] - tick_BidPrice1[i][0]) >= Trade_Stoploss[i] && stoplossen)
+    {
+        SendOrder(InstrumentID_n[i], 1, 3, 0, i);
+        TradingSignalB[i] = false;
 
-		//Trade_dataB[i][0] = 0;
-		Trade_dataB[i][2] = 0;
-		Trade_dataB[i][3] = 0;
-		Trade_Closetimes[i] = Trade_Closetimes[i] + 1;
-		Day_CloseProfitB[i] = Day_CloseProfitB[i] + tick_BidPrice1[i][0] - Trade_dataB[i][5];
-		Trade_CloseProfit[i] = Trade_CloseProfit[i] + tick_BidPrice1[i][0] - Trade_dataB[i][5];
-		Trade_dataB[i][5] = tick_BidPrice1[i][0];
-		cerr << "--->>> ±¨µ¥: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "ÂôÆ½Ö¹Ëğ" << "_" << Trade_dataB[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
-		if (simMode) { WriteTradeConfiguration(); }
-		_record1("±¨µ¥:", "ÂôÆ½Ö¹Ëğ", Trade_dataB[i][5], int(Trade_dataB[i][3]), i);
+        //Trade_dataB[i][0] = 0;
+        Trade_dataB[i][2] = 0;
+        Trade_dataB[i][3] = 0;
+        Trade_Closetimes[i] = Trade_Closetimes[i] + 1;
+        Day_CloseProfitB[i] = Day_CloseProfitB[i] + tick_BidPrice1[i][0] - Trade_dataB[i][5];
+        Trade_CloseProfit[i] = Trade_CloseProfit[i] + tick_BidPrice1[i][0] - Trade_dataB[i][5];
+        Trade_dataB[i][5] = tick_BidPrice1[i][0];
+        cerr << "--->>> æŠ¥å•: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "å–å¹³æ­¢æŸ" << "_" << Trade_dataB[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
+        if (simMode) { WriteTradeConfiguration(); }
+        _record1("æŠ¥å•:", "å–å¹³æ­¢æŸ", Trade_dataB[i][5], int(Trade_dataB[i][3]), i);
 
-	}
-	if (Trade_dataB[i][2] == -1 && Trade_dataB[i][3] == 6 && (tick_AskPrice1[i][0] - Trade_dataB[i][5]) >= Trade_Stoploss[i] && stoplossen)
-	{
-		SendOrder(InstrumentID_n[i], 0, 3, 0, i);
-		TradingSignalB[i] = false;
+    }
+    if (Trade_dataB[i][2] == -1 && Trade_dataB[i][3] == 6 && (tick_AskPrice1[i][0] - Trade_dataB[i][5]) >= Trade_Stoploss[i] && stoplossen)
+    {
+        SendOrder(InstrumentID_n[i], 0, 3, 0, i);
+        TradingSignalB[i] = false;
 
-		//Trade_dataB[i][0] = 0;
-		Trade_dataB[i][2] = 0;
-		Trade_dataB[i][3] = 0;
-		Trade_Closetimes[i] = Trade_Closetimes[i] + 1;
-		Day_CloseProfitB[i] = Day_CloseProfitB[i] + Trade_dataB[i][5] - tick_AskPrice1[i][0];
-		Trade_CloseProfit[i] = Trade_CloseProfit[i] + Trade_dataB[i][5] - tick_AskPrice1[i][0];
-		Trade_dataB[i][5] = tick_AskPrice1[i][0];
-		cerr << "--->>> ±¨µ¥: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "ÂòÆ½Ö¹Ëğ" << "_" << Trade_dataB[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
-		if (simMode) { WriteTradeConfiguration(); }
-		_record1("±¨µ¥:", "ÂòÆ½Ö¹Ëğ", Trade_dataB[i][5], int(Trade_dataB[i][3]), i);
+        //Trade_dataB[i][0] = 0;
+        Trade_dataB[i][2] = 0;
+        Trade_dataB[i][3] = 0;
+        Trade_Closetimes[i] = Trade_Closetimes[i] + 1;
+        Day_CloseProfitB[i] = Day_CloseProfitB[i] + Trade_dataB[i][5] - tick_AskPrice1[i][0];
+        Trade_CloseProfit[i] = Trade_CloseProfit[i] + Trade_dataB[i][5] - tick_AskPrice1[i][0];
+        Trade_dataB[i][5] = tick_AskPrice1[i][0];
+        cerr << "--->>> æŠ¥å•: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "ä¹°å¹³æ­¢æŸ" << "_" << Trade_dataB[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
+        if (simMode) { WriteTradeConfiguration(); }
+        _record1("æŠ¥å•:", "ä¹°å¹³æ­¢æŸ", Trade_dataB[i][5], int(Trade_dataB[i][3]), i);
 
-	}
+    }
 }
 
 
 
 void StopEndTime_B(double system_times, int i)
 {
-	void SendOrder(TThostFtdcInstrumentIDType FuturesId, int a, int b, int md, int i);
-	void WriteTradeConfiguration();
-	int GetLocalTimeSec2();
-	void _record1(char *txt1, char *txt2, double m, int n, int i);
+    void SendOrder(TThostFtdcInstrumentIDType FuturesId, int a, int b, int md, int i);
+    void WriteTradeConfiguration();
+    int GetLocalTimeSec2();
+    void _record1(char *txt1, char *txt2, double m, int n, int i);
 
-	bool stopdingshien = false;	//µ÷ÊÔÓÃ
-	int n = 10;					//10·ÖÖÓ¶¨Ê±Æ½²Ö
-	int nowtime = GetLocalTimeSec2();
+    bool stopdingshien = false;    //è°ƒè¯•ç”¨
+    int n = 10;                    //10åˆ†é’Ÿå®šæ—¶å¹³ä»“
+    int nowtime = GetLocalTimeSec2();
 
-	//¶¨Ê±Æ½²Ö
-	if (Trade_dataB[i][2] == 1 && (Q_BarTime_1n[i] - Trade_times[i])>n * 60 && stopdingshien)
-	{
-		SendOrder(InstrumentID_n[i], 1, 3, 0, i);
-		TradingSignalB[i] = false;
+    //å®šæ—¶å¹³ä»“
+    if (Trade_dataB[i][2] == 1 && (Q_BarTime_1n[i] - Trade_times[i])>n * 60 && stopdingshien)
+    {
+        SendOrder(InstrumentID_n[i], 1, 3, 0, i);
+        TradingSignalB[i] = false;
 
-		Trade_dataB[i][0] = 0;
-		Trade_dataB[i][2] = 0;
-		Trade_dataB[i][3] = 0;
-		Trade_Closetimes[i] = Trade_Closetimes[i] + 1;
-		Day_CloseProfitB[i] = Day_CloseProfitB[i] + tick_BidPrice1[i][0] - Trade_dataB[i][5];
-		Trade_CloseProfit[i] = Trade_CloseProfit[i] + tick_BidPrice1[i][0] - Trade_dataB[i][5];
-		Trade_dataB[i][5] = tick_BidPrice1[i][0];
-		cerr << "--->>> ±¨µ¥: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "ÂôÆ½¶¨Ê±" << "_" << Trade_dataB[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
-		if (simMode) { WriteTradeConfiguration(); }
-		_record1("±¨µ¥:", "ÂôÆ½¶¨Ê±", Trade_dataB[i][5], int(Trade_dataB[i][3]), i);
-	}
-	if (Trade_dataB[i][2] == -1 && (Q_BarTime_1n[i] - Trade_times[i])>n * 60 && stopdingshien)
-	{
-		SendOrder(InstrumentID_n[i], 0, 3, 0, i);
-		TradingSignalB[i] = false;
+        Trade_dataB[i][0] = 0;
+        Trade_dataB[i][2] = 0;
+        Trade_dataB[i][3] = 0;
+        Trade_Closetimes[i] = Trade_Closetimes[i] + 1;
+        Day_CloseProfitB[i] = Day_CloseProfitB[i] + tick_BidPrice1[i][0] - Trade_dataB[i][5];
+        Trade_CloseProfit[i] = Trade_CloseProfit[i] + tick_BidPrice1[i][0] - Trade_dataB[i][5];
+        Trade_dataB[i][5] = tick_BidPrice1[i][0];
+        cerr << "--->>> æŠ¥å•: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "å–å¹³å®šæ—¶" << "_" << Trade_dataB[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
+        if (simMode) { WriteTradeConfiguration(); }
+        _record1("æŠ¥å•:", "å–å¹³å®šæ—¶", Trade_dataB[i][5], int(Trade_dataB[i][3]), i);
+    }
+    if (Trade_dataB[i][2] == -1 && (Q_BarTime_1n[i] - Trade_times[i])>n * 60 && stopdingshien)
+    {
+        SendOrder(InstrumentID_n[i], 0, 3, 0, i);
+        TradingSignalB[i] = false;
 
-		Trade_dataB[i][0] = 0;
-		Trade_dataB[i][2] = 0;
-		Trade_dataB[i][3] = 0;
-		Trade_Closetimes[i] = Trade_Closetimes[i] + 1;
-		Day_CloseProfitB[i] = Day_CloseProfitB[i] + Trade_dataB[i][5] - tick_AskPrice1[i][0];
-		Trade_CloseProfit[i] = Trade_CloseProfit[i] + Trade_dataB[i][5] - tick_AskPrice1[i][0];
-		Trade_dataB[i][5] = tick_AskPrice1[i][0];
-		cerr << "--->>> ±¨µ¥: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "ÂòÆ½¶¨Ê±" << "_" << Trade_dataB[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
-		if (simMode) { WriteTradeConfiguration(); }
-		_record1("±¨µ¥:", "ÂòÆ½¶¨Ê±", Trade_dataB[i][5], int(Trade_dataB[i][3]), i);
-	}
+        Trade_dataB[i][0] = 0;
+        Trade_dataB[i][2] = 0;
+        Trade_dataB[i][3] = 0;
+        Trade_Closetimes[i] = Trade_Closetimes[i] + 1;
+        Day_CloseProfitB[i] = Day_CloseProfitB[i] + Trade_dataB[i][5] - tick_AskPrice1[i][0];
+        Trade_CloseProfit[i] = Trade_CloseProfit[i] + Trade_dataB[i][5] - tick_AskPrice1[i][0];
+        Trade_dataB[i][5] = tick_AskPrice1[i][0];
+        cerr << "--->>> æŠ¥å•: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "ä¹°å¹³å®šæ—¶" << "_" << Trade_dataB[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
+        if (simMode) { WriteTradeConfiguration(); }
+        _record1("æŠ¥å•:", "ä¹°å¹³å®šæ—¶", Trade_dataB[i][5], int(Trade_dataB[i][3]), i);
+    }
 
-	//ÊÕÅÌÆ½²Ö
+    //æ”¶ç›˜å¹³ä»“
 
-	if (Trade_dataB[i][2] == 1 && ((system_times>0.1455 && system_times<0.1456) || (system_times>0.2350 && system_times <= 0.2356)))
-	{
-		SendOrder(InstrumentID_n[i], 1, 3, 0, i);
-		TradingSignalB[i] = false;
+    if (Trade_dataB[i][2] == 1 && ((system_times>0.1455 && system_times<0.1456) || (system_times>0.2350 && system_times <= 0.2356)))
+    {
+        SendOrder(InstrumentID_n[i], 1, 3, 0, i);
+        TradingSignalB[i] = false;
 
-		Trade_dataB[i][0] = 0;
-		Trade_dataB[i][2] = 0;
-		Trade_dataB[i][3] = 0;
-		Trade_Closetimes[i] = Trade_Closetimes[i] + 1;
-		Day_CloseProfitB[i] = Day_CloseProfitB[i] + tick_BidPrice1[i][0] - Trade_dataB[i][5];
-		Trade_CloseProfit[i] = Trade_CloseProfit[i] + tick_BidPrice1[i][0] - Trade_dataB[i][5];
-		Trade_dataB[i][5] = tick_BidPrice1[i][0];
-		cerr << "--->>> ±¨µ¥: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "ÂôÆ½ÊÕÅÌ" << "_" << Trade_dataB[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
-		_record1("±¨µ¥:", "ÂôÆ½ÊÕÅÌ", Trade_dataB[i][5], int(Trade_dataB[i][3]), i);
-	}
-	if (Trade_dataB[i][2] == -1 && ((system_times>0.1455 && system_times <= 0.1456) || (system_times>0.2350 && system_times <= 0.2356)))
-	{
-		SendOrder(InstrumentID_n[i], 0, 3, 0, i);
-		TradingSignalB[i] = false;
+        Trade_dataB[i][0] = 0;
+        Trade_dataB[i][2] = 0;
+        Trade_dataB[i][3] = 0;
+        Trade_Closetimes[i] = Trade_Closetimes[i] + 1;
+        Day_CloseProfitB[i] = Day_CloseProfitB[i] + tick_BidPrice1[i][0] - Trade_dataB[i][5];
+        Trade_CloseProfit[i] = Trade_CloseProfit[i] + tick_BidPrice1[i][0] - Trade_dataB[i][5];
+        Trade_dataB[i][5] = tick_BidPrice1[i][0];
+        cerr << "--->>> æŠ¥å•: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "å–å¹³æ”¶ç›˜" << "_" << Trade_dataB[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
+        _record1("æŠ¥å•:", "å–å¹³æ”¶ç›˜", Trade_dataB[i][5], int(Trade_dataB[i][3]), i);
+    }
+    if (Trade_dataB[i][2] == -1 && ((system_times>0.1455 && system_times <= 0.1456) || (system_times>0.2350 && system_times <= 0.2356)))
+    {
+        SendOrder(InstrumentID_n[i], 0, 3, 0, i);
+        TradingSignalB[i] = false;
 
-		Trade_dataB[i][0] = 0;
-		Trade_dataB[i][2] = 0;
-		Trade_dataB[i][3] = 0;
-		Trade_Closetimes[i] = Trade_Closetimes[i] + 1;
-		Day_CloseProfitB[i] = Day_CloseProfitB[i] + Trade_dataB[i][5] - tick_AskPrice1[i][0];
-		Trade_CloseProfit[i] = Trade_CloseProfit[i] + Trade_dataB[i][5] - tick_AskPrice1[i][0];
-		Trade_dataB[i][5] = tick_AskPrice1[i][0];
-		cerr << "--->>> ±¨µ¥: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "ÂòÆ½ÊÕÅÌ" << "_" << Trade_dataB[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
-		_record1("±¨µ¥:", "ÂòÆ½ÊÕÅÌ", Trade_dataB[i][5], int(Trade_dataB[i][3]), i);
-	}
+        Trade_dataB[i][0] = 0;
+        Trade_dataB[i][2] = 0;
+        Trade_dataB[i][3] = 0;
+        Trade_Closetimes[i] = Trade_Closetimes[i] + 1;
+        Day_CloseProfitB[i] = Day_CloseProfitB[i] + Trade_dataB[i][5] - tick_AskPrice1[i][0];
+        Trade_CloseProfit[i] = Trade_CloseProfit[i] + Trade_dataB[i][5] - tick_AskPrice1[i][0];
+        Trade_dataB[i][5] = tick_AskPrice1[i][0];
+        cerr << "--->>> æŠ¥å•: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "ä¹°å¹³æ”¶ç›˜" << "_" << Trade_dataB[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
+        _record1("æŠ¥å•:", "ä¹°å¹³æ”¶ç›˜", Trade_dataB[i][5], int(Trade_dataB[i][3]), i);
+    }
 
-	if ((system_times>0.1455 && system_times<0.1459) || (system_times>0.2350 && system_times <= 0.2359))
-	{
-		SnifferSignalB[i] = false;
-		Day_CloseProfitB[i] = 0;
-	}
+    if ((system_times>0.1455 && system_times<0.1459) || (system_times>0.2350 && system_times <= 0.2359))
+    {
+        SnifferSignalB[i] = false;
+        Day_CloseProfitB[i] = 0;
+    }
 }
 
-void Istrading()	//²ßÂÔ£¬ÏÂµ¥
+void Istrading()    //ç­–ç•¥ï¼Œä¸‹å•
 {
-	for (int i = 0; i < 20; i++)
-	{
-		if (1)//i!=8 && i!=9)	//	²âÊÔÓÃ£¬ÔİÊ±²»½»Ò×ag£¬cu,¶Ô·ÂÕæ£¬ÊµÅÌ¾ùÓĞĞ§
-		{
+    for (int i = 0; i < 20; i++)
+    {
+        if (1)//i!=8 && i!=9)    //    æµ‹è¯•ç”¨ï¼Œæš‚æ—¶ä¸äº¤æ˜“agï¼Œcu,å¯¹ä»¿çœŸï¼Œå®ç›˜å‡æœ‰æ•ˆ
+        {
 
-			StopEndTime_A(tick_data[i][2], i);
-			StopEndTime_B(tick_data[i][2], i);
+            StopEndTime_A(tick_data[i][2], i);
+            StopEndTime_B(tick_data[i][2], i);
 
-			if (simMode)
-			{
-				if ((tick_data[i][2]>0.0913 && i>17) || (tick_data[i][2]>0.0858 && i <= 17))
-				{
-					StopLossA12(tick_data[i][2], i);		//Master
-					if (Sniffer_dataA[i][0] > 0)
-					{
-						TraderA12(tick_data[i][2], i);		//Master
-						Sniffer_dataA[i][0] = 0;
-					}
+            if (simMode)
+            {
+                if ((tick_data[i][2]>0.0913 && i>17) || (tick_data[i][2]>0.0858 && i <= 17))
+                {
+                    StopLossA12(tick_data[i][2], i);        //Master
+                    if (Sniffer_dataA[i][0] > 0)
+                    {
+                        TraderA12(tick_data[i][2], i);        //Master
+                        Sniffer_dataA[i][0] = 0;
+                    }
 
-					StopLossB12(tick_data[i][2], i);
-					if (Sniffer_dataB[i][0] > 0)
-					{
-						TraderB12(tick_data[i][2], i);
-						Sniffer_dataB[i][0] = 0;
-					}
-				}
-			}
-			else	//²âÊÔÄ£Ê½
-			{
-				StopLossA12(tick_data[i][2], i);		//Master
-				if (Sniffer_dataA[i][0] > 0)
-				{
-					TraderA12(tick_data[i][2], i);		//Master
-					Sniffer_dataA[i][0] = 0;
-				}
+                    StopLossB12(tick_data[i][2], i);
+                    if (Sniffer_dataB[i][0] > 0)
+                    {
+                        TraderB12(tick_data[i][2], i);
+                        Sniffer_dataB[i][0] = 0;
+                    }
+                }
+            }
+            else    //æµ‹è¯•æ¨¡å¼
+            {
+                StopLossA12(tick_data[i][2], i);        //Master
+                if (Sniffer_dataA[i][0] > 0)
+                {
+                    TraderA12(tick_data[i][2], i);        //Master
+                    Sniffer_dataA[i][0] = 0;
+                }
 
-				StopLossB12(tick_data[i][2], i);
-				if (Sniffer_dataB[i][0] > 0)
-				{
-					TraderB12(tick_data[i][2], i);
-					Sniffer_dataB[i][0] = 0;
-				}
-			}
-		}
-	}
+                StopLossB12(tick_data[i][2], i);
+                if (Sniffer_dataB[i][0] > 0)
+                {
+                    TraderB12(tick_data[i][2], i);
+                    Sniffer_dataB[i][0] = 0;
+                }
+            }
+        }
+    }
 }
 
 void Simulation_onefile(char  *pathstt)
 {
-	void _record0(char *txt);
+    void _record0(char *txt);
 
-	char Readfilepaths[50] = "";
-	strcpy(Readfilepaths, "./testdata/");
-	strcat(Readfilepaths, pathstt);
-	//cout << Readfilepaths << endl;	//´òÓ¡ÕûĞĞÊı¾İ
+    char Readfilepaths[50] = "";
+    strcpy(Readfilepaths, "./testdata/");
+    strcat(Readfilepaths, pathstt);
+    //cout << Readfilepaths << endl;    //æ‰“å°æ•´è¡Œæ•°æ®
 
-	ifstream fin(Readfilepaths, std::ios::in);
+    ifstream fin(Readfilepaths, std::ios::in);
 
-	string str = pathstt;
-	string str0 = "";
-	size_t iPos = str.find("_");
-	str0 = str.substr(0, iPos);
+    string str = pathstt;
+    string str0 = "";
+    size_t iPos = str.find("_");
+    str0 = str.substr(0, iPos);
 
-	strcpy(LogFilePaths, "./Simulation/Simulation_");
-	strcat(LogFilePaths, str0.c_str());
-	strcat(LogFilePaths, ".txt");
+    strcpy(LogFilePaths, "./Simulation/Simulation_");
+    strcat(LogFilePaths, str0.c_str());
+    strcat(LogFilePaths, ".txt");
 
-	Sleep(3000);
-	char line[1024] = { 0 };
-	vector < double > data(16);
+    Sleep(3000);
+    char line[1024] = { 0 };
+    vector < double > data(16);
 
-	_record0("¿ªÊ¼²âÊÔ£¡£¡£¡");
-	int t0 = 0;
+    _record0("å¼€å§‹æµ‹è¯•ï¼ï¼ï¼");
+    int t0 = 0;
 
-	while (fin.getline(line, sizeof(line)))
-	{
-		std::stringstream word(line);
-		//cout << line << endl;	//´òÓ¡ÕûĞĞÊı¾İ
-		//Sleep(100);
+    while (fin.getline(line, sizeof(line)))
+    {
+        std::stringstream word(line);
+        //cout << line << endl;    //æ‰“å°æ•´è¡Œæ•°æ®
+        //Sleep(100);
 
-		t0 = t0 + 1;
+        t0 = t0 + 1;
 
-		for (int i = 0; i < 20; i++)
-		{
+        for (int i = 0; i < 20; i++)
+        {
 
-			if (InstrumentID_n[i] == str0 && testfile)
-			{
+            if (InstrumentID_n[i] == str0 && testfile)
+            {
 
-				InstrumentID_name = InstrumentID_n[i];
-				tick_data[i][0] = 1;//ÉèÖÃ±êÖ¾Î»
-				ReceiveTick[i] = true;
+                InstrumentID_name = InstrumentID_n[i];
+                tick_data[i][0] = 1;//è®¾ç½®æ ‡å¿—ä½
+                ReceiveTick[i] = true;
 
-				for (int j = 0; j < 10; j++)
-				{
-					word >> data[j];
-					//cout << "Configuration:" << data[j] << endl;	//´òÓ¡Ä³¸öÊı¾İ 
-				}
+                for (int j = 0; j < 10; j++)
+                {
+                    word >> data[j];
+                    //cout << "Configuration:" << data[j] << endl;    //æ‰“å°æŸä¸ªæ•°æ® 
+                }
 
-				Q_BarTime_1n[i] = (int(data[1] * 100)) * 60 * 60 + (int((data[1] * 100 - int(data[1] * 100)) * 100)) * 60 + (int((data[1] * 10000 - int(data[1] * 10000)) * 100));
+                Q_BarTime_1n[i] = (int(data[1] * 100)) * 60 * 60 + (int((data[1] * 100 - int(data[1] * 100)) * 100)) * 60 + (int((data[1] * 10000 - int(data[1] * 10000)) * 100));
 
-				tick_data[i][1] = data[0];
-				tick_data[i][2] = data[1];
+                tick_data[i][1] = data[0];
+                tick_data[i][2] = data[1];
 
-				if ((tick_data[i][2]>0.0856 && tick_data[i][2]<0.0900 && i <= 13) || (tick_data[i][2]>0.2056 && tick_data[i][2]<0.2100 && i>13 && i <= 17) || (tick_data[i][2]>0.0913 && tick_data[i][2]<0.0915 && i>17))
-				{
-					Day_open[i][0] = data[3];
-					Day_CloseProfit[i] = 0;
-					Day_CloseProfitA[i] = 0;
-					Day_CloseProfitB[i] = 0;
+                if ((tick_data[i][2]>0.0856 && tick_data[i][2]<0.0900 && i <= 13) || (tick_data[i][2]>0.2056 && tick_data[i][2]<0.2100 && i>13 && i <= 17) || (tick_data[i][2]>0.0913 && tick_data[i][2]<0.0915 && i>17))
+                {
+                    Day_open[i][0] = data[3];
+                    Day_CloseProfit[i] = 0;
+                    Day_CloseProfitA[i] = 0;
+                    Day_CloseProfitB[i] = 0;
 
-				}
+                }
 
-				for (int j = 59; j > 0; j--)
-				{
-					tick_AskPrice1[i][j] = tick_AskPrice1[i][j - 1];
-					tick_BidPrice1[i][j] = tick_BidPrice1[i][j - 1];
-					tick_AskVolume1[i][j] = tick_AskVolume1[i][j - 1];
-					tick_BidVolume1[i][j] = tick_BidVolume1[i][j - 1];
-					tick_Volume[i][j] = tick_Volume[i][j - 1];
-					tick_OpenInterest[i][j] = tick_OpenInterest[i][j - 1];
-				}
+                for (int j = 59; j > 0; j--)
+                {
+                    tick_AskPrice1[i][j] = tick_AskPrice1[i][j - 1];
+                    tick_BidPrice1[i][j] = tick_BidPrice1[i][j - 1];
+                    tick_AskVolume1[i][j] = tick_AskVolume1[i][j - 1];
+                    tick_BidVolume1[i][j] = tick_BidVolume1[i][j - 1];
+                    tick_Volume[i][j] = tick_Volume[i][j - 1];
+                    tick_OpenInterest[i][j] = tick_OpenInterest[i][j - 1];
+                }
 
-				tick_AskPrice1[i][0] = data[3];
-				tick_BidPrice1[i][0] = data[5];
-				tick_AskVolume1[i][0] = data[4];
-				tick_BidVolume1[i][0] = data[6];
-				tick_Volume[i][0] = data[8];
-				tick_OpenInterest[i][0] = data[9];
+                tick_AskPrice1[i][0] = data[3];
+                tick_BidPrice1[i][0] = data[5];
+                tick_AskVolume1[i][0] = data[4];
+                tick_BidVolume1[i][0] = data[6];
+                tick_Volume[i][0] = data[8];
+                tick_OpenInterest[i][0] = data[9];
 
-				//cout << "Configuration:" << tick_data[i][2] << endl;	//´òÓ¡Ä³¸öÊı¾İ
-				ReceiveTick[i] = false;
-				//}
+                //cout << "Configuration:" << tick_data[i][2] << endl;    //æ‰“å°æŸä¸ªæ•°æ®
+                ReceiveTick[i] = false;
+                //}
 
-				Sniffer();
-				Istrading();
-				Sniffer();
-				Istrading();			//ÖØ¸´ÊÇÎªÁËºÍÊµ¼ÊÒ»ÖÂ£¬1¸ötickÊÕµ½ºó²ßÂÔ¿ÉÄÜ±»¶à´ÎÔËĞĞ¡£
-										//Sleep(100);
-										//cout << "Configuration:2_" << setprecision(9) <<GetLocalTimeMs1() << endl;	//´òÓ¡Ä³¸öÊı¾İ	//æ‰“å°æŸä¸ªæ•°æ®
-			}
-		}
-	}
-	fin.clear();
-	fin.close();
+                Sniffer();
+                Istrading();
+                Sniffer();
+                Istrading();            //é‡å¤æ˜¯ä¸ºäº†å’Œå®é™…ä¸€è‡´ï¼Œ1ä¸ªtickæ”¶åˆ°åç­–ç•¥å¯èƒ½è¢«å¤šæ¬¡è¿è¡Œã€‚
+                                        //Sleep(100);
+                                        //cout << "Configuration:2_" << setprecision(9) <<GetLocalTimeMs1() << endl;    //æ‰“å°æŸä¸ªæ•°æ®    //éµæ’³åµƒéŒæ„ªé‡œéç‰ˆåµ
+            }
+        }
+    }
+    fin.clear();
+    fin.close();
 }
 
 void _record1(char *txt1, char *txt2, double m, int n, int i)
 {
-	string ff2ss(double nums);
+    string ff2ss(double nums);
 
-	ofstream o_file(LogFilePaths, ios::app);
-	if (n>0)
-	{
-		if (n>0 && n <= 4)
-		{
-			o_file << txt1 << ff2ss(tick_data[i][1]) << "_" << tick_data[i][2] << "_" << InstrumentID_n[i] << "_" << InstrumentID_lots[i] << "_" << txt2 << "_" << Trade_dataA[i][5] << "_" << Trade_dataA[i][3] << endl; //½«ÄÚÈİĞ´Èëµ½ÎÄ±¾ÎÄ¼şÖĞ
-		}
-		else if (n>4 && n <= 6)
-		{
-			o_file << txt1 << ff2ss(tick_data[i][1]) << "_" << tick_data[i][2] << "_" << InstrumentID_n[i] << "_" << InstrumentID_lots[i] << "_" << txt2 << "_" << Trade_dataB[i][5] << "_" << Trade_dataB[i][3] << endl; //½«ÄÚÈİĞ´Èëµ½ÎÄ±¾ÎÄ¼şÖĞ
-		}
+    ofstream o_file(LogFilePaths, ios::app);
+    if (n>0)
+    {
+        if (n>0 && n <= 4)
+        {
+            o_file << txt1 << ff2ss(tick_data[i][1]) << "_" << tick_data[i][2] << "_" << InstrumentID_n[i] << "_" << InstrumentID_lots[i] << "_" << txt2 << "_" << Trade_dataA[i][5] << "_" << Trade_dataA[i][3] << endl; //å°†å†…å®¹å†™å…¥åˆ°æ–‡æœ¬æ–‡ä»¶ä¸­
+        }
+        else if (n>4 && n <= 6)
+        {
+            o_file << txt1 << ff2ss(tick_data[i][1]) << "_" << tick_data[i][2] << "_" << InstrumentID_n[i] << "_" << InstrumentID_lots[i] << "_" << txt2 << "_" << Trade_dataB[i][5] << "_" << Trade_dataB[i][3] << endl; //å°†å†…å®¹å†™å…¥åˆ°æ–‡æœ¬æ–‡ä»¶ä¸­
+        }
 
-	}
-	else
-	{
-		//																																					--´ıĞŞ¸Ä£¡£¡£¡
-		o_file << txt1 << ff2ss(tick_data[i][1]) << "_" << tick_data[i][2] << "_" << InstrumentID_n[i] << "_" << InstrumentID_lots[i] << "_" << txt2 << "_" << m << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl; //½«ÄÚÈİĞ´Èëµ½ÎÄ±¾ÎÄ¼şÖĞ
-	}
-	o_file.close();						//¹Ø±ÕÎÄ¼ş
+    }
+    else
+    {
+        //                                                                                                                                                    --å¾…ä¿®æ”¹ï¼ï¼ï¼
+        o_file << txt1 << ff2ss(tick_data[i][1]) << "_" << tick_data[i][2] << "_" << InstrumentID_n[i] << "_" << InstrumentID_lots[i] << "_" << txt2 << "_" << m << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl; //å°†å†…å®¹å†™å…¥åˆ°æ–‡æœ¬æ–‡ä»¶ä¸­
+    }
+    o_file.close();                        //å…³é—­æ–‡ä»¶
 }
 
 double GetLocalTimeSec1()
 {
-	SYSTEMTIME sys_time;
-	GetLocalTime(&sys_time);
-	double system_times;
-	system_times = (double)((sys_time.wHour) / 10e1) + (double)((sys_time.wMinute) / 10e3) + (double)((sys_time.wSecond) / 10e5);	//¸ñÊ½Ê±¼ä0.145100
-	return system_times;
+    SYSTEMTIME sys_time;
+    GetLocalTime(&sys_time);
+    double system_times;
+    system_times = (double)((sys_time.wHour) / 10e1) + (double)((sys_time.wMinute) / 10e3) + (double)((sys_time.wSecond) / 10e5);    //æ ¼å¼æ—¶é—´0.145100
+    return system_times;
 }
 
 int GetLocalTimeSec2()
 {
-	SYSTEMTIME sys_time;
-	GetLocalTime(&sys_time);
-	int system_times;
-	system_times = (int)((sys_time.wHour) * 60 * 60) + (int)((sys_time.wMinute) * 60) + (int)((sys_time.wSecond));					//¸ñÊ½Ê±¼äint sec
-	return system_times;
+    SYSTEMTIME sys_time;
+    GetLocalTime(&sys_time);
+    int system_times;
+    system_times = (int)((sys_time.wHour) * 60 * 60) + (int)((sys_time.wMinute) * 60) + (int)((sys_time.wSecond));                    //æ ¼å¼æ—¶é—´int sec
+    return system_times;
 }
 
 double GetLocalTimeMs1()
 {
-	SYSTEMTIME sys_time;
-	GetLocalTime(&sys_time);
-	double system_times;
-	system_times = (double)((sys_time.wHour) / 10e1) + (double)((sys_time.wMinute) / 10e3) + (double)((sys_time.wSecond) / 10e5) + (double)((sys_time.wMilliseconds) / 10e8);	//¸ñÊ½Ê±¼ä0.145100500
-	return system_times;
+    SYSTEMTIME sys_time;
+    GetLocalTime(&sys_time);
+    double system_times;
+    system_times = (double)((sys_time.wHour) / 10e1) + (double)((sys_time.wMinute) / 10e3) + (double)((sys_time.wSecond) / 10e5) + (double)((sys_time.wMilliseconds) / 10e8);    //æ ¼å¼æ—¶é—´0.145100500
+    return system_times;
 }
 
 int GetLocalTimeMs2()
 {
-	SYSTEMTIME sys_time;
-	GetLocalTime(&sys_time);
-	int system_times;
-	system_times = ((int)((sys_time.wHour) * 60 * 60) + (int)((sys_time.wMinute) * 60) + (int)((sys_time.wSecond))) * 1000 + (int)((sys_time.wMilliseconds));	//¸ñÊ½Ê±¼äint ms
-	return system_times;
+    SYSTEMTIME sys_time;
+    GetLocalTime(&sys_time);
+    int system_times;
+    system_times = ((int)((sys_time.wHour) * 60 * 60) + (int)((sys_time.wMinute) * 60) + (int)((sys_time.wSecond))) * 1000 + (int)((sys_time.wMilliseconds));    //æ ¼å¼æ—¶é—´int ms
+    return system_times;
 }
 
 bool ReadMdConfiguration()
 {
-	ifstream config("./AutoTrader.dat");
+    ifstream config("./AutoTrader.dat");
 
-	if (!config)
-	{
-		cerr << "--->>> " << "MdConfiguration File is missing!" << endl;
-		return false;
-	}
-	else
-	{
-		cerr << "--->>> " << "Read MdConfiguration File!" << endl;
-	}
+    if (!config)
+    {
+        cerr << "--->>> " << "MdConfiguration File is missing!" << endl;
+        return false;
+    }
+    else
+    {
+        cerr << "--->>> " << "Read MdConfiguration File!" << endl;
+    }
 
-	char line[1024] = { 0 };
-	vector < double > data(10);
+    char line[1024] = { 0 };
+    vector < double > data(10);
 
-	ifstream fin("./AutoTrader.dat", std::ios::in);
-	int i = 0;
+    ifstream fin("./AutoTrader.dat", std::ios::in);
+    int i = 0;
 
-	while (fin.getline(line, sizeof(line)))
-	{
-		std::stringstream word(line);
-		//cout << line << endl;	//´òÓ¡ÕûĞĞÊı¾İ
-		//Sleep(100);
-		double Day_fprice_t[9];
+    while (fin.getline(line, sizeof(line)))
+    {
+        std::stringstream word(line);
+        //cout << line << endl;    //æ‰“å°æ•´è¡Œæ•°æ®
+        //Sleep(100);
+        double Day_fprice_t[9];
 
-		for (int j = 0; j < 9; j++)
-		{
-			word >> Day_fprice_t[j];
-			//cout << Day_fprice_t[i][j] << endl;	//´òÓ¡ÕûĞĞÊı¾İ
-		}
+        for (int j = 0; j < 9; j++)
+        {
+            word >> Day_fprice_t[j];
+            //cout << Day_fprice_t[i][j] << endl;    //æ‰“å°æ•´è¡Œæ•°æ®
+        }
 
-		Day_open[i][1] = Day_fprice_t[5];
-		Day_high[i][1] = Day_fprice_t[6];
-		Day_low[i][1] = Day_fprice_t[7];
-		Day_close[i][1] = Day_fprice_t[8];
+        Day_open[i][1] = Day_fprice_t[5];
+        Day_high[i][1] = Day_fprice_t[6];
+        Day_low[i][1] = Day_fprice_t[7];
+        Day_close[i][1] = Day_fprice_t[8];
 
-		Day_open[i][2] = Day_fprice_t[1];
-		Day_high[i][2] = Day_fprice_t[2];
-		Day_low[i][2] = Day_fprice_t[3];
-		Day_close[i][2] = Day_fprice_t[4];
+        Day_open[i][2] = Day_fprice_t[1];
+        Day_high[i][2] = Day_fprice_t[2];
+        Day_low[i][2] = Day_fprice_t[3];
+        Day_close[i][2] = Day_fprice_t[4];
 
-		i++;
-	}
-	config.close();
-	return true;
+        i++;
+    }
+    config.close();
+    return true;
 }
 
 bool ReadTradeConfiguration()
 {
-	ifstream config("./AutoTrader.cfg");
+    ifstream config("./AutoTrader.cfg");
 
-	if (!config)
-	{
-		cerr << "--->>> " << "TradeConfiguration File is missing!" << endl;
-		return false;
-	}
-	else
-	{
-		cerr << "--->>> " << "Read TradeConfiguration File!" << endl;
-	}
+    if (!config)
+    {
+        cerr << "--->>> " << "TradeConfiguration File is missing!" << endl;
+        return false;
+    }
+    else
+    {
+        cerr << "--->>> " << "Read TradeConfiguration File!" << endl;
+    }
 
-	char line[1024] = { 0 };
-	vector < double > data(10);
-	double temp0 = 0;
-	double temp1 = 0;
+    char line[1024] = { 0 };
+    vector < double > data(10);
+    double temp0 = 0;
+    double temp1 = 0;
 
-	ifstream fin("./AutoTrader.cfg", std::ios::in);
-	int i = 0;
-	int it = 0;
+    ifstream fin("./AutoTrader.cfg", std::ios::in);
+    int i = 0;
+    int it = 0;
 
-	while (fin.getline(line, sizeof(line)))
-	{
-		i = int(it % 20);
-		std::stringstream word(line);
+    while (fin.getline(line, sizeof(line)))
+    {
+        i = int(it % 20);
+        std::stringstream word(line);
 
-		for (int j = 0; j < 9; j++)
-		{
-			if (j == 0)
-			{
-				word >> temp0;
-			}
-			else if (j == 1)
-			{
-				word >> temp1;
-			}
-			else if (j>1 && j <= 6)
-			{
-				if (it<20)
-				{
-					word >> Trade_dataA[i][j - 1];
-				}
-				else if (it >= 20 && it<40)
-				{
-					word >> Trade_dataB[i][j - 1];
-				}
-				else if (it >= 40 && it<60)
-				{
-					word >> Trade_dataC[i][j - 1];
-				}
+        for (int j = 0; j < 9; j++)
+        {
+            if (j == 0)
+            {
+                word >> temp0;
+            }
+            else if (j == 1)
+            {
+                word >> temp1;
+            }
+            else if (j>1 && j <= 6)
+            {
+                if (it<20)
+                {
+                    word >> Trade_dataA[i][j - 1];
+                }
+                else if (it >= 20 && it<40)
+                {
+                    word >> Trade_dataB[i][j - 1];
+                }
+                else if (it >= 40 && it<60)
+                {
+                    word >> Trade_dataC[i][j - 1];
+                }
 
-			}
-			else if (j == 7)
-			{
-				word >> Trade_Closetimes[i];
-			}
-			else if (j == 8)
-			{
-				word >> Trade_CloseProfit[i];
-			}
-		}
+            }
+            else if (j == 7)
+            {
+                word >> Trade_Closetimes[i];
+            }
+            else if (j == 8)
+            {
+                word >> Trade_CloseProfit[i];
+            }
+        }
 
-		if (temp1>0 && temp1<5)
-		{
-			if (Trade_dataA[i][2]>0.5)
-			{
-				cerr << "--->>> ±¨µ¥: " << InstrumentID_n[i] << "_" << Trade_dataA[i][1] << "_" << Trade_dataA[i][3] << "_" << "Âò¿ª" << "_" << Trade_dataA[i][5] << endl;
-			}
-			else if (Trade_dataA[i][2]<-0.5)
-			{
-				cerr << "--->>> ±¨µ¥: " << InstrumentID_n[i] << "_" << Trade_dataA[i][1] << "_" << Trade_dataA[i][3] << "_" << "Âô¿ª" << "_" << Trade_dataA[i][5] << endl;
-			}
-		}
-		else if (temp1>4 && temp1<7)
-		{
-			if (Trade_dataB[i][2]>0.5)
-			{
-				cerr << "--->>> ±¨µ¥: " << InstrumentID_n[i] << "_" << Trade_dataB[i][1] << "_" << Trade_dataB[i][3] << "_" << "Âò¿ª" << "_" << Trade_dataB[i][5] << endl;
-			}
-			else if (Trade_dataB[i][2]<-0.5)
-			{
-				cerr << "--->>> ±¨µ¥: " << InstrumentID_n[i] << "_" << Trade_dataB[i][1] << "_" << Trade_dataB[i][3] << "_" << "Âô¿ª" << "_" << Trade_dataB[i][5] << endl;
-			}
-		}
-		it++;
-	}
-	config.close();
-	return true;
+        if (temp1>0 && temp1<5)
+        {
+            if (Trade_dataA[i][2]>0.5)
+            {
+                cerr << "--->>> æŠ¥å•: " << InstrumentID_n[i] << "_" << Trade_dataA[i][1] << "_" << Trade_dataA[i][3] << "_" << "ä¹°å¼€" << "_" << Trade_dataA[i][5] << endl;
+            }
+            else if (Trade_dataA[i][2]<-0.5)
+            {
+                cerr << "--->>> æŠ¥å•: " << InstrumentID_n[i] << "_" << Trade_dataA[i][1] << "_" << Trade_dataA[i][3] << "_" << "å–å¼€" << "_" << Trade_dataA[i][5] << endl;
+            }
+        }
+        else if (temp1>4 && temp1<7)
+        {
+            if (Trade_dataB[i][2]>0.5)
+            {
+                cerr << "--->>> æŠ¥å•: " << InstrumentID_n[i] << "_" << Trade_dataB[i][1] << "_" << Trade_dataB[i][3] << "_" << "ä¹°å¼€" << "_" << Trade_dataB[i][5] << endl;
+            }
+            else if (Trade_dataB[i][2]<-0.5)
+            {
+                cerr << "--->>> æŠ¥å•: " << InstrumentID_n[i] << "_" << Trade_dataB[i][1] << "_" << Trade_dataB[i][3] << "_" << "å–å¼€" << "_" << Trade_dataB[i][5] << endl;
+            }
+        }
+        it++;
+    }
+    config.close();
+    return true;
 }
 
 void WriteMdConfiguration()
 {
-	string ff2ss(double nums);
+    string ff2ss(double nums);
 
-	ofstream o_file("./AutoTrader.dat", ios::trunc);		//±£´æ½ü2ÌìµÄÈÕÏßÊı¾İ
-	for (int i = 0; i < 20; i++)
-	{
-		Day_open[i][2] = Day_open[i][1];
-		Day_high[i][2] = Day_high[i][1];
-		Day_low[i][2] = Day_low[i][1];
-		Day_close[i][2] = Day_close[i][1];
+    ofstream o_file("./AutoTrader.dat", ios::trunc);        //ä¿å­˜è¿‘2å¤©çš„æ—¥çº¿æ•°æ®
+    for (int i = 0; i < 20; i++)
+    {
+        Day_open[i][2] = Day_open[i][1];
+        Day_high[i][2] = Day_high[i][1];
+        Day_low[i][2] = Day_low[i][1];
+        Day_close[i][2] = Day_close[i][1];
 
-		Day_open[i][1] = Day_open[i][0];
-		Day_high[i][1] = Day_high[i][0];
-		Day_low[i][1] = Day_low[i][0];
-		Day_close[i][1] = Day_close[i][0];
+        Day_open[i][1] = Day_open[i][0];
+        Day_high[i][1] = Day_high[i][0];
+        Day_low[i][1] = Day_low[i][0];
+        Day_close[i][1] = Day_close[i][0];
 
-		//o_file << ff2ss(tick_data[0][1]) << "\t" <<tick_data[i][2] <<"\t"<< Mn_open << " " << Mn_high << " " << Mn_low << " " << Mn_close << endl; //½«ÄÚÈİĞ´Èëµ½ÎÄ±¾ÎÄ¼şÖĞ
-		o_file << ff2ss(tick_data[i][1]) << "\t" << Day_open[i][2] << "\t" << Day_high[i][2] << "\t" << Day_low[i][2] << "\t" << Day_close[i][2] << "\t" << Day_open[i][1] << "\t" << Day_high[i][1] << "\t" << Day_low[i][1] << "\t" << Day_close[i][1] << endl; //½«ÄÚÈİĞ´Èëµ½ÎÄ±¾ÎÄ¼şÖĞ
-	}
-	o_file.close();						//¹Ø±ÕÎÄ¼ş
+        //o_file << ff2ss(tick_data[0][1]) << "\t" <<tick_data[i][2] <<"\t"<< Mn_open << " " << Mn_high << " " << Mn_low << " " << Mn_close << endl; //å°†å†…å®¹å†™å…¥åˆ°æ–‡æœ¬æ–‡ä»¶ä¸­
+        o_file << ff2ss(tick_data[i][1]) << "\t" << Day_open[i][2] << "\t" << Day_high[i][2] << "\t" << Day_low[i][2] << "\t" << Day_close[i][2] << "\t" << Day_open[i][1] << "\t" << Day_high[i][1] << "\t" << Day_low[i][1] << "\t" << Day_close[i][1] << endl; //å°†å†…å®¹å†™å…¥åˆ°æ–‡æœ¬æ–‡ä»¶ä¸­
+    }
+    o_file.close();                        //å…³é—­æ–‡ä»¶
 }
 
 void WriteTradeConfiguration()
 {
-	string ff2ss(double nums);
-	int	tn = 0;
+    string ff2ss(double nums);
+    int    tn = 0;
 
-	ofstream o_file("./AutoTrader.cfg", ios::trunc);
-	for (int i = 0; i < 20; i++)
-	{
-		o_file << ff2ss(tick_data[i][1]) << "\t" << Trade_dataA[i][3] << "\t" << Trade_dataA[i][1] << "\t" << Trade_dataA[i][2] << "\t" << Trade_dataA[i][3] << "\t" << Trade_dataA[i][4] << "\t" << Trade_dataA[i][5] << "\t" << Trade_Closetimes[i] << "\t" << Trade_CloseProfit[i] << endl; //½«ÄÚÈİĞ´Èëµ½ÎÄ±¾ÎÄ¼şÖĞ
-	}
+    ofstream o_file("./AutoTrader.cfg", ios::trunc);
+    for (int i = 0; i < 20; i++)
+    {
+        o_file << ff2ss(tick_data[i][1]) << "\t" << Trade_dataA[i][3] << "\t" << Trade_dataA[i][1] << "\t" << Trade_dataA[i][2] << "\t" << Trade_dataA[i][3] << "\t" << Trade_dataA[i][4] << "\t" << Trade_dataA[i][5] << "\t" << Trade_Closetimes[i] << "\t" << Trade_CloseProfit[i] << endl; //å°†å†…å®¹å†™å…¥åˆ°æ–‡æœ¬æ–‡ä»¶ä¸­
+    }
 
-	for (int i = 0; i < 20; i++)
-	{
-		o_file << ff2ss(tick_data[i][1]) << "\t" << Trade_dataB[i][3] << "\t" << Trade_dataB[i][1] << "\t" << Trade_dataB[i][2] << "\t" << Trade_dataB[i][3] << "\t" << Trade_dataB[i][4] << "\t" << Trade_dataB[i][5] << "\t" << Trade_Closetimes[i] << "\t" << Trade_CloseProfit[i] << endl; //½«ÄÚÈİĞ´Èëµ½ÎÄ±¾ÎÄ¼şÖĞ
-	}
-	o_file.close();						//¹Ø±ÕÎÄ¼ş
+    for (int i = 0; i < 20; i++)
+    {
+        o_file << ff2ss(tick_data[i][1]) << "\t" << Trade_dataB[i][3] << "\t" << Trade_dataB[i][1] << "\t" << Trade_dataB[i][2] << "\t" << Trade_dataB[i][3] << "\t" << Trade_dataB[i][4] << "\t" << Trade_dataB[i][5] << "\t" << Trade_Closetimes[i] << "\t" << Trade_CloseProfit[i] << endl; //å°†å†…å®¹å†™å…¥åˆ°æ–‡æœ¬æ–‡ä»¶ä¸­
+    }
+    o_file.close();                        //å…³é—­æ–‡ä»¶
 }
 
 void ErasingTradeConfiguration()
 {
-	int	tn = 0;
-	ofstream o_file("./AutoTrader.cfg", ios::trunc);
+    int    tn = 0;
+    ofstream o_file("./AutoTrader.cfg", ios::trunc);
 
-	for (int i = 0; i < 20; i++)
-	{
-		o_file << ff2ss(tick_data[i][1]) << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << endl; //½«ÄÚÈİĞ´Èëµ½ÎÄ±¾ÎÄ¼şÖĞ
-	}
+    for (int i = 0; i < 20; i++)
+    {
+        o_file << ff2ss(tick_data[i][1]) << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << endl; //å°†å†…å®¹å†™å…¥åˆ°æ–‡æœ¬æ–‡ä»¶ä¸­
+    }
 
-	for (int i = 0; i < 20; i++)
-	{
-		o_file << ff2ss(tick_data[i][1]) << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << endl; //½«ÄÚÈİĞ´Èëµ½ÎÄ±¾ÎÄ¼şÖĞ
-	}
-	o_file.close();						//¹Ø±ÕÎÄ¼ş
+    for (int i = 0; i < 20; i++)
+    {
+        o_file << ff2ss(tick_data[i][1]) << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << "\t" << tn << endl; //å°†å†…å®¹å†™å…¥åˆ°æ–‡æœ¬æ–‡ä»¶ä¸­
+    }
+    o_file.close();                        //å…³é—­æ–‡ä»¶
 }
 
 void Erasefiles()
 {
-	system("del .\\thostmduserapi.dllDialogRsp.con");
-	system("del .\\thostmduserapi.dllQueryRsp.con");
-	system("del .\\thostmduserapi.dllTradingDay.con");
+    system("del .\\thostmduserapi.dllDialogRsp.con");
+    system("del .\\thostmduserapi.dllQueryRsp.con");
+    system("del .\\thostmduserapi.dllTradingDay.con");
 
-	system("del .\\thosttraderapi.dllDialogRsp.con");
-	system("del .\\thosttraderapi.dllPrivate.con");
-	system("del .\\thosttraderapi.dllPublic.con");
-	system("del .\\thosttraderapi.dllQueryRsp.con");
-	system("del .\\thosttraderapi.dllTradingDay.con");
+    system("del .\\thosttraderapi.dllDialogRsp.con");
+    system("del .\\thosttraderapi.dllPrivate.con");
+    system("del .\\thosttraderapi.dllPublic.con");
+    system("del .\\thosttraderapi.dllQueryRsp.con");
+    system("del .\\thosttraderapi.dllTradingDay.con");
 }
 
-//±¨µ¥-ÏŞ¼Û
+//æŠ¥å•-é™ä»·
 void SendOrder(TThostFtdcInstrumentIDType FuturesId, int BuySell, int OpenClose, int md, int i)
 {
 
-	strcpy(STFTDC.INSTRUMENT_ID, InstrumentID_n[i]);
-	//cerr << "--->>> ±¨µ¥Â¼ÈëÇëÇó: " <<INSTRUMENT_ID<< endl;
+    strcpy(STFTDC.INSTRUMENT_ID, InstrumentID_n[i]);
+    //cerr << "--->>> æŠ¥å•å½•å…¥è¯·æ±‚: " <<INSTRUMENT_ID<< endl;
 
-	STFTDC.DIRECTION = BuySell;
-	STFTDC.MARKETState = OpenClose;
+    STFTDC.DIRECTION = BuySell;
+    STFTDC.MARKETState = OpenClose;
 
-	//Sleep(050);
+    //Sleep(050);
 
-	CThostFtdcInputOrderField req;
-	memset(&req, 0, sizeof(req));
-	///¾­¼Í¹«Ë¾´úÂë
-	strcpy_s(req.BrokerID, STFTDC.BROKER_ID);
-	///Í¶×ÊÕß´úÂë
-	strcpy_s(req.InvestorID, STFTDC.INVESTOR_ID);
-	///ºÏÔ¼´úÂë											//INSTRUMENT_ID
-	strcpy_s(req.InstrumentID, STFTDC.INSTRUMENT_ID);
-	///±¨µ¥ÒıÓÃ
-	//strcpy_s(req.OrderRef, ORDER_REF);				//ÏÂµ¥Ç°ĞŞ¸Ä
-	///ÓÃ»§´úÂë
-	//	TThostFtdcUserIDType	UserID;
-	///±¨µ¥¼Û¸ñÌõ¼ş: ÏŞ¼Û
-	req.OrderPriceType = THOST_FTDC_OPT_LimitPrice;
+    CThostFtdcInputOrderField req;
+    memset(&req, 0, sizeof(req));
+    ///ç»çºªå…¬å¸ä»£ç 
+    strcpy_s(req.BrokerID, STFTDC.BROKER_ID);
+    ///æŠ•èµ„è€…ä»£ç 
+    strcpy_s(req.InvestorID, STFTDC.INVESTOR_ID);
+    ///åˆçº¦ä»£ç                                             //INSTRUMENT_ID
+    strcpy_s(req.InstrumentID, STFTDC.INSTRUMENT_ID);
+    ///æŠ¥å•å¼•ç”¨
+    //strcpy_s(req.OrderRef, ORDER_REF);                //ä¸‹å•å‰ä¿®æ”¹
+    ///ç”¨æˆ·ä»£ç 
+    //    TThostFtdcUserIDType    UserID;
+    ///æŠ¥å•ä»·æ ¼æ¡ä»¶: é™ä»·
+    req.OrderPriceType = THOST_FTDC_OPT_LimitPrice;
 
-	///ÂòÂô·½Ïò:										//THOST_FTDC_D_Buy,THOST_FTDC_D_Sell
-	if (BuySell == 0)
-	{
-		req.Direction = THOST_FTDC_D_Buy;
-	}
-	else if (BuySell == 1)
-	{
-		req.Direction = THOST_FTDC_D_Sell;
-	}
+    ///ä¹°å–æ–¹å‘:                                        //THOST_FTDC_D_Buy,THOST_FTDC_D_Sell
+    if (BuySell == 0)
+    {
+        req.Direction = THOST_FTDC_D_Buy;
+    }
+    else if (BuySell == 1)
+    {
+        req.Direction = THOST_FTDC_D_Sell;
+    }
 
-	///×éºÏ¿ªÆ½±êÖ¾: ¿ª²Ö								//THOST_FTDC_OF_Open,THOST_FTDC_OF_Close,THOST_FTDC_OF_CloseToday
-	if (OpenClose == 0)
-	{
-		req.CombOffsetFlag[0] = THOST_FTDC_OF_Open;
-	}
-	else if (OpenClose == 1)
-	{
-		req.CombOffsetFlag[0] = THOST_FTDC_OF_Close;		//ÆäËû½»Ò×ËùÆ½½ñ£¬Æ½×ò£¬ÉÏÆÚÆ½×ò
-	}
-	else if (OpenClose == 3)
-	{
-		req.CombOffsetFlag[0] = THOST_FTDC_OF_CloseToday;	//ÉÏÆÚÆ½½ñ
-	}
+    ///ç»„åˆå¼€å¹³æ ‡å¿—: å¼€ä»“                                //THOST_FTDC_OF_Open,THOST_FTDC_OF_Close,THOST_FTDC_OF_CloseToday
+    if (OpenClose == 0)
+    {
+        req.CombOffsetFlag[0] = THOST_FTDC_OF_Open;
+    }
+    else if (OpenClose == 1)
+    {
+        req.CombOffsetFlag[0] = THOST_FTDC_OF_Close;        //å…¶ä»–äº¤æ˜“æ‰€å¹³ä»Šï¼Œå¹³æ˜¨ï¼Œä¸ŠæœŸå¹³æ˜¨
+    }
+    else if (OpenClose == 3)
+    {
+        req.CombOffsetFlag[0] = THOST_FTDC_OF_CloseToday;    //ä¸ŠæœŸå¹³ä»Š
+    }
 
-	///×éºÏÍ¶»úÌ×±£±êÖ¾
-	req.CombHedgeFlag[0] = THOST_FTDC_HF_Speculation;	//Í¶»ú
+    ///ç»„åˆæŠ•æœºå¥—ä¿æ ‡å¿—
+    req.CombHedgeFlag[0] = THOST_FTDC_HF_Speculation;    //æŠ•æœº
 
-														///¼Û¸ñ
-	if (md)
-	{
-		if (BuySell == 0)
-		{
-			STFTDC.LIMIT_PRICE = tick_data[i][8];
-		}
-		else if (BuySell == 1)
-		{
-			STFTDC.LIMIT_PRICE = tick_data[i][9];
-		}
-	}
-	else
-	{
-		if (BuySell == 0)
-		{
-			STFTDC.LIMIT_PRICE = tick_AskPrice1[i][0];
-		}
-		else if (BuySell == 1)
-		{
-			STFTDC.LIMIT_PRICE = tick_BidPrice1[i][0];
-		}
-	}
+                                                        ///ä»·æ ¼
+    if (md)
+    {
+        if (BuySell == 0)
+        {
+            STFTDC.LIMIT_PRICE = tick_data[i][8];
+        }
+        else if (BuySell == 1)
+        {
+            STFTDC.LIMIT_PRICE = tick_data[i][9];
+        }
+    }
+    else
+    {
+        if (BuySell == 0)
+        {
+            STFTDC.LIMIT_PRICE = tick_AskPrice1[i][0];
+        }
+        else if (BuySell == 1)
+        {
+            STFTDC.LIMIT_PRICE = tick_BidPrice1[i][0];
+        }
+    }
 
-	req.LimitPrice = STFTDC.LIMIT_PRICE;
+    req.LimitPrice = STFTDC.LIMIT_PRICE;
 
-	///ÊıÁ¿: 1											//     ¿ªÆ½²ÖÊıÁ¿
-	req.VolumeTotalOriginal = InstrumentID_lots[i];
-	///ÓĞĞ§ÆÚÀàĞÍ: µ±ÈÕÓĞĞ§
-	req.TimeCondition = THOST_FTDC_TC_GFD;
-	///GTDÈÕÆÚ
-	//	TThostFtdcDateType	GTDDate;
-	///³É½»Á¿ÀàĞÍ: ÈÎºÎÊıÁ¿
-	req.VolumeCondition = THOST_FTDC_VC_AV;
-	///×îĞ¡³É½»Á¿: 1
-	req.MinVolume = 1;
-	///´¥·¢Ìõ¼ş: Á¢¼´
-	req.ContingentCondition = THOST_FTDC_CC_Immediately;
-	///Ö¹Ëğ¼Û
-	//	TThostFtdcPriceType	StopPrice;
-	///Ç¿Æ½Ô­Òò: ·ÇÇ¿Æ½
-	req.ForceCloseReason = THOST_FTDC_FCC_NotForceClose;
-	///×Ô¶¯¹ÒÆğ±êÖ¾: ·ñ
-	req.IsAutoSuspend = 0;
-	///ÒµÎñµ¥Ôª
-	//	TThostFtdcBusinessUnitType	BusinessUnit;
-	///ÇëÇó±àºÅ
-	//	TThostFtdcRequestIDType	RequestID;
-	///ÓÃ»§Ç¿ÆÀ±êÖ¾: ·ñ
-	req.UserForceClose = 0;
+    ///æ•°é‡: 1                                            //     å¼€å¹³ä»“æ•°é‡
+    req.VolumeTotalOriginal = InstrumentID_lots[i];
+    ///æœ‰æ•ˆæœŸç±»å‹: å½“æ—¥æœ‰æ•ˆ
+    req.TimeCondition = THOST_FTDC_TC_GFD;
+    ///GTDæ—¥æœŸ
+    //    TThostFtdcDateType    GTDDate;
+    ///æˆäº¤é‡ç±»å‹: ä»»ä½•æ•°é‡
+    req.VolumeCondition = THOST_FTDC_VC_AV;
+    ///æœ€å°æˆäº¤é‡: 1
+    req.MinVolume = 1;
+    ///è§¦å‘æ¡ä»¶: ç«‹å³
+    req.ContingentCondition = THOST_FTDC_CC_Immediately;
+    ///æ­¢æŸä»·
+    //    TThostFtdcPriceType    StopPrice;
+    ///å¼ºå¹³åŸå› : éå¼ºå¹³
+    req.ForceCloseReason = THOST_FTDC_FCC_NotForceClose;
+    ///è‡ªåŠ¨æŒ‚èµ·æ ‡å¿—: å¦
+    req.IsAutoSuspend = 0;
+    ///ä¸šåŠ¡å•å…ƒ
+    //    TThostFtdcBusinessUnitType    BusinessUnit;
+    ///è¯·æ±‚ç¼–å·
+    //    TThostFtdcRequestIDType    RequestID;
+    ///ç”¨æˆ·å¼ºè¯„æ ‡å¿—: å¦
+    req.UserForceClose = 0;
 
-	if (simMode && InstrumentID_En[i] == 1)
-	{
-		///±¨µ¥ÒıÓÃ
-		int iNextOrderRef = atoi(STFTDC.ORDER_REF);
-		iNextOrderRef++;
-		sprintf(STFTDC.ORDER_REF, "%d", iNextOrderRef);
-		strcpy_s(req.OrderRef, STFTDC.ORDER_REF);
-		//sprintf(ORDERACTION_REF[i], ORDER_REF);	//±£´æ
+    if (simMode && InstrumentID_En[i] == 1)
+    {
+        ///æŠ¥å•å¼•ç”¨
+        int iNextOrderRef = atoi(STFTDC.ORDER_REF);
+        iNextOrderRef++;
+        sprintf(STFTDC.ORDER_REF, "%d", iNextOrderRef);
+        strcpy_s(req.OrderRef, STFTDC.ORDER_REF);
+        //sprintf(ORDERACTION_REF[i], ORDER_REF);    //ä¿å­˜
 
-		int iResult = usrApi->ReqOrderInsert(&req, ++iRequestID);		//ÊµÅÌ£¬»áÕıÊ½ÏÂµ¥
-		cerr << "--->>> ±¨µ¥Â¼ÈëÇëÇó: " << InstrumentID_n[i] << ((iResult == 0) ? " ³É¹¦" : " Ê§°Ü") << endl;
-	}
-	else
-	{
-		int iResult = 0;	//²âÊÔ£¬²»ÕæÕıÏÂµ¥
-							//cerr << "--->>> ±¨µ¥Â¼ÈëÇëÇó: " <<InstrumentID_n[i]<< ((iResult == 0) ? " ³É¹¦" : " Ê§°Ü") << endl;
-	}
+        int iResult = usrApi->ReqOrderInsert(&req, ++iRequestID);        //å®ç›˜ï¼Œä¼šæ­£å¼ä¸‹å•
+        cerr << "--->>> æŠ¥å•å½•å…¥è¯·æ±‚: " << InstrumentID_n[i] << ((iResult == 0) ? " æˆåŠŸ" : " å¤±è´¥") << endl;
+    }
+    else
+    {
+        int iResult = 0;    //æµ‹è¯•ï¼Œä¸çœŸæ­£ä¸‹å•
+                            //cerr << "--->>> æŠ¥å•å½•å…¥è¯·æ±‚: " <<InstrumentID_n[i]<< ((iResult == 0) ? " æˆåŠŸ" : " å¤±è´¥") << endl;
+    }
 }
 
 void Simulation()
 {
-	void Erasefiles();
-	bool ReadMdConfiguration();
-	bool ReadTradeConfiguration();
-	void _record0(char *txt);
-	void Sniffer();
-	void SendOrder(TThostFtdcInstrumentIDType FuturesId, int BuySell, int OpenClose, int i);
+    void Erasefiles();
+    bool ReadMdConfiguration();
+    bool ReadTradeConfiguration();
+    void _record0(char *txt);
+    void Sniffer();
+    void SendOrder(TThostFtdcInstrumentIDType FuturesId, int BuySell, int OpenClose, int i);
 
 
-	JustRun = true;													//ÕıÔÚÆô¶¯±êÖ¾
-	Erasefiles();
-	Sleep(2000);
+    JustRun = true;                                                    //æ­£åœ¨å¯åŠ¨æ ‡å¿—
+    Erasefiles();
+    Sleep(2000);
 
-	cerr << "--->>> " << "Welcom MyAutoTrader System!" << endl;
-	cerr << "--->>> " << "Version 1.0.3!" << endl;
+    cerr << "--->>> " << "Welcom MyAutoTrader System!" << endl;
+    cerr << "--->>> " << "Version 1.0.3!" << endl;
 
-	ReadMdConfiguration();
-	Sleep(2000);
-	// ³õÊ¼»¯UserApi
-	usrApi = CThostFtdcTraderApi::CreateFtdcTraderApi("./thosttraderapi.dll");			// ´´½¨UserApi//"./thosttraderapi.dll"
-	TradeChannel* trdSpi = new TradeChannel();
-	usrApi->RegisterSpi((CThostFtdcTraderSpi*)trdSpi);			// ×¢²áÊÂ¼şÀà
-	usrApi->SubscribePublicTopic(THOST_TERT_RESTART);				// ×¢²á¹«ÓĞÁ÷
-	usrApi->SubscribePrivateTopic(THOST_TERT_RESTART);			// ×¢²áË½ÓĞÁ÷
-	usrApi->RegisterFront(FRONT_ADDR_1A);							// connect
-																	//usrApi->RegisterFront(FRONT_ADDR_2A);						// connect
+    ReadMdConfiguration();
+    Sleep(2000);
+    // åˆå§‹åŒ–UserApi
+    usrApi = CThostFtdcTraderApi::CreateFtdcTraderApi("./thosttraderapi.dll");            // åˆ›å»ºUserApi//"./thosttraderapi.dll"
+    TradeChannel* trdSpi = new TradeChannel();
+    usrApi->RegisterSpi((CThostFtdcTraderSpi*)trdSpi);            // æ³¨å†Œäº‹ä»¶ç±»
+    usrApi->SubscribePublicTopic(THOST_TERT_RESTART);                // æ³¨å†Œå…¬æœ‰æµ
+    usrApi->SubscribePrivateTopic(THOST_TERT_RESTART);            // æ³¨å†Œç§æœ‰æµ
+    usrApi->RegisterFront(FRONT_ADDR_1A);                            // connect
+                                                                    //usrApi->RegisterFront(FRONT_ADDR_2A);                        // connect
 
-	if (simMode)
-	{
-		usrApi->Init();
-		cerr << "--->>> " << "Initialing UserApi" << endl;
-	}
+    if (simMode)
+    {
+        usrApi->Init();
+        cerr << "--->>> " << "Initialing UserApi" << endl;
+    }
 
-	// ³õÊ¼»¯MdApi
-	mdApi = CThostFtdcMdApi::CreateFtdcMdApi("./thostmduserapi.dll");					// ´´½¨MdApi//"./thostmduserapi.dll"
-	MarketDataCollector* mdSpi = new MarketDataCollector();
-	mdApi->RegisterSpi(mdSpi);									// ×¢²áÊÂ¼şÀà
-	mdApi->RegisterFront(FRONT_ADDR_1B);							// connect
-																	//mdApi->RegisterFront(FRONT_ADDR_2B);							// connect
+    // åˆå§‹åŒ–MdApi
+    mdApi = CThostFtdcMdApi::CreateFtdcMdApi("./thostmduserapi.dll");                    // åˆ›å»ºMdApi//"./thostmduserapi.dll"
+    MarketDataCollector* mdSpi = new MarketDataCollector();
+    mdApi->RegisterSpi(mdSpi);                                    // æ³¨å†Œäº‹ä»¶ç±»
+    mdApi->RegisterFront(FRONT_ADDR_1B);                            // connect
+                                                                    //mdApi->RegisterFront(FRONT_ADDR_2B);                            // connect
 
-	if (simMode)
-	{
-		mdApi->Init();
-		cerr << "--->>> " << "Initialing MdApi" << endl;
-	}
-	else
-	{
-		cerr << "--->>> " << "Test Mode!" << endl;
-	}
+    if (simMode)
+    {
+        mdApi->Init();
+        cerr << "--->>> " << "Initialing MdApi" << endl;
+    }
+    else
+    {
+        cerr << "--->>> " << "Test Mode!" << endl;
+    }
 
-	//mdApi->Join();
-	//mdApi->Release();
+    //mdApi->Join();
+    //mdApi->Release();
 
-	Sleep(7000);
-	ReadTradeConfiguration();
-	Sleep(1000);
-	cerr << "--->>> " << "³õÊ¼»¯Íê³É!" << endl;
+    Sleep(7000);
+    ReadTradeConfiguration();
+    Sleep(1000);
+    cerr << "--->>> " << "åˆå§‹åŒ–å®Œæˆ!" << endl;
 
-	while (simMode)	//ÊµÅÌ
-	{
-		Sniffer();
-		Istrading();
-		Sleep(050);
-	}
+    while (simMode)    //å®ç›˜
+    {
+        Sniffer();
+        Istrading();
+        Sleep(050);
+    }
 
-	while (!simMode)	//±¾µØ²âÊÔ
-	{
-		if (JustRun == true)
-		{
-			sim_test();	//±¾µØ»Ø²â
-			JustRun = false;
-		}
-	}
+    while (!simMode)    //æœ¬åœ°æµ‹è¯•
+    {
+        if (JustRun == true)
+        {
+            sim_test();    //æœ¬åœ°å›æµ‹
+            JustRun = false;
+        }
+    }
 }

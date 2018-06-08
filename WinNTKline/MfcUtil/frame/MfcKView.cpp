@@ -1,4 +1,4 @@
-// MfcKView.cpp : 实现文件
+// MfcKView.cpp : 瀹炵幇鏂囦欢
 //
 
 #include "../stdafx.h"
@@ -34,7 +34,7 @@ BEGIN_MESSAGE_MAP(CMfcKView, CFormView)
 	ON_BN_CLICKED(IDC_BUTTON1, &CMfcKView::OnBnClickedButton1)
 END_MESSAGE_MAP()
 
-// CMfcKView 诊断
+// CMfcKView 璇婃柇
 
 #ifdef _DEBUG
 void CMfcKView::AssertValid() const
@@ -85,6 +85,6 @@ void CMfcKView::OnBnClickedButton1()
 		, &si
 		, &pi
 	)) {
-		AfxMessageBox(_T("运行错误"));
+		AfxMessageBox(_T("杩愯閿欒"));
 	}
 }

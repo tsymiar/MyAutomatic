@@ -1,13 +1,13 @@
 #pragma once
 
-// CMfcKView ´°ÌåÊÓÍ¼
+// CMfcKView çª—ä½“è§†å›¾
 
 class CMfcKView : public CFormView
 {
 	DECLARE_DYNCREATE(CMfcKView)
 
 protected:
-	CMfcKView();           // ¶¯Ì¬´´½¨ËùÊ¹ÓÃµÄÊÜ±£»¤µÄ¹¹Ôìº¯Êı
+	CMfcKView();           // åŠ¨æ€åˆ›å»ºæ‰€ä½¿ç”¨çš„å—ä¿æŠ¤çš„æ„é€ å‡½æ•°
 	virtual ~CMfcKView();
 
 public:
@@ -23,7 +23,7 @@ public:
 	virtual void OnInitialUpdate();
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV Ö§³Ö
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV æ”¯æŒ
 
 	DECLARE_MESSAGE_MAP()
 public:

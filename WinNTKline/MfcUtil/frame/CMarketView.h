@@ -1,13 +1,13 @@
 #pragma once
 
-// CMarketView ´°ÌåÊÓÍ¼
+// CMarketView çª—ä½“è§†å›¾
 
 class CMarketView : public CFormView
 {
 	DECLARE_DYNCREATE(CMarketView)
 
 protected:
-	CMarketView();           // ¶¯Ì¬´´½¨ËùÊ¹ÓÃµÄÊÜ±£»¤µÄ¹¹Ôìº¯Êı
+	CMarketView();           // åŠ¨æ€åˆ›å»ºæ‰€ä½¿ç”¨çš„å—ä¿æŠ¤çš„æ„é€ å‡½æ•°
 	virtual ~CMarketView();
 
 public:
@@ -22,7 +22,7 @@ public:
 #endif
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV Ö§³Ö
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV æ”¯æŒ
 	virtual void OnInitialUpdate();
 	DECLARE_MESSAGE_MAP()
 };

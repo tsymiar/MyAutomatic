@@ -1,4 +1,4 @@
-﻿#ifndef BINARYTREE_H
+#ifndef BINARYTREE_H
 #define BINARYTREE_H
 #include <iostream>
 #include <stack>
