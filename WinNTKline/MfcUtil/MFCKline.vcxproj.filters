@@ -306,6 +306,12 @@
     <None Include="cfg\ips.ini">
       <Filter>配置文件</Filter>
     </None>
+    <None Include="web\BareBonesBrowserLaunch.java">
+      <Filter>配置文件</Filter>
+    </None>
+    <None Include="web\client.java">
+      <Filter>配置文件</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\MFCKline.ico">

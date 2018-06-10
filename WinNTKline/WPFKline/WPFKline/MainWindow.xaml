@@ -18,7 +18,7 @@
 
         <ams:StockChart Name="stockChart" Grid.Row="1">
             <ams:StockChart.DataSets>
-                <ams:DataSet Name="stockSet1" Brush="#7f8da9"
+                <ams:DataSet Name="stockSet" Brush="#7f8da9"
                                 ItemsSource="{Binding Data}"
                                 DateMemberPath="date"
                                 OpenMemberPath="open" HighMemberPath="high"

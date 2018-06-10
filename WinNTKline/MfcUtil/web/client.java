@@ -34,9 +34,9 @@ public class client {
 		String arg;
 	  	String url = "http://192.168.1.3:8080/file/Filetrans.php?action=file_upload";
 	  	if( file == null)   
-			arg = "untitled.iml";
+		arg = "untitled.iml";
 		else
-			arg = file;
+		arg = file;
 	  	File binary = new File(arg);
 	  	if (!binary.exists() || !binary.isFile()) {   
 			throw new IOException("file don‘t exit error.");
@@ -50,7 +50,7 @@ public class client {
 	  	connection.setDoOutput(true);
 	  	connection.setUseCaches(false); // POST should have no cache
 		System.out.println("Show 'head' & 'foot' we want to send:\n");
-	  	
+	  
 		// set head  
 		connection.setRequestProperty("Connection", "Keep-Alive");
 	  	connection.setRequestProperty("Charset", "UTF-8");
@@ -58,14 +58,14 @@ public class client {
 		connection.setRequestProperty("Content-Type", "multipart/form-data;boundary=" + boundary);
 	 	// set message  
 		String sb = "--" + // --    
-					boundary +    
-					CRLF +
-					"Content-Disposition: form-data;name=\"file\";filename=\"" + 
-					binary.getName() + 
-					"\"\r\n" +    
-					"Content-Type:application/octet-stream\r\n\r\n";
+				boundary +    
+		CRLF +
+				"Content-Disposition: form-data;name=\"file\";filename=\"" +
+				binary.getName() +
+				"\"\r\n" +    
+		"Content-Type:application/octet-stream\r\n\r\n";
 		byte[] head = sb.getBytes("utf-8");
-		
+
 	  	// get output stream  
 		OutputStream output = new DataOutputStream(connection.getOutputStream());
 	  	output.write(head);
@@ -88,7 +88,7 @@ public class client {
 		// Request is lazily fired whenever you need to obtain information about response.  
 		int response = ((HttpURLConnection) connection).getResponseCode();  
 		System.out.println("Connection Code = " + response + "\n"); // Should be 200
-	  	
+	  
 		StringBuilder buffer = new StringBuilder();  
 		BufferedReader reader = null;  
 		String result = null;  
@@ -135,7 +135,7 @@ public class client {
 		    head = "Content-Type";  
 		}  
 		System.out.println("Request for: " + url);  
-		
+
 		HttpUriRequest methods;  
 		try {   
 			HttpClient client = new DefaultHttpClient();   
@@ -143,7 +143,7 @@ public class client {
 				    methods = new HttpPost(url);   
 			else
 				    methods = new HttpGet(url);   
-			
+
 			HttpResponse response = client.execute(methods);   
 			HttpEntity entity = response.getEntity();   
 			InputStream input = entity.getContent();   
@@ -166,7 +166,7 @@ public class client {
 						       e.printStackTrace();
 					      }
 				     }
-			    } else 
+			    } else
 					System.out.println("values.length =" + values.length);
 			} else
 			    System.out.println("content header is null error.");
@@ -178,7 +178,7 @@ public class client {
 				     filelocal += String.valueOf(System.currentTimeMillis());
 			    }
 		    }   
-		
+
 			File file = new File(filelocal);
 		    file.getParentFile().mkdirs();
 		    FileOutputStream fileout = new FileOutputStream(file);   
@@ -215,5 +215,5 @@ public class client {
 			    break;
 		}
 	}
-	
+
 }
