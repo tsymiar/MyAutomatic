@@ -53,6 +53,7 @@ private:
 	HDC		m_hDC;
 	HICON m_hIcon;
 	HACCEL m_hAcc;
+	CRITICAL_SECTION mutex;
 private:
 	NOTIFYICONDATA GetNotiIcon(HWND O_hWnd);
 	void SetCurrentPosition(float winx, float winy);

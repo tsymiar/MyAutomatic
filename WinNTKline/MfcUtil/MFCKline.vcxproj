@@ -82,7 +82,6 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <CodeAnalysisRuleSet>NativeRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <RunCodeAnalysis>false</RunCodeAnalysis>
-    <LinkIncremental>false</LinkIncremental>
     <IntDir>$(SolutionDir)MFC\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -118,16 +117,16 @@
       <CompileAs>CompileAsCpp</CompileAs>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <Optimization>MaxSpeed</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <MinimalRebuild>false</MinimalRebuild>
+      <Optimization>MaxSpeed</Optimization>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>NotSet</TargetMachine>
       <AdditionalOptions>/NODEFAULTLIB:"libcmt.lib" %(AdditionalOptions)</AdditionalOptions>
       <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <AdditionalLibraryDirectories>$(PTHD_LIB86);$(QTDIR)\lib;$(CEFDIR)\$(Configuration);$(OPENCV)\lib\$(Configuration);$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\GL\lib;$(SolutionDir)MfcUtil\font\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>opencv_calib3d330d.lib;opencv_highgui330d.lib;opencv_photo330d.lib;opencv_video330d.lib;opencv_core330d.lib;opencv_imgcodecs330d.lib;opencv_shape330d.lib;opencv_videoio330d.lib;opencv_dnn330d.lib;opencv_imgproc330d.lib;opencv_stitching330d.lib;opencv_videostab330d.lib;opencv_features2d330d.lib;opencv_ml330d.lib;opencv_superres330d.lib;opencv_flann330d.lib;opencv_objdetect330d.lib;Qt5Gui.lib;Qt5Core.lib;Qt5OpenGL.lib;Qt5Widgets.lib;pthreadVC2.lib;libcef.lib;libcef_dll_wrapper.lib;thosttraderapi.lib;thostmduserapi.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -357,6 +356,8 @@
     <None Include="Idx\Initialise-inl.h" />
     <None Include="Idx\plus1second" />
     <None Include="res\MFCKline.rc2" />
+    <None Include="web\BareBonesBrowserLaunch.java" />
+    <None Include="web\client.java" />
     <None Include="web\myweb.nsmap" />
   </ItemGroup>
   <ItemGroup>

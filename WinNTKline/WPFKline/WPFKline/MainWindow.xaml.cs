@@ -82,7 +82,7 @@ namespace WPFKline
                 @"\..\..\..\..\MfcUtil\data\SH600747.DAT";
 #endif
                 LoadData(txtFilePath.Text);
-                stockSet1.ItemsSource = Data;
+                stockSet.ItemsSource = Data;
             }
         }
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -109,7 +109,7 @@ namespace WPFKline
             {
                 txtFilePath.Text = ofd.FileName;
                 LoadData(ofd.FileName);
-                stockSet1.ItemsSource = Data;
+                stockSet.ItemsSource = Data;
             }
         }
 

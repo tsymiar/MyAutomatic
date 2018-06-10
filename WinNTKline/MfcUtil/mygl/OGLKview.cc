@@ -1192,7 +1192,7 @@ bool OGLKview::GetMarkDatatoDraw(const char* file, void* P, char* title)
                     if (line <= 3)
                     {
                         this->dlginfo.line = 1;
-                        Pter = Pt[0];
+                        Pter = Pt[li];
                         last.stRSA._6 = last.stRSA._12 = last.stRSA._24 = atof(markdata[6]);
                     }
                     else

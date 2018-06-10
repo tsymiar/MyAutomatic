@@ -14,7 +14,6 @@ MyOglDrawDlg::MyOglDrawDlg(const char* sIP, CWnd* pParent /*=NULL*/)
 {
 	this->ctpIP = (char*)sIP;
 	net_exit = false;
-	//m_hIcon = LoadIcon((HINSTANCE)IDR_ICON, "");
 }
 
 void MyOglDrawDlg::DoDataExchange(CDataExchange* pDX)
@@ -49,12 +48,12 @@ BEGIN_MESSAGE_MAP(MyOglDrawDlg, CDialog)
 	ON_COMMAND(ID_SCRN, &MyOglDrawDlg::OnScrn2Bmp)
 END_MESSAGE_MAP()
 
-///*******************定义本文件内的全局变量*******************///
+///****************定义本文件内的全局变量****************///
 OGLKview Ogl;		//FillChart
 MyOglDrawDlg* Mod;	//Notify
 NOTIFYICONDATA icon;//OnTaskShow
 int sz_Data = 0;
-					///**************************END**************************///
+///*************************END************************///
 
 namespace StockOgl
 {
@@ -63,7 +62,7 @@ namespace StockOgl
 	int		failmsg = 0;
 	int		insert = 1;
 	char* 	cotx = NULL;
-	char* 	buff = NULL;
+	char 	buff[256];
 	char*	token = NULL;
 	bool	isnext = false;
 	char*	div_stock[3] = { NULL };
@@ -74,7 +73,6 @@ namespace StockOgl
 	string sSystemFullPath;
 	string sWritePath;
 	ifstream Readfile;
-	vector<char*> tradedata;
 	OGLKview::Market ststock;
 	WIN32_FIND_DATA fileData;
 	OGLKview::Point Pter = { 0 }, Pt[4] = { 0 };
@@ -99,10 +97,13 @@ char* MyOglDrawDlg::GetFirstData()
 
 int MyOglDrawDlg::GetMarkDatatoDraw()
 {
+	InitializeCriticalSection(&mutex);
 	static int line = 0;
 	if (Ogl.file == nullptr)
 		return -1;
 	using namespace StockOgl;
+	std::vector<char*> tradedata;
+	tradedata.reserve(1);
 	Readfile.open(Ogl.file, ios::in);
 	if (Readfile.fail())
 	{
@@ -114,18 +115,21 @@ int MyOglDrawDlg::GetMarkDatatoDraw()
 	else {
 		while (getline(Readfile, text))
 		{
-			buff = (char*)text.c_str();
+			EnterCriticalSection(&mutex);
+			memcpy(buff, (char*)text.c_str(), text.size() + 1);
 			token = strtok_s(buff, "/\t", &cotx);
-			while (token != NULL)
+			while (token != NULL && &token != NULL)
 			{
-				tradedata.push_back(*(&token));
+				{
+					tradedata.push_back(token);
+				}
 				token = strtok_s(nullptr, "/\t", &cotx);
 			}
 			token = NULL;
 			if ((tradedata.size() < 3) && (tradedata.size() > 0))
 			{
 				Ogl.coding = true;
-				buff = (char*)tradedata[0];
+				memcpy(buff, (char*)tradedata[0], strlen(tradedata[0]) + 1);
 				title.Format("%s", buff);
 				SetWindowText(title);
 				idx = 0;
@@ -133,7 +137,7 @@ int MyOglDrawDlg::GetMarkDatatoDraw()
 				while (token != NULL)
 				{
 					div_stock[idx] = token;
-					token = strtok_s(NULL, " ", (char**)&cotx);
+					token = strtok_s(nullptr, " ", (char**)&cotx);
 					idx++;
 				}
 				Ogl.SwitchViewport(0);
@@ -167,23 +171,26 @@ int MyOglDrawDlg::GetMarkDatatoDraw()
 							li = 0;
 							isnext = true;
 						}
-					Pt[li].x = (22 - Ogl.tinkep.multi*(3 - line*(Ogl.tinkep.multi + 9)*.01f + 3.f + Ogl.tinkep.move*.1f*insert) * 2)*.3f;
-					Pt[li].y = (float)atof(tradedata[6])*.9f;
+					Pt[li].x = (22 - Ogl.tinkep.multi*(3 - line * (Ogl.tinkep.multi + 9)*.01f + 3.f + Ogl.tinkep.move*.1f*insert) * 2)*.04f - 0.8f;
+					Pt[li].y = (float)atof(tradedata[6])*.8f + 2.5f;
 					if (line <= 3)
 					{
 						Ogl.dlginfo.line = 1;
-						Pter = Pt[0];
+						Pter = Pt[li];
 					}
 					else
 						Ogl.dlginfo.line = line - 2;
-					Ogl.DrawPoly(Pter, Pt[li], { 0.f,1.f,0.f });
-					Pter = Pt[li];
+					if (line > 2) {
+						Ogl.DrawPoly(Pter, Pt[li], { 0.f,1.f,0.f });
+					}
 					Ogl.DrawKline(ststock, Ogl.tinkep);
+					Pter = Pt[li];
 					li++;
 				}
 				tradedata.clear();
 			}
 			line++;
+			LeaveCriticalSection(&mutex);
 		}
 		if (Ogl.dlginfo.drawstaff > 0)
 			Ogl.DrawDetail(ststock);
@@ -192,6 +199,7 @@ int MyOglDrawDlg::GetMarkDatatoDraw()
 	}
 	vector<char*>().swap(tradedata);
 	Readfile.close();
+	DeleteCriticalSection(&mutex);
 	return line;
 }
 
@@ -462,10 +470,26 @@ BOOL MyOglDrawDlg::PreTranslateMessage(tagMSG * pMsg)
 		}
 		break;
 		case 'V':
+		{
 			CTPclient * m_ctp = new CTPclient();
 			CloseHandle((HANDLE)_beginthreadex(NULL, 0, m_ctp->TradeMarket, (void*)this, 0, NULL));
 			delete m_ctp;
-			break;
+		}
+		break;
+		case VK_RIGHT:
+		{
+			Ogl.tinkep.move++;
+			if (Ogl.tinkep.move > sz_Data + 30)
+				Ogl.tinkep.move = sz_Data + 30;
+		}
+		break;
+		case VK_LEFT:
+		{
+			Ogl.tinkep.move--;
+			if (Ogl.tinkep.move < 70)
+				Ogl.tinkep.move = 70;
+		}
+		break;
 		}
 	};
 	};
