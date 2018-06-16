@@ -36,13 +36,14 @@ struct CHATMSG
     char lastgrop[256] = { NULL };
 };
 
-struct CRITICALMSG
+typedef struct CLIENTSOCKET
 {
-    SOCKET sock;
+	SOCKET sock;
+	sockaddr_in srvaddr;
     CRITICAL_SECTION wrcon;
-    void* dlg;
     CHATMSG *msg;
-};
+    void* Dlg;
+} clientsocket;
 
 struct CMD {
     int idx; std::string val;

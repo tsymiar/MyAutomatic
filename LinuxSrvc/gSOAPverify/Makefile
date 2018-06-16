@@ -1,6 +1,7 @@
-GEN = `pwd`/bin
-OBJ = ../obj/
-PRJ = $(OBJ)gSOAPverify/
+CUR = `pwd`
+OBJ = ../obj
+GEN = $(CUR)/bin
+PRJ = $(OBJ)/gSOAPverify
 FILE= ./soap/myweb.wsdl
 FLAG= -Wall -g
 SYS = sysstatus.o
@@ -38,10 +39,10 @@ install:
 	cd /etc/rc3.d/
 	ln -sf ../init.d/gSOAPverify ./S77_SOAP
 clean:	
-	rm -f ./*.o $(GEN)/*.a $(GEN)/*.out $(GEN)/core.* $(PRJ)*.o
+	rm -f ./*.o ./core.* $(GEN)/*.a $(GEN)/*.out $(GEN)/core.* $(PRJ)/*.o
 clear:
-	rm -f ./*.o $(GEN)/*.a $(GEN)/*.out $(GEN)/core.* $(PRJ)*.o $(GEN)/gSOAPverify `ls *.o | egrep -v soapC.o stdsoap2.o soapServer.o`
-	rm -f /etc/init.d/gSOAPverify /usr/sbin/gSOAPverify
+	rm -f ./*.o ./core.* $(PRJ)/*.o `ls *.o | egrep -v soapC.o stdsoap2.o soapServer.o`
 	rm -rf $(GEN) $(OBJ)
+	rm -f /etc/init.d/gSOAPverify /usr/sbin/gSOAPverify
 	rm -rf S77_SOAP \
 	y

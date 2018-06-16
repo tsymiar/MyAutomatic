@@ -94,31 +94,32 @@ BEGIN_MESSAGE_MAP(CIMhideWndDlg, CDialogEx)
 END_MESSAGE_MAP()
 
 int flag = 1;
-char g_Msg[256];
+char* g_Msg;
+CRITICAL_SECTION wrcsec;
 
-void ShowMsg(void* lp) {
+void ShowMsg(void* msg) {
     int len = 0;
-    static char data[256];
-    memset(data, 0, 256);
-    memset(g_Msg, 0, 256);
-    struct CRITICALMSG* trans = (struct CRITICALMSG*)lp;
+    static char rslt[256];
+    memset(rslt, 0, 256);
+	clientsocket* trans = (clientsocket*)malloc(sizeof(clientsocket));
+	trans = (clientsocket*)msg;
     if (!trans)
         return;
+	EnterCriticalSection(&wrcsec);
     do {
-        EnterCriticalSection(&trans->wrcon);
-        if (trans->sock == 0)
+        if (trans->sock == INVALID_SOCKET)
             return;
-        len = recv(trans->sock, data, 256, 0);
+        len = recv(trans->sock, rslt, 256, 0);
         if (!(len == 256)) {
             Sleep(100);
             MessageBox(NULL, "connection lost.", "client", MB_OK);
             return;
         };
-        if (data[1] != 0x0 || data[2] == 0x0)
+        if (rslt[1] != 0x0 || rslt[2] == 0x0)
             return;
-        sprintf_s(g_Msg, 247, "MSG: %s\n", data + 8);
-        LeaveCriticalSection(&trans->wrcon);
+        sprintf_s(g_Msg, 247, "MSG: %s\n", rslt + 8);
     } while (flag);
+	LeaveCriticalSection(&wrcsec);
 };
 
 int CIMhideWndDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
@@ -148,6 +149,7 @@ int CIMhideWndDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
     //开启聊天
     //int err = InitChat(oimusr.addr);
     flag = 1;
+	InitializeCriticalSection(&wrcsec);
     StartChat(InitChat(&oimusr), ShowMsg);
     return 0;
 }
@@ -302,7 +304,6 @@ void CIMhideWndDlg::DoHide()
     default:
         break;
     }
-
     SetWindowPos(&wndTopMost, tRect);
 }
 

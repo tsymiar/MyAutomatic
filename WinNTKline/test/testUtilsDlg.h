@@ -35,11 +35,6 @@ private:
 	CEdit m_Port;
 	char a_IP[16];
 	CString a_Port;
-	inline void checkLeak(void* ptr)
-	{
-		if (ptr != nullptr)
-			delete ptr;
-	};
 public:
 	afx_msg void OnBnClickedOk();
 	afx_msg void OnBnClickedCancel();
