@@ -5,7 +5,6 @@
 #include "testUtilsDlg.h"
 #include "afxdialogex.h"
 #include <Resource.h>
-#include <dos\DOSCout.h>
 #include <soapH.h>
 #include "MyOglDrawDlg.h"
 #include "LoginDlg.h"
@@ -182,6 +181,11 @@ void CtestUtilsDlg::OnBnClickedImser()
 	::CreateProcess(_T("..\\Debug\\IM(Win32).exe"), _T("1"), NULL, NULL, false, 0, NULL, NULL, &sInfo, &pInfo);
 }
 
+void checkLeak(void* ptr)
+{
+	if (ptr != nullptr)
+		delete ptr;
+};
 
 void CtestUtilsDlg::OnBnClickedOk()
 {

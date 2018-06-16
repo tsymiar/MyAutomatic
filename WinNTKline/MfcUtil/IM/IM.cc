@@ -413,7 +413,7 @@ type_thread_func commands(void *arg)
 };
 
 int _im_(int argc, char *argv[]) {
-
+	printf("IM chat server v0.%d for %dbit OS.\n", 1, sizeof(void*) * 8);
 	if (!(load_acnt()))
 		printf("accounts data loaded from [%s].\n", ACC_REC);
 	else {
@@ -498,7 +498,7 @@ int _im_(int argc, char *argv[]) {
 		std::cerr << "errno:\t" << strerror(errno) << std::endl;
 		return -1;
 	}
-	printf("listening to port %d.\n", DEFAULT_PORT);
+	printf("listening PORT [%d].\n", DEFAULT_PORT);
 	struct sockaddr_in from;
 	type_len fromlen = (type_len)sizeof(from);
 	int c = 0;

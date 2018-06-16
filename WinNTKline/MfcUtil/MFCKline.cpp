@@ -78,7 +78,7 @@ BOOL CMFCKlineApp::InitInstance()
 	// 根据内存申请次序人工设置断点
 #ifdef _DEBUG
 	//_CrtSetDbgFlag(_CrtSetDbgFlag(_CRTDBG_REPORT_FLAG) | _CRTDBG_LEAK_CHECK_DF);
-	//_CrtSetBreakAlloc(1399);
+	//_CrtSetBreakAlloc(3570);
 #endif
 	// 启动首个窗口
 	CMFCKlineDlg dlg;

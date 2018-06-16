@@ -57,12 +57,14 @@ bool get_rslt_raw(struct DBinfo* info)
 
 void* test_connect(void* lp)
 {
+	char val = 1;
+	mysql_options(&mysql, MYSQL_OPT_RECONNECT, (char*) & val);
 	while (1)
 	{
 		if (mysql_ping(&mysql) != 0) {
 			if ((mysql_real_connect(&mysql, host, user, psw, db, port, NULL, 0) == 0) && (j < 9))
 			{
-				cout << LL << "Connect mysql fail." << endl;
+				cout << LL << "Connect mysql fail: " << mysql_error(&mysql) << "!" << endl;
 				j++;
 			}
 		}
@@ -80,10 +82,10 @@ int sqlDB(int type, char* acc, char* psw, struct DBinfo* info)
 			cout << LL << "lib init fail." << endl;
 		if (NULL == mysql_init(&mysql))
 			cout << LL << "MySQL init fail." << endl;
-		if (0 != mysql_options(&mysql, MYSQL_SET_CHARSET_NAME, "UTF-8"))
+		if (0 != mysql_options(&mysql, MYSQL_SET_CHARSET_NAME, "utf8"))
 			cout << LL << "MySQL setting fail." << endl;
 		if (NULL == mysql_real_connect(&mysql, host, user, psw, db, port, NULL, 0))
-			cout << LL << "Connect mysql fail." << endl;
+			cout << LL << "Connect mysql fail: " << mysql_error(&mysql) << "!" << endl;
 		//int Select(char* table, char** RES, const char* factor,...)
 		//"SELECT Name,AGE,sex,email FROM ...";
 		pthread_create(&tid, NULL, test_connect, &it);
@@ -133,7 +135,7 @@ bool get_rslt_new(DBinfo * info)
 	pthread_mutex_lock(&sql_lock);
 	if (0 != mysql_query(&mysql, sql))
 	{
-		cout << LL << "Query database fail." << endl;
+		cout << LL << "Query database fail: " << mysql_error(&mysql) << "!" << endl;
 		mysql_close(&mysql);
 		pthread_mutex_unlock(&sql_lock);
 		return -1;
@@ -162,7 +164,7 @@ bool get_rslt_new(DBinfo * info)
 		return info->flg;
 	}
 	else {
-		cout << LL << "SELECT element fail." << endl;
+		cout << LL << "SELECT element fail: " << mysql_error(&mysql) << "!" << endl;
 		mysql_close(&mysql);
 		mysql_server_end();
 		pthread_mutex_unlock(&sql_lock);

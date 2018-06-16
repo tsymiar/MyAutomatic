@@ -120,8 +120,10 @@ int MyOglDrawDlg::GetMarkDatatoDraw()
 			token = strtok_s(buff, "/\t", &cotx);
 			while (token != NULL && &token != NULL)
 			{
-				{
+				try{
 					tradedata.push_back(token);
+				}catch (exception) {
+					break;
 				}
 				token = strtok_s(nullptr, "/\t", &cotx);
 			}
@@ -129,7 +131,7 @@ int MyOglDrawDlg::GetMarkDatatoDraw()
 			if ((tradedata.size() < 3) && (tradedata.size() > 0))
 			{
 				Ogl.coding = true;
-				memcpy(buff, (char*)tradedata[0], strlen(tradedata[0]) + 1);
+				memcpy(buff, (char*)tradedata.at(0), strlen(tradedata.at(0)) + 1);
 				title.Format("%s", buff);
 				SetWindowText(title);
 				idx = 0;
@@ -154,15 +156,15 @@ int MyOglDrawDlg::GetMarkDatatoDraw()
 			{
 				if (line > 0)
 					Ogl.lastmarket = ststock;
-				ststock.time.tm_year = atoi(tradedata[0]);
-				ststock.time.tm_mon = atoi(tradedata[1]);
-				ststock.time.tm_mday = atoi(tradedata[2]);
-				ststock.open = (float)atof(tradedata[3]);
-				ststock.high = (float)atof(tradedata[4]);
-				ststock.low = (float)atof(tradedata[5]);
-				ststock.close = (float)atof(tradedata[6]);
-				ststock.amount = atoi(tradedata[7]);
-				ststock.price = (float)atof(tradedata[8]);
+				ststock.time.tm_year = atoi(tradedata.at(0));
+				ststock.time.tm_mon = atoi(tradedata.at(1));
+				ststock.time.tm_mday = atoi(tradedata.at(2));
+				ststock.open = (float)atof(tradedata.at(3));
+				ststock.high = (float)atof(tradedata.at(4));
+				ststock.low = (float)atof(tradedata.at(5));
+				ststock.close = (float)atof(tradedata.at(6));
+				ststock.amount = atoi(tradedata.at(7));
+				ststock.price = (float)atof(tradedata.at(8));
 				if (line < Ogl.tinkep.move + 12)
 				{
 					if (line > 0)
@@ -172,7 +174,7 @@ int MyOglDrawDlg::GetMarkDatatoDraw()
 							isnext = true;
 						}
 					Pt[li].x = (22 - Ogl.tinkep.multi*(3 - line * (Ogl.tinkep.multi + 9)*.01f + 3.f + Ogl.tinkep.move*.1f*insert) * 2)*.04f - 0.8f;
-					Pt[li].y = (float)atof(tradedata[6])*.8f + 2.5f;
+					Pt[li].y = (float)atof(tradedata.at(6))*.8f + 2.5f;
 					if (line <= 3)
 					{
 						Ogl.dlginfo.line = 1;
@@ -568,11 +570,7 @@ void MyOglDrawDlg::OnClose()
 
 void MyOglDrawDlg::PostNcDestroy()
 {
-	try {
-		delete this;
-	}
-	catch (exception e) 
-	{}
+	Shell_NotifyIcon(NIM_DELETE, &icon);
 }
 
 void MyOglDrawDlg::SetCtrl()
@@ -630,7 +628,6 @@ void MyOglDrawDlg::SetCtrl()
 
 MyOglDrawDlg::~MyOglDrawDlg()
 {
-	Shell_NotifyIcon(NIM_DELETE, &icon);
 }
 
 void MyOglDrawDlg::OnDropFiles(HDROP hDropInfo)
