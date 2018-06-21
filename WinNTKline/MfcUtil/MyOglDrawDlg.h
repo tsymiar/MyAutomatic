@@ -62,6 +62,7 @@ private:
 	void SetCtrl();
 public:
 	char* ctpIP = NULL;
+	int kPos = 0;
 	OGLKview  Ogl;
 	CString title;
 	GlModel model;
@@ -100,7 +101,7 @@ public:
 	void CallShellScript(CString Path, CString fbat, CString param);
 	char* GetFirstData();
 	auto GetPrivMem();
-	int GetMarkDatatoDraw();
+	int GetMarkDatatoDraw(int sign = 0, int len = 0);
 	afx_msg void OnSetBkg();
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);

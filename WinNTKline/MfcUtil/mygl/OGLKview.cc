@@ -773,7 +773,8 @@ int OGLKview::Data2View(std::vector<struct OGLKview::Market> market, OGLKview::D
 {
     //添加迭代器用于遍历向量元素
     std::vector<OGLKview::Market>::iterator it = market.begin();
-    while (it != market.end())++it;
+	while (it != market.end())
+		++it;
     //std::vector<OGLKview::Market>::iterator element = std::find(market.begin(), market.end(), who);
     //if (element != market.end())int pos = std::distance(market.begin(), element);
     OGLKview::Point fp;
@@ -1080,7 +1081,7 @@ namespace GMDD
 ///**************END GetMarkDatatoDraw**************///
 
 
-bool OGLKview::GetMarkDatatoDraw(const char* file, void* P, char* title)
+bool OGLKview::GetMarkDatatoDraw(const char* file, void* P, char* title, int hl, int tl)
 {
     using namespace GMDD;
     //#if 0
@@ -1169,238 +1170,245 @@ bool OGLKview::GetMarkDatatoDraw(const char* file, void* P, char* title)
             }
             else if (markdata.size() > 8)
             {
-                //将行情数据临时存储到结构体
-                st_stock.time.tm_year = atoi(markdata[0]);
-                st_stock.time.tm_mon = atoi(markdata[1]);
-                st_stock.time.tm_mday = atoi(markdata[2]);
-                st_stock.open = (float)atof(markdata[3]);
-                st_stock.high = (float)atof(markdata[4]);
-                st_stock.low = (float)atof(markdata[5]);
-                st_stock.close = (float)atof(markdata[6]);
-                st_stock.amount = atoi(markdata[7]);
-                st_stock.price = (float)atof(markdata[8]);
-                vec_market.push_back(st_stock);
-                //设置初始显示图形数量
-                if (line < tinkep.move + dlginfo.cycle / tinkep.ratio)
-                {
-                    if (line > 0)//li不必分组
-                        if (li > 3)
-                        {
-                            li = 0;
-                            isnext = true;
-                        }
-                    if (line <= 3)
-                    {
-                        this->dlginfo.line = 1;
-                        Pter = Pt[li];
-                        last.stRSA._6 = last.stRSA._12 = last.stRSA._24 = atof(markdata[6]);
-                    }
-                    else
-                        this->dlginfo.line = line - 2;
-                    {//初始化
-                        line % 20 == 0 ? totma._20 = totma._10 = totma._5 = 0 : \
-                            (line % 10 == 0 ? totma._10 = totma._5 = 0 : \
-                            (line % 5 == 0 ? totma._5 = 0 : 1));
-                        idx % 24 == 0 ? frise.stRSA._24 = fdrop.stRSA._24 = 0 : \
-                            (idx % 12 == 0 ? frise.stRSA._12 = fdrop.stRSA._12 = 0 : \
-                            (idx % 6 == 0 ? frise.stRSA._6 = fdrop.stRSA._6 = 0 : 1));
-                        line == 24 ? ot_AB24 = Pt[li] : \
-                            (line == 20 ? ot_ma20old = Pt[li] : \
-                            (line == 12 ? ot_AB12 = Pt[li] : \
-                                (line == 10 ? ot_ma10old = Pt[li] : \
-                                (line == 6 ? ot_AB6 = Pt[li] : \
-                                    (line == 5 ? ot_ma5old = Pt[0] : \
-                                        Pt[i])))));
-                    }
-                    //SMA加和
-                    totma._5 += (atof(markdata[4]) + atof(markdata[5])) / 2;
-                    totma._10 += (atof(markdata[4]) + atof(markdata[5])) / 2;
-                    totma._20 += (atof(markdata[4]) + atof(markdata[5])) / 2;
-                    //比较当前组最大最小交易价格
-                    if (maxprice < atof(markdata[4]))
-                        maxprice = atof(markdata[4]);
-                    if (minprice > atof(markdata[5]))
-                        minprice = atof(markdata[5]);
-                    if (volume < atoi(markdata[7]))
-                        volume = atoi(markdata[7]);
-                    this->lastmarket = st_stock;
-                    //瞄点
-                    Pt[li].x =
-                        //22 - 2 * tinkep.ratio*(3 - line*(tinkep.ratio + 9)*0.01f + 3.f + tinkep.move*.1f);
-                        this->Pxtinker(tinkep);
-                    Pt[li].y = (float)atof(markdata[6])/**.9f*/;
+				if (line >= hl && hl >= 0) //( > 1)
+				{
+					//if (line < hl)
+					//	continue;
+					if (tl != 0 && line > tl + hl)
+						break;
+					//将行情数据临时存储到结构体
+					st_stock.time.tm_year = atoi(markdata[0]);
+					st_stock.time.tm_mon = atoi(markdata[1]);
+					st_stock.time.tm_mday = atoi(markdata[2]);
+					st_stock.open = (float)atof(markdata[3]);
+					st_stock.high = (float)atof(markdata[4]);
+					st_stock.low = (float)atof(markdata[5]);
+					st_stock.close = (float)atof(markdata[6]);
+					st_stock.amount = atoi(markdata[7]);
+					st_stock.price = (float)atof(markdata[8]);
+					vec_market.push_back(st_stock);
+					//设置初始显示图形数量
+					if (line < tinkep.move + dlginfo.cycle / tinkep.ratio)
+					{
+						if (line > 0)//li不必分组
+							if (li > 3)
+							{
+								li = 0;
+								isnext = true;
+							}
+						if (line <= 3)
+						{
+							this->dlginfo.line = 1;
+							Pter = Pt[li];
+							last.stRSA._6 = last.stRSA._12 = last.stRSA._24 = atof(markdata[6]);
+						}
+						else
+							this->dlginfo.line = line - 2;
+						{//初始化
+							line % 20 == 0 ? totma._20 = totma._10 = totma._5 = 0 : \
+								(line % 10 == 0 ? totma._10 = totma._5 = 0 : \
+								(line % 5 == 0 ? totma._5 = 0 : 1));
+							idx % 24 == 0 ? frise.stRSA._24 = fdrop.stRSA._24 = 0 : \
+								(idx % 12 == 0 ? frise.stRSA._12 = fdrop.stRSA._12 = 0 : \
+								(idx % 6 == 0 ? frise.stRSA._6 = fdrop.stRSA._6 = 0 : 1));
+							line == 24 ? ot_AB24 = Pt[li] : \
+								(line == 20 ? ot_ma20old = Pt[li] : \
+								(line == 12 ? ot_AB12 = Pt[li] : \
+									(line == 10 ? ot_ma10old = Pt[li] : \
+									(line == 6 ? ot_AB6 = Pt[li] : \
+										(line == 5 ? ot_ma5old = Pt[0] : \
+											Pt[i])))));
+						}
+						//SMA加和
+						totma._5 += (atof(markdata[4]) + atof(markdata[5])) / 2;
+						totma._10 += (atof(markdata[4]) + atof(markdata[5])) / 2;
+						totma._20 += (atof(markdata[4]) + atof(markdata[5])) / 2;
+						//比较当前组最大最小交易价格
+						if (maxprice < atof(markdata[4]))
+							maxprice = atof(markdata[4]);
+						if (minprice > atof(markdata[5]))
+							minprice = atof(markdata[5]);
+						if (volume < atoi(markdata[7]))
+							volume = atoi(markdata[7]);
+						this->lastmarket = st_stock;
+						//瞄点
+						Pt[li].x =
+							//22 - 2 * tinkep.ratio*(3 - line*(tinkep.ratio + 9)*0.01f + 3.f + tinkep.move*.1f);
+							this->Pxtinker(tinkep);
+						Pt[li].y = (float)atof(markdata[6])/**.9f*/;
 #if !defined(CMfcKView)
-                    //                    ASSERT(!_CrtCheckMemory());
+						//                    ASSERT(!_CrtCheckMemory());
 #endif // !
-                    //计算RSA
-                    if (tinkep.ratio == 0)
-                    {
-                        Pt[li].x += 6.5f;
-                        Pt[li].y /= 2;
-                    }
-                    this->DrawPoly(Pter, Pt[li], { 0.f,1.f,0.f });
-                    Pter = Pt[li];
-                    //绘制MA线
-                    line < 20 ? ot_ma20old = ot_ma20 : \
-                        (line < 10 ? ot_ma10old = ot_ma10 : \
-                        (line < 5 ? ot_ma5old = ot_ma5 : ot_ma5old));
-                    if ((line - 1) % 20 == 0)
-                    {
-                        ma20.X = (int)totma._20;
-                        ma20.M = 1;
-                        ma20.N = 20;
-                        if (line - 1 == 20)
-                        {
-                            ot_ma20.y = isma._20 = totma._20 / 20;
-                            ot_ma20old.x = Pter.x;
-                            ot_ma20old.y = ot_ma20.y;
-                        }
-                        else
-                        {
+					//计算RSA
+						if (tinkep.ratio == 0)
+						{
+							Pt[li].x += 6.5f;
+							Pt[li].y /= 2;
+						}
+						this->DrawPoly(Pter, Pt[li], { 0.f,1.f,0.f });
+						Pter = Pt[li];
+						//绘制MA线
+						line < 20 ? ot_ma20old = ot_ma20 : \
+							(line < 10 ? ot_ma10old = ot_ma10 : \
+							(line < 5 ? ot_ma5old = ot_ma5 : ot_ma5old));
+						if ((line - 1) % 20 == 0)
+						{
+							ma20.X = (int)totma._20;
+							ma20.M = 1;
+							ma20.N = 20;
+							if (line - 1 == 20)
+							{
+								ot_ma20.y = isma._20 = totma._20 / 20;
+								ot_ma20old.x = Pter.x;
+								ot_ma20old.y = ot_ma20.y;
+							}
+							else
+							{
 
-                        }
-                        DrawPoly(ot_ma20old, ot_ma20, { 0.9f, 0.0f, 0.9f }, 4);
-                        ot_ma20old = ot_ma20;
-                        hadraw20 = true;
-                    }
-                    else if ((line - 1) % 10 == 0)
-                    {
-                        ma10.X = (int)totma._10;
-                        ma10.M = 1;
-                        ma10.N = 10;
-                        ot_ma10.y = isma._10 = totma._10 / 10;
-                        ot_ma10old.x = Pter.x;
-                        ot_ma10old.y = ot_ma10.y;
-                        DrawPoly(ot_ma10old, ot_ma10, { 1.f, 1.0f, 0.f }, 4);
-                        ot_ma10old = ot_ma10;
-                        hadraw10 = true;
-                    }
-                    else if ((line - 1) % 5 == 0)
-                    {
-                        ma5.X = (int)totma._5;
-                        ma5.M = 1;
-                        ma5.N = 5;
-                        ot_ma5.y = isma._5 = totma._5 / 5;
-                        ot_ma5old.x = Pter.x;
-                        ot_ma5old.y = ot_ma5.y;
-                        DrawPoly(ot_ma5old, ot_ma5, { 1.f, 1.0f, 1.f }, 4);
-                        ot_ma5old = ot_ma5;
-                        hadraw5 = true;
-                    }
-                    //绘制RSA线
-                    ot_AB6.x = ot_AB12.x = ot_AB24.x = Pxtinker(tinkep);
-                    //9 - tinkep.ratio*(3 - line*(tinkep.ratio + 9)*0.01f + 3.f + tinkep.move*.1f);
-                    ot_AB6.y = stock.RSI(frise.stRSA._6, fdrop.stRSA._6)*8.33f;
-                    ot_AB12.y = stock.RSI(frise.stRSA._12, fdrop.stRSA._12)*8.33f;
-                    ot_AB24.y = stock.RSI(frise.stRSA._24, fdrop.stRSA._24)*8.33f;
-                    line < 6 ? (ot_AB6old = ot_AB6) : (line <= 12 ? (ot_AB12old = ot_AB12) : (line < 24 ? ot_AB24 = ot_AB24old : ot_AB24old));
-                    //RSI6粉红
-                    if (line % 6 == 0) {
-                        frise.stRSA._6 = stock.RSI(frise.stRSA._6, fdrop.stRSA._6);
-                        ot_AB6.y = frise.stRSA._6*8.33f;
-                        DrawPoly(ot_AB6old, ot_AB6, { 1.f,.75f,.8f }, 4);
-                        ot_AB6old = ot_AB6;
-                    }
-                    //RSI12弱红
-                    if (line % 12 == 0) {
-                        frise.stRSA._12 = stock.RSI(frise.stRSA._12, fdrop.stRSA._12);
-                        ot_AB12.y = frise.stRSA._12*8.33f;
-                        DrawPoly(ot_AB12old, ot_AB12, { .9f,.1f,.3f }, 4);
-                        ot_AB12old = ot_AB12;
-                    }
-                    //RSI24紫色
-                    if (line % 24 == 0) {
-                        frise.stRSA._24 = stock.RSI(frise.stRSA._24, fdrop.stRSA._24);
-                        ot_AB24.y = frise.stRSA._24*8.33f;
-                        DrawPoly(ot_AB24old, ot_AB24, { .9f,0.f,.9f }, 4);
-                        ot_AB24old = ot_AB24;
-                    }
-                    //SMA10:
-                    ot_ma5 = { -0.7f,1.183f };
-                    ot_ma10 = { -0.44f,1.183f };
-                    ot_ma20 = { -0.2f,1.183f };
-                    //MACD:
-                    ot_macd = { -1.22f,-0.44f };
-                    //成交量:
-                    ot_vol = { ot_macd.x,-0.135f };
-                    //DIF:
-                    ot_dif = { ot_macd.x + 0.32f,-0.44f };
-                    //DEA:
-                    ot_dea = { ot_dif.x + 0.2f,-0.44f };
-                    //RSI:
-                    ot_rsi = { ot_vol.x,-0.74f };
-                    //RSI6,12,24
-                    ot_rsi6 = { ot_rsi.x + 0.32f,ot_rsi.y };
-                    ot_rsi12 = { ot_rsi6.x + 0.32f,ot_rsi6.y };
-                    ot_rsi24 = { ot_rsi12.x + 0.32f,ot_rsi12.y };
-                    //SM5白色
-                    SwitchViewport(1);
-                    if (hadraw5) {//添加判断条件
-                        sprintf_s(ma, "%s%.2f", s_ma5, isma._5);
-                        DrawKtext(ma, ot_ma5, 15);
-                        hadraw5 = false;
-                    }
-                    //SM10黄色
-                    if (hadraw10) {
-                        sprintf_s(ma, "%s%.2f", s_ma10, isma._10);
-                        DrawKtext(ma, ot_ma10, 15, { 1.f,1.f,0.f });
-                        hadraw10 = false;
-                    }
-                    //SM20紫色
-                    if (hadraw20) {
-                        sprintf_s(ma, "%s%.2f", s_ma20, isma._20);
-                        DrawKtext(ma, ot_ma20, 15, { 1.f,0.f,1.f });
-                        hadraw20 = false;
-                    }
-                    //转换视口
-                    SwitchViewport(0);
-                    //成交量Vol红色
-                    sprintf_s(vol, "%s%d", s_vol, volume);
-                    DrawKtext(vol, ot_vol, 15, { 1,0,0 });
-                    //MACD红
-                    sprintf_s(macd, "%s", s_macd);
-                    DrawKtext(macd, ot_macd, 15, { 1,0,0 });
-                    //DIF深绿
-                    sprintf_s(dif, "%s%.2f", s_dif, fo);
-                    DrawKtext(macd, ot_macd, 15, { 1,0,0 });
-                    //DEA黄色
-                    sprintf_s(dea, "%s%.2f", s_dea, fo);
-                    DrawKtext(macd, ot_dea, 15, { 1,0,0 });
-                    //RSI红色
-                    sprintf_s(rsi, "%s%.2f", s_rsi, fo);
-                    DrawKtext(rsi, ot_rsi, 15, { 1,0,0 });
-                    memset(rsi, 0, sizeof(rsi));
-                    //RSI6粉红
-                    total.stRSA._6 = stock.RSI(frise.stRSA._6, fdrop.stRSA._6);
-                    sprintf_s(rsi, "RSI6:%.3f", frise.stRSA._6);
-                    DrawKtext(rsi, ot_rsi6, 15, { 1,0.75f,0.8f });
-                    memset(rsi, 0, sizeof(rsi));
-                    //RSI12弱红
-                    total.stRSA._12 = stock.RSI(frise.stRSA._12, fdrop.stRSA._12);
-                    sprintf_s(rsi, "RSI12:%.3f", frise.stRSA._12);
-                    DrawKtext(rsi, ot_rsi12, 15, { 0.9f,0.1f,0.3f });
-                    memset(rsi, 0, sizeof(rsi));
-                    //RSI12紫色
-                    total.stRSA._24 = stock.RSI(frise.stRSA._24, fdrop.stRSA._24);
-                    sprintf_s(rsi, "RSI24:%.3f", frise.stRSA._24);
-                    DrawKtext(rsi, ot_rsi24, 15, { 0.9f,0.f,0.9f });
-                    memset(rsi, 0, sizeof(rsi));
-                    if (line >= tinkep.move)
-                    {
-                        DrawKline(st_stock, tinkep);
-                    }
-                    //刻度视口
-                    //插入表格数据
-                    //FillChart();
-                    //标尺虚线
-                    //市场详情窗口
-                    if (dlginfo.drawstaff > 0)
-                        DrawDetail(st_stock);
-                    //分组计数
-                    idx++;
-                    //点计数
-                    li++;
-                }
+							}
+							DrawPoly(ot_ma20old, ot_ma20, { 0.9f, 0.0f, 0.9f }, 4);
+							ot_ma20old = ot_ma20;
+							hadraw20 = true;
+						}
+						else if ((line - 1) % 10 == 0)
+						{
+							ma10.X = (int)totma._10;
+							ma10.M = 1;
+							ma10.N = 10;
+							ot_ma10.y = isma._10 = totma._10 / 10;
+							ot_ma10old.x = Pter.x;
+							ot_ma10old.y = ot_ma10.y;
+							DrawPoly(ot_ma10old, ot_ma10, { 1.f, 1.0f, 0.f }, 4);
+							ot_ma10old = ot_ma10;
+							hadraw10 = true;
+						}
+						else if ((line - 1) % 5 == 0)
+						{
+							ma5.X = (int)totma._5;
+							ma5.M = 1;
+							ma5.N = 5;
+							ot_ma5.y = isma._5 = totma._5 / 5;
+							ot_ma5old.x = Pter.x;
+							ot_ma5old.y = ot_ma5.y;
+							DrawPoly(ot_ma5old, ot_ma5, { 1.f, 1.0f, 1.f }, 4);
+							ot_ma5old = ot_ma5;
+							hadraw5 = true;
+						}
+						//绘制RSA线
+						ot_AB6.x = ot_AB12.x = ot_AB24.x = Pxtinker(tinkep);
+						//9 - tinkep.ratio*(3 - line*(tinkep.ratio + 9)*0.01f + 3.f + tinkep.move*.1f);
+						ot_AB6.y = stock.RSI(frise.stRSA._6, fdrop.stRSA._6)*8.33f;
+						ot_AB12.y = stock.RSI(frise.stRSA._12, fdrop.stRSA._12)*8.33f;
+						ot_AB24.y = stock.RSI(frise.stRSA._24, fdrop.stRSA._24)*8.33f;
+						line < 6 ? (ot_AB6old = ot_AB6) : (line <= 12 ? (ot_AB12old = ot_AB12) : (line < 24 ? ot_AB24 = ot_AB24old : ot_AB24old));
+						//RSI6粉红
+						if (line % 6 == 0) {
+							frise.stRSA._6 = stock.RSI(frise.stRSA._6, fdrop.stRSA._6);
+							ot_AB6.y = frise.stRSA._6*8.33f;
+							DrawPoly(ot_AB6old, ot_AB6, { 1.f,.75f,.8f }, 4);
+							ot_AB6old = ot_AB6;
+						}
+						//RSI12弱红
+						if (line % 12 == 0) {
+							frise.stRSA._12 = stock.RSI(frise.stRSA._12, fdrop.stRSA._12);
+							ot_AB12.y = frise.stRSA._12*8.33f;
+							DrawPoly(ot_AB12old, ot_AB12, { .9f,.1f,.3f }, 4);
+							ot_AB12old = ot_AB12;
+						}
+						//RSI24紫色
+						if (line % 24 == 0) {
+							frise.stRSA._24 = stock.RSI(frise.stRSA._24, fdrop.stRSA._24);
+							ot_AB24.y = frise.stRSA._24*8.33f;
+							DrawPoly(ot_AB24old, ot_AB24, { .9f,0.f,.9f }, 4);
+							ot_AB24old = ot_AB24;
+						}
+						//SMA10:
+						ot_ma5 = { -0.7f,1.183f };
+						ot_ma10 = { -0.44f,1.183f };
+						ot_ma20 = { -0.2f,1.183f };
+						//MACD:
+						ot_macd = { -1.22f,-0.44f };
+						//成交量:
+						ot_vol = { ot_macd.x,-0.135f };
+						//DIF:
+						ot_dif = { ot_macd.x + 0.32f,-0.44f };
+						//DEA:
+						ot_dea = { ot_dif.x + 0.2f,-0.44f };
+						//RSI:
+						ot_rsi = { ot_vol.x,-0.74f };
+						//RSI6,12,24
+						ot_rsi6 = { ot_rsi.x + 0.32f,ot_rsi.y };
+						ot_rsi12 = { ot_rsi6.x + 0.32f,ot_rsi6.y };
+						ot_rsi24 = { ot_rsi12.x + 0.32f,ot_rsi12.y };
+						//SM5白色
+						SwitchViewport(1);
+						if (hadraw5) {//添加判断条件
+							sprintf_s(ma, "%s%.2f", s_ma5, isma._5);
+							DrawKtext(ma, ot_ma5, 15);
+							hadraw5 = false;
+						}
+						//SM10黄色
+						if (hadraw10) {
+							sprintf_s(ma, "%s%.2f", s_ma10, isma._10);
+							DrawKtext(ma, ot_ma10, 15, { 1.f,1.f,0.f });
+							hadraw10 = false;
+						}
+						//SM20紫色
+						if (hadraw20) {
+							sprintf_s(ma, "%s%.2f", s_ma20, isma._20);
+							DrawKtext(ma, ot_ma20, 15, { 1.f,0.f,1.f });
+							hadraw20 = false;
+						}
+						//转换视口
+						SwitchViewport(0);
+						//成交量Vol红色
+						sprintf_s(vol, "%s%d", s_vol, volume);
+						DrawKtext(vol, ot_vol, 15, { 1,0,0 });
+						//MACD红
+						sprintf_s(macd, "%s", s_macd);
+						DrawKtext(macd, ot_macd, 15, { 1,0,0 });
+						//DIF深绿
+						sprintf_s(dif, "%s%.2f", s_dif, fo);
+						DrawKtext(macd, ot_macd, 15, { 1,0,0 });
+						//DEA黄色
+						sprintf_s(dea, "%s%.2f", s_dea, fo);
+						DrawKtext(macd, ot_dea, 15, { 1,0,0 });
+						//RSI红色
+						sprintf_s(rsi, "%s%.2f", s_rsi, fo);
+						DrawKtext(rsi, ot_rsi, 15, { 1,0,0 });
+						memset(rsi, 0, sizeof(rsi));
+						//RSI6粉红
+						total.stRSA._6 = stock.RSI(frise.stRSA._6, fdrop.stRSA._6);
+						sprintf_s(rsi, "RSI6:%.3f", frise.stRSA._6);
+						DrawKtext(rsi, ot_rsi6, 15, { 1,0.75f,0.8f });
+						memset(rsi, 0, sizeof(rsi));
+						//RSI12弱红
+						total.stRSA._12 = stock.RSI(frise.stRSA._12, fdrop.stRSA._12);
+						sprintf_s(rsi, "RSI12:%.3f", frise.stRSA._12);
+						DrawKtext(rsi, ot_rsi12, 15, { 0.9f,0.1f,0.3f });
+						memset(rsi, 0, sizeof(rsi));
+						//RSI12紫色
+						total.stRSA._24 = stock.RSI(frise.stRSA._24, fdrop.stRSA._24);
+						sprintf_s(rsi, "RSI24:%.3f", frise.stRSA._24);
+						DrawKtext(rsi, ot_rsi24, 15, { 0.9f,0.f,0.9f });
+						memset(rsi, 0, sizeof(rsi));
+						if (line >= tinkep.move)
+						{
+							DrawKline(st_stock, tinkep);
+						}
+						//刻度视口
+						//插入表格数据
+						//FillChart();
+						//标尺虚线
+						//市场详情窗口
+						if (dlginfo.drawstaff > 0)
+							DrawDetail(st_stock);
+						//分组计数
+						idx++;
+						//点计数
+						li++;
+					}
+				}
                 markdata.clear();
             }
             else return false;

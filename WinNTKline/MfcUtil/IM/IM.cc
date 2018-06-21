@@ -118,9 +118,10 @@ type_thread_func monite(void *arg)
 	char name[24], bufs[256], rcv_txt[256];
 	struct sockaddr_in adin;
 	type_len len = (type_len)sizeof(adin);
-	type_socket rcv_sock = recv_socket,//接收
-		snd_sock = //发送
-		accept(listen_socket, (struct sockaddr*)&adin, &len);
+	type_socket 
+		rcv_sock = recv_socket,//接收
+		snd_sock //发送
+		= accept(listen_socket, (struct sockaddr*)&adin, &len);
 
 	if (snd_sock
 #ifdef _WIN32

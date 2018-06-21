@@ -332,7 +332,7 @@ public:
 #ifdef _MSC_VER	
 	bool SetWindowPixelFormat(HDC m_hDC, HWND m_hWnd, int pixelformat = 0);
 #endif	
-	bool GetMarkDatatoDraw(const char* file = "", void* P = nullptr, char* title = NULL);
+	bool GetMarkDatatoDraw(const char* file = "", void* P = nullptr, char* title = NULL, int hl = 0, int tl = 0);
 public:
 	inline float axistinker(int pX) const
 	{

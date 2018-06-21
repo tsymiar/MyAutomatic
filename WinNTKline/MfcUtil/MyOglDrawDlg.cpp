@@ -73,7 +73,7 @@ namespace StockOgl
 	string sSystemFullPath;
 	string sWritePath;
 	ifstream Readfile;
-	OGLKview::Market ststock;
+	OGLKview::Market stocks;
 	WIN32_FIND_DATA fileData;
 	OGLKview::Point Pter = { 0 }, Pt[4] = { 0 };
 	OGLKview::Point pt_code = { 0.8f,1.189f };
@@ -95,7 +95,7 @@ char* MyOglDrawDlg::GetFirstData()
 	return Ogl.file = const_cast<char*>(sSystemFullPath.c_str());
 }
 
-int MyOglDrawDlg::GetMarkDatatoDraw()
+int MyOglDrawDlg::GetMarkDatatoDraw(int sign, int len)
 {
 	InitializeCriticalSection(&mutex);
 	static int line = 0;
@@ -120,9 +120,10 @@ int MyOglDrawDlg::GetMarkDatatoDraw()
 			token = strtok_s(buff, "/\t", &cotx);
 			while (token != NULL && &token != NULL)
 			{
-				try{
+				try {
 					tradedata.push_back(token);
-				}catch (exception) {
+				}
+				catch (exception) {
 					break;
 				}
 				token = strtok_s(nullptr, "/\t", &cotx);
@@ -154,40 +155,43 @@ int MyOglDrawDlg::GetMarkDatatoDraw()
 			}
 			else if (tradedata.size() > 8)
 			{
-				if (line > 0)
-					Ogl.lastmarket = ststock;
-				ststock.time.tm_year = atoi(tradedata.at(0));
-				ststock.time.tm_mon = atoi(tradedata.at(1));
-				ststock.time.tm_mday = atoi(tradedata.at(2));
-				ststock.open = (float)atof(tradedata.at(3));
-				ststock.high = (float)atof(tradedata.at(4));
-				ststock.low = (float)atof(tradedata.at(5));
-				ststock.close = (float)atof(tradedata.at(6));
-				ststock.amount = atoi(tradedata.at(7));
-				ststock.price = (float)atof(tradedata.at(8));
-				if (line < Ogl.tinkep.move + 12)
-				{
-					if (line > 0)
-						if (li > 3)
-						{
-							li = 0;
-							isnext = true;
-						}
-					Pt[li].x = (22 - Ogl.tinkep.multi*(3 - line * (Ogl.tinkep.multi + 9)*.01f + 3.f + Ogl.tinkep.move*.1f*insert) * 2)*.04f - 0.8f;
-					Pt[li].y = (float)atof(tradedata.at(6))*.8f + 2.5f;
-					if (line <= 3)
+				if (line >= sign && sign >= 0 ) {
+					if (sign != 0 && line > sign + len)
+						break;
+					Ogl.lastmarket = stocks;
+					stocks.time.tm_year = atoi(tradedata.at(0));
+					stocks.time.tm_mon = atoi(tradedata.at(1));
+					stocks.time.tm_mday = atoi(tradedata.at(2));
+					stocks.open = (float)atof(tradedata.at(3));
+					stocks.high = (float)atof(tradedata.at(4));
+					stocks.low = (float)atof(tradedata.at(5));
+					stocks.close = (float)atof(tradedata.at(6));
+					stocks.amount = atoi(tradedata.at(7));
+					stocks.price = (float)atof(tradedata.at(8));
+					if (line < Ogl.tinkep.move + 12)
 					{
-						Ogl.dlginfo.line = 1;
+						if (line > 0)
+							if (li > 3)
+							{
+								li = 0;
+								isnext = true;
+							}
+						Pt[li].x = (22 - Ogl.tinkep.multi*(3 - line * (Ogl.tinkep.multi + 9)*.01f + 3.f + Ogl.tinkep.move*.1f*insert) * 2)*.04f - 0.8f;
+						Pt[li].y = (float)atof(tradedata.at(6))*.8f + 2.5f;
+						if (line <= 3)
+						{
+							Ogl.dlginfo.line = 1;
+							Pter = Pt[li];
+						}
+						else
+							Ogl.dlginfo.line = line - 2;
+						if (line > 2) {
+							Ogl.DrawPoly(Pter, Pt[li], { 0.f,1.f,0.f });
+						}
+						Ogl.DrawKline(stocks, Ogl.tinkep);
 						Pter = Pt[li];
+						li++;
 					}
-					else
-						Ogl.dlginfo.line = line - 2;
-					if (line > 2) {
-						Ogl.DrawPoly(Pter, Pt[li], { 0.f,1.f,0.f });
-					}
-					Ogl.DrawKline(ststock, Ogl.tinkep);
-					Pter = Pt[li];
-					li++;
 				}
 				tradedata.clear();
 			}
@@ -195,7 +199,7 @@ int MyOglDrawDlg::GetMarkDatatoDraw()
 			LeaveCriticalSection(&mutex);
 		}
 		if (Ogl.dlginfo.drawstaff > 0)
-			Ogl.DrawDetail(ststock);
+			Ogl.DrawDetail(stocks);
 		sz_Data = line;
 		line = 0;
 	}
@@ -304,7 +308,7 @@ void _stdcall MyOglDrawDlg::DrawFunc(HDC m_hDC)
 	Ogl.DrawCoord(Ogl.dlginfo.mouX, Ogl.dlginfo.mouY);
 #if !defined(GLTEST)
 #ifdef _DEBUG || _UTILAPIS_
-	this->GetMarkDatatoDraw();
+	this->GetMarkDatatoDraw(kPos);
 #else
 	Ogl.GetMarkDatatoDraw();
 #endif
@@ -478,6 +482,12 @@ BOOL MyOglDrawDlg::PreTranslateMessage(tagMSG * pMsg)
 			delete m_ctp;
 		}
 		break;
+		case VK_OEM_COMMA:
+			kPos--;
+			break;
+		case VK_OEM_PERIOD:
+			kPos++;
+			break;
 		case VK_RIGHT:
 		{
 			Ogl.tinkep.move++;
