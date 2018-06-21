@@ -21,7 +21,7 @@
       <Compartment Name="Nested Types" Collapsed="false" />
     </Compartments>
     <TypeIdentifier>
-      <HashCode>AEkAAhAhDAJABpABGUCSTgQOIAAAAUEAJglFoJIhAgw=</HashCode>
+      <HashCode>AEkQAhAhDAJABpABGUCSTgQOIACAAUEAJglFoJIpAgw=</HashCode>
       <FileName>mygl\OGLKview.h</FileName>
     </TypeIdentifier>
   </Class>
@@ -31,21 +31,14 @@
       <Compartment Name="Nested Types" Collapsed="false" />
     </Compartments>
     <TypeIdentifier>
-      <HashCode>GACAAAEAQCEQBgiCg9QSBVpgCDBAUAUgAIYNYEBYADA=</HashCode>
+      <HashCode>GECAAAEAQCEQBojCg5QSBVpgCDBAUAUgAIYFIEBYIDA=</HashCode>
       <FileName>MyOglDrawDlg.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="CIMhideWndDlg" Collapsed="true">
     <Position X="5.75" Y="1.5" Width="1.5" />
-    <NestedTypes>
-      <Enum Name="CIMhideWndDlg::__unnamed_enum_0009_1" Collapsed="true">
-        <TypeIdentifier>
-          <NewMemberFileName>IMhideWndDlg.h</NewMemberFileName>
-        </TypeIdentifier>
-      </Enum>
-    </NestedTypes>
     <TypeIdentifier>
-      <HashCode>GCCAAQEBBCAAoEgASLAAAQBAEChoJABAACAUAAQQQEA=</HashCode>
+      <HashCode>GCCAGQEBBCAAoEgASLBAAQBAEChoJABAACAEAAQQQEA=</HashCode>
       <FileName>IMhideWndDlg.h</FileName>
     </TypeIdentifier>
   </Class>
@@ -58,57 +51,36 @@
   </Class>
   <Class Name="CMFCKlineDlg" Collapsed="true">
     <Position X="0.5" Y="1.5" Width="1.5" />
-    <NestedTypes>
-      <Enum Name="CMFCKlineDlg::__unnamed_enum_0068_1" Collapsed="true">
-        <TypeIdentifier>
-          <NewMemberFileName>MFCKlineDlg.h</NewMemberFileName>
-        </TypeIdentifier>
-      </Enum>
-    </NestedTypes>
     <TypeIdentifier>
-      <HashCode>JACIACEAAAAgAAAAAjwAAQEABCBRAAQgAIgAAAAQkEA=</HashCode>
+      <HashCode>pACYACEAAAAgAAAAAjwAAQEABCBRAAQgAIgAAAAQgEA=</HashCode>
       <FileName>MFCKlineDlg.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="CRegistDlg" Collapsed="true">
     <Position X="2.25" Y="1.5" Width="1.5" />
-    <NestedTypes>
-      <Enum Name="CRegistDlg::__unnamed_enum_001e_1" Collapsed="true">
-        <TypeIdentifier>
-          <NewMemberFileName>RegistDlg.h</NewMemberFileName>
-        </TypeIdentifier>
-      </Enum>
-    </NestedTypes>
     <TypeIdentifier>
-      <HashCode>AAgAAAEAEAggAAAAABAAAAAAAACAAAAAQAACAAAAAAA=</HashCode>
+      <HashCode>AAwAAAEAMAggAAgAhBIAAAAAAAAAAAEAQAAAAQIAgAA=</HashCode>
       <FileName>RegistDlg.h</FileName>
-    </TypeIdentifier>
-  </Class>
-  <Class Name="CWebBrowser2" Collapsed="true">
-    <Position X="2.25" Y="2.75" Width="1.5" />
-    <TypeIdentifier>
-      <HashCode>dCgQAJVEAJJAECtMAgARSMAgiQBAFEVQMAFaCgAITwI=</HashCode>
-      <FileName>ctl\CWebBrowser2.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="DepthMarket" Collapsed="true">
     <Position X="9" Y="0.5" Width="1.25" />
     <TypeIdentifier>
-      <HashCode>BAAAAAgADMAAAAAAAEQAAAAAQAACAACAAACDAAEIgAA=</HashCode>
+      <HashCode>BAAAAAgADMAAAAAAAEQAAAAAQAACAACAAACHAAEIgAA=</HashCode>
       <FileName>deep\DepthMarket.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="IMlogDlg" Collapsed="true">
     <Position X="5.75" Y="0.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAAAAAAAABAgBAAAAAAAAAAAAAAAAIEAAAAAAA=</HashCode>
+      <HashCode>AAAAAAEAABIAAABAgBAAAAAAAAAIAAAAAAJEAAAAAAA=</HashCode>
       <FileName>IMlogDlg.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="CTPclient" Collapsed="true">
     <Position X="8.5" Y="2.75" Width="1.25" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAAAAAAAAAAAAAwBAAAAAAAAAACAAAAAAAEAAA=</HashCode>
+      <HashCode>AAAAAAAAAAAAAAAAAAQwAAAAAAACAAAAAAAAAAAEAAA=</HashCode>
       <FileName>netwk\CTPclient.h</FileName>
     </TypeIdentifier>
   </Class>
@@ -121,16 +93,16 @@
   </Class>
   <Class Name="CLoginDlg" Collapsed="true">
     <Position X="4" Y="1.5" Width="1.5" />
-    <NestedTypes>
-      <Enum Name="CLoginDlg::__unnamed_enum_0010_1" Collapsed="true">
-        <TypeIdentifier>
-          <NewMemberFileName>LoginDlg.h</NewMemberFileName>
-        </TypeIdentifier>
-      </Enum>
-    </NestedTypes>
     <TypeIdentifier>
-      <HashCode>AIAIGAEAIhAACAgAAhAIRAAAAAgAI0AgYAAAAAAQAAA=</HashCode>
+      <HashCode>AoAIGAEAIhBACEAAAhAIRAAAAAgEIkggYAAAAAwQAAA=</HashCode>
       <FileName>LoginDlg.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CMfcHTML" Collapsed="true">
+    <Position X="2.25" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AACAAAAAAAASAAAACBAAiAKAQAAAAAAGAAAAAAAAAAA=</HashCode>
+      <FileName>html\MfcHtmlView.h</FileName>
     </TypeIdentifier>
   </Class>
   <Font Name="Microsoft YaHei UI" Size="9" />
