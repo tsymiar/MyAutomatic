@@ -308,7 +308,7 @@ void _stdcall MyOglDrawDlg::DrawFunc(HDC m_hDC)
 	Ogl.DrawCoord(Ogl.dlginfo.mouX, Ogl.dlginfo.mouY);
 #if !defined(GLTEST)
 #ifdef _DEBUG || _UTILAPIS_
-	this->GetMarkDatatoDraw(kPos);
+	this->GetMarkDatatoDraw(kPos, 100);
 #else
 	Ogl.GetMarkDatatoDraw();
 #endif

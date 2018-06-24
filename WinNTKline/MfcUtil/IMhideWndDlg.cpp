@@ -97,29 +97,37 @@ int flag = 1;
 char* g_Msg;
 CRITICAL_SECTION wrcsec;
 
-void ShowMsg(void* msg) {
-    int len = 0;
-    static char rslt[256];
-    memset(rslt, 0, 256);
+void* showmsg(void* msg)
+{
+	int len = 0;
+	static char rslt[256];
+	memset(rslt, 0, 256);
 	clientsocket* trans = (clientsocket*)malloc(sizeof(clientsocket));
 	trans = (clientsocket*)msg;
-    if (!trans)
-        return;
+	if (!trans)
+		return NULL;
 	EnterCriticalSection(&wrcsec);
-    do {
-        if (trans->sock == INVALID_SOCKET)
-            return;
-        len = recv(trans->sock, rslt, 256, 0);
-        if (!(len == 256)) {
-            Sleep(100);
-            MessageBox(NULL, "connection lost.", "client", MB_OK);
-            return;
-        };
-        if (rslt[1] != 0x0 || rslt[2] == 0x0)
-            return;
-        sprintf_s(g_Msg, 247, "MSG: %s\n", rslt + 8);
-    } while (flag);
+	do {
+		if (trans->sock == INVALID_SOCKET)
+			return NULL;
+		len = recv(trans->sock, rslt, 256, 0);
+		if (!(len == 256)) {
+			Sleep(100);
+			MessageBox(NULL, "connection lost.", "client", MB_OK);
+			return NULL;
+		};
+		if (rslt[1] != 0x0 || rslt[2] == 0x0)
+			return NULL;
+		sprintf_s(g_Msg, 247, "MSG: %s\n", rslt + 8);
+	} while (flag);
 	LeaveCriticalSection(&wrcsec);
+	return NULL;
+}
+
+void getServMsg(void* msg) 
+{
+	unsigned int tid;
+	_beginthreadex(NULL, 0, (_beginthreadex_proc_type)showmsg, msg, 0, &tid);
 };
 
 int CIMhideWndDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
@@ -150,7 +158,7 @@ int CIMhideWndDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
     //int err = InitChat(oimusr.addr);
     flag = 1;
 	InitializeCriticalSection(&wrcsec);
-    StartChat(InitChat(&oimusr), ShowMsg);
+    StartChat(InitChat(&oimusr), getServMsg);
     return 0;
 }
 
