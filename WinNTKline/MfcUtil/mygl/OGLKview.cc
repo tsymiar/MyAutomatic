@@ -90,30 +90,18 @@ bool OGLKview::SetWindowPixelFormat(HDC m_hDC, HWND m_hWnd, int pixelformat)
 //}
 #endif
 
-using namespace std;
-
-bool g_multi = false;
-char g_mktim[16] = { NULL };
-char g_ltime[32] = { NULL };
-float Xdeg, Ydeg;
-float diff = 0, voly = 0;
-float proportion, delta = 1;
-float shadowup, shadowdown;
-float candlemiddle, candleright, candleleft;
-OGLKview::Point g_P, arrow;
-OGLKview::Market fixeddata;
-OGLKview::OglAttr attr = { 1366,768 };
-OGLKview::Item g_ITEM = { 0,0,0,NULL };
-OGLKview::ViewSize viewsize = { 0,0,0,0 };
-OGLKview::Charmarket markchars = { "---","---","---" };
-#ifdef __linux
-#define _Strtok strtok_r
-#elif _MSC_VER
-#define _Strtok strtok_s
-#endif
-
 bool OGLKview::DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool hollow, OGLKview::Point pnt)
 {
+	using namespace std;
+	float Xdeg, Ydeg;
+	float diff = 0, voly = 0;
+	float proportion, delta = 1;
+	float shadowup, shadowdown;
+	float candlemiddle, candleright, candleleft;
+	float max_price = 0;
+	float min_price = INT_MAX;
+	OGLKview::Market fixeddata;
+	OGLKview::Point mouse, arrow;
     //(HANDLE)_beginthreadex(NULL, 0, &iItem, &thd, 0, NULL);
     SwitchViewport(1);
 #if _DEBUG
@@ -125,8 +113,8 @@ bool OGLKview::DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool h
     sprintf_s(g_ltime, "%d-%d-%d", markdata.time.tm_year, markdata.time.tm_mon, markdata.time.tm_mday);
     tinkep.datacol = dlginfo.line;// -3;
     hollow = !dlginfo.bkg;
-    g_P.x = (float)dlginfo.mouX;
-    g_P.y = (float)dlginfo.mouY;
+	mouse.x = (float)dlginfo.mouX;
+	mouse.y = (float)dlginfo.mouY;
     candlemiddle = Xdeg = pnt.x = Okv->Pxtinker(co);
     fillitem.closing = markdata.close;
     fillitem.curprice = markdata.price;
@@ -143,9 +131,9 @@ bool OGLKview::DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool h
     sprintf(markchars.high, "%.2f", markdata.high);
     sprintf(markchars.low, "%.2f", markdata.low);
     if (fillitem.higest < markdata.high)
-        fillitem.higest = markdata.high;
+		max_price = fillitem.higest = markdata.high;
     if (fillitem.lowest < markdata.low)
-        fillitem.lowest = markdata.low;
+		min_price = fillitem.lowest = markdata.low;
     //
     if (tinkep.ratio < 1)
         g_multi = true;
@@ -245,7 +233,7 @@ bool OGLKview::DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool h
     }
     glEnd();
     Ydeg = (fixeddata.high + fixeddata.low) / 2;
-    if ((xytinker(g_P).x >= candleleft) && (xytinker(g_P).x <= candleright))
+    if ((xytinker(mouse).x >= candleleft) && (xytinker(mouse).x <= candleright))
     {
         glColor3f(0.902f, 0.902f, 0.980f);
         glPointSize(3);
@@ -265,10 +253,10 @@ bool OGLKview::DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool h
         sprintf(markchars.open, "%.2f", markdata.open);
         sprintf(markchars.ydeg, "y=%.3f", Ydeg);
     }
-    if ((xytinker(g_P).x >= fixeddata.low) && (xytinker(g_P).x <= fixeddata.high))
+    if ((xytinker(mouse).x >= fixeddata.low) && (xytinker(mouse).x <= fixeddata.high))
     {
         sprintf(markchars.hintx, "%.2f", markdata.close);
-        sprintf(markchars.y, "K(y)=%.2f", xytinker(g_P));
+        sprintf(markchars.y, "K(y)=%.2f", xytinker(mouse));
     }
     arrow.y = Pytinker(fillitem.higest, tinkep);
     if (1/*orighigh>=p_maxpri*/)
@@ -465,12 +453,12 @@ int OGLKview::diag_staff(int x, int y)
     return y;
 }
 
-bool ChartItem(int row, OGLKview::Market market)
+bool OGLKview::DrawItems(Market market, int row)
 {
     char info[32];
     char listime[32];
     OGLKview view;
-    OGLKview::Point pnt;
+    Point pnt;
     bool tmp = *((bool*)&view);
     //GLuint index = 1;
     //glNewList(index, GL_COMPILE);
@@ -799,6 +787,11 @@ void OGLKview::SetColor(OGLKview::Color4f color)
     if (color.A == 0)
         color.A = 1;
     glColor4f(color.R, color.G, color.B, color.A);
+}
+
+std::pair<float, float> OGLKview::getPrices()
+{
+	return this->price;
 }
 
 void OGLKview::SwitchViewport(int viewport, OGLKview::ViewSize adjust)
@@ -1394,7 +1387,7 @@ bool OGLKview::GetMarkDatatoDraw(const char* file, void* P, char* title, int hl,
 						memset(rsi, 0, sizeof(rsi));
 						if (line >= tinkep.move)
 						{
-							DrawKline(st_stock, tinkep);
+							this->DrawKline(st_stock, tinkep);
 						}
 						//刻度视口
 						//插入表格数据
@@ -1416,7 +1409,7 @@ bool OGLKview::GetMarkDatatoDraw(const char* file, void* P, char* title, int hl,
         }
         this->dlginfo.line = line = 0;
     }
-    vector<char*>().swap(markdata);
+    std::vector<char*>().swap(markdata);
     std::vector<OGLKview::Market>().swap(vec_market);
     Readfile.close();
     return true;

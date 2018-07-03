@@ -88,27 +88,43 @@
 #endif
 #include	"Stock/Stock.h"
 #include	"Def/MacroDef.h" 
+
 #ifdef _FILL_
 #define fixpixelx 0.002f
 #else
 #define fixpixelx 0.002f
 #endif
+
 #define _N_ 10
+
 #ifdef OGL_KVIEW_H_
 #define DLL_KVIEW_API __declspec(dllexport)
 #else
 #define DLL_KVIEW_API __declspec(dllimport)
 #endif
+
 #ifdef __linux
 #define _stdcall
 #endif
+
 #ifdef _MSC_VER
 DLL_KVIEW_API
 #endif
+
 #ifdef __linux
 #include "SDL_text.h"
 #define sprintf_s sprintf
 #define _itoa_s _String s;s._itoa
+#endif
+
+#ifdef __linux
+#define _Strtok strtok_r
+#elif _MSC_VER
+#define _Strtok strtok_s
+#endif
+
+#ifndef INT_MAX
+#define INT_MAX       2147483647
 #endif
 
 class OGLKview
@@ -274,6 +290,15 @@ private:
 	OGLKview* Okv;
 	std::vector<char*> markdata;
 	Market st_stock;
+	float y_fix = 0;
+	int		failmsg = 0;
+	bool g_multi = false;
+	char g_mktim[16] = { NULL };
+	char g_ltime[32] = { NULL };
+	ViewSize viewsize = { 0,0,0,0 };
+	OglAttr attr = { 1366,768 };
+	Item g_ITEM = { 0,0,0,NULL };
+	Charmarket markchars = { "---","---","---" };
 #ifdef _WIN32
 	PROCGETCONSOLEWINDOW GetConsoleWindow;
 	void print_string(const char* str);
@@ -287,21 +312,20 @@ private:
 #endif
 	void GetChangeMatrix(float &angel, float &x, float &y, float &z) const;
 public:
-	float y_fix = 0;
-	bool unfurl = false;
-	bool coding = false;
 #if !defined(QT_VERSION)
 #if !defined(_WIN32)
 	DOSCout DOS;
 #endif
 #endif
+	bool unfurl = false;
+	bool coding = false;
+	char* file = nullptr;
+	std::pair<float, float> price;
 	ZOOM Zoom;
 	Initialise index;
 	FixWhat tinkep;
 	Dlginfo dlginfo;
 	Fillitem fillitem;
-	char* file = nullptr;
-	int		failmsg = 0;
 	OGLKview::Market lastmarket;
 	std::map<int, OGLKview::Strmap>stockmap;
 public:
@@ -321,6 +345,7 @@ public:
 	int DrawCoord(int mX, int mY);
 	int DrawArrow(OGLKview::Point begin);
 	int DrawDetail(OGLKview::Market market);
+	bool DrawItems(Market market, int row);
 	int DrawPoly(OGLKview::Point Pb, OGLKview::Point Pe, OGLKview::Color4f color = {1,1,1,1}, int viewport = 1);
 	bool DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool hollow = 1, OGLKview::Point pnt = { 0,0 });
 	void SwitchViewport(int viewport, OGLKview::ViewSize adjust 
@@ -328,6 +353,7 @@ public:
 	);
 	void SetBkg(bool b);
 	void SetColor(OGLKview::Color4f color);
+	std::pair<float, float> getPrices();
 	int Data2View(std::vector<struct OGLKview::Market> market, OGLKview::Dlginfo toview);
 #ifdef _MSC_VER	
 	bool SetWindowPixelFormat(HDC m_hDC, HWND m_hWnd, int pixelformat = 0);

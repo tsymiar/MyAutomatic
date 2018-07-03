@@ -63,6 +63,7 @@ private:
 public:
 	char* ctpIP = NULL;
 	int kPos = 0;
+	float margin;
 	OGLKview  Ogl;
 	CString title;
 	GlModel model;

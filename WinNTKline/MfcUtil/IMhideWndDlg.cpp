@@ -550,7 +550,8 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
     default:
         break;
     }
-    msg.idx = (comsel >> 8) & 0xff + comsel & 0xff;
+	memset(&msg, 0, sizeof(MSG_client));
+    msg.cmd = (comsel >> 8) & 0xff + comsel & 0xff;
     transMsg((char*)&msg);
     this->SetWindowText(g_Msg);
 }
