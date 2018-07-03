@@ -53,6 +53,7 @@ int InitChat(st_imusr* imusr) {
 	client_sock.srvaddr.sin_addr.s_addr = inet_addr(ipaddr);
 #endif
 	client_sock.srvaddr.sin_port = htons(DEFAULT_PORT);
+	/*
 	SOCKET test = socket(AF_INET, SOCK_STREAM, 0);
 	if (test == INVALID_SOCKET) {
 		cerr << "socket() failed with error " << WSAGetLastError() << endl;
@@ -65,6 +66,7 @@ int InitChat(st_imusr* imusr) {
 		return -1;
 	}
 	closesocket(test);
+	*/
 	client_sock.sock = socket(AF_INET, SOCK_STREAM, 0);
 	BOOL bReuseaddr = TRUE;
 	setsockopt(client_sock.sock, SOL_SOCKET, SO_REUSEADDR, (const char*)&bReuseaddr, sizeof(BOOL));

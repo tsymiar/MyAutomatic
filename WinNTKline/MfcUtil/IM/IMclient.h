@@ -50,12 +50,12 @@ struct CMD {
 };
 
 struct MSG_client {
-    char rsv;
-    char idx;
-    char ret[2];
-    char crc[4];
-    char usr[24];
-    char psw[24];
+    unsigned char rsv;
+    unsigned char cmd;
+    unsigned char ret[2];
+    unsigned char crc[4];
+    unsigned char usr[24];
+    unsigned char psw[24];
 };
 
 const CMD idx_CMD[] =
@@ -78,8 +78,8 @@ const CMD idx_CMD[] =
 enum  em_CMD{
     REGIST = 0,
     LOGIN,
-    LOGOUT,
     HELP,
+    LOGOUT,
     FRIENDLIST,
     SETPSW,
     REFRASH,

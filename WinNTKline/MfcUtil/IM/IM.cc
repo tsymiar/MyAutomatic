@@ -21,6 +21,7 @@
 #include <signal.h>
 #endif
 #endif
+#define THREAD_NUM 20
 #define DEFAULT_PORT 8877
 #define MAX_USERS 100
 #define MAX_ONLINE 30
@@ -117,6 +118,7 @@ int load_acnt();
 int new_user(char usr[24], char psw[24]);
 int user_is_line(char user[24]);
 int set_user_line(char user[24], type_socket sock);
+int set_user_quit(char user[24]);
 int get_user_idx(char user[24]);
 int user_auth(char usr[24], char psw[24]);
 int host_group(char ngrp[24], char psw[24]);
@@ -124,7 +126,7 @@ int get_group_idx(char group[24]);
 int join_group(int idx, char usr[24], char psw[24]);
 int leave_group(int idx, char usr[24]);
 
-type_thread_func monite(void *arg)
+type_thread_func monite(void *socket)
 {
 	int c, flg, rtn, cnt = 0;
 	unsigned int buflen;
@@ -132,7 +134,10 @@ type_thread_func monite(void *arg)
 	char name[24], bufs[256], rcv_txt[256];
 	struct sockaddr_in sin;
 	type_len len = (type_len)sizeof(sin);
-	type_socket rcv_sock = accept(listen_socket, (struct sockaddr*)&sin, &len);
+	type_socket rcv_sock;
+	type_socket *rcvsk = (type_socket*)socket;
+	if (*rcvsk == NULL)
+		rcv_sock = accept(listen_socket, (struct sockaddr*)&sin, &len);
 	bool set = true;
 	setsockopt(rcv_sock, SOL_SOCKET, SO_KEEPALIVE, (const char*)&set, sizeof(bool));
 	if (rcv_sock
@@ -192,8 +197,12 @@ type_thread_func monite(void *arg)
 					strcpy((bufs + 8), "too many users.\n");
 				}
 				else if (rtn > 0) {
-					sprintf(bufs + 2, "%x", -3);
+					sprintf(bufs + 2, "%x", rtn);
 					strcpy((bufs + 8), "user already exists.\n");
+				}
+				else if (rtn == -3) {
+					sprintf(bufs + 2, "%x", -3);
+					strcpy((bufs + 8), "user name error.\n");
 				};
 				send(rcv_sock, bufs, 64, 0);
 #ifdef _DEBUG
@@ -243,12 +252,18 @@ type_thread_func monite(void *arg)
 						strcpy(bufs + 8, "already online.");
 						buflen = 24;
 						break;
+					case 0x2:
+						buflen = 8;
+						break;
 					case 0x3:
 					{
 						sprintf(bufs + 8, "%s quit.\n", name);
+						set_user_quit(name);
 						logged = 0;
-						buflen = 40;
-					} return 0;
+						send(rcv_sock, bufs, 40, 0);
+						goto con_err1;
+					} 
+					return 0;
 					case 0x4:
 					{
 						rtn = get_user_idx(name);
@@ -394,6 +409,11 @@ type_thread_func monite(void *arg)
 			}
 		};
 		qq = flg;
+#ifdef _WIN32
+		Sleep(99);
+#elif __linux
+		usleep(99999);
+#endif
 	} while (!logged);
 
 con_err:
@@ -433,6 +453,11 @@ type_thread_func commands(void *arg)
 				printf("user %s kicked !\n", name);
 			};
 		};
+#ifdef _WIN32
+		Sleep(99);
+#elif __linux
+		usleep(99999);
+#endif
 	} while (!(aimtoquit));
 	return NULL;
 };
@@ -528,13 +553,15 @@ int _im_(int argc, char *argv[]) {
 		return -1;
 	}
 	printf("listening PORT [%d].\n", servport);
-	struct sockaddr_in from;
-	type_len fromlen = (type_len)sizeof(from);
-	int c = 0;
+	int cnt = 0;
 	do {
-#ifdef TEST_SOCKET
+#if (defined THREAD_PER_CONN ) || (defined TEST_SOCK)
+		struct sockaddr_in from;
+		type_len fromlen = (type_len)sizeof(from);
 		char IPdotdec[16];
 		type_socket test_socket = accept(listen_socket, (struct sockaddr*)&from, &fromlen);
+#endif
+#ifdef TEST_SOCK
 		if (test_socket
 #ifdef _WIN32
 			== INVALID_SOCKET) {
@@ -560,14 +587,28 @@ int _im_(int argc, char *argv[]) {
 #endif
 		closesocket(test_socket);
 #endif
+		if (THREAD_NUM != 0 && cnt == THREAD_NUM)
+			break;
 #ifdef _WIN32
+#ifdef THREAD_PER_CONN
+		_beginthreadex(NULL, 0, (_beginthreadex_proc_type)monite, (void*)&test_socket, 0, &thread_ID);
+#else
 		_beginthreadex(NULL, 0, (_beginthreadex_proc_type)monite, NULL, 0, &thread_ID);
+#endif
 #else
 		pthread_create(&thread_ID, NULL, monite, (void*)-1);
+#ifdef THREAD_PER_CONN
+		pthread_create(&thread_ID, NULL, monite, (void*)&test_socket);
 #endif
-		c++;
+#endif
+		cnt++;
+#ifdef _WIN32
+		Sleep(99);
+#elif __linux
+		usleep(99999);
+#endif
 		} while (!aimtoquit);
-		printf("c = %d\n", c);
+		printf("thread count = %d\n", cnt);
 		return 0;
 	}
 //save accounts to file.
@@ -639,6 +680,18 @@ int set_user_line(char user[24], type_socket sock) {
 	}
 	return 0;
 };
+int set_user_quit(char user[24]) {
+	char *n = user;
+	for (int i = 0; i < MAX_ONLINE; i++) {
+		if (strcmp(n, online[i].user) == 0)
+		{
+			memset(online[i].user, 0, 24);
+			online[i].sock_rcv = 0;
+			break;
+		}
+	}
+	return 0;
+}
 int get_user_idx(char user[24]) {
 	int c;
 	char *n = user;

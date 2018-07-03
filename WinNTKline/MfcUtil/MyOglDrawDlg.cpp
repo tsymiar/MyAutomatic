@@ -204,6 +204,7 @@ int MyOglDrawDlg::GetMarkDatatoDraw(int sign, int len)
 		line = 0;
 	}
 	vector<char*>().swap(tradedata);
+	margin = abs(Ogl.getPrices().first - Ogl.getPrices().second);
 	Readfile.close();
 	DeleteCriticalSection(&mutex);
 	return line;
