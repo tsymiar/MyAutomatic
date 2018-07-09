@@ -73,6 +73,9 @@
     <None Include="file\shadowsocks.sh">
       <Filter>其他</Filter>
     </None>
+    <None Include="file\git.sh">
+      <Filter>其他</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="soap\myweb.wsdl">
