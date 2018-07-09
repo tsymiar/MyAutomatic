@@ -135,8 +135,8 @@ type_thread_func monite(void *socket)
 	struct sockaddr_in sin;
 	type_len len = (type_len)sizeof(sin);
 	type_socket rcv_sock;
-	type_socket *rcvsk = (type_socket*)socket;
-	if (*rcvsk == NULL)
+	type_socket *sock = (type_socket*)socket;
+	if (sock == NULL || *sock == NULL)
 		rcv_sock = accept(listen_socket, (struct sockaddr*)&sin, &len);
 	bool set = true;
 	setsockopt(rcv_sock, SOL_SOCKET, SO_KEEPALIVE, (const char*)&set, sizeof(bool));
@@ -286,7 +286,7 @@ type_thread_func monite(void *socket)
 						strcpy((bufs + 8), "users logged list:");
 						for (c = 0; c < MAX_ONLINE; c++) {
 							if (strlen(online[c].user) >> 0) {
-								sprintf(bufs + 4, "%x", c);
+								sprintf(bufs + 2, "%x", c);
 								strcpy((bufs + 8 * (c + 4)), online[c].user);
 							}
 							if (online[c].user[0] == '\0')
@@ -299,7 +299,7 @@ type_thread_func monite(void *socket)
 						strcpy((bufs + 8), "groups list:");
 						for (c = 0; c < MAX_GROUPS; c++) {
 							if (strlen(groups[c].ngrp) >> 0) {
-								sprintf(bufs + 4, "%x", c);
+								sprintf(bufs + 2, "%x", c);
 								strcpy((bufs + 8 * (c + 4)), groups[c].ngrp);
 							};
 							if (groups[c].ngrp[0] == '\0')
@@ -608,7 +608,11 @@ int _im_(int argc, char *argv[]) {
 		usleep(99999);
 #endif
 		} while (!aimtoquit);
-		printf("thread count = %d\n", cnt);
+		printf("thread count = %d\n", cnt); 
+#ifdef _WIN32
+		if (cnt == THREAD_NUM)
+			while (1);
+#endif
 		return 0;
 	}
 //save accounts to file.
