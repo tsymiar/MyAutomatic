@@ -1,8 +1,7 @@
 #if !defined(ALGORITHM_H)
 #define ALGORITHM_H
 
-#include <cmath>
-#include <mgl\OGLKview.h>
+#include <mygl/OGLKview.h>
 
 char* IdentifyCode(char* rtn)
 {

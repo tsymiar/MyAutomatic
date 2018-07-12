@@ -774,24 +774,12 @@ int OGLKview::Data2View(std::vector<struct OGLKview::Market> market, OGLKview::D
     return 0;
 }
 
-void OGLKview::SetBkg(bool b)
+void OGLKview::SetViewBkg(bool b)
 {
     if (b)
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     else
         glClearColor(0.8f, 0.9f, 0.7f, 0.9f);
-}
-
-void OGLKview::SetColor(OGLKview::Color4f color)
-{
-    if (color.A == 0)
-        color.A = 1;
-    glColor4f(color.R, color.G, color.B, color.A);
-}
-
-std::pair<float, float> OGLKview::getPrices()
-{
-	return this->price;
 }
 
 void OGLKview::SwitchViewport(int viewport, OGLKview::ViewSize adjust)

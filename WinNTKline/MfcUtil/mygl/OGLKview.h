@@ -34,6 +34,7 @@
 #include	<cstdio>
 #include	<iostream>
 #include	<fstream>
+#include<cmath>
 #include	<random>
 #include	<fcntl.h>
 #if 0
@@ -96,6 +97,7 @@
 #endif
 
 #define _N_ 10
+# define SZ_ELEM(x) ((int) (sizeof(x) / sizeof((x)[0])))
 
 #ifdef OGL_KVIEW_H_
 #define DLL_KVIEW_API __declspec(dllexport)
@@ -238,39 +240,29 @@ public:
 	typedef Initialise::GLPoint Point;
 	typedef Initialise::GLColor Color4f;
 public:
-	inline std::list<struct OGLKview::Market> Vec2List(std::vector<struct OGLKview::Market> marvec)
+	template<typename T> inline std::list<T> Vec2List(const std::vector<T> &vec)
 	{
-		std::list<struct OGLKview::Market> marklist;
-		std::copy_n(std::make_move_iterator(marvec.begin()), marvec.size(), std::back_inserter(marklist));
-		marvec.clear();
-		return marklist;
+		std::list<T> lst;
+		std::copy_n(std::make_move_iterator(vec.begin()), vec.size(), std::back_inserter(lst));
+		return lst;
 	}
-	inline float SortPrice(std::list<struct OGLKview::Market> market, bool greater)
+	template<typename T> inline std::vector<T> SelectPeriod(std::vector<T> elem, unsigned space)
 	{
-		if (!greater)
+		std::vector<T>::iterator it = elem.begin();
+		if (elem.size() > space)
 		{
-			market.sort(std::less<struct OGLKview::Market>());
-			std::list<struct OGLKview::Market>::iterator it = market.begin();
-			return it->high;
+			it = elem.begin() + space;
+			elem.erase(it, elem.end());
+			it = elem.begin();
+			return elem;
 		}
-		else
-		{
-			market.sort(std::greater<struct OGLKview::Market>());
-			std::list<struct OGLKview::Market>::iterator it = market.begin();
-			return it->low;
-		}
+		else return elem;
 	}
-	inline std::vector<struct OGLKview::Market> SelectPeriod(std::vector<struct OGLKview::Market> market, unsigned space)
+	void OGLKview::SetColor(OGLKview::Color4f color)
 	{
-		std::vector<struct OGLKview::Market>::iterator it = market.begin();
-		if (market.size() > space)
-		{
-			it = market.begin() + space;
-			market.erase(it, market.end());
-			it = market.begin();
-			return market;
-		}
-		else return market;
+		if (color.A == 0)
+			color.A = 1;
+		glColor4f(color.R, color.G, color.B, color.A);
 	}
 private:
 #ifdef _WIN32
@@ -337,6 +329,10 @@ public:
 	static
 #endif
 	void AdjustDraw(GLsizei W, GLsizei H);
+	void SetViewBkg(bool b);
+	void SwitchViewport(int viewport, OGLKview::ViewSize adjust 
+		= {1,1,1,1}
+	);
 	void DrawItem(void);
 	void DrawDash(OGLKview::Point pnt[2]);
 	void DrawCurve(OGLKview::Point A[4]);
@@ -348,12 +344,6 @@ public:
 	bool DrawItems(Market market, int row);
 	int DrawPoly(OGLKview::Point Pb, OGLKview::Point Pe, OGLKview::Color4f color = {1,1,1,1}, int viewport = 1);
 	bool DrawKline(OGLKview::Market markdata, OGLKview::FixWhat co, bool hollow = 1, OGLKview::Point pnt = { 0,0 });
-	void SwitchViewport(int viewport, OGLKview::ViewSize adjust 
-		= {1,1,1,1}
-	);
-	void SetBkg(bool b);
-	void SetColor(OGLKview::Color4f color);
-	std::pair<float, float> getPrices();
 	int Data2View(std::vector<struct OGLKview::Market> market, OGLKview::Dlginfo toview);
 #ifdef _MSC_VER	
 	bool SetWindowPixelFormat(HDC m_hDC, HWND m_hWnd, int pixelformat = 0);
@@ -381,6 +371,25 @@ public:
 	inline float Pytinker(float py, OGLKview::FixWhat tinker) const
 	{
 		return 0.27f*py*tinker.ratio*tinker.zoom + y_fix - 2.1f;
+	}
+	inline std::pair<float, float> OGLKview::getPrices()
+	{
+		return this->price;
+	}
+	inline float SortPrice(std::list<struct OGLKview::Market> market, bool greater)
+	{
+		if (!greater)
+		{
+			market.sort(std::less<struct OGLKview::Market>());
+			std::list<struct OGLKview::Market>::iterator it = market.begin();
+			return it->high;
+		}
+		else
+		{
+			market.sort(std::greater<struct OGLKview::Market>());
+			std::list<struct OGLKview::Market>::iterator it = market.begin();
+			return it->low;
+		}
 	}
 };
 

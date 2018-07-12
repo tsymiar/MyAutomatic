@@ -96,12 +96,6 @@
     <ClInclude Include="IMlogDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="deep\DepthMarket.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Idx\MyAlgorithm.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="pthdpool\pthdpool.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -165,6 +159,12 @@
     <ClInclude Include="opencv\opencv2\opencv_modules.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Idx\Glalgorithm.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="deep\DepthView.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MFCKline.cpp">
@@ -213,9 +213,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="IMlogDlg.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="deep\DepthMarket.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="pthdpool\pthdpool.cc">
@@ -279,6 +276,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="IM\IMclient.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="deep\DepthView.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="HOOK\jniNative.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

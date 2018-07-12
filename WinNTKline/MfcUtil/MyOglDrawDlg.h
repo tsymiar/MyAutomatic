@@ -4,7 +4,7 @@
 #include	"afxdialogex.h"
 #include	"MYGL/OGLKview.h"
 #include	"netwk/CTPclient.h"
-#include	"deep/DepthMarket.h"
+#include	"deep/DepthView.h"
 #include	"font/FontNehe.h"
 #include	"Idx/CommSet.h"
 #include	"dos/DOSCout.h"
@@ -70,8 +70,8 @@ public:
 	CTabCtrl m_tab;
 	CToolBar m_tool;
 	DOSCout Dos;
-	DepthMarket object;
-	DepthMarket *depth= object.getDepth();
+	DepthView object;
+	DepthView *depth= object.getDepth();
 public:
 	// 重载函数
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
@@ -97,7 +97,7 @@ public:
 	afx_msg LRESULT OnTaskShow(WPARAM wparam, LPARAM lparam);
 	afx_msg LRESULT SetDlgTitle(WPARAM wparam, LPARAM lparam);
 	afx_msg void FloatDrift(char* text);
-	afx_msg void SetDlgBkg();
+	afx_msg void SetClientBkg();
 	afx_msg void SetDeepDeg(); 
 	void CallShellScript(CString Path, CString fbat, CString param);
 	char* GetFirstData();

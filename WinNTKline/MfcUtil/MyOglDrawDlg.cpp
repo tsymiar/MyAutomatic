@@ -37,7 +37,7 @@ BEGIN_MESSAGE_MAP(MyOglDrawDlg, CDialog)
 	ON_MESSAGE(WM_MSG_SHOW, OnTaskShow)
 	ON_MESSAGE(WM_MSG_TITL, SetDlgTitle)
 	ON_COMMAND(WM_MSG_DEP, &MyOglDrawDlg::SetDeepDeg)
-	ON_COMMAND(WM_MSG_BKG, &MyOglDrawDlg::SetDlgBkg)
+	ON_COMMAND(WM_MSG_BKG, &MyOglDrawDlg::SetClientBkg)
 	ON_COMMAND(WM_MSG_QUIT, &MyOglDrawDlg::PostNcDestroy)
 	ON_WM_DROPFILES()
 	ON_WM_CTLCOLOR()
@@ -322,7 +322,7 @@ void _stdcall MyOglDrawDlg::DrawFunc(HDC m_hDC)
 	//test.glTEST(true);
 #endif
 	Ogl.AdjustDraw(Ogl.dlginfo.width, Ogl.dlginfo.height);
-	Ogl.SetBkg(Ogl.dlginfo.bkg);
+	Ogl.SetViewBkg(Ogl.dlginfo.bkg);
 	SwapBuffers(m_hDC);
 }
 
@@ -525,7 +525,7 @@ BOOL MyOglDrawDlg::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINF
 		switch (nID)
 		{
 		case ID_BKG:
-			SetDlgBkg();
+			SetClientBkg();
 			break;
 		case ID_DEEP:
 			SetDeepDeg();
@@ -701,7 +701,7 @@ void MyOglDrawDlg::CallShellScript(CString Path, CString fbat, CString param)
 	WaitForSingleObject(ShExecInfo.hProcess, INFINITE);
 }
 
-void MyOglDrawDlg::SetDlgBkg()
+void MyOglDrawDlg::SetClientBkg()
 {
 	if (Ogl.dlginfo.bkg)
 		Ogl.dlginfo.bkg = false;
@@ -719,7 +719,7 @@ void MyOglDrawDlg::SetDeepDeg()
 
 void MyOglDrawDlg::OnSetBkg()
 {
-	SetDlgBkg();
+	SetClientBkg();
 }
 
 void MyOglDrawDlg::OnMouseMove(UINT nFlags, CPoint point)
