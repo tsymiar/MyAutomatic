@@ -1,9 +1,9 @@
-#ifndef CHART_DEPTH_H_
-#define CHART_DEPTH_H_
+#ifndef VIEW_DEPTH_H_
+#define VIEW_DEPTH_H_
 
 #include "MYGL/OGLKview.h"
 
-class DepthMarket
+class DepthView
 {
 private:
 	float Py, Pm;
@@ -19,13 +19,13 @@ private:
 public:
 	OGLKview::Item item;
 public:
-	DepthMarket();
+	DepthView();
 	void FillChart(bool unfurl);
+	void SetBackground();
 	void DrawItem(OGLKview::Item item, int col);
-	void DrawBackground();
 	int DrawItem(OGLKview::Item item, bool mode = false);
-	void DelItem(int item);
-	DepthMarket* getDepth();
-	virtual ~DepthMarket();
+	int DelItem(int item);
+	DepthView* getDepth();
+	virtual ~DepthView();
 };
-#endif // !CHART_DEPTH_H_
+#endif // !VIEW_DEPTH_H_

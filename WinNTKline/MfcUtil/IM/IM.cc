@@ -196,7 +196,7 @@ type_thread_func monite(void *socket)
 					sprintf(bufs + 2, "%x", -2);
 					strcpy((bufs + 8), "too many users.\n");
 				}
-				else if (rtn > 0) {
+				else if (rtn >= 0) {
 					sprintf(bufs + 2, "%x", rtn);
 					strcpy((bufs + 8), "user already exists.\n");
 				}
@@ -208,6 +208,7 @@ type_thread_func monite(void *socket)
 #ifdef _DEBUG
 				printf("bufs[%0x,%0x]:%s\n", bufs[0], bufs[1], bufs + 8);
 #endif
+				break;
 			}
 			else if ((rcv_txt[0] == 0) && (rcv_txt[1] == 0x1)) {
 				bufs[0] = 0;
