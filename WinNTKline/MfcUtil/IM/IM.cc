@@ -134,10 +134,12 @@ type_thread_func monite(void *socket)
 	char name[24], bufs[256], rcv_txt[256];
 	struct sockaddr_in sin;
 	type_len len = (type_len)sizeof(sin);
-	type_socket rcv_sock;
+	type_socket rcv_sock = 0;
 	type_socket *sock = (type_socket*)socket;
 	if (sock == NULL || *sock == NULL)
 		rcv_sock = accept(listen_socket, (struct sockaddr*)&sin, &len);
+	else
+		rcv_sock = *sock;
 	bool set = true;
 	setsockopt(rcv_sock, SOL_SOCKET, SO_KEEPALIVE, (const char*)&set, sizeof(bool));
 	if (rcv_sock

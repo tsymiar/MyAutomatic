@@ -32,7 +32,7 @@ static char THIS_FILE[] = __FILE__;
 
 IMPLEMENT_DYNAMIC(CIMhideWndDlg, CDialogEx)
 
-CIMhideWndDlg::CIMhideWndDlg(IMUSR* imusr, CWnd* pParent /*=NULL*/)
+CIMhideWndDlg::CIMhideWndDlg(IMCFG* imusr, CWnd* pParent /*=NULL*/)
     : CDialogEx(IDD_IMHIDEWND, pParent)
 {
     //{{AFX_DATA_INIT(CIMhideWndDlg)
@@ -41,7 +41,7 @@ CIMhideWndDlg::CIMhideWndDlg(IMUSR* imusr, CWnd* pParent /*=NULL*/)
     // Note that LoadIcon does not require a subsequent DestroyIcon in Win32
 
     if (imusr != NULL)
-        memcpy(&oimusr, imusr, sizeof(IMUSR));
+        memcpy(&imcfg, imusr, sizeof(IMCFG));
 
     m_isSizeChanged = FALSE;
     m_isSetTimer = FALSE;
@@ -97,7 +97,7 @@ int flag = 1;
 char* g_Msg;
 CRITICAL_SECTION wrcsec;
 
-void* showmsg(void* msg)
+void* showMsg(void* msg)
 {
 	int len = 0;
 	static char rslt[256];
@@ -111,9 +111,10 @@ void* showmsg(void* msg)
 		if (trans->sock == INVALID_SOCKET)
 			return NULL;
 		len = recv(trans->sock, rslt, 256, 0);
-		if (!(len == 256)) {
+		if (len <= 0) {
 			Sleep(100);
-			MessageBox(NULL, "connection lost.", "client", MB_OK);
+			MessageBox(NULL, "connection lost!", "client", MB_OK);
+			closesocket(trans->sock);
 			return NULL;
 		};
 		if (rslt[1] != 0x0 || rslt[2] == 0x0)
@@ -126,8 +127,8 @@ void* showmsg(void* msg)
 
 void getServMsg(void* msg) 
 {
-	unsigned int tid;
-	_beginthreadex(NULL, 0, (_beginthreadex_proc_type)showmsg, msg, 0, &tid);
+	unsigned int thrdAddr;
+	_beginthreadex(NULL, 0, (_beginthreadex_proc_type)showMsg, msg, 0, &thrdAddr);
 };
 
 int CIMhideWndDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
@@ -158,7 +159,7 @@ int CIMhideWndDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
     //int err = InitChat(oimusr.addr);
     flag = 1;
 	InitializeCriticalSection(&wrcsec);
-    StartChat(InitChat(&oimusr), getServMsg);
+    StartChat(InitChat(&imcfg), getServMsg);
     return 0;
 }
 
@@ -487,7 +488,7 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
     }
     CRect listrect;
     LVCOLUMN lvcol;
-    CRegistDlg m_crgist(oimusr.IP);
+    CRegistDlg m_crgist(imcfg.IP);
     SettingsDlg setDlg;
     MSG_client msg;
     m_logDlg = new IMlogDlg();

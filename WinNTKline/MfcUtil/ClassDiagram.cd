@@ -63,11 +63,11 @@
       <FileName>RegistDlg.h</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="DepthMarket" Collapsed="true">
+  <Class Name="DepthView" Collapsed="true">
     <Position X="9" Y="0.5" Width="1.25" />
     <TypeIdentifier>
       <HashCode>BAAAAAgADMAAAAAAAEQAAAAAQAACAACAAACHAAEIgAA=</HashCode>
-      <FileName>deep\DepthMarket.h</FileName>
+      <FileName>deep\DepthView.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="IMlogDlg" Collapsed="true">

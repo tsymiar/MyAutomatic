@@ -126,7 +126,7 @@ unsigned int __stdcall SocketThread(void* lp)
         rtn = select(sock + 1, &rdfs, NULL, NULL, &timeout);
         if (rtn > 0)
         {
-            lencv = recv(sock, buff, sizeof(buff), 0);
+            lencv = recv(sock, temp, sizeof(temp), 0);
             if (lencv > 0)
             {
                 printf(ok);

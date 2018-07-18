@@ -207,7 +207,7 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\MfcUtil\deep\DepthMarket.h" />
+    <ClInclude Include="..\MfcUtil\deep\DepthView.h" />
     <ClInclude Include="..\MfcUtil\dos\DOSCout.h" />
     <ClInclude Include="..\MfcUtil\html\cefWebKit.h" />
     <ClInclude Include="..\MfcUtil\html\MyHtmlView.h" />
@@ -240,7 +240,7 @@
     <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\stdsoap2.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\MfcUtil\deep\DepthMarket.cpp">
+    <ClCompile Include="..\MfcUtil\deep\DepthView.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\MfcUtil\dos\DOSCout.cpp">

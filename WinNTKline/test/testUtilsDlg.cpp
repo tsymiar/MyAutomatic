@@ -19,7 +19,7 @@
 
 struct SOELEM {
 	struct soap soap;
-	struct IMUSR imusr;
+	struct IMCFG imusr;
 } soelem;
 
 CLoginDlg logon; 
@@ -172,13 +172,13 @@ void CtestUtilsDlg::OnBnClickedSimbtn()
 void CtestUtilsDlg::OnBnClickedImser()
 {
 	STARTUPINFO sInfo;
-	PROCESS_INFORMATION pInfo;
-	ZeroMemory(&pInfo, sizeof(pInfo));
+	PROCESS_INFORMATION prInfo;
+	ZeroMemory(&prInfo, sizeof(prInfo));
 	ZeroMemory(&sInfo, sizeof(sInfo));
 	sInfo.cb = sizeof(sInfo);
 	sInfo.dwFlags = STARTF_USESHOWWINDOW;
 	sInfo.wShowWindow = SW_SHOWNORMAL;
-	::CreateProcess(_T("..\\Debug\\IM(Win32).exe"), _T("1"), NULL, NULL, false, 0, NULL, NULL, &sInfo, &pInfo);
+	::CreateProcess(_T("..\\Debug\\IM(Win32).exe"), _T("1"), NULL, NULL, false, 0, NULL, NULL, &sInfo, &prInfo);
 }
 
 void checkLeak(void* ptr)
