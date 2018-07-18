@@ -20,7 +20,7 @@
 #include <cstdio>
 #include <map>
 
-typedef struct IMUSR {
+typedef struct IMCFG {
     int option = 0x0;
     char addr[MAX_PATH] = { NULL };
     char comm[64] = { NULL };
@@ -28,9 +28,9 @@ typedef struct IMUSR {
     char usr[24] = { NULL };
     char IP[16];
     int err = -1;
-} st_imusr;
+} st_imcfg;
 
-struct CHATMSG
+struct LAST
 {
     char lastuser[256] = { NULL };
     char lastgrop[256] = { NULL };
@@ -41,7 +41,7 @@ typedef struct CLIENTSOCKET
 	SOCKET sock;
 	sockaddr_in srvaddr;
     CRITICAL_SECTION wrcon;
-    CHATMSG *msg;
+	LAST* last;
     void* Dlg;
 } clientsocket;
 
@@ -78,8 +78,8 @@ const CMD idx_CMD[] =
 enum  em_CMD{
     REGIST = 0,
     LOGIN,
-    HELP,
     LOGOUT,
+    HELP,
     FRIENDLIST,
     SETPSW,
     REFRASH,
@@ -92,7 +92,7 @@ enum  em_CMD{
     TALK,
 };
 
-int InitChat(st_imusr* imusr = NULL);
+int InitChat(st_imcfg* cfg = NULL);
 int StartChat(int err, void(*func)(void*));
 int SetOptCmd(unsigned int opt);
 int transMsg(char* msg);

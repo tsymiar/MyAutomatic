@@ -14,14 +14,14 @@ extern "C" {
 	* Method:    getNative
 	* Signature: ()V
 	*/
-	JNIEXPORT jstring JNICALL Java_Native_Func(JNIEnv *, jclass);
+	JNIEXPORT jstring JNICALL Java_Native_Func(JNIEnv *, jclass, int);
 
 
 #ifdef __cplusplus
 }
 #endif
 
-JNIEXPORT jstring JNICALL Java_Native_Func(JNIEnv *env, jclass clazz)
+JNIEXPORT jstring JNICALL Java_Native_Func(JNIEnv *env, jclass clazz, int m)
 {
 	FILE *f;
 	f = fopen("hello.txt", "a+, ccs=UTF-8");
@@ -33,7 +33,7 @@ JNIEXPORT jstring JNICALL Java_Native_Func(JNIEnv *env, jclass clazz)
 
 // Java & JNI
 static JNINativeMethod method_table[] = {
-	{ "getNative", "()Ljava/lang/String;", (void*)Java_Native_Func },//绑定
+	{ "getNative", "(I)Ljava/lang/String;", (void*)Java_Native_Func },//绑定
 };
 
 // register native method to java
@@ -48,7 +48,6 @@ static int registerNativeMethods(JNIEnv* env, const char* className,
 	if (env->RegisterNatives(clazz, gMethods, numMethods) < 0) {
 		return JNI_FALSE;
 	}
-
 	return JNI_TRUE;
 }
 

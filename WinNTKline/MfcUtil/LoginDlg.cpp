@@ -25,7 +25,7 @@ namespace logDlg
 
     struct SOAPELE {
         struct soap soap;
-        struct IMUSR imusr;
+        struct IMCFG imusr;
         struct ArrayOfEmp2 rslt;
         char msg[64];
         char **__rslt;
@@ -102,11 +102,11 @@ BOOL CLoginDlg::OnInitDialog()
 
 unsigned int _stdcall call_soap_thrd(void* lr)
 {
-    int sz_t = sizeof(struct soap) + sizeof(struct IMUSR) + sizeof(struct ArrayOfEmp2) + 1;
+    int sz_t = sizeof(struct soap) + sizeof(struct IMCFG) + sizeof(struct ArrayOfEmp2) + 1;
     SOAPELE* ele = (SOAPELE*)malloc(sz_t);
     CString msg;
     ele->rslt = ArrayOfEmp2();
-    ele->imusr = IMUSR();
+    ele->imusr = IMCFG();
     memcpy(ele, lr, sz_t);
     ele->imusr.err = soap_call_api__trans(&ele->soap, ele->imusr.addr, "", ele->imusr.comm, (char**)&ele->msg);
     if (ele->imusr.err != 0)
