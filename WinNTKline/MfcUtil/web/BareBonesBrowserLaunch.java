@@ -83,22 +83,24 @@ public class BareBonesBrowserLaunch {
       }
    }
 
-   public static void execWinCmd(String cmd) throws IOException {
+   public static void execWinCmd(String[] args) throws IOException {
        String[] env_arr = {null};
        Map<String, String> map = System.getenv();
-       int i = 0;
        Process proc = null;
        String text;
+       int i = 0;
        for (String key : map.keySet()) {
            String env = map.get(key);
            if (key.equals("Path")) {
                env_arr[i] = key + "=" + env;
+			   i++;
            }
        }
        try{
            String osName = System.getProperty("os.name");
            System.out.println(osName);
-           String[] cmd_arr = new String[3];
+            final int arr_len = args.length + 2;
+            String[] cmd_arr = new String[arr_len];
            if (osName.equals("Windows 95")) {
                cmd_arr[0] = "command.com";
            }else if (osName.contains("Windows")) {
@@ -108,8 +110,8 @@ public class BareBonesBrowserLaunch {
                 return;
             }
            cmd_arr[1] = "/C";
-           cmd_arr[2] = cmd;
-           System.out.println(Arrays.toString(env_arr));
+           System.arraycopy(args,0,cmd_arr,2,args.length);
+           System.out.println("Environment: " + Arrays.toString(env_arr));
            System.out.println(Arrays.toString(cmd_arr));
            try {
                proc = Runtime.getRuntime().exec(cmd_arr, env_arr);
