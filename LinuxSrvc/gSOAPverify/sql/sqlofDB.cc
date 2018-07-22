@@ -1,4 +1,4 @@
-#include "sqlDB.h"
+#include "sqlofDB.h"
 
 using namespace std;
 
@@ -21,9 +21,12 @@ MYSQL_FIELD *field = NULL;
 unsigned int rownum;
 unsigned int fieldnum;
 MYSQL_ROW fetch = NULL;
-bool get_rslt_new(struct DBinfo* info);
-bool get_rslt_raw(struct DBinfo* info)
+int get_rslt_new(struct queryInfo* info);
+
+bool get_rslt_raw(struct queryInfo* info)
 {
+	sprintf(sql, "SELECT * FROM %s WHERE psw='%s'", table.c_str(), psw);
+	cout << LL << "SQL(" << cnt << "):[\033[34m" << sql << "\033[0m]" << endl;
 	RES = mysql_store_result(&mysql);
 	rownum = (int)mysql_num_rows(RES);
 	fieldnum = mysql_num_fields(RES);
@@ -58,7 +61,7 @@ bool get_rslt_raw(struct DBinfo* info)
 void* test_connect(void* lp)
 {
 	char val = 1;
-	mysql_options(&mysql, MYSQL_OPT_RECONNECT, (char*) & val);
+	mysql_options(&mysql, MYSQL_OPT_RECONNECT, (char*)& val);
 	while (1)
 	{
 		if (mysql_ping(&mysql) != 0) {
@@ -73,8 +76,9 @@ void* test_connect(void* lp)
 	return lp;
 }
 
-int sqlDB(int type, char* acc, char* psw, struct DBinfo* info)
+int sqlQuery(int type, char* acc, char* psw, struct queryInfo* info)
 {
+	int ret = -1;
 	if (cnt == 0)
 	{
 		pthread_mutex_init(&sql_lock, NULL);
@@ -89,52 +93,49 @@ int sqlDB(int type, char* acc, char* psw, struct DBinfo* info)
 		//int Select(char* table, char** RES, const char* factor,...)
 		//"SELECT Name,AGE,sex,email FROM ...";
 		pthread_create(&tid, NULL, test_connect, &it);
-		cnt++;
 	}
 	cout << LL << "[" << type << "]--[ACC]:" << acc << "\t[(hash)]:" << psw << endl;
 #ifdef FIX
 	st_raw raw{ type, acc, psw };
 	info->raw = raw;
-	get_rslt_new(info);
+	ret = get_rslt_new(info);
 #else
-	sprintf(sql, "SELECT * FROM %s WHERE psw='%s'", table.c_str(), psw);
-	cout << LL << "SQL:[\033[34m" << sql << "\033[0m]" << endl;
-	pthread_mutex_lock(&sql_lock);
-	if (0 != mysql_query(&mysql, sql))
+	if (type == 0)
 	{
-		cout << LL << "Query database fail." << endl;
-		mysql_close(&mysql);
-		pthread_mutex_unlock(&sql_lock);
-		return -1;
-	}
-	else if (type == 0)
-	{
-		get_rslt_raw(info);
+		pthread_mutex_lock(&sql_lock);
+		if (get_rslt_raw(info))
+			ret = 0;
+		cnt++;
 		pthread_mutex_unlock(&sql_lock);
 	}
 	else {
-		cout << LL << "SELECT element fail." << endl;
+		cout << LL << "Element type invalid." << endl;
 		mysql_close(&mysql);
 		mysql_server_end();
-		pthread_mutex_unlock(&sql_lock);
-		return -1;
 	}
 #endif // FIX
-	return 0;
+	return ret;
 }
 
-void sql_close()
+void sqlClose()
 {
 	mysql_close(&mysql);
 }
 
-bool get_rslt_new(DBinfo * info)
+int get_rslt_new(queryInfo * info)
 {
 	sprintf(sql, "SELECT email,tell FROM %s WHERE `psw`='%s'" /*AND user='%s'"*/, table.c_str(), info->raw.psw/*, info->raw.acc*/);
-	cout << LL << "SQL:[\033[34m" << sql << "\033[0m]" << endl;
+	cout << LL << "SQL(" << cnt << "):[\033[34m" << sql << "\033[0m]" << endl;
 	pthread_mutex_lock(&sql_lock);
+	cnt++;
 	if (0 != mysql_query(&mysql, sql))
 	{
+		if (cnt == 1) {
+			pthread_mutex_unlock(&sql_lock);
+			cout << LL << "[INFO] first time went failure, waiting for retring..." << endl;
+			usleep(3000000);
+			return get_rslt_new(info);
+		}
 		cout << LL << "Query database fail: " << mysql_error(&mysql) << "!" << endl;
 		mysql_close(&mysql);
 		pthread_mutex_unlock(&sql_lock);
@@ -161,13 +162,13 @@ bool get_rslt_new(DBinfo * info)
 		}
 		mysql_free_result(RES);
 		pthread_mutex_unlock(&sql_lock);
-		return info->flg;
+		return info->flg ? 0 : -2;
 	}
 	else {
 		cout << LL << "SELECT element fail: " << mysql_error(&mysql) << "!" << endl;
 		mysql_close(&mysql);
 		mysql_server_end();
 		pthread_mutex_unlock(&sql_lock);
-		return -1;
+		return -3;
 	}
 }

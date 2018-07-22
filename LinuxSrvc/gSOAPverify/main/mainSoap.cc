@@ -1,7 +1,7 @@
 ﻿//
 #include"../util/_String-inl.h"
 #include	"mainSoap.h"
-#include"../sql/sqlDB.h"
+#include"../sql/sqlofDB.h"
 #include"../sys/sysstatus.h"
 #include"../soap/soapStub.h"
 #include"../soap/myweb.nsmap"
@@ -335,13 +335,14 @@ int main(int argc, char* argv[])
 
 int api__login_by_key(struct soap*, char *usr, char *psw, struct ArrayOfEmp2 &ccc)
 {
-	struct DBinfo info;
+	struct queryInfo info;
 	ccc.rslt.flag = -3;
 	if (!(usr == nullptr || psw == nullptr))
 	{
-		if (sqlDB(0, usr, psw, &info) != 200) {
+		if (sqlQuery(0, usr, psw, &info) != 0) {
 			info.flg = false;
 			ccc.rslt.flag = -2;
+			printf("[OUT]:\tqueryInfo.rslt is null.\n");
 		}
 		if (info.flg)
 		{

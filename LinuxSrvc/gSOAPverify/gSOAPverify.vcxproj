@@ -27,26 +27,26 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="main\mainSoap.cc" />
     <ClCompile Include="soap\soapC.cpp" />
     <ClCompile Include="soap\soapServer.cpp" />
     <ClCompile Include="soap\stdsoap2.cpp" />
-    <ClCompile Include="sql\sqlDB.cc" />
+    <ClCompile Include="sql\sqlofDB.cc" />
     <ClCompile Include="sys\sysstatus.cc" />
-    <ClCompile Include="web\mainSoap.cc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="main\mainSoap.h" />
     <ClInclude Include="soap\soapH.h" />
     <ClInclude Include="soap\soapStub.h" />
     <ClInclude Include="soap\stdsoap2.h" />
     <ClInclude Include="soap\webapi.h" />
-    <ClInclude Include="sql\sqlDB.h" />
+    <ClInclude Include="sql\sqlofDB.h" />
     <ClInclude Include="sys\sysstatus.h" />
     <ClInclude Include="util\_String-inl.h" />
-    <ClInclude Include="web\mainSoap.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="file\custominfo.sql" />
-    <None Include="file\git.sh" />
+    <None Include="file\gitbase.sh" />
     <None Include="file\mysql.sh" />
     <None Include="file\shadowsocks.sh" />
     <None Include="Makefile" />

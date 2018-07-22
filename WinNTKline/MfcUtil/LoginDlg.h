@@ -44,9 +44,10 @@ private:
 	CEdit m_editPsw;
 	CStatic m_regist;
 	CComboBox m_combo;
-	CIMhideWndDlg* m_ComIM = NULL;
+	MyOglDrawDlg m_Gl;
 	MyOglDrawDlg* m_ComGL = NULL;
 	CIMhideWndDlg* m_IMwnd = NULL;
+	CIMhideWndDlg* m_ComIM = NULL;
 	CIPAddressCtrl m_ipCtrl;
 	void SetCombox();
 	void SetUserofini0();

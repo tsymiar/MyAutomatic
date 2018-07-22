@@ -1,5 +1,5 @@
-#ifndef _SQLDB_H
-#define _SQLDB_H
+#ifndef _SQLOFDB_H
+#define _SQLOFDB_H
 #include <sys/socket.h>
 #include <mysql/mysql.h>
 #include <pthread.h>
@@ -32,7 +32,7 @@ typedef struct st_raw
 	char* psw;
 } RAW;
 
-struct DBinfo {
+struct queryInfo {
 	bool flg;
 	int idx;
 	RAW raw;
@@ -42,8 +42,8 @@ struct DBinfo {
 #  ifdef __cplusplus
 extern "C" {
 #  endif /* __cplusplus */
-	int sqlDB(int type, char* acc, char* psw, struct DBinfo* info);
-	void sql_close();
+	int sqlQuery(int type, char* acc, char* psw, struct queryInfo* info);
+	void sqlClose();
 #  ifdef __cplusplus
 }
 #  endif
