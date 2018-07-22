@@ -15,27 +15,24 @@
     <ClCompile Include="soap\stdsoap2.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="sql\sqlDB.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="soap\soapServer.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="soap\soapC.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="web\mainSoap.cc">
+    <ClCompile Include="sys\sysstatus.cc">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="sys\sysstatus.cc">
+    <ClCompile Include="sql\sqlofDB.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="main\mainSoap.cc">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="soap\soapH.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="sql\sqlDB.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="soap\stdsoap2.h">
@@ -47,13 +44,16 @@
     <ClInclude Include="soap\soapStub.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="web\mainSoap.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="sys\sysstatus.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="util\_String-inl.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="sql\sqlofDB.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="main\mainSoap.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -73,7 +73,7 @@
     <None Include="file\shadowsocks.sh">
       <Filter>其他</Filter>
     </None>
-    <None Include="file\git.sh">
+    <None Include="file\gitbase.sh">
       <Filter>其他</Filter>
     </None>
   </ItemGroup>

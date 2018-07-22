@@ -162,7 +162,6 @@ void CLoginDlg::OnBnClickedLogin()
             STrslt.Format("返回错误");
         else
         {
-            MyOglDrawDlg m_Gl;
             m_Gl.Create(IDD_OGLIMG);
             m_Gl.ShowWindow(SW_SHOWNORMAL);
             m_IMwnd = new CIMhideWndDlg(&soapele.imusr);
@@ -201,11 +200,14 @@ void CLoginDlg::OnBnClickedDft80()
 
 void CLoginDlg::OnStnClickedRegi()
 {
-    m_ipCtrl.GetWindowText(m_IP, 16);
-    if (m_IP[0] == '\0' || m_IP[0] == '\x30')
-        memcpy(m_IP, dftip, 10);
-    CRegistDlg m_crgist(m_IP);
-    m_crgist.DoModal();
+	if (AfxMessageBox("即将弹出的对话框，请点击“是”。", MB_OKCANCEL | MB_ICONEXCLAMATION) == IDOK)
+	{
+		m_ipCtrl.GetWindowText(m_IP, 16);
+		if (m_IP[0] == '\0' || m_IP[0] == '\x30')
+			memcpy(m_IP, dftip, 10);
+		CRegistDlg m_crgist(m_IP);
+		m_crgist.DoModal();
+	}
 }
 
 HBRUSH CLoginDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)

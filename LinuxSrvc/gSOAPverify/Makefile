@@ -5,7 +5,7 @@ PRJ = $(OBJ)/gSOAPverify
 FILE= ./soap/myweb.wsdl
 FLAG= -Wall -g
 SYS = sysstatus.o
-WEB = sqlDB.o mainSoap.o
+MAIN = sqlofDB.o mainSoap.o
 SOAP= soapC.o stdsoap2.o soapServer.o
 BIT = $(shell if [ `getconf LONG_BIT` -eq '64' ];then echo 64;fi;)
 SQL = -std=c++11 -L/usr/lib$(BIT)/mysql -lmysqlclient
@@ -16,10 +16,10 @@ gSOAPverify:$(OUT)
 	g++ -g -c ./soap/stdsoap2.cpp
 	g++ $(FLAG) -c ./soap/soapServer.cpp
 	g++ $(FLAG) -c ./sys/sysstatus.cc -std=c++11
-	g++ $(FLAG) -c ./sql/sqlDB.cc $(SQL)
-	g++ $(FLAG) -c ./web/mainSoap.cc $(PTHD)
+	g++ $(FLAG) -c ./sql/sqlofDB.cc $(SQL)
+	g++ $(FLAG) -c ./main/mainSoap.cc $(PTHD)
 	[ -z "$(ls $(GEN) &> /dev/null)" ] && mkdir $(GEN) || echo "exist"
-	g++ $(FLAG) -o $(GEN)/gSOAPverify $(SYS) $(SOAP) $(WEB) $(SQL) $(PTHD)
+	g++ $(FLAG) -o $(GEN)/gSOAPverify $(SYS) $(SOAP) $(MAIN) $(SQL) $(PTHD)
 	$(shell if [ -f $(FILE) ]; then if [ -d $(GEN) ]; then cp $(FILE) $(GEN)/;fi;else @echo "file <$(FILE)> don't exist.";fi;)
 	$(shell if [ -d $(PRJ) ]; then rm -rf $(OBJ);fi;)
 	mkdir $(OBJ) $(PRJ)
@@ -38,6 +38,7 @@ install:
 	chmod +x gSOAPverify
 	cd /etc/rc3.d/
 	ln -sf ../init.d/gSOAPverify ./S77_SOAP
+	cp -R ./readme/* /var/www/html
 clean:	
 	rm -f ./*.o ./core.* $(GEN)/*.a $(GEN)/*.out $(GEN)/core.* $(PRJ)/*.o
 clear:

@@ -55,7 +55,6 @@ BOOL CMfcHTML::CreateFromDialog(CWnd* pDlgWnd)
 {
 	CRect rc;
 	pDlgWnd->GetClientRect(&rc);
-
 	int nID = pDlgWnd->GetDlgCtrlID();
 	LPCTSTR lpClassName = AfxRegisterWndClass(NULL);
 	if (NULL != pDlgWnd->GetSafeHwnd())
