@@ -17,9 +17,7 @@
 #include <cstring>
 #include <cerrno>
 #include <arpa/inet.h>
-#ifdef __linux
 #include <signal.h>
-#endif
 #endif
 #define THREAD_NUM 20
 #define DEFAULT_PORT 8877
@@ -38,6 +36,9 @@ typedef unsigned int pthread_t;
 #endif
 typedef unsigned int type_thread_func;
 #define flush_all() _flushall()
+#ifndef _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
+#endif // !_CRT_SECURE_NO_WARNINGS
 #else
 typedef int type_socket;
 typedef socklen_t type_len;
@@ -561,7 +562,7 @@ int _im_(int argc, char *argv[]) {
 #if (defined THREAD_PER_CONN ) || (defined TEST_SOCK)
 		struct sockaddr_in from;
 		type_len fromlen = (type_len)sizeof(from);
-		char IPdotdec[16];
+		char IPdotdec[16]; IPdotdec;
 		type_socket test_socket = accept(listen_socket, (struct sockaddr*)&from, &fromlen);
 #endif
 #ifdef TEST_SOCK

@@ -98,7 +98,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
-      <PreprocessorDefinitions>_UTILAPIS_;_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WINSOCK_DEPRECATED_NO_WARNINGS;_UTILAPIS_;_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(libPNG);$(CEFDIR);$(OPENCV)\include;$(SolutionDir)MfcUtil;$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\font;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4819</DisableSpecificWarnings>
@@ -209,6 +209,7 @@
   <ItemGroup>
     <ClInclude Include="..\MfcUtil\deep\DepthView.h" />
     <ClInclude Include="..\MfcUtil\dos\DOSCout.h" />
+    <ClInclude Include="..\MfcUtil\elem\Screen-Sharing.h" />
     <ClInclude Include="..\MfcUtil\html\cefWebKit.h" />
     <ClInclude Include="..\MfcUtil\html\MyHtmlView.h" />
     <ClInclude Include="..\MfcUtil\IMhideWndDlg.h" />
@@ -221,7 +222,6 @@
     <ClInclude Include="..\MfcUtil\netwk\CTPdev.h" />
     <ClInclude Include="..\MfcUtil\netwk\Simulation.h" />
     <ClInclude Include="..\MfcUtil\opencv\CvimgMat.h" />
-    <ClInclude Include="..\MfcUtil\own\Screen-Sharing.h" />
     <ClInclude Include="..\MfcUtil\RegistDlg.h" />
     <ClInclude Include="..\MfcUtil\SettingsDlg.h" />
     <ClInclude Include="Resource.h" />
@@ -246,6 +246,7 @@
     <ClCompile Include="..\MfcUtil\dos\DOSCout.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="..\MfcUtil\elem\Screen-Sharing.cpp" />
     <ClCompile Include="..\MfcUtil\html\cefWebKit.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -271,9 +272,6 @@
     </ClCompile>
     <ClCompile Include="..\MfcUtil\opencv\CvimgMat.cc">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="..\MfcUtil\own\Screen-Sharing.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\MfcUtil\RegistDlg.cpp" />
     <ClCompile Include="..\MfcUtil\security\encoding.cc">

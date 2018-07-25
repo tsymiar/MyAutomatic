@@ -10,7 +10,7 @@
 #include	"dos/DOSCout.h"
 #include	"mygl/GlModel.h"
 #include	"netwk/Simulation.h"
-#include	"own/Screen-Sharing.h"
+#include	"elem/Screen-Sharing.h"
 
 using namespace freetype;
 // MyOglDrawDlg 对话框

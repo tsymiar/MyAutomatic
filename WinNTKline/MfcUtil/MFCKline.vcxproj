@@ -262,6 +262,8 @@
     <ClInclude Include="deep\DepthView.h" />
     <ClInclude Include="Def\MacroDef.h" />
     <ClInclude Include="dos\DOSCout.h" />
+    <ClInclude Include="elem\COwnCtl.h" />
+    <ClInclude Include="elem\Screen-Sharing.h" />
     <ClInclude Include="Font\FontNehe.h" />
     <ClInclude Include="HOOK\injectDLL.h" />
     <ClInclude Include="html\cefWebKit.h" />
@@ -293,8 +295,6 @@
     <ClInclude Include="netwk\Simulation.h" />
     <ClInclude Include="opencv\CvimgMat.h" />
     <ClInclude Include="opencv\opencv2\opencv_modules.hpp" />
-    <ClInclude Include="own\COwnCtl.h" />
-    <ClInclude Include="own\Screen-Sharing.h" />
     <ClInclude Include="pthdpool\pthdpool.h" />
     <ClInclude Include="RegistDlg.h" />
     <ClInclude Include="Resource.h" />
@@ -313,6 +313,8 @@
     <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\stdsoap2.cpp" />
     <ClCompile Include="deep\DepthView.cpp" />
     <ClCompile Include="dos\DOSCout.cpp" />
+    <ClCompile Include="elem\COwnCtl.cpp" />
+    <ClCompile Include="elem\Screen-Sharing.cpp" />
     <ClCompile Include="Font\FontNehe.cc" />
     <ClCompile Include="HOOK\injectDLL.cpp" />
     <ClCompile Include="HOOK\jniNative.cpp" />
@@ -338,8 +340,6 @@
     <ClCompile Include="netwk\GEThttp.cpp" />
     <ClCompile Include="netwk\Simulation.cpp" />
     <ClCompile Include="opencv\CvimgMat.cc" />
-    <ClCompile Include="own\COwnCtl.cpp" />
-    <ClCompile Include="own\Screen-Sharing.cpp" />
     <ClCompile Include="pthdpool\pthdpool.cc" />
     <ClCompile Include="RegistDlg.cpp" />
     <ClCompile Include="security\AES.cc" />
@@ -356,7 +356,6 @@
     <None Include="ClassDiagram.cd" />
     <None Include="Idx\Initialise-inl.h" />
     <None Include="Idx\plus1second" />
-    <None Include="res\MFCKline.rc2" />
     <None Include="web\BareBonesBrowserLaunch.java" />
     <None Include="web\client.java" />
     <None Include="web\myweb.nsmap" />

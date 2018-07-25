@@ -20,7 +20,7 @@ BOOL APIENTRY DllMain(HANDLE hModule, DWORD ul_reason_for_call, LPVOID lpReserve
 OGLKview::OGLKview() { ;}
 
 #ifdef __linux//||_UNIX
-int OGLKview::myGL(int argc, char ** argv)
+int OGLKview::mainGL(int argc, char ** argv)
 {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_DEPTH | GLUT_RGBA);
@@ -83,10 +83,10 @@ bool OGLKview::SetWindowPixelFormat(HDC m_hDC, HWND m_hWnd, int pixelformat)
     this->m_hDlg = m_hWnd;
     return true;
 }
-//unsigned _stdcall iItem(void* p)
+//unsigned _stdcall iItem(void* ptr)
 //{
-//    OGLKview* kv = (OGLKview*)p;
-//    TH *th = (TH*)p;
+//    TH *th = (TH*)ptr;
+//    OGLKview* kv = reinterpret_cast<OGLKview*>ptr;
 //}
 #endif
 
