@@ -235,7 +235,7 @@ public:
 	};
 	typedef struct Strmap {
 		std::string code;
-		std::string info;
+		std::string desc;
 	}Strmap;
 	typedef Initialise::GLPoint Point;
 	typedef Initialise::GLColor Color4f;
@@ -300,7 +300,7 @@ private:
 	bool chart_frame(void);
 	int diag_staff(int x, int y);
 #ifdef __linux
-	int myGL(int argc, char ** argv);
+	int mainGL(int argc, char ** argv);
 #endif
 	void GetChangeMatrix(float &angel, float &x, float &y, float &z) const;
 public:

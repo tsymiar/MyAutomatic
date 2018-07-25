@@ -1,47 +1,49 @@
 <h1 align = "center">MyAutomatic</h1>
 
-##### This is MyAutomatic,
+##### This is MyAutomatic, including: 
 
 LinuxSrvc:
 -------
-* Go into this directory ⇣
+* Go into the directory below ⇣
 
   ####  [LinuxSrvc](https://github.com/tsymiar/MyAutomatic/tree/auto-dev/LinuxSrvc/gSOAPverify)
     to `make` the binary file; if makes OK, to run it:
     ```c
     ./bin/gSOAPverify 8080
      ```
-     this is a `SOAP-server` to login the project.
+     this is a `SOAP-server` which is to login the project.
 *  [IM](https://github.com/tsymiar/MyAutomatic/tree/auto-dev/LinuxSrvc/IM)
     should compile with `Visual Studio 2017` on Windows;
     
     just run `g++ IM.cc -std=c++11 -lpthread` if using linux.
     
-    someone may see [IM.cc](https://raw.githubusercontent.com/tsymiar/MyAutomatic/auto-dev/WinNTKline/MfcUtil/IM/IM.cc) also, the source code.
+    you may saw [IM.cc](https://raw.githubusercontent.com/tsymiar/MyAutomatic/auto-dev/WinNTKline/MfcUtil/IM/IM.cc) also, the source code.
     
 Qtcases:
 -------
-  #####  [QtCases](https://github.com/tsymiar/MyAutomatic/tree/auto-dev/QtCases) qt with OpenGL.
+  #####  [QtCases](https://github.com/tsymiar/MyAutomatic/tree/auto-dev/QtCases) Qt with OpenGL.
   
 ## [WinNTKline](https://github.com/tsymiar/MyAutomatic/blob/auto-dev/WinNTKline):
+> 
 ######  [Microsoft .NET Framework 3.5](https://www.microsoft.com/en-US/download/details.aspx?id=25150)
->WinNTKline
->> CVML
+
+| CVML |
+|:----:|
 ```c
-    OpenCV && some Machine Learning learning cases.
+OpenCV && some Machine Learning learning cases.
 ``` 
->>MfcUtil
+| MfcUtil |
+|:-------:|
 ```c
-    A MFC solution to register, log, show K-line, ctp ... etc.
+A MFC solution to register, catch log, show K-line, simulate ctp ... etc.
 ```
->>WPFKline
+| WPFKline |
+|:--------:|
 ```c
-    A K-line app used C#.
+A K-line application using C#.
 ```
->>test
-```c
-    testcases to test functions using above.
-```
+>test
+`testcases to test functions of` _Util_.
 
 -------
 #### impact of project `MFCKline`:

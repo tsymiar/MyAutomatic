@@ -60,9 +60,9 @@ void CMyMenu::MeasureItem(LPMEASUREITEMSTRUCT lpMeasureItemStruct)
 {
 	// TODO: 添加您的代码以确定指定项的大小
 	lpMeasureItemStruct->itemWidth = NUM_ITEM_WIDTH;
-	//ItemInfo *info;
-	//info = (ItemInfo*)lpMeasureItemStruct->itemData;
-	//if(info->m_itemState == 0)
+	//ItemInfo *item;
+	//item = (ItemInfo*)lpMeasureItemStruct->itemData;
+	//if(item->m_itemState == 0)
 	if (lpMeasureItemStruct->itemID == 0)
 	{
 		lpMeasureItemStruct->itemHeight = NUM_SEPARATOR_SPACE;
@@ -78,10 +78,10 @@ void CMyMenu::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 	// TODO: 添加您的代码以绘制指定项
 	CString strText;
 	CDC *pDC = CDC::FromHandle(lpDrawItemStruct->hDC); //获取菜单项的设备句柄 
-	ItemInfo *info = (ItemInfo*)lpDrawItemStruct->itemData;
+	ItemInfo *item = (ItemInfo*)lpDrawItemStruct->itemData;
 	CRect rect(lpDrawItemStruct->rcItem);
 
-	if (info->m_itemState == 0)//分隔条
+	if (item->m_itemState == 0)//分隔条
 	{
 		pDC->FillSolidRect(rect, COLOR_BK);
 		CRect apart = rect;
@@ -114,9 +114,9 @@ void CMyMenu::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 	}
 	pDC->SetBkMode(TRANSPARENT);
 
-	if (info->m_icon != NULL)
+	if (item->m_icon != NULL)
 	{
-		DrawIconEx(pDC->m_hDC, rect.left + 7, rect.top + 16, info->m_icon, 16, 16, 0, NULL, DI_NORMAL);
+		DrawIconEx(pDC->m_hDC, rect.left + 7, rect.top + 16, item->m_icon, 16, 16, 0, NULL, DI_NORMAL);
 	}
 	//文字字体和字号设置
 	LOGFONT fontInfo;
@@ -128,81 +128,81 @@ void CMyMenu::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 	fontCh.CreateFontIndirect(&fontInfo);
 	pDC->SelectObject(&fontCh);
 
-	if (info->m_itemState == -1)//子菜单
+	if (item->m_itemState == -1)//子菜单
 	{
-		pDC->TextOut(rect.left + 36, rect.top + 13, info->m_text, info->m_text.GetLength());
+		pDC->TextOut(rect.left + 36, rect.top + 13, item->m_text, item->m_text.GetLength());
 		::ExcludeClipRect(pDC->m_hDC, rect.right - 15, rect.top, rect.right, rect.bottom);
 		DrawIconEx(pDC->m_hDC, rect.right - 40, rect.top + 7, AfxGetApp()->LoadIconA(IDI_ICON), 32, 32, 1, NULL, DI_NORMAL);
 	}
 	else
 	{
-		pDC->TextOut(rect.left + 36, rect.top + 13, info->m_text, info->m_text.GetLength());
+		pDC->TextOut(rect.left + 36, rect.top + 13, item->m_text, item->m_text.GetLength());
 		fontInfo.lfHeight = 16;
 		CFont fontEn;
 		lstrcpy(fontInfo.lfFaceName, _T("Arial"));
 		fontEn.CreateFontIndirect(&fontInfo);
 		pDC->SelectObject(&fontEn);
-		pDC->TextOut(rect.left + 86, rect.top + 16, info->m_shortcut, info->m_shortcut.GetLength());
+		pDC->TextOut(rect.left + 86, rect.top + 16, item->m_shortcut, item->m_shortcut.GetLength());
 	}
-	m_InfoList.AddTail(info);
+	m_InfoList.AddTail(item);
 }
 
 void CMyMenu::AppendItem(UINT id, CString strText, CString strShortcut, UINT iconID, UINT nFlags)
 {
-	ItemInfo *info = new ItemInfo;
-	info->m_id = id;
+	ItemInfo *item = new ItemInfo;
+	item->m_id = id;
 	if (iconID == 0)
 	{
-		info->m_icon = NULL;
+		item->m_icon = NULL;
 	}
 	else
 	{
-		info->m_icon = (HICON)::LoadImage(AfxGetInstanceHandle(), MAKEINTRESOURCE(iconID), IMAGE_ICON, 16, 16, 0);
-		//info->m_icon = AfxGetApp ()- >LoadIconA(iconID) ;
+		item->m_icon = (HICON)::LoadImage(AfxGetInstanceHandle(), MAKEINTRESOURCE(iconID), IMAGE_ICON, 16, 16, 0);
+		//item->m_icon = AfxGetApp ()- >LoadIconA(iconID) ;
 	}
-	info->m_text = strText;
-	info->m_shortcut = strShortcut;
-	info->m_itemState = 1;
+	item->m_text = strText;
+	item->m_shortcut = strShortcut;
+	item->m_itemState = 1;
 	nFlags |= MF_OWNERDRAW;
-	info->m_nFlag = nFlags;
-	m_InfoList.AddTail(info);
-	CMenu::AppendMenuA(nFlags, info->m_id, (LPCTSTR)info);
+	item->m_nFlag = nFlags;
+	m_InfoList.AddTail(item);
+	CMenu::AppendMenuA(nFlags, item->m_id, (LPCTSTR)item);
 }
 
 //子菜单
 void CMyMenu::AppendSubMenu(UINT id, CMyMenu* subMenu, CString strText, UINT iconID, UINT nFlags)
 {
-	ItemInfo *info = new ItemInfo;
-	info->m_id = id;
+	ItemInfo *item = new ItemInfo;
+	item->m_id = id;
 	if (iconID == 0)
 	{
-		info->m_icon = NULL;
+		item->m_icon = NULL;
 	}
 	else
 	{
-		info->m_icon = (HICON)::LoadImage(AfxGetInstanceHandle(), MAKEINTRESOURCE(iconID), IMAGE_ICON, 16, 16, 0);
+		item->m_icon = (HICON)::LoadImage(AfxGetInstanceHandle(), MAKEINTRESOURCE(iconID), IMAGE_ICON, 16, 16, 0);
 	}
-	info->m_text = strText;
-	info->m_shortcut = "";
-	info->m_itemState = -1;
+	item->m_text = strText;
+	item->m_shortcut = "";
+	item->m_itemState = -1;
 	nFlags |= MF_POPUP | MF_OWNERDRAW;
-	info->m_nFlag = nFlags;
+	item->m_nFlag = nFlags;
 
-	m_InfoList.AddTail(info);
-	CMenu::AppendMenu(nFlags, (UINT)subMenu->GetSafeHmenu(), (LPCTSTR)info);
+	m_InfoList.AddTail(item);
+	CMenu::AppendMenu(nFlags, (UINT)subMenu->GetSafeHmenu(), (LPCTSTR)item);
 }
 
 //分隔符
 void CMyMenu::AppendSeparator(UINT nID, UINT nFlags)
 {
-	ItemInfo *info = new ItemInfo;
-	info->m_id = nID;
-	info->m_icon = NULL;
-	info->m_text = "";
-	info->m_shortcut = "";
-	info->m_itemState = 0;
+	ItemInfo *item = new ItemInfo;
+	item->m_id = nID;
+	item->m_icon = NULL;
+	item->m_text = "";
+	item->m_shortcut = "";
+	item->m_itemState = 0;
 	nFlags |= MF_SEPARATOR | MF_OWNERDRAW;
-	info->m_nFlag = nFlags;
-	m_InfoList.AddTail(info);
-	CMenu::AppendMenu(nFlags, 0, (LPCTSTR)info);
+	item->m_nFlag = nFlags;
+	m_InfoList.AddTail(item);
+	CMenu::AppendMenu(nFlags, 0, (LPCTSTR)item);
 }

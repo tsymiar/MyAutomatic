@@ -28,11 +28,18 @@ inline unsigned char* fix_strerr(unsigned char* str)
 #else
 #ifndef __STRING_
 #define __STRING_
+
 #include <iostream>
 #include <iomanip>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <cassert>
+
+#if (defined __linux ) || (defined sprintf_s)
+#undef sprintf_s
+#define sprintf_s sprintf
+#endif // __linux
 
 #define Conn(x,y) x##y
 // #define ToChar(x) #@x
@@ -147,9 +154,9 @@ inline int _String::_strcut(unsigned char* str, char ch, char* str1, char* str2)
 	for (i = 0; i < strlen((char*)str); i++)
 		if (str[i] == ch)
 			break;
-	sprintf(s1, "%s", (char*)_strsub(str, 0, i));
+	sprintf_s(s1, "%s", (char*)_strsub(str, 0, i));
 	memcpy(str1, s1, strlen(s1) + 1);
-	sprintf(s2, "%s", (char*)_strsub(str, i + 1, strlen((char*)str) + 1 - i));
+	sprintf_s(s2, "%s", (char*)_strsub(str, i + 1, strlen((char*)str) + 1 - i));
 	memcpy(str2, s2, strlen(s2) + 1);
 	return i;
 }
@@ -195,12 +202,12 @@ inline char* _String::_strmove(char* w, int m, bool fore)
 	return w;
 }
 /**
-//单个字符的移动
-  * 字符串 w
-  * 移动的字符 c
-  * 移动的位数 b
-  * 移动的方向 hind(后)
-  */
+ * 单个字符的移动
+ * 字符串 w
+ * 移动的字符 c
+ * 移动的位数 b
+ * 移动的方向 hind(后)
+**/
 inline char* _String::_charmove(char* w, char c, int b, bool hind)
 {
 	int i = 0;
@@ -304,7 +311,7 @@ inline char* _String::_itoa(int num, char *str, int radix)
 		str[0] = '0'; str[1] = '\0';
 		return str;
 	}
-	char  string[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	char  string[] = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 	char* ptr = str;
 	int i; int j;
 	int value = num;

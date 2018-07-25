@@ -2,6 +2,7 @@
 #include "Screen-Sharing.h"
 
 using namespace std;
+
 #define HEIGHTPOS 10
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 

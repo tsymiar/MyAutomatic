@@ -79,9 +79,10 @@ void DOSCout::ExecuteConsole()
 	//阻塞主线程
 	while (true)
 	{
-		if (_getch() == 27)
+		if (_getch() == 27) {
 			ShowWindow(::FindWindow(NULL, _T("TextOut")), SW_HIDE);
 			break;
+		}
 	}
 }
 

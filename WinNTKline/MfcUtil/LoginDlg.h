@@ -28,7 +28,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 private:
 	struct IPS {
-		char info[32];
+		char name[32];
 		char user[16];
 		char addr[16];
 		char port[5];

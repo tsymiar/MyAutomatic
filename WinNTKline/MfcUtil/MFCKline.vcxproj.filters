@@ -90,9 +90,6 @@
     <ClInclude Include="Idx\_MACRO_.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="own\COwnCtl.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="IMlogDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -124,9 +121,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="netwk\Simulation.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="own\Screen-Sharing.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\..\LinuxSrvc\gSOAPverify\soap\stdsoap2.h">
@@ -163,6 +157,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="deep\DepthView.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="elem\COwnCtl.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="elem\Screen-Sharing.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -206,9 +206,6 @@
     <ClCompile Include="test\Testcase.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="own\COwnCtl.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="IM\IM.cc">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -243,9 +240,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="mygl\texture.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="own\Screen-Sharing.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\soapC.cpp">
@@ -284,6 +278,12 @@
     <ClCompile Include="HOOK\jniNative.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="elem\COwnCtl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="elem\Screen-Sharing.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="MFCKline.rc">
@@ -291,9 +291,6 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="res\MFCKline.rc2">
-      <Filter>资源文件</Filter>
-    </None>
     <None Include="Idx\plus1second">
       <Filter>头文件</Filter>
     </None>

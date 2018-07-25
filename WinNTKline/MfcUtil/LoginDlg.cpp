@@ -273,11 +273,11 @@ void CLoginDlg::getNsetIPs()
     for (int i = 0; i < cfgNum; i++) 
     {
         istr.Format(_T("%d"), i);
-        GetPrivateProfileString(istr, _T("info"), (LPCTSTR)"", st_ini[i].info, MAX_PATH, file);
+        GetPrivateProfileString(istr, _T("name"), (LPCTSTR)"", st_ini[i].name, MAX_PATH, file);
         GetPrivateProfileString(istr, _T("user"), (LPCTSTR)"", st_ini[i].user, MAX_PATH, file);
         GetPrivateProfileString(istr, _T("addr"), (LPCTSTR)"", st_ini[i].addr, MAX_PATH, file);
         GetPrivateProfileString(istr, _T("port"), (LPCTSTR)"", st_ini[i].port, MAX_PATH, file);
-        m_combo.InsertString(m_combo.GetCount() + i, st_ini[i].info);
+        m_combo.InsertString(m_combo.GetCount() + i, st_ini[i].name);
     }
     cnt_flg = 1;
 }
