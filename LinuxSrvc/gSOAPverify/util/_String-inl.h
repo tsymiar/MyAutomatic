@@ -26,7 +26,6 @@ inline unsigned char* fix_strerr(unsigned char* str)
 	return str;
 }
 #else
-#ifndef __STRING_
 #define __STRING_
 
 #include <iostream>
@@ -202,11 +201,11 @@ inline char* _String::_strmove(char* w, int m, bool fore)
 	return w;
 }
 /**
- * 单个字符的移动
- * 字符串 w
- * 移动的字符 c
- * 移动的位数 b
- * 移动的方向 hind(后)
+* 单个字符的移动
+* 字符串 w
+* 移动的字符 c
+* 移动的位数 b
+* 移动的方向 hind(后)
 **/
 inline char* _String::_charmove(char* w, char c, int b, bool hind)
 {
@@ -401,5 +400,4 @@ inline istream & operator >> (istream &input, _String &s)
 	s = temp;//赋值
 	return input;//return支持连续使用>>运算符
 }
-#endif
 #endif
