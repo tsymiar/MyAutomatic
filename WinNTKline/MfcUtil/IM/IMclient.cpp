@@ -46,12 +46,12 @@ int InitChat(st_imcfg* cfg) {
 		strcpy_s(ipaddr, "127.0.0.1");
 	}
 	else {
-			printf_s("Now enter server address: ");
-			scanf_s("%s", &ipaddr, (unsigned)_countof(ipaddr));
-			if (*ipaddr != 0)
-				memcpy(cfg->IP, &ipaddr, 16);
-			else
-				memcpy(&ipaddr, cfg->IP, 16);
+		printf_s("Now enter server address: ");
+		scanf_s("%s", &ipaddr, (unsigned)_countof(ipaddr));
+		if (*ipaddr != 0)
+			memcpy(cfg->IP, &ipaddr, 16);
+		else
+			memcpy(&ipaddr, cfg->IP, 16);
 	};
 	client_sock.srvaddr.sin_family = AF_INET;
 #ifdef _UTILAPIS_
@@ -66,14 +66,14 @@ int InitChat(st_imcfg* cfg) {
 	/*
 	SOCKET test = socket(AF_INET, SOCK_STREAM, 0);
 	if (test == INVALID_SOCKET) {
-		cerr << "socket() failed with error " << WSAGetLastError() << endl;
-		WSACleanup();
-		return -1;
+	cerr << "socket() failed with error " << WSAGetLastError() << endl;
+	WSACleanup();
+	return -1;
 	}
 	if (connect(test, (struct sockaddr*)&client_sock.srvaddr, sizeof(client_sock.srvaddr)) == SOCKET_ERROR) {
-		cerr << "connect() failed:error " << "[" << WSAGetLastError() << "] " << WSAECONNREFUSED << endl;
-		WSACleanup();
-		return -1;
+	cerr << "connect() failed:error " << "[" << WSAGetLastError() << "] " << WSAECONNREFUSED << endl;
+	WSACleanup();
+	return -1;
 	}
 	closesocket(test);
 	*/
@@ -90,8 +90,6 @@ int InitChat(st_imcfg* cfg) {
 
 unsigned int __stdcall Chat_Msg(void* func)
 {
-	int k = 0;
-	int rcvlen, curlen = 0;
 	unsigned int thread_ID;
 	static char auxstr[24];
 	static char title[64];
@@ -103,16 +101,18 @@ unsigned int __stdcall Chat_Msg(void* func)
 		return -1;
 	}
 	clientsocket imsock;
-	imsock.sock = socket(AF_INET, SOCK_STREAM, 0);
+	imsock.sock = client_sock.sock;// socket(AF_INET, SOCK_STREAM, 0);
 	_beginthreadex(NULL, 0, (_beginthreadex_proc_type)func, &imsock, 0, &thread_ID);
 	while (imcfg.err == 0)
 	{
 		EnterCriticalSection(&client_sock.wrcon);
+#ifdef TEST_SOCK
 		/*fflush(stdin);
 		char onechar = _getch();
 		auxstr[0] = onechar;
 		auxstr[1] = 0;
 		fflush(stdin);*/
+		int k = 0;
 		if (k == 0)
 		{
 			memset(sndbuf, 0, 256);
@@ -121,19 +121,19 @@ unsigned int __stdcall Chat_Msg(void* func)
 			if (k == INT_MAX)
 				k = 1;
 		}
-		rcvlen = recv(client_sock.sock, rcvbuf, 256, 0);
+		// rcvlen = recv(client_sock.sock, rcvbuf, 256, 0);
+#endif
 		sndbuf[0] = 0;
 		sndbuf[1] = imcfg.option;
 		switch (sndbuf[1])
 		{
 		case 0:
 			continue;
-		case 1:
+		case 0x1:
 			if (imcfg.usr != NULL)
 				strcpy_s(title, imcfg.usr);
 			if (rcvbuf[2] == 0x30) {
-				if (curlen != rcvlen && rcvlen != 0)
-					SetConsoleTitle(title);
+				SetConsoleTitle(title);
 				logstatus = 1;
 				continue;
 			}
@@ -239,7 +239,6 @@ unsigned int __stdcall Chat_Msg(void* func)
 			break;
 		}
 		};
-		curlen = rcvlen;
 		LeaveCriticalSection(&client_sock.wrcon);
 	}
 	return 0;

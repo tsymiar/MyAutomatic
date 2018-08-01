@@ -182,7 +182,7 @@ type_thread_func monite(void *socket)
 			{
 				if (c % 32 == 0)
 					printf("\n");
-				printf("%02x ", (unsigned)rcv_txt[c]);
+				printf("%02x ", (unsigned char)rcv_txt[c]);
 			}
 			printf("\n");
 #endif
