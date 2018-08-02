@@ -20,12 +20,13 @@ namespace logDlg
     struct soap soap;
     char dftip[] = "127.0.0.1";
     CString STrslt;
-    char comm[64];
+    char auth[80];
     char m_Port[16];
 
     struct SOAPELE {
         struct soap soap;
-        struct IMCFG imusr;
+        struct IMSetting sets;
+		struct MSG_trans imusr;
         struct ArrayOfEmp2 rslt;
         char msg[64];
         char **__rslt;
@@ -102,19 +103,19 @@ BOOL CLoginDlg::OnInitDialog()
 
 unsigned int _stdcall call_soap_thrd(void* lr)
 {
-    int sz_t = sizeof(struct soap) + sizeof(struct IMCFG) + sizeof(struct ArrayOfEmp2) + 1;
+    int sz_t = sizeof(struct soap) + sizeof(struct IMSetting) + sizeof(struct ArrayOfEmp2) + 1;
     SOAPELE* ele = (SOAPELE*)malloc(sz_t);
     CString msg;
     ele->rslt = ArrayOfEmp2();
-    ele->imusr = IMCFG();
+    ele->sets = IMSetting();
     memcpy(ele, lr, sz_t);
-    ele->imusr.err = soap_call_api__trans(&ele->soap, ele->imusr.addr, "", ele->imusr.comm, (char**)&ele->msg);
-    if (ele->imusr.err != 0)
+    ele->sets.err = soap_call_api__trans(&ele->soap, ele->sets.addr, "", (char*)ele->imusr.cmd, (char**)&ele->msg);
+    if (ele->sets.err != 0)
     {
         msg.Format("%s\n%s", *soap_faultstring(&ele->soap), ele->msg);
         AfxMessageBox(msg);
     }
-    return ele->imusr.err;
+    return ele->sets.err;
 }
 
 void CLoginDlg::OnBnClickedLogin()
@@ -133,7 +134,7 @@ void CLoginDlg::OnBnClickedLogin()
     md5_str(m_pswd, hexmd5);
     hex_to_str((unsigned char*)hexmd5, out);
     memcpy(soapele.imusr.psw, get_Hash(out, 16, out), 16);
-    sprintf_s(comm, "Login@acc=%s&psw=%s", m_acnt, soapele.imusr.psw);
+    sprintf_s(auth, "Login@acc=%s&psw=%s", m_acnt, soapele.imusr.psw);
     if (m_IP[0] == '\0' || m_IP[0] == '\x30')
         sprintf_s(addr, 256, "http://%s:%s/myweb.cgi", dftip, m_Port);
     else
@@ -147,15 +148,15 @@ void CLoginDlg::OnBnClickedLogin()
         soapele.__rslt[i] = new char[16];
         // soapele.__rslt[i - 1] + 8;
     }
-    memcpy(soapele.imusr.comm, comm, sizeof(comm));
-    memcpy(soapele.imusr.addr, addr, sizeof(addr));
+    memcpy(soapele.sets.auth, auth, sizeof(auth));
+    memcpy(soapele.sets.addr, addr, sizeof(addr));
     memcpy(soapele.imusr.usr, m_acnt, sizeof(m_acnt));
-    memcpy(soapele.imusr.IP, m_IP, 16);
+    memcpy(soapele.sets.IP, m_IP, 16);
     //CloseHandle((HANDLE)_beginthreadex(NULL, 0, \
     //    (_beginthreadex_proc_type)&call_soap_thrd \
     //    , (void *)&soapele, 0, NULL));
-    soapele.imusr.err = soap_call_api__login_by_key(&soapele.soap, soapele.imusr.addr, "", soapele.imusr.usr, soapele.imusr.psw, soapele.rslt);
-    switch (soapele.imusr.err)
+    soapele.sets.err = soap_call_api__login_by_key(&soapele.soap, soapele.sets.addr, "", (char*)soapele.imusr.usr, (char*)soapele.imusr.psw, soapele.rslt);
+    switch (soapele.sets.err)
     {
     case 0:
         if (soapele.rslt.rslt.flag != 200)
@@ -164,7 +165,7 @@ void CLoginDlg::OnBnClickedLogin()
         {
             m_Gl.Create(IDD_OGLIMG);
             m_Gl.ShowWindow(SW_SHOWNORMAL);
-            m_IMwnd = new CIMhideWndDlg(&soapele.imusr);
+            m_IMwnd = new CIMhideWndDlg(&soapele.sets);
             m_IMwnd->Create(IDD_IMHIDEWND);
             m_IMwnd->ShowWindow(SW_SHOWNORMAL);
             m_IMwnd->setWidgetHide();
@@ -297,8 +298,8 @@ void CLoginDlg::OnCbnSelchangeCom()
         break;
     case 1:
     {
-        memcpy(&soapele.imusr.IP, m_IP, 16);
-        m_ComIM = new CIMhideWndDlg(&soapele.imusr);
+        memcpy(&soapele.sets.IP, m_IP, 16);
+        m_ComIM = new CIMhideWndDlg(&soapele.sets);
         m_ComIM->Create(IDD_IMHIDEWND);
         m_ComIM->ShowWindow(SW_SHOWNORMAL);
     }

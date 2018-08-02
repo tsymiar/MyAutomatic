@@ -87,6 +87,6 @@ void IMlogDlg::OnBnClickedOk()
 			AfxMessageBox("密码必须是数字、字母和特殊字符的集合！");
 	if (SetLogInfo((LPSTR)(LPCSTR)m_strAcnt, (LPSTR)(LPCSTR)m_strPsw))
 		CDialogEx::OnOK();
-	SetStatus();
+	SetStatus(0);
 	//GetDlgItem(IDC_LISTFRND)->ShowWindow(SW_SHOW);
 }
