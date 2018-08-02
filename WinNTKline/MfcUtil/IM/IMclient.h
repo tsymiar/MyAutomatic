@@ -1,5 +1,5 @@
-﻿#ifndef IM_IMCHAT_H
-#define IM_IMCHAT_H
+﻿#ifndef _IMCHAT_H
+#define _IMCHAT_H
 #pragma comment(lib, "WS2_32.lib")
 #pragma warning (disable:4477)
 #pragma warning (disable:4819)
@@ -20,15 +20,13 @@
 #include <cstdio>
 #include <map>
 
-typedef struct IMCFG {
+typedef struct IMSetting {
     int option = 0x0;
     char addr[MAX_PATH] = { NULL };
-    char comm[64] = { NULL };
-    char psw[24] = { NULL };
-    char usr[24] = { NULL };
     char IP[16];
+	char auth[80];
     int err = -1;
-} st_imcfg;
+} st_settings;
 
 struct LAST
 {
@@ -36,20 +34,22 @@ struct LAST
     char lastgrop[256] = { NULL };
 };
 
-typedef struct CLIENTSOCKET
+typedef struct CLIENT
 {
 	SOCKET sock;
 	sockaddr_in srvaddr;
     CRITICAL_SECTION wrcon;
 	LAST* last;
     void* Dlg;
-} clientsocket;
+	char url[64];
+	int status = -1;
+} st_client;
 
 struct CMD {
     int idx; std::string val;
 };
 
-struct MSG_client {
+struct MSG_trans {
     unsigned char rsv;
     unsigned char cmd;
     unsigned char ret[2];
@@ -92,12 +92,12 @@ enum  em_CMD{
     TALK,
 };
 
-int InitChat(st_imcfg* cfg = NULL);
+int InitChat(st_settings* setting = NULL);
 int StartChat(int err, void(*func)(void*));
-int SetOptCmd(unsigned int opt);
-int transMsg(char* msg);
+int SetCommond(unsigned int cmd);
+int SetChatMsg(MSG_trans* msg);
 int SetLogInfo(char* usr, char* psw);
-int SetStatus();
+int SetStatus(int t);
 int CloseChat();
 
 #endif

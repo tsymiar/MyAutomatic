@@ -32,7 +32,7 @@ static char THIS_FILE[] = __FILE__;
 
 IMPLEMENT_DYNAMIC(CIMhideWndDlg, CDialogEx)
 
-CIMhideWndDlg::CIMhideWndDlg(IMCFG* imusr, CWnd* pParent /*=NULL*/)
+CIMhideWndDlg::CIMhideWndDlg(st_settings* setting, CWnd* pParent /*=NULL*/)
     : CDialogEx(IDD_IMHIDEWND, pParent)
 {
     //{{AFX_DATA_INIT(CIMhideWndDlg)
@@ -40,8 +40,8 @@ CIMhideWndDlg::CIMhideWndDlg(IMCFG* imusr, CWnd* pParent /*=NULL*/)
     //}}AFX_DATA_INIT
     // Note that LoadIcon does not require a subsequent DestroyIcon in Win32
 
-    if (imusr != NULL)
-        memcpy(&imcfg, imusr, sizeof(IMCFG));
+    if (setting != NULL)
+        memcpy(&imsetting, setting, sizeof(st_settings));
 
     m_isSizeChanged = FALSE;
     m_isSetTimer = FALSE;
@@ -102,8 +102,8 @@ void* showMsg(void* msg)
 	int len = 0;
 	static char rslt[256];
 	memset(rslt, 0, 256);
-	clientsocket* trans = (clientsocket*)malloc(sizeof(clientsocket));
-	trans = (clientsocket*)msg;
+	st_client* trans = (st_client*)malloc(sizeof(st_client));
+	trans = (st_client*)msg;
 	if (!trans)
 		return NULL;
 	EnterCriticalSection(&wrcsec);
@@ -159,7 +159,7 @@ int CIMhideWndDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
     //int err = InitChat(oimusr.addr);
     flag = 1;
 	InitializeCriticalSection(&wrcsec);
-    StartChat(InitChat(&imcfg), getServMsg);
+    StartChat(InitChat(&imsetting), getServMsg);
     return 0;
 }
 
@@ -488,14 +488,14 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
     }
     CRect listrect;
     LVCOLUMN lvcol;
-    CRegistDlg m_crgist(imcfg.IP);
+    CRegistDlg m_crgist(imsetting.IP);
     SettingsDlg setDlg;
-    MSG_client msg;
+	MSG_trans msg;
     m_logDlg = new IMlogDlg();
     int comsel = m_commbo.GetCurSel();
     char item[8];
-    SetOptCmd(comsel);
-    SetStatus();
+    SetCommond(comsel);
+    SetStatus(1);
     switch (comsel)
     {
     case REGIST:
@@ -551,9 +551,9 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
     default:
         break;
     }
-	memset(&msg, 0, sizeof(MSG_client));
-    msg.cmd = (comsel >> 8) & 0xff + comsel & 0xff;
-    transMsg((char*)&msg);
+	memset(&msg, 0, sizeof(st_client));
+	msg.cmd = (comsel >> 8) & 0xff + comsel & 0xff;
+	SetChatMsg(&msg);
     this->SetWindowText(g_Msg);
 }
 
