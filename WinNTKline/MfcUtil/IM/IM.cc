@@ -178,7 +178,7 @@ type_thread_func monite(void *socket)
 		{
 #ifdef _DEBUG
 			printf("1-rcv [%0x,%0x]: %s, %d\n", rcv_txt[0], rcv_txt[1], rcv_txt + 8, flg);
-			for (c = 0; c < 256; c++)
+			for (c = 0; c < flg; c++)
 			{
 				if (c % 32 == 0)
 					printf("\n");
@@ -209,7 +209,7 @@ type_thread_func monite(void *socket)
 				};
 				send(rcv_sock, bufs, 64, 0);
 #ifdef _DEBUG
-				printf("bufs[%0x,%0x]:%s\n", bufs[0], bufs[1], bufs + 8);
+				if (flg > 0) printf("bufs[%0x,%0x]:%s\n", bufs[0], bufs[1], bufs + 8);
 #endif
 				break;
 			}
@@ -236,6 +236,14 @@ type_thread_func monite(void *socket)
 			set_user_line(name, rcv_sock);
 			while (logged) {
 				flg = recv(rcv_sock, rcv_txt, 256, 0);
+				if (flg < 0 && flg != EWOULDBLOCK && flg != EAGAIN && flg != EINTR) {
+					printf("%s[%d]\n", strerror(errno), errno);
+					goto con_err1;
+					break;
+				}
+				else if (flg == 0) {
+					printf("socket disconnect normally.\n");
+				}
 				if (flg < 24)
 					goto con_err;
 				if (flg == -1) {
@@ -243,7 +251,14 @@ type_thread_func monite(void *socket)
 					goto con_err1;
 				};
 #ifdef _DEBUG
-				printf("2-rcv [%x,%x]: %s, %d\n", rcv_txt[0], rcv_txt[1], rcv_txt + 8, flg);
+				if (flg > 0) printf("2-rcv [%x,%x]: %s, %d\n", rcv_txt[0], rcv_txt[1], rcv_txt + 8, flg);
+				for (c = 0; c < flg; c++)
+				{
+					if (c % 32 == 0)
+						printf("\n");
+					printf("%02x ", (unsigned char)rcv_txt[c]);
+				}
+				printf("\n");
 #endif
 				buflen = 256;
 				memset(bufs, 0, 256);
