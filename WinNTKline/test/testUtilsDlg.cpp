@@ -19,7 +19,7 @@
 
 struct SOELEM {
 	struct soap soap;
-	struct IMCFG imusr;
+	st_settings setting;
 } soelem;
 
 CLoginDlg logon; 
@@ -119,8 +119,8 @@ HCURSOR CtestUtilsDlg::OnQueryDragIcon()
 void CtestUtilsDlg::OnBnClickedToim()
 {
 	m_ipAddr.GetWindowText(a_IP, 16);
-	memcpy(soelem.imusr.IP, a_IP, 16);
-	m_pIM = new CIMhideWndDlg(&soelem.imusr);
+	memcpy(soelem.setting.IP, a_IP, 16);
+	m_pIM = new CIMhideWndDlg(&soelem.setting);
 	m_pIM->Create(IDD_IMHIDEWND);
 	m_pIM->ShowWindow(SW_SHOWNORMAL);
 }
@@ -135,8 +135,8 @@ void CtestUtilsDlg::OnBnClickedTestlog()
 {
 	m_Port.GetWindowText(a_Port); 
 	m_ipAddr.GetWindowText(a_IP, 16);
-	sprintf_s(soelem.imusr.addr, 64, "http://%s:%d/myweb.cgi", a_IP, atoi(a_Port));
-	sprintf_s(soelem.imusr.comm, 28, "trans@&acc=local&test=8888");
+	sprintf_s(soelem.setting.addr, 64, "http://%s:%d/myweb.cgi", a_IP, atoi(a_Port));
+	sprintf_s(soelem.setting.auth, 28, "trans@&acc=local&test=8888");
 	for (int i = 0; i < LOOP_TIME; i++)
 	{
 		logon.testLogin(&soelem);

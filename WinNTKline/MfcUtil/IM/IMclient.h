@@ -21,7 +21,7 @@
 #include <map>
 
 typedef struct IMSetting {
-    int option = 0x0;
+    int idx = 0x0;
     char addr[MAX_PATH] = { NULL };
     char IP[16];
 	char auth[80];
@@ -45,8 +45,8 @@ typedef struct CLIENT
 	int status = -1;
 } st_client;
 
-struct CMD {
-    int idx; std::string val;
+struct MENU {
+    int key; std::string value;
 };
 
 struct MSG_trans {
@@ -58,7 +58,7 @@ struct MSG_trans {
     unsigned char psw[24];
 };
 
-const CMD idx_CMD[] =
+const MENU menus[] =
 {
     { 0x00,"命令菜单" },
     { 0x01,"注册" },
@@ -75,7 +75,7 @@ const CMD idx_CMD[] =
     { 0x0A,"退群" },
 };
 
-enum  em_CMD{
+enum  em_menu{
     REGIST = 0,
     LOGIN,
     LOGOUT,
@@ -93,8 +93,8 @@ enum  em_CMD{
 };
 
 int InitChat(st_settings* setting = NULL);
-int StartChat(int err, void(*func)(void*));
 int SetCommond(unsigned int cmd);
+int StartChat(int err, void(*func)(void*));
 int SetChatMsg(MSG_trans* msg);
 int SetLogInfo(char* usr, char* psw);
 int SetStatus(int t);
