@@ -90,6 +90,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <Link>
       <LibraryDependencies>pthread;%(LibraryDependencies)</LibraryDependencies>
+      <AdditionalOptions>-DTHREAD_PER_CONN %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ClCompile>
       <PreprocessorDefinitions>_DEBUG</PreprocessorDefinitions>

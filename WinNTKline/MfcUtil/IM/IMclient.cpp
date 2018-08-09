@@ -125,7 +125,7 @@ unsigned int __stdcall Chat_Msg(void* func)
 		// rcvlen = recv(client.sock, rcvbuf, 256, 0);
 #endif
 		sndbuf[0] = 0;
-		sndbuf[1] = setting.option;
+		sndbuf[1] = trans.cmd;
 		switch (sndbuf[1])
 		{
 		case 0:
@@ -220,7 +220,7 @@ unsigned int __stdcall Chat_Msg(void* func)
 		}
 		default:
 		{
-			if (setting.option == 0x0)
+			if (trans.cmd == 0x0)
 			{
 				MessageBox(NULL, "Logged failed.", "default", MB_OK);
 				return -1;

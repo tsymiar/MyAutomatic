@@ -114,7 +114,8 @@ void* showMsg(void* msg)
 		if (len <= 0) {
 			Sleep(100);
 			MessageBox(NULL, "connection lost!", "client", MB_OK);
-			closesocket(trans->sock);
+			if ((int)trans->sock > 0)
+				closesocket(trans->sock);
 			return NULL;
 		};
 		if (rslt[1] != 0x0 || rslt[2] == 0x0)
@@ -454,10 +455,10 @@ BOOL CIMhideWndDlg::OnInitDialog()
     CDialogEx::OnInitDialog();
     if (m_commbo.m_hWnd != NULL)
     {
-        m_commbo.InsertString(0, idx_CMD[0].val.c_str());
+        m_commbo.InsertString(0, menus[0].value.c_str());
         m_commbo.SetCurSel(0);
         for (int i = 1; i <= 0x0C; i++)
-            m_commbo.InsertString(i, idx_CMD[i].val.c_str());
+            m_commbo.InsertString(i, menus[i].value.c_str());
     }
     setFriendList();
     hBitmap = (HBITMAP)::LoadImage(NULL, ".\\res\\bit+.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
@@ -551,7 +552,7 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
     default:
         break;
     }
-	memset(&msg, 0, sizeof(st_client));
+	memset(&msg, 0, sizeof(MSG_trans));
 	msg.cmd = (comsel >> 8) & 0xff + comsel & 0xff;
 	SetChatMsg(&msg);
     this->SetWindowText(g_Msg);
