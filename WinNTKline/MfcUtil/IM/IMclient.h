@@ -30,19 +30,19 @@ typedef struct IMSetting {
 
 struct LAST
 {
-    char lastuser[256] = { NULL };
-    char lastgrop[256] = { NULL };
+    char lastuser[24] = { NULL };
+    char lastgrop[24] = { NULL };
 };
 
 typedef struct CLIENT
 {
-	SOCKET sock;
+	SOCKET sock = NULL;
 	sockaddr_in srvaddr;
     CRITICAL_SECTION wrcon;
 	LAST* last;
     void* Dlg;
 	char url[64];
-	int status = -1;
+	int status = 0;
 } st_client;
 
 struct MENU {
@@ -54,8 +54,18 @@ struct MSG_trans {
     unsigned char cmd;
     unsigned char ret[2];
     unsigned char crc[4];
-    unsigned char usr[24];
-    unsigned char psw[24];
+	union {
+		unsigned char usr[24];
+		unsigned char hgrp[24];
+
+	};
+	union {
+		unsigned char psw[24];
+		unsigned char grp[24];
+		unsigned char jgrp[24];
+		unsigned char intro[24];
+	};
+	unsigned char npsw[24];
 };
 
 const MENU menus[] =
@@ -63,26 +73,26 @@ const MENU menus[] =
     { 0x00,"命令菜单" },
     { 0x01,"注册" },
     { 0x02,"登陆" },
-    { 0x03,"登出" },
-    { 0x04,"帮助" },
-    { 0x08,"好友列表" },
-    { 0x09,"设置密码" },
-    { 0x05,"刷新列表" },
-    { 0x06,"群" },
-    { 0x07,"群成员" },
-    { 0x08,"创建群" },
-    { 0x09,"加入群" },
-    { 0x0A,"退群" },
+    { 0x03,"帮助" },
+    { 0x04,"登出" },
+    { 0x05,"设置密码" },
+    { 0x06,"重新载入" },
+    { 0x07,"好友列表" },
+    { 0x08,"群" },
+    { 0x09,"群成员" },
+    { 0x0A,"创建群" },
+    { 0x0B,"加入群" },
+    { 0x0C,"退群" },
 };
 
 enum  em_menu{
     REGIST = 0,
     LOGIN,
-    LOGOUT,
     HELP,
-    FRIENDLIST,
+    LOGOUT,
     SETPSW,
-    REFRASH,
+    RELOAD,
+    FRIENDLIST,
     VIEWGROUP,
     MEMBER,
     HOSTGROUP,
@@ -96,7 +106,8 @@ int InitChat(st_settings* setting = NULL);
 int SetCommond(unsigned int cmd);
 int StartChat(int err, void(*func)(void*));
 int SetChatMsg(MSG_trans* msg);
-int SetLogInfo(char* usr, char* psw);
+int callbackLog(char* usr, char* psw);
+int SettransMsg(MSG_trans* msg);
 int SetStatus(int t);
 int CloseChat();
 

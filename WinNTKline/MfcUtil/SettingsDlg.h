@@ -7,6 +7,7 @@ class SettingsDlg : public CDialogEx
 
 public:
 	SettingsDlg(CWnd* pParent = NULL);
+	SettingsDlg(void(*func)(char*));
 	virtual ~SettingsDlg();
 
 #ifdef AFX_DESIGN_TIME
@@ -18,8 +19,10 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 private:
+	int callback = 0;
 	CEdit m_Marks;
 	CString cs_Mark;
+	void(*setPswCallback)(char* psw);
 public:
 	int SetTitle(CString title);
 	CString& GetMark(CString& text, CString& title);

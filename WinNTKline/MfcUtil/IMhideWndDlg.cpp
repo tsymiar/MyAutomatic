@@ -55,15 +55,6 @@ CIMhideWndDlg::CIMhideWndDlg(st_settings* setting, CWnd* pParent /*=NULL*/)
     m_hideMode = HM_NONE;
 }
 
-CIMhideWndDlg::~CIMhideWndDlg()
-{
-    if (m_logDlg != NULL)
-    {
-        delete m_logDlg;
-        m_logDlg = NULL;
-    }
-}
-
 void CIMhideWndDlg::DoDataExchange(CDataExchange* pDX)
 {
     CDialogEx::DoDataExchange(pDX);
@@ -94,7 +85,7 @@ BEGIN_MESSAGE_MAP(CIMhideWndDlg, CDialogEx)
 END_MESSAGE_MAP()
 
 int flag = 1;
-char* g_Msg;
+char g_Msg[256];
 CRITICAL_SECTION wrcsec;
 
 void* showMsg(void* msg)
@@ -102,27 +93,30 @@ void* showMsg(void* msg)
 	int len = 0;
 	static char rslt[256];
 	memset(rslt, 0, 256);
-	st_client* trans = (st_client*)malloc(sizeof(st_client));
-	trans = (st_client*)msg;
-	if (!trans)
+	st_client* client = (st_client*)malloc(sizeof(st_client));
+	client = (st_client*)msg;
+	if (!client)
 		return NULL;
-	EnterCriticalSection(&wrcsec);
-	do {
-		if (trans->sock == INVALID_SOCKET)
-			return NULL;
-		len = recv(trans->sock, rslt, 256, 0);
+	while (flag) {
+		EnterCriticalSection(&wrcsec);
+		if (client->sock == 0)
+			continue;
+		len = recv(client->sock, rslt, 256, 0);
 		if (len <= 0) {
-			Sleep(100);
+			SetStatus(0);
 			MessageBox(NULL, "connection lost!", "client", MB_OK);
-			if ((int)trans->sock > 0)
-				closesocket(trans->sock);
-			return NULL;
+			if (len == -1)
+				break;
+			closesocket(client->sock);
+			continue;
 		};
 		if (rslt[1] != 0x0 || rslt[2] == 0x0)
 			return NULL;
 		sprintf_s(g_Msg, 247, "MSG: %s\n", rslt + 8);
-	} while (flag);
-	LeaveCriticalSection(&wrcsec);
+		MessageBox(NULL, g_Msg, "client", MB_OK);
+		Sleep(100);
+		LeaveCriticalSection(&wrcsec);
+	} 
 	return NULL;
 }
 
@@ -130,6 +124,7 @@ void getServMsg(void* msg)
 {
 	unsigned int thrdAddr;
 	_beginthreadex(NULL, 0, (_beginthreadex_proc_type)showMsg, msg, 0, &thrdAddr);
+	SetStatus(flag);
 };
 
 int CIMhideWndDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
@@ -158,8 +153,8 @@ int CIMhideWndDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
     //开启聊天
     //int err = InitChat(oimusr.addr);
-    flag = 1;
-	InitializeCriticalSection(&wrcsec);
+	InitializeCriticalSection(&wrcsec);	
+	SetStatus(flag);
     StartChat(InitChat(&imsetting), getServMsg);
     return 0;
 }
@@ -480,6 +475,31 @@ void CIMhideWndDlg::OnBnClickedExit()
 }
 
 int ifsh = 0;
+MSG_trans transmsg; 
+
+void callbackSets(char* psw)
+{
+	memcpy(transmsg.npsw, psw, 24);
+	SettransMsg(&transmsg); 
+}
+
+SettingsDlg* g_setDlg = NULL;
+
+BOOL CIMhideWndDlg::DestroyWindow()
+{
+	if (m_logDlg != NULL)
+	{
+		delete m_logDlg;
+		m_logDlg = NULL;
+	}
+	if (g_setDlg != NULL)
+	{
+		delete g_setDlg;
+		g_setDlg = NULL;
+	}		
+	return CDialogEx::DestroyWindow();
+}
+
 void CIMhideWndDlg::OnCbnSelchangeComm()
 {
     if (IDX == 0)
@@ -490,20 +510,20 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
     CRect listrect;
     LVCOLUMN lvcol;
     CRegistDlg m_crgist(imsetting.IP);
-    SettingsDlg setDlg;
-	MSG_trans msg;
-    m_logDlg = new IMlogDlg();
-    int comsel = m_commbo.GetCurSel();
+    int comsel = m_commbo.GetCurSel(); 
     char item[8];
-    SetCommond(comsel);
     SetStatus(1);
+	// memset(&msg, 0, sizeof(MSG_trans));
+	// msg.cmd = (comsel >> 8) & 0xff + comsel & 0xff;
+	transmsg.cmd = comsel;
     switch (comsel)
     {
     case REGIST:
         m_crgist.DoModal();
         break;
     case LOGIN:
-        if (::IsWindowVisible(m_logDlg->m_hWnd))
+		m_logDlg = new IMlogDlg(callbackLog);
+        if (m_logDlg == NULL || ::IsWindowVisible(m_logDlg->m_hWnd))
             return;
         if(cntdlg==0)
             if (m_frndList.m_hWnd != NULL)
@@ -520,26 +540,31 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
             }
         break;
     case LOGOUT:
+		SettransMsg(&transmsg);
         cntdlg = 0;
         break;
     case HELP:
         this->MessageBox("[注册]\n跳转到web注册页面\n[登陆]\n请输入用户和密码\n[登出]\n退出当前用户\n[帮助]\n弹出该对话框\n[好友列表]\n显示好友到面板\n[设置密码]\n重置密码\n[刷新列表]\n更新在线用户列表\n[群/群成员]\n显示群/群成员\n[创建群]\n作为群主创建群\n[加入群]\n成为某群一员\n[退群]\n退出某群停止接收群消息", "HELP", MB_OK);
         break;
     case SETPSW:
-        setDlg.DoModal();
-        setDlg.SetTitle("重置密码");
+		g_setDlg = new SettingsDlg(callbackSets);
+		g_setDlg->Create(IDD_MARKDLG);
+		g_setDlg->ShowWindow(SW_SHOW);
+		g_setDlg->SetTitle("重置密码");
         break;
-    case REFRASH:
+    case RELOAD:
         sprintf(item, "%03d", ifsh);
         m_frndList.InsertItem(0, item);
         sprintf(item, "%03X", (ifsh + 11) * 13 - 19);
         m_frndList.InsertItem(1, item);
+		SettransMsg(&transmsg);
         ifsh++;
         break;
     case FRIENDLIST:
         lvcol.pszText = _T("好友");
         m_frndList.SetColumn(0, &lvcol);
         m_frndList.ShowWindow(SW_SHOW);
+		SettransMsg(&transmsg);
         break;
     case VIEWGROUP:
         m_frndList.DeleteAllItems();
@@ -548,13 +573,11 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
         lvcol.pszText = _T("所在群");
         m_frndList.SetColumn(1, &lvcol);
         m_frndList.ShowWindow(SW_SHOW);
+		SettransMsg(&transmsg);
         break;
     default:
         break;
     }
-	memset(&msg, 0, sizeof(MSG_trans));
-	msg.cmd = (comsel >> 8) & 0xff + comsel & 0xff;
-	SetChatMsg(&msg);
     this->SetWindowText(g_Msg);
 }
 
@@ -602,4 +625,8 @@ void CIMhideWndDlg::OnPaint()
 void CIMhideWndDlg::OnBnClickedSeeknew()
 {
     MessageBox("");
+}
+
+CIMhideWndDlg::~CIMhideWndDlg()
+{
 }

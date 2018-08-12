@@ -5,9 +5,16 @@
 
 IMPLEMENT_DYNAMIC(SettingsDlg, CDialogEx)
 
-SettingsDlg::SettingsDlg(CWnd* pParent /*=NULL*/)
+SettingsDlg::SettingsDlg(CWnd * pParent)
 	: CDialogEx(IDD_MARKDLG, pParent)
-{}
+{
+}
+
+SettingsDlg::SettingsDlg(void(*func)(char*))
+{
+	setPswCallback = func; 
+	callback = 1;
+}
 
 SettingsDlg::~SettingsDlg() {}
 
@@ -42,5 +49,8 @@ CString & SettingsDlg::GetMark(CString& text, CString& title)
 void SettingsDlg::OnBnClickedOk()
 {
 	m_Marks.GetWindowText(cs_Mark);
+	if (callback)
+		setPswCallback((LPTSTR)(LPCTSTR)cs_Mark);
 	CDialogEx::OnOK();
 }
+
