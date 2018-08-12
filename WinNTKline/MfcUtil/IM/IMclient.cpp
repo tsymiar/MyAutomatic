@@ -9,31 +9,40 @@ st_client client;
 st_settings setting;
 
 //参考该函数编写报文处理函数
-void runtime(void* lp) {
+void runtime(void* param) {
 	int rcvlen;
 	static char buff[256];
 	static char srv_net[32];
 	CRITICAL_SECTION wrcon;
 	memset(buff, 0, 256);
 	InitializeCriticalSection(&wrcon);
-	st_client* client = reinterpret_cast<st_client*>(lp);
-	do {
+	st_client* client = reinterpret_cast<st_client*>(param);
+	while(1) {
 		rcvlen = recv(client->sock, buff, 256, 0);
 		if (rcvlen <= 0) {
-			Sleep(100);
 			sprintf(srv_net, "%s:%d", inet_ntoa(client->srvaddr.sin_addr), client->srvaddr.sin_port);
 			MessageBox(NULL, "connection lost!", srv_net, MB_OK);
+			if (rcvlen == -1)
+				break;
 			closesocket(client->sock);
+			continue;
 			// exit(0);
 		};
 		EnterCriticalSection(&wrcon);
 		'...';
+		for (int c = 0; c < 256; c++)
+		{
+			printf("%c", (unsigned char)buff[c]);
+		}
+		printf("\n");
+		Sleep(100);
 		LeaveCriticalSection(&wrcon);
-	} while (1);
+	};
 };
 
 int InitChat(st_settings* setting) {
 	WSADATA wsaData;
+	st_settings new_sets;
 	static char ipaddr[16];
 	memset(ipaddr, 0, 16);
 	int err = WSAStartup(0x202, &wsaData);
@@ -44,6 +53,9 @@ int InitChat(st_settings* setting) {
 	}
 	InitializeCriticalSection(&client.wrcon);
 	SetConsoleTitle("client v0.1");
+	if (setting == NULL) {
+		setting = &new_sets;
+	}
 	if (setting->IP[0] == '\0') {
 		strcpy_s(ipaddr, "127.0.0.1");
 	}
@@ -90,6 +102,99 @@ int InitChat(st_settings* setting) {
 	return 0;
 }
 
+int SwitchCmd(SOCKET sock)
+{
+#ifdef TEST_SOCK
+		static char auxstr[256];
+		/*fflush(stdin);
+		char onechar = _getch();
+		auxstr[0] = onechar;
+		auxstr[1] = 0;
+		fflush(stdin);*/
+		int k = 0;
+		if (k == 0)
+		{
+			memset(auxstr, 0, 256);
+			send(client.sock, auxstr, 256, 0);
+			k++;
+			if (k == INT_MAX)
+				k = 1;
+		}
+		// rcvlen = recv(client.sock, rcvbuf, 256, 0);
+#endif
+	int len = sizeof(trans);
+	switch (trans.cmd)
+	{
+	case 0:
+		break;
+	case 0x1:
+		static char title[64];
+		if (trans.usr != NULL) {
+			strcpy_s(title, (char*)trans.usr);
+			SetConsoleTitle(title);
+		}
+		send(sock, (char*)&trans, len, 0);
+		break;
+	case 0x03: //QUIT
+	{
+		if (client.status)
+		{
+			MessageBox(NULL, "exit error!", "Quit", MB_OK);
+			return setting.err = -1;
+		}
+		send(client.sock, "client quiet.", 16, 0);
+		break;
+	}
+	case 0x07: //"memberof"
+		scanf_s("%s%s", trans.usr, (unsigned)_countof(trans.usr), (trans.grp), (unsigned)_countof(trans.grp));
+		send(sock, (char*)&trans, len, 0);
+		break;
+	case 0x08:// "HOST"
+	{
+		scanf_s("%s%s", trans.hgrp, (unsigned)_countof(trans.hgrp), (trans.intro), (unsigned)_countof(trans.intro));
+		strcpy_s(client.last->lastgrop, 24, (char*)trans.hgrp);
+		send(sock, (char*)&trans, len, 0);
+		break;
+	}
+	case 0x09:// "JOIN"
+	{
+		scanf_s("%s%s", trans.usr, (unsigned)_countof(trans.usr), (trans.jgrp), (unsigned)_countof(trans.jgrp));
+		strcpy_s(client.last->lastgrop, 24, (char*)trans.jgrp);
+		send(sock, (char*)&trans, len, 0);
+		break;
+	}
+	case 0x0A:// 
+	{
+		scanf_s("%s", trans.grp, 24);
+		strcpy_s(client.last->lastgrop, 24, (char*)trans.grp);
+		send(sock, (char*)&trans, len, 0);
+		break;
+	}
+	case 0x0B:
+	{
+		gets_s((char*)trans.psw, 24);
+		send(sock, (char*)&trans, len, 0);
+		break;
+	}
+	default:
+	{
+		if (trans.ret == 0x0)
+		{
+			MessageBox(NULL, "Logged failure.", "default", MB_OK);
+			return -1;
+		}
+		if (client.last->lastuser && client.last->lastgrop)
+		{
+			memcpy(trans.usr, client.last->lastuser, 24);
+			memcpy(trans.grp, client.last->lastgrop, 24);
+		}
+		send(sock, (char*)&trans, 256, 0);
+		break;
+	}
+	}
+	return 0;
+}
+
 unsigned int __stdcall Chat_Msg(void* func)
 {
 	if (connect(client.sock, (struct sockaddr*)&client.srvaddr, sizeof(client.srvaddr)) == SOCKET_ERROR) {
@@ -103,139 +208,8 @@ unsigned int __stdcall Chat_Msg(void* func)
 	static char sndbuf[256];
 	imclient.sock = client.sock;// socket(AF_INET, SOCK_STREAM, 0);
 	_beginthreadex(NULL, 0, (_beginthreadex_proc_type)func, &imclient, 0, &thread_ID);
-	while (setting.err == 0)
-	{
-		EnterCriticalSection(&client.wrcon);
-#ifdef TEST_SOCK
-		static char auxstr[24];
-		/*fflush(stdin);
-		char onechar = _getch();
-		auxstr[0] = onechar;
-		auxstr[1] = 0;
-		fflush(stdin);*/
-		int k = 0;
-		if (k == 0)
-		{
-			memset(sndbuf, 0, 256);
-			send(client.sock, sndbuf, 256, 0);
-			k++;
-			if (k == INT_MAX)
-				k = 1;
-		}
-		// rcvlen = recv(client.sock, rcvbuf, 256, 0);
-#endif
-		sndbuf[0] = 0;
-		sndbuf[1] = trans.cmd;
-		switch (sndbuf[1])
-		{
-		case 0:
-			continue;
-		case 0x1:
-			if (trans.usr != NULL) {
-				strcpy_s(title, (char*)trans.usr);
-				SetConsoleTitle(title);
-				// client.status = 1;
-				continue;
-			}
-			break;
-		case 0x03: //QUIT
-		{
-			send(client.sock, sndbuf, 256, 0);
-			if (client.status)
-			{
-				MessageBox(NULL, "exit error!", "Quit", MB_OK);
-				return setting.err = -1;
-			}
-		}
-		case 0x05: //LIST
-		{
-			if (client.status)
-			{
-				send(client.sock, sndbuf, 256, 0);
-				break;
-			}
-			else continue;
-		}
-		case 0x06://"ALL"
-		{
-			if (client.status)
-			{
-				send(client.sock, sndbuf, 256, 0);
-				break;
-			}
-			else continue;
-		}
-		case 0x07: //"memberof"
-		{
-			if (client.status)
-			{
-				scanf_s("%s", (sndbuf + 8), (unsigned)_countof(sndbuf));
-				send(client.sock, sndbuf, 256, 0);
-				break;
-			}
-			else continue;
-		}
-		case 0x08:// "HOST"
-		{
-			if (client.status)
-			{
-				scanf_s("%s%s", (sndbuf + 8), (unsigned)_countof(sndbuf), (sndbuf + 32), (unsigned)_countof(sndbuf));
-				strcpy_s((client.last->lastgrop + 8), 256, (sndbuf + 8));
-				send(client.sock, sndbuf, 256, 0);
-				break;
-			}
-			else continue;
-		}
-		case 0x09:// "JOIN"
-		{
-			if (client.status)
-			{
-				scanf_s("%s%s", (sndbuf + 8), (unsigned)_countof(sndbuf), (sndbuf + 32), (unsigned)_countof(sndbuf));
-				strcpy_s((client.last->lastgrop + 8), 256, (sndbuf + 8));
-				send(client.sock, sndbuf, 256, 0);
-				break;
-			}
-			else continue;
-		}
-		case 0x0A:// "QUIT"
-		{
-			if (client.status)
-			{
-				scanf_s("%s", (sndbuf + 8), 256);
-				strcpy_s((client.last->lastgrop + 8), 256, (sndbuf + 8));
-				send(client.sock, sndbuf, 256, 0);
-				break;
-			}
-			else continue;
-		}
-		case 0x0B:
-		{
-			if (client.status)
-			{
-				gets_s(sndbuf + 32, 256);
-				send(client.sock, sndbuf, 256, 0);
-				break;
-			}
-			else continue;
-		}
-		default:
-		{
-			if (trans.cmd == 0x0)
-			{
-				MessageBox(NULL, "Logged failed.", "default", MB_OK);
-				return -1;
-			}
-			if (client.last->lastuser && client.last->lastgrop)
-			{
-				memcpy(sndbuf + 8, client.last->lastuser, 24);
-				memcpy(sndbuf + 32, client.last->lastgrop, 24);
-			}
-			send(client.sock, sndbuf, 256, 0);
-			break;
-		}
-		};
-		LeaveCriticalSection(&client.wrcon);
-	}
+	while (client.status)
+		SwitchCmd(imclient.sock);
 	return 0;
 }
 
@@ -246,9 +220,10 @@ int StartChat(int err, void(*func)(void*))
 		return err;
 	else {
 		if (func == NULL)
-			return -1;
+			func = [](void*) {printf("Lambda null func.\n"); };
 		else
-			return _beginthreadex(NULL, 0, Chat_Msg, func, 0, NULL);
+			setting.err = 0;
+		return _beginthreadex(NULL, 0, Chat_Msg, func, 0, NULL);
 	}
 }
 
@@ -262,13 +237,19 @@ int SetChatMsg(MSG_trans* msg)
 	return send(client.sock, (char*)&msg, 256, 0);
 }
 
-int SetLogInfo(char * usr, char * psw)
+int callbackLog(char * usr, char * psw)
 {
+	trans.cmd = 0x1;
 	memset(trans.usr, 0, 24);
 	memcpy(trans.usr, usr, strlen(usr) + 1);
 	memset(trans.psw, 0, 24);
 	memcpy(trans.psw, psw, strlen(psw) + 1);
-	send(client.sock, (char*)&trans, 64, 0);
+	return client.status;
+}
+
+int SettransMsg(MSG_trans* msg)
+{
+	memcpy(&trans, msg, sizeof(MSG_trans));
 	return client.status;
 }
 

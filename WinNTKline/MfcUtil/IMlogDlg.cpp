@@ -13,6 +13,11 @@ IMPLEMENT_DYNAMIC(IMlogDlg, CDialogEx)
 IMlogDlg::IMlogDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(IDD_IMMODAL, pParent) {}
 
+IMlogDlg::IMlogDlg(int(*func)(char *, char *))
+{
+	setUsrPsw = func;
+}
+
 IMlogDlg::~IMlogDlg()
 {
 }
@@ -82,11 +87,13 @@ void IMlogDlg::OnBnClickedOk()
 	if (lstrlen(m_strAcnt) < 3) 
 	{
 		AfxMessageBox("请输入3~20个字符。");
-	}else
-		if (!checkText(m_strPsw)) 
+		return;
+	} else
+		if (!checkText(m_strPsw)) {
 			AfxMessageBox("密码必须是数字、字母和特殊字符的集合！");
-	if (SetLogInfo((LPSTR)(LPCSTR)m_strAcnt, (LPSTR)(LPCSTR)m_strPsw))
-		CDialogEx::OnOK();
-	SetStatus(0);
-	//GetDlgItem(IDC_LISTFRND)->ShowWindow(SW_SHOW);
+			return;
+		}
+	if (setUsrPsw((LPSTR)(LPCSTR)m_strAcnt, (LPSTR)(LPCSTR)m_strPsw))
+		//GetDlgItem(IDC_LISTFRND)->ShowWindow(SW_SHOW);
+		CDialogEx::OnOK();;
 }
