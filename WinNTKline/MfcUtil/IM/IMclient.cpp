@@ -125,9 +125,9 @@ int SwitchCmd(SOCKET sock)
 	int len = sizeof(trans);
 	switch (trans.cmd)
 	{
-	case 0:
+	case REGIST:
 		break;
-	case 0x1:
+	case LOGIN:
 		static char title[64];
 		if (trans.usr != NULL) {
 			strcpy_s(title, (char*)trans.usr);
@@ -135,7 +135,7 @@ int SwitchCmd(SOCKET sock)
 		}
 		send(sock, (char*)&trans, len, 0);
 		break;
-	case 0x03: //QUIT
+	case LOGOUT:
 	{
 		if (client.status)
 		{
@@ -145,34 +145,34 @@ int SwitchCmd(SOCKET sock)
 		send(client.sock, "client quiet.", 16, 0);
 		break;
 	}
-	case 0x07: //"memberof"
-		scanf_s("%s%s", trans.usr, (unsigned)_countof(trans.usr), (trans.grp), (unsigned)_countof(trans.grp));
+	case SETPSW:
+	{
+		gets_s((char*)trans.psw, 24);
 		send(sock, (char*)&trans, len, 0);
 		break;
-	case 0x08:// "HOST"
+	}
+	case MEMBEROF:
+		scanf_s("%s %s", trans.usr, (unsigned)_countof(trans.usr), (trans.grpnm), (unsigned)_countof(trans.grpnm));
+		send(sock, (char*)&trans, len, 0);
+		break;
+	case VIEWGROUP:
 	{
-		scanf_s("%s%s", trans.hgrp, (unsigned)_countof(trans.hgrp), (trans.intro), (unsigned)_countof(trans.intro));
+		scanf_s("%s", trans.grpnm, 24);
+		strcpy_s(client.last->lastgrop, 24, (char*)trans.grpnm);
+		send(sock, (char*)&trans, len, 0);
+		break;
+	}
+	case HOSTGROUP:
+	{
+		scanf_s("%s %s", trans.hgrp, (unsigned)_countof(trans.hgrp), (trans.grpmrk), (unsigned)_countof(trans.grpmrk));
 		strcpy_s(client.last->lastgrop, 24, (char*)trans.hgrp);
 		send(sock, (char*)&trans, len, 0);
 		break;
 	}
-	case 0x09:// "JOIN"
+	case JOINGROUP:
 	{
-		scanf_s("%s%s", trans.usr, (unsigned)_countof(trans.usr), (trans.jgrp), (unsigned)_countof(trans.jgrp));
+		scanf_s("%s %s", trans.usr, (unsigned)_countof(trans.usr), (trans.jgrp), (unsigned)_countof(trans.jgrp));
 		strcpy_s(client.last->lastgrop, 24, (char*)trans.jgrp);
-		send(sock, (char*)&trans, len, 0);
-		break;
-	}
-	case 0x0A:// 
-	{
-		scanf_s("%s", trans.grp, 24);
-		strcpy_s(client.last->lastgrop, 24, (char*)trans.grp);
-		send(sock, (char*)&trans, len, 0);
-		break;
-	}
-	case 0x0B:
-	{
-		gets_s((char*)trans.psw, 24);
 		send(sock, (char*)&trans, len, 0);
 		break;
 	}
@@ -186,7 +186,7 @@ int SwitchCmd(SOCKET sock)
 		if (client.last->lastuser && client.last->lastgrop)
 		{
 			memcpy(trans.usr, client.last->lastuser, 24);
-			memcpy(trans.grp, client.last->lastgrop, 24);
+			memcpy(trans.grpnm, client.last->lastgrop, 24);
 		}
 		send(sock, (char*)&trans, 256, 0);
 		break;

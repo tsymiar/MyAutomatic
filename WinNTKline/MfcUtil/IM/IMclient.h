@@ -54,18 +54,20 @@ struct MSG_trans {
     unsigned char cmd;
     unsigned char ret[2];
     unsigned char crc[4];
-	union {
-		unsigned char usr[24];
-		unsigned char hgrp[24];
-
-	};
+	unsigned char usr[24];
+	unsigned char grpnm[24];
 	union {
 		unsigned char psw[24];
-		unsigned char grp[24];
-		unsigned char jgrp[24];
-		unsigned char intro[24];
+		unsigned char token[24];
+		unsigned char grpmrk[24];
 	};
-	unsigned char npsw[24];
+	union {
+		unsigned char sign[24];
+		unsigned char hgrp[24];
+		unsigned char jgrp[24];
+		unsigned char npsw[24];
+		unsigned char grpbrf[24];
+	};
 };
 
 const MENU menus[] =
@@ -94,7 +96,7 @@ enum  em_menu{
     RELOAD,
     FRIENDLIST,
     VIEWGROUP,
-    MEMBER,
+    MEMBEROF,
     HOSTGROUP,
     JOINGROUP,
     EXITGROUP,
