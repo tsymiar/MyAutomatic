@@ -97,7 +97,7 @@ BOOL CLoginDlg::OnInitDialog()
     SetCombox();
     m_editPsw.SetLimitText(16);
     m_ipCtrl.SetAddress(127, 0, 0, 1);
-    m_editPsw.SetWindowText("test123");
+    m_editPsw.SetWindowText("tesT123$");
     return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
@@ -109,13 +109,13 @@ unsigned int _stdcall call_soap_thrd(void* lr)
     ele->rslt = ArrayOfEmp2();
     ele->sets = IMSetting();
     memcpy(ele, lr, sz_t);
-    ele->sets.err = soap_call_api__trans(&ele->soap, ele->sets.addr, "", (char*)ele->imusr.cmd, (char**)&ele->msg);
-    if (ele->sets.err != 0)
+    ele->sets.erno = soap_call_api__trans(&ele->soap, ele->sets.addr, "", (char*)ele->imusr.cmd, (char**)&ele->msg);
+    if (ele->sets.erno != 0)
     {
         msg.Format("%s\n%s", *soap_faultstring(&ele->soap), ele->msg);
         AfxMessageBox(msg);
     }
-    return ele->sets.err;
+    return ele->sets.erno;
 }
 
 void CLoginDlg::OnBnClickedLogin()
@@ -155,8 +155,8 @@ void CLoginDlg::OnBnClickedLogin()
     //CloseHandle((HANDLE)_beginthreadex(NULL, 0, \
     //    (_beginthreadex_proc_type)&call_soap_thrd \
     //    , (void *)&soapele, 0, NULL));
-    soapele.sets.err = soap_call_api__login_by_key(&soapele.soap, soapele.sets.addr, "", (char*)soapele.imusr.usr, (char*)soapele.imusr.psw, soapele.rslt);
-    switch (soapele.sets.err)
+    soapele.sets.erno = soap_call_api__login_by_key(&soapele.soap, soapele.sets.addr, "", (char*)soapele.imusr.usr, (char*)soapele.imusr.psw, soapele.rslt);
+    switch (soapele.sets.erno)
     {
     case 0:
         if (soapele.rslt.rslt.flag != 200)

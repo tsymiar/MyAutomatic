@@ -47,7 +47,7 @@ CREATE TABLE `glkline` (
 
 LOCK TABLES `glkline` WRITE;
 /*!40000 ALTER TABLE `glkline` DISABLE KEYS */;
-INSERT INTO `glkline` VALUES (0,'ioscatchme','a6afbbcbf8be7668',NULL,'m',22,NULL,'13700000001','2017-12-07','shenyun_n@foxmail.com','www.shenyun.link',NULL),(1,'ccccc','88888',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO `glkline` VALUES (0,'ioscatchme','9f626c9b7028d552',NULL,'m',22,NULL,'13700000001','2017-12-07','shenyun_n@foxmail.com','www.shenyun.link',NULL),(1,'ccccc','88888',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
 /*!40000 ALTER TABLE `glkline` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;

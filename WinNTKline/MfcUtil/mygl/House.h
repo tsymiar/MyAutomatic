@@ -7,9 +7,9 @@
 #include <Windows.h>
 #endif // _WIN32
 #include <GL/glu.h>
-#include "../Idx/auto_tchar.h"
+#include "../com/auto_tchar.h"
 #include "../GL/glaux.h"
-#include "../Idx/Initialise-inl.h"
+#include "../com/Initialise-inl.h"
 #include "../Def/MacroDef.h"
 
 #define INTS int

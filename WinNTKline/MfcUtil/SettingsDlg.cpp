@@ -2,6 +2,7 @@
 #include "afxdialogex.h"
 #include "Resource.h"
 #include "SettingsDlg.h"
+#include "IM/IMClient.h"
 
 IMPLEMENT_DYNAMIC(SettingsDlg, CDialogEx)
 
@@ -48,7 +49,11 @@ CString & SettingsDlg::GetMark(CString& text, CString& title)
 
 void SettingsDlg::OnBnClickedOk()
 {
-	m_Marks.GetWindowText(cs_Mark);
+	m_Marks.GetWindowText(cs_Mark);		
+	if (!checkPswVilid((LPSTR)(LPCSTR)cs_Mark)) {
+		AfxMessageBox("密码必须是数字、字母和特殊字符的集合！");
+		return;
+	}
 	if (callback)
 		setPswCallback((LPTSTR)(LPCTSTR)cs_Mark);
 	CDialogEx::OnOK();

@@ -47,39 +47,6 @@ BOOL IMlogDlg::OnInitDialog()
 	return 0;
 }
 
-bool checkText(CString str)
-{
-	int z0 = 0;
-	int zz = 0;
-	int zZ = 0;
-	int z_ = 0;
-	for (int i = 0; i < str.GetLength(); i++)
-	{
-		char ansi = str[i];
-		if (ansi <= '9' && ansi >= '0')
-		{
-			z0 = 1;
-		}
-		else if (ansi <= 'z' && ansi >= 'a')
-		{
-			zz = 1;
-		}
-		else if (ansi <= 'Z' && ansi >= 'A')
-		{
-			zZ = 1;
-		}
-		else if (ansi > 127)
-		{
-			z_ = 0;
-		}
-		else
-		{
-			z_ = 1;
-		}
-	}
-	return (z0 + zz + zZ + z_ == 4);
-}
-
 void IMlogDlg::OnBnClickedOk()
 {
 	GetDlgItem(IDC_ACNT)->GetWindowText(m_strAcnt);
@@ -89,11 +56,11 @@ void IMlogDlg::OnBnClickedOk()
 		AfxMessageBox("请输入3~20个字符。");
 		return;
 	} else
-		if (!checkText(m_strPsw)) {
+		if (!checkPswVilid((LPSTR)(LPCSTR)m_strPsw)) {
 			AfxMessageBox("密码必须是数字、字母和特殊字符的集合！");
 			return;
 		}
 	if (setUsrPsw((LPSTR)(LPCSTR)m_strAcnt, (LPSTR)(LPCSTR)m_strPsw))
 		//GetDlgItem(IDC_LISTFRND)->ShowWindow(SW_SHOW);
-		CDialogEx::OnOK();;
+		CDialogEx::OnOK();
 }

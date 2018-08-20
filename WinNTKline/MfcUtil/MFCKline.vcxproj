@@ -268,14 +268,14 @@
     <ClInclude Include="HOOK\injectDLL.h" />
     <ClInclude Include="html\cefWebKit.h" />
     <ClInclude Include="html\MfcHtmlView.h" />
-    <ClInclude Include="Idx\auto_tchar.h" />
-    <ClInclude Include="Idx\binarytree-inl.h" />
-    <ClInclude Include="Idx\CommSet.h" />
-    <ClInclude Include="Idx\CPUID.H" />
-    <ClInclude Include="Idx\Glalgorithm.h" />
-    <ClInclude Include="Idx\Singleton.hpp" />
-    <ClInclude Include="Idx\Timer.hpp" />
-    <ClInclude Include="Idx\_MACRO_.h" />
+    <ClInclude Include="com\auto_tchar.h" />
+    <ClInclude Include="com\binarytree-inl.h" />
+    <ClInclude Include="com\CommSet.h" />
+    <ClInclude Include="com\CPUID.H" />
+    <ClInclude Include="com\Glalgorithm.h" />
+    <ClInclude Include="com\Singleton.hpp" />
+    <ClInclude Include="com\Timer.hpp" />
+    <ClInclude Include="com\_MACRO_.h" />
     <ClInclude Include="IMlogDlg.h" />
     <ClInclude Include="IMhideWndDlg.h" />
     <ClInclude Include="IM\IMclient.h" />
@@ -322,7 +322,9 @@
     <ClCompile Include="html\MfcHtmlView.cpp" />
     <ClCompile Include="IMlogDlg.cpp" />
     <ClCompile Include="IMhideWndDlg.cpp" />
-    <ClCompile Include="IM\IM.cc" />
+    <ClCompile Include="IM\IM.cc">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="IM\IMclient.cpp" />
     <ClCompile Include="IM\TCPsocket.cpp" />
     <ClCompile Include="LoginDlg.cpp" />
@@ -354,8 +356,8 @@
   <ItemGroup>
     <None Include="cfg\ips.ini" />
     <None Include="ClassDiagram.cd" />
-    <None Include="Idx\Initialise-inl.h" />
-    <None Include="Idx\plus1second" />
+    <None Include="com\Initialise-inl.h" />
+    <None Include="com\plus1second" />
     <None Include="web\BareBonesBrowserLaunch.java" />
     <None Include="web\client.java" />
     <None Include="web\myweb.nsmap" />
