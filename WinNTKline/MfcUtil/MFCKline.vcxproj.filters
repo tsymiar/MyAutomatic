@@ -78,16 +78,16 @@
     <ClInclude Include="web\myweb.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Idx\binarytree-inl.h">
+    <ClInclude Include="com\binarytree-inl.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Idx\CommSet.h">
+    <ClInclude Include="com\CommSet.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Idx\CPUID.H">
+    <ClInclude Include="com\CPUID.H">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Idx\_MACRO_.h">
+    <ClInclude Include="com\_MACRO_.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="IMlogDlg.h">
@@ -129,7 +129,7 @@
     <ClInclude Include="html\cefWebKit.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Idx\auto_tchar.h">
+    <ClInclude Include="com\auto_tchar.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="SettingsDlg.h">
@@ -138,13 +138,13 @@
     <ClInclude Include="opencv\CvimgMat.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Idx\Timer.hpp">
+    <ClInclude Include="com\Timer.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="html\MfcHtmlView.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Idx\Singleton.hpp">
+    <ClInclude Include="com\Singleton.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="netwk\CTPclient.h">
@@ -153,7 +153,7 @@
     <ClInclude Include="opencv\opencv2\opencv_modules.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Idx\Glalgorithm.h">
+    <ClInclude Include="com\Glalgorithm.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="deep\DepthView.h">
@@ -204,9 +204,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="test\Testcase.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="IM\IM.cc">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="IMlogDlg.cpp">
@@ -284,6 +281,9 @@
     <ClCompile Include="elem\Screen-Sharing.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="IM\IM.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="MFCKline.rc">
@@ -291,10 +291,10 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Idx\plus1second">
+    <None Include="com\plus1second">
       <Filter>头文件</Filter>
     </None>
-    <None Include="Idx\Initialise-inl.h">
+    <None Include="com\Initialise-inl.h">
       <Filter>头文件</Filter>
     </None>
     <None Include="ClassDiagram.cd">

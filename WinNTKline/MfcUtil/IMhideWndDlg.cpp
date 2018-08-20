@@ -84,7 +84,6 @@ BEGIN_MESSAGE_MAP(CIMhideWndDlg, CDialogEx)
     ON_BN_CLICKED(IDC_SEEKNEW, &CIMhideWndDlg::OnBnClickedSeeknew)
 END_MESSAGE_MAP()
 
-int flag = 1;
 char g_Msg[256];
 CRITICAL_SECTION wrcsec;
 
@@ -97,21 +96,20 @@ void* showMsg(void* msg)
 	client = (st_client*)msg;
 	if (!client)
 		return NULL;
-	while (flag) {
+	while (1) {
+		if (client->flag == 0)
+			continue;
 		EnterCriticalSection(&wrcsec);
 		if (client->sock == 0)
 			continue;
 		len = recv(client->sock, rslt, 256, 0);
 		if (len <= 0) {
-			SetStatus(0);
 			MessageBox(NULL, "connection lost!", "client", MB_OK);
 			if (len == -1)
 				break;
 			closesocket(client->sock);
 			continue;
 		};
-		if (rslt[1] != 0x0 || rslt[2] == 0x0)
-			return NULL;
 		sprintf_s(g_Msg, 247, "MSG: %s\n", rslt + 8);
 		MessageBox(NULL, g_Msg, "client", MB_OK);
 		Sleep(100);
@@ -124,7 +122,6 @@ void getServMsg(void* msg)
 {
 	unsigned int thrdAddr;
 	_beginthreadex(NULL, 0, (_beginthreadex_proc_type)showMsg, msg, 0, &thrdAddr);
-	SetStatus(flag);
 };
 
 int CIMhideWndDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
@@ -154,7 +151,6 @@ int CIMhideWndDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
     //开启聊天
     //int err = InitChat(oimusr.addr);
 	InitializeCriticalSection(&wrcsec);	
-	SetStatus(flag);
     StartChat(InitChat(&imsetting), getServMsg);
     return 0;
 }
@@ -464,7 +460,6 @@ BOOL CIMhideWndDlg::OnInitDialog()
 
 void CIMhideWndDlg::OnBnClickedExit()
 {
-    flag = 0;
     CloseChat();
     if (!AfxGetMainWnd()->IsWindowVisible())
     {
@@ -480,7 +475,7 @@ MSG_trans transmsg;
 void callbackSets(char* psw)
 {
 	memcpy(transmsg.npsw, psw, 24);
-	SettransMsg(&transmsg); 
+	SetChatMsg(&transmsg); 
 }
 
 SettingsDlg* g_setDlg = NULL;
@@ -512,7 +507,6 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
     CRegistDlg m_crgist(imsetting.IP);
     int comsel = m_commbo.GetCurSel(); 
     char item[8];
-    SetStatus(1);
 	// memset(&msg, 0, sizeof(MSG_trans));
 	// msg.cmd = (comsel >> 8) & 0xff + comsel & 0xff;
 	transmsg.cmd = comsel;
@@ -540,7 +534,7 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
             }
         break;
     case LOGOUT:
-		SettransMsg(&transmsg);
+		SetChatMsg(&transmsg);
         cntdlg = 0;
         break;
     case HELP:
@@ -557,14 +551,14 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
         m_frndList.InsertItem(0, item);
         sprintf(item, "%03X", (ifsh + 11) * 13 - 19);
         m_frndList.InsertItem(1, item);
-		SettransMsg(&transmsg);
+		SetChatMsg(&transmsg);
         ifsh++;
         break;
     case FRIENDLIST:
         lvcol.pszText = _T("好友");
         m_frndList.SetColumn(0, &lvcol);
         m_frndList.ShowWindow(SW_SHOW);
-		SettransMsg(&transmsg);
+		SetChatMsg(&transmsg);
         break;
     case VIEWGROUP:
         m_frndList.DeleteAllItems();
@@ -573,7 +567,7 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
         lvcol.pszText = _T("所在群");
         m_frndList.SetColumn(1, &lvcol);
         m_frndList.ShowWindow(SW_SHOW);
-		SettransMsg(&transmsg);
+		SetChatMsg(&transmsg);
         break;
     default:
         break;
