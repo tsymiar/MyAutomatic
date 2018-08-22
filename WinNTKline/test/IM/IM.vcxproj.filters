@@ -10,5 +10,11 @@
     <ClCompile Include="..\..\MfcUtil\IM\IM.cc">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\MfcUtil\IM\IMclient.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="client.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

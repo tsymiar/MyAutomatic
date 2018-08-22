@@ -56,7 +56,7 @@ void IMlogDlg::OnBnClickedOk()
 		AfxMessageBox("请输入3~20个字符。");
 		return;
 	} else
-		if (!checkPswVilid((LPSTR)(LPCSTR)m_strPsw)) {
+		if (!checkPswValid((LPSTR)(LPCSTR)m_strPsw)) {
 			AfxMessageBox("密码必须是数字、字母和特殊字符的集合！");
 			return;
 		}
