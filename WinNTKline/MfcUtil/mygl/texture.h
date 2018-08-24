@@ -22,9 +22,9 @@
 extern "C" {
 #  endif /* __cplusplus */
 
-	extern GLuint TextureLoad(char *filename, GLboolean alpha,
-		GLenum minfilter, GLenum magfilter,
-		GLenum wrap);
+    extern GLuint TextureLoad(char *filename, GLboolean alpha,
+        GLenum minfilter, GLenum magfilter,
+        GLenum wrap);
 
 #  ifdef __cplusplus
 }

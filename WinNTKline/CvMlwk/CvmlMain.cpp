@@ -11,18 +11,18 @@
 int main()
 {
 #ifdef WIN32
-	const cv::String img = "../MfcUtil/image/taoxi.png";
-	CvimgMat vm;
-//#undef CVML
+    const cv::String img = "../MfcUtil/image/taoxi.png";
+    CvimgMat vm;
+    //#undef CVML
 #ifdef CVML
-	vm.cvmat_test();
+    vm.cvmat_test();
 #endif
-	cv::Mat mat = vm.getImageMat(img, 0);
-	std::cout << "ShannonEntropy -> [" << img << "] = " << ShannonEntropy::getInstance()->SingleEntropy(mat) << std::endl;
-	while (1);
+    cv::Mat mat = vm.getImageMat(img, 0);
+    std::cout << "ShannonEntropy -> [" << img << "] = " << ShannonEntropy::getInstance()->SingleEntropy(mat) << std::endl;
+    while (1);
 #else
-	CPyTensor tf;
-	tf.testPyfunc();
+    CPyTensor tf;
+    tf.testPyfunc();
 #endif
     return 0;
 }

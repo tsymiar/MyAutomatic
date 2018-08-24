@@ -44,4 +44,9 @@
       <Filter>脚本</Filter>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\MfcUtil\image\taoxi.jpg">
+      <Filter>资源文件</Filter>
+    </Image>
+  </ItemGroup>
 </Project>

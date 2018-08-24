@@ -10,15 +10,14 @@
 class ShowImage
 {
 public:
-	ShowImage();
-	~ShowImage();
-	int setPixels(const char* filename);
-	void Show();
-	void Show(const char* filename);
+    ShowImage();
+    ~ShowImage();
+    int setPixels(const char* filename);
+    void Show();
+    void Show(const char* filename);
 private:
-	GLuint texture[3] = { NULL };
+    GLuint texture[3] = { NULL };
 private:
-	void loadGLTextures(const char* filename);
-	GLuint CreateTextureFromPng(const char* filename);
+    void loadGLTextures(const char* filename);
+    GLuint CreateTextureFromPng(const char* filename);
 };
-

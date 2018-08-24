@@ -2,6 +2,13 @@
 # Set default behavior to automatically normalize line endings.
 ###############################################################################
 * text=auto
-#touch .gitattributes
+*.c text
+*.h text
+*.cc text
+*.cpp text
+*.hpp text
+*.py eol=lf
+*.sh text eol=lf
+*.vcproj text eol=crlf
 *.h linguist-language=C++
 *.cc linguist-language=C++

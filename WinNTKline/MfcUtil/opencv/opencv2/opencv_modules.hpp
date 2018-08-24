@@ -29,5 +29,3 @@
 #define HAVE_OPENCV_VIDEOIO
 #define HAVE_OPENCV_VIDEOSTAB
 */
-
-

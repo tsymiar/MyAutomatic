@@ -7,9 +7,9 @@
 class CPyTensor
 {
 public:
-	CPyTensor(); 
-	virtual ~CPyTensor();
-	int testPyfunc(wchar_t *argv = (wchar_t*)"CPyTensor");
+    CPyTensor();
+    virtual ~CPyTensor();
+    int testPyfunc(wchar_t *argv = (wchar_t*)"CPyTensor");
 };
 
 #include "CPyTensor.cpp"

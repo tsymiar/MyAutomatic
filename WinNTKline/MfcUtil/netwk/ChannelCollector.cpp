@@ -5,8 +5,8 @@ extern CThostFtdcTraderApi *TRDAPI;
 
 #ifdef THOST_FTDCMDAPI_H
 
-MarketDataCollector::MarketDataCollector(CThostFtdcMdApi * api){}
-MarketDataCollector::~MarketDataCollector(){}
+MarketDataCollector::MarketDataCollector(CThostFtdcMdApi * api) {}
+MarketDataCollector::~MarketDataCollector() {}
 
 int MarketDataCollector::CtpMarketMainApi()
 {
@@ -146,9 +146,9 @@ void MarketDataCollector::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField * 
 
             //***************************************************    
 
-            bool check0 = (tick_data[i][2]>0.0910 && tick_data[i][2]<0.0915 && i>17) || (tick_data[i][2]<0.1518 && tick_data[i][2]>0.0914 && !FristTick[i] && i>17);
-            bool check1 = (tick_data[i][2]>0.0856 && tick_data[i][2]<0.0900 && i <= 17) || (tick_data[i][2]<0.1505 && tick_data[i][2]>0.0859 && !FristTick[i] && i <= 17);
-            bool check2 = (tick_data[i][2]>0.2056 && tick_data[i][2]<0.2100 && i <= 17) || ((tick_data[i][2]<0.0235 || tick_data[i][2]>0.2059) && !FristTick[i] && i <= 17);
+            bool check0 = (tick_data[i][2] > 0.0910 && tick_data[i][2] < 0.0915 && i>17) || (tick_data[i][2]<0.1518 && tick_data[i][2]>0.0914 && !FristTick[i] && i > 17);
+            bool check1 = (tick_data[i][2] > 0.0856 && tick_data[i][2] < 0.0900 && i <= 17) || (tick_data[i][2]<0.1505 && tick_data[i][2]>0.0859 && !FristTick[i] && i <= 17);
+            bool check2 = (tick_data[i][2] > 0.2056 && tick_data[i][2] < 0.2100 && i <= 17) || ((tick_data[i][2]<0.0235 || tick_data[i][2]>0.2059) && !FristTick[i] && i <= 17);
 
             if (STFTDC.stMDATA.MdMode && (check0 || check1 || check2))
             {
@@ -178,7 +178,7 @@ void MarketDataCollector::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField * 
 
             //***************************************************    
 
-            for (int j = 59; j >0; j--)
+            for (int j = 59; j > 0; j--)
             {
                 tick_AskPrice1[i][j] = tick_AskPrice1[i][j - 1];
                 tick_BidPrice1[i][j] = tick_BidPrice1[i][j - 1];
@@ -189,7 +189,7 @@ void MarketDataCollector::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField * 
             }
 
             //实盘开盘前登录，交易所此处插入的最大值，需屏蔽处理
-            if ((tick_data[i][2]>0.0250 && tick_data[i][2]<0.0850) || (tick_data[i][2]>0.1550 && tick_data[i][2]<0.2050))
+            if ((tick_data[i][2] > 0.0250 && tick_data[i][2] < 0.0850) || (tick_data[i][2] > 0.1550 && tick_data[i][2] < 0.2050))
                 //if (AskPrice1t>99999 || BidPrice1t>99999)
             {
                 tick_AskPrice1[i][0] = 0;
@@ -210,7 +210,7 @@ void MarketDataCollector::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField * 
 
             bool Timemore0 = tick_data[i][2] != 0.0859 && tick_data[i][2] != 0.0900 && tick_data[i][2] != 0.1015 && tick_data[i][2] != 0.1130 && tick_data[i][2] != 0.1500;
             bool Timemore1 = tick_data[i][2] != 0.2059 && tick_data[i][2] != 0.2100 && tick_data[i][2] != 0.0230;
-            bool Timemore2 = (tick_data[i][2]>0.0900 && tick_data[i][2]<0.1500) || tick_data[i][2]>0.2100 || tick_data[i][2]<0.0230;
+            bool Timemore2 = (tick_data[i][2] > 0.0900 && tick_data[i][2] < 0.1500) || tick_data[i][2] > 0.2100 || tick_data[i][2] < 0.0230;
 
             if (Timemore0 && Timemore1  && Timemore2 && seconds >= 0 && seconds<40 && tick_Volume[i][0]>tick_Volume[i][1] && MnKlinesig[i] == false)
             {
@@ -235,7 +235,7 @@ void MarketDataCollector::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField * 
                 Mn_close[i][0] = NewPrice;
             }
 
-            if (seconds>45 && seconds<55 && MnKlinesig[i] == true)
+            if (seconds > 45 && seconds < 55 && MnKlinesig[i] == true)
             {
                 MnKlinesig[i] = false;
             }
@@ -274,7 +274,7 @@ void MarketDataCollector::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField * 
             o_file.close();                        //关闭文件
 
 
-            if (tick_data[i][2]>0.145950 && (tick_Volume[i][0] - tick_Volume[i][1])<0.01 && (tick_OpenInterest[i][0] - tick_OpenInterest[i][1])<0.01)// && LastTick[i]==false)
+            if (tick_data[i][2] > 0.145950 && (tick_Volume[i][0] - tick_Volume[i][1]) < 0.01 && (tick_OpenInterest[i][0] - tick_OpenInterest[i][1]) < 0.01)// && LastTick[i]==false)
             {
                 //LastTick[i]=true;
 
@@ -286,7 +286,7 @@ void MarketDataCollector::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField * 
                 //WriteConfiguration("./AutoTrader.dat");
             }
 
-            if ((tick_data[i][2]>0.0913 && i>17) || (tick_data[i][2]>0.0858 && i <= 17))
+            if ((tick_data[i][2] > 0.0913 && i > 17) || (tick_data[i][2] > 0.0858 && i <= 17))
             {
                 FristTick[i] = true;
             }
@@ -455,7 +455,7 @@ void TradeChannel::CtpTrdReqQryInstrument()
     memset(&req, 0, sizeof(req));
     strcpy_s(req.InstrumentID, STFTDC.INSTRUMENT_ID);
     int iResult = TRDAPI->ReqQryInstrument(&req, ++STFTDC.iReqID);
-    ((cerr << "--->>> 请求查询合约: ",iResult == 0) ? cerr << "成功" : cerr << "失败 [" << iResult << (iResult != 0 ? "]" : "")) << endl;
+    ((cerr << "--->>> 请求查询合约: ", iResult == 0) ? cerr << "成功" : cerr << "失败 [" << iResult << (iResult != 0 ? "]" : "")) << endl;
 }
 
 void TradeChannel::OnRspQryInstrument(CThostFtdcInstrumentField *pInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)

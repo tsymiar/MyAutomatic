@@ -191,19 +191,20 @@ class ns2__ArrayOfEmp2;
 /// - ns2__result* ns2__result::soap_dup(soap*) returns deep copy of ns2__result, copies the (cyclic) graph structure when a context is provided, or (cycle-pruned) tree structure with soap_set_mode(soap, SOAP_XML_TREE) (use soapcpp2 -Ec)
 /// - ns2__result::soap_del() deep deletes ns2__result data members, use only after ns2__result::soap_dup(NULL) (use soapcpp2 -Ed)
 class ns2__result
-{ public:
-/// Element "flag" of XSD type xs:xsd-int.
-    xsd__xsd_int                         flag                           ;	///< Required element.
+{
+public:
+    /// Element "flag" of XSD type xs:xsd-int.
+    xsd__xsd_int                         flag;	///< Required element.
 /// Element "idx" of XSD type xs:xsd-int.
-    xsd__xsd_int                         idx                            ;	///< Required element.
+    xsd__xsd_int                         idx;	///< Required element.
 /// Element "age" of XSD type xs:xsd-int.
-    xsd__xsd_int                         age                            ;	///< Required element.
+    xsd__xsd_int                         age;	///< Required element.
 /// Element "tell" of XSD type xs:xsd-string.
-	xsd__xsd_string*                     tell = NULL;						///< Optional element.
+    xsd__xsd_string*                     tell = NULL;						///< Optional element.
 /// Element "email" of XSD type xs:xsd-string.
-	xsd__xsd_string*                     email = 0;							///< Optional element.
+    xsd__xsd_string*                     email = 0;							///< Optional element.
 /// A handle to the soap struct context that manages this instance when instantiated by a context or NULL otherwise (automatically set).
-    struct soap                         *soap                          ;
+    struct soap                         *soap;
 };
 
 /// @brief "urn:myweb":ArrayOfEmp2 is a complexType.
@@ -219,11 +220,12 @@ class ns2__result
 /// - ns2__ArrayOfEmp2* ns2__ArrayOfEmp2::soap_dup(soap*) returns deep copy of ns2__ArrayOfEmp2, copies the (cyclic) graph structure when a context is provided, or (cycle-pruned) tree structure with soap_set_mode(soap, SOAP_XML_TREE) (use soapcpp2 -Ec)
 /// - ns2__ArrayOfEmp2::soap_del() deep deletes ns2__ArrayOfEmp2 data members, use only after ns2__ArrayOfEmp2::soap_dup(NULL) (use soapcpp2 -Ed)
 class ns2__ArrayOfEmp2
-{ public:
-/// Element "rslt" of XSD type "urn:myweb":result.
-    ns2__result*                         rslt                          ;	///< Required element.
+{
+public:
+    /// Element "rslt" of XSD type "urn:myweb":result.
+    ns2__result*                         rslt;	///< Required element.
 /// A handle to the soap struct context that manages this instance when instantiated by a context or NULL otherwise (automatically set).
-    struct soap                         *soap                          ;
+    struct soap                         *soap;
 };
 
 

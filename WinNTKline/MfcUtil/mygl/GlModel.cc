@@ -80,7 +80,7 @@ bool BMP::Load(const char *FileName) {
         std::cout << "不能读取数据" << std::endl;
         return false;
     }
-    for (i = 0; i<size; i += 3) { //bgr -> rgb
+    for (i = 0; i < size; i += 3) { //bgr -> rgb
         temp = Data[i];
         Data[i] = Data[i + 2];
         Data[i + 2] = temp;
@@ -138,11 +138,11 @@ void __sphere(GLfloat xx, GLfloat yy, GLfloat zz, GLfloat radius, GLfloat M, GLf
     float angle_xy = 0.0;
     int i = 0, j = 0;
     glBegin(GL_QUADS);
-    for (i = 0; i<M; i++)
+    for (i = 0; i < M; i++)
     {
         angle_z = i * step_z;
 
-        for (j = 0; j<N; j++)
+        for (j = 0; j < N; j++)
         {
             angle_xy = j * step_xy;
 
@@ -154,15 +154,15 @@ void __sphere(GLfloat xx, GLfloat yy, GLfloat zz, GLfloat radius, GLfloat M, GLf
             y[1] = radius * sin(angle_z + step_z) * sin(angle_xy);
             z[1] = radius * cos(angle_z + step_z);
 
-            x[2] = radius*sin(angle_z + step_z)*cos(angle_xy + step_xy);
-            y[2] = radius*sin(angle_z + step_z)*sin(angle_xy + step_xy);
-            z[2] = radius*cos(angle_z + step_z);
+            x[2] = radius * sin(angle_z + step_z)*cos(angle_xy + step_xy);
+            y[2] = radius * sin(angle_z + step_z)*sin(angle_xy + step_xy);
+            z[2] = radius * cos(angle_z + step_z);
 
             x[3] = radius * sin(angle_z) * cos(angle_xy + step_xy);
             y[3] = radius * sin(angle_z) * sin(angle_xy + step_xy);
             z[3] = radius * cos(angle_z);
 
-            for (int k = 0; k<4; k++)
+            for (int k = 0; k < 4; k++)
             {
                 glVertex3f(xx + float(x[k]), yy + float(y[k]), zz + float(z[k]));
             }
@@ -217,14 +217,14 @@ int GlModel::LoadGLTexture()                                    // Load Bitmaps 
 {
     int load = FALSE;                                        // Status Indicator
     AUX_RGBImageRec *TextureImage[NUM];
-    for (int i = 0; i<NUM; i++)
+    for (int i = 0; i < NUM; i++)
         memset(TextureImage, i, sizeof(void *) * 1);        // Set The Pointer To NULL
                                                             // Load The Bitmap, Check For Errors, If Bitmap's Not Found Quit
     if ((TextureImage[0] = LoadBMP("image/qdu.bmp")) &&
         (TextureImage[1] = LoadBMP("image/outdoor.bmp")) && (TextureImage[2] = LoadBMP("image/bkg.bmp")))
     {
         load = TRUE;                            // Set The Status To TRUE
-        for (int k = 0; k<NUM; k++)
+        for (int k = 0; k < NUM; k++)
         {
             glGenTextures(1, &texture[k]);
             // Create Nearest Filtered Texture
@@ -236,7 +236,7 @@ int GlModel::LoadGLTexture()                                    // Load Bitmaps 
     }
     else
         return NUM;
-    for (int j = 0; j<NUM; j++)
+    for (int j = 0; j < NUM; j++)
     {
         if (TextureImage[j])                            // If Texture Exists
         {

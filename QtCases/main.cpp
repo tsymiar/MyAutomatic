@@ -9,9 +9,9 @@ extern "C" __declspec(dllexport)
 #endif
 int main(int argc, char *argv[])
 {
-	QApplication a(argc, argv);
-	OpenGLWindow w("flappy TRIANGLE");
-	a.setActiveWindow(&w);
-	w.show();
-	return a.exec();
+    QApplication a(argc, argv);
+    OpenGLWindow w("flappy TRIANGLE");
+    a.setActiveWindow(&w);
+    w.show();
+    return a.exec();
 }

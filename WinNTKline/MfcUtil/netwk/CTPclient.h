@@ -6,11 +6,11 @@
 class CTPclient
 {
 public:
-	OGLKview Ogl;
-	CTPclient();
-	virtual ~CTPclient();
-	static unsigned int __stdcall SimpleClient(void* P);
-	static unsigned int __stdcall TradeMarket(void* P);
+    OGLKview Ogl;
+    CTPclient();
+    virtual ~CTPclient();
+    static unsigned int __stdcall SimpleClient(void* P);
+    static unsigned int __stdcall TradeMarket(void* P);
 };
 
 #endif

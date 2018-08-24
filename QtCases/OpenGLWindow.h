@@ -5,21 +5,21 @@
 
 class OpenGLWindow : public QOglMaterial
 {
-	Q_OBJECT
+    Q_OBJECT
 
 public:
-	OpenGLWindow(const char* title = "tsymiar's Tutorial", bool fs = false);
-	~OpenGLWindow();
+    OpenGLWindow(const char* title = "tsymiar's Tutorial", bool fs = false);
+    ~OpenGLWindow();
 protected:
-	void keyPressEvent(QKeyEvent *e);
-	void mouseMoveEvent(QMouseEvent *e);
+    void keyPressEvent(QKeyEvent *e);
+    void mouseMoveEvent(QMouseEvent *e);
 private:
-	bool fullscreen;
-	bool light;
-	GLfloat x, y, z, h;
-	QTimer *timer = NULL;
-	private slots:
-	void timerDone();
+    bool fullscreen;
+    bool light;
+    GLfloat x, y, z, h;
+    QTimer *timer = NULL;
+private slots:
+    void timerDone();
 };
 
 #endif // OpenGLWindow_H

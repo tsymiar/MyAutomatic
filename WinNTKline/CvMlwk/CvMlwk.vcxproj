@@ -182,6 +182,9 @@
   <ItemGroup>
     <None Include="..\MfcUtil\tensor\object_detect.py" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\MfcUtil\image\taoxi.jpg" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

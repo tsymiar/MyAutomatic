@@ -2,7 +2,7 @@
 
 GLUiObj::GLUiObj()
 {
-	ui.setupUi(this);
+    ui.setupUi(this);
 }
 
 GLUiObj::~GLUiObj()

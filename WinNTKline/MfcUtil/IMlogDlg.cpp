@@ -1,4 +1,4 @@
-// IMlogDlg.cpp : å®žçŽ°æ–‡ä»¶
+ï»¿// IMlogDlg.cpp : ç€¹ç‚µå¹‡é‚å›¦æ¬¢
 //
 
 #include "stdafx.h"
@@ -6,16 +6,16 @@
 #include "IMlogDlg.h"
 #include "afxdialogex.h"
 
-// IMlogDlg å¯¹è¯æ¡?
+// IMlogDlg ç€µç¡…ç˜½å¦—?
 
 IMPLEMENT_DYNAMIC(IMlogDlg, CDialogEx)
 
 IMlogDlg::IMlogDlg(CWnd* pParent /*=NULL*/)
-	: CDialogEx(IDD_IMMODAL, pParent) {}
+    : CDialogEx(IDD_IMMODAL, pParent) {}
 
 IMlogDlg::IMlogDlg(int(*func)(char *, char *))
 {
-	setUsrPsw = func;
+    setUsrPsw = func;
 }
 
 IMlogDlg::~IMlogDlg()
@@ -24,13 +24,13 @@ IMlogDlg::~IMlogDlg()
 
 void IMlogDlg::DoDataExchange(CDataExchange* pDX)
 {
-	CDialogEx::DoDataExchange(pDX);
-	DDX_Control(pDX, IDC_ACNT, m_editUsr);
-	DDX_Control(pDX, IDC_PSW, m_editPsw);
+    CDialogEx::DoDataExchange(pDX);
+    DDX_Control(pDX, IDC_ACNT, m_editUsr);
+    DDX_Control(pDX, IDC_PSW, m_editPsw);
 }
 
 BEGIN_MESSAGE_MAP(IMlogDlg, CDialogEx)
-	ON_BN_CLICKED(IDOK, &IMlogDlg::OnBnClickedOk)
+    ON_BN_CLICKED(IDOK, &IMlogDlg::OnBnClickedOk)
 END_MESSAGE_MAP()
 
 
@@ -41,26 +41,27 @@ void IMlogDlg::PostNcDestroy()
 
 BOOL IMlogDlg::OnInitDialog()
 {
-	CDialogEx::OnInitDialog();
-	m_editUsr.SetLimitText(20);
-	m_editPsw.SetLimitText(20);
-	return 0;
+    CDialogEx::OnInitDialog();
+    m_editUsr.SetLimitText(20);
+    m_editPsw.SetLimitText(20);
+    return 0;
 }
 
 void IMlogDlg::OnBnClickedOk()
 {
-	GetDlgItem(IDC_ACNT)->GetWindowText(m_strAcnt);
-	GetDlgItem(IDC_PSW)->GetWindowText(m_strPsw);
-	if (lstrlen(m_strAcnt) < 3) 
-	{
-		AfxMessageBox("ÇëÊäÈë3~20¸ö×Ö·û¡£");
-		return;
-	} else
-		if (!checkPswValid((LPSTR)(LPCSTR)m_strPsw)) {
-			AfxMessageBox("ÃÜÂë±ØÐëÊÇÊý×Ö¡¢×ÖÄ¸ºÍÌØÊâ×Ö·ûµÄ¼¯ºÏ£¡");
-			return;
-		}
-	if (setUsrPsw((LPSTR)(LPCSTR)m_strAcnt, (LPSTR)(LPCSTR)m_strPsw))
-		//GetDlgItem(IDC_LISTFRND)->ShowWindow(SW_SHOW);
-		CDialogEx::OnOK();
+    GetDlgItem(IDC_ACNT)->GetWindowText(m_strAcnt);
+    GetDlgItem(IDC_PSW)->GetWindowText(m_strPsw);
+    if (lstrlen(m_strAcnt) < 3)
+    {
+        AfxMessageBox("è¯·è¾“å…¥3~20ä¸ªå­—ç¬¦ã€‚");
+        return;
+    }
+    else
+        if (!checkPswValid((LPSTR)(LPCSTR)m_strPsw)) {
+            AfxMessageBox("å¯†ç å¿…é¡»æ˜¯æ•°å­—ã€å­—æ¯å’Œç‰¹æ®Šå­—ç¬¦çš„é›†åˆï¼");
+            return;
+        }
+    if (setUsrPsw((LPSTR)(LPCSTR)m_strAcnt, (LPSTR)(LPCSTR)m_strPsw))
+        //GetDlgItem(IDC_LISTFRND)->ShowWindow(SW_SHOW);
+        CDialogEx::OnOK();
 }
