@@ -6,14 +6,14 @@
 
 class GLUiObj : public QMainWindow
 {
-	Q_OBJECT
+    Q_OBJECT
 
 public:
-	GLUiObj();
-	~GLUiObj();
+    GLUiObj();
+    ~GLUiObj();
 
 private:
-	Ui::QtCasesClass ui;
+    Ui::QtCasesClass ui;
 };
 
 #endif // MYUIOBJ_H

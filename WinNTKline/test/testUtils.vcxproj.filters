@@ -45,16 +45,10 @@
     <ClInclude Include="..\MfcUtil\netwk\ChannelCollector.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\MfcUtil\netwk\CTPdev.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="..\MfcUtil\netwk\Simulation.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\MfcUtil\IM\IMclient.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\MfcUtil\html\MyHtmlView.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\MfcUtil\html\cefWebKit.h">
@@ -79,6 +73,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\MfcUtil\elem\Screen-Sharing.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\MfcUtil\netwk\CTPclient.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

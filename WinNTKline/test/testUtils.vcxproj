@@ -212,7 +212,6 @@
     <ClInclude Include="..\MfcUtil\dos\DOSCout.h" />
     <ClInclude Include="..\MfcUtil\elem\Screen-Sharing.h" />
     <ClInclude Include="..\MfcUtil\html\cefWebKit.h" />
-    <ClInclude Include="..\MfcUtil\html\MyHtmlView.h" />
     <ClInclude Include="..\MfcUtil\IMhideWndDlg.h" />
     <ClInclude Include="..\MfcUtil\IMlogDlg.h" />
     <ClInclude Include="..\MfcUtil\IM\IMclient.h" />
@@ -220,7 +219,7 @@
     <ClInclude Include="..\MfcUtil\mygl\OGLKview.h" />
     <ClInclude Include="..\MfcUtil\MyOglDrawDlg.h" />
     <ClInclude Include="..\MfcUtil\netwk\ChannelCollector.h" />
-    <ClInclude Include="..\MfcUtil\netwk\CTPdev.h" />
+    <ClInclude Include="..\MfcUtil\netwk\CTPclient.h" />
     <ClInclude Include="..\MfcUtil\netwk\Simulation.h" />
     <ClInclude Include="..\MfcUtil\opencv\CvimgMat.h" />
     <ClInclude Include="..\MfcUtil\RegistDlg.h" />

@@ -16,13 +16,13 @@
 class DOSCout
 {
 public:
-	DOSCout();
-	virtual ~DOSCout();
-	void ExecuteConsole();
-	void RedirectConsole();
-	void ConsoleIOoverload();
+    DOSCout();
+    virtual ~DOSCout();
+    void ExecuteConsole();
+    void RedirectConsole();
+    void ConsoleIOoverload();
 private:
-	static const WORD CONSOLE_LINES = 500;
+    static const WORD CONSOLE_LINES = 500;
 };
 
 #endif // !DOS_COUT_H_

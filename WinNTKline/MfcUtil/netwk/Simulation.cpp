@@ -112,7 +112,7 @@ void sim_test()
             cout << file.name << endl;
             Sleep(1000);
 
-            if (n>0)
+            if (n > 0)
             {
                 cout << "准备测试第" << n << "个文件！" << endl;
 
@@ -151,18 +151,18 @@ void Sniffer_A12(int i)    //监听Tick数据以及指标计算
 {
     void Sniffer_56(int i);    //
 
-    if (!ReceiveTick[i] && fabs(tick_data[i][0] - 1)<0.01)
+    if (!ReceiveTick[i] && fabs(tick_data[i][0] - 1) < 0.01)
     {
         SnifferSignalA[i] = true;
 
-        bool TradingTimeA = (tick_data[i][2]>0.0910 && tick_data[i][2]<0.1450) || (tick_data[i][2]>0.2105 && tick_data[i][2]<0.2359);
-        bool TradingTimeB = (tick_data[i][2]>0.0910 && tick_data[i][2]<0.1450) || (tick_data[i][2]>0.2105 && tick_data[i][2]<0.2359);
+        bool TradingTimeA = (tick_data[i][2] > 0.0910 && tick_data[i][2] < 0.1450) || (tick_data[i][2] > 0.2105 && tick_data[i][2] < 0.2359);
+        bool TradingTimeB = (tick_data[i][2] > 0.0910 && tick_data[i][2] < 0.1450) || (tick_data[i][2] > 0.2105 && tick_data[i][2] < 0.2359);
 
-        if (simMode && Mn_close[i][1]> Mn_open[i][1] && TradingTimeA)
+        if (simMode && Mn_close[i][1] > Mn_open[i][1] && TradingTimeA)
         {
             Sniffer_dataA[i][0] = 1;
         }
-        else if (simMode && Mn_close[i][1]< Mn_open[i][1] && TradingTimeA)
+        else if (simMode && Mn_close[i][1] < Mn_open[i][1] && TradingTimeA)
         {
             Sniffer_dataA[i][0] = 2;
         }
@@ -176,21 +176,21 @@ void Sniffer_A12(int i)    //监听Tick数据以及指标计算
 
 void Sniffer_B12(int i)    //监听Tick数据以及指标计算
 {
-    if (!ReceiveTick[i] && fabs(tick_data[i][0] - 1)<0.01)//ru
+    if (!ReceiveTick[i] && fabs(tick_data[i][0] - 1) < 0.01)//ru
     {
         SnifferSignalB[i] = true;
 
-        bool TradingTimeA = (tick_data[i][2]>0.0910 && tick_data[i][2]<0.1450) || (tick_data[i][2]>0.2105 && tick_data[i][2]<0.2359);
-        bool TradingTimeB = (tick_data[i][2]>0.0910 && tick_data[i][2]<0.1450) || (tick_data[i][2]>0.2105 && tick_data[i][2]<0.2359);
+        bool TradingTimeA = (tick_data[i][2] > 0.0910 && tick_data[i][2] < 0.1450) || (tick_data[i][2] > 0.2105 && tick_data[i][2] < 0.2359);
+        bool TradingTimeB = (tick_data[i][2] > 0.0910 && tick_data[i][2] < 0.1450) || (tick_data[i][2] > 0.2105 && tick_data[i][2] < 0.2359);
 
-        bool condtion1 = tick_AskPrice1[i][0]>tick_AskPrice1[i][1];
-        bool condtion2 = tick_AskPrice1[i][0]<tick_AskPrice1[i][1];
+        bool condtion1 = tick_AskPrice1[i][0] > tick_AskPrice1[i][1];
+        bool condtion2 = tick_AskPrice1[i][0] < tick_AskPrice1[i][1];
 
-        bool condtion3 = tick_AskPrice1[i][1]>tick_AskPrice1[i][2];
-        bool condtion4 = tick_AskPrice1[i][1]<tick_AskPrice1[i][2];
+        bool condtion3 = tick_AskPrice1[i][1] > tick_AskPrice1[i][2];
+        bool condtion4 = tick_AskPrice1[i][1] < tick_AskPrice1[i][2];
 
-        bool condtion5 = tick_AskPrice1[i][2]>tick_AskPrice1[i][3];
-        bool condtion6 = tick_AskPrice1[i][2]<tick_AskPrice1[i][3];
+        bool condtion5 = tick_AskPrice1[i][2] > tick_AskPrice1[i][3];
+        bool condtion6 = tick_AskPrice1[i][2] < tick_AskPrice1[i][3];
 
 
         if (condtion1 && 1 && 1 && TradingTimeA)
@@ -219,7 +219,7 @@ void Sniffer()    //监听Tick数据已经指标计算 实盘用
 
     double Nowtime = (double)((sys_time.wHour) / 10e1) + (double)((sys_time.wMinute) / 10e3) + (double)((sys_time.wSecond) / 10e5);    //格式时间0.145100
 
-    if (simMode && (tick_data[18][2] >= 0.151459 || tick_data[3][2] >= 0.145959) && Nowtime>0.1518 && Nowtime<0.1520 && CloseAll == false)
+    if (simMode && (tick_data[18][2] >= 0.151459 || tick_data[3][2] >= 0.145959) && Nowtime > 0.1518 && Nowtime < 0.1520 && CloseAll == false)
     {
         cerr << "--->>> " << ff2ss(tick_data[1][1]) << "准备收盘!" << endl;
         cerr << "--->>> " << "WriteMdConfiguration!" << endl;
@@ -233,7 +233,7 @@ void Sniffer()    //监听Tick数据已经指标计算 实盘用
     {
         if (simMode)
         {
-            if (fabs(tick_data[i][0] - 1)<0.01 && ((tick_data[i][2]>0.0913 && i>17) || (tick_data[i][2]>0.0858 && i <= 17)))//i>17合约为IF
+            if (fabs(tick_data[i][0] - 1) < 0.01 && ((tick_data[i][2] > 0.0913 && i > 17) || (tick_data[i][2] > 0.0858 && i <= 17)))//i>17合约为IF
             {
                 Sniffer_A12(i);
                 Sniffer_B12(i);
@@ -242,7 +242,7 @@ void Sniffer()    //监听Tick数据已经指标计算 实盘用
         }
         else
         {
-            if (fabs(tick_data[i][0] - 1)<0.01)
+            if (fabs(tick_data[i][0] - 1) < 0.01)
             {
                 Sniffer_A12(i);
                 Sniffer_B12(i);
@@ -259,11 +259,11 @@ void TraderA12(double system_times, int i)
     double GetLocalTimeSec1();
     void _record1(char *txt1, char *txt2, double m, int n, int i);
 
-    bool TradingTimeB = (tick_data[i][2]>0.1014 && tick_data[i][2]<0.1400);// || (tick_data[i][2]>0.2105 && tick_data[i][2]<0.2350) ;
-    bool TradingTimeS = (tick_data[i][2]>0.0905 && tick_data[i][2]<0.1400);// || (tick_data[i][2]>0.2105 && tick_data[i][2]<0.2350) ;
+    bool TradingTimeB = (tick_data[i][2] > 0.1014 && tick_data[i][2] < 0.1400);// || (tick_data[i][2]>0.2105 && tick_data[i][2]<0.2350) ;
+    bool TradingTimeS = (tick_data[i][2] > 0.0905 && tick_data[i][2] < 0.1400);// || (tick_data[i][2]>0.2105 && tick_data[i][2]<0.2350) ;
 
-    bool Condtion1 = (tick_BidPrice1[i][0] - tick_data[i][9])>20 * InstrumentID_minmove[i] && (tick_data[i][8] - tick_AskPrice1[i][0])>10 * InstrumentID_minmove[i];
-    bool Condtion2 = (tick_data[i][8] - tick_AskPrice1[i][0])>20 * InstrumentID_minmove[i] && (tick_BidPrice1[i][0] - tick_data[i][9])>10 * InstrumentID_minmove[i];
+    bool Condtion1 = (tick_BidPrice1[i][0] - tick_data[i][9]) > 20 * InstrumentID_minmove[i] && (tick_data[i][8] - tick_AskPrice1[i][0]) > 10 * InstrumentID_minmove[i];
+    bool Condtion2 = (tick_data[i][8] - tick_AskPrice1[i][0]) > 20 * InstrumentID_minmove[i] && (tick_BidPrice1[i][0] - tick_data[i][9]) > 10 * InstrumentID_minmove[i];
 
     if (Sniffer_dataA[i][0] > 0 && TradingSignalA[i] == false)
     {
@@ -272,7 +272,7 @@ void TraderA12(double system_times, int i)
 
         if ((Sniffer_dataA[i][0] == 1 || Sniffer_dataA[i][0] == 98) && TradingTimeB)
         {
-            if (Trade_dataA[i][2] <-0.5)//如有反向单，先平仓处理
+            if (Trade_dataA[i][2] < -0.5)//如有反向单，先平仓处理
             {
                 SendOrder(InstrumentID_n[i], 0, 3, 1, i);
                 TradingSignalA[i] = false;
@@ -289,7 +289,7 @@ void TraderA12(double system_times, int i)
                 _record1("报单:", "买平", Trade_dataA[i][5], int(Trade_dataA[i][3]), i);
             }
 
-            if ((fabs(Trade_dataA[i][2]))<0.5 && Day_CloseProfit[i]>-1.6*Trade_StopCloseProfit[i] && Condtion1)
+            if ((fabs(Trade_dataA[i][2])) < 0.5 && Day_CloseProfit[i] > -1.6*Trade_StopCloseProfit[i] && Condtion1)
             {
                 SendOrder(InstrumentID_n[i], 0, 0, 1, i);
                 TradingSignalA[i] = false;
@@ -326,7 +326,7 @@ void TraderA12(double system_times, int i)
                 _record1("报单:", "卖平", Trade_dataA[i][5], int(Trade_dataA[i][3]), i);
             }
 
-            if ((fabs(Trade_dataA[i][2]))<0.5 &&  Day_CloseProfit[i]>-1.6*Trade_StopCloseProfit[i] && Condtion2)
+            if ((fabs(Trade_dataA[i][2])) < 0.5 &&  Day_CloseProfit[i] > -1.6*Trade_StopCloseProfit[i] && Condtion2)
             {
                 SendOrder(InstrumentID_n[i], 1, 0, 1, i);
                 TradingSignalA[i] = false;
@@ -446,7 +446,7 @@ void StopEndTime_A(double system_times, int i)
     int nowtime = GetLocalTimeSec2();
 
     //定时平仓
-    if (Trade_dataA[i][2] == 1 && (Q_BarTime_1n[i] - Trade_times[i])>n * 60 && stopdingshien)
+    if (Trade_dataA[i][2] == 1 && (Q_BarTime_1n[i] - Trade_times[i]) > n * 60 && stopdingshien)
     {
         SendOrder(InstrumentID_n[i], 1, 3, 0, i);
         TradingSignalA[i] = false;
@@ -462,7 +462,7 @@ void StopEndTime_A(double system_times, int i)
         if (simMode) { WriteTradeConfiguration(); }
         _record1("报单:", "卖平定时", Trade_dataA[i][5], int(Trade_dataA[i][3]), i);
     }
-    if (Trade_dataA[i][2] == -1 && (Q_BarTime_1n[i] - Trade_times[i])>n * 60 && stopdingshien)
+    if (Trade_dataA[i][2] == -1 && (Q_BarTime_1n[i] - Trade_times[i]) > n * 60 && stopdingshien)
     {
         SendOrder(InstrumentID_n[i], 0, 3, 0, i);
         TradingSignalA[i] = false;
@@ -481,7 +481,7 @@ void StopEndTime_A(double system_times, int i)
 
     //收盘平仓
 
-    if (Trade_dataA[i][2] == 1 && ((system_times>0.1455 && system_times<0.1456) || (system_times>0.2350 && system_times <= 0.2356)))
+    if (Trade_dataA[i][2] == 1 && ((system_times > 0.1455 && system_times < 0.1456) || (system_times > 0.2350 && system_times <= 0.2356)))
     {
         SendOrder(InstrumentID_n[i], 1, 3, 0, i);
         TradingSignalA[i] = false;
@@ -496,7 +496,7 @@ void StopEndTime_A(double system_times, int i)
         cerr << "--->>> 报单: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "卖平收盘" << "_" << Trade_dataA[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
         _record1("报单:", "卖平收盘", Trade_dataA[i][5], int(Trade_dataA[i][3]), i);
     }
-    if (Trade_dataA[i][2] == -1 && ((system_times>0.1455 && system_times <= 0.1456) || (system_times>0.2350 && system_times <= 0.2356)))
+    if (Trade_dataA[i][2] == -1 && ((system_times > 0.1455 && system_times <= 0.1456) || (system_times > 0.2350 && system_times <= 0.2356)))
     {
         SendOrder(InstrumentID_n[i], 0, 3, 0, i);
         TradingSignalA[i] = false;
@@ -512,7 +512,7 @@ void StopEndTime_A(double system_times, int i)
         _record1("报单:", "买平收盘", Trade_dataA[i][5], int(Trade_dataA[i][3]), i);
     }
 
-    if ((system_times>0.1455 && system_times<0.1459) || (system_times>0.2350 && system_times <= 0.2359))
+    if ((system_times > 0.1455 && system_times < 0.1459) || (system_times > 0.2350 && system_times <= 0.2359))
     {
         SnifferSignalA[i] = false;
     }
@@ -526,8 +526,8 @@ void TraderB12(double system_times, int i)
     double GetLocalTimeSec1();
     void _record1(char *txt1, char *txt2, double m, int n, int i);
 
-    bool TradingTimeB = (tick_data[i][2]>0.0920 && tick_data[i][2]<0.1450) || (tick_data[i][2]>0.2105 && tick_data[i][2]<0.2350);
-    bool TradingTimeS = (tick_data[i][2]>0.0920 && tick_data[i][2]<0.1450) || (tick_data[i][2]>0.2105 && tick_data[i][2]<0.2350);
+    bool TradingTimeB = (tick_data[i][2] > 0.0920 && tick_data[i][2] < 0.1450) || (tick_data[i][2] > 0.2105 && tick_data[i][2] < 0.2350);
+    bool TradingTimeS = (tick_data[i][2] > 0.0920 && tick_data[i][2] < 0.1450) || (tick_data[i][2] > 0.2105 && tick_data[i][2] < 0.2350);
 
     if (Sniffer_dataB[i][0] > 0 && TradingSignalB[i] == false)
     {
@@ -556,7 +556,7 @@ void TraderB12(double system_times, int i)
             if (simMode) { WriteTradeConfiguration(); }
             _record1("报单:", "买平", Trade_dataB[i][5], int(Trade_dataB[i][3]), i);
 
-            if (TradingTimeB && fanen && duowen && Day_CloseProfitB[i]>-1 * Trade_StopCloseProfit[i])
+            if (TradingTimeB && fanen && duowen && Day_CloseProfitB[i] > -1 * Trade_StopCloseProfit[i])
             {
                 SendOrder(InstrumentID_n[i], 0, 0, 0, i);
                 TradingSignalB[i] = false;
@@ -589,7 +589,7 @@ void TraderB12(double system_times, int i)
             if (simMode) { WriteTradeConfiguration(); }
             _record1("报单:", "卖平", Trade_dataB[i][5], int(Trade_dataB[i][3]), i);
 
-            if (TradingTimeS && fanen   && kongen && Day_CloseProfitB[i]>-1 * Trade_StopCloseProfit[i])
+            if (TradingTimeS && fanen   && kongen && Day_CloseProfitB[i] > -1 * Trade_StopCloseProfit[i])
             {
                 SendOrder(InstrumentID_n[i], 1, 0, 0, i);
                 TradingSignalB[i] = false;
@@ -606,7 +606,7 @@ void TraderB12(double system_times, int i)
             }
 
         }
-        else if ((Sniffer_dataB[i][0] == 5 || Sniffer_dataB[i][0] == 98) && Trade_dataB[i][2] == 0 && TradingTimeB  && duowen  && Day_CloseProfitB[i]>-1 * Trade_StopCloseProfit[i])
+        else if ((Sniffer_dataB[i][0] == 5 || Sniffer_dataB[i][0] == 98) && Trade_dataB[i][2] == 0 && TradingTimeB  && duowen  && Day_CloseProfitB[i] > -1 * Trade_StopCloseProfit[i])
         {
 
             SendOrder(InstrumentID_n[i], 0, 0, 0, i);
@@ -623,7 +623,7 @@ void TraderB12(double system_times, int i)
             _record1("报单:", "买开", Trade_dataB[i][5], int(Trade_dataB[i][3]), i);
 
         }
-        else if ((Sniffer_dataB[i][0] == 6 || Sniffer_dataB[i][0] == 98) && Trade_dataB[i][2] == 0 && TradingTimeS  && kongen  && Day_CloseProfitB[i]>-1 * Trade_StopCloseProfit[i])
+        else if ((Sniffer_dataB[i][0] == 6 || Sniffer_dataB[i][0] == 98) && Trade_dataB[i][2] == 0 && TradingTimeS  && kongen  && Day_CloseProfitB[i] > -1 * Trade_StopCloseProfit[i])
         {
 
             SendOrder(InstrumentID_n[i], 1, 0, 0, i);
@@ -743,7 +743,7 @@ void StopEndTime_B(double system_times, int i)
     int nowtime = GetLocalTimeSec2();
 
     //定时平仓
-    if (Trade_dataB[i][2] == 1 && (Q_BarTime_1n[i] - Trade_times[i])>n * 60 && stopdingshien)
+    if (Trade_dataB[i][2] == 1 && (Q_BarTime_1n[i] - Trade_times[i]) > n * 60 && stopdingshien)
     {
         SendOrder(InstrumentID_n[i], 1, 3, 0, i);
         TradingSignalB[i] = false;
@@ -759,7 +759,7 @@ void StopEndTime_B(double system_times, int i)
         if (simMode) { WriteTradeConfiguration(); }
         _record1("报单:", "卖平定时", Trade_dataB[i][5], int(Trade_dataB[i][3]), i);
     }
-    if (Trade_dataB[i][2] == -1 && (Q_BarTime_1n[i] - Trade_times[i])>n * 60 && stopdingshien)
+    if (Trade_dataB[i][2] == -1 && (Q_BarTime_1n[i] - Trade_times[i]) > n * 60 && stopdingshien)
     {
         SendOrder(InstrumentID_n[i], 0, 3, 0, i);
         TradingSignalB[i] = false;
@@ -778,7 +778,7 @@ void StopEndTime_B(double system_times, int i)
 
     //收盘平仓
 
-    if (Trade_dataB[i][2] == 1 && ((system_times>0.1455 && system_times<0.1456) || (system_times>0.2350 && system_times <= 0.2356)))
+    if (Trade_dataB[i][2] == 1 && ((system_times > 0.1455 && system_times < 0.1456) || (system_times > 0.2350 && system_times <= 0.2356)))
     {
         SendOrder(InstrumentID_n[i], 1, 3, 0, i);
         TradingSignalB[i] = false;
@@ -793,7 +793,7 @@ void StopEndTime_B(double system_times, int i)
         cerr << "--->>> 报单: " << InstrumentID_n[i] << "_" << tick_data[i][2] << "_" << "卖平收盘" << "_" << Trade_dataB[i][5] << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
         _record1("报单:", "卖平收盘", Trade_dataB[i][5], int(Trade_dataB[i][3]), i);
     }
-    if (Trade_dataB[i][2] == -1 && ((system_times>0.1455 && system_times <= 0.1456) || (system_times>0.2350 && system_times <= 0.2356)))
+    if (Trade_dataB[i][2] == -1 && ((system_times > 0.1455 && system_times <= 0.1456) || (system_times > 0.2350 && system_times <= 0.2356)))
     {
         SendOrder(InstrumentID_n[i], 0, 3, 0, i);
         TradingSignalB[i] = false;
@@ -809,7 +809,7 @@ void StopEndTime_B(double system_times, int i)
         _record1("报单:", "买平收盘", Trade_dataB[i][5], int(Trade_dataB[i][3]), i);
     }
 
-    if ((system_times>0.1455 && system_times<0.1459) || (system_times>0.2350 && system_times <= 0.2359))
+    if ((system_times > 0.1455 && system_times < 0.1459) || (system_times > 0.2350 && system_times <= 0.2359))
     {
         SnifferSignalB[i] = false;
         Day_CloseProfitB[i] = 0;
@@ -828,7 +828,7 @@ void Istrading()    //策略，下单
 
             if (simMode)
             {
-                if ((tick_data[i][2]>0.0913 && i>17) || (tick_data[i][2]>0.0858 && i <= 17))
+                if ((tick_data[i][2] > 0.0913 && i > 17) || (tick_data[i][2] > 0.0858 && i <= 17))
                 {
                     StopLossA12(tick_data[i][2], i);        //Master
                     if (Sniffer_dataA[i][0] > 0)
@@ -921,7 +921,7 @@ void Simulation_onefile(char  *pathstt)
                 tick_data[i][1] = data[0];
                 tick_data[i][2] = data[1];
 
-                if ((tick_data[i][2]>0.0856 && tick_data[i][2]<0.0900 && i <= 13) || (tick_data[i][2]>0.2056 && tick_data[i][2]<0.2100 && i>13 && i <= 17) || (tick_data[i][2]>0.0913 && tick_data[i][2]<0.0915 && i>17))
+                if ((tick_data[i][2] > 0.0856 && tick_data[i][2] < 0.0900 && i <= 13) || (tick_data[i][2] > 0.2056 && tick_data[i][2] < 0.2100 && i>13 && i <= 17) || (tick_data[i][2] > 0.0913 && tick_data[i][2] < 0.0915 && i>17))
                 {
                     Day_open[i][0] = data[3];
                     Day_CloseProfit[i] = 0;
@@ -969,13 +969,13 @@ void _record1(char *txt1, char *txt2, double m, int n, int i)
     string ff2ss(double nums);
 
     ofstream o_file(LogFilePaths, ios::app);
-    if (n>0)
+    if (n > 0)
     {
-        if (n>0 && n <= 4)
+        if (n > 0 && n <= 4)
         {
             o_file << txt1 << ff2ss(tick_data[i][1]) << "_" << tick_data[i][2] << "_" << InstrumentID_n[i] << "_" << InstrumentID_lots[i] << "_" << txt2 << "_" << Trade_dataA[i][5] << "_" << Trade_dataA[i][3] << endl; //将内容写入到文本文件中
         }
-        else if (n>4 && n <= 6)
+        else if (n > 4 && n <= 6)
         {
             o_file << txt1 << ff2ss(tick_data[i][1]) << "_" << tick_data[i][2] << "_" << InstrumentID_n[i] << "_" << InstrumentID_lots[i] << "_" << txt2 << "_" << Trade_dataB[i][5] << "_" << Trade_dataB[i][3] << endl; //将内容写入到文本文件中
         }
@@ -1112,17 +1112,17 @@ bool ReadTradeConfiguration()
             {
                 word >> temp1;
             }
-            else if (j>1 && j <= 6)
+            else if (j > 1 && j <= 6)
             {
-                if (it<20)
+                if (it < 20)
                 {
                     word >> Trade_dataA[i][j - 1];
                 }
-                else if (it >= 20 && it<40)
+                else if (it >= 20 && it < 40)
                 {
                     word >> Trade_dataB[i][j - 1];
                 }
-                else if (it >= 40 && it<60)
+                else if (it >= 40 && it < 60)
                 {
                     word >> Trade_dataC[i][j - 1];
                 }
@@ -1138,24 +1138,24 @@ bool ReadTradeConfiguration()
             }
         }
 
-        if (temp1>0 && temp1<5)
+        if (temp1 > 0 && temp1 < 5)
         {
-            if (Trade_dataA[i][2]>0.5)
+            if (Trade_dataA[i][2] > 0.5)
             {
                 cerr << "--->>> 报单: " << InstrumentID_n[i] << "_" << Trade_dataA[i][1] << "_" << Trade_dataA[i][3] << "_" << "买开" << "_" << Trade_dataA[i][5] << endl;
             }
-            else if (Trade_dataA[i][2]<-0.5)
+            else if (Trade_dataA[i][2] < -0.5)
             {
                 cerr << "--->>> 报单: " << InstrumentID_n[i] << "_" << Trade_dataA[i][1] << "_" << Trade_dataA[i][3] << "_" << "卖开" << "_" << Trade_dataA[i][5] << endl;
             }
         }
-        else if (temp1>4 && temp1<7)
+        else if (temp1 > 4 && temp1 < 7)
         {
-            if (Trade_dataB[i][2]>0.5)
+            if (Trade_dataB[i][2] > 0.5)
             {
                 cerr << "--->>> 报单: " << InstrumentID_n[i] << "_" << Trade_dataB[i][1] << "_" << Trade_dataB[i][3] << "_" << "买开" << "_" << Trade_dataB[i][5] << endl;
             }
-            else if (Trade_dataB[i][2]<-0.5)
+            else if (Trade_dataB[i][2] < -0.5)
             {
                 cerr << "--->>> 报单: " << InstrumentID_n[i] << "_" << Trade_dataB[i][1] << "_" << Trade_dataB[i][3] << "_" << "卖开" << "_" << Trade_dataB[i][5] << endl;
             }

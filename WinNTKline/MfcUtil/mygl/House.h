@@ -80,84 +80,83 @@ static GLfloat speed = 0;
 /* Data struct		*/
 typedef struct texture_2d
 {
-	char	fname[30];
-	INT2U	type;	/* CLAMP_TEXTURE or REPEAT_TEXTEXTURE */
+    char	fname[30];
+    INT2U	type;	/* CLAMP_TEXTURE or REPEAT_TEXTEXTURE */
 }   TEXTURE_2D;
 
 typedef struct point3d     /* point in 3D  */
 {
-	FLOAT	x, y, z;	/* 3D coordinate */
-	FLOAT	r, g, b;	/* color		 */
-	FLOAT	u, v;		/* texture coordinate	*/
+    FLOAT	x, y, z;	/* 3D coordinate */
+    FLOAT	r, g, b;	/* color		 */
+    FLOAT	u, v;		/* texture coordinate	*/
 }   POINT3D;
 
 
 typedef struct surface		/* surface	*/
 {
-	INT4U	pointn;		/* point number		*/
-	INT4U	triangle;	/* triangle number	*/
-	INT4U	quadric;	/* quadrangle number	*/
-	POINT3D	*pointlist;	/* points list		*/
-	INT4U	*patchlist;	/* patches list(list of point No.)*/
-	INT4U	texId;	        /* texture index	*/
+    INT4U	pointn;		/* point number		*/
+    INT4U	triangle;	/* triangle number	*/
+    INT4U	quadric;	/* quadrangle number	*/
+    POINT3D	*pointlist;	/* points list		*/
+    INT4U	*patchlist;	/* patches list(list of point No.)*/
+    INT4U	texId;	        /* texture index	*/
 }   SURFACE;
 
 typedef struct object		/* OBJECT		*/
 {
-	INT4U	SurfNum; /* surface number and list size*/
-	SURFACE	*surflist; 	/* surfaces list in the object*/
+    INT4U	SurfNum; /* surface number and list size*/
+    SURFACE	*surflist; 	/* surfaces list in the object*/
 }   OBJECT;
 
 class House
 {
 public:
-	// This is the holding space for the landscape colours.
-	int	Width, Height;
-	HGLRC m_hGLContext;
-	int m_GLPixelIndex;
-	// Mouse position and button.
-	int oldmx = 0, oldmy = 0, mb;
-	typedef Initialise::GLPoint Point;
-	typedef Initialise::GLColor Color3f;
+    // This is the holding space for the landscape colours.
+    int	Width, Height;
+    HGLRC m_hGLContext;
+    int m_GLPixelIndex;
+    // Mouse position and button.
+    int oldmx = 0, oldmy = 0, mb;
+    typedef Initialise::GLPoint Point;
+    typedef Initialise::GLColor Color3f;
 protected:
-	int wide, tall;
-	Initialise index;
+    int wide, tall;
+    Initialise index;
 
-	TEXTURE_2D    **TextureList;
-	OBJECT	      *ObjectList;		/* ObjectList[0]:isolated surfaces*/
+    TEXTURE_2D    **TextureList;
+    OBJECT	      *ObjectList;		/* ObjectList[0]:isolated surfaces*/
 
-	INT4S         ObjectNum;
+    INT4S         ObjectNum;
 
-	char          gEnergyFile[30];
-	char	      sLookAtFN[100];
-	char	      ImageName[30];
+    char          gEnergyFile[30];
+    char	      sLookAtFN[100];
+    char	      ImageName[30];
 
-	unsigned short int comp = 32; // Scale modifier.
+    unsigned short int comp = 32; // Scale modifier.
 
-	unsigned short int temp, texture_mapping = FALSE,
-		land_fogging = TRUE, flat_shading = TRUE;
+    unsigned short int temp, texture_mapping = FALSE,
+        land_fogging = TRUE, flat_shading = TRUE;
 
-	float	angle, Near, ex, ey, ez, cx, cy, cz, ux, uy, uz;
+    float	angle, Near, ex, ey, ez, cx, cy, cz, ux, uy, uz;
 
-	unsigned char  *ImageDatas[MAX_TEX];
-	INT2U rslxs[MAX_TEX], rslys[MAX_TEX];
-	int   texnum;
+    unsigned char  *ImageDatas[MAX_TEX];
+    INT2U rslxs[MAX_TEX], rslys[MAX_TEX];
+    int   texnum;
 public:
-	House();
-	// OpenGL specific
-	BOOL CreateViewGLContext(HDC hDC);
-	virtual ~House();
-	void MoveEye(int type, GLfloat amount = 0, int update = 0);
-	void	InitTex(int TexIndex);
-	void	KillTex();
-	void    LoadAllTexture();
-	void    CleanAllTexture();
-	void    CleanList();
-	void    InitLookAt();
-	void    ReadData();
-	unsigned char	*OpenTexImage(INT2U TexIndex, INT2U *rslx, INT2U *rsly);
-	void    InitRenderWin();
-	void InitGeometry(void);
-	void    Render(void);
+    House();
+    // OpenGL specific
+    BOOL CreateViewGLContext(HDC hDC);
+    virtual ~House();
+    void MoveEye(int type, GLfloat amount = 0, int update = 0);
+    void	InitTex(int TexIndex);
+    void	KillTex();
+    void    LoadAllTexture();
+    void    CleanAllTexture();
+    void    CleanList();
+    void    InitLookAt();
+    void    ReadData();
+    unsigned char	*OpenTexImage(INT2U TexIndex, INT2U *rslx, INT2U *rsly);
+    void    InitRenderWin();
+    void InitGeometry(void);
+    void    Render(void);
 };
-

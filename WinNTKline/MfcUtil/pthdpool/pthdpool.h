@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include <pthread.h>
 #include <cstdlib>
 #include <cassert>
@@ -6,9 +6,9 @@
 #include <cstdio>
 #include <cerrno>
 #if __cplusplus <= 199711L
-    #define null NULL
+#define null NULL
 #else
-    #define null nullptr
+#define null nullptr
 #endif
 #ifdef __cplusplus
 /* 对于 C++ 编译器，指定用 C 的语法编译 */
@@ -24,7 +24,7 @@ extern "C" {
         bool            dispose;        /* 标志线程池是否销毁 */
         int                thrd_num;        /* 最大线程数 */
         int                queue_size;        /* 线程队列长度 */
-        int                cur_thrd_no;    /* 线程池中活动线程数 */ 
+        int                cur_thrd_no;    /* 线程池中活动线程数 */
         int                prev;            /* 链表头 */
         int                tail;            /* 链表尾 */
         pthread_t*        thrd_id;        /* 线程ID数组首指针 */
@@ -35,9 +35,9 @@ extern "C" {
     /*
      * @brief     初始化线程池
      * @param     thrd_num:最大线程数,sz_que:队列长度
-     * @retval    成功-创建的线程池指针，失败-其他 
+     * @retval    成功-创建的线程池指针，失败-其他
      */
-    extern my_pool_t* my_pool_init(int thrd_num,int sz_que);
+    extern my_pool_t* my_pool_init(int thrd_num, int sz_que);
     /*
      * @brief     向线程池添加任务
      * @param     pool,添加任务的线程池;routine：任务函数指针，arg：传递给routine的参数
@@ -56,7 +56,7 @@ extern "C" {
      * @retval    0,成功;其他,失败
      */
     extern int my_pool_destroy(my_pool_t *pool);
-    
+
 #ifdef __cplusplus
 }
 #endif

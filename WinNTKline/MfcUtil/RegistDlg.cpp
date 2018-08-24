@@ -55,37 +55,37 @@ int ShowBox(HWND hWndParent)
 
 BOOL CRegistDlg::OnInitDialog()
 {
-	InitBrs();
-	SetTipLatent();
-	// ShowBox(this->m_hWnd);
-	return \
-		CDialog::OnInitDialog();
+    InitBrs();
+    SetTipLatent();
+    // ShowBox(this->m_hWnd);
+    return \
+        CDialog::OnInitDialog();
 }
 
 void CRegistDlg::InitBrs()
 {
     CRect rect;
-	CString url;
-	int reg_port = 443;
+    CString url;
+    int reg_port = 443;
     COleVariant noAg;
     GetClientRect(&rect);
     if (this->m_IP[0] == '\0')return;
     int gauge = rect.right / 3;
     m_hint.Create(hintext, WS_VISIBLE | SS_NOTIFY, \
     { gauge, rect.bottom - 40, gauge + 170, rect.bottom - 20}, this, ID_STATIC);
-	url.Format("https://%s:%d/MyAutomatic", this->m_IP, reg_port);
-	/*
-	//CWebBrowser2
-	if (!m_browser.Create(NULL, NULL, WS_VISIBLE, \
-	rect, this, ID_BROSR))return;
-	m_browser.Navigate(url, &noAg, &noAg, &noAg, &noAg);
-	*/
+    url.Format("https://%s:%d/MyAutomatic", this->m_IP, reg_port);
+    /*
+    //CWebBrowser2
+    if (!m_browser.Create(NULL, NULL, WS_VISIBLE, \
+    rect, this, ID_BROSR))return;
+    m_browser.Navigate(url, &noAg, &noAg, &noAg, &noAg);
+    */
 
-	m_HTMLPage = new CMfcHtmlView;
-	m_HTMLPage->CreateFromDialog(this);
-	m_HTMLPage->Navigate2(url);
+    m_HTMLPage = new CMfcHtmlView;
+    m_HTMLPage->CreateFromDialog(this);
+    m_HTMLPage->Navigate2(url);
 
-	//SetCefWeb(rect, url);
+    //SetCefWeb(rect, url);
 }
 
 void CRegistDlg::SetTipLatent()

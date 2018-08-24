@@ -2,7 +2,7 @@
 #include "ChannelCollector.h"
 
 extern bool net_exit;
-struct st_TThostFtdc STFTDC; 
+struct st_TThostFtdc STFTDC;
 CThostFtdcTraderApi *TRDAPI;
 
 CTPclient::CTPclient() {}
@@ -96,4 +96,3 @@ unsigned int __stdcall CTPclient::TradeMarket(void* P)
     delete tdChnl, m_ctp;
     return 0;
 }
-
