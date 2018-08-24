@@ -822,7 +822,7 @@ int save_acnt() {
     if (dumpfile == NULL)
         return -1;
     fwrite(users, sizeof(USER), MAX_USERS, dumpfile);
-    fwrite(groups, sizeof(GROUP), MAX_GROUPS, dumpfile);
+    fwrite(groups, sizeof(st_GROUP), MAX_GROUPS, dumpfile);
     if (fclose(dumpfile) != 0)
         return -2;
     flush_all();
@@ -837,7 +837,7 @@ int load_acnt() {
         return -1;
     else {
         fread(users, sizeof(USER), MAX_USERS, dumpfile);
-        fread(groups, sizeof(GROUP), MAX_GROUPS, dumpfile);
+        fread(groups, sizeof(st_GROUP), MAX_GROUPS, dumpfile);
         fclose(dumpfile);
         return 0;
     };
