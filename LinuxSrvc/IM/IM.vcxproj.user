@@ -4,4 +4,8 @@
     <DebugChildProcesses>true</DebugChildProcesses>
     <DebuggerFlavor>LinuxDebugger</DebuggerFlavor>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|MIPS'">
+    <DebugChildProcesses>true</DebugChildProcesses>
+    <DebuggerFlavor>LinuxDebugger</DebuggerFlavor>
+  </PropertyGroup>
 </Project>

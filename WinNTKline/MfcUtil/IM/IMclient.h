@@ -44,6 +44,7 @@ typedef struct CLIENT
     int flag = 0;
     void* Dlg;
     void(*fp2p)(void*);
+    int count = 0;
 } st_client;
 
 struct MENU {

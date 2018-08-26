@@ -5,6 +5,11 @@
     <DebuggerFlavor>LinuxDebugger</DebuggerFlavor>
     <DebugChildProcesses>true</DebugChildProcesses>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|MIPS'">
+    <RemoteDebuggerCommandArguments>8080</RemoteDebuggerCommandArguments>
+    <DebuggerFlavor>LinuxDebugger</DebuggerFlavor>
+    <DebugChildProcesses>true</DebugChildProcesses>
+  </PropertyGroup>
   <PropertyGroup>
     <ShowAllFiles>false</ShowAllFiles>
   </PropertyGroup>
