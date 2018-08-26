@@ -160,6 +160,8 @@ int main(
 return 0;
 }
 
+type_socket g_sock;
+
 int save_acnt();
 int load_acnt();
 int user_auth(char usr[24], char psw[24]);
@@ -174,7 +176,7 @@ int host_group(char grpn[24], unsigned char brief[24]);
 int join_group(int no, char usr[24], char psw[24]);
 int leave_group(int no, char usr[24]);
 
-type_thread_func monite(void *socket)
+type_thread_func monite(void *arg)
 {
     static USER user;
     st_GROUP group;
@@ -185,16 +187,19 @@ type_thread_func monite(void *socket)
     struct sockaddr_in sin;
     type_len len = (type_len)sizeof(sin);
     type_socket rcv_sock = 0;
-    type_socket *sock = (type_socket*)socket;
+    type_socket *sock = reinterpret_cast<type_socket*>(arg);
     char ipAddr[INET_ADDRSTRLEN];
-    bool set = true;
-    if ((int)sock > 0) {
+#ifdef _WIN32
+    if (-1 != (int)sock && (int)sock > 0) {
         if ((int)*sock != 0)
             rcv_sock = *sock;
         else
             return 0;
-    }
-    else {
+    } else 
+#else
+    rcv_sock = g_sock;
+#endif // !_WIN32
+    {
         rcv_sock = accept(listen_socket, (struct sockaddr*)&sin, &len);
     }
     struct sockaddr_in peerAddr;
@@ -203,6 +208,7 @@ type_thread_func monite(void *socket)
     const char* IP = inet_ntop(AF_INET, &peerAddr.sin_addr, ipAddr, sizeof(ipAddr));
     const int PORT = ntohs(peerAddr.sin_port);
     printf("accepted peer address [%s:%d]\n", IP, PORT);
+    bool set = true;
     setsockopt(rcv_sock, SOL_SOCKET, SO_KEEPALIVE, (const char*)&set, sizeof(bool));
     if (rcv_sock
 #ifdef _WIN32
@@ -805,6 +811,7 @@ int _im_(int argc, char * argv[]) {
 #else
         pthread_create(&thread_ID, NULL, monite, (void*)-1);
 #ifdef THREAD_PER_CONN
+        g_sock = test_socket;
         pthread_create(&thread_ID, NULL, monite, (void*)&test_socket);
 #endif
 #endif
