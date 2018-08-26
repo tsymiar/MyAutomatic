@@ -139,12 +139,12 @@ void pipesig_handler(int s) {
 }
 
 int main(
-#ifdef __linux
+#ifndef _WIN32
     int argc, char* argv[]
 #endif
 )
 {
-#ifdef __linux
+#ifndef _WIN32
     if (fork() == 0)
     {
         signal(SIGPIPE, pipesig_handler);
@@ -154,7 +154,7 @@ int main(
 #endif
     printf("IM chat server v0.%d for %dbit OS.\n", 1, sizeof(void*) * 8);
     _im_(argc, argv);
-#ifdef __linux
+#ifndef _WIN32
     }
 #endif
 return 0;
@@ -178,8 +178,9 @@ type_thread_func monite(void *socket)
 {
     static USER user;
     st_GROUP group;
-    int c, flg, valrtn, cnt = 0;
+    int c, flg, num = 0;
     int qq = 0, logged = 0;
+    int valrtn;
     char sd_bufs[256], rcv_txt[256];
     struct sockaddr_in sin;
     type_len len = (type_len)sizeof(sin);
@@ -227,18 +228,18 @@ type_thread_func monite(void *socket)
 #endif
             lol = sizeof(int);
         if (getsockopt(rcv_sock, SOL_SOCKET, SO_KEEPALIVE, (char*)&val, &lol) == 0) {
-            if (cnt == 3) {
+            if (num == 3) {
                 set_user_quit(user.usr);
                 printf("### socket status changed (%s): connection may be die.\n", strerror(errno));
             }
-            cnt++;
+            num++;
         }
         flg = recv(rcv_sock, rcv_txt, 256, 0);
         if (qq != flg && flg != 0)
         {
             memcpy(&user, rcv_txt, sizeof(user));
             if (flg <= -1 && flg != EWOULDBLOCK && flg != EAGAIN && flg != EINTR) {
-                if (cnt == 333) {
+                if (num == 333) {
                     set_user_quit(user.usr);
                     printf("----------------------------------------------------------------\
                     \n### client socket [%d] closed by itself just now.\n", rcv_sock);
@@ -312,7 +313,10 @@ type_thread_func monite(void *socket)
                     memcpy(userName, user.usr, 24);
                 }
                 else if (valrtn == 0) {
-                    sprintf(sd_bufs + 8, "[%s] already logged on.", user.usr);
+                    if (memcmp(user.usr, userName, 24) == 0)
+                        sprintf(sd_bufs + 8, "[%s] already logged on.", user.usr);
+                    else
+                        sprintf(sd_bufs + 8, "logging status error, closing socket.\n");
                     snres = send(rcv_sock, sd_bufs, 64, 0);
                     if (snres < 0) {
                         printf("### socket status: %s\n", strerror(snres));
@@ -382,19 +386,19 @@ type_thread_func monite(void *socket)
                     printf("\n");
 #endif
                 }
-                unsigned int slen = 256;
-                memset(sd_bufs, 0, slen);
+                unsigned int buflen = 256;
+                memset(sd_bufs, 0, buflen);
                 if (user.rsv == 0)
                 {
                     switch (sd_bufs[1] = user.uiCmdMsg)
                     {
                     case 0x01:
                         strcpy(sd_bufs + 8, "User already being on-line.");
-                        slen = 48;
+                        buflen = 48;
                         break;
                     case 0x2:
                         memcpy(sd_bufs, &user, 8);
-                        slen = 8;
+                        buflen = 8;
                         break;
                     case 0x3:
                     {
@@ -413,7 +417,7 @@ type_thread_func monite(void *socket)
                             strcpy(users[valrtn].psw, user.npsw);
                         else
                             memcpy(sd_bufs + 8, "Change passwrod failure: user auth error.", 42);
-                        slen = 56;
+                        buflen = 56;
                     } break;
                     case 0x5:
                     {
@@ -426,10 +430,14 @@ type_thread_func monite(void *socket)
                             if (isline[c].user[0] == '\0')
                                 break;
                         };
-                        slen = 8 * (c + 4 + 4);
+                        buflen = 8 * (c + 4 + 4);
                     } break;
                     case 0x6:
                     {
+                        if (memcmp(user.chk, "P2P", 4) == 0) {
+                            sprintf((sd_bufs + 8), "'%s' is communicating with '%s' by P2P.", user.usr, user.peer);
+                            break;
+                        }
                         unsigned int uiIP = 0;
                         valrtn = get_user_ndx(user.peer);
                         if (valrtn >= 0) {
@@ -466,7 +474,7 @@ type_thread_func monite(void *socket)
                         strcpy((sd_bufs + 8), user.peer);
                         unsigned char *val = (unsigned char *)&uiIP;
                         printf(">>> get client peer [%u.%u.%u.%u:%s]\n", val[3], val[2], val[1], val[0], sd_bufs + 54);
-                        slen = 64;
+                        buflen = 64;
                     } break;
                     case 0x7:
                     {
@@ -475,7 +483,7 @@ type_thread_func monite(void *socket)
                         sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
                         if (valrtn == -1) {
                             strcpy((sd_bufs + 8), "No such group.");
-                            slen = 32;
+                            buflen = 32;
                         }
                         else {
                             strcpy((sd_bufs + 8), "User is member of group(s): \n");
@@ -486,7 +494,7 @@ type_thread_func monite(void *socket)
                             };
                             if (groups[valrtn].group.members[c][0] == '\0')
                                 break;
-                            slen = 8 * (c + 4 + 4);
+                            buflen = 8 * (c + 4 + 4);
                         };
                     } break;
                     case 0x8:
@@ -495,16 +503,16 @@ type_thread_func monite(void *socket)
                         sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
                         if (valrtn == -2) {
                             strcpy((sd_bufs + 8), "Host group rejected.");
-                            slen = 32;
+                            buflen = 32;
                         }
                         else if (valrtn == -1) {
                             join_group(valrtn, user.usr, (char*)user.jgrp);
                             sprintf(sd_bufs + 8, "%s, joined group: '%s'.", user.usr, user.jgrp);
-                            slen = 72;
+                            buflen = 72;
                         }
                         else {
                             sprintf(sd_bufs + 8, "Created group: %s.", user.hgrp);
-                            slen = 56;
+                            buflen = 56;
                         }
                     } break;
                     case 0x9:
@@ -517,7 +525,7 @@ type_thread_func monite(void *socket)
                         else if (valrtn == -2) {
                             strcpy((sd_bufs + 8), "Wrong password to this group.");
                         }
-                        slen = 48;
+                        buflen = 48;
                     } break;
                     case 0xA:
                     {
@@ -528,14 +536,14 @@ type_thread_func monite(void *socket)
                             strcpy((sd_bufs + 8), "Leave group successfully.");
                         else
                             strcpy((sd_bufs + 8), "You aren't yet in this group.");
-                        slen = 42;
+                        buflen = 42;
                     } break;
                     case 0xB: // set user sign
                     {
                         valrtn = get_user_ndx(user.usr);
                         sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
                         strcpy(users[valrtn].intro, user.sign);
-                        slen = 8;
+                        buflen = 8;
                     } break;
                     case 0xC:
                     {
@@ -548,7 +556,7 @@ type_thread_func monite(void *socket)
                             if (groups[c].group.name[0] == '\0')
                                 break;
                         };
-                        slen = 8 * (c + 4 + 3);
+                        buflen = 8 * (c + 4 + 3);
                     } break;
                     case 0xD:
                     { //loop1
@@ -579,7 +587,7 @@ type_thread_func monite(void *socket)
                     } break;
                     default: break;
                     }
-                    send(rcv_sock, sd_bufs, slen, 0);
+                    send(rcv_sock, sd_bufs, buflen, 0);
 #ifdef _DEBUG
                     printf(">>> 2-MSG [%0x,%0x]: ", sd_bufs[0], sd_bufs[1]);
                     for (c = 2; c < sizeof(user); c++)
@@ -752,7 +760,7 @@ int _im_(int argc, char * argv[]) {
     socklen_t listenLen = (socklen_t)sizeof(listenAddr);
     getsockname(listen_socket, (struct sockaddr *)&listenAddr, &listenLen);
     printf("localhost listening [%s:%d].\n", inet_ntoa(listenAddr.sin_addr), servport);
-    int cnt = 0;
+    int thdcnt = 0;
     do {
 #if (defined THREAD_PER_CONN ) || (defined TEST_SOCK)
         struct sockaddr_in from;
@@ -774,10 +782,10 @@ int _im_(int argc, char * argv[]) {
         }
         else
         {
-#ifdef __linux
-            inet_ntop(AF_INET, (void *)&from.sin_addr, IPdotdec, 16);
-#else
+#ifdef _WIN32
             memcpy(IPdotdec, inet_ntoa(from.sin_addr), 16);
+#else
+            inet_ntop(AF_INET, (void *)&from.sin_addr, IPdotdec, 16);
 #endif
             printf("accept [%s] success.\n", IPdotdec);
         }
@@ -786,7 +794,7 @@ int _im_(int argc, char * argv[]) {
 #endif
         closesocket(test_socket);
 #endif
-        if (THREAD_NUM != 0 && cnt == THREAD_NUM)
+        if (THREAD_NUM != 0 && thdcnt == THREAD_NUM)
             break;
 #ifdef _WIN32
 #ifdef THREAD_PER_CONN
@@ -800,16 +808,16 @@ int _im_(int argc, char * argv[]) {
         pthread_create(&thread_ID, NULL, monite, (void*)&test_socket);
 #endif
 #endif
-        cnt++;
+        thdcnt++;
 #ifdef _WIN32
         Sleep(99);
 #elif __linux
         usleep(99999);
 #endif
         } while (!aimtoquit);
-        printf("executing thread count = %d\n", cnt);
+        printf("executing thread count = %d\n", thdcnt);
 #ifdef _WIN32
-        if (cnt == THREAD_NUM)
+        if (thdcnt == THREAD_NUM)
             while (1);
 #endif
         return 0;

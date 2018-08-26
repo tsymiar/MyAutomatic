@@ -63,7 +63,7 @@ int InitChat(st_settings* sets) {
         strcpy_s(ipaddr, "127.0.0.1");
     }
     else {
-        printf_s("Now enter server address: ");
+        printf_s("Current OS is %d bit.\nNow enter server address: ", sizeof(void*) * 8);
         scanf_s("%s", &ipaddr, (unsigned)_countof(ipaddr));
         if (*ipaddr != 0)
             memcpy(sets->IP, &ipaddr, 16);
@@ -298,11 +298,14 @@ int p2pMessage(char *userName, char *Message, int UserIP, unsigned int UserPort)
         MSG_trans msg;
         memset(&msg, 0, sizeof(MSG_trans));
         msg.uiCmdMsg = CHATWITH;
+        memcpy(msg.chk, "P2P", 4);
         memcpy(msg.usr, trans.usr, 24);
         memcpy(msg.peer, userName, 24);
         //请求服务器“打洞”
-        //SetChatMsg(&msg);
-        _beginthreadex(NULL, 0, RecvThreadProc, &PrimaryUDP, 0, NULL);
+        SetChatMsg(&msg);
+        if (client.count == 0)
+            _beginthreadex(NULL, 0, RecvThreadProc, &PrimaryUDP, 0, NULL);
+        client.count++;
         Sleep(100);
     }
     return 0;
