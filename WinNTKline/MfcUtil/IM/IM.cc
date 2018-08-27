@@ -809,10 +809,11 @@ int _im_(int argc, char * argv[]) {
         _beginthreadex(NULL, 0, (_beginthreadex_proc_type)monite, NULL, 0, &thread_ID);
 #endif
 #else
-        pthread_create(&thread_ID, NULL, monite, (void*)-1);
 #ifdef THREAD_PER_CONN
         g_sock = test_socket;
         pthread_create(&thread_ID, NULL, monite, (void*)&test_socket);
+#else
+        pthread_create(&thread_ID, NULL, monite, (void*)-1);
 #endif
 #endif
         thdcnt++;
