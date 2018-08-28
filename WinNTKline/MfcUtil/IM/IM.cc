@@ -592,8 +592,11 @@ type_thread_func monite(void *arg)
                         }//else
                     } break;
                     default: break;
+                    } 
+                    if (memcmp(user.chk, "P2P", 4) != 0) 
+                    {
+                        send(rcv_sock, sd_bufs, buflen, 0);
                     }
-                    send(rcv_sock, sd_bufs, buflen, 0);
 #ifdef _DEBUG
                     printf(">>> 2-MSG [%0x,%0x]: ", sd_bufs[0], sd_bufs[1]);
                     for (c = 2; c < sizeof(user); c++)

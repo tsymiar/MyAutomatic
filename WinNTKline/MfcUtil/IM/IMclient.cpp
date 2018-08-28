@@ -203,16 +203,15 @@ int checkPswValid(char* str)
 /*P2P接收消息线程*/
 unsigned int __stdcall RecvThreadProc(void* PrimaryUDP)
 {
-    sockaddr_in remote;
     int MAX_PACKET_SIZE = 256;
-    int len = sizeof(remote);
-    SOCKET* Sock = (SOCKET*)PrimaryUDP;
+    PPSOCK* P2Psock = (PPSOCK*)PrimaryUDP;
+    int len = sizeof(P2Psock->addr);
     for (;;)
     {
         char recvbuf[256];
-        if (client.flag == 0 || Sock == nullptr)
+        if (client.flag == 0 || P2Psock->sock == NULL)
             continue;
-        int ret = recvfrom(*Sock, (char*)recvbuf, MAX_PACKET_SIZE, 0, (sockaddr*)&remote, &len);
+        int ret = recvfrom(P2Psock->sock, (char*)recvbuf, MAX_PACKET_SIZE, 0, (sockaddr*)&P2Psock->addr, &len);
         if (ret <= 0)
         {
             printf("Recv Message Error: %s!\n", strerror(ret));
@@ -221,8 +220,8 @@ unsigned int __stdcall RecvThreadProc(void* PrimaryUDP)
         else {
             int c = 0;
             in_addr peer;
-            peer.S_un.S_addr = remote.sin_addr.S_un.S_addr;
-            int port = remote.sin_port;
+            peer.S_un.S_addr = P2Psock->addr.sin_addr.S_un.S_addr;
+            int port = P2Psock->addr.sin_port;
             printf("Message from [%s:%d] >>\n", inet_ntoa(peer), port);
             printf("----------------------------------------------------------------\n");
             for (c = 0; c < ret; c++)
@@ -243,7 +242,7 @@ unsigned int __stdcall RecvThreadProc(void* PrimaryUDP)
 //流程：首先直接向某个客户的外网IP发送消息，如果此前没有“打洞”，该消息发送端等待超时；
 //判断超时后，发送端发送请求到服务器要求“打洞”，要求服务器请求该客户向本机发送打洞消息。
 //重复MAXRETRY次
-int p2pMessage(char *userName, char *Message, int UserIP, unsigned int UserPort)
+int p2pMessage(char *userName, int UserIP, unsigned int UserPort, const char *Message)
 {
     int MAXRETRY = 5;
     int P2PMESSAGE = 100;
@@ -279,12 +278,13 @@ int p2pMessage(char *userName, char *Message, int UserIP, unsigned int UserPort)
         remote.sin_addr.S_un.S_addr = htonl(UserIP);
 
         MSG_trans MessageHead;
+        memset(&MessageHead, 0, sizeof(MessageHead));
         MessageHead.uiCmdMsg = P2PMESSAGE;
         memcpy(MessageHead.usr, userName, 24);
         //发送P2P消息头
-        int sscnt = sendto(PrimaryUDP, (const char*)&MessageHead, sizeof(MessageHead), 0, (const sockaddr*)&remote, sizeof(remote));
+        int ppres = sendto(PrimaryUDP, (const char*)&MessageHead, 32, 0, (const sockaddr*)&remote, sizeof(remote));
         //发送P2P消息体
-        sscnt = sendto(PrimaryUDP, (const char*)&Message, (int)strlen(Message) + 1, 0, (const sockaddr*)&remote, sizeof(remote));
+        ppres = sendto(PrimaryUDP, (const char*)&Message, (int)strlen(Message) + 1, 0, (const sockaddr*)&remote, sizeof(remote));
         //等待接收消息线程修改标志
         for (int i = 0; i < 10; i++)
         {
@@ -303,8 +303,11 @@ int p2pMessage(char *userName, char *Message, int UserIP, unsigned int UserPort)
         memcpy(msg.peer, userName, 24);
         //请求服务器“打洞”
         SetChatMsg(&msg);
+        PPSOCK pp_sock;
+        pp_sock.addr = remote;
+        pp_sock.sock = PrimaryUDP;
         if (client.count == 0)
-            _beginthreadex(NULL, 0, RecvThreadProc, &PrimaryUDP, 0, NULL);
+            _beginthreadex(NULL, 0, RecvThreadProc, &pp_sock, 0, NULL);
         client.count++;
         Sleep(100);
     }

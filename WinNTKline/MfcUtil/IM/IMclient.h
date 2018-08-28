@@ -47,6 +47,12 @@ typedef struct CLIENT
     int count = 0;
 } st_client;
 
+struct PPSOCK
+{
+    SOCKET sock = NULL;
+    sockaddr_in addr;
+};
+
 struct MENU {
     int key; std::string value;
 };
@@ -117,6 +123,7 @@ int CloseChat();
 int SetChatMsg(MSG_trans* msg = NULL);
 int GetStatus();
 int callbackLog(char* usr, char* psw);
-int checkPswValid(char* str); int p2pMessage(char *userName, char *Message, int UserIP, unsigned int UserPort);
+int checkPswValid(char* str); 
+int p2pMessage(char *userName, int UserIP, unsigned int UserPort, const char *Message);
 
 #endif
