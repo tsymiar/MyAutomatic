@@ -21,7 +21,7 @@ void runtime1(void* lp) {
             unsigned char *val = (unsigned char *)&ip;
             printf("User:\t%s\nIP:\t%u.%u.%u.%u\nPORT:\t%s\n",
                 rcv_buf + 8, val[3], val[2], val[1], val[0], rcv_buf + 54);
-            int parse = p2pMessage(rcv_buf + 8, (char*)&trans, atoi(rcv_buf + 8), atoi(rcv_buf + 54));
+            int parse = p2pMessage(rcv_buf + 8, atoi(rcv_buf + 8), atoi(rcv_buf + 54), (char*)&trans);
         }
         LeaveCriticalSection(&wrcon);
         if (rcvlen <= 0) {
