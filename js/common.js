@@ -103,6 +103,40 @@ var Base64 = {
 
 const iv = CryptoJS.enc.Base64.parse(Base64.encode('a6afbbcbf8be7668')); 
 
+var Terminal = {
+    // 辨别移动终端类型
+    platform : function(){
+        var u = navigator.userAgent, app = navigator.appVersion;
+
+        return {
+            //IE内核
+            windows: u.indexOf('Windows') > -1,
+            //opera内核
+            presto: u.indexOf('Presto') > -1,
+            //苹果、谷歌内核
+            webKit: u.indexOf('AppleWebKit') > -1,
+            //火狐内核
+            gecko: u.indexOf('Gecko') > -1 && u.indexOf('KHTML') === -1,
+            //是否为移动终端
+            mobile: !!u.match(/AppleWebKit.*Mobile.*/) || !!u.match(/AppleWebKit/),
+            //ios终端
+            ios: !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/),
+            //android终端或者uc浏览器
+            android: u.indexOf('Android') > -1 || u.indexOf('Linux') > -1,
+            //是否iPad
+            iPad: u.indexOf('iPad') > -1,
+            //是否为iPhone或者QQHD浏览器
+            iPhone: u.indexOf('iPhone') > -1,
+            //是否为mac系统
+            Mac: u.indexOf('Macintosh') > -1,
+            //是否web应该程序，没有头部与底部
+            webApp: u.indexOf('Safari') === -1
+        };
+    }(),
+    // 辨别移动终端的语言：zh-cn、en-us、ko-kr、ja-jp...
+    language : (navigator.browserLanguage || navigator.language).toLowerCase()
+};
+
 function format_parse(key) {
     while (key.length < 16) {
         key = key + '\u0000';
@@ -133,36 +167,221 @@ function aes_decrypt(enc, key){
     return decryptedStr;
 }
 
-function array2Json(o) {
-    var r = [];
-    if (typeof o === "string") return "\"" + o.replace(/([\'\"\\])/g, "\\$1").replace(/(\n)/g, "\\n").replace(/(\r)/g, "\\r").replace(/(\t)/g, "\\t") + "\"";
-    if (typeof o === "object") {
-        if (!o.sort) {
-            for (var i in o)
-                r.push(i + ":" + arrayToJson(o[i]));
-            if (!!document.all && !/^\n?function\s*toString\(\)\s*\{\n?\s*\[native code\]\n?\s*\}\n?\s*$/.test(o.toString)) {
-                r.push("toString:" + o.toString.toString());
-            }
-            r = "{" + r.join() + "}";
-        } else {
-            for (var i = 0; i < o.length; i++) {
-                r.push(arrayToJson(o[i]));
-            }
-                r = "[" + r.join() + "]";
-        }
-        return r;
+function json2String(data){
+    var text = JSON.parse(data);
+    text = JSON.stringify(text,null,2);
+    if(text == undefined)
+        text = eval("("+data+")");
+    return text;
+}
+
+function array2String(o){
+    var arr = []; 
+    if(typeof o=="string"){ 
+        return "\""+o.replace(/([\'\"\\])/g,"\\$1").replace(/(\n)/g,"\\n").replace(/(\r) /g,"\\r").replace(/(\t) /g,"\\t")+"\""; 
+    } 
+    if(typeof o=="object"){ 
+        if(!o.sort){ 
+            for(var i in o){ 
+                arr.push("\""+i+"\":"+array2String(o[i])); 
+            } 
+            if(!!document.all&&!/^\n?function\s*toString\(\)\s*\{\n?\s*\[native code\]\n?\s*\}\n?\s*$/.test(o.toString)){ 
+                arr.push("toString:"+o.toString.toString()); 
+            } 
+            arr = "  {\n\t"+arr.join()+"\n  }"; 
+        }else{ 
+            for(var i=0;i<o.length;i++){ 
+                arr.push(array2String(o[i])) 
+            } 
+            arr = "["+arr.join()+"]"; 
+        } 
+        return arr; 
+    } 
+    return o.toString(); 
+}
+
+function trimSpace(text){
+    if(text == null) return null; else return str.replace(/^\s+|\s+$/g,"");
+}
+
+function trimComma(text) {
+    if(text === null)
+        return "";
+    else
+        return text.replace(/(.*)[,，]$/, '$1');
+}
+
+function checkifMetchNum(v)
+{
+    if(v!=null){
+        var r,re;
+        re = /\d*/i;
+        r = v.match(re);
+        return (r===v);
     }
-    return o.toString();
+    return false;
 }
 
-function jsonOut(text){
-    return JSON.stringify(text, null, 4);
+function checkifNum(v)
+{
+    if (v != null && v !== "") {
+        return !isNaN(v);
+    }
+    return false;
 }
 
-function containSpecial(s)
-{      
-    var judge = RegExp(/[(\ )(\~)(\!)(\@)(\#)(\$)(\%)(\^)(\&)(\*)(\()(\))(\-)(\_)(\+)(\=)(\[)(\])(\{)(\})(\|)(\\)(\;)(\:)(\')(\")(\,)(\.)(\/)(\<)(\>)(\?)(\)]+/);      
-    return (judge.test(s));      
+function checkNULL(value){
+    if(value === "null" || value === undefined || value === null)
+        return "";
+    else
+        return value;
+}
+
+function checkOutofLength(value,length){
+    let Val = value;
+    if(value.length > parseInt(length)){
+        Val = (Val.substring(0,parseInt(length)) + "...");
+    }
+    return Val;
+}
+
+function checkIfFiledir( s ){
+    var special = RegExp(/[(\ )(\~)(\!)(\@)(\#)(\$)(\%)(\^)(\&)(\*)(\()(\))(\+)(\=)(\[)(\])(\{)(\})(\|)(\')(\")(\,)(\<)(\>)(\?)(\)]+/);
+    return ( special.test(s) );
+}
+
+function containSpecial( s ){
+    var special = RegExp(/[(\ )(\~)(\!)(\@)(\#)(\$)(\%)(\^)(\&)(\*)(\()(\))(\-)(\_)(\+)(\=)(\[)(\])(\{)(\})(\|)(\\)(\;)(\:)(\')(\")(\,)(\.)(\/)(\<)(\>)(\?)(\)]+/);
+    return ( special.test(s) );
+}
+
+function containChinese( s ){
+    return (/.*[\u4e00-\u9FFF]+.*$/.test(s)); // \u 表示unicode
+}
+
+function containNoglish( s ){
+    return (escape(s).indexOf('%u') !== -1)
+}
+
+function getQueryString(name)
+{
+    var reg = new RegExp("(^|&)"+ name +"=([^&]*)(&|$)");
+    var r = window.location.search.substr(1).match(reg);
+    if(r!=null)return  unescape(r[2]); return null;
+}
+
+function getKeybyVal(map,val){
+    // try {
+    //     for (let key of map) {
+    //         if (map[key] === val) {
+    //             return key;
+    //         }
+    //     }
+    // }catch(e){
+        for (let key in map) {
+            if (map[key] === val) {
+                return key;
+            }
+        }
+    // }
+}
+
+function beInArray(arr, val){
+    for(let i = 0; i < arr.length; i++){
+        if(val === arr[i]){
+            return true;
+        }
+    }
+    return false;
+}
+
+function beInObject(obj, val) {
+    let ch = JSON.stringify(obj);
+    return ch.indexOf(val) !== -1;
+}
+
+function showObject(oj){
+    var sh = "";
+    for(var name in oj){
+        var val = oj[name];
+        sh += name + ":" + val + "\n";
+        if((typeof val==='object')&&val.constructor===Object) {
+            for (var _in in val) {
+                sh += name + ":" + val + "-" + _in + ":" + val[_in] + "\n";
+            }
+        }
+    }
+    console.log(sh);
+}
+
+// convert php array to javascript array
+function parse_array(arrStr) {
+    if(arrStr == null || arrStr === "")
+        return;
+    var tempKey = 'arr23' + new Date().getTime();
+    var arrayJsonStr = '{"' + tempKey + '":' + arrStr + '}';
+    var arrayJson;
+    if (JSON && JSON.parse) {
+        arrayJson = JSON.parse(arrayJsonStr);
+    } else {
+        arrayJson = eval('(' + arrayJsonStr + ')');
+    }
+    return arrayJson[tempKey];
+}
+
+String.format = function ()
+{
+    var param = [];
+    for (var i = 0, l = arguments.length; i < l; i++)
+    {
+        param.push(arguments[i]);
+    }
+    var statment = param[0]; // get the first element(the original statement)
+    param.shift(); // remove the first element from array
+    return statment.replace(/\{(\d+)\}/g, function(m, n)
+    {
+        return param[n];
+    });
+}
+
+function getLocalTime(nS) {
+    if(nS === 0 || nS === '0')
+        return "Invalid Date";
+    else
+        return new Date(parseInt(nS)).toLocaleString().replace(/:\d{1,2}$/,' ');
+}
+
+function convert_time_stamp_to_date(time_stamp){
+    var a = new Date(time_stamp * 1000);
+    var year = a.getFullYear();
+    var month = a.getMonth() + 1;
+    var date = a.getDate();
+    var hour = a.getHours();
+    var min = a.getMinutes();
+    var sec = a.getSeconds();
+    var time = year + "-" + pad(month, 2) + "-" + pad(date, 2) + " " + pad(hour, 2) + ":" + pad(min, 2) + ":" + pad(sec, 2);
+    return time;
+}
+
+function setCookie(name, value, day){
+    var date = new Date();
+    date.setDate(date.getDate() + day);
+    document.cookie  = name + '=' + value
+        + ';expires=' + date + ';path=/MyAutomatic;domain=' + window.location.hostname;
+}
+
+function getCookie(name){
+    var reg = RegExp(name + '=([^;]+)');
+    var arr = document.cookie.match(reg);
+    if(arr){
+        return arr[1];
+    }else{
+        return '';
+    }
+}
+
+function delCookie(name){
+    setCookie(name, '', -1);
 }
 
 function nativeXMLHttp(method, link, param, callback) {
@@ -184,41 +403,67 @@ function nativeXMLHttp(method, link, param, callback) {
     xmlhttp.open(method, link, true);
     xmlhttp.setRequestHeader("Content-Type","application/x-www-form-urlencoded;charset=utf-8");
     xmlhttp.send(param);
+    var i = 0;
     xmlhttp.onreadystatechange = function() {
         if(xmlhttp.readyState === 4 && xmlhttp.status === 200) {
             if (typeof (callback) === "function") { 
                 callback(xmlhttp.responseText);
             }
-        }else if(xmlhttp.status === 401){
-            location.reload(true);
-        }else if(xmlhttp.status === 405){
-            alert("405 Not Allowed");
-        }else if(xmlhttp.status === 500){
-            alert("Internal Server Error");
+        }else if(i == 0){
+            i++;
+            if(xmlhttp.status === 401){
+                location.reload(true);            
+                return;
+            }else if(xmlhttp.status === 405){
+                alert("405 Not Allowed");
+                return;
+            }else if(xmlhttp.status === 500){
+                alert("Internal Server Error");
+                return;
+            }
         }
     };
 }
 
-function requestJson(method, link, callback, json){
-    var json = JSON.stringify(json);
+function requestJson(json, link, method, callback) {
+    //jquery.json
+    var encoded;
+    try{
+        encoded = $.toJSON(json);
+    }catch (e) {
+        encoded = JSON.stringify(json);
+    }
     $.ajax({
-        type: method,
-        url: link,
-        data: json,
-        dataType:"json",
-        success:function(data){
-            if (typeof (callback) === "function") { 
+        url : link,
+        type : method,
+        data : encoded,
+        dataType : 'json',
+        contentType: "application/json; charset=utf-8",
+        success : function(data, status, xhr) {
+//        Do Anything After get Return data
+            if(typeof(callback) === "function"){
                 callback(data);
             }
         },
-        error:function(jqXHR){
-             if(jqXHR.status === "Unauthorized"){
-                 
-             }else{
-                 alert(jqXHR.status);
-             }
+        error : function(xhr, error, exception) {
+            // handle the error.
+            if(exception.toString() === "Unauthorized"){
+                if(link.indexOf("token")!==-1) {
+                    location.reload(true);
+                }else{
+                    alert(401);
+                }
+            }else{
+                alert(exception.toString());
+            }
         }
     });
+}
+
+function pop_hide(){
+    $('#ly').remove();
+    setPopDivNoScroll("clazz_pop_div", "id_pop_div", false);
+    setCookie("pop_state","hide");
 }
 
 function setPopDivNoScroll(clazz_pop_div, id_pop_div, display, text, top, left, width, height, top_id, btm_elem){
@@ -261,13 +506,20 @@ function setPopDivNoScroll(clazz_pop_div, id_pop_div, display, text, top, left, 
     div_pop.style.display = 'block';
     if(text){
         if(text.length > 290){
-            text = text.substring(0,290) + " ...";
+            // text = text.substring(0,290) + " ...";
         }
     }
+    winNode.after('<div id="ly" style="position:fixed; top:0; left:0; z-index:2; width:100%; height:100%; background:#f5f5f5; filter:alpha(opacity=70); opacity:0.7;display: none;"></div>');
     winNode.html(
-        '<div class="title">提示 !<span class="hide" onclick="pop_hide()">X</span></div>' +
-        '<div id="content" style="word-wrap:break-word">'+ text +'</div>'
+        '<div class="title">提示！<span class="hide" title="关闭" onclick="pop_hide()">✖</span></div>' +
+        '<div id="content" style="word-wrap:break-word;margin: 3% 0 0 0;">'+ text +'</div>'
     );
+    $('#ly').show();
+    $("#content").css({
+        'overflow': 'auto',
+        'width': (width-1)+'px',
+        'height': (height-50)+'px'
+    });
     if(display && typeof(display) === "boolean"){
         var clazz = $('.'+clazz_pop_div);
         winNode.get(0).offsetHeight += 30;
@@ -299,6 +551,7 @@ function setPopDivNoScroll(clazz_pop_div, id_pop_div, display, text, top, left, 
                 pop_div_elem.height(pop_div_height + 25);
             }
         }
+        setCookie("pop_state","show");
     }else if(display === "move"){
         //hooyes
         (function(document){
@@ -352,13 +605,13 @@ function setPopDivNoScroll(clazz_pop_div, id_pop_div, display, text, top, left, 
         });
     }else{
         div_pop.style.display = 'none';
+        $('#ly').css({'display': 'none'});
         $(window).scroll(function(){
-            winNode.css({
-                'display': 'none'
-            });
+            winNode.hide();
         });
     }
 }
+
 //上传文件方法
 function UpladFile(elem, url) {
     // js获取文件
@@ -436,6 +689,100 @@ function progressFunction(evt) {
     //剩余时间
     var resttime = ((evt.total-evt.loaded)/bspeed).toFixed(1);
     time.innerHTML = '，速度：'+speed+units+'，剩余时间：'+resttime+'s';
-    if(bspeed===0)
+    if(bspeed===0){
         time.innerHTML = '上传已取消';
+    }
+}
+
+function checkAllBoxs(elem, name, text_id) {
+    if($(elem).prop( "checked" )) {
+        $("#"+text_id).html("cancel");
+        $("input[name='"+name+"']").each(function () {
+            this.checked = true;
+        });
+    }else{
+        $("#"+text_id).html("select");
+        $("input[name='"+name+"']").each(function () {
+            this.checked = false;
+        });
+    }
+}
+
+function getSelectedBox(box_name) {
+    var a = "";
+    $('input[type="checkbox"][name="'+box_name+'"]:checked').each(
+        function () {
+            a = a + $(this).val() + ",";
+        }
+    );
+    return trimComma(a);
+}
+
+function setClipboard(clazz, label, callback) {
+    $("#"+label).html("");
+    var clipboard = new ClipboardJS('.'+clazz);
+    clipboard.on('success', function(e) {
+        if(typeof(callback) === "function"){
+            callback();
+        }
+    });
+    clipboard.on('error', function(e) {
+        $("#"+label).html("&nbsp;fail...");
+        console.log(e);
+    });
+}
+
+var g_sort = false;
+var g_timer = null;
+var g_target = 0;
+var g_leader = 0;
+
+function sortTablebyValue(tb_id, th_id){
+    let tabNode = document.getElementById(tb_id);
+    let row0 = tabNode.rows;
+    let row1 = [];
+    for (let x = 1; x < row0.length; x++) {
+        row1[x - 1] = row0[x];
+    }
+    for (let x = 0; x < row1.length - 1; x++) {
+        for (let y = x + 1; y < row1.length; y++) {
+            if (parseInt(row1[x].cells[1].innerHTML) > parseInt(row1[y].cells[1].innerHTML)) {
+                let temp = row1[x];
+                row1[x] = row1[y];
+                row1[y] = temp;
+            }
+        }
+    }
+    let icon = document.getElementById(th_id);
+    if (g_sort) {
+        for (let x = 0; x < row1.length; x++) {
+            row1[x].parentNode.appendChild(row1[x]);
+        }
+        icon.innerHTML = "<i>◩</i>";
+        g_sort = true;
+    }else{
+        for (let x = row1.length-1; x >=0; x--) {
+            row1[x].parentNode.appendChild(row1[x]);
+        }
+        icon.innerHTML = "<i>◪</i>";
+        g_sort = false;
+    }
+}
+
+function scroll2BodyTop() {
+    clearInterval(g_timer);
+    g_timer = setInterval(function () {
+        //获取步长
+        var step = (g_target - g_leader) / 10;
+        //二次处理步长
+        step = step>0?Math.ceil(step):Math.floor(step);
+        g_leader = g_leader + step;
+        //屏幕(页面)滚动到某个位置
+        window.scrollTo(0, g_leader);
+        //清除定时器
+        if(g_leader === 0){
+            clearInterval(g_timer);
+        }
+    },25);
+    document.body.scrollTop = 0;
 }

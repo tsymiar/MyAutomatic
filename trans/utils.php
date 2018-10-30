@@ -26,7 +26,7 @@ class User {
     var $zip;  //手机号吗
     var $comments; //签名 
  
-    public static function errReport($err,$code,$msg,$data) { //报错
+    public static function errReport($err, $code = NULL, $msg = NULL, $data = NULL) { //报错
         if (!$code && !$msg) {
             echo "ERROR: $err.\n";
         } else {
@@ -36,7 +36,7 @@ class User {
             if($data){
                 $json["data"] = $data;
             }
-            echo json_decode ($json, JSON_PRETTY_PRINT);
+            echo json_encode($json, JSON_PRETTY_PRINT);
         }
     }
      

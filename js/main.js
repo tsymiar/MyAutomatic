@@ -59,10 +59,6 @@ var formArray = new Array(
     "comments"
 );
 
-function pop_hide(){
-    setPopDivNoScroll("clazz_pop_div", "id_pop_div", false);
-}
-
 function click2Submit(){
     $("#dontjump").html("");
     if($form_elem === null || $form_elem.getInvalid().length >= 1){
@@ -87,15 +83,24 @@ function click2Submit(){
         if(arrKey === "icon"){
             icon = arrVal = $(".ideal-file-filename").val();
         }
+        if(arrKey === "date"){
+            var tmp1 = arrVal;
+            var tmp2 = tmp1.substr(tmp1.lastIndexOf("/") + 1);
+            var tmp3 = tmp1.substring(0,tmp1.lastIndexOf("/"))
+            var tmpVal = tmp2 + "/" + tmp3;
+            console.log(tmp1+"\n"+tmp2+"\n"+tmp3+"\n"+tmpVal);
+            arrVal = tmpVal.replace(/\//g,"-");
+        }
         if(i === formArray.length-1){
             param += (arrKey + "=" + arrVal);
         }else{
-            param += (arrKey+"="+arrVal+"&");
+            param += (arrKey + "=" + arrVal + "&");
         }
     }
     nativeXMLHttp("POST", link, param, function(rsp_text){
             if(rsp_text){
-                if(rsp_text.indexOf("ERROR:") !== -1 || rsp_text.indexOf("error") !== -1){
+                if(rsp_text.indexOf("ERROR:") !== -1 || rsp_text.indexOf("error") !== -1 ||
+                        rsp_text.indexOf("/<b>.*</b>/") !== -1){
                     setPopDivNoScroll("clazz_pop_div", "id_pop_div", true, rsp_text);
                 }else{
                     var json = JSON.parse(rsp_text);

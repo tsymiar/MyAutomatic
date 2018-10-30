@@ -3,10 +3,12 @@ body{font:normal 4px/2.0 Arial, Helvetica, Free Sans, sans-serif;color: #222;bac
 #comments{width:300px;height:100px;}
     
 .title{
+	font-family: Times, TimesNR, 'New Century Schoolbook', Georgia, 'New York', serif;
     background-color : #fff;
     color: #ff0000;
-    font-size: 13px;
+    font-size: 14px;
     text-align:center;
+    font-weight:700;
 }
 #content{
     color: black;
