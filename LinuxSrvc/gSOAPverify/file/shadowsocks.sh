@@ -1,10 +1,12 @@
 #!/bin/bash
 curl "https://bootstrap.pypa.io/get-pip.py" -o "get-pip.py"
+#nmcli dev wifi connect "AP" password "xxxxxxxx"
 python get-pip.py
 pip install --upgrade pip shadowsocks
 cat>/etc/shadowsocks/ssserver.json<<EOF
 {
     "server": "0.0.0.0",
+    "_comment": ["[::0]", "0.0.0.0"],
     "local_address": "127.0.0.1",
     "local_port":1080,
     "port_password": {

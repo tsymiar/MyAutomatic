@@ -2,16 +2,16 @@
 #define _V4L2_H_
 
 #include <stdio.h>
-#include <stdlib.h>		//stdio.h and stdlib.h are needed by perror function
+#include <stdlib.h>      //stdio.h and stdlib.h are needed by perror function
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <fcntl.h>		//O_RDWR
+#include <fcntl.h>       //O_RDWR
 #include <unistd.h>
 #include <errno.h>
 #include <memory.h>
 #include <string.h>
-#include <sys/mman.h>	//unistd.h and sys/mman.h are needed by mmap function
-#include <stdbool.h>	//false and true
+#include <sys/mman.h>    //unistd.h and sys/mman.h are needed by mmap function
+#include <stdbool.h>     //false and true
 #include <sys/ioctl.h>
 #include <linux/videodev2.h>//v4l2 API
 
