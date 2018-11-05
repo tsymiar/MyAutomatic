@@ -975,7 +975,7 @@ int new_user(char usr[24], char psw[24]) {
 int user_is_line(char user[24]) {
     char *tomatch = user;
 #if !defined _WIN32
-    struct ONLINE active[MAX_ACTIVE] = { 0, "" };
+    struct ONLINE active[MAX_ACTIVE]; // = { 0, "" };
 #endif
     for (int i = 0; i < MAX_ACTIVE; i++) {
         set_n_get_mem(&active[i], i);
@@ -986,7 +986,7 @@ int user_is_line(char user[24]) {
 };
 int set_user_line(char user[24], type_socket sock) {
 #if !defined _WIN32
-    struct ONLINE active[MAX_ACTIVE] = { 0, "" };
+    struct ONLINE active[MAX_ACTIVE]; // = { 0, "" };
 #endif
     for (int i = 0; i < MAX_ACTIVE; i++) {
         if (active[i].user[0] == '\0')
