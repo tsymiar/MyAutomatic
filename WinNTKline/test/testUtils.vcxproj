@@ -106,7 +106,6 @@
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <StringPooling>true</StringPooling>
-      <MinimalRebuild>true</MinimalRebuild>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
