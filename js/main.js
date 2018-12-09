@@ -46,6 +46,16 @@ $(document).ready(function(){
         $form_elem.reset().fresh().focusFirst();
     });
     $form_elem.focusFirst();
+    var naviLang =(navigator.language || navigator.browserLanguage).toUpperCase();
+    if(naviLang.indexOf("ZH") <= -1) {
+        try{
+            document.getElementsByTagName('section')[0].name = "Scroll to get more.";
+        }catch(e){;}
+        $("img").attr("title","QQ me");
+        $(".ideal-label").html("Homepage:");
+        $("#request").html("Submit");
+        $("#reset").html("Reset");
+    }
 });
 
 var formArray = new Array(
@@ -111,6 +121,6 @@ function click2Submit(){
             }
         });
     if(icon !== null && icon !== ""){
-        UpladFile("icon", "trans/service.php?action=file_uptoload");
+        UpladFile("icon", "trans/service.php?action=file_upload2");
     }
 }

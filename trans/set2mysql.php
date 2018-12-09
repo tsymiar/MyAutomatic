@@ -3,7 +3,7 @@ header('content-type:text/html; charset=utf8');
 
 define("DB_HOST","localhost");
 define("DB_USER","root");
-define("DB_PWD","psw123");
+define("DB_PWD","Psw123$");
 define("DB_DATABASE","custominfo");
 define("DB_CHARSET","utf8");
 define("DB_TABLE","myweb");

@@ -107,7 +107,6 @@ var Terminal = {
     // 辨别移动终端类型
     platform : function(){
         var u = navigator.userAgent, app = navigator.appVersion;
-
         return {
             //IE内核
             windows: u.indexOf('Windows') > -1,
@@ -225,6 +224,12 @@ function checkifMetchNum(v)
 function checkifNum(v)
 {
     if (v != null && v !== "") {
+        if(v.toString().indexOf("e") !== -1){
+            return false;
+        }
+        if(v.toString().indexOf("-") !== -1){
+            return false;
+        }
         return !isNaN(v);
     }
     return false;
@@ -256,7 +261,7 @@ function containSpecial( s ){
 }
 
 function containChinese( s ){
-    return (/.*[\u4e00-\u9FFF]+.*$/.test(s)); // \u 表示unicode
+    return (/.*[\u4e00-\u9FFF]+.*$/.test(s)); // \u for unicode
 }
 
 function containNoglish( s ){
@@ -384,6 +389,25 @@ function delCookie(name){
     setCookie(name, '', -1);
 }
 
+// Sleep time expects milliseconds
+async function sleep (time) {
+    return await new Promise((resolve) => setTimeout(resolve, time));
+}
+
+let LOCK_MAP = new Map();
+
+function lock(key){
+    LOCK_MAP.set(key, 1);
+}
+
+function unlock(key){
+    LOCK_MAP.set(key, 0);
+}
+
+function getLock(key) {
+    return LOCK_MAP.get(key);
+}
+
 function nativeXMLHttp(method, link, param, callback) {
     var xmlhttp;
     // 适用于大多数浏览器，以及IE7和IE更高版本
@@ -440,7 +464,7 @@ function requestJson(json, link, method, callback) {
         dataType : 'json',
         contentType: "application/json; charset=utf-8",
         success : function(data, status, xhr) {
-//        Do Anything After get Return data
+            // Do Anything After get Return data
             if(typeof(callback) === "function"){
                 callback(data);
             }
@@ -553,7 +577,7 @@ function setPopDivNoScroll(clazz_pop_div, id_pop_div, display, text, top, left, 
         }
         setCookie("pop_state","show");
     }else if(display === "move"){
-        //hooyes
+        //by hooyes
         (function(document){
             $fn.Drag = function(){
                 var M = false;
@@ -669,14 +693,14 @@ function progressFunction(evt) {
     }
     var time = document.getElementById("time");
     var nt = new Date().getTime();//获取当前时间
-    var pertime = (nt-ot)/1000; //计算出上次调用该方法时到现在的时间差，单位为s
+    var pertime = (nt-ot)/1000; //计算出上次调用该方法时到现在的时间差，单位为秒(s)
     ot = new Date().getTime(); //重新赋值时间，用于下次计算
-    var perload = evt.loaded - oloaded; //计算该分段上传的文件大小，单位b
+    var perload = evt.loaded - oloaded; //计算该分段上传的文件大小，单位bit
     oloaded = evt.loaded;//重新赋值已上传文件大小，用以下次计算
     //上传速度计算
-    var speed = perload/pertime;//单位b/s
+    var speed = perload/pertime;//单位bit/s
     var bspeed = speed;
-    var units = 'b/s';//单位名称
+    var units = 'b/s';
     if(speed/1024>1){
         speed = speed/1024;
         units = 'k/s';
@@ -718,9 +742,12 @@ function getSelectedBox(box_name) {
     return trimComma(a);
 }
 
+// data-clipboard-target: #<elemID>
+// data-clipboard-action: cut/copy
+// data-clipboard-text: text
 function setClipboard(clazz, label, callback) {
     $("#"+label).html("");
-    var clipboard = new ClipboardJS('.'+clazz);
+    var clipboard = new ClipboardJS('.' + clazz);
     clipboard.on('success', function(e) {
         if(typeof(callback) === "function"){
             callback();
@@ -785,4 +812,106 @@ function scroll2BodyTop() {
         }
     },25);
     document.body.scrollTop = 0;
+}
+
+function setPopComponent(display, top_id, btm_elem, width, height, left)
+{
+    click_delete_module = 0;
+    let top_val = null;
+    if(top_id) {
+        top_val = ($("#" + top_id).get(0).getBoundingClientRect().top);
+    }
+    let left_val = 0;
+    if(left){
+        left_val = parseInt(left);
+    }
+    $('#ly').remove();
+    setPopDivNoScroll("clazz_pop_div","main_pop_div",display,top_val,left_val,width,height,null,btm_elem);
+}
+
+function getBackgroundColor($dom) {
+    let bgColor = "";
+    while($dom[0].tagName.toLowerCase() !== "html") {
+        bgColor = $dom.css("background-color");
+        if(bgColor !== "rgba(0, 0, 0, 0)" && bgColor !== "transparent") {
+            break;
+        }
+        $dom = $dom.parent();
+    }
+    return bgColor;
+}
+
+String.prototype.colorHex = function(){
+    let that = this;
+    let reg = /^#([0-9a-fA-f]{3}|[0-9a-fA-f]{6})$/;
+    if (/^(rgb|RGB)/.test(that)) {
+        let aColor = that.replace(/(?:\(|\)|rgb|RGB)*/g, "").split(",");
+        let strHex = "#";
+        for (let i=0; i<aColor.length; i++) {
+            let hex = Number(aColor[i]).toString(16);
+            if (hex === "0") {
+                hex += hex;
+            }
+            if(hex.length === 1) {
+                hex = "0" + hex;
+            }
+            strHex += hex;
+        }
+        if (strHex.length !== 7) {
+            strHex = that;
+        }
+        return strHex;
+    } else if (reg.test(that)) {
+        let aNum = that.replace(/#/,"").split("");
+        if (aNum.length === 6) {
+            return that;
+        } else if(aNum.length === 3) {
+            let numHex = "#";
+            for (let i=0; i<aNum.length; i+=1) {
+                numHex += (aNum[i] + aNum[i]);
+            }
+            return numHex;
+        }
+    }
+    return that;
+};
+
+function padding0(num, length) {
+    if((num + "").length >= length) {
+        return num;
+    }
+    return padding0("0" + num, length)
+}
+
+function hexToRgbA(hex){
+    let c;
+    if(/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)){
+        c= hex.substring(1).split('');
+        if(c.length === 3){
+            c= [c[0], c[0], c[1], c[1], c[2], c[2]];
+        }
+        c = '0x'+c.join('');
+        return 'RGB('+[(c>>16)&255, (c>>8)&255, c&255].join(',')+')';
+        //return 'rgba('+[(c>>16)&255, (c>>8)&255, c&255].join(',')+',1)';
+    }
+    throw new Error('bad Hex.');
+}
+
+// onmouseover="changeTrColor(this,'over')" onmouseout="changeTrColor(this,'out')"
+function changeTrColor(elem,flag){
+    let colorRgb = getBackgroundColor($(elem));
+    let colorHex = colorRgb.colorHex();
+    let colorVal = parseInt(colorHex.slice(1),16);
+    if(colorVal > 0)
+        colorVal -= 8;
+    else
+        colorVal += 8;
+    let colorNear = hexToRgbA("#" + padding0(colorVal,6).toString(16));
+    if(flag === "over"){
+        $(elem).css({"background": colorNear});
+    }else if(flag === 'out'){
+        colorVal += 2 * 8;
+        colorRgb = hexToRgbA("#" + padding0(colorVal,6).toString(16));
+        $(elem).css({"background": colorRgb});
+    }
 }

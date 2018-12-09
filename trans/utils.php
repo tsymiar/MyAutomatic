@@ -3,7 +3,7 @@
 ini_set('display_errors',1);
 ini_set('display_startup_errors',1);
 error_reporting(-1);
-ini_set('error_log', dirname(__FILE__) . '/error_log.txt');
+ini_set('error_log', dirname(__FILE__) . '/logs/error.log');
 header('content-type:text/html; charset=utf8'); 
 
 class User {

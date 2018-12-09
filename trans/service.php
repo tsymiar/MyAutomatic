@@ -5,14 +5,13 @@ header('Access-Control-Allow-Methods:POST');
 header('Access-Control-Allow-Headers:x-requested-with,content-type');
 /**
  * Description of Filetrans
- *
  * @author tsymiar
  */
 define("ROOT_PATH", dirname(__FILE__));
 define("ACTION_REGIST", "register");
 define("ACTION_SET_DBDATA", "set_dbdata");
 define("ACTION_SUBMIT_ARRAY", "submit_array");
-define("ACTION_FILE_UPTOLOAD", "file_uptoload");
+define("ACTION_FILE_UPTOLOAD", "file_upload2");
 define("ACTION_FILE_DOWNLOAD", "file_download");
 
 include_once ('utils.php');
@@ -167,7 +166,7 @@ class FileLoad extends HandleBase{
         while (!feof($handle)) {
             $contents = fread($handle, 8192);
             echo $contents;
-            ob_flush();    //release data of PHP buffer
+            ob_flush(); //release data of PHP buffer
             flush();    //send data to browser
         }
         fclose($handle);
