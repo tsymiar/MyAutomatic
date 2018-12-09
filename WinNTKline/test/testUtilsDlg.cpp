@@ -71,7 +71,7 @@ BOOL CtestUtilsDlg::OnInitDialog()
 	m_ipAddr.GetWindowText(a_IP, 16);
 	if (a_IP[0] == '\0' || a_IP[0] == '\x30')
 	{
-		sprintf_s(a_IP, 16, "192.168.1.3");
+		sprintf_s(a_IP, 16, "192.168.8.210");
 		m_ipAddr.SetAddress(ntohl(inet_addr(a_IP)));
 	}
 

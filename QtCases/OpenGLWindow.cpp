@@ -29,7 +29,7 @@ OpenGLWindow::~OpenGLWindow()
 void OpenGLWindow::keyPressEvent(QKeyEvent * e)
 {
     qDebug() << "+++ key(" << e->key() << ")" <<
-        QString("x=%1; y=%2; z=%3")
+        QString("x=%1 y=%2 z=%3")
         .arg(x)
         .arg(y)
         .arg(z)
@@ -60,31 +60,33 @@ void OpenGLWindow::keyPressEvent(QKeyEvent * e)
         }
         break;
 #ifndef _GLVBO_
-    case Qt::Key_Right:	//→
+    case Qt::Key_Right:   //→
         x += 0.01f;
         setXval(x);
         break;
-    case Qt::Key_Left:	//←
+    case Qt::Key_Left:    //←
         x -= 0.01f;
         setXval(x);
         break;
-    case Qt::Key_Up:	//↑
+    case Qt::Key_Up:      //↑
         y += 0.01f;
         setYval(y);
         break;
-    case Qt::Key_Down:	//↓
+    case Qt::Key_Down:    //↓
         y -= 0.01f;
         setYval(y);
         break;
-    case Qt::Key_Plus:	//+
+    case Qt::Key_Plus:    //+
         z += 0.1f;
         setZoom(z);
         break;
-    case Qt::Key_Minus:	//-
+    case Qt::Key_Minus:   //-
         z -= 0.1f;
         setZoom(z);
         break;
     case Qt::Key_Space:
+        if (fabs(h - getH()) < 0.01)
+            setBingo(false);
         h += 0.3f;
         setHigh(h);
         break;
@@ -117,7 +119,7 @@ void OpenGLWindow::mouseMoveEvent(QMouseEvent * e)
 
 void OpenGLWindow::timerDone()
 {
-#ifndef _GLVBO_	
+#ifndef _GLVBO_
     h -= 0.01f;
     if (h < -1)
         h = -1;
