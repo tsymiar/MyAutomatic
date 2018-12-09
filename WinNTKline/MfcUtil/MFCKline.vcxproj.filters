@@ -342,5 +342,8 @@
     <Text Include="ReadMe.txt">
       <Filter>配置文件</Filter>
     </Text>
+    <Text Include="IM\MSG.txt">
+      <Filter>配置文件</Filter>
+    </Text>
   </ItemGroup>
 </Project>

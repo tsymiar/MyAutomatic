@@ -4,6 +4,7 @@
     <RemoteDebuggerCommandArguments>8080</RemoteDebuggerCommandArguments>
     <DebuggerFlavor>LinuxDebugger</DebuggerFlavor>
     <DebugChildProcesses>true</DebugChildProcesses>
+    <DebuggerType>NativeOnly</DebuggerType>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|MIPS'">
     <RemoteDebuggerCommandArguments>8080</RemoteDebuggerCommandArguments>

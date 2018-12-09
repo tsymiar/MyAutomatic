@@ -254,6 +254,7 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <Text Include="IM\MSG.txt" />
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>

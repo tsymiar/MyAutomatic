@@ -44,6 +44,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)QT\</IntDir>
+    <IncludePath>$(SolutionDir)MfcUtil\com;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
@@ -178,6 +179,7 @@
     <None Include="QtCases.pro" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\WinNTKline\MfcUtil\com\qalgorithms.h" />
     <ClInclude Include="OglMaterial.h" />
     <ClInclude Include="showimg.h" />
   </ItemGroup>
