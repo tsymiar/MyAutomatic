@@ -1,4 +1,4 @@
-﻿//
+//
 #include"../util/_String-inl.h"
 #include	"mainSoap.h"
 #include"../sql/sqlofDB.h"
