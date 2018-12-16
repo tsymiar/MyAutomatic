@@ -138,7 +138,7 @@ public class client {
 	// @param: local file path.
 	private static int httpUpload(String file) throws Exception {
 		String arg;
-		String url = "http://127.0.0.1:8080/file/Filetrans.php?action=file_upload";
+		String url = "http://127.0.0.1:8080/MyAutomatic/trans/service.php?action=file_upload2";
 		if(file == null)
 			arg = "untitled.iml";
 		else
@@ -226,7 +226,7 @@ public class client {
 			root="./";
 		}
 		if (reqsturl == null) {
-			url = "http://127.0.0.1:8080/file/Filetrans.php?action=file_download";
+			url = "http://127.0.0.1:8080/MyAutomatic/trans/service.php?action=file_download";
 			head = "Content-Disposition";
 		} else {
 			url = reqsturl;
