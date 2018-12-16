@@ -339,6 +339,8 @@ type_thread_func monite(void *arg)
                     else {
                         sprintf(sd_bufs + 8, "Logging status invalid, please close this socket.\n");
                         set_user_quit(user.usr);
+                        closesocket(listen_socket);
+                        continue;
                     }
                     snres = send(rcv_sock, sd_bufs, 64, 0);
                     if (snres < 0) {
