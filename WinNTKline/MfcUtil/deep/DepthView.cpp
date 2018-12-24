@@ -10,45 +10,23 @@ DepthView::DepthView()
     item.time.hour = item.time.min = 0;
     item.pc_ = .0f;
     item.mode = 0;
-    item.bs = NULL;
+    item.bs = nullptr;
 }
 
 void DepthView::FillChart(bool unfurl)
 {
-    OGLKview::Point t_chart{ 0.72f,1.111f };
     Okv.SwitchViewport(0);
-    if (unfurl)
-    {
-        Py = 0.57f;
-        MAX_COL = 17;
-        fillAskBid(t_chart);
-    }
-    else
-    {
-        Py = 1.111f;
-        MAX_COL = 25;
-    }
-    Okv.SetColor({ 1,0,0 });
-    glBegin(GL_LINES);
-    {
-        glVertex2f(0.7f, (Py + 1.09F) / 2);
-        glVertex2f(1.7f, (Py + 1.09F) / 2);
-
-        glVertex2f(0.7f, Py - 0.07f);
-        glVertex2f(1.7f, Py - 0.07f);
-
-        glVertex2f(0.7f, Py - 0.55f);
-        glVertex2f(1.7f, Py - 0.55f);
-    }
-    glEnd();
-    fillList();
-    fillItem();
+    const float x = 0.72f;
+    fillTable(unfurl, x);
+    fillList(x);
+    fillItem(x);
 }
 
 void DepthView::DrawItem(OGLKview::Item item, int col)
 {
+    Okv.SwitchViewport(0);
     char time0[8] = " ";
-    OGLKview::Color4f color = { 1,1,1,1 };
+    const OGLKview::Color4f color = { 1,1,1,1 };
     OGLKview::Point pnt = { 0.72f,Py - 0.666f*(col + 1) };
     if (item.time.hour > hour)
     {
@@ -66,7 +44,7 @@ void DepthView::DrawItem(OGLKview::Item item, int col)
 int DepthView::DrawItem(OGLKview::Item item, bool mode)
 {
     char ti[8], time[8] = " ";
-    OGLKview::Color4f color = { 1,1,1,1 };
+    const OGLKview::Color4f color = { 1,1,1,1 };
     OGLKview::Point pnt = { 0.72f,Py - 0.666f };
     item.time.min <= 9 ? sprintf(time, "0%d", item.time.min) : sprintf(time, "%d", item.time.min);
     if ((item.time.min >= 60) || (item.time.min < 0) || (item.time.hour > 24) || (item.time.hour < 0))
@@ -108,10 +86,39 @@ void DepthView::SetBackground()
     glEnd();
 }
 
-void DepthView::fillList()
+void DepthView::fillTable(bool unfurl, float x)
 {
-    OGLKview::Point pnt = { 0.72f,Py - 0.6f };
-    OGLKview::Color4f color = { 0.7f,0.7f,0.7f };
+    const OGLKview::Point t_chart{ x,1.111f };
+    if (unfurl)
+    {
+        Py = 0.57f;
+        MAX_COL = 17;
+        fillAskBid(t_chart);
+    }
+    else
+    {
+        Py = 1.111f;
+        MAX_COL = 25;
+    }
+    Okv.SetColor({ 1,0,0 });
+    glBegin(GL_LINES);
+    {
+        glVertex2f(0.7f, (Py + 1.09F) / 2);
+        glVertex2f(1.7f, (Py + 1.09F) / 2);
+
+        glVertex2f(0.7f, Py - 0.07f);
+        glVertex2f(1.7f, Py - 0.07f);
+
+        glVertex2f(0.7f, Py - 0.55f);
+        glVertex2f(1.7f, Py - 0.55f);
+    }
+    glEnd();
+}
+
+void DepthView::fillList(float x)
+{
+    OGLKview::Point pnt = { x, Py - 0.6f };
+    const OGLKview::Color4f color = { 0.7f,0.7f,0.7f };
     Okv.DrawKtext("北京时间", pnt, 14, color);
 }
 
@@ -134,10 +141,9 @@ void DepthView::fillAskBid(OGLKview::Point pnt)
     Okv.DrawKtext("买5", pnt, 14, color, "宋体");
 }
 
-void DepthView::fillItem()
+void DepthView::fillItem(float x)
 {
-    OGLKview::Point pnt;
-    pnt = { 0.72f, (Py + 1.09F) / 2 + 0.011F };
+    OGLKview::Point pnt = {x, (Py + 1.09F) / 2 + 0.011F};
     Okv.DrawKtext("卖1", pnt, 17, color, " ", false);
     pnt.y = (Py + 1.09F) / 2 - 0.05F;
     Okv.DrawKtext("买1", pnt, 17, color, " ", false);
