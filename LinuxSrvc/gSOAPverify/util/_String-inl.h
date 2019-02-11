@@ -65,7 +65,7 @@ public:
     char* _strmove(char* w, int m, bool fore = false);
     char* _charmove(char* w, char c, int b, bool hind = false/*默认向左*/);
     char* _intmove(char* w, int m, int b, bool hind = false);
-    int find_char(char **str, char ch);
+    int find_char(char **arr, char ch, int m = 1/*1st dim of arr*/);
     char* _op_order(char * src, char* dst);
     char* _op_order(char * str);
     char* _c_str() const;
@@ -257,20 +257,32 @@ inline char* _String::_intmove(char* w, int m, int b, bool hind)
     }
     return w;
 }
-// 返回字符串数组str含有的字符ch数
-inline int _String::find_char(char **str, char ch)
+// 返回字符串数组str含有的字符ch数; Usage:
+/*
+    char l[][16] = { "acvhhj", "222", "ccc" };
+	int m = 3;
+    char *a[16] = { NULL };
+    for(int i = 0; i < m; i++)
+        a[i] = l[i]; // (char*)[const char* point]
+    int s = find_char(a, 'c', m);
+*/
+inline int _String::find_char(char **arr, char ch, int m)
 {
+    int i = 0;
     int num = 0;
-    char *string;
-    while ((string = *str++) != NULL)
+    char *str = NULL;
+    while ((str = *arr++) != NULL)
     {
-        while (*string != '\0')
+        if (i >= m)
+            break;
+        while (*str != '\0')
         {
-            if (*string++ == ch)
+            if (*str++ == ch)
             {
                 num++;
             }
         }
+        i++;
     }
     return num;
 }
