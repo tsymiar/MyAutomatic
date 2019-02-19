@@ -26,7 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
  /********************************************************************/
- /*                Modified by tsymiar <909006258@qq.com>            */
+ /*              Modified by tsymiar <909006258@qq.com>              */
  /********************************************************************/
 #include "pthdpool.h"
 
@@ -39,7 +39,7 @@ static void *my_thrd_func(void *lp)
     my_task_t task_t;
     int m = 0;
     for (;;) {
-        /* Lock must be taken to wait on conditional variable */
+        /* Lock must be token to wait on conditional variable */
         pthread_mutex_lock(&pool->queue_lock);
         /* Wait on condition variable, check for spurious wakeups.
            When returning from pthread_cond_wait(), we own the lock. */
@@ -61,7 +61,7 @@ static void *my_thrd_func(void *lp)
         task_t.func = pool->queue[pool->prev].func;
         task_t.arg = pool->queue[pool->prev].arg;
         pool->prev += 1;
-        pool->prev = (pool->prev == pool->queue_size) ? 0 : pool->prev;
+        pool->prev = (pool->prev >= pool->queue_size) ? 0 : pool->prev;
         pool->cur_thrd_no -= 1;
         /* Unlock */
         if ((!pool->queue[pool->prev].func) && (pthread_mutex_trylock(&pool->queue_lock) == EBUSY))
@@ -91,9 +91,9 @@ int my_pool_free(my_pool_t *pool_t) {
 my_pool_t* my_pool_init(int thrd_num, int sz_que)
 {
     int j;
-    my_pool *pool_t = (my_pool*)calloc(1, sizeof(pool_t));    //内存的动态存储区中分配1个长度为pool的连续空间
+    my_pool *pool_t = (my_pool*)calloc(1, sizeof(pool_t));      //内存的动态存储区中分配1个长度为pool的连续空间
     //static pthread_cond_t cond = PTHREAD_COND_INITIALIZER;    //静态初始化条件变量
-    //static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;    //静态初始化互斥锁
+    //static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER; //静态初始化互斥锁
     pool_t->dispose = false;
     if (thrd_num < 1)
         thrd_num = 1;
@@ -103,7 +103,7 @@ my_pool_t* my_pool_init(int thrd_num, int sz_que)
     //为thrd_id分配thrd_num个pthread_t空间
     pool_t->thrd_id = (pthread_t *)malloc(sizeof(pthread_t) * thrd_num);
     pool_t->queue = (my_task_t *)malloc(sizeof(my_task_t) * sz_que);
-    if (pthread_mutex_init(&pool_t->queue_lock, NULL) != 0 ||    /*动态初始化条件变量*/
+    if (pthread_mutex_init(&pool_t->queue_lock, NULL) != 0 ||   /*动态初始化条件变量*/
         pthread_cond_init(&pool_t->queue_noti, NULL) != 0 ||    /*动态初始化互斥锁*/
         pool_t->thrd_id == null || pool_t->queue == null)
     {
@@ -140,10 +140,10 @@ int my_pool_add_task(my_pool_t *pool, void *(*routine)(void *), void * arg)
         return -2;
     }
     next = pool->tail + 1;
-    next = (next == pool->queue_size) ? 0 : next;
+    next = (next >= pool->queue_size) ? 0 : next;
     do {
         /* Are we full ? */
-        if (pool->cur_thrd_no == pool->queue_size) {
+        if (pool->cur_thrd_no >= pool->queue_size) {
             err = -3;
             break;
         }
@@ -166,7 +166,7 @@ int my_pool_add_task(my_pool_t *pool, void *(*routine)(void *), void * arg)
     if (pthread_mutex_unlock(&pool->queue_lock) != 0) {
         err = -2;
     }
-    return 0;
+    return err;
 }
 
 int my_pool_destroy(my_pool_t *pool)
