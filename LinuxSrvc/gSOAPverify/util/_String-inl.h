@@ -51,7 +51,7 @@ class _String {
     friend istream& operator >> (istream&, _String&);
 public:
     _String(const char* str = NULL);//赋值兼默认构造函数（char）
-    _String(const _String& other);//赋值构造函数（_String）
+    _String(const _String& other);  //赋值构造函数（_String）
     _String& operator=(const _String& other);
     _String/*&*/ operator+(const _String& other);
     bool operator==(const _String&);
@@ -83,8 +83,8 @@ public:
 private:
     char* m_data;
 };
-
-inline _String::_String(const char* str)//inline执行时直接语句替换
+//inline执行时直接语句替换
+inline _String::_String(const char* str)
 {
     if (!str)
         m_data = 0;
@@ -95,8 +95,8 @@ inline _String::_String(const char* str)//inline执行时直接语句替换
 }
 
 inline _String::_String(const _String& other)
-{
-    if (!other.m_data)//类的成员函数内可以访问同种对象的私有成员（同种类为友元关系的类）
+{//类的成员函数内可以访问同种对象的私有成员（同种类为友元关系的类）
+    if (!other.m_data)
         m_data = 0;
     else
     {
@@ -112,7 +112,7 @@ inline char* _String::_strcpy(char* strDest, const char* strSrc, int N)
     char* strDestCopy = strDest;
     while ((*strDest++ = *strSrc++) != '\0' && --available > 0)
         N = (int)NULL;
-    return strDestCopy;//返回字符串以支持链式表达式
+    return strDestCopy; //返回字符串以支持链式表达式
 }
 //字符串拼接
 inline char * /*__cdecl*/ _String::_strcat(char * strDest, const char * strSrc)
@@ -128,21 +128,23 @@ inline char * /*__cdecl*/ _String::_strcat(char * strDest, const char * strSrc)
 //从第pos位开始截取ch的len个字符。
 inline unsigned char* _String::_strsub(unsigned char* ch, int pos, int len)
 {
+    //定义一个字符指针，指向传递进来的ch地址
     unsigned char* pch = ch;
-    //定义一个字符指针，指向传递进来的ch地址。  
+    //通过calloc来分配一个len长度的字符数组，返回的是字符指针
     unsigned char* subch = (unsigned char*)calloc(sizeof(unsigned char), len + 1);
-    //通过calloc来分配一个len长度的字符数组，返回的是字符指针。  
     int i;
-    //只有在C99下for循环中才可以声明变量，这里写在外面，提高兼容性。  
+    //只有在C99下for循环中才可以声明变量，这里写在外面，提高兼容性  
     pch = pch + pos;
-    //是pch指针指向pos位置。  
+    //是pch指针指向pos位置
     for (i = 0; i < len; i++)
-    {
+    {//循环遍历赋值数组
         subch[i] = *(pch++);
-        //循环遍历赋值数组。  
     }
-    subch[len] = '\0';//加上字符串结束符。  
-    return subch;       //返回分配的字符数组地址。  
+    //加上字符串结束符
+    subch[len] = '\0';
+    //返回分配的字符数组地址
+    return subch;
+    //该地址指向的内存必须在函数外释放(free)
 }
 //截取字符串str内字符ch左右两边的子串。
 inline int _String::_strcut(unsigned char* str, char ch, char* str1, char* str2)
@@ -260,7 +262,7 @@ inline char* _String::_intmove(char* w, int m, int b, bool hind)
 // 返回字符串数组str含有的字符ch数; Usage:
 /*
     char l[][16] = { "acvhhj", "222", "ccc" };
-	int m = 3;
+    int m = 3;
     char *a[16] = { NULL };
     for(int i = 0; i < m; i++)
         a[i] = l[i]; // (char*)[const char* point]
@@ -271,6 +273,8 @@ inline int _String::find_char(char **arr, char ch, int m)
     int i = 0;
     int num = 0;
     char *str = NULL;
+    if(arr == NULL)
+        return -1;
     while ((str = *arr++) != NULL)
     {
         if (i >= m)
@@ -287,7 +291,7 @@ inline int _String::find_char(char **arr, char ch, int m)
     return num;
 }
 
-//字符串逆序输出
+// 字符串逆序输出
 inline char* _String::_op_order(char * src, char *cst)
 {
     int len = strlen(src);
@@ -384,8 +388,8 @@ inline _String /*&*/ _String::operator+(const _String & other)
         newstring.m_data = new char[strlen(m_data) + strlen(other.m_data) + 1];
         newstring._strcpy(newstring.m_data, m_data);
         newstring._strcat(newstring.m_data, other.m_data);
-    }
-    return newstring;//内联函数不该返回局部变量的引用
+    }//内联函数不该返回局部变量的引用
+    return newstring;
 }
 
 inline bool _String::operator==(const _String& s)
@@ -410,6 +414,6 @@ inline istream & operator >> (istream &input, _String &s)
     char temp[255];//存储输入流
     input >> setw(255) >> temp;
     s = temp;//赋值
-    return input;//return支持连续使用>>运算符
+    return input;//支持连续使用>>运算符
 }
 #endif
