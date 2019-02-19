@@ -32,7 +32,7 @@
 #define MAX_GROUPS 10
 #define ACC_REC "acnts"
 #define IPCKEY 0x520905
-#define IPCFLAG IPC_CREAT //|IPC_EXCL|SHM_R|SHM_W
+#define IPCFLAG IPC_CREAT|IPC_EXCL //|SHM_R|SHM_W
 //using namespace std;
 //C++11 std与socket.h中bind函数冲突
 #ifdef _WIN32
@@ -65,7 +65,7 @@ pthread_mutex_t
 sendallow;
 
 int  aim2exit = 0;
-type_socket listen_socket;
+type_socket listen_socket, cursock;
 
 struct user_clazz {
     char usr[24];
@@ -179,7 +179,7 @@ int get_group_ndx(char group[24]);
 int host_group(char grpn[24], unsigned char brief[24]);
 int join_group(int no, char usr[24], char psw[24]);
 int leave_group(int no, char usr[24]);
-template<typename T> int set_n_get_mem(T* shmem, int idx = 0, int rw = 0);
+template<typename T> int set_n_get_mem(T* shmem, int ndx = 0, int rw = 0);
 void func_waitpid(int signo);
 
 type_thread_func monite(void *arg)
@@ -212,6 +212,7 @@ type_thread_func monite(void *arg)
         rcv_sock = accept(listen_socket, reinterpret_cast<struct sockaddr*>(&sin), &len);
 #endif
     }
+    cursock = rcv_sock;
     getpeername(rcv_sock, reinterpret_cast<struct sockaddr *>(&peerAddr), &peerLen);
     const char* IP = inet_ntop(AF_INET, &peerAddr.sin_addr, ipAddr, sizeof(ipAddr));
     const int PORT = ntohs(peerAddr.sin_port);
@@ -859,21 +860,23 @@ int _im_(int argc, char * argv[]) {
 #endif
         return 0;
     }
-template<typename T> int set_n_get_mem(T* shmem, int idx, int rw) {
+template<typename T> int set_n_get_mem(T* shmem, int ndx, int rw) {
     int shmids = -1;
+    if (ndx > MAX_ACTIVE)
+        return rw;
 #ifdef _SYS_SHM_H
     pthread_mutex_trylock(&sendallow);
     T *shared;
-    if ((shmids = shmget(IPCKEY + idx, sizeof(T), 0666 | IPCFLAG) < 0))
+    if ((shmids = shmget(IPCKEY, MAX_ACTIVE * sizeof(T), 0666 | IPCFLAG) < 0))
     {
         if (EEXIST == errno)
         {
-            shmids = shmget(IPCKEY + idx, sizeof(T), 0666);
+            shmids = shmget(IPCKEY, MAX_ACTIVE * sizeof(T), 0666);
             shared = (T*)shmat(shmids, NULL, 0);
         }
         else
         {
-            perror("fail to shmget");
+            fprintf(stderr, "fail to shmget.\n");
             exit(-1);
         }
     }
@@ -881,15 +884,15 @@ template<typename T> int set_n_get_mem(T* shmem, int idx, int rw) {
         shared = (T*)shmat(shmids, NULL, 0);
     }
     if (rw >= 1) {
-        memmove(shared, shmem, sizeof(T));
+        memmove(shared + ndx * sizeof(T), shmem, sizeof(T));
     }
     else if (rw == 0) {
-        memmove(shmem, shared, sizeof(T));
+        memmove(shmem, shared + ndx * sizeof(T), sizeof(T));
     }
     else {
         if (shmdt(shared) == -1)
         {
-            fprintf(stderr, "shmdt fail.\n");
+            fprintf(stderr, "shmdt: detach segment fail.\n");
         }
         if (shmctl(shmids, IPC_RMID, 0) == -1)
         {
@@ -905,7 +908,7 @@ void func_waitpid(int signo) {
     int stat;
     pid_t pid;
     while ((pid = waitpid(-1, &stat, WNOHANG)) > 0) {
-        char buf[64];
+        static char buf[64];
         sprintf(buf, "Signal(%d): child process %d exit just now.\n", signo, pid);
         write(STDERR_FILENO, buf, strlen(buf));
     }
