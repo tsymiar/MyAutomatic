@@ -30,6 +30,24 @@ char* IdentifyCode(char* rtn)
     return code;
 }
 
+int getDaysofThisYear(unsigned int year, unsigned int month, unsigned int day, int* clacdays) 
+{
+    if (year < 0 || month <= 0 || month > 12 || day <= 0)
+        return -1;
+    int comm[] = { 31,28,31,30,31,30,31,31,30,31,30,31 };
+    int leap[] = { 31,29,31,30,31,30,31,31,30,31,30,31 };
+    if (day > comm[month - 1] || day > leap[month - 1])
+        return -1;
+    int total = 0;
+    for (int i = 0; i < month - 1; i++) {
+        if (year % 400 || (year % 100 != 0 && year % 4 == 0))
+            total += leap[i];
+        else
+            total += comm[i];
+        return *clacdays = month == 1 ? day : day + total;
+    }
+}
+
 class BearCharges
 {
     double Sqrt_sum(int x, int y)
