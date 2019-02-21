@@ -65,7 +65,7 @@ pthread_mutex_t
 sendallow;
 
 int  aim2exit = 0;
-type_socket listen_socket, cursock;
+type_socket listen_socket;
 
 struct user_clazz {
     char usr[24];
@@ -212,7 +212,6 @@ type_thread_func monite(void *arg)
         rcv_sock = accept(listen_socket, reinterpret_cast<struct sockaddr*>(&sin), &len);
 #endif
     }
-    cursock = rcv_sock;
     getpeername(rcv_sock, reinterpret_cast<struct sockaddr *>(&peerAddr), &peerLen);
     const char* IP = inet_ntop(AF_INET, &peerAddr.sin_addr, ipAddr, sizeof(ipAddr));
     const int PORT = ntohs(peerAddr.sin_port);
@@ -332,24 +331,28 @@ type_thread_func monite(void *arg)
                     set_user_peer(user.usr, IP, PORT);
                     set_user_line(user.usr, rcv_sock);
                     memcpy(userName, user.usr, 24);
+                    send(rcv_sock, sd_bufs, 64, 0);
                 }
                 else if (valrtn == 0) {
                     sprintf(sd_bufs + 2, "%x", NEVAL(-1));
-                    if (memcmp(user.usr, userName, 24) == 0)
+                    if (memcmp(user.usr, userName, 24) == 0) {
                         sprintf(sd_bufs + 8, "Another [%s] is on line.", user.usr);
-                    else {
-                        sprintf(sd_bufs + 8, "Logging status invalid, please close this socket.\n");
-                        set_user_quit(user.usr);
-                        closesocket(listen_socket);
+                        snres = send(rcv_sock, sd_bufs, 64, 0);
+                        if (snres < 0) {
+                            printf("### socket status: %s\n", strerror(snres));
+                        }
+                        else
+                            printf(">>> %s\n", sd_bufs + 8);
                         continue;
                     }
-                    snres = send(rcv_sock, sd_bufs, 64, 0);
-                    if (snres < 0) {
-                        printf("### socket status: %s\n", strerror(snres));
-                    }
-                    else
+                    else {
+                        sprintf(sd_bufs + 8, "Logging status invalid, will close this socket.\n");
+                        set_user_quit(user.usr);
+                        send(rcv_sock, sd_bufs, 64, 0);
+                        closesocket(rcv_sock);
                         printf(">>> %s\n", sd_bufs + 8);
-                    continue;
+                        continue;
+                    }
                 }
                 else if (valrtn == -1) {
                     strcpy((sd_bufs + 8), "Error: check username/password again.");
@@ -361,7 +364,6 @@ type_thread_func monite(void *arg)
                     printf(">>> Unknown Error!\n");
                     continue;
                 };
-                send(rcv_sock, sd_bufs, 64, 0);
             }
             else {
                 strcpy((sd_bufs + 8), "Warning: please Register or Login at first.");
@@ -888,6 +890,9 @@ template<typename T> int set_n_get_mem(T* shmem, int ndx, int rw) {
     }
     else if (rw == 0) {
         memmove(shmem, shared + ndx * sizeof(T), sizeof(T));
+    }
+    else if (rw + 1 == 0) {
+        memset(shared + ndx * sizeof(T), 0, sizeof(T));
     }
     else {
         if (shmdt(shared) == -1)
