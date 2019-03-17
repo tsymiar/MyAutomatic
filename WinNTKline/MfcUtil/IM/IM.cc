@@ -407,7 +407,6 @@ type_thread_func monite(void *arg)
                         else
                             printf("### Request param invalid.\n");
                         goto con_err0;
-                        break;
                     }
                     memcpy(&user, rcv_txt, flg);
                 }
@@ -496,8 +495,8 @@ type_thread_func monite(void *arg)
                                     }
                                     s++;
                                 };
-                                sprintf((sd_bufs + 32), "%d", uiIP);
-                                sprintf((sd_bufs + 54), "%d", users[valrtn].peer.port);
+                                sprintf((sd_bufs + 32), "%d", (int)uiIP);
+                                sprintf((sd_bufs + 54), "%d", (int)users[valrtn].peer.port);
                                 // p2p_req2usr
                             }
                             else {
@@ -531,7 +530,7 @@ type_thread_func monite(void *arg)
                                     strcpy((sd_bufs + 8 * (c + 4)), groups[valrtn].group.members[c]);
                                 };
                             };
-                            if (groups[valrtn].group.members[c][0] == '\0')
+                            if (valrtn == -1 || groups[valrtn].group.members[c][0] == '\0')
                                 break;
                             buflen = 8 * (c + 4 + 4);
                         };
@@ -608,7 +607,7 @@ type_thread_func monite(void *arg)
                                 sprintf(sd_bufs + 3, "%x", -1);
                                 strcpy((sd_bufs + 8), user.usr);
                                 strcpy((sd_bufs + 32), user.sign);
-                                send(active[valrtn].sock_, sd_bufs, 48, 0);
+                                send(rcv_sock, sd_bufs, 48, 0);
                             };    //loop0
                         }//valrtn=-1
                         else {
@@ -635,8 +634,9 @@ type_thread_func monite(void *arg)
 #ifdef _DEBUG
                     printf(">>> 2-MSG [%0x,%0x]: ", sd_bufs[0], sd_bufs[1]);
                     for (c = 2; c < static_cast<int>(sizeof(user)); c++) {
-                        if ((c - 32 > 0) && ((c - 32) % 8 == 0))
-                            printf("\t");
+                        if ((c - 32 > 0) && ((c - 32) % 8 == 0)
+                            && (sd_bufs[c] == '0' || sd_bufs[c] == '\0' || sd_bufs[c] == '\x20'))
+                            printf(" ");
                         printf("%c", static_cast<unsigned char>(sd_bufs[c]));
                     }
                     printf("\n");

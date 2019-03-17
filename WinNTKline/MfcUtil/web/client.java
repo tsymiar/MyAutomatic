@@ -214,7 +214,6 @@ public class client {
 	// @param: remote file path; local file path.
 	private static int httpDownload(String reqsturl, String filelocal) throws Exception {
 		int cache = 10 * 1024;
-		boolean isWindows;
 		String url, head, splash, root;
 		if (System.getProperty("os.name") != null && System.getProperty("os.name").toLowerCase().contains("windows")) {
 			isWindows = true;

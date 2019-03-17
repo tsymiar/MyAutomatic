@@ -3,6 +3,8 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <DebugChildProcesses>true</DebugChildProcesses>
     <DebuggerFlavor>LinuxDebugger</DebuggerFlavor>
+    <DebuggerType>NativeOnly</DebuggerType>
+    <RemoteDebugTarget>173.199.127.68 (username=, port=22, authentication=Password)</RemoteDebugTarget>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|MIPS'">
     <DebugChildProcesses>true</DebugChildProcesses>

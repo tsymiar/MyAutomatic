@@ -1,7 +1,7 @@
 #!/bin/bash
 # 功能：删除包含指定内容的行/插入指定内容到指定行
 idx=0
-for tmp in `ls *.prototxt`
+for tmp in $(ls *.prototxt)
 do
   file=$tmp
   echo $tmp 

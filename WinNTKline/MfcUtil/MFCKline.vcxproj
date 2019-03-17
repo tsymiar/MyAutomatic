@@ -362,6 +362,9 @@
     <None Include="ClassDiagram.cd" />
     <None Include="com\Initialise-inl.h" />
     <None Include="com\plus1second" />
+    <None Include="script\blobstxt.sh" />
+    <None Include="script\call.bat" />
+    <None Include="script\reptile.py" />
     <None Include="web\BareBonesBrowserLaunch.java" />
     <None Include="web\client.java" />
     <None Include="web\myweb.nsmap" />
