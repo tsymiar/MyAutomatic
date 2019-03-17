@@ -312,6 +312,15 @@
     <None Include="web\client.java">
       <Filter>配置文件</Filter>
     </None>
+    <None Include="script\blobstxt.sh">
+      <Filter>配置文件</Filter>
+    </None>
+    <None Include="script\call.bat">
+      <Filter>配置文件</Filter>
+    </None>
+    <None Include="script\reptile.py">
+      <Filter>配置文件</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\MFCKline.ico">
