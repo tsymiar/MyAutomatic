@@ -405,8 +405,7 @@ int aes_test() {
         vectorList[i] = storeArray(plainBytes, 16 * i, countBytes);
     }
     vector<vector<unsigned char> > encryptedBox = encypt(extendedKey, vectorList[0], numRounds);
-    string *outputArray;
-    outputArray = new string[32];
+    string *outputArray = new string[32];
     int stringCount = 0;
     char buffer[32];
     string buffer2;
@@ -425,12 +424,12 @@ int aes_test() {
             }
         }
     else cout << "Unable to open file";
+    delete[] outputArray;
     cout << endl;
     //printf ("%s",buffer2);
     myfile.close();
     int pressEnter;
     cin >> pressEnter;
     cin >> pressEnter;
-
     return 0;
 }

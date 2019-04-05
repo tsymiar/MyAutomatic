@@ -23,13 +23,13 @@ extern "C"
 	};
 	struct st_sys
 	{
-		char* s_host;
-		char* ss_alias;
-		char* ss_addr;
 		long int li_cpu;
 		long int li_page;
 		long long mem_all;
 		long long mem_free;
+		char* s_host;
+		char* ss_alias;
+		char* ss_addr;
 	};
 	int show_memory(char* ip, st_sys* sys);
 	int detect_eth_cable(char *ifname);

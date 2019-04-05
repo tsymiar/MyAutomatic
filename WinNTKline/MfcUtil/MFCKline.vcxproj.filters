@@ -165,6 +165,9 @@
     <ClInclude Include="elem\Screen-Sharing.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="security\verify.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MFCKline.cpp">
@@ -282,6 +285,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="IM\IM.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="security\verify.cc">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

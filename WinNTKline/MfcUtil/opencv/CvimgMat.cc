@@ -39,6 +39,7 @@ static void on_ROITrackBar(int weight, void* usrdata)
         addWeighted(*src1, weight / 255.0, *src1, 1.0 - (weight / 255.0), 0.0, dst);
         imshow("ROI", dst);
     }
+    free(src1);
 }
 
 static void on_BilateralTrackBar(int d, void* usrdata)
