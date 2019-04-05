@@ -113,7 +113,7 @@
       <EnablePREfast>false</EnablePREfast>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DisableSpecificWarnings>4793;4819</DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>$(BOOST);$(CEFDIR);$(OPENSSL);$(QTDIR)\include;$(OPENCV)\include;$(PTHREAD)\include;$(JAVA_HOME)\include\win32;$(SolutionDir)MfcUtil;$(SolutionDir)MfcUtil\font;$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\mygl;$(SolutionDir)MfcUtil\Index;$(SolutionDir)MfcUtil\opencv;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap;.\GeneratedFiles\$(ConfigurationName);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BOOST);$(CEFDIR);$(QTDIR)\include;$(OPENCV)\include;$(OPENSSL)\include;$(PTHREAD)\include;$(JAVA_HOME)\include\win32;$(SolutionDir)MfcUtil;$(SolutionDir)MfcUtil\font;$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\mygl;$(SolutionDir)MfcUtil\Index;$(SolutionDir)MfcUtil\opencv;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap;.\GeneratedFiles\$(ConfigurationName);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAs>CompileAsCpp</CompileAs>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -128,8 +128,8 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <AdditionalLibraryDirectories>$(PTHD_LIB86);$(QTDIR)\lib;$(CEFDIR)\$(Configuration);$(OPENCV)\lib\$(Configuration);$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\GL\lib;$(SolutionDir)MfcUtil\font\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opencv_calib3d330d.lib;opencv_highgui330d.lib;opencv_photo330d.lib;opencv_video330d.lib;opencv_core330d.lib;opencv_imgcodecs330d.lib;opencv_shape330d.lib;opencv_videoio330d.lib;opencv_dnn330d.lib;opencv_imgproc330d.lib;opencv_stitching330d.lib;opencv_videostab330d.lib;opencv_features2d330d.lib;opencv_ml330d.lib;opencv_superres330d.lib;opencv_flann330d.lib;opencv_objdetect330d.lib;Qt5Gui.lib;Qt5Core.lib;Qt5OpenGL.lib;Qt5Widgets.lib;pthreadVC2.lib;libcef.lib;libcef_dll_wrapper.lib;thosttraderapi.lib;thostmduserapi.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(PTHD_LIB86);$(QTDIR)\lib;$(CEFDIR)\$(Configuration);$(OPENSSL)\lib;$(OPENCV)\lib\$(Configuration);$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\GL\lib;$(SolutionDir)MfcUtil\font\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opencv_calib3d330d.lib;opencv_highgui330d.lib;opencv_photo330d.lib;opencv_video330d.lib;opencv_core330d.lib;opencv_imgcodecs330d.lib;opencv_shape330d.lib;opencv_videoio330d.lib;opencv_dnn330d.lib;opencv_imgproc330d.lib;opencv_stitching330d.lib;opencv_videostab330d.lib;opencv_features2d330d.lib;opencv_ml330d.lib;opencv_superres330d.lib;opencv_flann330d.lib;opencv_objdetect330d.lib;Qt5Gui.lib;Qt5Core.lib;Qt5OpenGL.lib;Qt5Widgets.lib;pthreadVC2.lib;libcef.lib;libcrypto.lib;libcef_dll_wrapper.lib;thosttraderapi.lib;thostmduserapi.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -301,6 +301,7 @@
     <ClInclude Include="Resource.h" />
     <ClInclude Include="security\encoding.h" />
     <ClInclude Include="security\MD5.h" />
+    <ClInclude Include="security\verify.h" />
     <ClInclude Include="SettingsDlg.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Stock\Stock.h" />
@@ -351,6 +352,7 @@
     <ClCompile Include="security\AES.cc" />
     <ClCompile Include="security\encoding.cc" />
     <ClCompile Include="security\MD5.cc" />
+    <ClCompile Include="security\verify.cc" />
     <ClCompile Include="SettingsDlg.cpp" />
     <ClCompile Include="test\Testcase.cpp" />
   </ItemGroup>

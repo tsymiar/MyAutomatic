@@ -25,6 +25,7 @@ namespace WPFKline
         private List<StockParam> LoadStockInfo(string fileName)
         {
             if (File.Exists(fileName))
+            {
                 using (Stream resourceStream = new FileStream(fileName, FileMode.Open))
                 {
                     using (StreamReader reader = new StreamReader(resourceStream, Encoding.GetEncoding("GB2312")))
@@ -63,6 +64,7 @@ namespace WPFKline
                         return res;
                     }
                 }
+            }
             else
             {
                 DirectoryInfo fileInfo = new DirectoryInfo(fileName);

@@ -92,22 +92,20 @@ void* showMsg(void* msg)
     int len = 0;
     static char rslt[256];
     memset(rslt, 0, 256);
-    st_client* client = (st_client*)malloc(sizeof(st_client));
-    client = (st_client*)msg;
-    if (!client)
-        return NULL;
+    st_client client;// = (st_client*)malloc(sizeof(st_client));
+    client = (st_client)*((st_client*)msg);
     while (1) {
-        if (client->flag == 0)
+        if (client.flag == 0)
             continue;
         EnterCriticalSection(&wrcsec);
-        if (client->sock == 0)
+        if (client.sock == 0)
             continue;
-        len = recv(client->sock, rslt, 256, 0);
+        len = recv(client.sock, rslt, 256, 0);
         if (len <= 0) {
             MessageBox(NULL, "connection lost!", "client", MB_OK);
             if (len == -1)
                 break;
-            closesocket(client->sock);
+            closesocket(client.sock);
             continue;
         };
         sprintf_s(g_Msg, 247, "MSG: %s\n", rslt + 8);
