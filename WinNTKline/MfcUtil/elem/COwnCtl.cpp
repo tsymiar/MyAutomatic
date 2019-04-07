@@ -21,12 +21,12 @@ void CMyEdit::FillEdit(CString& tmp)
 
 void CMyEdit::FillEdit(const char tmp[], int hexlen)
 {
-    CString sTmp;
-    char* temp = new char[2048];
     if (this->m_hWnd == NULL)return;
+    CString sTmp;
     GetWindowText(sTmp);
     if (sTmp.GetLength() >= 0x7f0)
         sTmp = "";
+    char* temp = new char[2048];
     if (sTmp.IsEmpty())
     {
         sprintf_s(temp, 1024, "%s", tmp);

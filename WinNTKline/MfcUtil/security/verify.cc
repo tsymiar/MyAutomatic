@@ -10,7 +10,7 @@ unsigned char* get_hash1(unsigned char* ha, unsigned  char* sh, unsigned char* s
 }
 
 //用工作密钥对hash1进行加密运算(IDEA算法ECB)，结果为密押MIYA。
-unsigned char* get_MIYA(struct KEYINFO workey, unsigned char* hash1, unsigned char* miya)
+unsigned char* get_MIYA(const struct KEYINFO workey, unsigned char* hash1, unsigned char* miya)
 {
     IDEA_KEY_SCHEDULE* wk = 0;
     idea_ecb_encrypt(hash1, miya, wk);

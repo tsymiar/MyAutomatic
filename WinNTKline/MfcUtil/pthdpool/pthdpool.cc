@@ -91,7 +91,7 @@ int my_pool_free(my_pool_t *pool_t) {
 my_pool_t* my_pool_init(int thrd_num, int sz_que)
 {
     int j;
-    my_pool *pool_t = (my_pool*)calloc(1, sizeof(pool_t));      //内存的动态存储区中分配1个长度为pool的连续空间
+    my_pool *pool_t = (my_pool*)calloc(1, sizeof(*pool_t));     //内存的动态存储区中分配1个长度为pool的连续空间
     //static pthread_cond_t cond = PTHREAD_COND_INITIALIZER;    //静态初始化条件变量
     //static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER; //静态初始化互斥锁
     pool_t->dispose = false;

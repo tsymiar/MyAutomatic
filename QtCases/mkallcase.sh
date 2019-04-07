@@ -4,7 +4,7 @@ if [ -f "Makefile" ]; then
 fi
 g++ -c ../WinNTKline/MfcUtil/mygl/SDL_text.cc -lGL -lSDL
 qmake -o Makefile QtCases.pro
-for ui in `ls *.ui`
+for ui in $(ls *.ui)
 do
 	uic $ui -o ui_${ui%.ui}.h
 done

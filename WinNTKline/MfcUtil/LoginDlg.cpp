@@ -315,8 +315,8 @@ void CLoginDlg::OnCbnSelchangeCom()
     case 3:
         if (AllocConsole())
         {
-            freopen("CONOUT$", "w", stderr);
-            Simulation();
+            if (freopen("CONOUT$", "w", stderr) != nullptr)
+                Simulation();
         }
         break;
     case 4:
