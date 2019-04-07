@@ -663,7 +663,7 @@ type_thread_func commands(void *arg)
 {
     char optionstr[24], name[24];
     do {
-        scanf("%s", reinterpret_cast<char*>(&optionstr));
+        scanf("%32s", reinterpret_cast<char*>(&optionstr));
         if (strcmp(optionstr, "quit") == 0) {
             closesocket(listen_socket);
             printf("saving accounts data to file %s.\n", ACC_REC);
@@ -680,7 +680,7 @@ type_thread_func commands(void *arg)
         }
         if (strcmp(optionstr, "kick") == 0) {
             printf("Kick whom out?\n");
-            scanf("%s", reinterpret_cast<char*>(&name));
+            scanf("%32s", reinterpret_cast<char*>(&name));
             int rtn = user_is_line(name);
             if (!(rtn == -1)) {
 #if !defined _WIN32

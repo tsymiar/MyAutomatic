@@ -164,8 +164,8 @@ void CtestUtilsDlg::OnBnClickedSimbtn()
 {
 	if (AllocConsole())
 	{
-		freopen("CONOUT$", "w", stderr);
-		Simulation();
+        if (freopen("CONOUT$", "w", stderr) != nullptr)
+            Simulation();
 	}
 }
 

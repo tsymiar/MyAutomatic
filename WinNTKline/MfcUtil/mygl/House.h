@@ -141,7 +141,7 @@ protected:
 
     unsigned char  *ImageDatas[MAX_TEX];
     INT2U rslxs[MAX_TEX], rslys[MAX_TEX];
-    int   texnum;
+    int   texnum = 0;
 public:
     House();
     // OpenGL specific

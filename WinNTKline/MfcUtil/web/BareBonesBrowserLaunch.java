@@ -46,10 +46,10 @@ class StreamThread extends Thread {
 
 public class BareBonesBrowserLaunch {
 
-   static final String[] browsers = {"x-www-browser", "google-chrome",
+   private static final String[] browsers = {"x-www-browser", "google-chrome",
            "firefox", "opera", "epiphany", "konqueror", "conkeror", "midori",
            "kazehakase", "mozilla"};
-   static final String errMsg = "Error attempting to launch web browser";
+   private static final String errMsg = "Error attempting to launch web browser";
 
    public static void openURL(String url) {
       try {  //attempt to use Desktop library from JDK 1.6+
@@ -75,7 +75,7 @@ public class BareBonesBrowserLaunch {
                           {"which", b}).getInputStream().read() != -1)
                      Runtime.getRuntime().exec(new String[]{browser = b, url});
                if (browser == null)
-                  throw new Exception(Arrays.toString(browsers));
+                  throw new RuntimeException(Arrays.toString(browsers));
             }
          } catch (Exception e) {
             JOptionPane.showMessageDialog(null, errMsg + "\n" + e.toString());
@@ -91,9 +91,9 @@ public class BareBonesBrowserLaunch {
        int i = 0;
        for (String key : map.keySet()) {
            String env = map.get(key);
-           if (key.equals("Path")) {
+           if ("Path".equals(key)) {
                env_arr[i] = key + "=" + env;
-			   i++;
+               i++;
            }
        }
        try{
@@ -101,7 +101,7 @@ public class BareBonesBrowserLaunch {
            System.out.println(osName);
             final int arr_len = args.length + 2;
             String[] cmd_arr = new String[arr_len];
-           if (osName.equals("Windows 95")) {
+           if ("Windows 95".equals(osName)) {
                cmd_arr[0] = "command.com";
            }else if (osName.contains("Windows")) {
                cmd_arr[0] = "cmd.exe";
@@ -118,7 +118,7 @@ public class BareBonesBrowserLaunch {
            } catch (IOException e) {
                e.printStackTrace();
            }
-		   StreamThread msgStream = new StreamThread(Objects.requireNonNull(proc).getErrorStream(), "MSG");
+           StreamThread msgStream = new StreamThread(Objects.requireNonNull(proc).getErrorStream(), "MSG");
            StreamThread outStream = new StreamThread(proc.getInputStream(), "OUT");
            msgStream.start();
            outStream.start();

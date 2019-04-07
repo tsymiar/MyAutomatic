@@ -78,8 +78,7 @@ unsigned int __stdcall CTPclient::TradeMarket(void* P)
     MyOglDrawDlg* m_hWnd = (MyOglDrawDlg*)P;
     TradeChannel trade;
     CString str;
-    if (AllocConsole())
-        freopen("CONOUT$", "w", stderr);
+    if (AllocConsole() && freopen("CONOUT$", "w", stderr)) {}
     TRDAPI = CThostFtdcTraderApi::CreateFtdcTraderApi(STFTDC.FLOW_PATH);
     TradeChannel *tdChnl = new TradeChannel();
     TRDAPI->RegisterSpi((CThostFtdcTraderSpi*)tdChnl);

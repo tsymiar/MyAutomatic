@@ -33,7 +33,7 @@ public:
 private:
 	CIPAddressCtrl m_ipAddr;
 	CEdit m_Port;
-	char a_IP[16];
+    char a_IP[16] = { NULL };
 	CString a_Port;
 public:
 	afx_msg void OnBnClickedOk();

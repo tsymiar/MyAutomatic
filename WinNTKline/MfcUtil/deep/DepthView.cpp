@@ -7,7 +7,7 @@ DepthView* DepthView::getDepth()
 
 DepthView::DepthView()
 {
-    item.time.hour = item.time.min = 0;
+    Pm = item.time.hour = item.time.min = 0;
     item.pc_ = .0f;
     item.mode = 0;
     item.bs = nullptr;

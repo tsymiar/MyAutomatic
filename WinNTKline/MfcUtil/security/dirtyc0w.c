@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
 	You have to open with PROT_READ.
 	*/
 	map = mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, f, 0);
-	printf("mmap %x\n\n", map);
+	printf("mmap %x\n\n", (unsigned int)map);
 	/*
 	You have to do it on two threads.
 	*/
