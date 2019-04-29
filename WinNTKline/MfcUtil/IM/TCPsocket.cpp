@@ -41,10 +41,9 @@ char __data[8];
 ///////////////////////////////////////////////
 unsigned int __stdcall SocketThread(void* lp)
 {
-    cout << "type port: ";
+    cout << "Now type port (default 6001): ";
     //while (cin >> port/*, port != '\n'*/)
-    //    cout << port << endl;
-    //scanf("%d", &port);
+    scanf("%4d", &port);
     cout << port << endl;
     srand((int)time(0));
     cout << "Starting up TCP sever" << endl;
