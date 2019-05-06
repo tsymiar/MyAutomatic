@@ -32,7 +32,7 @@ typedef struct _v4l2_struct
 } v4l2_device;
 
 #define DEFAULT_DEVICE "/dev/video0"
-#define ToString(x) #x
+
 const int imgw = 640;
 const int imgh = 320;
 
@@ -41,6 +41,7 @@ extern int v4l2_mapping_buffers(v4l2_device*, __u32);
 extern unsigned int v4l2_set_buffer_queue(v4l2_device*, __u32);
 extern int v4l2_save_image_frame(v4l2_device*, char*);
 extern int v4l2_close_dev(v4l2_device*);
+
 int v4l2_get_capability(v4l2_device*);
 int v4l2_get_pixel_format(v4l2_device*);
 int v4l2_set_pixel_format(v4l2_device*);
@@ -50,7 +51,7 @@ int v4l2_init_dev(v4l2_device *v4l2_obj, char *device)
 {
     if (!device)
         device = DEFAULT_DEVICE;
-    if ((v4l2_obj->v4l_fd = open(device, O_RDWR | O_NONBLOCK)) < 0)
+    if ((v4l2_obj->v4l_fd = open(device, O_RDWR /*| O_NONBLOCK*//*Resource temporarily unavailable*/)) < 0)
     {
         perror("v4l2_open fail");
         return -1;
@@ -59,7 +60,7 @@ int v4l2_init_dev(v4l2_device *v4l2_obj, char *device)
         return -2;
     if (v4l2_get_pixel_format(v4l2_obj) <= 0)
         return -3;
-    return v4l2_set_pixel_format(v4l2_obj);;
+    return v4l2_set_pixel_format(v4l2_obj);
 }
 
 int v4l2_close_dev(v4l2_device *v4l2_obj)
@@ -121,7 +122,7 @@ int v4l2_try_format(v4l2_device *v4l2_obj, __u32 format)
     v4l2_obj->format.fmt.pix.pixelformat = format;
     if ((ioctl(v4l2_obj->v4l_fd, VIDIOC_TRY_FMT, &v4l2_obj->format) == -1) && (errno == EINVAL))
     {
-        perror("Not support format!");
+        perror("Not support format");
         return -2;
     }
     return 0;
@@ -132,7 +133,10 @@ int v4l2_request_buffers(v4l2_device *v4l2_obj, __u32 count)
     v4l2_obj->req.count = count;
     v4l2_obj->req.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     v4l2_obj->req.memory = V4L2_MEMORY_MMAP;
-    ioctl(v4l2_obj->v4l_fd, VIDIOC_REQBUFS, &v4l2_obj->req);
+    if (-1 == ioctl(v4l2_obj->v4l_fd, VIDIOC_REQBUFS, &v4l2_obj->req)) {
+        perror("Request buffer error");
+        return 0;
+    };
     v4l2_obj->buffer = (struct _st_buf*)calloc(v4l2_obj->req.count, sizeof(*v4l2_obj->buffer));
     return v4l2_obj->req.count;
 }
@@ -147,8 +151,10 @@ int v4l2_mapping_buffers(v4l2_device *v4l2_obj, __u32 count)
         v4l2_obj->argp.memory = V4L2_MEMORY_MMAP;
         v4l2_obj->argp.index = i;
         // 查询缓冲区得到起始物理地址和大小  
-        if (-1 == ioctl(v4l2_obj->v4l_fd, VIDIOC_QUERYBUF, &v4l2_obj->argp))
+        if (-1 == ioctl(v4l2_obj->v4l_fd, VIDIOC_QUERYBUF, &v4l2_obj->argp)) {
+            perror("Query buffer fail");
             exit(-1);
+        }
         v4l2_obj->buffer[i].length = v4l2_obj->argp.length;
         // 映射内存  
         v4l2_obj->buffer[i].start = mmap(NULL, 
@@ -170,7 +176,10 @@ unsigned int v4l2_set_buffer_queue(v4l2_device *v4l2_obj, __u32 count)
         v4l2_obj->argp.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
         v4l2_obj->argp.memory = V4L2_MEMORY_MMAP;
         v4l2_obj->argp.index = i;
-        ioctl(v4l2_obj->v4l_fd, VIDIOC_QBUF, &v4l2_obj->argp);
+        if (-1 == ioctl(v4l2_obj->v4l_fd, VIDIOC_QBUF, &v4l2_obj->argp)) {
+            perror("Enqueue data issue");
+            return -1;
+        };
     }
     return i;
 }
@@ -180,7 +189,10 @@ int v4l2_save_image_frame(v4l2_device *v4l2_obj, char* flag)
     enum v4l2_buf_type type;
     v4l2_obj->argp.type = type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     v4l2_obj->argp.memory = V4L2_MEMORY_MMAP;
-    ioctl(v4l2_obj->v4l_fd, VIDIOC_STREAMON, &v4l2_obj->argp.type);
+    if (-1 == ioctl(v4l2_obj->v4l_fd, VIDIOC_STREAMON, &v4l2_obj->argp.type)) {
+        perror("Start streaming I/O issue");
+        return -1;
+    }
     fd_set fds;
     FD_ZERO(&fds);
     FD_SET(v4l2_obj->v4l_fd, &fds);
@@ -190,7 +202,10 @@ int v4l2_save_image_frame(v4l2_device *v4l2_obj, char* flag)
     select(FD_SETSIZE, (fd_set*)(&v4l2_obj->v4l_fd + 1), &fds, (fd_set *)0, &timeout);
     v4l2_obj->argp.type = type;   
     v4l2_obj->argp.memory = V4L2_MEMORY_MMAP;
-    ioctl(v4l2_obj->v4l_fd, VIDIOC_DQBUF, &v4l2_obj->argp);
+    if (-1 == ioctl(v4l2_obj->v4l_fd, VIDIOC_DQBUF, &v4l2_obj->argp)) {
+        perror("Dequeue data issue");
+        return -2;
+    }
     char file[126];
     snprintf(file, strlen(flag) + 1, "%s%d", flag, v4l2_obj->argp.index);
     int yuv = open(file, O_WRONLY | O_CREAT, 0777);
@@ -198,7 +213,10 @@ int v4l2_save_image_frame(v4l2_device *v4l2_obj, char* flag)
         v4l2_obj->buffer[v4l2_obj->argp.index].length
     //    (v4l2_obj->width ? : imgw) * (v4l2_obj->height ? : imgh)
     );
-    ioctl(v4l2_obj->v4l_fd, VIDIOC_QBUF, &v4l2_obj->argp);
+    if (-1 == ioctl(v4l2_obj->v4l_fd, VIDIOC_QBUF, &v4l2_obj->argp)) {
+        perror("Re-enqueue data issue");
+        return -3;
+    }
     int i = 0;
     for (; i < v4l2_obj->req.count; ++i)
         munmap(v4l2_obj->buffer[i].start, v4l2_obj->buffer[i].length);
