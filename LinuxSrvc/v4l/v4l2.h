@@ -39,7 +39,7 @@ const int imgh = 320;
 extern int v4l2_init_dev(v4l2_device*, char*);
 extern int v4l2_mapping_buffers(v4l2_device*, __u32);
 extern unsigned int v4l2_set_buffer_queue(v4l2_device*, __u32);
-extern int v4l2_save_image_frame(v4l2_device*, char*);
+extern int v4l2_save_image_frame(v4l2_device*, const char*);
 extern int v4l2_close_dev(v4l2_device*);
 
 int v4l2_get_capability(v4l2_device*);
@@ -49,8 +49,8 @@ int v4l2_try_format(v4l2_device*, __u32);
 
 int v4l2_init_dev(v4l2_device *v4l2_obj, char *device)
 {
-    if (!device)
-        device = DEFAULT_DEVICE;
+    if (!device || device == NULL)
+        device = (char*)DEFAULT_DEVICE;
     if ((v4l2_obj->v4l_fd = open(device, O_RDWR /*| O_NONBLOCK*//*Resource temporarily unavailable*/)) < 0)
     {
         perror("v4l2_open fail");
@@ -184,7 +184,7 @@ unsigned int v4l2_set_buffer_queue(v4l2_device *v4l2_obj, __u32 count)
     return i;
 }
 
-int v4l2_save_image_frame(v4l2_device *v4l2_obj, char* flag)
+int v4l2_save_image_frame(v4l2_device *v4l2_obj, const char* flag)
 {
     enum v4l2_buf_type type;
     v4l2_obj->argp.type = type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -223,6 +223,20 @@ int v4l2_save_image_frame(v4l2_device *v4l2_obj, char* flag)
     close(yuv);
     fprintf(stdout, "Save picture as [ %s ](0x%p).\n", file, v4l2_obj->buffer->start);
     return result;
+}
+
+int get_img(const char* filename)
+{
+    v4l2_device obj;
+    int val = v4l2_init_dev(&obj, NULL);
+    if (val == 0) {
+        if (v4l2_set_buffer_queue(&obj, v4l2_mapping_buffers(&obj, 4)) <= 0)
+            return -1;
+        if (v4l2_save_image_frame(&obj, filename) <= 0)
+            return -2;
+        v4l2_close_dev(&obj);
+    }
+    return 0;
 }
 
 #endif

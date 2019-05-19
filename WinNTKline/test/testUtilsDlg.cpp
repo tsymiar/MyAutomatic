@@ -181,17 +181,11 @@ void CtestUtilsDlg::OnBnClickedImser()
 	::CreateProcess(_T("..\\Debug\\IM(Win32).exe"), _T("1"), NULL, NULL, false, 0, NULL, NULL, &sInfo, &prInfo);
 }
 
-void checkLeak(void* ptr)
-{
-	if (ptr != nullptr)
-		delete ptr;
-};
-
 void CtestUtilsDlg::OnBnClickedOk()
 {
-	checkLeak(ogl);
-	checkLeak(m_ctp);
-	checkLeak(m_pIM);
+    Initialise::freeLeak(ogl);
+    Initialise::freeLeak(m_ctp);
+    Initialise::freeLeak(m_pIM);
 	CDialog::OnOK();
 }
 

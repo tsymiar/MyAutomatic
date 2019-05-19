@@ -5,28 +5,17 @@
 #include"../sys/sysstatus.h"
 #include"../soap/soapStub.h"
 #include"../soap/myweb.nsmap"
-//#pragma comment(lib, "pthreads.2/pthreadVC2.lib") 
-//#pragma comment(lib, "WS2_32.lib")
-/*
-#define CHEAK _sopen_s(&file,_file, O_RDONLY,0,0);\
-_sopen_s(&move,_moving, O_WRONLY | O_CREAT,0,0);\
-if(file < 0 || move < 0)\
-printf("Move error.");\
-_lseek(file, -OFFSET, SEEK_END);\
-while (len = _read(file, buff, sizeof(buff)) > 0)\
-{_write(move, buff, len);_close(move);_close(file);}
-*/
-pthread_mutex_t queue_lock;//队列锁
-pthread_cond_t  queue_noti;//条件变量
-SOAP_SOCKET     queue[MAX_QUEUE];//数组队列
-int head = 0, tail = 0;          //队列头队列尾初始化         
-void *process_queue(void *);     //线程入口函数
-int enqueue(SOAP_SOCKET, unsigned long ip); //入队列函数
+
+pthread_mutex_t queue_lock;      // 队列锁
+pthread_cond_t  queue_noti;      // 条件变量
+SOAP_SOCKET     queue[MAX_QUEUE];// 数组队列
+int head = 0, tail = 0;          // 队列头队列尾初始化         
+void *process_queue(void *);     // 线程入口函数
+int enqueue(SOAP_SOCKET, unsigned long ip); // 入队列函数
+SOAP_SOCKET dequeue(void);       // 出队列函数
 unsigned long dequeue_ip();
-SOAP_SOCKET dequeue(void); //出队列函数
 static unsigned long ips[MAX_QUEUE];
 int logcnt = 0;
-mainSoap web;
 
 void * process_queue(void * soap)
 {
@@ -49,7 +38,6 @@ void * process_queue(void * soap)
     return NULL;
 }
 
-//入队列操作
 int enqueue(SOAP_SOCKET sock, unsigned long ip)
 {
     int status = SOAP_OK;
@@ -58,8 +46,9 @@ int enqueue(SOAP_SOCKET sock, unsigned long ip)
     next = (tail + 1) % MAX_QUEUE;
     if (next >= MAX_QUEUE)
         next = 0;
+    // 队列满
     if (next == head)
-        status = SOAP_EOM;//队列满
+        status = SOAP_EOM;
     else
     {
         queue[tail] = sock;
@@ -71,7 +60,6 @@ int enqueue(SOAP_SOCKET sock, unsigned long ip)
     return status;
 }
 
-//出队列操作
 SOAP_SOCKET dequeue()
 {
     SOAP_SOCKET sock;
@@ -101,10 +89,8 @@ unsigned long dequeue_ip()
     return ip;
 }
 
-#ifdef MY_HTTPGET
 int http_get(struct soap *soap)
-#else
-int http_get(struct soap *soap)
+#ifdef NS_HTTPPOST
 {
     soap_response(soap, SOAP_HTML);
     soap_send(soap, "<html>Hello I'm WebService.</html>");
@@ -114,28 +100,27 @@ int http_get(struct soap *soap)
 int http_post(struct soap *soap, const char *endpoint, const char *host, int port, const char *path, const char *action, size_t count)
 #endif
 {
-    FILE* fd = 0;
-#ifdef MY_HTTPGET
-    char* s = strchr(soap->path, '?');
-    if (!s || strcmp(s, "?wsdl"))
-        return SOAP_GET_METHOD;
-    fd = fopen("myweb.wsdl", "rb");
-#else
+    FILE* stream = 0;
+#ifdef NS_HTTPPOST
     // 请求WSDL时，传送相应文件
-    // 获取请求的wsdl文件名
+    // 获取请求的wsdl文件
     std::string fielPath(soap->path);
     size_t pos = fielPath.rfind("/");
     std::string fileName(fielPath, pos + 1);
-
     // 将?替换为.
     size_t dotPos = fileName.rfind("?");
     if ((int)dotPos == -1)
         return 404;
     fileName.replace(dotPos, 1, ".");
     // 打开WSDL文件准备拷贝
-    fd = fopen(fileName.c_str(), "rb");
-#endif // MY_HTTPGET
-    if (!fd)
+    stream = fopen(fileName.c_str(), "rb");
+#else
+    char* s = strchr(soap->path, '?');
+    if (!s || strcmp(s, "?wsdl"))
+        return SOAP_GET_METHOD;
+    stream = fopen("myweb.wsdl", "rb");
+#endif // NS_HTTPPOST
+    if (!stream)
     {
         // HTTP not found error
         return 404;
@@ -145,72 +130,30 @@ int http_post(struct soap *soap, const char *endpoint, const char *host, int por
     soap_response(soap, SOAP_FILE);
     for (;;)
     {
-        // 从fd中读取数据
-        size_t r = fread(soap->tmpbuf, 1, sizeof(soap->tmpbuf), fd);
+        // 从stream中读取数据
+        size_t r = fread(soap->tmpbuf, 1, sizeof(soap->tmpbuf), stream);
         if (!r)break;
         if (soap_send_raw(soap, soap->tmpbuf, r))
         {
-            // can't send, but little we can do about that
+            fprintf(stderr, "can't send raw data of tmpbuf.\n");
             break;
         }
     }
-    fclose(fd);
+    fclose(stream);
     soap_end_send(soap);
     return
-#ifdef MY_HTTPGET
-        SOAP_OK;
-#else
+#ifdef NS_HTTPPOST
         http_get(soap);
+#else
+        SOAP_OK;
 #endif
 }
 
-int mainSoap::movedll()
+int main_server(int argc, char** argv)
 {
-    /*
-    _sopen_s(&file, _file, O_RDONLY, SH_DENYNO, _S_IREAD);
-    _sopen_s(&move, _moving, O_WRONLY | O_CREAT, _SH_SECURE, _S_IREAD| _S_IWRITE);//|_S_IEXEC);
-    if (file < 0 || move < 0)
-    {
-    printf("Move error.\n");
-    return -1;
-    }
-    _lseek(file, -OFFSET, SEEK_END);
-    while (len = _read(file, buff, sizeof(buff)) > 0)
-    {
-    _write(move, buff, len);
-    _close(move);
-    _close(file);
-    }
-    */
-    int i = 0;
-    //    char gc;
-    char text[] = "Copying file....\r";
-    //    FILE* fl = fopen(_file, "rb"), *mv = fopen(_moving, "a+");
-    //    if (!(fl || mv))
-    {
-        for (; i < (int)sizeof(text) - 1; i++)
-        {
-            putchar(text[i]);
-            sleep(70);
-        }
-
-        //        if (fl)
-        //            while (gc = fgetc(fl) != EOF)
-        {
-            //                fputc(gc, mv);
-        }
-        //        fclose(fl);
-        //        fclose(mv);
-        return EXIT_SUCCESS;
-    }
-    return -1;
-}
-
-int soap_ser(int argc, char** argv)
-{
-#ifdef MY_DEBUG
+#ifdef NS_DEBUG
     argc = 3; argv[1] = (char*)"8080";
-#endif // MY_DEBUG
+#endif // NS_DEBUG
     if (argv[1] == nullptr)
     {
         std::cout << "请输入端口参数 例如：“\033[45m./gSOAPverify 8080\033[0m”\n" << argv[1] << std::endl;
@@ -218,25 +161,24 @@ int soap_ser(int argc, char** argv)
         return -1;
     }
     struct soap Soap;
-    //初始化运行时环境
+    // 初始化运行时环境
     soap_init(&Soap);
-#ifdef MY_HTTPGET
-    Soap.fget = http_get;
-#else
+#ifdef NS_HTTPPOST
     Soap.fpost = http_post;
-#endif // !MY_HTTPGET
-    //web.movedll();
-    //设置UTF-8编码
+#else
+    Soap.fget = http_get;
+#endif // !NS_HTTPPOST
+    // 设置UTF-8编码
     soap_set_mode(&Soap, SOAP_C_UTFSTRING);
     soap_set_namespaces(&Soap, namespaces);
-    //如果没有参数，当作CGI程序处理
+    // 如果没有参数，当作CGI程序处理
     if (argc <2)
     {
-        //CGI 风格服务请求，单线程
+        // CGI 风格服务请求，单线程
         soap_serve(&Soap);
-        //清除序列化的类的实例
+        // 清除序列化类实例
         soap_destroy(&Soap);
-        //清除序列化的数据
+        // 清除序列化数据
         soap_end(&Soap);
     }
     else
@@ -245,13 +187,13 @@ int soap_ser(int argc, char** argv)
         pthread_t tid[MAX_THR];
         int i, port = atoi(argv[1]);
         SOAP_SOCKET m, cs;
-        //锁和条件变量初始化
+        // 锁和条件变量初始化
         pthread_mutex_init(&queue_lock, NULL);
         pthread_cond_init(&queue_noti, NULL);
-        //绑定服务端口
+        // 绑定服务端口
         m = soap_bind(&Soap, NULL, port, BACKLOG);
-        //循环直至服务套接字合法
         int vilid = 0;
+        // 循环绑定直至服务套接字合法
         while (!soap_valid_socket(m))
         {
             if (vilid == 0)
@@ -264,7 +206,7 @@ int soap_ser(int argc, char** argv)
         }
         fprintf(stderr, "======== Socket端口号:%s ========\n", argv[1]);
 
-        //生成服务线程
+        // 生成服务线程
         for (i = 0; i <MAX_THR; i++)
         {
             soap_thr[i] = soap_copy(&Soap);
@@ -275,7 +217,7 @@ int soap_ser(int argc, char** argv)
         int j = 0;
         for (;;)
         {
-            //接受客户端的连接
+            // 接受客户端连接
             cs = soap_accept(&Soap);
             if (!soap_valid_socket(cs))
             {
@@ -291,18 +233,18 @@ int soap_ser(int argc, char** argv)
                 }
             }
             logcnt++;
-            //客户端的IP地址
+            // 客户端IP地址
             fprintf(stderr, "\033[32mAccepted\033[0m \033[1mREMOTE\033[0m connection. IP = \033[33m%d.%d.%d.%d\033[0m, socket = %d, log(%d) \n", \
                 (int)(((Soap.ip) >> 24) & 0xFF), (int)(((Soap.ip) >> 16) & 0xFF), (int)(((Soap.ip) >> 8) & 0xFF), \
                 (int)((Soap.ip) & 0xFF), (int)(Soap.socket), logcnt);
-            //请求的套接字进入队列，如果队列已满则循环等待
+            // 套接字入队，如果队列已满则循环等待
             while (enqueue(cs, ips[j]) == SOAP_EOM)
                 usleep(1000);
             j++;
             if (j >= MAX_THR)
                 j = 0;
         }
-        //服务结束后的清理工作
+        // 清理服务
         for (i = 0; i < MAX_THR; i++)
         {
             while (enqueue(SOAP_INVALID_SOCKET, ips[i]) == SOAP_EOM)
@@ -321,46 +263,13 @@ int soap_ser(int argc, char** argv)
         pthread_mutex_destroy(&queue_lock);
         pthread_cond_destroy(&queue_noti);
     }
-    //分离运行时的环境
+    // 分离运行时环境
     soap_done(&Soap);
-    return 0;
-}
-
-int main(int argc, char* argv[])
-{
-    if (fork() == 0)
-        soap_ser(argc, argv);
-    return 0;
-}
-
-int api__login_by_key(struct soap*, char *usr, char *psw, struct ArrayOfEmp2 &ccc)
-{
-    struct queryInfo info;
-    ccc.rslt.flag = -3;
-    if (!(usr == nullptr || psw == nullptr))
-    {
-        if (sqlQuery(0, usr, psw, &info) != 0) {
-            info.flg = false;
-            ccc.rslt.flag = -2;
-            printf("[OUT]:\tqueryInfo.rslt is null.\n");
-        }
-        if (info.flg)
-        {
-            ccc.rslt.email = info.msg->email;
-            ccc.rslt.tell = info.msg->tell;
-            printf("[OUT]:\temail:%s\t", ccc.rslt.email);
-            if (strlen(ccc.rslt.tell) != 0)
-                cout << "tell:" << ccc.rslt.tell;
-            cout << endl;
-            ccc.rslt.flag = 200;
-        }
-    }
     return 0;
 }
 
 int api__trans(struct soap *soap, char* msg, char* rtn[])
 {
-    //    CHEAK;
     int j = 0;
     _String str;
     struct PARAM {
@@ -416,3 +325,34 @@ int api__get_server_status(struct soap *soap, xsd_string cmd, xsd_string& status
     return 0;
 }
 
+int api__login_by_key(struct soap*, char *usr, char *psw, struct ArrayOfEmp2 &ccc)
+{
+    struct queryInfo info;
+    ccc.rslt.flag = -3;
+    if (!(usr == nullptr || psw == nullptr))
+    {
+        if (sqlQuery(0, usr, psw, &info) != 0) {
+            info.flg = false;
+            ccc.rslt.flag = -2;
+            printf("[OUT]:\tqueryInfo.rslt is null.\n");
+        }
+        if (info.flg)
+        {
+            ccc.rslt.email = info.msg->email;
+            ccc.rslt.tell = info.msg->tell;
+            printf("[OUT]:\temail:%s\t", ccc.rslt.email);
+            if (strlen(ccc.rslt.tell) != 0)
+                cout << "tell:" << ccc.rslt.tell;
+            cout << endl;
+            ccc.rslt.flag = 200;
+        }
+    }
+    return 0;
+}
+
+int main(int argc, char* argv[])
+{
+    if (fork() == 0)
+        main_server(argc, argv);
+    return 0;
+}
