@@ -10,7 +10,7 @@ SOAP= soapC.o stdsoap2.o soapServer.o
 BIT = $(shell if [ `getconf LONG_BIT` -eq '64' ];then echo 64;fi;)
 SQL = -std=c++11 -L/usr/lib$(BIT)/mysql -lmysqlclient
 PTHD= -std=c++11 -lpthread #-lgsoap++#-L/usr/local/gSOAP/lib/libsoap++
-FLAG += -DMY_DEBUG
+FLAG += -DNS_DEBUG
 gSOAPverify:$(OUT)
 	g++ $(FLAG) -c ./soap/soapC.cpp
 	g++ -g -c ./soap/stdsoap2.cpp

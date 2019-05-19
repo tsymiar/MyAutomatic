@@ -58,6 +58,13 @@ public:
         return p;
     }
 #endif
+    inline static void* freeLeak(void* ptr)
+    {
+        if (ptr != nullptr)
+            delete ptr;
+        ptr = nullptr;
+        return ptr;
+    }
     virtual ~Initialise()
     {
         if (this->ptr)

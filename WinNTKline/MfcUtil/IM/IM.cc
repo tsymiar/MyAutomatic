@@ -23,7 +23,7 @@
 #include <arpa/inet.h>
 #include <signal.h>
 #endif
-#define NEVAL(a) (a) & 0xff
+#define NEVAL(a) (((~((a) & 0x0f)) | ((a) & 0xf0)) & 0xff)
 #define THREAD_NUM 20
 #define DEFAULT_PORT 8877
 #define MAX_USERS 99
@@ -56,6 +56,9 @@ typedef void *type_thread_func;
 #define SLEEP(t) usleep((int)1010.10f*t);
 pthread_mutexattr_t attr;
 #endif
+
+#define GET_IMG_EXE "./v4l2.exe"
+#define IMAGE_FILE "v4l2.jpg"
 
 #ifdef _WIN32
 CRITICAL_SECTION
@@ -113,9 +116,9 @@ typedef struct user_socket {
     char usr[24];
     union {
         char psw[24];
-        char peer[24];
         char TOKEN[24];
     };
+    char peer[24];
     union {
         char sign[24];
         char npsw[24];
@@ -434,8 +437,10 @@ type_thread_func monite(void *arg)
                         buflen = 48;
                         break;
                     case 0x2:
-                        memcpy(sd_bufs, &user, 8);
-                        buflen = 8;
+                        char susr[sizeof(user)];
+                        sprintf(susr, "User: %s(%s); group: join - %s, host - %s\n", user.usr, user.sign, user.jgrp, user.hgrp);
+                        memcpy(sd_bufs + 8, susr, strlen(susr) + 1);
+                        buflen = 8 + strlen(susr) + 1;
                         break;
                     case 0x3:
                     {
@@ -516,12 +521,79 @@ type_thread_func monite(void *arg)
                     } break;
                     case 0x7:
                     {
-                        valrtn = get_user_ndx(user.usr);
-                        sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
-                        strcpy(users[valrtn].intro, user.sign);
-                        buflen = 8;
+#if !defined _WIN32
+                        char *mesg = NULL;
+                        if (vfork() == 0)
+                        {
+                            char *const agv[] = { (char*)"v4l2.exe", (char *)(0) };
+                            valrtn = execvp(GET_IMG_EXE, agv);
+                            mesg = strerror(errno);
+                            sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
+                            strcpy((sd_bufs + 8), mesg);
+                            buflen = 8 + strlen(mesg) + 1;
+                            fprintf(stdout, "Exec %s with execvp fail, %s.\n", GET_IMG_EXE, mesg);
+                        }
+                        else {
+                            wait(&valrtn);
+                            if (errno != ECHILD) {
+                                mesg = strerror(errno);
+                            }
+                            else {
+                                mesg = "sucess";
+                            }
+                            sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
+                            strcpy((sd_bufs + 8), mesg);
+                            buflen = 8 + strlen(mesg) + 1;
+                            fprintf(stdout, "Make image with %s, %s.\n", GET_IMG_EXE, mesg);
+                        }
+#else
+                        char *mesg = "OS don't support v4l.\n";
+                        buflen = 32;
+                        strcpy((sd_bufs + 8), mesg);
+                        fprintf(stdout, mesg);
+#endif
                     } break;
                     case 0x8:
+                    {
+                        FILE * file = fopen(IMAGE_FILE, "rb");
+                        if (file == NULL)
+                        {
+                            sprintf(sd_bufs + 8, "Fail open file %s.\n", IMAGE_FILE);
+                            fprintf(stdout, sd_bufs + 8);
+                            buflen = 8 + strlen(IMAGE_FILE) + 14;
+                            break;
+                        }
+                        fseek(file, 0, SEEK_END);
+                        long lSize = ftell(file);
+                        rewind(file);
+                        int num = lSize / sizeof(unsigned char);
+                        unsigned char *pos = (unsigned char*)malloc(sizeof(unsigned char)*num);
+                        if (pos == NULL)
+                        {
+                            sprintf(sd_bufs + 8, "Fail malloc for %s.\n", IMAGE_FILE);
+                            fprintf(stdout, sd_bufs + 8);
+                            buflen = 8 + strlen(IMAGE_FILE) + 20;
+                            break;
+                        }
+                        while (!feof(file)) {
+                            int rcsz = fread(pos, sizeof(unsigned char), num, file);
+                            fprintf(stdout, "File %s size = %d, rcsz = %d.\n", IMAGE_FILE, num, rcsz);
+                            for (int i = 0; i < num; i++) {
+                                int ct = 0;
+                                sprintf(sd_bufs + 4, "%02x", ct);
+                                if ((i > 0) && (i % 247 == 0)) {
+                                    ct = 0;
+                                    send(rcv_sock, sd_bufs, 256, 0);
+                                }
+                                sprintf(sd_bufs + 8 + ct, "%x", pos[i]);
+                                ct++;
+                            }
+                        }
+                        free(pos);
+                        fclose(file);
+                    }
+                    break;
+                    case 0x9:
                     {
                         valrtn = host_group(user.usr, user.jgrp);
                         sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
@@ -539,7 +611,7 @@ type_thread_func monite(void *arg)
                             buflen = 56;
                         }
                     } break;
-                    case 0x9:
+                    case 0xA:
                     {
                         valrtn = join_group(get_group_ndx(user.usr), user.usr, reinterpret_cast<char*>(user.jgrp));
                         sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
@@ -551,7 +623,7 @@ type_thread_func monite(void *arg)
                         }
                         buflen = 48;
                     } break;
-                    case 0xA:
+                    case 0xB:
                     {
                         strcpy((sd_bufs + 8), "Groups list:\n");
                         for (c = 0; c < MAX_GROUPS; c++) {
@@ -564,7 +636,7 @@ type_thread_func monite(void *arg)
                         };
                         buflen = 8 * (c + 4 + 3);
                     } break;
-                    case 0xB: // set user sign
+                    case 0xC: // set user sign
                     {
                         memcpy(&group, &user, sizeof(group));
                         valrtn = get_group_ndx(group.grpnm);
@@ -585,7 +657,7 @@ type_thread_func monite(void *arg)
                             buflen = 8 * (c + 4 + 4);
                         };
                     } break;
-                    case 0xC:
+                    case 0xD:
                     {
                         memcpy(&group, &user, sizeof(group));
                         valrtn = leave_group(get_group_ndx(group.grpnm), user.usr);
@@ -596,7 +668,7 @@ type_thread_func monite(void *arg)
                             strcpy((sd_bufs + 8), "You aren't yet in this group.");
                         buflen = 42;
                     } break;
-                    case 0xD:
+                    case 0xE:
                     { //loop1
                         valrtn = get_group_ndx(group.grpnm);
                         sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
@@ -633,10 +705,15 @@ type_thread_func monite(void *arg)
                     }
 #ifdef _DEBUG
                     fprintf(stdout, ">>> 2-MSG [%0x,%0x]: ", sd_bufs[0], sd_bufs[1]);
+                    int j = 0;
                     for (c = 2; c < static_cast<int>(sizeof(user)); c++) {
                         if ((c - 32 > 0) && ((c - 32) % 8 == 0)
                             && (sd_bufs[c] == '0' || sd_bufs[c] == '\0' || sd_bufs[c] == '\x20'))
                             fprintf(stdout, " ");
+                        if ((c == 0 || c == '0') && j < 4)
+                            j++;
+                        else
+                            j = 0;
                         fprintf(stdout, "%c", static_cast<unsigned char>(sd_bufs[c]));
                     }
                     fprintf(stdout, "\n");
@@ -1063,6 +1140,8 @@ int set_user_peer(const char user[24], const char ip[INET_ADDRSTRLEN], const int
 }
 int get_user_ndx(char user[24]) {
     char *u = user;
+    if (u[0] == '\0')
+        return -1;
     for (int i = 0; i < MAX_USERS; i++) {
         if (strcmp(u, users[i].usr) == 0)
             return i;
@@ -1071,6 +1150,8 @@ int get_user_ndx(char user[24]) {
 };
 int get_group_ndx(char group[24]) {
     char *x = group;
+    if (x[0] == '\0')
+        return -1;
     for (int i = 0; i < MAX_GROUPS; i++) {
         if (strcmp(groups[i].group.name, x) == 0)
             return i;
