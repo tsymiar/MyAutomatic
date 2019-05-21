@@ -6,6 +6,7 @@ void runtime1(void* lp) {
     CRITICAL_SECTION wrcon;
     InitializeCriticalSection(&wrcon);
     st_client* client = (st_client*)lp;
+    int length = 0;
     while (1) {
         if (client->flag == 0)
             continue;
@@ -22,6 +23,17 @@ void runtime1(void* lp) {
             printf("User:\t%s\nIP:\t%u.%u.%u.%u\nPORT:\t%s\n",
                 rcv_buf + 8, val[3], val[2], val[1], val[0], rcv_buf + 54);
             int parse = p2pMessage(rcv_buf + 8, atoi(rcv_buf + 8), atoi(rcv_buf + 54), (char*)&trans);
+        }
+        if (rcv_buf[1] == 0x8) {
+            int rcv_len = atoi(rcv_buf + 22);
+            FILE * file = fopen("recv.file", "ab+");
+            if (length == rcv_len)
+                continue;
+            length = rcv_len;
+            char data[224];
+            memcpy(data, rcv_buf + 32, 224);
+            fwrite(data, sizeof(unsigned char), 224, file);
+            fclose(file);
         }
         LeaveCriticalSection(&wrcon);
         if (rcvlen <= 0) {
@@ -45,7 +57,8 @@ int main()
             break;
         int comm = 0;
         printf("Input commond [1-13]: ");
-        scanf("%d", &comm);
+        if (0 >= scanf("%d", &comm))
+            break;
         MSG_trans msg;
         memset(&msg, 0, sizeof(MSG_trans));
         msg.uiCmdMsg = comm;
