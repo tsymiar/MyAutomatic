@@ -53,7 +53,7 @@ typedef socklen_t type_len;
 typedef void *type_thread_func;
 #define flush_all() fflush(stdin)
 #define closesocket(socket) close(socket)
-#define SLEEP(t) usleep((int)1010.10f*t);
+#define SLEEP(t) usleep((int)1010.10f*(t));
 pthread_mutexattr_t attr;
 #endif
 
@@ -531,7 +531,7 @@ type_thread_func monite(void *arg)
                             sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
                             strcpy((sd_bufs + 8), mesg);
                             buflen = 8 + strlen(mesg) + 1;
-                            fprintf(stdout, "Exec %s with execvp fail, %s.\n", GET_IMG_EXE, mesg);
+                            fprintf(stdout, "Exec [ %s ] with execvp fail, %s.\n", GET_IMG_EXE, mesg);
                         }
                         else {
                             wait(&valrtn);
@@ -539,12 +539,12 @@ type_thread_func monite(void *arg)
                                 mesg = strerror(errno);
                             }
                             else {
-                                mesg = "sucess";
+                                mesg = (char*)"sucess";
                             }
                             sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
                             strcpy((sd_bufs + 8), mesg);
                             buflen = 8 + strlen(mesg) + 1;
-                            fprintf(stdout, "Make image with %s, %s.\n", GET_IMG_EXE, mesg);
+                            fprintf(stdout, "Make image with [ %s ], %s.\n", GET_IMG_EXE, mesg);
                         }
 #else
                         char *mesg = "OS don't support v4l.\n";
@@ -558,36 +558,43 @@ type_thread_func monite(void *arg)
                         FILE * file = fopen(IMAGE_FILE, "rb");
                         if (file == NULL)
                         {
-                            sprintf(sd_bufs + 8, "Fail open file %s.\n", IMAGE_FILE);
+                            sprintf(sd_bufs + 8, "Fail open file \"%s\".\n", IMAGE_FILE);
                             fprintf(stdout, sd_bufs + 8);
-                            buflen = 8 + strlen(IMAGE_FILE) + 14;
+                            buflen = 8 + strlen(IMAGE_FILE) + 22;
                             break;
                         }
                         fseek(file, 0, SEEK_END);
                         long lSize = ftell(file);
                         rewind(file);
                         int num = lSize / sizeof(unsigned char);
+                        if (num > 2097152)
+                            num = 1024;
+                        memset(sd_bufs + 8, num, 6);
                         unsigned char *pos = (unsigned char*)malloc(sizeof(unsigned char)*num);
                         if (pos == NULL)
                         {
-                            sprintf(sd_bufs + 8, "Fail malloc for %s.\n", IMAGE_FILE);
+                            sprintf(sd_bufs + 8, "Fail malloc for \"%s\".\n", IMAGE_FILE);
                             fprintf(stdout, sd_bufs + 8);
-                            buflen = 8 + strlen(IMAGE_FILE) + 20;
+                            buflen = 8 + strlen(IMAGE_FILE) + 24;
                             break;
                         }
-                        while (!feof(file)) {
-                            int rcsz = fread(pos, sizeof(unsigned char), num, file);
-                            fprintf(stdout, "File %s size = %d, rcsz = %d.\n", IMAGE_FILE, num, rcsz);
-                            for (int i = 0; i < num; i++) {
-                                int ct = 0;
-                                sprintf(sd_bufs + 4, "%02x", ct);
-                                if ((i > 0) && (i % 247 == 0)) {
-                                    ct = 0;
+                        int slice = 0;
+                        while (int rcsz = fread(pos, sizeof(unsigned char), num, file) != 0 && !feof(file)) {
+                            fprintf(stdout, "File \"%s\" size = %d, rcsz = %d, slice = %d.\n", IMAGE_FILE, num, rcsz, slice);
+                            sprintf(sd_bufs + 14, "%04d", slice);
+                            volatile int cur = 0;
+                            for (volatile int i = 0; i <= num; i++) {
+                                if ((i > 0) && (i % 224 == 0) || (i + 1 == num)) {
+                                    sprintf(sd_bufs + 22, "%04d", i);
                                     send(rcv_sock, sd_bufs, 256, 0);
+                                    memset(sd_bufs + 32, 0, 224);
+                                    cur = 0;
                                 }
-                                sprintf(sd_bufs + 8 + ct, "%x", pos[i]);
-                                ct++;
+                                memset(sd_bufs + 32 + cur, pos[i], 1);
+                                SLEEP(1/10000);
+                                cur++;
                             }
+                            slice++;
                         }
                         free(pos);
                         fclose(file);
@@ -611,32 +618,7 @@ type_thread_func monite(void *arg)
                             buflen = 56;
                         }
                     } break;
-                    case 0xA:
-                    {
-                        valrtn = join_group(get_group_ndx(user.usr), user.usr, reinterpret_cast<char*>(user.jgrp));
-                        sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
-                        if (valrtn == -1) {
-                            strcpy((sd_bufs + 8), "You have already in this group.");
-                        }
-                        else if (valrtn == -2) {
-                            strcpy((sd_bufs + 8), "Wrong pass code to this group.");
-                        }
-                        buflen = 48;
-                    } break;
-                    case 0xB:
-                    {
-                        strcpy((sd_bufs + 8), "Groups list:\n");
-                        for (c = 0; c < MAX_GROUPS; c++) {
-                            if (strlen(groups[c].group.name) >> 0) {
-                                sprintf(sd_bufs + 2, "%x", c);
-                                strcpy((sd_bufs + 8 * (c + 4)), groups[c].group.name);
-                            };
-                            if (groups[c].group.name[0] == '\0')
-                                break;
-                        };
-                        buflen = 8 * (c + 4 + 3);
-                    } break;
-                    case 0xC: // set user sign
+                    case 0xA: // set user sign
                     {
                         memcpy(&group, &user, sizeof(group));
                         valrtn = get_group_ndx(group.grpnm);
@@ -656,6 +638,31 @@ type_thread_func monite(void *arg)
                                 break;
                             buflen = 8 * (c + 4 + 4);
                         };
+                    } break;
+                    case 0xB:
+                    {
+                        valrtn = join_group(get_group_ndx(user.usr), user.usr, reinterpret_cast<char*>(user.jgrp));
+                        sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
+                        if (valrtn == -1) {
+                            strcpy((sd_bufs + 8), "You have already in this group.");
+                        }
+                        else if (valrtn == -2) {
+                            strcpy((sd_bufs + 8), "Wrong pass code to this group.");
+                        }
+                        buflen = 48;
+                    } break;
+                    case 0xC:
+                    {
+                        strcpy((sd_bufs + 8), "Groups list:\n");
+                        for (c = 0; c < MAX_GROUPS; c++) {
+                            if (strlen(groups[c].group.name) >> 0) {
+                                sprintf(sd_bufs + 2, "%x", c);
+                                strcpy((sd_bufs + 8 * (c + 4)), groups[c].group.name);
+                            };
+                            if (groups[c].group.name[0] == '\0')
+                                break;
+                        };
+                        buflen = 8 * (c + 4 + 3);
                     } break;
                     case 0xD:
                     {
