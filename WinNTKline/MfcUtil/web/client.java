@@ -112,7 +112,7 @@ class FileType {
     }
 }
 
-public class client {
+public class Client {
 
     private static final byte[] CRLF = new byte[]{13, 10};
 

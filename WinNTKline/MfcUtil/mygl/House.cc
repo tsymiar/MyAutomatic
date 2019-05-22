@@ -309,7 +309,6 @@ unsigned char 	*House::OpenTexImage(INT2U TexIndex, INT2U *rslx, INT2U *rsly)
     INT4U		i, j;
     char		ImageName[30];
     unsigned char		*SImageData;
-    int rc;
     int width, height;
 
     strcpy_s(ImageName, TextureList[TexIndex]->fname);
@@ -318,12 +317,12 @@ unsigned char 	*House::OpenTexImage(INT2U TexIndex, INT2U *rslx, INT2U *rsly)
     fopen_s(&fp, ImageName, "rb");
     if (!fp) return 0;
     fseek(fp, 18L, 0);
-    rc = fread(&width, sizeof(long), 1, fp);
-    rc = fread(&height, sizeof(long), 1, fp);
+    fread(&width, sizeof(long), 1, fp);
+    fread(&height, sizeof(long), 1, fp);
     *rslx = srcx = width; *rsly = srcy = height;
     fseek(fp, 54L, 0);
     image = (unsigned char *)malloc(width*height * 3);
-    rc = fread(image, width*height * 3, 1, fp);
+    fread(image, width*height * 3, 1, fp);
     fclose(fp);
     SImageData = (unsigned char *)malloc(srcx*srcy * 3);
     for (i = 0; i < srcx; i++) {
