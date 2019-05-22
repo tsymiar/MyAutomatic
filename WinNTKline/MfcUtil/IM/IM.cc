@@ -585,7 +585,7 @@ type_thread_func monite(void *arg)
                             volatile int cur = 0;
                             for (volatile int i = 0; i <= num; i++) {
                                 if ((i > 0) && (i % 224 == 0) || (i + 1 == num)) {
-                                    sprintf(sd_bufs + 22, "%04d", i);
+                                    sprintf(sd_bufs + 22, "%04d", i); // TODO would lost last byte char
                                     send(rcv_sock, sd_bufs, 256, 0);
                                     memset(sd_bufs + 32, 0, 224);
                                     cur = 0;

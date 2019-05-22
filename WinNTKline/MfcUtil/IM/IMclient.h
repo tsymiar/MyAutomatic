@@ -20,6 +20,8 @@
 #include <cstdio>
 #include <map>
 
+constexpr char* filename = "recv.file";
+
 typedef struct IMSetting {
     int erno = -1;
     char addr[MAX_PATH] = { NULL };

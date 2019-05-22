@@ -6,7 +6,8 @@ void runtime1(void* lp) {
     CRITICAL_SECTION wrcon;
     InitializeCriticalSection(&wrcon);
     st_client* client = (st_client*)lp;
-    int length = 0;
+    int fw_len = 0;
+    int cnt = 0;
     while (1) {
         if (client->flag == 0)
             continue;
@@ -26,13 +27,18 @@ void runtime1(void* lp) {
         }
         if (rcv_buf[1] == 0x8) {
             int rcv_len = atoi(rcv_buf + 22);
-            FILE * file = fopen("recv.file", "ab+");
-            if (length == rcv_len)
+            if (cnt = 0)
+                fclose(fopen(filename, "w"));
+            FILE * file = fopen(filename, "ab+");
+            if (fw_len == rcv_len)
                 continue;
-            length = rcv_len;
+            fw_len = rcv_len;
             char data[224];
             memcpy(data, rcv_buf + 32, 224);
-            fwrite(data, sizeof(unsigned char), 224, file);
+            if (fw_len - (fw_len / 224) * 224 > 0)
+                fwrite(data, sizeof(unsigned char), fw_len % 224, file);
+            else
+                fwrite(data, sizeof(unsigned char), 224, file);
             fclose(file);
         }
         LeaveCriticalSection(&wrcon);
@@ -46,6 +52,7 @@ void runtime1(void* lp) {
             exit(0);
             break;
         };
+        cnt++;
     };
 };
 
