@@ -300,7 +300,7 @@ int p2pMessage(char *userName, int UserIP, unsigned int UserPort, const char *Me
         memcpy(msg.usr, trans.usr, 24);
         memcpy(msg.peer, userName, 24);
         //请求服务器“打洞”
-        SetChatMsg(&msg);
+        SendChatMsg(&msg);
         PPSOCK pp_sock;
         pp_sock.addr = remote;
         pp_sock.sock = PrimaryUDP;
@@ -312,7 +312,7 @@ int p2pMessage(char *userName, int UserIP, unsigned int UserPort, const char *Me
     return 0;
 }
 
-int SetChatMsg(MSG_trans* msg)
+int SendChatMsg(MSG_trans* msg)
 {
     if (client.flag < 0) {
         MessageBox(NULL, "Connection error to exit!", "Quit", MB_OK);
@@ -345,64 +345,12 @@ int SetChatMsg(MSG_trans* msg)
         send(client.sock, (char*)&trans, len, 0);
         return -1;
     }
-    switch (trans.uiCmdMsg)
+    if (client.last.lastuser != '\0' && client.last.lastgrop[0] != '\0')
     {
-    case REGISTER:
-        break;
-    case LOGIN:
-    {
-        static char title[64];
-        if (trans.usr != NULL) {
-            sprintf(title, "Welcome %s", (char*)trans.usr);
-            SetConsoleTitle(title);
-        }
-        send(client.sock, (char*)&trans, len, 0);
-        break;
+        memcpy(trans.usr, client.last.lastuser, 24);
+        memcpy(trans.grpnm, client.last.lastgrop, 24);
     }
-    case SETPSW:
-    {
-        gets_s((char*)trans.psw, 24);
-        send(client.sock, (char*)&trans, len, 0);
-        break;
-    }
-    case VIEWGROUP:
-    {
-        scanf_s("%s", trans.grpnm, 24);
-        strcpy_s(client.last.lastgrop, 24, (char*)trans.grpnm);
-        send(client.sock, (char*)&trans, len, 0);
-        break;
-    }
-    case HOSTGROUP:
-    {
-        scanf_s("%s %s", trans.hgrp, (unsigned)_countof(trans.hgrp), (trans.grpmrk), (unsigned)_countof(trans.grpmrk));
-        strcpy_s(client.last.lastgrop, 24, (char*)trans.hgrp);
-        send(client.sock, (char*)&trans, len, 0);
-        break;
-    }
-    case JOINGROUP:
-    {
-        scanf_s("%s %s", trans.usr, (unsigned)_countof(trans.usr), (trans.jgrp), (unsigned)_countof(trans.jgrp));
-        strcpy_s(client.last.lastgrop, 24, (char*)trans.jgrp);
-        send(client.sock, (char*)&trans, len, 0);
-        break;
-    }
-    default:
-    {
-        if (trans.rtn == 0x0)
-        {
-            MessageBox(NULL, "Logging failure.", "default", MB_OK);
-            return -1;
-        }
-        if (client.last.lastuser && client.last.lastgrop)
-        {
-            memcpy(trans.usr, client.last.lastuser, 24);
-            memcpy(trans.grpnm, client.last.lastgrop, 24);
-        }
-        send(client.sock, (char*)&trans, 256, 0);
-        break;
-    }
-    }
-    return 0;
+    return send(client.sock, (char*)&trans, len, 0);
 }
 
 int GetStatus()

@@ -108,6 +108,7 @@
     <ClInclude Include="v4l2.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="sample.c" />
     <ClCompile Include="v4l2.c" />
   </ItemGroup>
   <ItemDefinitionGroup />

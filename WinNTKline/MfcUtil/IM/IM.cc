@@ -118,8 +118,8 @@ typedef struct user_socket {
         char psw[24];
         char TOKEN[24];
     };
-    char peer[24];
     union {
+        char peer[24];
         char sign[24];
         char npsw[24];
         unsigned char hgrp[24];
@@ -511,7 +511,7 @@ type_thread_func monite(void *arg)
                         }
                         else {
                             valrtn = -3;
-                            strcpy((sd_bufs + 32), "Get user network: No such user!");
+                            sprintf((sd_bufs + 32), "Get user network: No such user(%s)!", user.peer);
                         }
                         sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
                         strcpy((sd_bufs + 8), user.peer);
@@ -584,14 +584,14 @@ type_thread_func monite(void *arg)
                             sprintf(sd_bufs + 14, "%04d", slice);
                             volatile int cur = 0;
                             for (volatile int i = 0; i <= num; i++) {
-                                if ((i > 0) && (i % 224 == 0) || (i + 1 == num)) {
-                                    sprintf(sd_bufs + 22, "%04d", i); // TODO would lost last byte char
+                                if ((i > 0) && (i % 224 == 0) || (i == num)) {
+                                    sprintf(sd_bufs + 22, "%04d", i);
                                     send(rcv_sock, sd_bufs, 256, 0);
                                     memset(sd_bufs + 32, 0, 224);
                                     cur = 0;
                                 }
                                 memset(sd_bufs + 32 + cur, pos[i], 1);
-                                SLEEP(1/10000);
+                                SLEEP(1.0/10000);
                                 cur++;
                             }
                             slice++;
