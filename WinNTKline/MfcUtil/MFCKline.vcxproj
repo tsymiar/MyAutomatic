@@ -368,7 +368,7 @@
     <None Include="script\call.bat" />
     <None Include="script\reptile.py" />
     <None Include="web\BareBonesBrowserLaunch.java" />
-    <None Include="web\client.java" />
+    <None Include="web\Client.java" />
     <None Include="web\myweb.nsmap" />
   </ItemGroup>
   <ItemGroup>

@@ -7,7 +7,7 @@ int main()
     if (val == 0) {
         if (v4l2_set_buffer_queue(&obj, v4l2_mapping_buffers(&obj, 4)) <= 0)
             return -1;
-        if (v4l2_save_image_frame(&obj, "v4l.jpg") <= 0)
+        if (v4l2_save_image_frame(&obj, "v4l2.jpg") <= 0)
             return-2;
         v4l2_close_dev(&obj);
     }

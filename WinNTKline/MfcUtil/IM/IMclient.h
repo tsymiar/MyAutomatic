@@ -56,7 +56,8 @@ struct PPSOCK
 };
 
 struct MENU {
-    int key; std::string value;
+    int key;
+    std::string value;
 };
 
 struct MSG_trans {
@@ -69,12 +70,12 @@ struct MSG_trans {
         unsigned char grpnm[24];
     };
     union {
-        unsigned char psw[24];
-        unsigned char peer[24];
-        unsigned char TOKEN[24];
-        unsigned char grpmrk[24];
+        char psw[24];
+        char TOKEN[24];
+        char grpmrk[24];
     };
     union {
+        unsigned char peer[24];
         unsigned char sign[24];
         unsigned char hgrp[24];
         unsigned char jgrp[24];
@@ -124,7 +125,7 @@ enum  em_menu {
 int InitChat(st_settings* setting = NULL);
 int StartChat(int erno, void(*func)(void*));
 int CloseChat();
-int SetChatMsg(MSG_trans* msg = NULL);
+int SendChatMsg(MSG_trans* msg = NULL);
 int GetStatus();
 int callbackLog(char* usr, char* psw);
 int checkPswValid(char* str); 
