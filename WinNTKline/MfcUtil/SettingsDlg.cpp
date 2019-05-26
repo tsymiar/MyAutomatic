@@ -50,12 +50,17 @@ CString & SettingsDlg::GetMark(CString& text, CString& title)
 void SettingsDlg::OnBnClickedOk()
 {
     m_Marks.GetWindowText(cs_Mark);
-    if (!checkPswValid((LPSTR)(LPCSTR)cs_Mark)) {
-        AfxMessageBox("密码必须是数字、字母和特殊字符的集合！");
+    if (!!!checkPswValid((LPSTR)(LPCSTR)cs_Mark) && checkMark) {
+        AfxMessageBox("输入请包含数字、字母和特殊字符！");
         return;
     }
     if (callback)
         setPswCallback((LPTSTR)(LPCTSTR)cs_Mark);
     CDialogEx::OnOK();
+}
+
+bool SettingsDlg::SetifCheck(bool check)
+{
+    return this->checkMark = check;
 }
 

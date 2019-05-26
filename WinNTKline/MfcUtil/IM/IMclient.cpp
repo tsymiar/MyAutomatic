@@ -312,6 +312,12 @@ int p2pMessage(char *userName, int UserIP, unsigned int UserPort, const char *Me
     return 0;
 }
 
+int SetClientDlg(void * Dlg)
+{
+    client.Dlg = Dlg;
+    return (int)client.Dlg;
+}
+
 int SendChatMsg(MSG_trans* msg)
 {
     if (client.flag < 0) {

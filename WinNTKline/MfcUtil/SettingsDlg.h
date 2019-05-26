@@ -20,6 +20,7 @@ protected:
     DECLARE_MESSAGE_MAP()
 private:
     int callback = 0;
+    bool checkMark = true;
     CEdit m_Marks;
     CString cs_Mark;
     void(*setPswCallback)(char* psw);
@@ -27,4 +28,5 @@ public:
     int SetTitle(CString title);
     CString& GetMark(CString& text, CString& title);
     afx_msg void OnBnClickedOk();
+    bool SetifCheck(bool check);
 };
