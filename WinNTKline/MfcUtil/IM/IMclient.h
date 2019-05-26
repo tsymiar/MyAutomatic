@@ -89,8 +89,8 @@ const MENU menus[] =
     { 0x00,"命令菜单" },
     { 0x01,"注册" },
     { 0x02,"登陆" },
-    { 0x03,"用户信息" },
-    { 0x04,"登出" },
+    { 0x04,"帮助" },
+    { 0x03,"登出" },
     { 0x05,"设置密码" },
     { 0x06,"在线用户列表" },
     { 0x07,"聊天对象" },
@@ -104,6 +104,8 @@ const MENU menus[] =
 };
 
 enum  em_menu {
+    CHAT = -2,
+    TALK,
     REGISTER = 0,
     LOGIN,
     IUSER,
@@ -118,8 +120,6 @@ enum  em_menu {
     JOINGROUP,
     VIEWGROUP,
     EXITGROUP,
-    CHAT = 0xe,
-    TALK,
 };
 
 int InitChat(st_settings* setting = NULL);
@@ -130,5 +130,6 @@ int GetStatus();
 int callbackLog(char* usr, char* psw);
 int checkPswValid(char* str); 
 int p2pMessage(char *userName, int UserIP, unsigned int UserPort, const char *Message);
+int SetClientDlg(void* Dlg);
 
 #endif

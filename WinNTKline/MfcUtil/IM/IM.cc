@@ -368,6 +368,12 @@ type_thread_func monite(void *arg)
                     continue;
                 };
             }
+            else if ((user.rsv == 0) && (user.uiCmdMsg == 0x3)) {
+                strcpy((sd_bufs + 8), "Warning: user hasn't logged on yet.");
+                send(rcv_sock, sd_bufs, 48, 0);
+                fprintf(stdout, ">>> %s\n", sd_bufs + 8);
+                continue;
+            }
             else {
                 strcpy((sd_bufs + 8), "Warning: please Register or Login at first.");
                 send(rcv_sock, sd_bufs, 56, 0);
@@ -591,7 +597,7 @@ type_thread_func monite(void *arg)
                                     cur = 0;
                                 }
                                 memset(sd_bufs + 32 + cur, pos[i], 1);
-                                SLEEP(1.0/10000);
+                                SLEEP(1/10000);
                                 cur++;
                             }
                             slice++;
