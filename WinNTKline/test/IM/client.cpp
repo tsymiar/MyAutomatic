@@ -19,8 +19,8 @@ void parseRcvMsg(void* lp) {
             printf("%c", (unsigned char)rcv_buf[c]);
         printf("\n");
 #endif
-        if (rcv_buf[1] == 0x6 && rcv_buf[2] >= 48 && rcv_buf[2] < 102) {
-            MSG_trans trans{ 0x0,0x6,"0" };
+        if (rcv_buf[1] == 0x6 && memcmp(rcv_buf + 2, "ff", 2) == 0) {
+            MSG_trans trans { 0x0,0x6,"0" };
             int ip = atoi(rcv_buf + 32);
             unsigned char *val = (unsigned char *)&ip;
             printf("User:\t%s\nIP:\t%u.%u.%u.%u\nPORT:\t%s\n",
