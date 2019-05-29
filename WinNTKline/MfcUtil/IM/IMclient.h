@@ -77,11 +77,18 @@ struct MSG_trans {
     union {
         unsigned char peer[24];
         unsigned char sign[24];
+        unsigned char npsw[24];
         unsigned char hgrp[24];
         unsigned char jgrp[24];
-        unsigned char npsw[24];
         unsigned char grpbrf[24];
     };
+    class PeerStruct
+    {
+        unsigned char cmd[4];
+        unsigned char val[4];
+        char head[16];
+    } peer_mesg;
+    char more_mesg[40];
 };
 
 const MENU menus[] =
