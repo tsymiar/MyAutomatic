@@ -119,6 +119,7 @@ enum  em_menu {
     LOGOUT,
     SETPSW,
     ONLINE,
+    PEER2P,
     CHATWITH,
     V4L2IMG,
     GETTINGIMG,

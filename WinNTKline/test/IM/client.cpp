@@ -77,6 +77,11 @@ MSG_trans SetChatMsg(MSG_trans& trans) {
         gets_s((char*)trans.psw, 24);
         break;
     }
+    case CHATWITH: 
+    {
+        memcpy(trans.chk, "NDT", 4);
+        break;
+    }
     case HOSTGROUP:
     {
         scanf_s("%s %s", trans.hgrp, (unsigned)_countof(trans.hgrp), (trans.grpmrk), (unsigned)_countof(trans.grpmrk));
