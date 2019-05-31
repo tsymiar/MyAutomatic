@@ -70,19 +70,38 @@ sendallow;
 int  aim2exit = 0;
 type_socket listen_socket;
 
-struct user_network {
+struct Network {
     unsigned char ip[INET_ADDRSTRLEN];
     unsigned int port;
     type_socket socket;
 };
 
+struct ONLINE {
+    char user[24];
+    Network netwk;
+}
+#ifdef _WIN32
+active[MAX_ACTIVE]
+#endif // _WIN32
+;
+
 struct user_clazz {
     char usr[24];
     char psw[24];
-    user_network sock;
+    Network netwk;
     unsigned char hgrp[24];
     char intro[24];
 }users[MAX_USERS];
+
+struct member
+{
+    user_clazz user[MAX_MENBERS_PER_GROUP];
+
+    member()
+    {
+        memset(this, 0, sizeof(*this));
+    }
+};
 
 typedef struct user_mesg {
     unsigned char rsv;
@@ -110,31 +129,11 @@ typedef struct user_mesg {
     char more_mesg[40];
 } USER;
 
-struct ONLINE {
-    user_network sock;
-    char user[24];
-}
-#ifdef _WIN32
-active[MAX_ACTIVE]
-#endif // _WIN32
-;
-
-struct member
-{
-    user_clazz user[MAX_MENBERS_PER_GROUP];
-
-    member()
-    {
-        memset(this, 0, sizeof(*this));
-    }
-};
-
 struct group_clazz {
     char name[24];
     char brief[24];
     char members[MAX_MENBERS_PER_GROUP][24];
-    // unsigned int usrCnt;
-    // member members[0];
+    unsigned int usrCnt;
     char grpnm[24];
     char grpmrk[24];
     char grpbrf[24];
@@ -146,7 +145,7 @@ struct group_file {
     {
         memset(this, 0, sizeof(*this));
     }
-    // unsigned int getSize() const { return sizeof(*this) + group.usrCnt * sizeof(member); }
+    unsigned int getSize() const { return sizeof(*this) + group.usrCnt * sizeof(member); }
 }groups[MAX_GROUPS];
 
 
@@ -156,18 +155,18 @@ void pipesig_handler(int s) {
 #endif
 }
 
-int save_acnt();
-int load_acnt();
+int inst_mesg(int argc, char * argv[]);
+template<typename T> int set_n_get_mem(T* shmem, int ndx = 0, int rw = 0);
+void func_waitpid(int signo);
 int user_auth(char usr[24], char psw[24]);
 int new_user(char usr[24], char psw[24]);
 int user_is_line(char user[24]);
-int set_user_line(char user[24], type_socket sock);
-int set_user_quit(char user[24]);
+int set_user_line(char user[24], Network& netwk);
 int set_user_peer(const char user[24], const char ip[INET_ADDRSTRLEN], const int port, type_socket sock);
+int set_user_quit(char user[24]);
+int save_acnt();
+int load_acnt();
 int get_user_ndx(char user[24]);
-template<typename T> int set_n_get_mem(T* shmem, int ndx = 0, int rw = 0);
-void func_waitpid(int signo);
-int inst_msg(int argc, char * argv[]);
 int get_group_ndx(char group[24]);
 int host_group(char grpn[24], unsigned char brief[24]);
 int join_group(int no, char usr[24], char psw[24]);
@@ -184,9 +183,10 @@ int main(int argc, char* argv[])
             for (int c = 0; c < MAX_ACTIVE; c++) {
                 set_n_get_mem(&active[c], c);
             }
-            fprintf(stdout, "No.\tuser\tIP\tport\tsocket\n");
+            fprintf(stdout, "\tNo.\tuser\tIP\t\tPort\tsocket\n");
             for (int c = 0; c < MAX_ACTIVE; c++) {
-                fprintf(stdout, "%d\t%s\t%s\t%d\t%d\n", c, active[c].user, active[c].sock.ip, active[c].sock.port, active[c].sock.socket);
+                fprintf(stdout, "\t%d\t%s\t%s\t%d\t%d\n", c + 1,
+                    active[c].user, active[c].netwk.ip, active[c].netwk.port, active[c].netwk.socket);
             }
             exit(0);
         }
@@ -200,12 +200,12 @@ int main(int argc, char* argv[])
         }
     }
 #ifdef _WIN32
-    inst_msg(1, { nullptr });
+    inst_mesg(1, { nullptr });
 #else
     if (fork() == 0)
     {
         signal(SIGPIPE, pipesig_handler);
-        inst_msg(argc, argv);
+        inst_mesg(argc, argv);
     }
 #endif
     return 0;
@@ -314,7 +314,7 @@ type_thread_func monite(void *arg)
                 valrtn = new_user(user.usr, user.psw);
                 sprintf(sd_bufs + 2, "%x", NEVAL(valrtn + 1));
                 if (valrtn == -1) {
-                    sprintf(sd_bufs + 8, "New user: %s", user.usr);
+                    sprintf((sd_bufs + 8), "New user: %s", user.usr);
                     join_group(0, user.usr, (char*)("all"));
                     send(rcv_sock, sd_bufs, 48, 0);
                     fprintf(stdout, ">>> %s\n", sd_bufs + 8);
@@ -348,15 +348,19 @@ type_thread_func monite(void *arg)
                 // user.usr: 8; password: 32.
                 sprintf(sd_bufs + 2, "%x", NEVAL(valrtn = user_auth(user.usr, user.psw)));
                 if (valrtn == (logged = 1)) {
-                    sprintf(sd_bufs + 8, "[%s] logging on successfully.", user.usr);
+                    sprintf((sd_bufs + 8), "[%s] logging on successfully.", user.usr);
                     set_user_peer(user.usr, IP, PORT, rcv_sock);
-                    set_user_line(user.usr, rcv_sock);
+                    Network sock;
+                    memcpy(sock.ip, IP, INET_ADDRSTRLEN),
+                        sock.port = PORT,
+                        sock.socket = rcv_sock;
+                    set_user_line(user.usr, sock);
                     memcpy(userName, user.usr, 24);
                     send(rcv_sock, sd_bufs, 64, 0);
                 } else if (valrtn == 0) {
                     sprintf(sd_bufs + 2, "%x", NEVAL(-1));
                     if (memcmp(user.usr, userName, 24) == 0) {
-                        sprintf(sd_bufs + 8, "Another [%s] is on line.", user.usr);
+                        sprintf((sd_bufs + 8), "Another [%s] is on line.", user.usr);
                         snres = send(rcv_sock, sd_bufs, 64, 0);
                         if (snres < 0) {
                             fprintf(stderr, "### socket status: %s\n", strerror(snres));
@@ -364,7 +368,7 @@ type_thread_func monite(void *arg)
                             fprintf(stdout, ">>> %s\n", sd_bufs + 8);
                         continue;
                     } else {
-                        sprintf(sd_bufs + 8, "Logging status invalid, will close this socket.");
+                        sprintf((sd_bufs + 8), "Logging status invalid, will close this socket.");
                         set_user_quit(user.usr);
                         send(rcv_sock, sd_bufs, 64, 0);
                         closesocket(rcv_sock);
@@ -500,7 +504,7 @@ type_thread_func monite(void *arg)
                         if (valrtn >= 0) {
                             if (user_is_line(user.peer) >= 0) {
                                 fprintf(stdout, "``` '%s' wants to P2P with '%s'\n", user.usr, user.peer);
-                                const char* s = reinterpret_cast<char*>(&users[valrtn].sock.ip);
+                                const char* s = reinterpret_cast<char*>(&users[valrtn].netwk.ip);
                                 unsigned char t = 0;
                                 while (1) {
                                     if (*s != '\0' && *s != '.') {
@@ -514,7 +518,7 @@ type_thread_func monite(void *arg)
                                     s++;
                                 };
                                 sprintf((sd_bufs + 32), "%d", (unsigned int)uiIP);
-                                sprintf((sd_bufs + 54), "%d", (int)users[valrtn].sock.port);
+                                sprintf((sd_bufs + 54), "%d", (int)users[valrtn].netwk.port);
                                 // p2p_req2usr
                             } else {
                                 valrtn = -2;
@@ -542,17 +546,17 @@ type_thread_func monite(void *arg)
                         valrtn = get_user_ndx(user.peer);
                         if (valrtn >= 0) {
                             if (user_is_line(user.peer) >= 0) {
-                                type_socket srvsock = users[valrtn].sock.socket;
+                                type_socket srvsock = users[valrtn].netwk.socket;
                                 char random = (rand() % 255 + '\1');
-                                char srvmsg[124];
-                                memset(srvmsg, 0, 124);
+                                char srvmsg[64];
+                                memset(srvmsg, 0, 64);
                                 memcpy(srvmsg, &user, 4);
                                 sprintf(srvmsg + 4, "%c", random);
-                                memcpy(srvmsg, &user.peer_mesg, 64);
                                 strcpy((char*)&user.more_mesg, "User NDT success!");
-                                send(srvsock, srvmsg, 124, 0);
+                                memcpy(srvmsg + 8, &user.peer_mesg, 56);
+                                send(srvsock, srvmsg, 64, 0);
                                 sprintf((sd_bufs + 32), "[%c] NDT success to %s(%s:%d).",
-                                    random, user.peer, users[valrtn].sock.ip, users[valrtn].sock.port);
+                                    random, user.peer, users[valrtn].netwk.ip, users[valrtn].netwk.port);
                                 sndlen = 120;
                             } else {
                                 valrtn = -2;
@@ -738,7 +742,7 @@ type_thread_func monite(void *arg)
                                     if (!(uil == -1)) {
                                         strcpy((sd_bufs + 8), user.usr);
                                         strcpy((sd_bufs + 32), user.sign);
-                                        send(active[uil].sock.socket, sd_bufs, 48, 0);
+                                        send(active[uil].netwk.socket, sd_bufs, 48, 0);
                                     }//if uil
                                 }//if strlen
                             }//for
@@ -814,7 +818,7 @@ type_thread_func commands(void *arg)
                     set_n_get_mem(&active[i], i);
                 }
 #endif
-                closesocket(active[rtn].sock.socket);
+                closesocket(active[rtn].netwk.socket);
                 fprintf(stdout, "User %s kicked out!\n", name);
             };
         };
@@ -826,7 +830,8 @@ type_thread_func commands(void *arg)
     return NULL;
 };
 
-int inst_msg(int argc, char * argv[]) {
+int inst_mesg(int argc, char * argv[])
+{
     int servport = DEFAULT_PORT;
     if (argc == 2 && atoi(argv[1]) != 0) {
         servport = atoi(argv[1]);
@@ -1114,7 +1119,7 @@ int user_is_line(char user[24]) {
     }
     return -1;
 };
-int set_user_line(char user[24], type_socket sock) {
+int set_user_line(char user[24], Network& netwk) {
 #if !defined _WIN32
     struct ONLINE active[MAX_ACTIVE];  // = { 0, "" };
     memset(active, 0, sizeof(ONLINE) * MAX_ACTIVE);
@@ -1124,7 +1129,9 @@ int set_user_line(char user[24], type_socket sock) {
         if (active[i].user[0] == '\0')
         {
             memcpy(active[i].user, user, 24);
-            active[i].sock.socket = sock;
+            memcpy(active[i].netwk.ip, netwk.ip, INET_ADDRSTRLEN);
+            active[i].netwk.port = netwk.port;
+            active[i].netwk.socket = netwk.socket;
             set_n_get_mem(&active[i], i, 1);
             return i;
         }
@@ -1142,9 +1149,9 @@ int set_user_quit(char user[24]) {
         if (strcmp(u, active[i].user) == 0)
         {
             memset(active[i].user, 0, 24);
-            active[i].sock.socket = 0;
-            active[i].sock.port = 0;
-            memset(active[i].sock.ip, 0, 22);
+            memset(active[i].netwk.ip, 0, INET_ADDRSTRLEN);
+            active[i].netwk.socket = 0;
+            active[i].netwk.port = 0;
             set_n_get_mem(&active[i], i, -1);
             break;
         }
@@ -1169,9 +1176,9 @@ int set_user_peer(const char user[24], const char ip[INET_ADDRSTRLEN], const int
         return -3;
     for (int i = 0; i < MAX_USERS; i++) {
         if (strcmp(u, users[i].usr) == 0) {
-            strcpy(reinterpret_cast<char*>(users[i].sock.ip), ip);
-            users[i].sock.port = port;
-            users[i].sock.socket = sock;
+            strcpy(reinterpret_cast<char*>(users[i].netwk.ip), ip);
+            users[i].netwk.port = port;
+            users[i].netwk.socket = sock;
             return 0;
         }
     }
