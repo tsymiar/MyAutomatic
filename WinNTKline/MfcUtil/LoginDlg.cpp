@@ -25,8 +25,8 @@ namespace logDlg
 
     struct SOAPELE {
         struct soap soap;
-        struct IMSetting sets;
-        struct MSG_trans imusr;
+        st_setting sets;
+        st_trans imusr;
         struct ArrayOfEmp2 rslt;
         char msg[64];
         char **__rslt;
@@ -103,15 +103,15 @@ BOOL CLoginDlg::OnInitDialog()
 
 unsigned int _stdcall call_soap_thrd(void* lr)
 {
-    int sz_t = sizeof(struct soap) + sizeof(struct IMSetting) + sizeof(struct ArrayOfEmp2) + 1;
+    int sz_t = sizeof(struct soap) + sizeof(st_setting) + sizeof(struct ArrayOfEmp2) + 1;
     SOAPELE* ele = (SOAPELE*)malloc(sz_t);
-    CString msg;
     ele->rslt = ArrayOfEmp2();
-    ele->sets = IMSetting();
+    ele->sets = st_setting();
     memcpy(ele, lr, sz_t);
     ele->sets.erno = soap_call_api__trans(&ele->soap, ele->sets.addr, "", (char*)ele->imusr.uiCmdMsg, (char**)&ele->msg);
     if (ele->sets.erno != 0)
     {
+        CString msg;
         msg.Format("%s\n%s", *soap_faultstring(&ele->soap), ele->msg);
         AfxMessageBox(msg);
     }

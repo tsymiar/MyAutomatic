@@ -32,7 +32,7 @@ static char THIS_FILE[] = __FILE__;
 
 IMPLEMENT_DYNAMIC(CIMhideWndDlg, CDialogEx)
 
-CIMhideWndDlg::CIMhideWndDlg(st_settings* setting, CWnd* pParent /*=NULL*/)
+CIMhideWndDlg::CIMhideWndDlg(st_setting* setting, CWnd* pParent /*=NULL*/)
     : CDialogEx(IDD_IMHIDEWND, pParent)
 {
     //{{AFX_DATA_INIT(CIMhideWndDlg)
@@ -41,7 +41,7 @@ CIMhideWndDlg::CIMhideWndDlg(st_settings* setting, CWnd* pParent /*=NULL*/)
     // Note that LoadIcon does not require a subsequent DestroyIcon in Win32
 
     if (setting != NULL)
-        memcpy(&imsetting, setting, sizeof(st_settings));
+        memcpy(&imsetting, setting, sizeof(st_setting));
 
     m_isSizeChanged = FALSE;
     m_isSetTimer = FALSE;
@@ -480,12 +480,12 @@ void CIMhideWndDlg::OnBnClickedExit()
 }
 
 int ifsh = 0;
-MSG_trans transmsg;
+st_trans transMsg;
 
 void callbackSets(char* psw)
 {
-    memcpy(transmsg.npsw, psw, 24);
-    SendChatMsg(&transmsg);
+    memcpy(transMsg.npsw, psw, 24);
+    SendChatMsg(&transMsg);
 }
 
 SettingsDlg* g_setDlg = NULL;
@@ -538,7 +538,7 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
     char item[8];
     // memset(&msg, 0, sizeof(MSG_trans));
     // msg.cmd = (comsel >> 8) & 0xff + comsel & 0xff;
-    transmsg.uiCmdMsg = comsel;
+    transMsg.uiCmdMsg = comsel;
     switch (comsel)
     {
     case REGISTER:
@@ -567,7 +567,7 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
         if (m_logDlg != NULL) {
             m_logDlg->OnBnClickedCancel();
         }
-        if (SendChatMsg(&transmsg) == 0) {
+        if (SendChatMsg(&transMsg) == 0) {
             MessageBox("已发起请求。", MB_OK);
         }
         break;
@@ -586,7 +586,7 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
         m_frndList.InsertItem(0, item);
         sprintf(item, "%03X", (ifsh + 11) * 13 - 19);
         m_frndList.InsertItem(1, item);
-        SendChatMsg(&transmsg);
+        SendChatMsg(&transMsg);
         ifsh++;
         break;
     case ONLINE:        
@@ -596,7 +596,7 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
         lvcol.pszText = _T("好友");
         m_frndList.SetColumn(0, &lvcol);
         m_frndList.ShowWindow(SW_SHOW);
-        SendChatMsg(&transmsg);
+        SendChatMsg(&transMsg);
         break;
     case VIEWGROUP:
         if (m_logDlg != NULL) {
@@ -608,7 +608,7 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
         lvcol.pszText = _T("所在群");
         m_frndList.SetColumn(1, &lvcol);
         m_frndList.ShowWindow(SW_SHOW);
-        SendChatMsg(&transmsg);
+        SendChatMsg(&transMsg);
         break;
     default:
         break;
