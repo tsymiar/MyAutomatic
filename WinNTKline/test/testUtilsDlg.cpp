@@ -19,7 +19,7 @@
 
 struct SOELEM {
 	struct soap soap;
-	st_settings setting;
+	st_setting setting;
 } soelem;
 
 CLoginDlg logon; 

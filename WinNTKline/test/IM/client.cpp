@@ -7,7 +7,7 @@ void parseRcvMsg(void* lp) {
     InitializeCriticalSection(&wrcon);
     st_client* client = (st_client*)lp;
     int fw_len = 0;
-    int cnt = 0;
+    int count = 0;
     while (1) {
         if (client->flag == 0)
             continue;
@@ -16,25 +16,31 @@ void parseRcvMsg(void* lp) {
         EnterCriticalSection(&wrcon);
 #ifdef _DEBUG
         for (int c = 0; c < rcvlen; c++)
-            printf("%c", (unsigned char)rcv_buf[c]);
-        printf("\n");
+            fprintf(stdout, "%c", (unsigned char)rcv_buf[c]);
+        fprintf(stdout, "\n");
 #endif
-        if (rcv_buf[1] == 0x6 && memcmp(rcv_buf + 2, "ff", 2) == 0) {
-            MSG_trans trans { 0x0,0x6,"0" };
-            int ip = atoi(rcv_buf + 32);
+        st_trans *mesg = (st_trans*)rcv_buf;
+        if (mesg->uiCmdMsg == 0x6 && memcmp(mesg->retval, "ff", 2) == 0) {
+            int ip = atoi((const char*)mesg->peerIP);
             unsigned char *val = (unsigned char *)&ip;
-            printf("User:\t%s\nIP:\t%u.%u.%u.%u\nPORT:\t%s\n",
-                rcv_buf + 8, val[3], val[2], val[1], val[0], rcv_buf + 54);
-            int parse = p2pMessage(rcv_buf + 8, atoi(rcv_buf + 8), atoi(rcv_buf + 54), (char*)&trans);
+            int port = atoi((const char*)mesg->peer_port);
+            fprintf(stdout, "User:\t%s\nIP:\t%u.%u.%u.%u\nPORT:\t%d\n",
+                mesg->usr, val[3], val[2], val[1], val[0], port);
+            if (port <= 0) {
+                fprintf(stdout, "Error number of user port, stop send p2p message!\n");
+            } else {
+                st_trans trans{ 0x0,0x6, "0" };
+                int parse = p2pMessage(mesg->usr, ip, port, (char*)&trans);
+            }
         }
-        if (rcv_buf[1] == 0x8) {
-            int rcv_len = atoi(rcv_buf + 22);
-            if (cnt = 0)
+        if (mesg->uiCmdMsg == 0x8) {
+            int ndt_len = atoi(rcv_buf + 22);
+            if (count = 0)
                 fclose(fopen(filename, "w"));
             FILE * file = fopen(filename, "ab+");
-            if (fw_len == rcv_len)
+            if (fw_len == ndt_len)
                 continue;
-            fw_len = rcv_len;
+            fw_len = ndt_len;
             char data[224];
             memcpy(data, rcv_buf + 32, 224);
             if (fw_len - (fw_len / 224) * 224 > 0)
@@ -44,21 +50,21 @@ void parseRcvMsg(void* lp) {
             fclose(file);
         }
         LeaveCriticalSection(&wrcon);
-        if (rcvlen <= 0) {
+        if (rcvlen <= 0 || (mesg->retval[0] == 'e' && mesg->retval[1] == '8')) {
             sprintf(srv_net, "Connection lost!\n%s:%d", inet_ntoa(client->srvaddr.sin_addr), client->srvaddr.sin_port);
             char title[32];
-            sprintf(title, "socket: %s", itoa((int)client->sock, rcv_buf, 10));
+            sprintf(title, "socket: %s", itoa((int)client->sock, (char*)mesg, 10));
             MessageBox(NULL, srv_net, title, MB_OK);
             client->flag = -1;
             closesocket(client->sock);
             exit(0);
             break;
         };
-        cnt++;
+        count++;
     };
 };
 
-MSG_trans SetChatMsg(MSG_trans& trans) {
+st_trans SetChatMsg(st_trans& trans) {
     switch (trans.uiCmdMsg)
     {
     case REGISTER:
@@ -77,29 +83,40 @@ MSG_trans SetChatMsg(MSG_trans& trans) {
         gets_s((char*)trans.psw, 24);
         break;
     }
+    case PEER2P:
+    {
+        break;
+    }
     case CHATWITH: 
     {
-        memcpy(trans.chk, "NDT", 4);
+        memcpy(trans.type, "NDT", 4);
+        fprintf(stdout, "Input chat message, limit on 16 characters.\n");
+        memset(trans.peer_mesg.head, 0, 16);
+        trans.peer_mesg.cmd[0] = CHATWITH;
+        scanf_s("%16s", trans.more_mesg, 16);
         break;
     }
     case HOSTGROUP:
     {
-        scanf_s("%s %s", trans.hgrp, (unsigned)_countof(trans.hgrp), (trans.grpmrk), (unsigned)_countof(trans.grpmrk));
+        fprintf(stdout, "Input host group name AND group mark, divide with BLANK(' ').\n");
+        scanf_s("%s %s", trans.group_host, (unsigned)_countof(trans.group_host), (trans.group_mark), (unsigned)_countof(trans.group_mark));
         break;
     }
     case JOINGROUP:
     {
-        scanf_s("%s %s", trans.usr, (unsigned)_countof(trans.usr), (trans.jgrp), (unsigned)_countof(trans.jgrp));
+        fprintf(stdout, "Input user name AND group name want to join, divide with BLANK(' ').\n");
+        scanf_s("%s %s", trans.usr, (unsigned)_countof(trans.usr), (trans.group_join), (unsigned)_countof(trans.group_join));
         break;
     }
     case VIEWGROUP:
     {
-        scanf_s("%s", trans.grpnm, 24);
+        fprintf(stdout, "Input group name limit on 24 characters.\n");
+        scanf_s("%s", trans.group_name, 24);
         break;
     }
     default:
     {
-        if (trans.rtn == 0x0)
+        if (trans.retval == 0x0)
         {
             MessageBox(NULL, "Logging failure.", "default", MB_OK);
             return trans;
@@ -116,15 +133,15 @@ int main()
         if (GetStatus() < 0)
             break;
         int comm = 0;
-        printf("Input commond [1-13]: ");
+        fprintf(stdout, "Input commond [1-13]: ");
         if (scanf("%d", &comm) <= 0)
             break;
-        MSG_trans msg;
-        memset(&msg, 0, sizeof(MSG_trans));
+        st_trans msg;
+        memset(&msg, 0, sizeof(st_trans));
         msg.uiCmdMsg = comm;
         memcpy(msg.usr, "AAA", 4);
         memcpy(msg.psw, "AAA", 4);
-        memcpy(msg.peer, "iv9527", 7);
+        memcpy(msg.peer_name, "iv9527", 7);
         SendChatMsg(&SetChatMsg(msg));
         Sleep(100);
     }

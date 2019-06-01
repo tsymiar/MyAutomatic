@@ -22,18 +22,10 @@
 
 constexpr char* filename = "recv.file";
 
-typedef struct IMSetting {
-    int erno = -1;
-    char addr[MAX_PATH] = { NULL };
-    char IP[16];
-    char auth[80];
-    unsigned int PORT;
-} st_settings;
-
-struct LAST
+struct P2P_NETWORK
 {
-    char lastuser[24];
-    char lastgrop[24];
+    SOCKET socket = NULL;
+    sockaddr_in addr;
 };
 
 typedef struct CLIENT
@@ -41,54 +33,63 @@ typedef struct CLIENT
     SOCKET sock = NULL;
     sockaddr_in srvaddr;
     CRITICAL_SECTION wrcon;
-    LAST last;
     char url[64];
     int flag = 0;
     void* Dlg;
     void(*fp2p)(void*);
     int count = 0;
+    struct LAST
+    {
+        char lastuser[24];
+        char lastgrop[24];
+    } last;
 } st_client;
 
-struct PPSOCK
-{
-    SOCKET sock = NULL;
-    sockaddr_in addr;
-};
+typedef struct IM_SETTING {
+    int erno = -1;
+    char addr[MAX_PATH] = { NULL };
+    char IP[16];
+    char auth[80];
+    unsigned int PORT;
+} st_setting;
 
-struct MENU {
-    int key;
-    std::string value;
-};
-
-struct MSG_trans {
-    unsigned char rsv;
+typedef struct MSG_TRANS {
+    unsigned char reserve;
     unsigned char uiCmdMsg;
-    unsigned char rtn[2];
-    unsigned char chk[4];
+    unsigned char retval[2];
+    unsigned char type[4];
     union {
         unsigned char usr[24];
-        unsigned char grpnm[24];
+        unsigned char group_name[24];
     };
     union {
         char psw[24];
         char TOKEN[24];
-        char grpmrk[24];
+        char peerIP[24];
+        char group_mark[24];
     };
     union {
-        unsigned char peer[24];
+        unsigned char peer_name[24];
+        unsigned char peer_port[24];
         unsigned char sign[24];
         unsigned char npsw[24];
-        unsigned char hgrp[24];
-        unsigned char jgrp[24];
-        unsigned char grpbrf[24];
+        unsigned char group_info[24];
+        unsigned char group_host[24];
+        unsigned char group_join[24];
     };
-    class PeerStruct
+    struct PeerStruct
     {
-        unsigned char cmd[4];
+        unsigned char rsv[2];
+        unsigned char cmd[2];
         unsigned char val[4];
-        char head[16];
+        unsigned char head[16];
     } peer_mesg;
     char more_mesg[40];
+} st_trans;
+
+struct MENU {
+    int key;
+    std::string value;
 };
 
 const MENU menus[] =
@@ -110,7 +111,7 @@ const MENU menus[] =
     { 0x0E,"退群" },
 };
 
-enum  em_menu {
+enum  EM_MENU {
     CHAT = -2,
     TALK,
     REGISTER = 0,
@@ -130,14 +131,14 @@ enum  em_menu {
     EXITGROUP,
 };
 
-int InitChat(st_settings* setting = NULL);
+int InitChat(st_setting* setting = NULL);
 int StartChat(int erno, void(*func)(void*));
 int CloseChat();
-int SendChatMsg(MSG_trans* msg = NULL);
+int SendChatMsg(st_trans* msg = NULL);
 int GetStatus();
 int callbackLog(char* usr, char* psw);
 int checkPswValid(char* str); 
-int p2pMessage(char *userName, int UserIP, unsigned int UserPort, const char *Message);
+int p2pMessage(unsigned char *userName, int UserIP, unsigned int UserPort, const char *Message);
 int SetClientDlg(void* Dlg);
 
 #endif

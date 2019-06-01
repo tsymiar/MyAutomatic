@@ -112,9 +112,12 @@ typedef struct user_mesg {
     union {
         char psw[24];
         char TOKEN[24];
+        char peerIp[24];
     };
     union {
         char peer[24];
+        // peer port
+        char port[24];
         char sign[24];
         char npsw[24];
         unsigned char hgrp[24];
@@ -122,7 +125,9 @@ typedef struct user_mesg {
     };
     class PeerStruct
     {
-        unsigned char cmd[4];
+        unsigned char rsv[2];
+    public:
+        unsigned char cmd[2];
         unsigned char val[4];
         char head[16];
     } peer_mesg;
@@ -185,8 +190,10 @@ int main(int argc, char* argv[])
             }
             fprintf(stdout, "\tNo.\tuser\tIP\t\tPort\tsocket\n");
             for (int c = 0; c < MAX_ACTIVE; c++) {
-                fprintf(stdout, "\t%d\t%s\t%s\t%d\t%d\n", c + 1,
-                    active[c].user, active[c].netwk.ip, active[c].netwk.port, active[c].netwk.socket);
+                if (active[c].user[0] != '\0') {
+                    fprintf(stdout, "\t%d\t%s\t%s\t%d\t%d\n", c + 1,
+                        active[c].user, active[c].netwk.ip, active[c].netwk.port, active[c].netwk.socket);
+                }
             }
             exit(0);
         }
@@ -276,6 +283,7 @@ type_thread_func monite(void *arg)
 #if defined _WIN32 || defined THREAD_PER_CONN || defined SOCK_CONN_TEST
                 ;
 #else
+                closesocket(rcv_sock);
                 exit(errno);
 #endif
             }
@@ -290,6 +298,7 @@ type_thread_func monite(void *arg)
                     set_user_quit(user.usr);
                     fprintf(stderr, "----------------------------------------------------------------\
                     \n### client socket [%d] closed by itself just now.\n", rcv_sock);
+                    closesocket(rcv_sock);
                 }
                 continue;
             } else {
@@ -358,8 +367,8 @@ type_thread_func monite(void *arg)
                     memcpy(userName, user.usr, 24);
                     send(rcv_sock, sd_bufs, 64, 0);
                 } else if (valrtn == 0) {
-                    sprintf(sd_bufs + 2, "%x", NEVAL(-1));
                     if (memcmp(user.usr, userName, 24) == 0) {
+                        sprintf(sd_bufs + 2, "%x", NEVAL(-1));
                         sprintf((sd_bufs + 8), "Another [%s] is on line.", user.usr);
                         snres = send(rcv_sock, sd_bufs, 64, 0);
                         if (snres < 0) {
@@ -368,6 +377,7 @@ type_thread_func monite(void *arg)
                             fprintf(stdout, ">>> %s\n", sd_bufs + 8);
                         continue;
                     } else {
+                        sprintf((sd_bufs + 2), "%02x", 0xe8);
                         sprintf((sd_bufs + 8), "Logging status invalid, will close this socket.");
                         set_user_quit(user.usr);
                         send(rcv_sock, sd_bufs, 64, 0);
@@ -496,7 +506,7 @@ type_thread_func monite(void *arg)
                     case 0x6:
                     {
                         if (memcmp(user.chk, "P2P", 4) == 0) {
-                            sprintf((sd_bufs + 8), "'%s' is communicating with '%s' by P2P.", user.usr, user.peer);
+                            sprintf((sd_bufs + 8), "'%s' is communicating with '%s' via P2P.", user.usr, user.peer);
                             break;
                         }
                         unsigned int uiIP = 0;
@@ -518,7 +528,7 @@ type_thread_func monite(void *arg)
                                     s++;
                                 };
                                 sprintf((sd_bufs + 32), "%d", (unsigned int)uiIP);
-                                sprintf((sd_bufs + 54), "%d", (int)users[valrtn].netwk.port);
+                                sprintf((sd_bufs + 56), "%d", (int)users[valrtn].netwk.port);
                                 // p2p_req2usr
                             } else {
                                 valrtn = -2;
@@ -531,13 +541,13 @@ type_thread_func monite(void *arg)
                         sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
                         strcpy((sd_bufs + 8), user.peer);
                         unsigned char *val = reinterpret_cast<unsigned char *>(&uiIP);
-                        fprintf(stdout, ">>> get client peer [%u.%u.%u.%u:%s]\n", val[3], val[2], val[1], val[0], sd_bufs + 54);
+                        fprintf(stdout, ">>> get client peer [%u.%u.%u.%u:%s]\n", val[3], val[2], val[1], val[0], sd_bufs + 56);
                         sndlen = 64;
                     } break;
                     case 0x7:
                     {
                         if (memcmp(user.chk, "NDT", 4) == 0) {
-                            fprintf(stdout, "'%s' is communicating with '%s' by NDT.\n", user.usr, user.peer);
+                            fprintf(stdout, "'%s' is communicating with '%s' via NDT.\n", user.usr, user.peer);
                         } else {
                             sprintf((sd_bufs + 8), "Check message error if NDT(network data translation).");
                             sndlen = 64;
@@ -547,17 +557,37 @@ type_thread_func monite(void *arg)
                         if (valrtn >= 0) {
                             if (user_is_line(user.peer) >= 0) {
                                 type_socket srvsock = users[valrtn].netwk.socket;
-                                char random = (rand() % 255 + '\1');
-                                char srvmsg[64];
-                                memset(srvmsg, 0, 64);
-                                memcpy(srvmsg, &user, 4);
-                                sprintf(srvmsg + 4, "%c", random);
-                                strcpy((char*)&user.more_mesg, "User NDT success!");
-                                memcpy(srvmsg + 8, &user.peer_mesg, 56);
-                                send(srvsock, srvmsg, 64, 0);
-                                sprintf((sd_bufs + 32), "[%c] NDT success to %s(%s:%d).",
-                                    random, user.peer, users[valrtn].netwk.ip, users[valrtn].netwk.port);
-                                sndlen = 120;
+                                unsigned char* srvip = users[valrtn].netwk.ip;
+                                unsigned int srvport = users[valrtn].netwk.port;
+#if  !defined _WIN32
+                                ONLINE active[MAX_ACTIVE];
+                                memset(active, 0, sizeof(active));
+                                for (int c = 0; c < MAX_ACTIVE; c++) {
+                                    set_n_get_mem(&active[c], c);
+                                    if (memcmp(active[c].user, user.peer, 24) == 0) {
+                                        srvsock = active[c].netwk.socket;
+                                        srvip = active[c].netwk.ip;
+                                        srvport = active[c].netwk.port;
+                                        break;
+                                    }
+                                }
+#endif
+                                if (srvip == nullptr || srvport <= 0) {
+                                    sprintf((sd_bufs + 32), "Peer user ip or port value error.");
+                                    sndlen = 72;
+                                } else {
+                                    char random = (rand() % 255 + '\1');
+                                    char srvmsg[64];
+                                    memset(srvmsg, 0, 64);
+                                    memcpy(srvmsg, &user, 4);
+                                    sprintf(srvmsg + 4, "%c", random);
+                                    strcpy((char*)&user.more_mesg, "User NDT success!");
+                                    memcpy(srvmsg + 8, &user.peer_mesg.head, 56);
+                                    send(srvsock, srvmsg, 64, 0);
+                                    sprintf((sd_bufs + 32), "[%c] NDT success to %s(%s:%d).",
+                                        random, user.peer, srvip, srvport);
+                                    sndlen = 120;
+                                }
                             } else {
                                 valrtn = -2;
                                 strcpy((sd_bufs + 32), "User was offline!");
