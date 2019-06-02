@@ -5,21 +5,43 @@ var formArray = [
     "username",
     "password",
     "email",
-    "date",
     "icon",
+    "date",
     "website",
     "zip",
     "comments"
 ];
 
-jQuery.idealforms.errors.required = '该处是必填的.';
-jQuery.idealforms.errors.number = '必须是数字.';
-jQuery.idealforms.errors.digits = '必须是唯一的数字.';
-jQuery.idealforms.errors.name = '至少有3个字符长，并且仅包含字母.';
-jQuery.idealforms.errors.username = '长度在4到32个字符之间，并以字母开头.';
-jQuery.idealforms.errors.passwd = '至少6个字符长，并且至少包含一个数字、一个大写字母和一个小写字母.';
-jQuery.idealforms.errors.strongpass = '至少为8个字符长，至少包含一个大写字母和一个小写字母和一个数字或特殊字符.';
-jQuery.idealforms.errors.email = '必须是一个有效的E-mail地址. <br><em>(e.g. user@gmail.com)</em>';
+const ideal_errors = [
+    jQuery.idealforms.errors.required,
+    jQuery.idealforms.errors.digits,
+    jQuery.idealforms.errors.number,
+    jQuery.idealforms.errors.name,
+    jQuery.idealforms.errors.username,
+    jQuery.idealforms.errors.passwd,
+    jQuery.idealforms.errors.strongpass,
+    jQuery.idealforms.errors.email
+];
+
+var cnZh_errors = [
+    '该处是必填的.',
+    '必须是唯一的数字.',
+    '必须是数字.',
+    '至少有3个字符长，并且仅包含字母.',
+    '长度必须在4到32个字符之间，并以字母开头.',
+    '至少6个字符长，并且至少包含一个数字、一个大写字母和一个小写字母.',
+    '至少为8个字符长，至少包含一个大写字母和一个小写字母和一个数字或特殊字符.',
+    '必须是一个有效的E-mail地址. <br><em>(e.g. user@gmail.com)</em>'
+];
+
+jQuery.idealforms.errors.required = cnZh_errors[0];
+jQuery.idealforms.errors.number = cnZh_errors[1];
+jQuery.idealforms.errors.digits = cnZh_errors[2];
+jQuery.idealforms.errors.name = cnZh_errors[3];
+jQuery.idealforms.errors.username = cnZh_errors[4];
+jQuery.idealforms.errors.passwd = cnZh_errors[5];
+jQuery.idealforms.errors.strongpass = cnZh_errors[6];
+jQuery.idealforms.errors.email = cnZh_errors[7];
 
 $(document).ready(function() {
     var options = {
@@ -74,6 +96,14 @@ $(document).ready(function() {
     $form_elem.focusFirst();
     var naviLang = (navigator.language || navigator.browserLanguage).toUpperCase();
     if (naviLang.indexOf("ZH") <= -1) {
+        jQuery.idealforms.errors.required = ideal_errors[0];
+        jQuery.idealforms.errors.number = ideal_errors[1];
+        jQuery.idealforms.errors.digits = ideal_errors[2];
+        jQuery.idealforms.errors.name = ideal_errors[3];
+        jQuery.idealforms.errors.username = ideal_errors[4];
+        jQuery.idealforms.errors.passwd = ideal_errors[5];
+        jQuery.idealforms.errors.strongpass = ideal_errors[6];
+        jQuery.idealforms.errors.email = ideal_errors[7];
         try {
             document.getElementsByTagName('section')[0].name = "Scroll to show more.";
             $('.ideal-tabs-wrap').html(
