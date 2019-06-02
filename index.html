@@ -4,7 +4,8 @@
 <!--<![endif]-->
 <!--[if lt IE 9]><html lang="en" class="ie9"><![endif]-->
 <head>
-    <meta name="viewport" content="width=device-width,initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+    <meta name="viewport"
+          content="width=device-width,initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
 
@@ -36,49 +37,59 @@
                 <section name="滚动鼠标查看更多">
                     <div>
                         <label style="width: 64px;">用户名:</label>
-                        <input id="username" name="user[name]" data-ideal="required username" type="text"/>
+                        <input id="username" name="user[name]" data-ideal="required username" type="text" title=""/>
                     </div>
                     <div>
                         <label>密码:</label>
-                        <input id="passwd" name="user[pass]" data-ideal="required passwd" type="password"/>
+                        <input id="passwd" name="user[pass]" data-ideal="required passwd" type="password" title=""/>
                     </div>
                     <div>
                         <label>邮箱:</label>
-                        <input id="email" name="user[mail]" data-ideal="required email" type="email"/>
-                    </div>
-                    <div>
-                        <label>出生日期:<br/></label>
-                        <input id="date" name="date" class="datepicker" data-ideal="date" type="text" placeholder="mm/dd/yy"/>
+                        <input id="email" name="user[mail]" data-ideal="required email" type="email" title=""/>
                     </div>
                     <div>
                         <label>上传头像:<br/></label>
                         <input id="icon" name="file" multiple type="file"/>
                     </div>
-                    <div>
-                        <label class="ideal-label" style="/* width: 64px; */">个人主页:</label>
-                        <input id="website" name="website" data-ideal="url" type="text"/>
-                    </div>
-                    <div>
-                        <label>邮编:</label>
-                        <input id="zip" type="text" name="zip" data-ideal="zip"/>
-                    </div>
-                    <div>
-                        <label>备注:</label>
-                        <textarea id="comments" name="comments"></textarea>
+                    <div id="more-form" style="display:none;">
+                        <div>
+                            <label>出生日期:<br/></label>
+                            <input id="date" name="date" class="datepicker" data-ideal="date" type="text"
+                                   placeholder="mm/dd/yy"/>
+                        </div>
+                        <div>
+                            <label class="ideal-label" style="/* width: 64px; */">个人主页:</label>
+                            <input id="website" name="website" data-ideal="url" type="text" title=""/>
+                        </div>
+                        <div>
+                            <label>邮编:</label>
+                            <input id="zip" type="text" name="zip" data-ideal="zip" title=""/>
+                        </div>
+                        <div>
+                            <label>备注:</label>
+                            <textarea id="comments" name="comments" title=""></textarea>
+                        </div>
                     </div>
                 </section>
-                <div style="text-align:left;">
-                    <a href="tencent://message/?uin=909006258" target="_blank">
-                        <!--a href="http://wpa.qq.com/msgrd?v=3&uin=909006258&site=qq&menu=yes" target="_blank"-->
-                        <img alt=" " src="https://pub.idqqimg.com/qconn/wpa/button/button_old_161.gif" title="点此Q我" border="0">
+                <div style="text-align:left;"><br>
+                    <a href="tencent://message/?uin=909006258"><!--target="_blank"-->
+                        <img alt=" " src="https://pub.idqqimg.com/qconn/wpa/button/button_old_161.gif" title="" border="0">
                     </a>
+                    <a id="more-link" href="#" onclick="showMoreform()" style="float:right;cursor:pointer;margin-right:6%;"
+                       title="more">➤</a>
                 </div>
-                <div><hr/></div>
+                <div>
+                    <hr/>
+                </div>
                 <div>
                     <!--<input type="button" value="submit" onclick="click2Submit()"/>-->
+                    <button id="reset" type="button">重置</button>
                     <button id="request" onclick='click2Submit()'>提交</button>
-                    <button id="reset" type="button">重置</button><br>
-                    <label id="dontjump" style="font-size:10px;font-family:Arial;"></label>
+                    <br>
+                    <label id="dontjump" style="font-size:10px;font-family:Arial,serif;"></label>
+                </div>
+                <div id="appreciate">
+                    <img src="image/Appreciating.png"/>
                 </div>
             </form>
             <!-- End Form -->

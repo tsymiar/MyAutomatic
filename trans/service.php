@@ -44,30 +44,30 @@ class Regist extends HandleBase{
             $usrid = DBUtil::user_register(User::$table, $register);
             switch($usrid){
                 case 0:
-                    User::errReport("user register");
+                    User::errReport("User register");
                     return;
                 case -1:
-                    User::errReport("user exist");
+                    User::errReport("User exist");
                     return;
                 case -2:
-                    User::errReport("database");
+                    User::errReport("Database error");
                     return;
             }
             $js_arr = array();
             $js_arr['img'] = $_POST['icon'];
             $js_arr['date'] = $_POST['date'];
+            if($js_arr['date'] == '-'){
+                $js_arr['date'] = '0000-00-00';
+            }
             $js_arr['zip'] = $_POST['zip'];
             $js_arr['site'] = $_POST['website'];
             $js_arr['`desc`'] = $_POST['comments'];
             $err = DBUtil::user_update(User::$table, $js_arr, $usrid);
-            if($err <= 0){
-                User::errReport("user update");
-                return;
-            }
-            $js_arr['user'] = $register;
-            $js_arr['code'] = 200;
-            $js_arr['message'] = "OK";
-            echo json_encode($js_arr, JSON_PRETTY_PRINT);
+            $js_ret = array();
+            $js_ret['code'] = 200;
+            $js_ret['status'] = $err;
+            $js_ret['message'] = "SUCCESS";
+            echo json_encode($js_ret, JSON_PRETTY_PRINT);
         }
     }
 }
@@ -120,7 +120,7 @@ class FileLoad extends HandleBase{
                 $dir="upload";
                 self::create_folders($dir);
                 if (!is_dir($dir)) {
-                    User::errReport("mkdir fail, may cause by limits of authority");
+                    User::errReport("Exec mkdir fail, may cause by limits of authority");
                 }else{
                     /*if(file_exists("upload/".$_FILES["file"]["name"])){
                             echo $_FILES["file"]["name"]." is already exists."."\n";
@@ -129,7 +129,7 @@ class FileLoad extends HandleBase{
                     if ($rslt) {
                         echo "Stored in: ".ROOT_PATH."/upload/".$_FILES["file"]["name"]."\n";
                     } else {
-                        User::errReport("move_uploaded_file ".strval($rslt));
+                        User::errReport("Exec move_uploaded_file ".strval($rslt));
                     }
                 }
                 /*
@@ -138,7 +138,7 @@ class FileLoad extends HandleBase{
                 }
                 */
             } else {
-                User::errReport("Check File ".$_FILES["file"]["error"]);
+                User::errReport("Check File error ".$_FILES["file"]["error"]);
             }
         }
     }
@@ -162,7 +162,6 @@ class FileLoad extends HandleBase{
         header("Accept-Length:".$filesize);
         header("Content-Disposition: attachment; filename=".$file_name);
 
-        $contents = '';
         while (!feof($handle)) {
             $contents = fread($handle, 8192);
             echo $contents;

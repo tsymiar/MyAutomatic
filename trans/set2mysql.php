@@ -1,36 +1,39 @@
 <?php
 header('content-type:text/html; charset=utf8');
 
-define("DB_HOST","localhost");
-define("DB_USER","root");
-define("DB_PWD","Psw123$");
-define("DB_DATABASE","custominfo");
-define("DB_CHARSET","utf8");
-define("DB_TABLE","myweb");
+define("DB_HOST", "localhost");
+define("DB_USER", "root");
+define("DB_PWD", "Psw123$");
+define("DB_DATABASE", "myautomatic");
+define("DB_CHARSET", "utf8");
+define("DB_TABLE", "games");
 
 $file = "game.txt";
 $link = ""; //global mysql descriptor
 // connect func
-function connect(){
+function connect()
+{
     global $link;
-    $link = mysqli_connect(DB_HOST,DB_USER,DB_PWD) or die("ERROR connect to database:".mysql_errno().":".mysql_error());
+    $link = mysqli_connect(DB_HOST, DB_USER, DB_PWD)
+    or die("ERROR connect to database:" . mysqli_errno($link) . ":" . mysqli_error($link));
     mysqli_select_db($link, DB_DATABASE) or die("open DB_DATABASE error.");
-    $sql = 'set names '.DB_CHARSET;
+    $sql = 'set names ' . DB_CHARSET;
     mysqli_query($link, $sql) or die ("set charset error.");
     return $link;
 }
+
 /* deal func, array is not a turely array.*/
-function insert($table, $array){
+function insert($table, $array)
+{
     global $link;
     $key = join(",", array_keys($array));
-    $val = "'".join("','", array_values($array))."'";
+    $val = "'" . join("','", array_values($array)) . "'";
     $id = $val[$key][0];
     # $sql = "insert into {$table} /*({$key})*/ values ({$val})";
     // $sql = "UPDATE {$table} set ({$val}) where id={$id}";
     // mysqli_query($link, $sql);
-    for ($i = 1; $i < count($array); $i++)
-    {
-        $vol =  array_keys($array)[$i];
+    for ($i = 1; $i < count($array); $i++) {
+        $vol = array_keys($array)[$i];
         $vlu = array_values($array)[$i];
         $sql = "update {$table} set {$vol}='{$vlu}' where id={$id};";
         mysqli_query($link, $sql);
@@ -38,9 +41,10 @@ function insert($table, $array){
     return mysqli_insert_id($link);
 }
 
-function one_param_query($conn, $sql, $param, $type = "s"){
+function one_param_query($conn, $sql, $param, $type = "s")
+{
     $stmt = mysqli_prepare($conn, $sql);
-    if ($stmt){
+    if ($stmt) {
         $stmt->bind_param($type, $param);
         $stmt->execute();
         $rslt = $stmt->get_result();
@@ -56,43 +60,44 @@ function select_images($table)
 {
     global $link;
     $value = "";
-    $sql = "select img from ? order by id, name";
+    $sql = "select `img` from ? order by `id`, `name`";
     $rslt = one_param_query($link, $sql, $table);
-    if($rslt){
+    if ($rslt) {
         $val = mysqli_fetch_assoc($link, $rslt);
         $value = array_pop($val);
+        echo $value;
     } else {
         echo "function 'one_param_query' error.\n";
     }
-    echo $value;return $value;}
-    // set file content as php object
-    $jscnt = file_get_contents($file);
-    // encode json string as php array
-    // $jscnt = utf8_encode($jscnt);
-    $jsarr = json_decode($jscnt,true);
-    if (!is_array($jsarr)) {
-        die("set data as php array NOT successful.\n");
-    }
-    // connect with mysql
-    connect();
-    // 2-dimensional array
-    $flag = 0;
-    foreach($jsarr as $k=>$val){
-        for($j=0; $j<count($val); $j++){
-            // 1-dimensional array
-            $i = insert(DB_TABLE, $val[$j]);
-            if ($i != 0) {
-                echo "maybe some error in inserting ".$val[$j]." to ".$file."\n";
-                $flag = 1;
-            }
+    return $value;
+}
+
+// set file content as php object
+$jscnt = file_get_contents($file);
+// encode json string as php array
+// $jscnt = utf8_encode($jscnt);
+$jsarr = json_decode($jscnt, true);
+if (!is_array($jsarr)) {
+    die("set data as php array NOT successful.\n");
+}
+// connect with mysql
+connect();
+// 2-dimensional array
+$flag = 0;
+foreach ($jsarr as $k => $val) {
+    for ($j = 0; $j < count($val); $j++) {
+        // 1-dimensional array
+        $i = insert(DB_TABLE, $val[$j]);
+        if ($i != 0) {
+            echo "maybe some error in inserting " . $val[$j] . " to " . $file . "\n";
+            $flag = 1;
         }
     }
-    if ($flag == 0) {
-        echo "fill data of " . $file . " OK.\n";
-    }
-    // select_images(DB_TABLE);
-    if(!$link){
-        mysqli_close($link);
-    }
-
-
+}
+if ($flag == 0) {
+    echo "fill data of " . $file . " OK.\n";
+}
+// select_images(DB_TABLE);
+if ($link != null) {
+    mysqli_close($link);
+}

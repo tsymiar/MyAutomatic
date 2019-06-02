@@ -683,7 +683,7 @@
     }
     function hex2rgb() {
         let rgb_val = $("#color_hex").val();
-		rgb_val = rgb_val.replace(/^\s+|\s+$/g,"");
+        rgb_val = rgb_val.replace(/^\s+|\s+$/g,"");
         if(rgb_val.indexOf("#") !== -1 && rgb_val.charAt(0) === "#"){
             rgb_val = rgb_val.substring(1);
         }

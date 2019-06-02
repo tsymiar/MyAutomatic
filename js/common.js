@@ -500,6 +500,14 @@ function setPopDivNoScroll(clazz_pop_div, id_pop_div, display, text, top, left, 
     }
     var winNode = $("#"+id_pop_div);
     width = (width === null || width === undefined || width === 0) ? 300 : width;
+    if(text){
+        if(text.length < 55){
+            height = 80;
+        }
+        if(text.length > 290){
+            // text = text.substring(0,290) + " ...";
+        }
+    }
     height = (height === null || height === undefined || height === 0) ? 160 : height;
     top = (top === null || top === undefined || top === 0) ? 100 : (top > height ? top - height : top);
     if(top + height > $(window).height()){
@@ -508,6 +516,7 @@ function setPopDivNoScroll(clazz_pop_div, id_pop_div, display, text, top, left, 
     if(top_id){
         top = ($("#"+top_id).get(0).getBoundingClientRect().top);
     }
+
     var css = {
         'left': '30%',
         'top': top+'px',
@@ -528,11 +537,6 @@ function setPopDivNoScroll(clazz_pop_div, id_pop_div, display, text, top, left, 
     }
     winNode.on('click','');
     div_pop.style.display = 'block';
-    if(text){
-        if(text.length > 290){
-            // text = text.substring(0,290) + " ...";
-        }
-    }
     winNode.after('<div id="ly" style="position:fixed; top:0; left:0; z-index:2; width:100%; height:100%; background:#f5f5f5; filter:alpha(opacity=70); opacity:0.7;display: none;"></div>');
     winNode.html(
         '<div class="title">提示！<span class="hide" title="关闭" onclick="pop_hide()">✖</span></div>' +

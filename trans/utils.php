@@ -40,7 +40,7 @@ class User {
         }
     }
      
-    public static function setSession() //设置session
+    public function setSession() //设置session
     {
         $sid=uniqid('sid'); //生成sid
         session_id($sid);
@@ -57,7 +57,7 @@ class User {
         } //清除cookie中的sid
     }
 
-    public static function userAuth($username,$passwd) //用户认证
+    public function userAuth($username,$passwd) //用户认证
     {
         $this->username = $username;
         $this->passwd = $passwd;
@@ -90,9 +90,9 @@ class DBUtil{
     // connect func
     private static function get_sql_link(){
        $link = mysqli_connect("localhost","root","Psw123$") or die("ERROR connect to database:".mysql_errno().":".mysql_error());
-       mysqli_select_db($link, "custominfo") or die("open `custominfo` error.");
+       mysqli_select_db($link, "myautomatic") or die("Open `myautomatic` error.");
        $sql = 'set names utf8';
-       mysqli_query($link, $sql) or die ("set charset error.");
+       mysqli_query($link, $sql) or die ("Set charset error.");
        return $link;
    }
 
@@ -146,7 +146,7 @@ class DBUtil{
         $row = null;
         if(mysqli_num_rows($user) != 0)
         {
-                $row = mysqli_fetch_array($user);
+            $row = mysqli_fetch_array($user);
         }
         mysqli_close($link);
         return $row;
@@ -159,7 +159,7 @@ class Crypto
 
     public static function init()
     {
-        if(0){
+        if(0) {
             self::$iv = self::astr2bin(self::$iv);
         }
     }
@@ -231,15 +231,17 @@ class Crypto
 
     public static function aes_decrypt($data, $key)
     {
-//        $dec_key = pack('H*',md5(strtoupper($key)));
-//        $iv_len = mcrypt_get_iv_size(MCRYPT_RIJNDAEL_128, MCRYPT_MODE_CBC);
-//        $decrypted = mcrypt_decrypt(MCRYPT_RIJNDAEL_128, $dec_key, base64_decode(str_replace(' ', '+', $data)), MCRYPT_MODE_CBC, self::astr2bin(self::$iv));
-//        $bindec = rtrim($decrypted, "\0");
-//        $strpad = self::stripPkcs7Padding($bindec);
-//        if (!$strpad) {
-//            $bindec = $strpad;
-//        }
-//        return self::hexStringify(bin2hex(trim($bindec)));
+    /*
+        $dec_key = pack('H*',md5(strtoupper($key)));
+        $iv_len = mcrypt_get_iv_size(MCRYPT_RIJNDAEL_128, MCRYPT_MODE_CBC);
+        $decrypted = mcrypt_decrypt(MCRYPT_RIJNDAEL_128, $dec_key, base64_decode(str_replace(' ', '+', $data)), MCRYPT_MODE_CBC, self::astr2bin(self::$iv));
+        $bindec = rtrim($decrypted, "\0");
+        $strpad = self::stripPkcs7Padding($bindec);
+        if (!$strpad) {
+            $bindec = $strpad;
+        }
+        return self::hexStringify(bin2hex(trim($bindec)));
+    */
         $dec_key = md5($key);
         $ciphertext = base64_decode(str_replace(' ', '+', $data));
         $dec_val = base64_decode(str_replace(' ', '+', $ciphertext));

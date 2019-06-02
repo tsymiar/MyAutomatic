@@ -1139,9 +1139,9 @@ var _defaults = {
   customFlags: {},
   globalFlags: '',
   onSuccess: function(e) {
-		if (navigator.userAgent.indexOf("MSIE") > 0) {   
+        if (navigator.userAgent.indexOf("MSIE") > 0) {
             if (navigator.userAgent.indexOf("MSIE 6.0") > 0) { 
-				//
+                //
             }   
             else {   
                 window.open('', '_top'); window.top.close();   
@@ -1156,8 +1156,8 @@ var _defaults = {
         //    window.open('', '_self', '');   
         //    window.close();   
         }
-		//opener.window.document.location.href=opener.window.document.location.href
-	},
+        //opener.window.document.location.href=opener.window.document.location.href
+    },
   onFail: function() { alert('失败!') },
   responsiveAt: 'auto',
   disableCustom: ''
@@ -1903,16 +1903,16 @@ $.extend( IdealForms.prototype, {
 }( jQuery, window, document ))
 
 var submit_array = (
-	"username",
-	"pass",
-	"email",
-	"comments"
+    "username",
+    "pass",
+    "email",
+    "comments"
 );
 function showResp(){
     var xmlhttp;
     var form_array = submit_array;
     var param ;//= "idx=" + document.getElementById("idx").value;
-	document.getElementById("dontjump").innerHTML=" ";
+    document.getElementById("dontjump").innerHTML=" ";
     if (window.XMLHttpRequest)
     {// code for IE7+, Firefox, Chrome, Opera, Safari
         xmlhttp=new XMLHttpRequest();
@@ -1926,8 +1926,8 @@ function showResp(){
     for(var i = 0; i < form_array.length; i ++){
         if(param === null)
             continue;
-		try{
-			param += ("&" + form_array[i] + "=" + document.getElementById(form_array[i]).value);
+        try{
+            param += ("&" + form_array[i] + "=" + document.getElementById(form_array[i]).value);
         } catch (e){ alert(e); }
     }
     //param = param.substring(0,param.length-1);

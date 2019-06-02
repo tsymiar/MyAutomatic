@@ -58,7 +58,7 @@ $(document).ready(function(){
     }
 });
 
-var formArray = new Array(
+var formArray = [
     "username",
     "passwd",
     "email",
@@ -67,7 +67,7 @@ var formArray = new Array(
     "website",
     "zip",
     "comments"
-);
+];
 
 function click2Submit(){
     $("#dontjump").html("");
@@ -122,5 +122,18 @@ function click2Submit(){
         });
     if(icon !== null && icon !== ""){
         UpladFile("icon", "trans/service.php?action=file_upload2");
+    }
+}
+
+function showMoreform() {
+    var more_elem = $("#more-link");
+    if(more_elem.html() === "✖"){
+        more_elem.html("➤");
+        $("#more-form").css("display", "none");
+        more_elem.attr("title","more");
+    } else {
+        more_elem.html("✖");
+        $("#more-form").css("display", "block");
+        more_elem.attr("title","less");
     }
 }
