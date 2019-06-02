@@ -1,6 +1,10 @@
-#include <IMclient.h>
+#include "IMclient.h"
 
-void parseRcvMsg(void* lp) {
+void
+#ifndef _WIN32
+*
+#endif
+parseRcvMsg(void* lp) {
     static char rcv_buf[256];
     static char srv_net[32];
     CRITICAL_SECTION wrcon;
@@ -53,7 +57,7 @@ void parseRcvMsg(void* lp) {
         if (rcvlen <= 0 || (mesg->retval[0] == 'e' && mesg->retval[1] == '8')) {
             sprintf(srv_net, "Connection lost!\n%s:%d", inet_ntoa(client->srvaddr.sin_addr), client->srvaddr.sin_port);
             char title[32];
-            sprintf(title, "socket: %s", itoa((int)client->sock, (char*)mesg, 10));
+            sprintf(title, "socket: %s", _itoa((int)client->sock, (char*)mesg, 10));
             MessageBox(NULL, srv_net, title, MB_OK);
             client->flag = -1;
             closesocket(client->sock);
@@ -64,7 +68,7 @@ void parseRcvMsg(void* lp) {
     };
 };
 
-st_trans SetChatMsg(st_trans& trans) {
+st_trans* SetChatMsg(st_trans& trans) {
     switch (trans.uiCmdMsg)
     {
     case REGISTER:
@@ -93,7 +97,7 @@ st_trans SetChatMsg(st_trans& trans) {
         fprintf(stdout, "Input chat message, limit on 16 characters.\n");
         memset(trans.peer_mesg.head, 0, 16);
         trans.peer_mesg.cmd[0] = CHATWITH;
-        scanf_s("%16s", trans.more_mesg, 16);
+        scanf_s("%16s", trans.peer_mesg.head, 16);
         break;
     }
     case HOSTGROUP:
@@ -119,11 +123,11 @@ st_trans SetChatMsg(st_trans& trans) {
         if (trans.retval == 0x0)
         {
             MessageBox(NULL, "Logging failure.", "default", MB_OK);
-            return trans;
+            return &trans;
         }
     }
     }
-    return trans;
+    return &trans;
 }
 
 int main()
@@ -142,7 +146,8 @@ int main()
         memcpy(msg.usr, "AAA", 4);
         memcpy(msg.psw, "AAA", 4);
         memcpy(msg.peer_name, "iv9527", 7);
-        SendChatMsg(&SetChatMsg(msg));
+        msg = *SetChatMsg(msg);
+        SendChatMsg(&msg);
         Sleep(100);
     }
     return 0;

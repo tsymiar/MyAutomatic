@@ -327,6 +327,9 @@
     <None Include="script\reptile.py">
       <Filter>配置文件</Filter>
     </None>
+    <None Include="..\..\LinuxSrvc\gSOAPverify\file\myautomatic.sql">
+      <Filter>配置文件</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\MFCKline.ico">
