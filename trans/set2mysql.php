@@ -9,7 +9,7 @@ define("DB_CHARSET", "utf8");
 define("DB_TABLE", "games");
 
 $file = "game.txt";
-$link = ""; //global mysql descriptor
+$link = null; //global mysql descriptor
 // connect func
 function connect()
 {
@@ -73,9 +73,9 @@ function select_images($table)
 }
 
 // set file content as php object
+// $jscnt = utf8_encode($jscnt);
 $jscnt = file_get_contents($file);
 // encode json string as php array
-// $jscnt = utf8_encode($jscnt);
 $jsarr = json_decode($jscnt, true);
 if (!is_array($jsarr)) {
     die("set data as php array NOT successful.\n");

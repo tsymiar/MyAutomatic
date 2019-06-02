@@ -18,7 +18,7 @@ class User {
     var $cookietime=108000; //cookie有效时间
 
     var $username;  //用户名
-    var $passwd;    //密码
+    var $password;    //密码
     var $email;     //邮箱
     var $date;  //生日
     var $icon;  //头像
@@ -57,10 +57,10 @@ class User {
         } //清除cookie中的sid
     }
 
-    public function userAuth($username,$passwd) //用户认证
+    public function userAuth($username,$password) //用户认证
     {
         $this->username = $username;
-        $this->passwd = $passwd;
+        $this->password = $password;
         $row = DBUtil::query_user($username);
         if($row != null)
         {
@@ -68,7 +68,7 @@ class User {
             {
                 self::errReport(self::$err_user);
                 return false;
-            } elseif(md5($passwd)==$row['passwd']) //密码匹配
+            } elseif(md5($password)==$row['password']) //密码匹配
             {
                 $this->id=$row['id'];
                 $this->level=$row['level'];

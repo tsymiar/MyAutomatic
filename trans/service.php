@@ -32,7 +32,7 @@ class Regist extends HandleBase{
         $register = array();
         if($_SERVER["REQUEST_METHOD"] === "POST" 
             && ($enc_key = $_POST['username'])){
-            $enc_val = $_POST['passwd'];
+            $enc_val = $_POST['password'];
             $psw = Crypto::aes_decrypt($enc_val, $enc_key);
             $register['user'] = $enc_key;
             $register['psw'] = substr(md5($psw),8,16);
