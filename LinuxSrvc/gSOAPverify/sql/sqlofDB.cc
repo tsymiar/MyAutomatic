@@ -13,7 +13,7 @@ pthread_mutex_t sql_lock;
 char host[] = "localhost";
 char user[] = "root";
 char psw[] = "Psw123$";
-char db[] = "custominfo";
+char db[] = "myautomatic";
 string table = "glkline";
 char LL[] = "\033[K>>>";
 MYSQL_RES *RES = nullptr;

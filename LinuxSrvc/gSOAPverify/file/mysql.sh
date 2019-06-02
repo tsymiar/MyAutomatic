@@ -1,7 +1,7 @@
 #!/bin/bash
 if [ "${1}" == "-i" ]; then
 	echo "导入数据库"
-	mysqldump -u root -p custominfo < custominfo.sql
+	mysqldump -u root -p myautomatic < myautomatic.sql
 	echo "OK"
 	exit 0
 else

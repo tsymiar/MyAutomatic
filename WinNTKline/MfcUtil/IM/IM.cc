@@ -583,10 +583,14 @@ type_thread_func monite(void *arg)
                                     sprintf(srvmsg + 4, "%c", random);
                                     strcpy((char*)&user.more_mesg, "User NDT success!");
                                     memcpy(srvmsg + 8, &user.peer_mesg.head, 56);
-                                    send(srvsock, srvmsg, 64, 0);
-                                    sprintf((sd_bufs + 32), "[%c] NDT success to %s(%s:%d).",
-                                        random, user.peer, srvip, srvport);
-                                    sndlen = 120;
+                                    if (-1 != send(srvsock, srvmsg, 64, 0)) {
+                                        sprintf((sd_bufs + 32), "[%c] NDT success to %s(%s:%d).",
+                                            random, user.peer, srvip, srvport);
+                                        sndlen = 120;
+                                    } else {
+                                        sprintf((sd_bufs + 32), "Got failure while Sending message.");
+                                        sndlen = 72;
+                                    }
                                 }
                             } else {
                                 valrtn = -2;

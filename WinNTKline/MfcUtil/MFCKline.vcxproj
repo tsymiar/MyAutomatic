@@ -360,6 +360,7 @@
     <ResourceCompile Include="MFCKline.rc" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\LinuxSrvc\gSOAPverify\file\myautomatic.sql" />
     <None Include="cfg\ips.ini" />
     <None Include="ClassDiagram.cd" />
     <None Include="com\Initialise-inl.h" />

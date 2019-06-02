@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 5.6.35, for Linux (i686)
 --
--- Host: localhost    Database: custominfo
+-- Host: localhost    Database: myautomatic
 -- ------------------------------------------------------
 -- Server version	5.6.35
 
@@ -15,7 +15,8 @@
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
-USE custominfo;
+CREATE DATABASE IF NOT EXISTS myautomatic;
+USE myautomatic;
 
 --
 -- Table structure for table `glkline`
