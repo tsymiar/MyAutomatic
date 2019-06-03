@@ -132,10 +132,14 @@ st_trans* SetChatMsg(st_trans& trans) {
 
 int main()
 {
-    StartChat(InitChat(), parseRcvMsg);
+    int ret = StartChat(InitChat(), parseRcvMsg);
+    if (ret < 0)
+        return ret;
     while (1) {
-        if (GetStatus() < 0)
+        if (GetStatus() < 0) {
+            CloseChat();
             break;
+        }
         int comm = 0;
         fprintf(stdout, "Input commond [1-13]: ");
         if (scanf("%d", &comm) <= 0)

@@ -1,4 +1,4 @@
-#include "IMClient.h"
+#include "IMclient.h"
 
 using namespace std;
 
@@ -7,7 +7,12 @@ st_client client;
 st_setting setting;
 
 // 参考该函数编写报文处理函数
-void runtime(void* param) {
+#ifdef _WIN32
+unsigned int __stdcall
+#else
+void*
+#endif
+runtime(void* param) {
     static char srv_net[32];
     static char rcv_buf[256];
     CRITICAL_SECTION wrcon;
@@ -48,7 +53,7 @@ int InitChat(st_setting* sets) {
     if (erno == SOCKET_ERROR) {
         cerr << "WSAStartup failed with error " << WSAGetLastError() << endl;
         WSACleanup();
-        return -1;
+        exit(0);
     }
     SetConsoleTitle("client v0.1");
 #endif
@@ -63,7 +68,7 @@ int InitChat(st_setting* sets) {
         strcpy_s(ipaddr, "127.0.0.1");
     } else {
         fprintf_s(stdout, "Current OS is %d bit.\nNow enter server address: ", sizeof(void*) * 8);
-        scanf_s("%16s", &ipaddr);
+        scanf_s("%16s", &ipaddr, 16);
         if (*ipaddr != 0)
             memcpy(sets->IP, &ipaddr, 16);
         else
@@ -83,9 +88,9 @@ int InitChat(st_setting* sets) {
     client.sock = socket(AF_INET, SOCK_STREAM, 0);
     BOOL bReuseaddr = TRUE;
     if (client.sock == INVALID_SOCKET) {
-        cerr << "socket() failed with error " << WSAGetLastError() << endl;
+        cerr << "socket() invalid with error " << WSAGetLastError() << endl;
         WSACleanup();
-        return -1;
+        exit(0);
     }
     setsockopt(client.sock, SOL_SOCKET, SO_REUSEADDR, (const char*)&bReuseaddr, sizeof(BOOL));
     return 0;
@@ -107,12 +112,10 @@ string GetLastErrorToString(int errorCode)
 #endif
 }
 #ifdef _WIN32
-#define err_ret -1;
 unsigned int
 __stdcall
 Chat_Msg(void(*func)(void*))
 #else
-#define err_ret nullptr;
 void* Chat_Msg(void* func)
 #endif
 {
@@ -121,20 +124,20 @@ void* Chat_Msg(void* func)
             GetLastErrorToString(WSAGetLastError()).c_str()
             << "] " << endl;
         WSACleanup();
-        return err_ret;
+        exit(0);
     }
-    Pthreadt thread_ID;
+    Pthreadt threads;
     client.flag = 1;
-    _beginthreadex(NULL, 0, (_beginthreadex_proc_type)func, &client, 0, &thread_ID);
+    _beginthreadex(NULL, 0, (_beginthreadex_proc_type)func, &client, 0, &threads);
     return 0;
 }
 
 int StartChat(int erno,
-#ifdef _WIN32
-    void(*func)(void*)
-#else
-    void* func(void*)
+    void
+#ifndef _WIN32
+    *
 #endif
+    (*func)(void*)
 )
 {
     setting.erno = erno;
@@ -142,14 +145,15 @@ int StartChat(int erno,
         return erno;
     else {
         if (func == NULL) {
-#ifdef _WIN32
-            func = [](void*) { printf("Lambda null func.\n"); };
-            return (int)_beginthreadex(NULL, 0, (_beginthreadex_proc_type)Chat_Msg, func, 0, NULL);
-#else
-            printf("Lambda null func.\n");
+            func = [](void*) {
+#ifndef _WIN32
+                return (void*)
 #endif
+                    printf("Lambda null func.\n"); };
         }
-    }
+    }    
+    Pthreadt threads;
+    return (int)_beginthreadex(NULL, 0, (_beginthreadex_proc_type)Chat_Msg, (void*)func, 0, &threads);
 }
 
 int CloseChat()
@@ -171,9 +175,14 @@ int callbackLog(char * usr, char * psw)
     return trans.uiCmdMsg;
 }
 #ifdef _WIN32
-inline int SetClientDlg(void* Wnd)
+int SetClientDlg(void* Wnd)
 {
-    return (int)(client.Dlg = Wnd);
+    if (Wnd == NULL) {
+        return -1;
+    } else {
+        client.Dlg = Wnd;
+        return 0;
+    }
 };
 #endif
 int SendChatMsg(st_trans* msg)
@@ -326,8 +335,9 @@ int p2pMessage(unsigned char *userName, int UserIP, unsigned int UserPort, char 
         P2P_NETWORK pp_sock;
         pp_sock.addr = remote;
         pp_sock.socket = PrimaryUDP;
-        if (client.count == 0)
+        if (client.count == 0) {
             _beginthreadex(NULL, 0, RecvThreadProc, &pp_sock, 0, NULL);
+        }
         client.count++;
         Sleep(100);
     }

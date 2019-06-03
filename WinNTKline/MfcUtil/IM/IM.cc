@@ -300,6 +300,7 @@ type_thread_func monite(void *arg)
                     \n### client socket [%d] closed by itself just now.\n", rcv_sock);
                     closesocket(rcv_sock);
                 }
+                num++;
                 continue;
             } else {
 #ifdef _DEBUG
@@ -462,7 +463,7 @@ type_thread_func monite(void *arg)
                     switch (sd_bufs[1] = user.uiCmdMsg)
                     {
                     case 0x01:
-                        strcpy((sd_bufs + 8), "User already being on-line.");
+                        strcpy((sd_bufs + 8), "User has already on-line.");
                         sndlen = 48;
                         break;
                     case 0x2:
@@ -475,7 +476,7 @@ type_thread_func monite(void *arg)
                     {
                         flg = logged = 0;
                         set_user_quit(user.usr);
-                        sprintf((sd_bufs + 8), "[%s] has offline.", user.usr);
+                        sprintf((sd_bufs + 8), "[%s] has logout.", user.usr);
                         send(rcv_sock, sd_bufs, 48, 0);
                         fprintf(stderr, "### [%0x, %x]: %s\n", sd_bufs[1], static_cast<unsigned>(*user.chk), sd_bufs + 8);
                         continue;
@@ -498,6 +499,9 @@ type_thread_func monite(void *arg)
                             if (strlen(active[c].user) > 0) {
                                 sprintf(sd_bufs + 2, "%x", c);
                                 strcpy((sd_bufs + 8 * (c + 4)), active[c].user);
+                                if (sd_bufs + 8 * (c + 4) + 24 == '\0') {
+                                    memset(sd_bufs + 8 * (c + 4) + 24, '\t', 1);
+                                }
                             } else if (active[c].user[0] == '\0')
                                 break;
                         };
