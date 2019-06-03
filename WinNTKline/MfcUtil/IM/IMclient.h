@@ -68,10 +68,13 @@ inline char* _itoa(int val, char*str, int rdx) {
     return str;
 }
 inline int InitializeCriticalSection(CRITICAL_SECTION* mutex) {
-    return pthread_mutex_init(mutex, NULL);
+    pthread_mutexattr_t attr;
+    pthread_mutexattr_init(&attr);
+    pthread_mutexattr_settype(&attr, PTHREAD_PROCESS_SHARED);
+    return pthread_mutex_init(mutex, &attr);
 }
 inline int EnterCriticalSection(CRITICAL_SECTION* mutex) {
-    return pthread_mutex_lock(mutex);
+    return pthread_mutex_trylock(mutex);
 }
 inline int LeaveCriticalSection(CRITICAL_SECTION* mutex) {
     return pthread_mutex_unlock(mutex);
@@ -80,10 +83,10 @@ inline int DeleteCriticalSection(CRITICAL_SECTION* mutex) {
     return pthread_mutex_destroy(mutex);
 }
 inline int SetConsoleTitle(char* title) {
-    return fprintf(stdout, "---%s---\n", title);
+    return fprintf(stdout, "------%s------\n", title);
 }
 inline int MessageBox(int flag, char* message, char* title, int s) {
-    return fprintf(stdout, "---%s---\n\t%s\n", title, message);
+    return fprintf(stdout, "------%s------\n>>>\t%s\n", title, message);
 }
 inline int WSAGetLastError() {
     return errno;
@@ -230,12 +233,12 @@ inline int checkPswValid(char* str)
     return (z0 + zz + zZ + z_ == 4 ? 1 : 0);
 }
 int InitChat(st_setting* setting = NULL);
-int StartChat(int erno, 
-#ifdef _WIN32
-    void(*func)(void*)
-#else
-    void* func(void*)
+int StartChat(int erno,
+    void
+#ifndef _WIN32
+    *
 #endif
+    (*func)(void*)
 );
 int SendChatMsg(st_trans* msg = NULL);
 int GetStatus();
