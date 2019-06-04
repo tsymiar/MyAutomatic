@@ -24,15 +24,15 @@
 #include <signal.h>
 #endif
 #define NEVAL(a) (((~((a) & 0x0f)) | ((a) & 0xf0)) & 0xff)
-#define THREAD_NUM 20
 #define DEFAULT_PORT 8877
-#define MAX_USERS 99
-#define MAX_ACTIVE 30
-#define MAX_MENBERS_PER_GROUP 11
-#define MAX_GROUPS 10
-#define ACC_REC "acnts"
 #define IPCKEY 0x520905
 #define IPCFLAG IPC_CREAT|IPC_EXCL //|SHM_R|SHM_W
+#define THREAD_NUM 20
+#define ACC_REC "acnts"
+#define MAX_ACTIVE 30
+#define MAX_USERS 99
+#define MAX_GROUPS 10
+#define MAX_MENBERS_PER_GROUP 11
 //using namespace std;
 //C++11 std与socket.h中bind函数冲突
 #ifdef _WIN32
@@ -69,6 +69,7 @@ sendallow;
 
 int  aim2exit = 0;
 type_socket listen_socket;
+static unsigned int g_threadNo_ = 0;
 
 struct Network {
     unsigned char ip[INET_ADDRSTRLEN];
@@ -129,9 +130,9 @@ typedef struct user_mesg {
     public:
         unsigned char cmd[2];
         unsigned char val[4];
-        char head[16];
+        char msg[16];
     } peer_mesg;
-    char more_mesg[40];
+    char status[8];
 } USER;
 
 struct group_clazz {
@@ -160,9 +161,11 @@ void pipesig_handler(int s) {
 #endif
 }
 
-int inst_mesg(int argc, char * argv[]);
+int inst_mesg(int argc, char* argv[]);
 template<typename T> int set_n_get_mem(T* shmem, int ndx = 0, int rw = 0);
 void func_waitpid(int signo);
+int queryNetworkParams(const char* username, Network& network, const int max = MAX_ACTIVE);
+Network queryNetworkParams(int index);
 int user_auth(char usr[24], char psw[24]);
 int new_user(char usr[24], char psw[24]);
 int user_is_line(char user[24]);
@@ -179,11 +182,11 @@ int leave_group(int no, char usr[24]);
 
 int main(int argc, char* argv[])
 {
-    fprintf(stdout, "IM chat server v0.%d for %dbit OS.\n", 1, static_cast<int>(sizeof(void*)) * 8);
+    fprintf(stdout, "------- IM chat server v0.%d for %dbit OS. -------\n", 1, static_cast<int>(sizeof(void*)) * 8);
     if (argc > 1) {
         std::string arg1 = argv[1];
         if (arg1 == "-m") {
-            ONLINE active[MAX_ACTIVE];
+            struct ONLINE active[MAX_ACTIVE];
             memset(active, 0, sizeof(active));
             for (int c = 0; c < MAX_ACTIVE; c++) {
                 set_n_get_mem(&active[c], c);
@@ -198,7 +201,7 @@ int main(int argc, char* argv[])
             exit(0);
         }
         if (arg1 == "-x") {
-            ONLINE active[MAX_ACTIVE];
+            struct ONLINE active[MAX_ACTIVE];
             memset(active, 0, sizeof(active));
             for (int c = 0; c < MAX_ACTIVE; c++) {
                 set_n_get_mem(&active[c], c, -1);
@@ -292,12 +295,13 @@ type_thread_func monite(void *arg)
         flg = recv(rcv_sock, rcv_txt, 256, 0);
         if (qq != flg && flg != 0)
         {
+            g_threadNo_++;
             memcpy(&user, rcv_txt, sizeof(user));
             if (flg <= -1 && flg != EWOULDBLOCK && flg != EAGAIN && flg != EINTR) {
                 if (num == 333) {
                     set_user_quit(user.usr);
                     fprintf(stderr, "----------------------------------------------------------------\
-                    \n### client socket [%d] closed by itself just now.\n", rcv_sock);
+                    \n### client(%d) socket [%d] closed by itself just now.\n", g_threadNo_, rcv_sock);
                     closesocket(rcv_sock);
                 }
                 num++;
@@ -305,7 +309,7 @@ type_thread_func monite(void *arg)
             } else {
 #ifdef _DEBUG
                 fprintf(stdout, "----------------------------------------------------------------\
-                \n>>> 1-RCV [%0x,%0x]: %s, %d\n", user.uiCmdMsg, static_cast<unsigned>(*user.chk), user.usr, flg);
+                \n>>> 1-RCV [%0x,%0x]: %s, %d, %d\n", user.uiCmdMsg, static_cast<unsigned>(*user.chk), user.usr, flg, g_threadNo_);
                 for (c = 0; c < flg; c++)
                 {
                     if (c > 0 && c % 32 == 0)
@@ -518,7 +522,11 @@ type_thread_func monite(void *arg)
                         if (valrtn >= 0) {
                             if (user_is_line(user.peer) >= 0) {
                                 fprintf(stdout, "``` '%s' wants to P2P with '%s'\n", user.usr, user.peer);
-                                const char* s = reinterpret_cast<char*>(&users[valrtn].netwk.ip);
+                                Network p2pnet = queryNetworkParams(valrtn);
+#if  !defined _WIN32
+                                queryNetworkParams(user.peer, p2pnet);
+#endif
+                                const char* s = reinterpret_cast<char*>(&p2pnet.ip);
                                 unsigned char t = 0;
                                 while (1) {
                                     if (*s != '\0' && *s != '.') {
@@ -531,8 +539,8 @@ type_thread_func monite(void *arg)
                                     }
                                     s++;
                                 };
-                                sprintf((sd_bufs + 32), "%d", (unsigned int)uiIP);
-                                sprintf((sd_bufs + 56), "%d", (int)users[valrtn].netwk.port);
+                                sprintf((sd_bufs + 32), "%d", uiIP);
+                                sprintf((sd_bufs + 56), "%d", p2pnet.port);
                                 // p2p_req2usr
                             } else {
                                 valrtn = -2;
@@ -560,36 +568,24 @@ type_thread_func monite(void *arg)
                         valrtn = get_user_ndx(user.peer);
                         if (valrtn >= 0) {
                             if (user_is_line(user.peer) >= 0) {
-                                type_socket srvsock = users[valrtn].netwk.socket;
-                                unsigned char* srvip = users[valrtn].netwk.ip;
-                                unsigned int srvport = users[valrtn].netwk.port;
+                                Network ndtnet = queryNetworkParams(valrtn);
 #if  !defined _WIN32
-                                ONLINE active[MAX_ACTIVE];
-                                memset(active, 0, sizeof(active));
-                                for (int c = 0; c < MAX_ACTIVE; c++) {
-                                    set_n_get_mem(&active[c], c);
-                                    if (memcmp(active[c].user, user.peer, 24) == 0) {
-                                        srvsock = active[c].netwk.socket;
-                                        srvip = active[c].netwk.ip;
-                                        srvport = active[c].netwk.port;
-                                        break;
-                                    }
-                                }
+                                queryNetworkParams(user.peer, ndtnet);
 #endif
-                                if (srvip == nullptr || srvport <= 0) {
+                                if (ndtnet.ip == nullptr || ndtnet.port <= 0) {
                                     sprintf((sd_bufs + 32), "Peer user ip or port value error.");
                                     sndlen = 72;
                                 } else {
                                     char random = (rand() % 255 + '\1');
-                                    char srvmsg[64];
-                                    memset(srvmsg, 0, 64);
-                                    memcpy(srvmsg, &user, 4);
-                                    sprintf(srvmsg + 4, "%c", random);
-                                    strcpy((char*)&user.more_mesg, "User NDT success!");
-                                    memcpy(srvmsg + 8, &user.peer_mesg.head, 56);
-                                    if (-1 != send(srvsock, srvmsg, 64, 0)) {
+                                    char ndtmsg[32];
+                                    memset(ndtmsg, 0, 32);
+                                    memcpy(ndtmsg, &user, 4);
+                                    sprintf(ndtmsg + 4, "%c", random);
+                                    strcpy((char*)&user.status, "200");
+                                    memcpy(ndtmsg + 8, &user.peer_mesg.msg, 24);
+                                    if (-1 != send(ndtnet.socket, ndtmsg, 32, 0)) {
                                         sprintf((sd_bufs + 32), "[%c] NDT success to %s(%s:%d).",
-                                            random, user.peer, srvip, srvport);
+                                            random, user.peer, ndtnet.ip, ndtnet.port);
                                         sndlen = 120;
                                     } else {
                                         sprintf((sd_bufs + 32), "Got failure while Sending message.");
@@ -879,8 +875,8 @@ int inst_mesg(int argc, char * argv[])
     } else {
         strcpy(users[0].usr, "iv9527");
         strcpy(users[0].psw, "tesT123$");
-        strcpy(users[1].usr, "AAA");
-        strcpy(users[1].psw, "AAA");
+        strcpy(users[1].usr, "AAAAA");
+        strcpy(users[1].psw, "AAAAA");
         strcpy(groups[0].group.name, "all");
         strcpy(groups[0].group.brief, "all");
         strcpy(groups[0].group.members[0], "iv9527");
@@ -1078,6 +1074,32 @@ void func_waitpid(int signo) {
     return;
 #endif
 }
+
+int queryNetworkParams(const char * username, Network & network, const int max)
+{
+    struct ONLINE active[MAX_ACTIVE];
+    memset(active, 0, sizeof(active));
+    for (int c = 0; c < max; c++) {
+        set_n_get_mem(&active[c], c);
+        if (memcmp(active[c].user, username, 24) == 0) {
+            memcpy(network.ip, active[c].netwk.ip, INET_ADDRSTRLEN);
+            network.port = active[c].netwk.port;
+            network.socket = active[c].netwk.socket;
+            return 0;
+        }
+    }
+    return -1;
+}
+// for Windows
+Network queryNetworkParams(int index)
+{
+    Network network;
+    memcpy(network.ip, users[index].netwk.ip, INET_ADDRSTRLEN);
+    network.socket = users[index].netwk.socket;
+    network.port = users[index].netwk.port;
+    return network;
+}
+
 //save accounts to file.
 int save_acnt() {
     flush_all();
@@ -1180,7 +1202,7 @@ int set_user_quit(char user[24]) {
     char *u = user;
 #if !defined _WIN32
     struct ONLINE active[MAX_ACTIVE];  // = { 0, "" };
-    memset(active, 0, sizeof(ONLINE) * MAX_ACTIVE);
+    memset(active, 0, sizeof(active));
 #endif
     for (int i = 0; i < MAX_ACTIVE; i++) {
         set_n_get_mem(&active[i], i);

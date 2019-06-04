@@ -33,6 +33,9 @@ typedef pthread_mutex_t CRITICAL_SECTION;
 typedef int                 BOOL;
 typedef void*(*_beginthreadex_proc_type)(void*);
 typedef pthread_t Pthreadt;
+typedef struct WSADATA {
+    char w;
+};
 #define MAX_PATH          260
 #define MB_OK                       0x00000000L
 #define INVALID_SOCKET  (SOCKET)(~0)
@@ -83,14 +86,15 @@ inline int DeleteCriticalSection(CRITICAL_SECTION* mutex) {
     return pthread_mutex_destroy(mutex);
 }
 inline int SetConsoleTitle(char* title) {
-    return fprintf(stdout, "------%s------\n", title);
+    return fprintf(stdout, "------ %s ------\n", title);
 }
 inline int MessageBox(int flag, char* message, char* title, int s) {
-    return fprintf(stdout, "------%s------\n>>>\t%s\n", title, message);
+    return fprintf(stdout, "------ %s ------\n>>>\t%s\n", title, message);
 }
 inline int WSAGetLastError() {
     return errno;
 }
+inline int WSAStartup(int, WSADATA*) { return 0; }
 inline int WSACleanup() { return 0; }
 #endif
 
@@ -128,6 +132,15 @@ typedef struct IM_SETTING {
     unsigned int PORT;
 } st_setting;
 
+struct PeerMessg
+{
+    unsigned char rsv[2];
+    unsigned char cmd[2];
+    unsigned char val[4];
+    unsigned char msg[16];
+    unsigned char status[8];
+};
+
 typedef struct MSG_TRANS {
     unsigned char reserve;
     unsigned char uiCmdMsg;
@@ -144,21 +157,14 @@ typedef struct MSG_TRANS {
         unsigned char group_mark[24];
     };
     union {
-        unsigned char peer_name[24];
-        unsigned char peer_port[24];
         unsigned char sign[24];
         unsigned char npsw[24];
+        unsigned char peer_name[24];
+        unsigned char peer_port[24];
         unsigned char group_host[24];
         unsigned char group_join[24];
     };
-    struct PeerStruct
-    {
-        unsigned char rsv[2];
-        unsigned char cmd[2];
-        unsigned char val[4];
-        unsigned char head[16];
-    } peer_mesg;
-    char more_mesg[40];
+    struct PeerMessg more_mesg;
 } st_trans;
 
 struct MENU {

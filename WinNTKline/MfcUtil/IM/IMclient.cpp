@@ -47,7 +47,7 @@ runtime(void* param) {
 };
 
 int InitChat(st_setting* sets) {
-#ifdef _WIN32
+    SetConsoleTitle("client v0.1");
     WSADATA wsaData;
     int erno = WSAStartup(0x202, &wsaData);
     if (erno == SOCKET_ERROR) {
@@ -55,26 +55,22 @@ int InitChat(st_setting* sets) {
         WSACleanup();
         exit(0);
     }
-    SetConsoleTitle("client v0.1");
-#endif
-    st_setting new_sets;
-    static char ipaddr[16];
     InitializeCriticalSection(&client.wrcon);
+    static char ipaddr[16];
     memset(ipaddr, 0, 16);
-    if (sets == NULL) {
-        sets = &new_sets;
-    }
-    if (sets->IP[0] == '\0') {
-        strcpy_s(ipaddr, "127.0.0.1");
-    } else {
+    if (sets == NULL || sets->IP[0] == '\0' || sets->IP[0] < 0) {
         fprintf_s(stdout, "Current OS is %d bit.\nNow enter server address: ", sizeof(void*) * 8);
         scanf_s("%16s", &ipaddr, 16);
-        if (*ipaddr != 0)
-            memcpy(sets->IP, &ipaddr, 16);
-        else
-            memcpy(&ipaddr, sets->IP, 16);
-    };
-    memcpy(&setting, sets, sizeof(st_setting));
+        if (*ipaddr != 0) {
+            memcpy(setting.IP, &ipaddr, 16);
+        }
+        if (sets != NULL && sets->PORT != 0) {
+            setting.PORT = sets->PORT;
+        }
+    } else {
+        memcpy(&ipaddr, sets->IP, 16);
+        memcpy(&setting, sets, sizeof(st_setting));
+    }
     client.srvaddr.sin_family = AF_INET;
 #ifdef _UTILAPIS_
     inet_pton(AF_INET, ipaddr, (PVOID*)&client.srvaddr.sin_addr.s_addr);
@@ -145,11 +141,12 @@ int StartChat(int erno,
         return erno;
     else {
         if (func == NULL) {
+            setting.erno = -1;
             func = [](void*) {
 #ifndef _WIN32
                 return (void*)
 #endif
-                    printf("Lambda null func.\n"); };
+                    fprintf_s(stdout, "Lambda null func.\n"); };
         }
     }    
     Pthreadt threads;
@@ -225,9 +222,10 @@ RecvThreadProc(void* PrimaryUDP)
     int len = sizeof(P2Psock->addr);
     for (;;)
     {
-        char recvbuf[256];
         if (client.flag == 0 || P2Psock->socket == NULL)
             continue;
+        char recvbuf[256];
+        memset(recvbuf, 0, 256);
         int ret = recvfrom(P2Psock->socket, (char*)recvbuf, MAX_PACKET_SIZE, 0, (sockaddr*)&P2Psock->addr,
 #ifdef _WIN32
             &len
@@ -237,7 +235,7 @@ RecvThreadProc(void* PrimaryUDP)
         );
         if (ret <= 0)
         {
-            printf("Recv Message Error: %s!\n", strerror(ret));
+            fprintf(stdout, "Recv Message Error: %s!\n", strerror(ret));
             continue;
         } else {
             int c = 0;
@@ -248,18 +246,18 @@ RecvThreadProc(void* PrimaryUDP)
             peer.s_addr = P2Psock->addr.sin_addr.s_addr;
 #endif
             int port = P2Psock->addr.sin_port;
-            printf("Message from [%s:%d] >>\n", inet_ntoa(peer), port);
-            printf("----------------------------------------------------------------\n");
+            fprintf(stdout, "Message from [%s:%d] >>\n", inet_ntoa(peer), port);
+            fprintf(stdout, "----------------------------------------------------------------\n");
             for (c = 0; c < ret; c++)
             {
                 if (c > 0 && c % 32 == 0)
-                    printf("\n");
-                printf("%02x ", (unsigned char)recvbuf[c]);
+                    fprintf(stdout, "\n");
+                fprintf(stdout, "%02x ", (unsigned char)recvbuf[c]);
             }
-            printf("\n");
+            fprintf(stdout, "\n");
             for (c = 0; c < ret; c++)
-                printf("%c", (unsigned char)recvbuf[c]);
-            printf("\n");
+                fprintf(stdout, "%c", (unsigned char)recvbuf[c]);
+            fprintf(stdout, "\n");
         }
     }
 }
@@ -269,8 +267,6 @@ RecvThreadProc(void* PrimaryUDP)
 //重复MAXRETRY次
 int p2pMessage(unsigned char *userName, int UserIP, unsigned int UserPort, char const *Message)
 {
-    int MAXRETRY = 5;
-    int P2PMESSAGE = 100;
     SOCKET PrimaryUDP = socket(AF_INET, SOCK_DGRAM, 0);
     if (PrimaryUDP < 0)
     {
@@ -293,7 +289,7 @@ int p2pMessage(unsigned char *userName, int UserIP, unsigned int UserPort, char 
         std::cout << "socket binding failure!" << std::endl;
         return 0;
     }
-
+    int MAXRETRY = 5;
     for (int trytime = 0; trytime < MAXRETRY; trytime++)
     {
         sockaddr_in remote;
@@ -306,12 +302,12 @@ int p2pMessage(unsigned char *userName, int UserIP, unsigned int UserPort, char 
 #endif
             = htonl(UserIP);
 
-        st_trans MessageHead;
-        memset(&MessageHead, 0, sizeof(MessageHead));
-        MessageHead.uiCmdMsg = P2PMESSAGE;
-        memcpy(MessageHead.usr, userName, 24);
+        st_trans MessagePeer;
+        memset(&MessagePeer, 0, sizeof(MessagePeer));
+        MessagePeer.uiCmdMsg = PEER2P;
+        memcpy(MessagePeer.usr, userName, 24);
         //发送P2P消息头
-        int ppres = sendto(PrimaryUDP, (const char*)&MessageHead, 32, 0, (const sockaddr*)&remote, sizeof(remote));
+        int ppres = sendto(PrimaryUDP, (const char*)&MessagePeer, 32, 0, (const sockaddr*)&remote, sizeof(remote));
         //发送P2P消息体
         ppres = sendto(PrimaryUDP, (const char*)&Message, (int)strlen(Message) + 1, 0, (const sockaddr*)&remote, sizeof(remote));
         //等待接收消息线程修改标志
@@ -324,19 +320,21 @@ int p2pMessage(unsigned char *userName, int UserIP, unsigned int UserPort, char 
         }
         //没有接收到目标主机的回应，认为目标主机的端口
         //映射没有打开，那么发送请求到服务器要求“打洞”。
-        st_trans msg;
-        memset(&msg, 0, sizeof(st_trans));
-        msg.uiCmdMsg = CHATWITH;
-        memcpy(msg.type, "P2P", 4);
-        memcpy(msg.usr, trans.usr, 24);
-        memcpy(msg.peer_name, userName, 24);
+        st_trans MessageHost;
+        memset(&MessageHost, 0, sizeof(st_trans));
+        MessageHost.uiCmdMsg = PEER2P;
+        memcpy(MessageHost.type, "P2P", 4);
+        memcpy(MessageHost.usr, trans.usr, 24);
+        memcpy(MessageHost.peer_name, userName, 24);
         //请求服务器“打洞”
-        SendChatMsg(&msg);
+        SendChatMsg(&MessageHost);
+        //启动接收线程
         P2P_NETWORK pp_sock;
         pp_sock.addr = remote;
         pp_sock.socket = PrimaryUDP;
+        Pthreadt threads;
         if (client.count == 0) {
-            _beginthreadex(NULL, 0, RecvThreadProc, &pp_sock, 0, NULL);
+            _beginthreadex(NULL, 0, RecvThreadProc, &pp_sock, 0, &threads);
         }
         client.count++;
         Sleep(100);
