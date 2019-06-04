@@ -24,7 +24,7 @@ parseRcvMsg(void* lp) {
         fprintf(stdout, "\n");
 #endif
         st_trans *mesg = (st_trans*)rcv_buf;
-        if (mesg->uiCmdMsg == 0x6 && memcmp(mesg->retval, "ff", 2) == 0) {
+        if (mesg->uiCmdMsg == PEER2P && memcmp(mesg->retval, "ff", 2) == 0) {
             int ip = atoi((const char*)mesg->peerIP);
             unsigned char *val = (unsigned char *)&ip;
             int port = atoi((const char*)mesg->peer_port);
@@ -33,14 +33,18 @@ parseRcvMsg(void* lp) {
             if (port <= 0) {
                 fprintf(stdout, "Error number of user port, stop send p2p message!\n");
             } else {
-                st_trans trans{ 0x0,0x6, "0" };
-                int parse = p2pMessage(mesg->usr, ip, port, (char*)&trans);
+                struct PeerMessg p2pmsg;
+                memset(&p2pmsg, 0, sizeof(PeerMessg));
+                p2pmsg.cmd[0] = mesg->uiCmdMsg;
+                int parse = p2pMessage(mesg->usr, ip, port, (char*)&p2pmsg);
             }
         }
-        if (mesg->uiCmdMsg == 0x8) {
+        if (mesg->uiCmdMsg == V4L2IMG) {
             int ndt_len = atoi(rcv_buf + 22);
-            if (count = 0)
+            if (count = 0) {
                 fclose(fopen(filename, "w"));
+                count = 1;
+            }
             FILE * file = fopen(filename, "ab+");
             if (fw_len == ndt_len)
                 continue;
@@ -64,7 +68,6 @@ parseRcvMsg(void* lp) {
             exit(0);
             break;
         };
-        count++;
     };
 };
 
@@ -94,10 +97,10 @@ st_trans* SetChatMsg(st_trans& trans) {
     case CHATWITH: 
     {
         memcpy(trans.type, "NDT", 4);
+        trans.more_mesg.cmd[0] = CHATWITH;
         fprintf(stdout, "Input chat message, limit on 16 characters.\n");
-        memset(trans.peer_mesg.head, 0, 16);
-        trans.peer_mesg.cmd[0] = CHATWITH;
-        scanf_s("%16s", trans.peer_mesg.head, 16);
+        memset(trans.more_mesg.msg, 0, 16);
+        scanf_s("%16s", trans.more_mesg.msg, 16);
         break;
     }
     case HOSTGROUP:
@@ -142,13 +145,13 @@ int main()
         }
         int comm = 0;
         fprintf(stdout, "Input commond [1-13]: ");
-        if (scanf("%d", &comm) <= 0)
+        if (scanf("%2d", &comm) <= 0)
             break;
         st_trans msg;
         memset(&msg, 0, sizeof(st_trans));
         msg.uiCmdMsg = comm;
-        memcpy(msg.usr, "AAA", 4);
-        memcpy(msg.psw, "AAA", 4);
+        memcpy(msg.usr, "AAAAA", 6);
+        memcpy(msg.psw, "AAAAA", 6);
         memcpy(msg.peer_name, "iv9527", 7);
         msg = *SetChatMsg(msg);
         SendChatMsg(&msg);
