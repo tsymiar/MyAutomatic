@@ -15,7 +15,7 @@ int main()
     CvimgMat vm;
     //#undef CVML
 #ifdef CVML
-    vm.cvmat_test();
+    vm.cvmatTest();
 #endif
     cv::Mat mat = vm.getImageMat(img, 0);
     std::cout << "ShannonEntropy -> [" << img << "] = " << ShannonEntropy::getInstance()->SingleEntropy(mat) << std::endl;

@@ -1,3 +1,0 @@
-// 提示文件帮助 Visual Studio IDE 解释 Visual C++ 标识符,
-// https://go.microsoft.com/fwlink/?linkid=865984
-#define NEVAL(a) (a) & 0xff
