@@ -39,7 +39,7 @@ parseRcvMsg(void* lp) {
                 int parse = p2pMessage(mesg->usr, ip, port, (char*)&p2pmsg);
             }
         }
-        if (mesg->uiCmdMsg == V4L2IMG) {
+        if (mesg->uiCmdMsg == GETIMAGE) {
             int ndt_len = atoi(rcv_buf + 22);
             if (count = 0) {
                 fclose(fopen(filename, "w"));
