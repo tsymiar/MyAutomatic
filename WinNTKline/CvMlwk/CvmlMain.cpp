@@ -14,12 +14,9 @@ int main()
     const cv::String img = "../MfcUtil/image/taoxi.png";
     CvimgMat vm;
     //#undef CVML
-#ifdef CVML
-    vm.cvmatTest();
-#endif
     cv::Mat mat = vm.getImageMat(img, 0);
     std::cout << "ShannonEntropy -> [" << img << "] = " << ShannonEntropy::getInstance()->SingleEntropy(mat) << std::endl;
-    while (1);
+    vm.cvmatTest(img);
 #else
     CPyTensor tf;
     tf.testPyfunc();

@@ -6,14 +6,20 @@
 #endif
 #include <opencv2/opencv.hpp>
 
-struct CvimgMat {
+struct MatImgSet {
+    cv::String name;
+    cv::Mat image;
+};
+class CvimgMat {
+private:
+    MatImgSet* getImageSet(const cv::String& img, const cv::String& name);
+public:
     cv::Mat getImageMat(const cv::String& img, int flg = -1);
-    int saveMat2PNG(int w, int h, const cv::String& name);
     int interestRegionImage(const cv::String& src, const cv::String& mask);
     int mixedModelImage(const cv::String& img1, const cv::String& img2);
-    int bilateralImage(cv::Mat srcImage);
-    int medianFilterImage(const cv::String& image, int ksize = 3);
-    int neighbourAverageImage(cv::Mat srcImage, cv::Size ksize = cv::Size(3, 3));
-    int thresholdImage(cv::Mat srcImage);
-    int cvmatTest();
+    int medianFilterImage(const cv::String& src, int value = 3);
+    int neighbourAverageImage(const cv::String& src, cv::Size ksize = cv::Size(3, 3));
+    int bilateralImage(const cv::String & src);
+    int thresholdImage(const cv::String& src);
+    int cvmatTest(const cv::String& file);
 };

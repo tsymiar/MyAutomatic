@@ -5,21 +5,9 @@ using namespace cv;
 
 Mat g_imageMat;
 
-const cv::String g_cvPngStr =
-#ifdef CVML
-"../MfcUtil/image/taoxi.png"
-#else
-"../image/taoxi.png"
-#endif
-;
+const cv::String g_cvJpgStr = "../MfcUtil/image/taoxi.jpg";
+static cv::String g_cvPngStr = "../MfcUtil/image/taoxi.png";
 
-const cv::String g_cvJpgStr =
-#ifdef CVML
-"../MfcUtil/image/taoxi.jpg"
-#else
-"../image/taoxi.jpg"
-#endif
-;
 struct MatImages {
     Mat rawImage;
     Mat mskImage;
@@ -27,6 +15,10 @@ struct MatImages {
 struct ROIImages {
     MatImages roiImages;
     int flag = 0;
+};
+struct GaussImage {
+    MatImgSet set;
+    Size ksize;
 };
 
 void createAlphaMat(Mat &mat)
@@ -42,6 +34,24 @@ void createAlphaMat(Mat &mat)
             rgba[3] = saturate_cast<uchar>(0.5 * (rgba[1] + rgba[2]));
         }
     }
+}
+
+int saveMat2PNG(int w, int h, const String& name)
+{
+    Mat mat(w, h, CV_8UC4);
+    createAlphaMat(mat);
+    std::vector<int>compression_params;
+    compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+    compression_params.push_back(9);
+    try {
+        imwrite(name, mat, compression_params);
+    }
+    catch (std::runtime_error& ex) {
+        fprintf(stderr, "error trans jpeg to PNG format: %s\n", ex.what());
+        return -1;
+    }
+    fprintf(stdout, "save png file = '%s' (%d, %d).\n", name.c_str(), w, h);
+    return 0;
 }
 
 static void onROIxyTrackBar(int fix, void* usrdata)
@@ -76,86 +86,105 @@ static void onROIxyTrackBar(int fix, void* usrdata)
 
 static void onBilateralTrackBar(int d, void* usrdata)
 {
-    Mat *src = (Mat*)(usrdata);
-    Mat dst;
-    // Mat& dst = image;
-    if (src->flags < 0)
-        src = &g_imageMat;
-    bilateralFilter(*src, dst, d, d * 2, d / 2);
-    imshow("Bilateral", dst);
+    MatImgSet *src = (MatImgSet*)(usrdata);
+    if (src->image.flags < 0) {
+        src->image = g_imageMat;
+    }
+    Mat out;
+    bilateralFilter(src->image, out, d, d * 2, d / 2);
+    imshow(src->name, out);
 }
 
 static void onMedianFilterTrackBar(int ksize, void* usrdata)
 {
-    Mat src, dst;
-    memcpy(&src, usrdata, sizeof(Mat));
+    MatImgSet *src = (MatImgSet*)(usrdata);
     if (ksize == 3 || ksize == 5) {
-        src = imread(g_cvJpgStr, CV_8U | CV_16U | CV_32F);
+        src->image = imread(g_cvJpgStr, CV_8U | CV_16U | CV_32F);
     }
     if (ksize > 40) {
-        src = imread(g_cvJpgStr, CV_8U);
+        src->image = imread(g_cvJpgStr, CV_8U);
     }
-    if (ksize % 2 == 0)
+    if (ksize % 2 == 0) {
         ksize += 1;
-    medianBlur(src, dst, ksize);
-    imshow("MedianFilter", dst);
+    }
+    Mat out;
+    medianBlur(src->image, out, ksize);
+    imshow(src->name, out);
+}
+
+static void onNeighbourAverageTrackBar(int ksize, void* usrdata)
+{
+    GaussImage *src = (GaussImage*)(usrdata);
+    imshow(src->set.name, src->set.image);
+    if (src->ksize == Size(3, 3)) {
+        int size = 0;
+        if (ksize != 0 && (ksize % 2 == 0)) {
+            size = ksize + 1;
+        } else {
+            size = ksize;
+        }
+        src->ksize = Size(size, size);
+    }
+    Mat out;
+    GaussianBlur(src->set.image, out, src->ksize, ksize, 0);
+    imshow(src->set.name, out);
 }
 
 static void onThreshTrackBar(int old, void* usrdata)
 {
-    Mat dst, *src = (Mat*)(usrdata);
+    MatImgSet *src = (MatImgSet*)(usrdata);
+    if (src->image.flags <= 0) {
+        src->image = g_imageMat;
+    }
+    Mat out;
     // 二值化 
-    if (src->flags < 0)
-        src = &g_imageMat;
-    threshold(*src, dst, old, 255, 0);
-    imshow("Threshold", dst);
+    cvtColor(src->image, out, CV_BGR2GRAY);
+    threshold(src->image, out, old, 255, 0);
+    imshow(src->name, out);
 }
 
 static void onMixedTrackBar(int value, void* usrdata)
 {
-    Mat mixImage;
     MatImages *images = (MatImages*)(usrdata);
     double alpha = value / 255.0;
     double beta = (1.0 - alpha);
+    Mat mixImage;
     addWeighted(images->rawImage, beta, images->mskImage, alpha, 0.0, mixImage);
     imshow("Mixed Weights", mixImage);
 }
 
-int CvimgMat::saveMat2PNG(int w, int h, const String& name)
-{
-    Mat mat(w, h, CV_8UC4);
-    createAlphaMat(mat);
-    std::vector<int>compression_params;
-    compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
-    compression_params.push_back(9);
-    try {
-        imwrite(name, mat, compression_params);
-    }
-    catch (std::runtime_error& ex) {
-        fprintf(stderr, "error trans jpeg to PNG: %s\n", ex.what());
-        return -1;
-    }
-    fprintf(stdout, "save PNG file = '%s' (%d, %d).\n", name.c_str(), w, h);
-    return 0;
-}
-
 Mat CvimgMat::getImageMat(const String& img, int flg)
 {
-    Mat dst, src = imread(img, CV_LOAD_IMAGE_ANYDEPTH | CV_LOAD_IMAGE_ANYCOLOR);
+    Mat out, src = imread(img, CV_LOAD_IMAGE_ANYDEPTH | CV_LOAD_IMAGE_ANYCOLOR);
     if (flg == 0)
-        src = imread(img, 0);
+        src = imread(img, flg);
     if (!src.data)
-        fprintf(stdout, "error imread g_rawImage!\n");
+        fprintf(stdout, "error imread raw image!\n");
     else
     {
-        dst = src.clone();
-        if (flg == -1)
+        out = src.clone();
+        if (flg <= -1)
         {
             namedWindow("Raw image", WINDOW_NORMAL);
             imshow("Raw image", src);
         }
     }
-    return dst;
+    return out;
+}
+
+MatImgSet* CvimgMat::getImageSet(const String& img, const String& name)
+{
+    MatImgSet *image = NULL;
+    int len = sizeof(String) + sizeof(Mat);
+    image = (MatImgSet*)malloc(len);
+    memset(image, 0, len);
+    image->image = getImageMat(img);
+    image->name = name;
+    if (image->image.flags <= 0) {
+        fprintf(stdout, "%s: source image flag invalid.\n", name.c_str());
+        return NULL;
+    }
+    return image;
 }
 
 int CvimgMat::interestRegionImage(const String & src, const String & mask)
@@ -165,7 +194,7 @@ int CvimgMat::interestRegionImage(const String & src, const String & mask)
 
     if (!logImage.data)
     {
-        fprintf(stdout, "error imread logImage!\n");
+        fprintf(stdout, "error imread logo image!\n");
         return -1;
     }
     Mat imageROI{ Rect(0, 90, logImage.cols, logImage.rows) };
@@ -177,7 +206,7 @@ int CvimgMat::interestRegionImage(const String & src, const String & mask)
     Mat srcImage = imread(src);
     if (!srcImage.data)
     {
-        fprintf(stdout, "error imread roiImage!\n");
+        fprintf(stdout, "error imread roi image!\n");
         return -1;
     }
     ROIImages *images = NULL;
@@ -211,12 +240,12 @@ int CvimgMat::mixedModelImage(const String & img1, const String & img2)
     Mat image2 = imread(img2);
     // size(dpi) of image must same as img2
     if (image1.cols != image2.cols || image2.rows != image1.rows) {
-        fprintf(stdout, "g_mixImage: mismatch image's size!(%d,%d)->(%d,%d)\n", \
+        fprintf(stdout, "mixedModelImage: mismatch image's size!(%d,%d)->(%d,%d)\n", \
             image1.cols, image1.rows, image2.cols, image2.rows);
         return -2;
     }
     if (!image1.data || !image2.data) {
-        fprintf(stdout, "error imread alpha Image!\n");
+        fprintf(stdout, "error imread alpha image!\n");
         return -1;
     }
     int iv = 0;
@@ -226,94 +255,115 @@ int CvimgMat::mixedModelImage(const String & img1, const String & img2)
     memset(images, 0, len);
     images->rawImage = image1;
     images->mskImage = image2;
-    namedWindow("Mixed Weights", 0);
-    createTrackbar("weight", "Mixed Weights", &iv, 255, onMixedTrackBar, images);
-    imshow("Mixed Weights", images->rawImage);
-    fprintf(stdout, "mix img1 & img2 OK.\n");
+    String name = "Mixed Weights";
+    namedWindow(name, WINDOW_NORMAL);
+    createTrackbar("weight", name, &iv, 255, onMixedTrackBar, images);
+    imshow(name, images->rawImage);
+    fprintf(stdout, "Mixed image2 to image1 OK.\n");
     return 0;
 }
 
-int CvimgMat::bilateralImage(Mat srcImage)
+int CvimgMat::bilateralImage(const String & src)
 {
-    if (srcImage.flags <= 0) {
-        fprintf(stdout, "bilateralImage srcImage flag invalid.\n");
+    String name = "Bilateral";
+    MatImgSet *image = NULL;
+    int len = sizeof(String) + sizeof(Mat);
+    image = (MatImgSet*)malloc(len);
+    memset(image, 0, len);
+    image->image = getImageMat(src);
+    image->name = name;
+    if (image->image.flags <= 0) {
+        fprintf(stdout, "%s: source image flag invalid.\n", name.c_str());
         return -1;
     }
     int bilateralval = 8;
-    namedWindow("Bilateral", 0);
-    createTrackbar("bilateral", "Bilateral", &bilateralval, 400, onBilateralTrackBar, &srcImage);
-    imshow("Bilateral", srcImage);
-    fprintf(stdout, "BilateralFilter load OK.\n");
+    namedWindow(name, WINDOW_NORMAL);
+    createTrackbar("bilateral", name, &bilateralval, 400, onBilateralTrackBar, image);
+    imshow(name, image->image);
+    fprintf(stdout, "BilateralFilter create OK.\n");
     return 0;
 }
 
-int CvimgMat::medianFilterImage(const String& image, int ksize)
+int CvimgMat::medianFilterImage(const String& src, int value)
 {
-    int len = sizeof(Mat);
-    Mat srcImg = getImageMat(image);
-    Mat* imgMat = (Mat*)malloc(len);
-    memset(imgMat, 0, len);
-    memcpy(imgMat, &srcImg, len);
-    if (imgMat->flags <= 0) {
-        fprintf(stdout, "medianFilterImage srcImage flag invalid.\n");
+    String name = "MedianFilter";
+    MatImgSet *image = NULL;
+    int len = sizeof(String) + sizeof(Mat);
+    image = (MatImgSet*)malloc(len);
+    memset(image, 0, len);
+    image->image = getImageMat(src);
+    image->name = name;
+    if (image->image.flags <= 0) {
+        fprintf(stdout, "%s: source image flag invalid.\n", name.c_str());
         return -1;
     }
-    if (ksize % 2 == 0)
-        ksize += 1;
-    namedWindow("MedianFilter");
-    createTrackbar("median", "MedianFilter", &ksize, 100, onMedianFilterTrackBar, imgMat);
-    imshow("MedianFilter", srcImg);
-    fprintf(stdout, "MedianFilter load OK.\n");
+    if (value % 2 == 0)
+        value += 1;
+    namedWindow(name, WINDOW_NORMAL);
+    createTrackbar("median", name, &value, 100, onMedianFilterTrackBar, image);
+    imshow(name, image->image);
+    fprintf(stdout, "MedianFilter create OK.\n");
     return 0;
 }
 
-int CvimgMat::neighbourAverageImage(Mat srcImage, Size ksize)
+int CvimgMat::neighbourAverageImage(const String& src, Size ksize)
 {
-    if (srcImage.flags <= 0) {
-        fprintf(stdout, "neighbourAverageImage srcImage flag invalid.\n");
+    String name = "NeighbourAverage";
+    GaussImage *image = NULL;
+    int len = sizeof(MatImgSet) + sizeof(Size);
+    image = (GaussImage*)malloc(len);
+    memset(image, 0, len);
+    image->set.image = getImageMat(src);
+    image->set.name = name;
+    image->ksize = ksize;
+    if (image->set.image.flags <= 0) {
+        fprintf(stdout, "GaussianFilter: source image flag invalid.\n");
         return -1;
     }
-    Mat avgimg;
-    namedWindow("Neighbour Average");
-    GaussianBlur(srcImage, avgimg, ksize, 0, 0);
-    imshow("Neighbour Average", avgimg);
-    fprintf(stdout, "GaussianFilter load OK.\n");
+    int value = 0;
+    namedWindow(name);
+    createTrackbar("Average size", name, &value, 99, onNeighbourAverageTrackBar, image);
+    imshow(name, image->set.image);
+    fprintf(stdout, "GaussianFilter create OK.\n");
     return 0;
 }
 
-int CvimgMat::thresholdImage(Mat srcImage)
+int CvimgMat::thresholdImage(const String& src)
 {
-    if (srcImage.flags <= 0) {
-        fprintf(stdout, "thresholdImage srcImage flag invalid.\n");
+    String name = "Threshold";
+    MatImgSet *image = NULL;
+    int len = sizeof(String) + sizeof(Mat);
+    image = (MatImgSet*)malloc(len);
+    memset(image, 0, len);
+    image->image = getImageMat(src);
+    image->name = name;
+    if (image->image.flags <= 0) {
+        fprintf(stdout, "%s: source image flag invalid.\n", name.c_str());
         return -1;
     }
-    Mat imgDst;
-    int posTrackBar = 200;
-    cvtColor(srcImage, imgDst, CV_BGR2GRAY);
-    namedWindow("Threshold");
-    imshow("Threshold", srcImage);
-    createTrackbar("thresh", "Threshold", &posTrackBar, 255, onThreshTrackBar, &srcImage);
-    fprintf(stdout, "threshold for srcImage OK.\n");
+    int posTrackBar = 128;
+    namedWindow(name);
+    createTrackbar("thresh", name, &posTrackBar, 255, onThreshTrackBar, image);
+    imshow(name, image->image);
+    fprintf(stdout, "%s sets for source image OK.\n", name.c_str());
     return 0;
 }
 
-int CvimgMat::cvmatTest()
+int CvimgMat::cvmatTest(const String& file)
 {
-    const cv::String srcImg =
-#ifdef CVML
-        "../MfcUtil/image/qdu.bmp"
-#else
-        "../image/qdu.bmp"
-#endif
-        ;
-    interestRegionImage(srcImg, g_cvPngStr);
-    mixedModelImage(g_cvJpgStr, g_cvPngStr);
+    if (!file.empty() && file.length() > 0) {
+        g_cvPngStr = file;
+    }
+    const cv::String bkgImg = "../MfcUtil/image/qdu.bmp";
     g_imageMat = getImageMat(g_cvJpgStr);
-    bilateralImage(g_imageMat);
-    medianFilterImage(g_cvJpgStr);
-    neighbourAverageImage(g_imageMat);
-    thresholdImage(g_imageMat);
 
-    while (char(waitKey(1)) != 32) {}
+    interestRegionImage(bkgImg, g_cvPngStr);
+    mixedModelImage(g_cvJpgStr, g_cvPngStr);
+    medianFilterImage(g_cvJpgStr);
+    neighbourAverageImage(g_cvJpgStr);
+    bilateralImage(g_cvJpgStr);
+    thresholdImage(g_cvJpgStr);
+
+    while (char(waitKey(1)) != 27) {}
     return 0;
 }
