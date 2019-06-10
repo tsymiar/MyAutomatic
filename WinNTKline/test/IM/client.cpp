@@ -147,6 +147,10 @@ int main()
         fprintf(stdout, "Input commond [1-13]: ");
         if (scanf("%2d", &comm) <= 0)
             break;
+        if (comm > 13 || comm < 1) {
+            fprintf(stdout, "Input value error: beyound [1,13]\n");
+            break;
+        }
         st_trans msg;
         memset(&msg, 0, sizeof(st_trans));
         msg.uiCmdMsg = comm;

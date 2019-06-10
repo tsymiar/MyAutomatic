@@ -107,6 +107,9 @@
   <ItemGroup>
     <ClCompile Include="..\..\WinNTKline\MfcUtil\IM\IM.cc" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Makefile" />
+  </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <Link>
       <LibraryDependencies>pthread;%(LibraryDependencies)</LibraryDependencies>

@@ -1,7 +1,5 @@
-#include <cstdio>
 #include <cstdlib>
 #include <iostream>
-#include <fstream>
 #ifdef _WIN32
 #pragma comment(lib, "WS2_32.lib")
 #include <WinSock2.h>
@@ -123,6 +121,7 @@ typedef struct user_mesg {
         char npsw[24];
         unsigned char hgrp[24];
         unsigned char jgrp[24];
+        unsigned char ngrp[24];
     };
     class PeerStruct
     {
@@ -140,7 +139,7 @@ struct group_clazz {
     char brief[24];
     char members[MAX_MENBERS_PER_GROUP][24];
     unsigned int usrCnt;
-    char grpnm[24];
+    unsigned char grpnm[24];
     char grpmrk[24];
     char grpbrf[24];
 };
@@ -172,13 +171,13 @@ int user_is_line(char user[24]);
 int set_user_line(char user[24], Network& netwk);
 int set_user_peer(const char user[24], const char ip[INET_ADDRSTRLEN], const int port, type_socket sock);
 int set_user_quit(char user[24]);
+int get_user_seq(char user[24]);
 int save_acnt();
 int load_acnt();
-int get_user_ndx(char user[24]);
-int get_group_ndx(char group[24]);
+int find_group(unsigned char basis[24]);
 int host_group(char grpn[24], unsigned char brief[24]);
 int join_group(int no, char usr[24], char psw[24]);
-int leave_group(int no, char usr[24]);
+int exit_group(int no, char usr[24]);
 
 int main(int argc, char* argv[])
 {
@@ -472,7 +471,7 @@ type_thread_func monite(void *arg)
                         break;
                     case 0x2:
                         char susr[sizeof(user)];
-                        sprintf(susr, "User: %s(%s); group: join - %s, host - %s.", user.usr, user.sign, user.jgrp, user.hgrp);
+                        sprintf(susr, "User: %s(--%s--);", user.usr, user.sign);
                         memcpy(sd_bufs + 8, susr, strlen(susr) + 1);
                         sndlen = 8 + strlen(susr) + 1;
                         break;
@@ -487,7 +486,7 @@ type_thread_func monite(void *arg)
                     }
                     case 0x4:
                     {
-                        valrtn = get_user_ndx(user.usr);
+                        valrtn = get_user_seq(user.usr);
                         sprintf((sd_bufs + 2), "%x", NEVAL(valrtn));
                         if (1 == user_auth(user.usr, user.psw) && user.npsw != nullptr)
                             strcpy(users[valrtn].psw, user.npsw);
@@ -518,7 +517,7 @@ type_thread_func monite(void *arg)
                             break;
                         }
                         unsigned int uiIP = 0;
-                        valrtn = get_user_ndx(user.peer);
+                        valrtn = get_user_seq(user.peer);
                         if (valrtn >= 0) {
                             if (user_is_line(user.peer) >= 0) {
                                 fprintf(stdout, "``` '%s' wants to P2P with '%s'\n", user.usr, user.peer);
@@ -565,7 +564,7 @@ type_thread_func monite(void *arg)
                             sndlen = 64;
                             break;
                         }
-                        valrtn = get_user_ndx(user.peer);
+                        valrtn = get_user_seq(user.peer);
                         if (valrtn >= 0) {
                             if (user_is_line(user.peer) >= 0) {
                                 Network ndtnet = queryNetworkParams(valrtn);
@@ -621,7 +620,11 @@ type_thread_func monite(void *arg)
                             if (errno != ECHILD) {
                                 mesg = strerror(errno);
                             } else {
-                                mesg = (char*)"sucess";
+                                if (access(IMAGE_FILE, 0) == 0) {
+                                    mesg = (char*)"sucess";
+                                } else {
+                                    mesg = (char*)"not save image file";
+                                }
                             }
                             sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
                             strcpy((sd_bufs + 8), mesg);
@@ -684,7 +687,20 @@ type_thread_func monite(void *arg)
                     break;
                     case 0xA:
                     {
-                        valrtn = host_group(user.usr, user.jgrp);
+                        strcpy((sd_bufs + 8), "Groups list:\n");
+                        for (c = 0; c < MAX_GROUPS; c++) {
+                            if (strlen(groups[c].group.name) >> 0) {
+                                sprintf(sd_bufs + 2, "%x", c);
+                                strcpy((sd_bufs + 8 * (c + 4)), groups[c].group.name);
+                            };
+                            if (groups[c].group.name[0] == '\0')
+                                break;
+                        };
+                        sndlen = 8 * (c + 4 + 3);
+                    } break;
+                    case 0xB:
+                    {
+                        valrtn = host_group(user.usr, user.hgrp);
                         sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
                         if (valrtn == -2) {
                             strcpy((sd_bufs + 8), "Host group rejected.");
@@ -698,10 +714,30 @@ type_thread_func monite(void *arg)
                             sndlen = 56;
                         }
                     } break;
-                    case 0xB: // set user sign
+                    case 0xC:
                     {
-                        memcpy(&group, &user, sizeof(group));
-                        valrtn = get_group_ndx(group.grpnm);
+                        valrtn = join_group(find_group(user.jgrp), user.usr, reinterpret_cast<char*>(user.jgrp));
+                        sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
+                        if (valrtn == -1) {
+                            strcpy((sd_bufs + 8), "You have already in this group.");
+                        } else if (valrtn == -2) {
+                            strcpy((sd_bufs + 8), "Wrong pass code to this group.");
+                        }
+                        sndlen = 48;
+                    } break;
+                    case 0xD:
+                    {
+                        valrtn = exit_group(find_group(user.ngrp), user.usr);
+                        sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
+                        if (valrtn == 0)
+                            strcpy((sd_bufs + 8), "Leave group successfully.");
+                        else
+                            strcpy((sd_bufs + 8), "You aren't yet in this group.");
+                        sndlen = 42;
+                    } break;
+                    case 0xE:
+                    {
+                        valrtn = find_group(user.ngrp);
                         sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
                         if (valrtn == -1) {
                             strcpy((sd_bufs + 8), "No such group.");
@@ -718,44 +754,9 @@ type_thread_func monite(void *arg)
                             sndlen = 8 * (c + 4 + 4);
                         };
                     } break;
-                    case 0xC:
-                    {
-                        valrtn = join_group(get_group_ndx(user.usr), user.usr, reinterpret_cast<char*>(user.jgrp));
-                        sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
-                        if (valrtn == -1) {
-                            strcpy((sd_bufs + 8), "You have already in this group.");
-                        } else if (valrtn == -2) {
-                            strcpy((sd_bufs + 8), "Wrong pass code to this group.");
-                        }
-                        sndlen = 48;
-                    } break;
-                    case 0xD:
-                    {
-                        strcpy((sd_bufs + 8), "Groups list:\n");
-                        for (c = 0; c < MAX_GROUPS; c++) {
-                            if (strlen(groups[c].group.name) >> 0) {
-                                sprintf(sd_bufs + 2, "%x", c);
-                                strcpy((sd_bufs + 8 * (c + 4)), groups[c].group.name);
-                            };
-                            if (groups[c].group.name[0] == '\0')
-                                break;
-                        };
-                        sndlen = 8 * (c + 4 + 3);
-                    } break;
-                    case 0xE:
-                    {
-                        memcpy(&group, &user, sizeof(group));
-                        valrtn = leave_group(get_group_ndx(group.grpnm), user.usr);
-                        sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
-                        if (valrtn == 0)
-                            strcpy((sd_bufs + 8), "Leave group successfully.");
-                        else
-                            strcpy((sd_bufs + 8), "You aren't yet in this group.");
-                        sndlen = 42;
-                    } break;
                     case 0xF:
                     { //loop1
-                        valrtn = get_group_ndx(group.grpnm);
+                        valrtn = find_group(group.grpnm);
                         sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
                         for (int i = 0; i < MAX_ACTIVE; i++)
                             set_n_get_mem(&active[i], i);
@@ -1146,7 +1147,7 @@ int user_auth(char usr[24], char psw[24]) {
 int new_user(char usr[24], char psw[24]) {
     if (usr[0] == '\0')
         return -4;
-    if (0 <= get_user_ndx(usr)) {
+    if (0 <= get_user_seq(usr)) {
         return -3;
     }
     char *n = usr;
@@ -1244,7 +1245,7 @@ int set_user_peer(const char user[24], const char ip[INET_ADDRSTRLEN], const int
     }
     return -4;
 }
-int get_user_ndx(char user[24]) {
+int get_user_seq(char user[24]) {
     char *u = user;
     if (u[0] == '\0')
         return -1;
@@ -1254,14 +1255,19 @@ int get_user_ndx(char user[24]) {
     };
     return -1;
 };
-int get_group_ndx(char group[24]) {
-    char *x = group;
+int find_group(unsigned char basis[24]) {
+    char *x = (char*)basis;
     if (x[0] == '\0')
         return -1;
     for (int i = 0; i < MAX_GROUPS; i++) {
         if (strcmp(groups[i].group.name, x) == 0)
             return i;
+        for (int j = 0; j < MAX_MENBERS_PER_GROUP; j++) {
+            if (strcmp(groups[i].group.members[j], x) == 0)
+                return i;
+        }
     };
+
     return -1;
 };
 int host_group(char grpn[24], unsigned char brief[24]) {
@@ -1298,7 +1304,7 @@ int join_group(int no, char usr[24], char brf[24]) {
     };
     return -3;
 };
-int leave_group(int no, char usr[24]) {
+int exit_group(int no, char usr[24]) {
     char *m = usr;
     for (int i = 0; i < MAX_GROUPS; i++) {
         if ((strcmp(groups[no].group.members[i], m) == 0)) {
