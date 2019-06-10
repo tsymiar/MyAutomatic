@@ -10,6 +10,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IM", "..\LinuxSrvc\IM\IM.vcxproj", "{28813B8F-EA1E-4039-9BDE-11F0EB52986C}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Linux", "Linux", "{9AF30FB0-9135-4EBA-B07E-16B1F1D98C76}"
+	ProjectSection(SolutionItems) = preProject
+		..\LinuxSrvc\Makefile = ..\LinuxSrvc\Makefile
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Mix", "Mix", "{929677BC-1A53-4CD4-B120-259D6A7FDBDB}"
 EndProject

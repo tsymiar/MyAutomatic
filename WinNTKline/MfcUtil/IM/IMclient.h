@@ -148,7 +148,6 @@ typedef struct MSG_TRANS {
     unsigned char type[4];
     union {
         unsigned char usr[24];
-        unsigned char group_name[24];
     };
     union {
         char psw[24];
@@ -163,6 +162,7 @@ typedef struct MSG_TRANS {
         unsigned char peer_port[24];
         unsigned char group_host[24];
         unsigned char group_join[24];
+        unsigned char group_name[24];
     };
     struct PeerMessg more_mesg;
 } st_trans;
