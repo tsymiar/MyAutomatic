@@ -1,5 +1,6 @@
 #include <cstdlib>
 #include <iostream>
+#include <time.h>
 #ifdef _WIN32
 #pragma comment(lib, "WS2_32.lib")
 #include <WinSock2.h>
@@ -252,7 +253,11 @@ type_thread_func monite(void *arg)
     getpeername(rcv_sock, reinterpret_cast<struct sockaddr *>(&peerAddr), &peerLen);
     const char* IP = inet_ntop(AF_INET, &peerAddr.sin_addr, ipAddr, sizeof(ipAddr));
     const int PORT = ntohs(peerAddr.sin_port);
-    fprintf(stdout, "accepted peer address [%s:%d]\n", IP, PORT);
+    time_t t;
+    struct tm * lt;
+    time(&t);
+    lt = localtime(&t);
+    fprintf(stdout, "accepted peer address [%s:%d] (@ %d/%d/%d %d:%d:%d)\n", IP, PORT, lt->tm_year + 1900, lt->tm_mon, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
     bool set = true;
     setsockopt(rcv_sock, SOL_SOCKET, SO_KEEPALIVE, reinterpret_cast<const char*>(&set), sizeof(bool));
     if (rcv_sock
@@ -512,10 +517,6 @@ type_thread_func monite(void *arg)
                     } break;
                     case 0x6:
                     {
-                        if (memcmp(user.chk, "P2P", 4) == 0) {
-                            sprintf((sd_bufs + 8), "'%s' is communicating with '%s' via P2P.", user.usr, user.peer);
-                            break;
-                        }
                         unsigned int uiIP = 0;
                         valrtn = get_user_seq(user.peer);
                         if (valrtn >= 0) {
@@ -540,6 +541,14 @@ type_thread_func monite(void *arg)
                                 };
                                 sprintf((sd_bufs + 32), "%d", uiIP);
                                 sprintf((sd_bufs + 56), "%d", p2pnet.port);
+                                if (memcmp(user.chk, "P2P", 4) == 0) { // recieve a hole digging message
+                                    fprintf(stdout, "'%s' is communicating with '%s' via P2P.\n", user.usr, user.peer);
+                                    strcpy((sd_bufs + 4), "P2P");
+                                    strcpy((sd_bufs + 8), user.peer);
+                                    sprintf((sd_bufs + 64), "%s request a hole.", user.usr);
+                                    send(p2pnet.socket, sd_bufs, 108, 0);
+                                    break;
+                                }
                                 // p2p_req2usr
                             } else {
                                 valrtn = -2;
