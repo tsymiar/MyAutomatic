@@ -108,7 +108,9 @@
     <ClInclude Include="v4l2.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="sample.c" />
+    <ClCompile Include="sample.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="v4l2.c" />
   </ItemGroup>
   <ItemGroup>

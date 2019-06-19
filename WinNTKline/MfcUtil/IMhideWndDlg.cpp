@@ -484,7 +484,7 @@ st_trans transMsg;
 
 void callbackSets(char* psw)
 {
-    memcpy(transMsg.npsw, psw, 24);
+    memcpy(transMsg.user_newpass, psw, 24);
     SendChatMsg(&transMsg);
 }
 

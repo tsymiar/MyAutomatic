@@ -123,7 +123,7 @@
     <ClInclude Include="netwk\Simulation.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\LinuxSrvc\gSOAPverify\soap\stdsoap2.h">
+    <ClInclude Include="..\..\LinuSrvc\gSOAPverify\soap\stdsoap2.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="html\cefWebKit.h">
@@ -242,13 +242,13 @@
     <ClCompile Include="mygl\texture.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\soapC.cpp">
+    <ClCompile Include="..\..\LinuSrvc\gSOAPverify\soap\soapC.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\soapClient.cpp">
+    <ClCompile Include="..\..\LinuSrvc\gSOAPverify\soap\soapClient.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\stdsoap2.cpp">
+    <ClCompile Include="..\..\LinuSrvc\gSOAPverify\soap\stdsoap2.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="html\cefWebKit.cpp">
@@ -327,7 +327,7 @@
     <None Include="script\reptile.py">
       <Filter>配置文件</Filter>
     </None>
-    <None Include="..\..\LinuxSrvc\gSOAPverify\file\myautomatic.sql">
+    <None Include="..\..\LinuSrvc\gSOAPverify\file\myautomatic.sql">
       <Filter>配置文件</Filter>
     </None>
   </ItemGroup>

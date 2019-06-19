@@ -11,9 +11,9 @@
 int main()
 {
 #ifdef WIN32
-    const cv::String img = "../MfcUtil/image/taoxi.png";
     CvimgMat vm;
     //#undef CVML
+    const cv::String img = "../MfcUtil/image/taoxi.jpg";
     cv::Mat mat = vm.getImageMat(img, 0);
     std::cout << "ShannonEntropy -> [" << img << "] = " << ShannonEntropy::getInstance()->SingleEntropy(mat) << std::endl;
     vm.cvmatTest(img);

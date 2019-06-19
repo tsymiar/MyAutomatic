@@ -22,4 +22,5 @@ public:
     int bilateralImage(const cv::String & src);
     int thresholdImage(const cv::String& src);
     int cvmatTest(const cv::String& file);
+    int cvmatTest();
 };

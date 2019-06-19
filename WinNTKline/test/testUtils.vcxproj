@@ -100,7 +100,7 @@
       <Optimization>MaxSpeed</Optimization>
       <PreprocessorDefinitions>_WINSOCK_DEPRECATED_NO_WARNINGS;_UTILAPIS_;_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(libPNG);$(CEFDIR);$(OPENCV)\include;$(SolutionDir)MfcUtil;$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\font;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(libPNG);$(CEFDIR);$(OPENCV)\include;$(SolutionDir)MfcUtil;$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\font;$(SolutionDir)..\LinuSrvc\gSOAPverify\soap</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>
       </DisableSpecificWarnings>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
@@ -130,7 +130,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_UTILAPIS_;_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(libPNG);$(CEFDIR);$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\font;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap;$(SolutionDir)MfcUtil</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(libPNG);$(CEFDIR);$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\font;$(SolutionDir)..\LinuSrvc\gSOAPverify\soap;$(SolutionDir)MfcUtil</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4819</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -158,7 +158,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(libPNG);$(CEFDIR);$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\font;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap;$(SolutionDir)MfcUtil</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(libPNG);$(CEFDIR);$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\font;$(SolutionDir)..\LinuSrvc\gSOAPverify\soap;$(SolutionDir)MfcUtil</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -187,7 +187,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(libPNG);$(CEFDIR);$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\font;$(SolutionDir)..\LinuxSrvc\gSOAPverify\soap;$(SolutionDir)MfcUtil</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(libPNG);$(CEFDIR);$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\font;$(SolutionDir)..\LinuSrvc\gSOAPverify\soap;$(SolutionDir)MfcUtil</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -231,13 +231,13 @@
     <ClInclude Include="testUtilsDlg.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\soapC.cpp">
+    <ClCompile Include="..\..\LinuSrvc\gSOAPverify\soap\soapC.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\soapClient.cpp">
+    <ClCompile Include="..\..\LinuSrvc\gSOAPverify\soap\soapClient.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\stdsoap2.cpp">
+    <ClCompile Include="..\..\LinuSrvc\gSOAPverify\soap\stdsoap2.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\MfcUtil\deep\DepthView.cpp">

@@ -133,8 +133,8 @@ void CLoginDlg::OnBnClickedLogin()
     }
     md5_str(m_pswd, hexmd5);
     hex_to_str((unsigned char*)hexmd5, out);
-    memcpy(soapele.imusr.psw, get_Hash(out, 16, out), 16);
-    sprintf_s(auth, "Login@acc=%s&psw=%s", m_acnt, soapele.imusr.psw);
+    memcpy(soapele.imusr.password, get_Hash(out, 16, out), 16);
+    sprintf_s(auth, "Login@acc=%s&psw=%s", m_acnt, soapele.imusr.password);
     if (m_IP[0] == '\0' || m_IP[0] == '\x30')
         sprintf_s(addr, 256, "http://%s:%s/myweb.cgi", dftip, m_Port);
     else
@@ -150,12 +150,13 @@ void CLoginDlg::OnBnClickedLogin()
     }
     memcpy(soapele.sets.auth, auth, sizeof(auth));
     memcpy(soapele.sets.addr, addr, sizeof(addr));
-    memcpy(soapele.imusr.usr, m_acnt, sizeof(m_acnt));
+    memcpy(soapele.imusr.username, m_acnt, sizeof(m_acnt));
     memcpy(soapele.sets.IP, m_IP, 16);
     //CloseHandle((HANDLE)_beginthreadex(NULL, 0, \
     //    (_beginthreadex_proc_type)&call_soap_thrd \
     //    , (void *)&soapele, 0, NULL));
-    soapele.sets.erno = soap_call_api__login_by_key(&soapele.soap, soapele.sets.addr, "", (char*)soapele.imusr.usr, (char*)soapele.imusr.psw, soapele.rslt);
+    soapele.sets.erno = soap_call_api__login_by_key(&soapele.soap, soapele.sets.addr, "", 
+        (char*)soapele.imusr.username, (char*)soapele.imusr.password, soapele.rslt);
     switch (soapele.sets.erno)
     {
     case 0:
@@ -287,6 +288,7 @@ void CLoginDlg::getNsetIPs()
 void CLoginDlg::OnCbnSelchangeCom()
 {
     CString sip;
+    CvimgMat image;
     CTPclient* m_ctp = NULL;
     int curNo = m_combo.GetCurSel();
     m_combo.GetLBText(curNo, sip);
@@ -325,14 +327,13 @@ void CLoginDlg::OnCbnSelchangeCom()
         m_ComGL->ShowWindow(SW_SHOWNORMAL);
         break;
     case 5:
-        CvimgMat image;
-        image.cvmat_test();
+        image.cvmatTest();
         break;
     case 6:
         m_ipCtrl.SetAddress(ntohl(inet_addr(st_ini[m_combo.GetCount() - curNo - 1].addr)));
         m_logport.SetWindowText(st_ini[m_combo.GetCount() - curNo - 1].port);
         break;
-    default:break;
+    default: break;
     }
 }
 

@@ -1,5 +1,5 @@
 //
-#include"../util/_String-inl.h"
+#include"../util/String_-inl.h"
 #include"mainSoap.h"
 #include"../sql/sqlofDB.h"
 #include"../sys/sysstatus.h"
@@ -271,7 +271,7 @@ int main_server(int argc, char** argv)
 int api__trans(struct soap *soap, char* msg, char* rtn[])
 {
     int j = 0;
-    _String str;
+    String_ str;
     struct PARAM {
         char key[16];
         char value[16];
@@ -280,7 +280,7 @@ int api__trans(struct soap *soap, char* msg, char* rtn[])
     char*    token = NULL;
     struct PARAM params[8];
     char *text[8] = { msg };
-    int noeq = str.find_char(text, '=');
+    int noeq = str.charcount_(text, '=');
     printf("GET:[%s][%d]\n", msg, noeq);
     token = strtok(msg, "@&");
     for (int i = 0; i < 8; i++) {
@@ -297,7 +297,7 @@ int api__trans(struct soap *soap, char* msg, char* rtn[])
         curstr[j] = token;
         if (strstr(curstr[j], "=") != NULL)
         {
-            str._strcut((unsigned char*)curstr[j], '=', params[j].key, params[j].value);
+            str.strcut_((unsigned char*)curstr[j], '=', params[j].key, params[j].value);
             j++;
         }
         token = strtok(NULL, "&");
