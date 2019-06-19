@@ -15,6 +15,7 @@
 #include <sys/shm.h>
 #include <sys/ipc.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
 #include <pthread.h>
 #include <unistd.h>
 #include <cstring>
@@ -518,6 +519,7 @@ type_thread_func monite(void *arg)
                     case 0x6:
                     {
                         unsigned int uiIP = 0;
+                        strcpy((sd_bufs + 8), user.usr);
                         valrtn = get_user_seq(user.peer);
                         if (valrtn >= 0) {
                             if (user_is_line(user.peer) >= 0) {
@@ -543,10 +545,18 @@ type_thread_func monite(void *arg)
                                 sprintf((sd_bufs + 56), "%d", p2pnet.port);
                                 if (memcmp(user.chk, "P2P", 4) == 0) { // recieve a hole digging message
                                     fprintf(stdout, "'%s' is communicating with '%s' via P2P.\n", user.usr, user.peer);
+                                    sprintf(sd_bufs + 2, "%x", NEVAL(0));
                                     strcpy((sd_bufs + 4), "P2P");
-                                    strcpy((sd_bufs + 8), user.peer);
                                     sprintf((sd_bufs + 64), "%s request a hole.", user.usr);
-                                    send(p2pnet.socket, sd_bufs, 108, 0);
+                                    if (-1 != send(p2pnet.socket, sd_bufs, 108, 0)) {
+                                        fprintf(stdout, "Success send command to %s.\n", user.peer);
+                                    } else {
+                                        memset(sd_bufs + 8, 0, 248);
+                                        sprintf(sd_bufs + 2, "%x", NEVAL(-1));
+                                        sprintf((sd_bufs + 32), "fail send command to %s.", user.peer);
+                                        send(rcv_sock, sd_bufs, sndlen, 0);
+                                        fprintf(stdout, "Got failure trans command to %s:%d (%s).\n", p2pnet.ip, p2pnet.port, strerror(errno));
+                                    }
                                     break;
                                 }
                                 // p2p_req2usr
@@ -559,17 +569,17 @@ type_thread_func monite(void *arg)
                             sprintf((sd_bufs + 32), "Get user network: No such user(%s)!", user.peer);
                         }
                         sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
-                        strcpy((sd_bufs + 8), user.peer);
                         unsigned char *val = reinterpret_cast<unsigned char *>(&uiIP);
                         fprintf(stdout, ">>> get client peer [%u.%u.%u.%u:%s]\n", val[3], val[2], val[1], val[0], sd_bufs + 56);
                         sndlen = 64;
                     } break;
                     case 0x7:
                     {
+                        strcpy((sd_bufs + 8), user.usr);
                         if (memcmp(user.chk, "NDT", 4) == 0) {
                             fprintf(stdout, "'%s' is communicating with '%s' via NDT.\n", user.usr, user.peer);
                         } else {
-                            sprintf((sd_bufs + 8), "Check message error if NDT(network data translation).");
+                            sprintf((sd_bufs + 32), "Check message error for Network Data Translation.");
                             sndlen = 64;
                             break;
                         }
@@ -592,11 +602,16 @@ type_thread_func monite(void *arg)
                                     strcpy((char*)&user.status, "200");
                                     memcpy(ndtmsg + 8, &user.peer_mesg.msg, 24);
                                     if (-1 != send(ndtnet.socket, ndtmsg, 32, 0)) {
-                                        sprintf((sd_bufs + 32), "[%c] NDT success to %s(%s:%d).",
-                                            random, user.peer, ndtnet.ip, ndtnet.port);
-                                        sndlen = 120;
+                                        sprintf((sd_bufs + 32), "[%c] NDT success to %s.", random, user.peer);
+                                        sndlen = 80;
                                     } else {
-                                        sprintf((sd_bufs + 32), "Got failure while Sending message.");
+                                        struct stat sock_stat;
+                                        if (EBADF == fstat(ndtnet.socket, &sock_stat)) {
+                                            fprintf(stdout, "Error: socket descriptor - %d.\n", ndtnet.socket);
+                                        } else {
+                                            fprintf(stdout, "Error: %s.\n", strerror(errno));
+                                        }
+                                        sprintf((sd_bufs + 32), "Got failure while sending a message.");
                                         sndlen = 72;
                                     }
                                 }

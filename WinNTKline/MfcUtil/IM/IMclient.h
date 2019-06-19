@@ -114,6 +114,7 @@ typedef struct CLIENT
     CRITICAL_SECTION wrcon;
     char url[64];
     int flag = 0;
+    volatile int rcvndt = 0;
     void* Dlg;
     void(*fp2p)(void*);
     int count = 0;
@@ -132,39 +133,46 @@ typedef struct IM_SETTING {
     unsigned int PORT;
 } st_setting;
 
-struct PeerMessg
+struct MainMesg
+{
+    unsigned char message[16];
+    unsigned char status[8];
+};
+
+struct MoreMesg
 {
     unsigned char rsv[2];
     unsigned char cmd[2];
     unsigned char val[4];
-    unsigned char msg[16];
-    unsigned char status[8];
+    struct MainMesg mesg;
 };
 
 typedef struct MSG_TRANS {
     unsigned char reserve;
     unsigned char uiCmdMsg;
-    unsigned char retval[2];
+    unsigned char value[2];
     unsigned char type[4];
     union {
-        unsigned char usr[24];
+        unsigned char username[24];
+        struct MainMesg recv_mesg;
     };
     union {
-        char psw[24];
+        char password[24];
         char TOKEN[24];
         char peerIP[24];
+        char errMsg[24];
         unsigned char group_mark[24];
     };
     union {
-        unsigned char sign[24];
-        unsigned char npsw[24];
+        unsigned char user_sign[24];
+        unsigned char user_newpass[24];
         unsigned char peer_name[24];
         unsigned char peer_port[24];
         unsigned char group_host[24];
         unsigned char group_join[24];
         unsigned char group_name[24];
     };
-    struct PeerMessg more_mesg;
+    struct MoreMesg more_mesg;
 } st_trans;
 
 struct MENU {
@@ -247,11 +255,14 @@ int StartChat(int erno,
     (*func)(void*)
 );
 int SendChatMsg(st_trans* msg = NULL);
-int GetStatus();
 int callbackLog(char* usr, char* psw);
 int CloseChat();
 int p2pMessage(unsigned char *userName, int UserIP, unsigned int UserPort, char const *Message);
 #ifdef _WIN32
 int SetClientDlg(void* Wnd);
 #endif
+int GetChatFlag();
+void SetChatFlag(int flag);
+bool GetNDTState();
+void SetNDTState(bool stat);
 #endif

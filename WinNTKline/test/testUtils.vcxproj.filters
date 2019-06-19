@@ -119,13 +119,13 @@
     <ClCompile Include="..\MfcUtil\netwk\Simulation.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\soapC.cpp">
+    <ClCompile Include="..\..\LinuSrvc\gSOAPverify\soap\soapC.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\soapClient.cpp">
+    <ClCompile Include="..\..\LinuSrvc\gSOAPverify\soap\soapClient.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\LinuxSrvc\gSOAPverify\soap\stdsoap2.cpp">
+    <ClCompile Include="..\..\LinuSrvc\gSOAPverify\soap\stdsoap2.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\MfcUtil\html\cefWebKit.cpp">

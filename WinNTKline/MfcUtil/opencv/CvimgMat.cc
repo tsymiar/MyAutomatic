@@ -5,8 +5,9 @@ using namespace cv;
 
 Mat g_imageMat;
 
-const cv::String g_cvJpgStr = "../MfcUtil/image/taoxi.jpg";
-static cv::String g_cvPngStr = "../MfcUtil/image/taoxi.png";
+String imgFiles = "../MfcUtil/image/taoxi.";
+const String g_jpegFile = imgFiles + "jpeg";
+static String g_jpgFile = imgFiles + "jpg";
 
 struct MatImages {
     Mat rawImage;
@@ -59,7 +60,7 @@ static void onROIxyTrackBar(int fix, void* usrdata)
     ROIImages *images = (ROIImages*)(usrdata);
     // images->rawImage.flags < 0 ? (Mat*)memcpy(images, usrdata, sizeof(RoiImages)) : &imread(dstPng);
     if (images->roiImages.rawImage.flags <= 0) {
-        Mat img = imread(g_cvPngStr);
+        Mat img = imread(g_jpegFile);
         if (img.flags <= 0) {
             fprintf(stdout, "raw image is null!\n");
             return;
@@ -99,10 +100,10 @@ static void onMedianFilterTrackBar(int ksize, void* usrdata)
 {
     MatImgSet *src = (MatImgSet*)(usrdata);
     if (ksize == 3 || ksize == 5) {
-        src->image = imread(g_cvJpgStr, CV_8U | CV_16U | CV_32F);
+        src->image = imread(g_jpgFile, CV_8U | CV_16U | CV_32F);
     }
     if (ksize > 40) {
-        src->image = imread(g_cvJpgStr, CV_8U);
+        src->image = imread(g_jpgFile, CV_8U);
     }
     if (ksize % 2 == 0) {
         ksize += 1;
@@ -189,7 +190,7 @@ MatImgSet* CvimgMat::getImageSet(const String& img, const String& name)
 
 int CvimgMat::interestRegionImage(const String & src, const String & mask)
 {
-    saveMat2PNG(90, 90, g_cvPngStr);
+    saveMat2PNG(90, 90, g_jpegFile);
     Mat logImage = imread(mask);
 
     if (!logImage.data)
@@ -236,7 +237,7 @@ int CvimgMat::interestRegionImage(const String & src, const String & mask)
 int CvimgMat::mixedModelImage(const String & img1, const String & img2)
 {
     Mat image1 = imread(img1);
-    saveMat2PNG(image1.rows, image1.cols, g_cvPngStr);
+    saveMat2PNG(image1.rows, image1.cols, g_jpegFile);
     Mat image2 = imread(img2);
     // size(dpi) of image must same as img2
     if (image1.cols != image2.cols || image2.rows != image1.rows) {
@@ -352,18 +353,23 @@ int CvimgMat::thresholdImage(const String& src)
 int CvimgMat::cvmatTest(const String& file)
 {
     if (!file.empty() && file.length() > 0) {
-        g_cvPngStr = file;
+        g_jpgFile = file;
     }
-    const cv::String bkgImg = "../MfcUtil/image/qdu.bmp";
-    g_imageMat = getImageMat(g_cvJpgStr);
+    const cv::String bkgImage = "../MfcUtil/image/qdu.bmp";
+    g_imageMat = getImageMat(g_jpgFile);
 
-    interestRegionImage(bkgImg, g_cvPngStr);
-    mixedModelImage(g_cvJpgStr, g_cvPngStr);
-    medianFilterImage(g_cvJpgStr);
-    neighbourAverageImage(g_cvJpgStr);
-    bilateralImage(g_cvJpgStr);
-    thresholdImage(g_cvJpgStr);
+    interestRegionImage(bkgImage, g_jpegFile);
+    mixedModelImage(g_jpgFile, g_jpegFile);
+    neighbourAverageImage(g_jpgFile);
+    medianFilterImage(g_jpgFile);
+    bilateralImage(g_jpgFile);
+    thresholdImage(g_jpgFile);
 
     while (char(waitKey(1)) != 27) {}
     return 0;
+}
+
+int CvimgMat::cvmatTest() 
+{
+    return cvmatTest(g_jpegFile);
 }

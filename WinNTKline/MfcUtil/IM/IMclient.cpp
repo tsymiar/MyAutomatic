@@ -64,12 +64,14 @@ int InitChat(st_setting* sets) {
         if (*ipaddr != 0) {
             memcpy(setting.IP, &ipaddr, 16);
         }
-        if (sets != NULL && sets->PORT != 0) {
-            setting.PORT = sets->PORT;
-        }
     } else {
         memcpy(&ipaddr, sets->IP, 16);
         memcpy(&setting, sets, sizeof(st_setting));
+    }
+    if (sets != NULL && sets->PORT != 0) {
+        setting.PORT = sets->PORT;
+    } else {
+        setting.PORT = DEFAULT_PORT;
     }
     client.srvaddr.sin_family = AF_INET;
 #ifdef _UTILAPIS_
@@ -77,7 +79,7 @@ int InitChat(st_setting* sets) {
 #else
     client.srvaddr.sin_addr.s_addr = inet_addr(ipaddr);
 #endif
-    client.srvaddr.sin_port = htons(DEFAULT_PORT);
+    client.srvaddr.sin_port = htons(setting.PORT);
     char title[32];
     sprintf(title, "client: %s", ipaddr);
     SetConsoleTitle(title);
@@ -164,10 +166,10 @@ int CloseChat()
 int callbackLog(char * usr, char * psw)
 {
     trans.uiCmdMsg = 0x1;
-    memset(trans.usr, 0, 24);
-    memcpy(trans.usr, usr, strlen(usr) + 1);
-    memset(trans.psw, 0, 24);
-    memcpy(trans.psw, psw, strlen(psw) + 1);
+    memset(trans.username, 0, 24);
+    memcpy(trans.username, usr, strlen(usr) + 1);
+    memset(trans.password, 0, 24);
+    memcpy(trans.password, psw, strlen(psw) + 1);
     send(client.sock, (char*)&trans, sizeof(st_trans), 0);
     return trans.uiCmdMsg;
 }
@@ -185,12 +187,14 @@ int SetClientDlg(void* Wnd)
 int SendChatMsg(st_trans* msg)
 {
     if (client.flag < 0) {
-        MessageBox(NULL, "Connection error to exit!", "Quit", MB_OK);
+        MessageBox(NULL, "Connection status error, will exit!", "Quit", MB_OK);
         return setting.erno = -1;
     }
     int len = sizeof(trans);
     trans = { '\0', (unsigned char)(trans.uiCmdMsg & 0xff) };
     if (msg != NULL) {
+        if (msg->uiCmdMsg < 0)
+            return -2;
         memcpy(&trans, msg, sizeof(st_trans));
     } else {
         send(client.sock, (char*)&trans, len, 0);
@@ -198,15 +202,10 @@ int SendChatMsg(st_trans* msg)
     }
     if (client.last.lastuser != '\0' && client.last.lastgrop[0] != '\0')
     {
-        memcpy(trans.usr, client.last.lastuser, 24);
+        memcpy(trans.username, client.last.lastuser, 24);
         memcpy(trans.group_name, client.last.lastgrop, 24);
     }
     return send(client.sock, (char*)&trans, len, 0);
-}
-
-int GetStatus()
-{
-    return client.flag;
 }
 
 /*P2P接收消息线程*/
@@ -235,10 +234,19 @@ RecvThreadProc(void* PrimaryUDP)
         );
         if (ret <= 0)
         {
-            fprintf(stdout, "Recv Message Error: %s!\n", strerror(ret));
+            if (client.count == 3) {
+
+            } else if (client.count < 3) {
+                fprintf(stdout, "Recieve No Message: %s!\n", strerror(ret));
+            } else {
+                if (client.count > 30) {
+                    fprintf(stdout, "Recieve error too many times!\n");
+                    break;
+                }
+            }
             continue;
         } else {
-            int c = 0;
+            client.flag = 2;
             in_addr peer;
 #ifdef _WIN32
             peer.S_un.S_addr = P2Psock->addr.sin_addr.S_un.S_addr;
@@ -248,6 +256,7 @@ RecvThreadProc(void* PrimaryUDP)
             int port = P2Psock->addr.sin_port;
             fprintf(stdout, "Message from [%s:%d] >>\n", inet_ntoa(peer), port);
             fprintf(stdout, "----------------------------------------------------------------\n");
+            int c = 0;
             for (c = 0; c < ret; c++)
             {
                 if (c > 0 && c % 32 == 0)
@@ -260,10 +269,11 @@ RecvThreadProc(void* PrimaryUDP)
             fprintf(stdout, "\n");
         }
     }
+    return 0;
 }
 /*P2P主体函数*/
-//流程：首先，直接向某个客户的外网IP发送消息，如果此前没有“打洞”，该消息发送端等待超时；
-//判断超时后，发送端发送请求到服务器要求“打洞”，要求服务器请求该客户向本机发送打洞消息。
+//流程：首先，直接向某个客户的外网IP发送消息，如果会话状态无效，则该消息发送端等待超时；
+//判断超时后，发送端发送请求到服务器要求“打洞”，然后服务器请求该客户向本机发送打洞消息。
 //重复MAXRETRY次
 int p2pMessage(unsigned char *userName, int UserIP, unsigned int UserPort, char const *Message)
 {
@@ -279,6 +289,7 @@ int p2pMessage(unsigned char *userName, int UserIP, unsigned int UserPort, char 
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
     int bOptval = 1; // 端口复用
     int retSetsockopt = setsockopt(PrimaryUDP, SOL_SOCKET, SO_REUSEADDR, (char *)&bOptval, sizeof(bOptval));
+    int MAXRETRY = 5;
     if (SOCKET_ERROR == retSetsockopt)
     {
         std::cout << "setsockopt() error!" << std::endl;
@@ -289,7 +300,18 @@ int p2pMessage(unsigned char *userName, int UserIP, unsigned int UserPort, char 
         std::cout << "socket binding failure!" << std::endl;
         return 0;
     }
-    int MAXRETRY = 5;
+    if (client.flag != 2) {
+        //没有接收到目标主机的回应，认为目标主机的端口
+        //映射没有打开，那么发送请求到服务器要求“打洞”。
+        st_trans MessageHost;
+        memset(&MessageHost, 0, sizeof(st_trans));
+        MessageHost.uiCmdMsg = PEER2P;
+        memcpy(MessageHost.type, "P2P", 4);
+        memcpy(MessageHost.username, trans.username, 24);
+        memcpy(MessageHost.peer_name, userName, 24);
+        //请求服务器“打洞”
+        SendChatMsg(&MessageHost);
+    }
     for (int trytime = 0; trytime < MAXRETRY; trytime++)
     {
         sockaddr_in remote;
@@ -305,39 +327,50 @@ int p2pMessage(unsigned char *userName, int UserIP, unsigned int UserPort, char 
         st_trans MessagePeer;
         memset(&MessagePeer, 0, sizeof(MessagePeer));
         MessagePeer.uiCmdMsg = PEER2P;
-        memcpy(MessagePeer.usr, userName, 24);
+        memcpy(MessagePeer.username, userName, 24);
         //发送P2P消息头
         int ppres = sendto(PrimaryUDP, (const char*)&MessagePeer, 32, 0, (const sockaddr*)&remote, sizeof(remote));
         //发送P2P消息体
         ppres = sendto(PrimaryUDP, (const char*)&Message, (int)strlen(Message) + 1, 0, (const sockaddr*)&remote, sizeof(remote));
-        //等待接收消息线程修改标志
-        for (int i = 0; i < 10; i++)
-        {
-            if (client.flag <= 0)
-                return -1;
-            else
-                Sleep(300);
-        }
-        //没有接收到目标主机的回应，认为目标主机的端口
-        //映射没有打开，那么发送请求到服务器要求“打洞”。
-        st_trans MessageHost;
-        memset(&MessageHost, 0, sizeof(st_trans));
-        MessageHost.uiCmdMsg = PEER2P;
-        memcpy(MessageHost.type, "P2P", 4);
-        memcpy(MessageHost.usr, trans.usr, 24);
-        memcpy(MessageHost.peer_name, userName, 24);
-        //请求服务器“打洞”
-        SendChatMsg(&MessageHost);
-        //启动接收线程
-        P2P_NETWORK pp_sock;
-        pp_sock.addr = remote;
-        pp_sock.socket = PrimaryUDP;
-        Pthreadt threads;
+        memset(&MessagePeer, 0, sizeof(st_trans));
+        memcpy(&MessagePeer, Message, sizeof(st_trans));
         if (client.count == 0) {
+            //启动接收线程
+            P2P_NETWORK pp_sock;
+            pp_sock.addr = remote;
+            pp_sock.socket = PrimaryUDP;
+            Pthreadt threads;
             _beginthreadex(NULL, 0, RecvThreadProc, &pp_sock, 0, &threads);
         }
         client.count++;
-        Sleep(100);
+        //等待接收消息线程修改标志
+        for (int i = 0; i < 10; i++)
+        {
+            if (client.flag >= 0 && client.flag < 2)
+                Sleep(300);
+            else
+                return -1;
+        }
     }
     return 0;
+}
+
+int GetChatFlag()
+{
+    return client.flag;
+}
+
+void SetChatFlag(int flag)
+{
+    client.flag = flag;
+}
+
+bool GetNDTState()
+{
+    return client.rcvndt;
+}
+
+void SetNDTState(bool stat)
+{
+    client.rcvndt = stat;
 }
