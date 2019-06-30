@@ -218,6 +218,15 @@ enum  EM_MENU {
     VIEWGROUP,
     EXITGROUP,
 };
+
+enum  RCV_STATE {
+    RCV_ERR = -1,
+    RCV_SCC,
+    RCV_TCP,
+    RCV_P2P,
+    RCV_NDT
+};
+
 inline int checkPswValid(char* str)
 {
     int z0 = 0;
@@ -254,15 +263,15 @@ int StartChat(int erno,
 #endif
     (*func)(void*)
 );
-int SendChatMsg(st_trans* msg = NULL);
+int SendChatMesg(st_trans* msg = NULL);
 int callbackLog(char* usr, char* psw);
 int CloseChat();
 int p2pMessage(unsigned char *userName, int UserIP, unsigned int UserPort, char const *Message);
 #ifdef _WIN32
 int SetClientDlg(void* Wnd);
 #endif
-int GetChatFlag();
-void SetChatFlag(int flag);
-bool GetNDTState();
-void SetNDTState(bool stat);
+int IsChatActive();
+void SetChatActive(int flag);
+int GetRecvState();
+void SetRecvState(int state);
 #endif
