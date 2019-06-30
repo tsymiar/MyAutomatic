@@ -1,5 +1,8 @@
 #include "IMclient.h"
 
+int g_printedInput = 0;
+char youSaid[11] = "You Said: ";
+
 void
 #ifndef _WIN32
 *
@@ -24,6 +27,10 @@ parseRcvMsg(void* lprcv) {
             for (int c = 0; c < rcvlen; c++)
                 fprintf(stdout, "%c", (unsigned char)rcv_buf[c]);
             fprintf(stdout, "\n");
+            SetRecvState(RCV_TCP);
+        } else {
+            SetRecvState(RCV_ERR);
+            fprintf(stdout, "Recieving...");
         }
 #endif
         if (mesg->uiCmdMsg == PEER2P) {
@@ -40,17 +47,22 @@ parseRcvMsg(void* lprcv) {
                 p2pmsg.cmd[0] = mesg->uiCmdMsg;
                 memcpy(&p2pmsg.mesg, "hello", 16);
                 int parse = p2pMessage(mesg->username, ip, port, (char*)&p2pmsg);
+                if (parse == 0) {
+                    SetRecvState(RCV_P2P);
+                }
             }
         }
         if (mesg->uiCmdMsg == CHATWITH) {
             if (atoi((const char*)mesg->recv_mesg.status) == 200) {
-                fprintf(stdout, "Recieved: %s\n", mesg->recv_mesg);
-                SetNDTState(true);
+                SetRecvState(RCV_NDT);
+                fprintf(stdout, "\r%*c\rRecieved: %s\n", 64, ' ', mesg->recv_mesg);
+                if (g_printedInput > 0) {
+                    fprintf(stdout, youSaid);
+                }
             } else if (rcvlen < 0) {
-                SetNDTState(false);
-                fprintf(stdout, "Recieve status error.\n");
-            } else {
-                fprintf(stdout, "Message: %s, %s.\n", mesg->recv_mesg, mesg->errMsg + 4);
+                fprintf(stdout, "Status error.\n");
+                closesocket(client->sock);
+                exit(0);
             }
         }
         if (mesg->uiCmdMsg == GETIMAGE) {
@@ -79,7 +91,7 @@ parseRcvMsg(void* lprcv) {
             char title[32];
             sprintf(title, "socket: %s", _itoa((int)client->sock, (char*)mesg, 10));
             MessageBox(NULL, srv_net, title, MB_OK);
-            SetChatFlag(-1);
+            SetChatActive(rcvlen);
             closesocket(client->sock);
             exit(0);
             break;
@@ -87,7 +99,7 @@ parseRcvMsg(void* lprcv) {
     };
 };
 
-st_trans* SetChatMsg(st_trans& trans) {
+st_trans* SetChatMesg(st_trans& trans) {
     switch (trans.uiCmdMsg)
     {
     case REGISTER:
@@ -110,14 +122,16 @@ st_trans* SetChatMsg(st_trans& trans) {
     {
         break;
     }
-    case CHATWITH: 
+    case CHATWITH:
     {
         memcpy(trans.type, "NDT", 4);
         trans.more_mesg.cmd[0] = CHATWITH;
 #ifdef NDT_ONLY
-        fprintf(stdout, "You Said: ");
+        fprintf(stdout, youSaid);
+        g_printedInput = 1;
 #else
         fprintf(stdout, "Input chat message, limit on 16 characters.\n");
+        g_printedInput = 1;
 #endif
         memset(&trans.more_mesg.mesg, 0, 16);
         if (scanf_s("%s", &trans.more_mesg.mesg, 16) <= 0) {
@@ -162,20 +176,29 @@ int main()
     if (StartChat(InitChat(), parseRcvMsg) < 0)
         return -1;
 #ifdef NDT_ONLY
-    int comm = 0;
+    int comm = 1;
 #endif
     while (1) {
-        if (GetChatFlag() < 0) {
+        if (IsChatActive() < 0) {
             return CloseChat();
         }
-        bool recieved = GetNDTState();
+        st_trans msg;
+        memset(&msg, 0, sizeof(st_trans));
+        int recieved = GetRecvState();
+        g_printedInput = 0;
+        memcpy(msg.username, "AAAAA", 6);
+        memcpy(msg.password, "AAAAA", 6);
+        memcpy(msg.peer_name, "iv9527", 7);
 #ifdef NDT_ONLY
         if (comm > 1) {
-            comm = 7;
+            comm = CHATWITH;
         }
+        msg.more_mesg.cmd[0] = msg.uiCmdMsg = comm;
+        while (IsChatActive() == 0) { ; }
+        comm++;
 #else
         int comm = 0;
-        if (!recieved) {
+        if (recieved == RCV_TCP || recieved == RCV_SCC) {
             fprintf(stdout, "Input commond [1-13]: ");
             if (scanf("%2d", &comm) <= 0) {
                 fprintf(stdout, "Input object format error.\n");
@@ -186,29 +209,19 @@ int main()
                 break;
             }
         }
-#endif // NDT_ONLY
-        st_trans msg;
-        memset(&msg, 0, sizeof(st_trans));
         msg.uiCmdMsg = comm;
-        memcpy(msg.username, "AAAAA", 6);
-        memcpy(msg.password, "AAAAA", 6);
-        memcpy(msg.peer_name, "iv9527", 7);
-        if (recieved) {
-            memcpy(msg.type, "NDT", 4);
-            msg.more_mesg.cmd[0] = CHATWITH;
-            fprintf(stdout, "NDT Send: ");
-            memset(&msg.more_mesg.mesg, 0, 16);
-            scanf_s("%s", &msg.more_mesg.mesg, 16);
+#endif // NDT_ONLY
+        if (recieved == RCV_NDT) {
+            msg.more_mesg.cmd[0] = msg.uiCmdMsg = CHATWITH;
         }
-        int ret = SendChatMsg(SetChatMsg(msg));
-        if (ret < 0) {
-            fprintf(stdout, "Error while setting chat message.\n");
-            return -1;
+        if (recieved > RCV_ERR) {
+            int ret = SendChatMesg(SetChatMesg(msg));
+            if (ret < 0) {
+                fprintf(stdout, "Error while setting chat message.\n");
+                return -1;
+            }
         }
         Sleep(100);
-#ifdef NDT_ONLY
-        comm++;
-#endif
     }
     return 0;
 }

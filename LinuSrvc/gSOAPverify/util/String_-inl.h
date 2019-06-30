@@ -28,8 +28,10 @@ inline unsigned char* fix_strerr(unsigned char* str)
 #else
 #define _STRING__
 
-#include <iomanip>
 #include <cassert>
+#include <iomanip>
+#include <istream>
+#include <ostream>
 
 #if (defined __linux ) || (defined sprintf_s)
 #undef sprintf_s
@@ -48,12 +50,15 @@ class String_ {
 public:
     String_(const char* str = nullptr);//赋值兼默认构造函数（char）
     String_(const String_& other);  //赋值构造函数（String_）
+    ~String_(void) { delete[] m_data; }
     String_& operator=(const String_& other);
     String_/*&*/ operator+(const String_& other);
     String_ operator+=(const String_& other);
     bool operator==(const String_&);
     char& operator[](unsigned int) const;
-    char* c_str_() const;
+    char* c_str_() const {
+        return m_data;
+    };
     size_t size_() {
         int len;
         for (len = 0; m_data[len] != '\0'; len++)
@@ -73,17 +78,18 @@ public:
     String_ toLowerCase_();
     String_ toUpperCase_();
     static char* itoa_(int num, char *str, int radix);
+    static int memcmp_(const void *buffer1, const void *buffer2, int count);
+    static char* strcpy_(char* strDest, const char* strSrc, int LEN = 1024);
     static size_t strlen_(const char* str);
     static char* /*__cdecl*/strcat_(char * strDest, const char * strSrc);
-    static char* strcpy_(char* strDest, const char* strSrc, int LEN = 1024);
     static int strcut_(unsigned char* str, char ch, char* str1, char* str2);
     static unsigned char* strsub_(unsigned char* ch, int pos, int len);
     static char* reverse_(char * src, char* cst);
-    static int charcount_(char **arr, char ch, int m = 1/*1st dim of arr*/);
+    static int charcount_(char *arr, char ch);
+    static int charcount2_(char **arr, char ch, int m = 1/*1st dim of arr*/);
     static char* charstrmove_(char* w, char ch, int d, bool fore = false/*默认向后*/);
     static char* charposmove_(char* w, int m, int d, bool fore = false);
     static char* strmove_(char* w, int m, bool fore = false);
-    ~String_(void) { delete[] m_data; }
 private:
     char* m_data;
 };
@@ -107,47 +113,6 @@ inline String_::String_(const String_& other)
         m_data = new char[strlen_(other.m_data) + 1];
         strcpy_(m_data, other.m_data);
     }
-}
-
-inline char* String_::itoa_(int num, char *str, int radix)
-{
-    if (num == 0)
-    {
-        str[0] = '0'; str[1] = '\0';
-        return str;
-    }
-    char  string[] = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    char* ptr = str;
-    int i; int j;
-    int value = num;
-    if (num < 0) num = -num;
-    while (num >= radix)
-    {
-        *ptr++ = string[num % radix];
-        num /= radix;
-    }
-    if (num)
-    {
-        *ptr++ = string[num];
-        *ptr = '\0';
-    }
-    int n = j = ptr - str - 1;
-    for (i = 0; i < (ptr - str) / 2; i++)
-    {
-        int temp = str[i]; str[i] = str[j]; str[j--] = temp;
-    }
-    if (value < 0)
-    {
-        for (j = n; j >= 0; --j) str[j + 1] = str[j];
-        str[0] = '-';
-    }
-    str[n + 2] = '\0';
-    return str;
-}
-
-inline char* String_::c_str_() const
-{
-    return m_data;
 }
 
 inline String_ & String_::operator=(const String_ & other)
@@ -195,12 +160,12 @@ inline bool String_::operator==(const String_& s)
 {
     if (strlen_(s.m_data) != strlen_(m_data))
         return false;
-    return strcmp(m_data, s.m_data) ? false : true;
+    return memcmp_(m_data, s.m_data, s.strlen_(m_data)) ? false : true;
 }
 
 inline char & String_::operator[](unsigned int e) const
 {
-    if (e >= 0 && e <= strlen(m_data))
+    if (e >= 0 && e <= strlen_(m_data))
         return m_data[e];
 }
 
@@ -255,7 +220,7 @@ inline int String_::indexOf_(String_ str)
 {
     int len = (int)strlen_(m_data);
     for (int i = 0; i < len; i++) {
-        if (memcmp(&m_data[i], str.c_str_(), str.size_()) == 0) {
+        if (memcmp_(&m_data[i], str.c_str_(), str.size_()) == 0) {
             return i;
         }
     }
@@ -328,6 +293,54 @@ inline String_ String_::toUpperCase_()
     str[len] = '\0';
     return str;
 }
+
+inline char* String_::itoa_(int num, char *str, int radix)
+{
+    if (num == 0)
+    {
+        str[0] = '0'; str[1] = '\0';
+        return str;
+    }
+    char  string[] = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    char* ptr = str;
+    int i; int j;
+    int value = num;
+    if (num < 0) num = -num;
+    while (num >= radix)
+    {
+        *ptr++ = string[num % radix];
+        num /= radix;
+    }
+    if (num)
+    {
+        *ptr++ = string[num];
+        *ptr = '\0';
+    }
+    int n = j = ptr - str - 1;
+    for (i = 0; i < (ptr - str) / 2; i++)
+    {
+        int temp = str[i]; str[i] = str[j]; str[j--] = temp;
+    }
+    if (value < 0)
+    {
+        for (j = n; j >= 0; --j) str[j + 1] = str[j];
+        str[0] = '-';
+    }
+    str[n + 2] = '\0';
+    return str;
+}
+
+inline int String_::memcmp_(const void *buffer1, const void *buffer2, int count)
+{
+    if (!count)
+        return(0);
+    while (--count && *(char *)buffer1 == *(char *)buffer2)
+    {
+        buffer1 = (char *)buffer1 + 1;
+        buffer2 = (char *)buffer2 + 1;
+    }
+    return(*((unsigned char *)buffer1) - *((unsigned char *)buffer2));
+}
 //字符串拷贝
 inline char* String_::strcpy_(char* strDest, const char* strSrc, int LEN)
 {
@@ -364,13 +377,13 @@ inline int String_::strcut_(unsigned char* str, char ch, char* str1, char* str2)
     char s1[16];
     char s2[16];
     unsigned int i = 0;
-    for (i = 0; i < (int)strlen_((char*)str); i++)
+    for (i = 0; i < (unsigned int)strlen_((char*)str); i++)
         if (str[i] == ch)
             break;
     sprintf_s(s1, "%s", (char*)strsub_(str, 0, i));
-    memcpy(str1, s1, strlen_(s1) + 1);
+    strcpy_(str1, s1, strlen_(s1) + 1);
     sprintf_s(s2, "%s", (char*)strsub_(str, i + 1, (int)strlen_((char*)str) + 1 - i));
-    memcpy(str2, s2, strlen_(s2) + 1);
+    strcpy_(str2, s2, strlen_(s2) + 1);
     return i;
 }
 //从第pos位开始截取ch的len个字符。
@@ -409,6 +422,24 @@ inline char* String_::reverse_(char * src, char *cst)
     free(dest);//释放空间
     return cst;
 }
+
+inline int String_::charcount_(char *arr, char ch)
+{
+    int i = 0;
+    char *str = arr;
+    if (arr == NULL) {
+        return -1;
+    }
+    while ((str = arr++) != '\0') {
+        if (*str == '\0') {
+            break;
+        }
+        if (*(str++) == ch) {
+            i++;
+        }
+    }
+    return i;
+}
 // 返回字符串数组str含有的字符ch数; Usage:
 /*
     char l[][16] = { "acvhhj", "222", "ccc" };
@@ -416,9 +447,9 @@ inline char* String_::reverse_(char * src, char *cst)
     char *a[16] = { NULL };
     for(int i = 0; i < m; i++)
         a[i] = l[i]; // (char*)[const char* point]
-    int s = charcount_(a, 'c', m);
+    int s = charcount2_(a, 'c', m);
 */
-inline int String_::charcount_(char **arr, char ch, int m)
+inline int String_::charcount2_(char **arr, char ch, int m)
 {
     int i = 0;
     int num = 0;
@@ -450,7 +481,6 @@ inline int String_::charcount_(char **arr, char ch, int m)
 inline char* String_::charstrmove_(char* w, char ch, int d, bool fore)
 {
     int i = 0;
-    char s = *w;
     char* t = w;
     int len = (int)strlen_(w);
     while (*t)

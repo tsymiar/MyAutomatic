@@ -91,6 +91,7 @@ int InitChat(st_setting* sets) {
         exit(0);
     }
     setsockopt(client.sock, SOL_SOCKET, SO_REUSEADDR, (const char*)&bReuseaddr, sizeof(BOOL));
+    SetRecvState(RCV_TCP);
     return 0;
 }
 string GetLastErrorToString(int errorCode)
@@ -150,7 +151,7 @@ int StartChat(int erno,
 #endif
                     fprintf_s(stdout, "Lambda null func.\n"); };
         }
-    }    
+    }
     Pthreadt threads;
     return (int)_beginthreadex(NULL, 0, (_beginthreadex_proc_type)Chat_Msg, (void*)func, 0, &threads);
 }
@@ -184,7 +185,7 @@ int SetClientDlg(void* Wnd)
     }
 };
 #endif
-int SendChatMsg(st_trans* msg)
+int SendChatMesg(st_trans* msg)
 {
     if (client.flag < 0) {
         MessageBox(NULL, "Connection status error, will exit!", "Quit", MB_OK);
@@ -310,7 +311,7 @@ int p2pMessage(unsigned char *userName, int UserIP, unsigned int UserPort, char 
         memcpy(MessageHost.username, trans.username, 24);
         memcpy(MessageHost.peer_name, userName, 24);
         //请求服务器“打洞”
-        SendChatMsg(&MessageHost);
+        SendChatMesg(&MessageHost);
     }
     for (int trytime = 0; trytime < MAXRETRY; trytime++)
     {
@@ -355,22 +356,22 @@ int p2pMessage(unsigned char *userName, int UserIP, unsigned int UserPort, char 
     return 0;
 }
 
-int GetChatFlag()
+int IsChatActive()
 {
     return client.flag;
 }
 
-void SetChatFlag(int flag)
+void SetChatActive(int flag)
 {
     client.flag = flag;
 }
 
-bool GetNDTState()
+int GetRecvState()
 {
     return client.rcvndt;
 }
 
-void SetNDTState(bool stat)
+void SetRecvState(int state)
 {
-    client.rcvndt = stat;
+    client.rcvndt = state;
 }

@@ -3,6 +3,9 @@ curl "https://bootstrap.pypa.io/get-pip.py" -o "get-pip.py"
 #nmcli dev wifi connect "AP" password "xxxxxxxx"
 python get-pip.py
 pip install --upgrade pip shadowsocks
+if [ ! -d "/etc/shadowsocks/" ]; then
+    mkdir /etc/shadowsocks
+fi;
 cat>/etc/shadowsocks/ssserver.json<<EOF
 {
     "server": "0.0.0.0",
@@ -23,7 +26,7 @@ firewall-cmd --zone=public --add-port=8383/tcp --permanent
 firewall-cmd --complete-reload
 ssserver -c /etc/shadowsocks/ssserver.json -d start --log-file ~/shadowsocks.log
 if [[ `tail /etc/rc.local` =~ "ssserver" ]];then
-;
+    exit "O.K"
 else
     echo "!!" >> /etc/rc.local
 fi
