@@ -20,23 +20,28 @@
 void serial_init(int fd)
 {
     struct termios options;
+    bzero(&options, sizeof(options));
+
     tcgetattr(fd, &options);
     //位掩码方式激活本地连接、使能接收
     options.c_cflag |= (CLOCAL | CREAD);
 
+    cfsetispeed(&options, B115200);
+    cfsetospeed(&options, B115200);
     options.c_cflag &= ~CSIZE;
     options.c_cflag &= ~CRTSCTS;
     options.c_cflag |= CS8;
     options.c_cflag &= ~CSTOPB;
     options.c_iflag |= IGNPAR;
+    tcflush(fd, TCIFLUSH);
+
     options.c_oflag = 0;
     options.c_lflag = 0;
 
-    cfsetispeed(&options, B115200);
-    cfsetospeed(&options, B115200);
-    tcsetattr(fd, TCSANOW, &options);
-
-    printf("Serial init...\n");
+    tcflush(fd, TCIOFLUSH);
+    if (0 == tcsetattr(fd, TCSANOW, &options)) {
+        printf("Serial tty is ready...\n");
+    }
 }
 
 
@@ -49,29 +54,31 @@ int main(int argc, int **argv)
     int flag = 0;
     char buff[MAX_BUFF], replay[MAX_BUFF];
 
-    me_fd = open("/dev/ttyUSB0", O_RDWR, 0);
+    me_fd = open("/dev/ttyUSB0", O_RDWR | O_NOCTTY);
     if (me_fd == -1) {
-        printf("Can't open ttyUSB0.\n");
+        perror("Can't open /dev/ttyUSB0 - \n");
         return 0;
+    } else {
+        fcntl(me_fd, F_SETFL, 0);
     }
 
     serial_init(me_fd);
 
-    memset(buff, 0, sizeof(buff));
-    strcpy(buff, "AT\r\n");
-    write(me_fd, buff, sizeof(buff));
-
-    while (1)
+    while (!flag)
     {
         FD_ZERO(&rdfds);
-        FD_SET(0, &rdfds);
+        FD_SET(me_fd, &rdfds);
         tv.tv_sec = 1;
         tv.tv_usec = 500;
-        ret = select(1, &rdfds, NULL, NULL, &tv);
+
+        memset(buff, 0, sizeof(buff));
+        strcpy(buff, "ATI\r\n");
+        write(me_fd, buff, sizeof(buff));
+        ret = select(me_fd + 1, &rdfds, NULL, NULL, &tv);
         if (ret < 0)
             perror("select");
         else if (ret == 0)
-            printf("Select state timeout!\n");
+            printf("Select state TIMEOUT!\n");
         else
         {
             printf("State changed inside 1.5s sum ret = %d.\n", ret);
@@ -85,6 +92,10 @@ int main(int argc, int **argv)
         if (flag) {
             flag = 0;
             memset(buff, 0, sizeof(buff));
+            printf("Input serial command: ");
+            if (scanf("%64s", replay) == -1) {
+                printf("Bytes beyound limit(64)!\n");
+            }
             strcpy(buff, replay);
             strcat(buff, "\r\n");
             write(me_fd, buff, sizeof(buff));

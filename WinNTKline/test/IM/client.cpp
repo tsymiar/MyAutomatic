@@ -1,7 +1,7 @@
 #include "IMclient.h"
 
 int g_printedInput = 0;
-char youSaid[11] = "You Said: ";
+const char youSaid[11] = "Msg Sent: ";
 
 void
 #ifndef _WIN32
@@ -30,7 +30,11 @@ parseRcvMsg(void* lprcv) {
             SetRecvState(RCV_TCP);
         } else {
             SetRecvState(RCV_ERR);
-            fprintf(stdout, "Recieving...");
+            if (g_printedInput >= 0) {
+                fprintf(stdout, "\rRecieving...");
+            } else {
+                fprintf(stdout, "\r%*c\rRecieving...\n%s", 64, ' ', youSaid);
+            }
         }
 #endif
         if (mesg->uiCmdMsg == PEER2P) {
@@ -127,16 +131,18 @@ st_trans* SetChatMesg(st_trans& trans) {
         memcpy(trans.type, "NDT", 4);
         trans.more_mesg.cmd[0] = CHATWITH;
 #ifdef NDT_ONLY
-        fprintf(stdout, youSaid);
-        g_printedInput = 1;
+        if (g_printedInput > -1) {
+            fprintf(stdout, youSaid);
+            g_printedInput = 1;
+        }
 #else
         fprintf(stdout, "Input chat message, limit on 16 characters.\n");
         g_printedInput = 1;
 #endif
         memset(&trans.more_mesg.mesg, 0, 16);
         if (scanf_s("%s", &trans.more_mesg.mesg, 16) <= 0) {
-            fprintf(stdout, "Error while getting chat message.\n");
-            trans.uiCmdMsg = -1;
+            fprintf(stdout, "Error: characters limit 16!\n");
+            g_printedInput = trans.uiCmdMsg = -1;
             return &trans;
         }
         break;
