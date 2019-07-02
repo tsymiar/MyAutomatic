@@ -27,14 +27,14 @@ typedef struct _v4l2_struct
     struct v4l2_requestbuffers req;
     struct _st_buf {
         void *start;
-        unsigned int length;
+        unsigned int size;
     }*buffer;
 } v4l2_device;
 
 #define DEFAULT_DEVICE "/dev/video0"
 
-const int imgw = 640;
-const int imgh = 320;
+const int IMGW = 640;
+const int IMGH = 320;
 
 extern int v4l2_init_dev(v4l2_device*, char*);
 extern int v4l2_mapping_buffers(v4l2_device*, __u32);
@@ -100,8 +100,8 @@ int v4l2_get_pixel_format(v4l2_device *v4l2_obj)
 int v4l2_set_pixel_format(v4l2_device *v4l2_obj) 
 {
     v4l2_obj->format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-    v4l2_obj->format.fmt.pix.width = imgw;
-    v4l2_obj->format.fmt.pix.height = imgh;
+    v4l2_obj->format.fmt.pix.width = IMGW;
+    v4l2_obj->format.fmt.pix.height = IMGH;
     v4l2_obj->format.fmt.pix.field = V4L2_FIELD_INTERLACED;
     v4l2_obj->format.fmt.pix.pixelformat = V4L2_PIX_FMT_MJPEG;
     int val = ioctl(v4l2_obj->v4l_fd, VIDIOC_S_FMT, &v4l2_obj->format);
@@ -155,7 +155,7 @@ int v4l2_mapping_buffers(v4l2_device *v4l2_obj, __u32 count)
             perror("Query buffer fail");
             exit(-1);
         }
-        v4l2_obj->buffer[i].length = v4l2_obj->argp.length;
+        v4l2_obj->buffer[i].size = v4l2_obj->argp.length;
         // 映射内存  
         v4l2_obj->buffer[i].start = mmap(NULL, 
             v4l2_obj->argp.length, 
@@ -210,7 +210,7 @@ int v4l2_save_image_frame(v4l2_device *v4l2_obj, const char* flag)
     snprintf(file, strlen(flag) + 1, "%s%d", flag, v4l2_obj->argp.index);
     int yuv = open(file, O_WRONLY | O_CREAT, 0777);
     int result = write(yuv, v4l2_obj->buffer[v4l2_obj->argp.index].start,
-        v4l2_obj->buffer[v4l2_obj->argp.index].length
+        v4l2_obj->buffer[v4l2_obj->argp.index].size
     //    (v4l2_obj->width ? : imgw) * (v4l2_obj->height ? : imgh)
     );
     if (-1 == ioctl(v4l2_obj->v4l_fd, VIDIOC_QBUF, &v4l2_obj->argp)) {
@@ -219,13 +219,13 @@ int v4l2_save_image_frame(v4l2_device *v4l2_obj, const char* flag)
     }
     int i = 0;
     for (; i < v4l2_obj->req.count; ++i)
-        munmap(v4l2_obj->buffer[i].start, v4l2_obj->buffer[i].length);
+        munmap(v4l2_obj->buffer[i].start, v4l2_obj->buffer[i].size);
     close(yuv);
     fprintf(stdout, "Save picture as [ %s ](0x%p).\n", file, v4l2_obj->buffer->start);
     return result;
 }
 
-int get_img(const char* filename)
+int get_image_file(const char* filename)
 {
     v4l2_device obj;
     int val = v4l2_init_dev(&obj, NULL);
