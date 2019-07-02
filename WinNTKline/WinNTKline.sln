@@ -45,7 +45,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testUtils", "test\testUtils
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CvMlwk", "CvMlwk\CvMlwk.vcxproj", "{8FFF2EFE-1196-43BA-A3F3-A0B377628DAF}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "v4l", "..\LinuSrvc\v4l\v4l.vcxproj", "{85D69618-98CA-4A50-B519-9EA287F2D226}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "hdware", "..\LinuSrvc\hdware\hdware.vcxproj", "{85D69618-98CA-4A50-B519-9EA287F2D226}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
