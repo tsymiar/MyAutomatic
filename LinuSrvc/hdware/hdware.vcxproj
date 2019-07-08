@@ -110,9 +110,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="me909s.c" />
-    <ClCompile Include="sample.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">true</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="sample.c" />
     <ClCompile Include="v4l2.c" />
   </ItemGroup>
   <ItemGroup>
