@@ -10,8 +10,8 @@
 class ShowImage
 {
 public:
-    ShowImage();
-    ~ShowImage();
+    ShowImage() {};
+    ~ShowImage() {};
     int setPixels(const char* filename);
     void Show();
     void Show(const char* filename);
