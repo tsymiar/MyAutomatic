@@ -131,7 +131,7 @@ void QOglMaterial::textout(int left, int upon, QColor color, float th, QString f
 void QOglMaterial::initializeGL()
 {
     qDebug("+++ initializeGL +++");
-    /* 0. 初始化函数，使得GL函数可以使用 */
+    /* 0. 初始化函数，使能GL函数 */
     initializeOpenGLFunctions();
 #ifdef _GLVBO_
     /* 创建项目对象链接着色器 */
@@ -163,7 +163,7 @@ void QOglMaterial::initializeGL()
     if (!program->bind())
         return;
 
-    ///< 获取shaderprogram的id号，然后可以通过id号获取一些属性...
+    ///< 获取shaderprogram的id号，然后可以通过programid号获取一些属性...
     programid = program->programId();
 
     ///< 从shaderprogram获取变量标识，用到2种方式
@@ -193,7 +193,7 @@ void QOglMaterial::resizeGL(int width, int height)
     ///< 透视投影【简单容错】
     qreal aspect = qreal(width) / qreal(height ? height : 1);
     m_projection.perspective(60.0f, aspect, 1.0f, 100.0f);
-    ///< 增加模型矩阵，做一定偏移量，使物体刚开始渲染出来时就可以被看到！
+    ///< 增加模型矩阵，做一定偏移量，使物体刚开始渲染出来时就可以显示！
     m_projection.translate(0.0f, 0.0f, -2.0f);
 #else
     if (height == 0)

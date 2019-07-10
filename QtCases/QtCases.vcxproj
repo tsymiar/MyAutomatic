@@ -108,7 +108,7 @@
     <ClCompile Include="OglMaterial.cpp" />
     <ClCompile Include="OpenGLWindow.cpp" />
     <ClCompile Include="gluiobj.cpp" />
-    <ClCompile Include="showimg.cpp" />
+    <ClCompile Include="ShowImage.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="OpenGLWindow.h">
@@ -181,7 +181,7 @@
   <ItemGroup>
     <ClInclude Include="..\WinNTKline\MfcUtil\com\qalgorithms.h" />
     <ClInclude Include="OglMaterial.h" />
-    <ClInclude Include="showimg.h" />
+    <ClInclude Include="ShowImage.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
