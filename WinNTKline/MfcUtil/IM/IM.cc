@@ -230,12 +230,10 @@ type_thread_func monite(void *arg)
     int qq = 0, logged = 0;
     int valrtn;
     char sd_bufs[256], rcv_txt[256];
-    struct sockaddr_in sin;
 #if !defined _WIN32
     struct ONLINE active[MAX_ACTIVE];
     memset(active, 0, sizeof(ONLINE) * MAX_ACTIVE);
 #endif
-    type_len len = static_cast<type_len>(sizeof(sin));
     type_socket rcv_sock = 0;
     type_socket *sock = reinterpret_cast<type_socket*>(arg);
     char ipAddr[INET_ADDRSTRLEN];
@@ -248,6 +246,8 @@ type_thread_func monite(void *arg)
         std::cerr << "ERROR: socket contra-valid([" << sock << "]" << *sock << ") " << strerror(errno) << std::endl;
         exit(-1);
 #else
+        struct sockaddr_in sin;
+        type_len len = static_cast<type_len>(sizeof(sin));
         rcv_sock = accept(listen_socket, reinterpret_cast<struct sockaddr*>(&sin), &len);
 #endif
     }
@@ -365,7 +365,8 @@ type_thread_func monite(void *arg)
                 break;
             } else if ((user.rsv == 0) && (user.uiCmdMsg == 0x1)) {
                 // user.usr: 8; password: 32.
-                sprintf(sd_bufs + 2, "%x", NEVAL(valrtn = user_auth(user.usr, user.psw)));
+                valrtn = user_auth(user.usr, user.psw);
+                sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
                 if (valrtn == (logged = 1)) {
                     sprintf((sd_bufs + 8), "[%s] logging on successfully.", user.usr);
                     set_user_peer(user.usr, IP, PORT, rcv_sock);
@@ -532,7 +533,7 @@ type_thread_func monite(void *arg)
                                 unsigned char t = 0;
                                 while (1) {
                                     if (*s != '\0' && *s != '.') {
-                                        t = t * 10 + *s - '0';
+                                        t = (unsigned char)(t * 10 + *s - '0');
                                     } else {
                                         uiIP = (uiIP << 8) + t;
                                         if (*s == '\0')
@@ -594,7 +595,7 @@ type_thread_func monite(void *arg)
                                     sprintf((sd_bufs + 32), "Peer user ip or port value error.");
                                     sndlen = 72;
                                 } else {
-                                    char random = (rand() % 255 + '\1');
+                                    char random = (char)(rand() % 255 + '\1');
                                     char ndtmsg[32];
                                     memset(ndtmsg, 0, 32);
                                     memcpy(ndtmsg, &user, 4);
@@ -693,7 +694,7 @@ type_thread_func monite(void *arg)
                             sprintf((sd_bufs + 14), "%04d", slice);
                             volatile int cur = 0;
                             for (volatile int i = 0; i <= num; i++) {
-                                if ((i > 0) && (i % 224 == 0) || (i == num)) {
+                                if (((i > 0) && (i % 224 == 0)) || (i == num)) {
                                     sprintf((sd_bufs + 22), "%04d", i);
                                     send(rcv_sock, sd_bufs, 256, 0);
                                     memset(sd_bufs + 32, 0, 224);
@@ -914,7 +915,6 @@ int inst_mesg(int argc, char * argv[])
     pthread_mutex_init(&(sendallow), &attr);
 #endif
     aim2exit = 0;
-    pthread_t thread_ID;
 #ifdef _WIN32
     SetConsoleTitle((
 #ifdef _UNICODE
@@ -923,7 +923,8 @@ int inst_mesg(int argc, char * argv[])
         LPCSTR
 #endif
         )"chat server for network design");
-    _beginthreadex(nullptr, 0, (_beginthreadex_proc_type)commands, nullptr, 0, &thread_ID);
+    pthread_t threadid;
+    _beginthreadex(nullptr, 0, (_beginthreadex_proc_type)commands, nullptr, 0, &threadid);
     WSADATA wsaData;
     if (WSAStartup(0x202, &wsaData) == SOCKET_ERROR) {
         std::cerr << "WSAStartup failed with error " << WSAGetLastError() << std::endl;
@@ -935,7 +936,7 @@ int inst_mesg(int argc, char * argv[])
     struct sockaddr_in local;
     local.sin_family = AF_INET;
     local.sin_addr.s_addr = INADDR_ANY;
-    local.sin_port = htons(servport);
+    local.sin_port = htons((uint16_t)servport);
     listen_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (listen_socket
 #ifdef _WIN32
@@ -979,7 +980,6 @@ int inst_mesg(int argc, char * argv[])
 #endif
     do {
         struct sockaddr_in from;
-        char IPdotdec[16]; IPdotdec;
         type_len folen = static_cast<type_len>(sizeof(from));
 #ifdef SOCK_CONN_TEST
         type_socket test_socket = accept(listen_socket, (struct sockaddr*)&from, &folen);
@@ -995,6 +995,7 @@ int inst_mesg(int argc, char * argv[])
             return -1;
         } else
         {
+            char IPdotdec[16];
 #ifdef _WIN32
             memcpy(IPdotdec, inet_ntoa(from.sin_addr), 16);
 #else
@@ -1013,13 +1014,14 @@ int inst_mesg(int argc, char * argv[])
 #endif
 #ifdef _WIN32
 #ifdef SOCK_CONN_TEST
-        _beginthreadex(NULL, 0, (_beginthreadex_proc_type)monite, (void*)&test_socket, 0, &thread_ID);
+        _beginthreadex(NULL, 0, (_beginthreadex_proc_type)monite, (void*)&test_socket, 0, &threadid);
 #else
-        _beginthreadex(nullptr, 0, (_beginthreadex_proc_type)monite, nullptr, 0, &thread_ID);
+        _beginthreadex(nullptr, 0, (_beginthreadex_proc_type)monite, nullptr, 0, &threadid);
 #endif
 #else
 #ifdef THREAD_PER_CONN
-        pthread_create(&thread_ID, NULL, monite, NULL);
+        pthread_t threadid;
+        pthread_create(&threadid, NULL, monite, NULL);
 #elif !defined SOCK_CONN_TEST
         type_socket msg_socket = accept(listen_socket, (struct sockaddr*)&from, &folen);
         if (msg_socket < 0) {
