@@ -50,6 +50,7 @@
     <ClInclude Include="soap\webapi.h" />
     <ClInclude Include="sql\sqlofDB.h" />
     <ClInclude Include="sys\sysstatus.h" />
+    <ClInclude Include="util\ListStack.h" />
     <ClInclude Include="util\String_-inl.h" />
   </ItemGroup>
   <ItemGroup>
