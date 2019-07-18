@@ -4,7 +4,7 @@ struct List {
     List* prev;
     void* addr;
     List* next;
-    List(void* elem) : prev(0), next(0), addr(0) { 
+    List(void* elem) : prev(0), next(0), addr(0) {
         addr = (List *)malloc(sizeof(List));
         if (addr) {
             prev = next = this;
@@ -34,6 +34,7 @@ public:
     typedef List* PosPtr;
     LinkedList(Element elem) {
         list = new List((void*)elem);
+        count++;
     };
     LinkedList() {
         make_empty();
@@ -46,33 +47,33 @@ public:
     PosPtr find_previous(Element elem);
     List* insert(Element elem, PosPtr ppos);
     List* insert(int index, Element element);
+    List* add(Element elem);
+    List* get(int num);
+    int size();
+    void remove(Element elem);
+    bool contains(Element elem);
+    PosPtr advance(PosPtr ppos, int step);
+    Element retrieve(PosPtr ppos);
     List* first();
     List* last();
-    PosPtr advance(PosPtr ppos);
-    Element retrieve(PosPtr ppos);
-    List* add(Element elem);
-    void Delete(Element x);
-    bool isEmpty();
     int indexOf(Element elem);
-    bool contains(Element elem);
-    void remove(Element elem);
-    int size();
+    bool isEmpty();
+    void Delete(Element elem);
 };
 
 template <typename Element> class ListStack {
 private:
     Stack *stack = new Stack(nullptr);
 public:
-    ListStack(Stack S) {
-        stack = &S;
+    ListStack(Element S) {
+        stack->addr = (void*)S;
     };
-    bool isEmpty(Stack stack);
-    Stack create();
-    void dispose(Stack stack);
-    void make_empty(Stack statck);
-    Stack push(Element elem, Stack stack);
-    Element top(Stack stack);
-    void pop(Stack stack);
+    bool is_empty();
+    void dispose();
+    void make_empty();
+    Stack push(Element elem);
+    Element top();
+    void pop();
 };
 
 template <typename Element> class BinaryTree {
@@ -114,12 +115,24 @@ template<typename Element>
 inline List * LinkedList<Element>::find(Element elem)
 {
     PosPtr ppos = list;
-    while (ppos != nullptr && ppos->addr != elem)
+    int i = 0;
+    while (ppos != nullptr && ppos->addr != elem) {
+        if (++i > count) {
+            ppos = nullptr;
+            break;
+        }
         ppos = ppos->prev;
+    }
     if (ppos == nullptr) {
+        i = 0;
         ppos = list;
-        while (ppos != nullptr && ppos->addr != elem)
+        while (ppos != nullptr && ppos->addr != elem) {
+            if (++i > count) {
+                ppos = nullptr;
+                break;
+            }
             ppos = ppos->next;
+        }
     }
     return ppos;
 }
@@ -127,10 +140,10 @@ inline List * LinkedList<Element>::find(Element elem)
 template<typename Element>
 inline List * LinkedList<Element>::find_previous(Element elem)
 {
-    List* list = find(elem);
-    if (list == nullptr)
+    List* ppos = find(elem);
+    if (ppos == nullptr)
         return nullptr;
-    return list->prev;
+    return ppos->prev;
 }
 
 template<typename Element>
@@ -173,28 +186,10 @@ inline List * LinkedList<Element>::insert(int index, Element element)
 }
 
 template<typename Element>
-inline List* LinkedList<Element>::first()
-{
-    List* ppos = list;
-    while (ppos->prev != nullptr)
-        ppos = ppos->prev;
-    return ppos;
-}
-
-template<typename Element>
-inline List* LinkedList<Element>::last()
-{
-    List* ppos = list;
-    while (ppos->next != nullptr)
-        ppos = ppos->next;
-    return ppos;
-}
-
-template<typename Element>
 inline List * LinkedList<Element>::add(Element elem)
 {
     List *tmp1 = new List(elem);
-    List *tmp2 = list;
+    List *tmp2 = list->prev;
     tmp1->prev = tmp2;
     tmp1->next = tmp2->next;
     tmp2->next->prev = tmp1;
@@ -204,8 +199,104 @@ inline List * LinkedList<Element>::add(Element elem)
 }
 
 template<typename Element>
+inline List * LinkedList<Element>::get(int num)
+{
+    if (num < 0 || num >= count)
+        return nullptr;
+    int i = 0;
+    List* ppos = list;
+    while (ppos->next != nullptr) {
+        if (num == 0)
+            return ppos;
+        if (i == num)
+            break;
+        ppos = ppos->next;
+        i++;
+    }
+    return ppos;
+}
+
+template<typename Element>
+inline int LinkedList<Element>::size()
+{
+    return count;
+}
+
+template<typename Element>
+inline void LinkedList<Element>::remove(Element elem)
+{
+    List* ppos = find(elem);
+    if (ppos != nullptr) {
+        List* tmp1 = ppos->prev;
+        List* tmp2 = ppos->next;
+        tmp1->next = ppos->next;
+        tmp2->prev = ppos->prev;
+        delete ppos;
+        count--;
+    }
+}
+
+template<typename Element>
+inline bool LinkedList<Element>::contains(Element elem)
+{
+    return (find(elem) != nullptr);
+}
+
+template<typename Element>
+inline List* LinkedList<Element>::advance(PosPtr ppos, int step)
+{
+    if (step < 0)
+        return nullptr;
+    for (int i = 0; i < step; i++)
+        ppos = ppos->next;
+    return ppos;
+}
+
+template<typename Element>
+inline Element LinkedList<Element>::retrieve(PosPtr ppos)
+{
+    return ppos->addr;
+}
+
+template<typename Element>
+inline List* LinkedList<Element>::first()
+{
+    int i = count;
+    List* ppos = list;
+    while (ppos->prev != nullptr) {
+        if (--i < 0)
+            break;
+        ppos = ppos->prev;
+    }
+    return ppos;
+}
+
+template<typename Element>
+inline List* LinkedList<Element>::last()
+{
+    return get(count - 1);
+}
+
+template<typename Element>
 inline bool LinkedList<Element>::isEmpty()
 {
     return (list->prev == nullptr && list->addr == nullptr && list->next == nullptr);
 }
 
+template<typename Element>
+inline int LinkedList<Element>::indexOf(Element elem)
+{
+    List* ppos = list;
+    for (int i = 0; i < count; i++) {
+        if (ppos->addr == elem)
+            return i;
+        ppos = ppos->next;
+    }
+    return -1;
+}
+
+template<typename Element>
+inline void LinkedList<Element>::Delete(Element elem)
+{
+    remove(elem);
+}
