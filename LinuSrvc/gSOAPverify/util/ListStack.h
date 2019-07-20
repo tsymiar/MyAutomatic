@@ -1,5 +1,7 @@
 #pragma once
 
+#include <malloc.h>
+
 struct List {
     List* prev;
     void* addr;
@@ -36,13 +38,12 @@ public:
         list = new List((void*)elem);
         count++;
     };
-    LinkedList() {
-        make_empty();
+    ~LinkedList() {
+        makeEmpty();
     }
     List *get() {
         return list;
     }
-    List* make_empty();
     PosPtr find(Element elem);
     PosPtr find_previous(Element elem);
     List* insert(Element elem, PosPtr ppos);
@@ -56,6 +57,7 @@ public:
     Element retrieve(PosPtr ppos);
     List* first();
     List* last();
+    List* makeEmpty();
     int indexOf(Element elem);
     bool isEmpty();
     void Delete(Element elem);
@@ -67,11 +69,14 @@ private:
 public:
     ListStack(Element S) {
         stack->addr = (void*)S;
+    };  
+    ~ListStack() {
+        dispose();
     };
     bool is_empty();
     void dispose();
     void make_empty();
-    Stack push(Element elem);
+    Stack* push(Element elem);
     Element top();
     void pop();
 };
@@ -92,24 +97,6 @@ public:
     Tree* Delete(Element x);
     Element retrieve(PosPtr ppos);
 };
-
-template<typename Element>
-inline List * LinkedList<Element>::make_empty()
-{
-    if (list->addr != nullptr) {
-        list->addr = nullptr;
-    }
-    if (list->prev != nullptr) {
-        delete list->prev;
-        list->prev = nullptr;
-    }
-    if (list->next != nullptr) {
-        delete list->next;
-        list->next = nullptr;
-    }
-    count = 0;
-    return list;
-}
 
 template<typename Element>
 inline List * LinkedList<Element>::find(Element elem)
@@ -168,19 +155,22 @@ inline List * LinkedList<Element>::insert(Element elem, PosPtr ppos)
 template<typename Element>
 inline List * LinkedList<Element>::insert(int index, Element element)
 {
-    List *temp = new List(0);
+    if (index <= 0 || index > count) {
+        return nullptr;
+    }
+    List *elem = new List((void*)element);
     List* buff = first();
     int it = 0;
     while (buff != nullptr) {
         if (++it == index) {
-            temp->prev = buff->prev;
-            temp->next = buff;
+            elem->prev = buff;
+            elem->next = buff->next;
+            buff->next->prev = elem;
+            buff->next = elem;
             break;
         }
         buff = buff->next;
     }
-    temp->addr = (void*)element;
-    list = temp;
     count++;
     return list;
 }
@@ -188,7 +178,7 @@ inline List * LinkedList<Element>::insert(int index, Element element)
 template<typename Element>
 inline List * LinkedList<Element>::add(Element elem)
 {
-    List *tmp1 = new List(elem);
+    List *tmp1 = new List((void*)elem);
     List *tmp2 = list->prev;
     tmp1->prev = tmp2;
     tmp1->next = tmp2->next;
@@ -227,10 +217,8 @@ inline void LinkedList<Element>::remove(Element elem)
 {
     List* ppos = find(elem);
     if (ppos != nullptr) {
-        List* tmp1 = ppos->prev;
-        List* tmp2 = ppos->next;
-        tmp1->next = ppos->next;
-        tmp2->prev = ppos->prev;
+        ppos->prev->next = ppos->next;
+        ppos->next->prev = ppos->prev;
         delete ppos;
         count--;
     }
@@ -278,9 +266,21 @@ inline List* LinkedList<Element>::last()
 }
 
 template<typename Element>
-inline bool LinkedList<Element>::isEmpty()
+inline List * LinkedList<Element>::makeEmpty()
 {
-    return (list->prev == nullptr && list->addr == nullptr && list->next == nullptr);
+    if (list->addr != nullptr) {
+        list->addr = nullptr;
+    }
+    if (list->prev != nullptr) {
+        delete list->prev;
+        list->prev = nullptr;
+    }
+    if (list->next != nullptr) {
+        delete list->next;
+        list->next = nullptr;
+    }
+    count = 0;
+    return list;
 }
 
 template<typename Element>
@@ -296,7 +296,60 @@ inline int LinkedList<Element>::indexOf(Element elem)
 }
 
 template<typename Element>
+inline bool LinkedList<Element>::isEmpty()
+{
+    return (list->prev == nullptr && list->addr == nullptr && list->next == nullptr);
+}
+
+template<typename Element>
 inline void LinkedList<Element>::Delete(Element elem)
 {
     remove(elem);
+}
+
+template<typename Element>
+inline bool ListStack<Element>::is_empty()
+{
+    return (stack == nullptr || (stack->addr == nullptr && stack->next == nullptr));
+}
+
+template<typename Element>
+inline void ListStack<Element>::dispose()
+{
+    if (stack != nullptr) {
+        delete stack->next;
+        delete stack;
+        stack = nullptr;
+    }
+}
+
+template<typename Element>
+inline void ListStack<Element>::make_empty()
+{
+    while (!is_empty()) {
+        pop();
+    }
+}
+
+template<typename Element>
+inline Stack* ListStack<Element>::push(Element elem)
+{
+    Stack* ppos = new Stack((void*)elem);
+    ppos->next = stack;
+    stack = ppos;
+    return stack;
+}
+
+template<typename Element>
+inline Element ListStack<Element>::top()
+{
+    return Element(stack->addr);
+}
+
+template<typename Element>
+inline void ListStack<Element>::pop()
+{
+    Stack* ppos = stack->next;
+    delete stack;
+    stack = ppos;
 }
