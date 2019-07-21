@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="me909s.c" />
+    <ClCompile Include="sample.c" />
+    <ClCompile Include="v4l2.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="v4l2.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Makefile" />
+  </ItemGroup>
+</Project>

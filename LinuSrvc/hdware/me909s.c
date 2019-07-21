@@ -15,6 +15,42 @@
 #include <termios.h>
 
 #define MAX_BUF_LEN	1024
+const char *PortName = "/dev/ttyUSB0";
+
+const char ME909Arguments[8][32] = {
+    "AT",
+    "AT+CMEE=2",
+    "AT+CPIN?",
+    "AT+CEREG=2",
+    "AT^HCSQ?",
+    "AT+COPS?",
+    "AT^SYSCFGEX=\"03\",3fffffff,1,2,7fffffffffffffff,,",
+    "AT^NDISDUP=1,1,\"cmnet\""
+};
+
+int mem_usb_check() {
+    FILE* fusb = fopen("/sys/kernel/debug/usb/devices", "r");
+    if (fusb == NULL) {
+        perror("Fail to read me909s device");
+        return -1;
+    }
+    char* vendor, *prodid;
+    const int maxlinesize = 256;
+    char* sperline = (char *)malloc(maxlinesize);
+    while (!feof(fusb)
+        && fgets(sperline, maxlinesize - 1, fusb) != NULL
+        && sperline[strlen(sperline) - 1] == '\n') {
+        if (sperline[0] == 'P') {
+            vendor = strstr(sperline, "Vendor=");
+            prodid = strstr(sperline, "ProdID=");
+            if (memcmp("12d1", (void*)(vendor + 7), 4) == 0 && 
+                memcmp("15c1", (void*)(prodid + 7), 4) == 0)
+                return 0;
+        }
+    }
+    free(sperline);
+    return -2;
+}
 
 int main(int argc, int **argv)
 {
@@ -26,13 +62,18 @@ int main(int argc, int **argv)
     int me_fd, ret, rd_stdin;
     int flag = 0;
     int times = 0;
-    char buff[MAX_BUF_LEN], rply[MAX_BUF_LEN];
+    char buff[64], rply[MAX_BUF_LEN];
     struct termios options;
+    int cmdat = 0;
 
-    me_fd = open("/dev/ttyUSB0", O_RDWR | O_NOCTTY);
+    if (mem_usb_check() == -2 && errno != 13) {
+        printf("Failing to check me909s device!\n");
+        return -1;
+    }
+    me_fd = open(PortName, O_RDWR | O_NOCTTY);
     if (me_fd == -1) {
-        perror("Can't open /dev/ttyUSB0 - \n");
-        return 0;
+        perror("Can't stat device file ttyUSB0");
+        return -1;
     } else {
         fcntl(me_fd, F_SETFL, 0);
     }
@@ -57,11 +98,13 @@ int main(int argc, int **argv)
 
     tcflush(me_fd, TCIOFLUSH);
     if (0 == tcsetattr(me_fd, TCSANOW, &options)) {
-        printf("Serial tty is ready...\n");
+        printf("Serial of %s is ready...\n", PortName);
     }
 
     memset(buff, 0, sizeof(buff));
-    strcpy(buff, "AT+CPIN?\r\n");
+    strcpy(buff, ME909Arguments[0]);
+    printf("Commands example below: \n\tATZ\n\tATQ0 V1 E1 S0 = 0\n\tAT + CGDCONT = 1, \"IP\", \"3gnet\"\n\
+Writing first AT Command: %s\n", ME909Arguments[0]);
 
     while (!flag)
     {
@@ -73,14 +116,16 @@ int main(int argc, int **argv)
         } else if (ret == 0) {
             times++;
             if (times > 1000) {
-                printf("Timeout too many times, exit.\n");
+                printf("Recievd too many timeout, process exit!\n");
                 break;
             }
-            printf("Select state(%d) TIMEOUT!\n", times);
+            if (times % 100 == 0) {
+                printf("Select(%d) TIMEOUT!\n", times);
+            }
             FD_SET(me_fd, &rdfds);
             continue;
         } else {
-            printf("State changed inside 1.5s sum ret = %d.\n", ret);
+            printf("State changed inside 1.5s, select ret = %d.\n", ret);
             if (FD_ISSET(0, &rdfds)) {
                 flag = 1;
                 memset(rply, 0, sizeof(rply));
@@ -91,18 +136,29 @@ int main(int argc, int **argv)
         if (flag) {
             flag = 0;
         } else {
+            usleep(100);
             memset(rply, 0, sizeof(rply));
-            read(me_fd, rply, sizeof(rply));
+            if (read(me_fd, rply, sizeof(rply)) > 0) {
+                cmdat++; // first command is "AT", ME909Arguments[0]
+            }
             printf("--------\n%s\n--------\n", rply);
         }
         memset(buff, 0, sizeof(buff));
-        printf("New serial command: ");
-        if (scanf("%64s", rply) == -1) {
-            printf("Bytes beyound limit(1~64)!\n");
-            break;
+        if (cmdat <= 7) {
+            printf("Current AT Command %d: %s\n", cmdat, ME909Arguments[cmdat]);
+            strcpy(buff, ME909Arguments[cmdat]);
+        } else {
+            printf("New serial command('q' to quiet): ");
+            if (scanf("%64s", rply) == -1) {
+                printf("Bytes beyound limit(1~64)!\n");
+                break;
+            }
+            if (memcmp("q", rply, 2) == 0)
+                return 0;
+            strcpy(buff, rply);
         }
-        strcpy(buff, rply);
         strcat(buff, "\r\n");
+        times = 0;
     }
     close(me_fd);
     return times;
