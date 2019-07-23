@@ -1,7 +1,4 @@
 ﻿/*
- * Copyright (c) 2013, Mathias Brossard <mathias@brossard.org>.
- * All rights reserved.
- *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
  * met:
@@ -24,21 +21,17 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
- /********************************************************************/
- /*              Modified by tsymiar <909006258@qq.com>              */
- /********************************************************************/
+ */ // Modified by tsymiar
+
 #include "pthdpool.h"
 
-int err = 0;
-static int th[1024];
+static int threads[MAX_THRD_NUM];
 
-static void *my_thrd_func(void *lp)
+static void *pthd_thrd_func(void *argument)
 {
-    my_pool *pool = (my_pool_t *)lp;
-    my_task_t task_t;
-    int m = 0;
-    for (;;) {
+    pthd_task_t task_t;
+    pthd_pool_t *pool = (pthd_pool_t *)argument;
+    while (!pool->dispose) {
         /* Lock must be token to wait on conditional variable */
         pthread_mutex_lock(&pool->queue_lock);
         /* Wait on condition variable, check for spurious wakeups.
@@ -68,78 +61,82 @@ static void *my_thrd_func(void *lp)
             pthread_mutex_unlock(&pool->queue_lock);
         /* Get to work */
         (*(task_t.func))(task_t.arg);
+        pthread_mutex_unlock(&pool->queue_lock);
     }
-    pthread_exit(NULL);
+    pthread_exit(null);
     return 0;
 }
 
-int my_pool_free(my_pool_t *pool_t) {
-    if (pool_t == NULL || pool_t->dispose) {
+int pthd_pool_free(pthd_pool_t *pool) {
+    if (pool == null || pool->dispose) {
         return -1;
     }
     /* 释放线程 任务队列 互斥锁 条件变量 线程池所占内存资源 */
-    if (pool_t->thrd_id) {
-        free(pool_t->thrd_id);
-        free(pool_t->queue);
-        pthread_mutex_destroy(&(pool_t->queue_lock));
-        pthread_cond_destroy(&(pool_t->queue_noti));
+    if (pool->thrd_id) {
+        free(pool->thrd_id);
+        free(pool->queue);
+        pthread_mutex_destroy(&(pool->queue_lock));
+        pthread_cond_destroy(&(pool->queue_noti));
     }
-    free(pool_t);
+    free(pool);
     return 0;
 }
 
-my_pool_t* my_pool_init(int thrd_num, int sz_que)
+pthd_pool_t* pthd_pool_init(int sz_que, int thrd_num)
 {
-    int j;
-    my_pool *pool_t = (my_pool*)calloc(1, sizeof(*pool_t));     //内存的动态存储区中分配1个长度为pool的连续空间
+    pthd_pool_t *pool = (pthd_pool_t*)calloc(1, sizeof(*pool));     //内存的动态存储区中分配1个长度为pool的连续空间
     //static pthread_cond_t cond = PTHREAD_COND_INITIALIZER;    //静态初始化条件变量
     //static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER; //静态初始化互斥锁
-    pool_t->dispose = false;
+    pool->dispose = false;
     if (thrd_num < 1)
         thrd_num = 1;
-    pool_t->thrd_num = thrd_num;
-    pool_t->queue_size = sz_que;
-    pool_t->cur_thrd_no = 0;
+    pool->thrd_num = thrd_num;
+    pool->queue_size = sz_que;
+    pool->cur_thrd_no = 0;
     //为thrd_id分配thrd_num个pthread_t空间
-    pool_t->thrd_id = (pthread_t *)malloc(sizeof(pthread_t) * thrd_num);
-    pool_t->queue = (my_task_t *)malloc(sizeof(my_task_t) * sz_que);
-    if (pthread_mutex_init(&pool_t->queue_lock, NULL) != 0 ||   /*动态初始化条件变量*/
-        pthread_cond_init(&pool_t->queue_noti, NULL) != 0 ||    /*动态初始化互斥锁*/
-        pool_t->thrd_id == null || pool_t->queue == null)
+    int thdlen = sizeof(pthread_t) * thrd_num;
+    int quelen = sizeof(pthd_task_t) * sz_que;
+    pool->thrd_id = (pthread_t *)malloc(thdlen);
+    memset(pool->thrd_id, 0, thdlen);
+    pool->queue = (pthd_task_t *)malloc(quelen);
+    memset(pool->queue, 0, quelen);
+    if (pthread_mutex_init(&pool->queue_lock, null) != 0 ||   /*动态初始化条件变量*/
+        pthread_cond_init(&pool->queue_noti, null) != 0 ||    /*动态初始化互斥锁*/
+        pool->thrd_id == null || pool->queue == null)
     {
         goto error;
     }
-    for (int i = j = 0; i < pool_t->thrd_num; i++) {
-        if (pthread_create(&(pool_t->thrd_id[i]), NULL,
-            my_thrd_func, (void*)pool_t) != 0) {
-            my_pool_destroy(pool_t);
-            return NULL;
-        }
-        else
+    int j;
+    for (int i = j = 0; i < pool->thrd_num; i++) {
+        if (pthread_create(&(pool->thrd_id[i]), null,
+            pthd_thrd_func, (void*)pool) != 0) {
+            pthd_pool_destroy(pool);
+            return null;
+        } else
         {
-            th[j] = i;
-            pool_t->cur_thrd_no += 1;
+            threads[j] = i;
+            pool->cur_thrd_no += 1;
             j++;
         }
     }
-    return pool_t;
+    return pool;
 error:
-    if (pool_t) {
-        my_pool_free(pool_t);
+    if (pool) {
+        pthd_pool_free(pool);
     }
-    return NULL;
+    return null;
 }
 
-int my_pool_add_task(my_pool_t *pool, void *(*routine)(void *), void * arg)
+int pthd_pool_add_task(pthd_pool_t *pool, void *(*routine)(void *), void * arg)
 {
-    int next;
-    if (pool == NULL || routine == NULL) {
+    int err = 0;
+    if (pool == null || routine == null) {
         return -1;
     }
     if (pthread_mutex_lock(&(pool->queue_lock)) != 0) {
         return -2;
     }
-    next = pool->tail + 1;
+    int next = pool->tail + 1;
     next = (next >= pool->queue_size) ? 0 : next;
     do {
         /* Are we full ? */
@@ -169,10 +166,10 @@ int my_pool_add_task(my_pool_t *pool, void *(*routine)(void *), void * arg)
     return err;
 }
 
-int my_pool_destroy(my_pool_t *pool)
+int pthd_pool_destroy(pthd_pool_t *pool)
 {
-    int i, err = 0;
-    if (pool == NULL) {
+    int err = 0;
+    if (pool == null) {
         return -1;
     }
     if (pthread_mutex_lock(&(pool->queue_lock)) != 0) {
@@ -191,8 +188,9 @@ int my_pool_destroy(my_pool_t *pool)
             break;
         }
         /* Join all worker thread */
-        for (i = 0; i < pool->thrd_num; i++) {
-            if (pthread_join(pool->thrd_id[th[i]], NULL) != 0) {
+        for (int i = 0; i < pool->thrd_num; i++) {
+            pthread_t thrd = pool->thrd_id[threads[i]];
+            if (pthread_join(thrd, null) != 0) {
                 err = -3;
             }
         }
@@ -200,16 +198,15 @@ int my_pool_destroy(my_pool_t *pool)
     } while (0);
     /* Only if everything went well do we deallocate the pool */
     if (!err) {
-        my_pool_free(pool);
+        pthd_pool_free(pool);
     }
     return err;
 }
 
-int my_pool_wait(my_pool_t *pool)
+int pthd_pool_wait()
 {
-    if (pthread_join(pthread_self(), NULL) != 0) {
+    if (pthread_join(pthread_self(), null) != 0) {
         return -3;
-    }
-    else
+    } else
         return 0;
 }
