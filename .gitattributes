@@ -3,12 +3,13 @@
 ###############################################################################
 * text=auto
 *.c text
-*.h text
-*.cc text
-*.cpp text
-*.hpp text
+*.H text
 *.py eol=lf
+*.java eol=lf
 *.sh text eol=lf
+*.bat text eol=lf
 *.vcproj text eol=crlf
 *.h linguist-language=C++
 *.cc linguist-language=C++
+*.cpp linguist-language=C++
+*.hpp linguist-language=C++
