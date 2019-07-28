@@ -25,8 +25,6 @@
 
 #include "pthdpool.h"
 
-static int threads[MAX_THRD_NUM];
-
 static void *pthd_thrd_func(void *argument)
 {
     pthd_task_t task_t;
@@ -84,9 +82,8 @@ int pthd_pool_free(pthd_pool_t *pool) {
 
 pthd_pool_t* pthd_pool_init(int sz_que, int thrd_num)
 {
-    pthd_pool_t *pool = (pthd_pool_t*)calloc(1, sizeof(*pool));     //内存的动态存储区中分配1个长度为pool的连续空间
-    //static pthread_cond_t cond = PTHREAD_COND_INITIALIZER;    //静态初始化条件变量
-    //static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER; //静态初始化互斥锁
+    //从动态内存存储区中分配1个pthd_pool_t单位长度连续空间
+    pthd_pool_t *pool = (pthd_pool_t*)calloc(1, sizeof(*pool));
     pool->dispose = false;
     if (thrd_num < 1)
         thrd_num = 1;
@@ -100,8 +97,8 @@ pthd_pool_t* pthd_pool_init(int sz_que, int thrd_num)
     memset(pool->thrd_id, 0, thdlen);
     pool->queue = (pthd_task_t *)malloc(quelen);
     memset(pool->queue, 0, quelen);
-    if (pthread_mutex_init(&pool->queue_lock, null) != 0 ||   /*动态初始化条件变量*/
-        pthread_cond_init(&pool->queue_noti, null) != 0 ||    /*动态初始化互斥锁*/
+    if (pthread_mutex_init(&pool->queue_lock, null) != 0 ||
+        pthread_cond_init(&pool->queue_noti, null) != 0 ||
         pool->thrd_id == null || pool->queue == null)
     {
         goto error;
