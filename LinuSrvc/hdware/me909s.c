@@ -17,21 +17,28 @@
 #define MAX_BUF_LEN	1024
 const char *PortName = "/dev/ttyUSB0";
 
-const char ME909Arguments[8][32] = {
-    "AT",
-    "AT+CMEE=2",
+const char ME909Arguments[11][49] = {
+    "ATZ",
     "AT+CPIN?",
-    "AT+CEREG=2",
-    "AT^HCSQ?",
     "AT+COPS?",
     "AT^SYSCFGEX=\"03\",3fffffff,1,2,7fffffffffffffff,,",
-    "AT^NDISDUP=1,1,\"cmnet\""
+    "AT^SYSINFOEX",
+    "AT+CGDCONT=16,\"IP\",\"APN\"",
+    "AT^AUTHDATA = 16,,,\"usr\",\"card\"",
+    "AT^NDISDUP=1,1,\"cmnet\"",
+    "AT+CGACT=1,1",
+    "AT+CEREG?",
+    "ATDT*99***1#"
 };
+
+int start_pppd() {
+    return 0;
+}
 
 int mem_usb_check() {
     FILE* fusb = fopen("/sys/kernel/debug/usb/devices", "r");
     if (fusb == NULL) {
-        perror("Fail to read me909s device");
+        perror("WARN: fail to read usb list file");
         return -1;
     }
     char* vendor, *prodid;
@@ -43,7 +50,7 @@ int mem_usb_check() {
         if (sperline[0] == 'P') {
             vendor = strstr(sperline, "Vendor=");
             prodid = strstr(sperline, "ProdID=");
-            if (memcmp("12d1", (void*)(vendor + 7), 4) == 0 && 
+            if (memcmp("12d1", (void*)(vendor + 7), 4) == 0 &&
                 memcmp("15c1", (void*)(prodid + 7), 4) == 0)
                 return 0;
         }
@@ -59,20 +66,21 @@ int main(int argc, int **argv)
     struct timeval tv;
     tv.tv_sec = 1;
     tv.tv_usec = 500;
-    int me_fd, ret, rd_stdin;
-    int flag = 0;
-    int times = 0;
-    char buff[64], rply[MAX_BUF_LEN];
+    char buff[256], rply[MAX_BUF_LEN];
     struct termios options;
-    int cmdat = 0;
+    int me_fd, ret, rd_stdin;
+    int tries = 0;
+    int flag = 0;
+    int cmmat = 0;
+    int curr = 0;
 
     if (mem_usb_check() == -2 && errno != 13) {
-        printf("Failing to check me909s device!\n");
+        printf("Fail to check me909s model!\n");
         return -1;
     }
     me_fd = open(PortName, O_RDWR | O_NOCTTY);
     if (me_fd == -1) {
-        perror("Can't stat device file ttyUSB0");
+        perror("Can't open usb file ttyUSB0");
         return -1;
     } else {
         fcntl(me_fd, F_SETFL, 0);
@@ -98,57 +106,74 @@ int main(int argc, int **argv)
 
     tcflush(me_fd, TCIOFLUSH);
     if (0 == tcsetattr(me_fd, TCSANOW, &options)) {
-        printf("Serial of %s is ready...\n", PortName);
+        printf("Serial of %s being ready...\n", PortName);
     }
-
-    memset(buff, 0, sizeof(buff));
-    strcpy(buff, ME909Arguments[0]);
-    printf("Commands example below: \n\tATZ\n\tATQ0 V1 E1 S0 = 0\n\tAT + CGDCONT = 1, \"IP\", \"3gnet\"\n\
-Writing first AT Command: %s\n", ME909Arguments[0]);
 
     while (!flag)
     {
-        write(me_fd, buff, sizeof(buff));
-        ret = select(me_fd + 1, &rdfds, NULL, NULL, &tv);
+        ret = select(STDIN_FILENO + 1, &rdfds, NULL, NULL, &tv);
         if (ret < 0) {
             perror("select");
             break;
-        } else if (ret == 0) {
-            times++;
-            if (times > 1000) {
-                printf("Recievd too many timeout, process exit!\n");
-                break;
-            }
-            if (times % 100 == 0) {
-                printf("Select(%d) TIMEOUT!\n", times);
-            }
-            FD_SET(me_fd, &rdfds);
-            continue;
-        } else {
+        } else if (FD_ISSET(0, &rdfds)) {
             printf("State changed inside 1.5s, select ret = %d.\n", ret);
-            if (FD_ISSET(0, &rdfds)) {
-                flag = 1;
-                memset(rply, 0, sizeof(rply));
-                rd_stdin = read(0, rply, sizeof(rply));
-                printf("Data from usb = %d:\n--- %s.\n", rd_stdin, rply);
+        } else {
+            tries++;
+            if (tries == 1/* && cmmat == 0*/) {
+                sprintf(buff, "%s\r\n", ME909Arguments[0]);
+                write(me_fd, buff, strlen(buff) + 1);
+                usleep(100000);
+                flag = 0;
+            } else {
+                if (tries > 1000) {
+                    printf("Cause too many timeout, checking process exit!\n");
+                    for (curr = 0; curr < 11; curr++) {
+                        printf("\t%s\n", ME909Arguments[curr]);
+                    }
+                    cmmat = 11;
+                    flag = 1;
+                }
+                if (curr < 11) {
+                    if (tries % 100 == 0) {
+                        printf("Select(%d) TIMEOUT!\n", tries);
+                    }
+                    FD_SET(me_fd, &rdfds);
+                    continue;
+                }
             }
         }
         if (flag) {
             flag = 0;
-        } else {
-            usleep(100);
+        } else do {
             memset(rply, 0, sizeof(rply));
-            if (read(me_fd, rply, sizeof(rply)) > 0) {
-                cmdat++; // first command is "AT", ME909Arguments[0]
+            if (rd_stdin = read(me_fd, rply, sizeof(rply)) > 0) {
+                if (strstr(rply, ">")) {
+                    printf("Enter text to serial: ");
+                    memset(buff, 0, sizeof(buff));
+                    scanf("%140s", buff);
+                    write(me_fd, buff, strlen(buff) + 1);
+                    continue;
+                } else {
+                    if (cmmat == 0)
+                        printf("First command '%s' reply:\n--------\n%s\n--------\n", ME909Arguments[0], rply);
+                    else
+                        printf("Reply from %s:\n--------\n%s\n--------\n", PortName, rply);
+                    cmmat++;
+                }
             }
-            printf("--------\n%s\n--------\n", rply);
-        }
+            if (strstr(rply, "CONNECT")) {
+                printf("--> Don't know what to do!  Starting pppd and hoping for the best.\n");
+                start_pppd();
+                break;
+            }
+            usleep(100000);
+        } while (0);
         memset(buff, 0, sizeof(buff));
-        if (cmdat <= 7) {
-            printf("Current AT Command %d: %s\n", cmdat, ME909Arguments[cmdat]);
-            strcpy(buff, ME909Arguments[cmdat]);
+        if (cmmat <= 10 && curr == 0) {
+            printf("Current AT Command %d: %s\n", cmmat, ME909Arguments[cmmat]);
+            strcpy(buff, ME909Arguments[cmmat]);
         } else {
-            printf("New serial command('q' to quiet): ");
+            printf("New serial command('q' to quit): ");
             if (scanf("%64s", rply) == -1) {
                 printf("Bytes beyound limit(1~64)!\n");
                 break;
@@ -158,8 +183,9 @@ Writing first AT Command: %s\n", ME909Arguments[0]);
             strcpy(buff, rply);
         }
         strcat(buff, "\r\n");
-        times = 0;
+        write(me_fd, buff, strlen(buff) + 1);
+        tries = 0;
     }
     close(me_fd);
-    return times;
+    return tries;
 }
