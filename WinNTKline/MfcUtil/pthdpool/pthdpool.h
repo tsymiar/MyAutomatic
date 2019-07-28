@@ -17,8 +17,8 @@ extern "C" {
 #endif
     //线程任务属性
     typedef struct PthdTask {
-        void*              (*func)(void*);   /* 任务回调函数指针 */
-        void               *arg;             /* 传入任务函数的参数 */
+        void*              (*func)(void*); /* 任务回调函数指针 */
+        void               *arg;           /* 传入任务函数的参数 */
     } pthd_task_t;
     //线程池属性
     typedef struct PthdPool {
@@ -30,13 +30,15 @@ extern "C" {
         int                tail;           /* 队尾编号 */
         pthread_t*         thrd_id;        /* 线程ID数组首指针 */
         pthd_task_t*       queue;          /* 线程队列指针 */
-        pthread_mutex_t    queue_lock;     /* 线程队列锁 */
-        pthread_cond_t     queue_noti;     /* 线程同步条件变量 */
+        pthread_mutex_t    queue_lock = PTHREAD_MUTEX_INITIALIZER;  /* 线程队列锁 */
+        pthread_cond_t     queue_noti = PTHREAD_COND_INITIALIZER;   /* 线程同步条件变量 */
     } pthd_pool_t;
+    //线程数组索引
+    static int threads[MAX_THRD_NUM];
     /**
       * @brief     初始化线程池
       * @param     thrd_num: 最大线程数, sz_que: 队列长度
-      * @retval    sucess: thread point; NULL, error
+      * @retval    sucess: thread point; NULL, error;
       */
     extern pthd_pool_t* pthd_pool_init(int sz_que, int thrd_num = 0);
     /**
@@ -46,14 +48,13 @@ extern "C" {
       */
     extern int pthd_pool_add_task(pthd_pool_t *pool, void*(*routine)(void*), void *arg);
     /**
-      * @brief     等待某个线程池执行
-      * @retval    0, sucess; -3, pthread join error
+      * @brief     等待线程退出
+      * @retval    0, sucess; -3, pthread join error;
       */
     extern int pthd_pool_wait();
     /**
       * @brief     销毁线程池
-      * @param     pool: 要销毁的线程池
-      * @retval    0, sucess; -1, pool null; -2, mutex error; -3, pthread join error; -4, dispose
+      * @retval    0, sucess; -1, pool null; -2, mutex error; -3, pthread join error; -4, dispose;
       */
     extern int pthd_pool_destroy(pthd_pool_t *pool);
 
