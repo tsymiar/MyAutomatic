@@ -192,11 +192,13 @@ function click2Submit(){
 function showMoreform() {
     var more_elem = $("#more-link");
     if(more_elem.html() === "✖"){
-        more_elem.html("➤");
+        more_elem.html("<img src='image/arrow.svg' width='50%'>");
         $("#more-form").css("display", "none");
+        more_elem.css("marginRight", "-10%");
         more_elem.attr("title","more");
     } else {
         more_elem.html("✖");
+        more_elem.css("marginRight", "6%");
         $("#more-form").css("display", "block");
         more_elem.attr("title","less");
     }

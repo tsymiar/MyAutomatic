@@ -138,7 +138,7 @@ class FileLoad extends HandleBase{
                 }
                 */
             } else {
-                User::errReport("Check File error ".$_FILES["file"]["error"]);
+                User::errReport("Check File failure: ".$_FILES["file"]["error"]);
             }
         }
     }
@@ -178,6 +178,9 @@ $action = isset($_REQUEST["action"]) ? $_REQUEST["action"] : NULL;
 if(strpos($action, "file") === false){
     switch($action){
         case NULL:
+		case null:
+		case "null":
+		case "NULL":
             break;
         case ACTION_REGIST:
             Regist::handle_request();
