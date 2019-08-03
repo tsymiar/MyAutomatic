@@ -57,7 +57,7 @@ typedef void *type_thread_func;
 pthread_mutexattr_t attr;
 #endif
 
-#define GET_IMG_EXE "./v4l2.exe"
+#define GET_IMG_EXE "v4l2.exe"
 #define IMAGE_FILE "v4l2.jpg"
 
 #ifdef _WIN32
@@ -67,14 +67,14 @@ pthread_mutex_t
 #endif
 sendallow;
 
-int  aim2exit = 0;
+int aim2exit = 0;
 type_socket listen_socket;
 static unsigned int g_threadNo_ = 0;
 
 struct Network {
-    unsigned char ip[INET_ADDRSTRLEN];
-    unsigned int port;
-    type_socket socket;
+    volatile unsigned char ip[INET_ADDRSTRLEN];
+    volatile unsigned int port;
+    volatile type_socket socket;
 };
 
 struct ONLINE {
@@ -158,7 +158,8 @@ struct group_file {
 
 void pipesig_handler(int s) {
 #ifdef _UNISTD_H
-    write(STDERR_FILENO, "Signal: caught SIGPIPE!\n", 26);
+    write(STDERR_FILENO, "Signal: caught a SIGPIPE!\n", 27);
+    exit(0);
 #endif
 }
 
@@ -166,7 +167,7 @@ int inst_mesg(int argc, char* argv[]);
 template<typename T> int set_n_get_mem(T* shmem, int ndx = 0, int rw = 0);
 void func_waitpid(int signo);
 int queryNetworkParams(const char* username, Network& network, const int max = MAX_ACTIVE);
-Network queryNetworkParams(int index);
+Network queryNetworkParams(int uid);
 int user_auth(char usr[24], char psw[24]);
 int new_user(char usr[24], char psw[24]);
 int user_is_line(char user[24]);
@@ -194,7 +195,7 @@ int main(int argc, char* argv[])
             }
             fprintf(stdout, "\tNo.\tuser\tIP\t\tPort\tsocket\n");
             for (int c = 0; c < MAX_ACTIVE; c++) {
-                if (active[c].user[0] != '\0') {
+                if (&active != nullptr && active[c].user[0] != '\0') {
                     fprintf(stdout, "\t%d\t%s\t%s\t%d\t%d\n", c + 1,
                         active[c].user, active[c].netwk.ip, active[c].netwk.port, active[c].netwk.socket);
                 }
@@ -226,7 +227,7 @@ type_thread_func monite(void *arg)
 {
     static USER user;
     group_clazz group;
-    int c, flg, num = 0;
+    int c, flg, cur = 0;
     int qq = 0, logged = 0;
     int valrtn;
     char sd_bufs[256], rcv_txt[256];
@@ -285,34 +286,31 @@ type_thread_func monite(void *arg)
             lol = sizeof(int);
         int val;
         if (getsockopt(rcv_sock, SOL_SOCKET, SO_KEEPALIVE, reinterpret_cast<char*>(&val), &lol) == 0) {
-            if (num == 3) {
+            if (cur > 0)
+                fprintf(stderr, "### Connect-%d status changed (%s): socket going to close.\n", cur, strerror(errno));
+            if (errno != 0) {
                 set_user_quit(user.usr);
-                fprintf(stderr, "### socket status changed (%s): connection may going die.\n", strerror(errno));
-#if defined _WIN32 || defined THREAD_PER_CONN || defined SOCK_CONN_TEST
+#if defined _WIN32
                 ;
-#else
-                closesocket(rcv_sock);
-                exit(errno);
+#elif THREAD_PER_CONN || SOCK_CONN_TEST
+                goto con_err1;
 #endif
             }
-            num++;
+            cur++;
         }
         flg = recv(rcv_sock, rcv_txt, 256, 0);
         if (qq != flg && flg != 0)
         {
-            g_threadNo_++;
-            memcpy(&user, rcv_txt, sizeof(user));
             if (flg <= -1 && flg != EWOULDBLOCK && flg != EAGAIN && flg != EINTR) {
-                if (num == 333) {
-                    set_user_quit(user.usr);
-                    fprintf(stderr, "----------------------------------------------------------------\
-                    \n### client(%d) socket [%d] closed by itself just now.\n", g_threadNo_, rcv_sock);
-                    closesocket(rcv_sock);
-                }
-                num++;
-                continue;
+                set_user_quit(user.usr);
+                fprintf(stderr, "----------------------------------------------------------------\
+                    \n### Client socket [%d] closed by itself just now.\n", rcv_sock);
+                closesocket(rcv_sock);
+                exit(0);
             } else {
 #ifdef _DEBUG
+                g_threadNo_++;
+                memcpy(&user, rcv_txt, sizeof(user));
                 fprintf(stdout, "----------------------------------------------------------------\
                 \n>>> 1-RCV [%0x,%0x]: %s, %d, %d\n", user.uiCmdMsg, static_cast<unsigned>(*user.chk), user.usr, flg, g_threadNo_);
                 for (c = 0; c < flg; c++)
@@ -335,33 +333,29 @@ type_thread_func monite(void *arg)
                 if (valrtn == -1) {
                     sprintf((sd_bufs + 8), "New user: %s", user.usr);
                     join_group(0, user.usr, (char*)("all"));
-                    send(rcv_sock, sd_bufs, 48, 0);
+                    snres = send(rcv_sock, sd_bufs, 48, 0);
                     fprintf(stdout, ">>> %s\n", sd_bufs + 8);
-                    continue;
                 } else if (valrtn == -2) {
                     strcpy((sd_bufs + 8), "Too many users.");
-                    send(rcv_sock, sd_bufs, 28, 0);
+                    snres = send(rcv_sock, sd_bufs, 28, 0);
                     fprintf(stdout, ">>> %s\n", sd_bufs + 8);
-                    continue;
                 } else if (valrtn >= 0) {
                     strcpy((sd_bufs + 8), "User already exists.");
-                    send(rcv_sock, sd_bufs, 32, 0);
+                    snres = send(rcv_sock, sd_bufs, 32, 0);
                     fprintf(stdout, ">>> %s\n", sd_bufs + 8);
-                    continue;
                 } else if (valrtn == -3) {
                     strcpy((sd_bufs + 8), "Same user name exist.");
-                    send(rcv_sock, sd_bufs, 32, 0);
+                    snres = send(rcv_sock, sd_bufs, 32, 0);
                     fprintf(stdout, ">>> %s\n", sd_bufs + 8);
-                    continue;
                 } else if (valrtn == -4) {
                     strcpy((sd_bufs + 8), "User name error.");
                     snres = send(rcv_sock, sd_bufs, 32, 0);
-                    if (snres < 0) {
-                        fprintf(stderr, "### socket status: %s\n", strerror(snres));
-                    } else
-                        fprintf(stdout, ">>> %s\n", sd_bufs + 8);
-                    continue;
+                    fprintf(stdout, ">>> %s\n", sd_bufs + 8);
                 };
+                if (snres < 0) {
+                    fprintf(stderr, "### Socket status: %s\n", strerror(errno));
+                }
+                continue;
                 break;
             } else if ((user.rsv == 0) && (user.uiCmdMsg == 0x1)) {
                 // user.usr: 8; password: 32.
@@ -371,7 +365,7 @@ type_thread_func monite(void *arg)
                     sprintf((sd_bufs + 8), "[%s] logging on successfully.", user.usr);
                     set_user_peer(user.usr, IP, PORT, rcv_sock);
                     Network sock;
-                    memcpy(sock.ip, IP, INET_ADDRSTRLEN),
+                    memcpy((void*)sock.ip, IP, INET_ADDRSTRLEN),
                         sock.port = PORT,
                         sock.socket = rcv_sock;
                     set_user_line(user.usr, sock);
@@ -383,7 +377,12 @@ type_thread_func monite(void *arg)
                         sprintf((sd_bufs + 8), "Another [%s] is on line.", user.usr);
                         snres = send(rcv_sock, sd_bufs, 64, 0);
                         if (snres < 0) {
-                            fprintf(stderr, "### socket status: %s\n", strerror(snres));
+                            fprintf(stderr, "### User status: %s\n", strerror(errno));
+#if defined _WIN32
+                            return NULL;
+#elif THREAD_PER_CONN || SOCK_CONN_TEST
+                            goto con_err1;
+#endif
                         } else
                             fprintf(stdout, ">>> %s\n", sd_bufs + 8);
                         continue;
@@ -425,31 +424,42 @@ type_thread_func monite(void *arg)
             // set cur qq as last flg;
             qq = flg;
             while (logged) {
+                time_t t1 = t;
+                time(&t);
+                // heart beat
+                if ((t - t1 > 30)
+                    && (send(rcv_sock, "\0\0", 2, 0) < 0)) {
+#if defined _WIN32
+                    return NULL;
+#elif THREAD_PER_CONN || SOCK_CONN_TEST
+                    goto con_err1;
+#endif
+                }
                 memset(&user, 0, sizeof(user));
                 flg = recv(rcv_sock, rcv_txt, 256, 0);
                 if (flg < 0 && flg != EWOULDBLOCK && flg != EAGAIN && flg != EINTR) {
                     set_user_quit(user.usr);
                     fprintf(stderr, "### Lost connection with *[%s]: %s(%d)\n", userName, strerror(flg), flg);
                     logged = 0;
+#if defined _WIN32
+                    return NULL;
+#elif THREAD_PER_CONN || SOCK_CONN_TEST
                     goto con_err1;
-#if defined _WIN32 || defined THREAD_PER_CONN || defined SOCK_CONN_TEST
-                    break;
-#else
-                    exit(errno);
 #endif
                 } else {
-                    if (flg < 24) {
-                        set_user_quit(user.usr);
+                    if (flg < 8 && flg != 2) {
+                        set_user_quit(userName);
                         if (flg == 0) {
-                            fprintf(stderr, "### Socket disconnect normally.\n");
-#if defined _WIN32 || defined THREAD_PER_CONN || defined SOCK_CONN_TEST
-                            ;
-#else
-                            exit(errno);
+                            fprintf(stderr, "### Peer socket was missing...\n");
+#if defined _WIN32
+                            return NULL;
+#elif THREAD_PER_CONN || SOCK_CONN_TEST
+                            goto con_err1;
 #endif
-                        } else
+                        } else {
                             fprintf(stderr, "### Request param invalid.\n");
-                        goto con_err0;
+                            goto con_err0;
+                        }
                     }
                     memcpy(&user, rcv_txt, flg);
                 }
@@ -529,7 +539,7 @@ type_thread_func monite(void *arg)
 #if  !defined _WIN32
                                 queryNetworkParams(user.peer, p2pnet);
 #endif
-                                const char* s = reinterpret_cast<char*>(&p2pnet.ip);
+                                const char* s = reinterpret_cast<char*>((unsigned char**)&p2pnet.ip);
                                 unsigned char t = 0;
                                 while (1) {
                                     if (*s != '\0' && *s != '.') {
@@ -612,7 +622,7 @@ type_thread_func monite(void *arg)
                                         } else {
                                             fprintf(stdout, "Error: %s.\n", strerror(errno));
                                         }
-                                        sprintf((sd_bufs + 32), "Got failure while sending a message.");
+                                        sprintf((sd_bufs + 32), "Got failure while senting a message.");
                                         sndlen = 72;
                                     }
                                 }
@@ -634,12 +644,12 @@ type_thread_func monite(void *arg)
                         if (vfork() == 0)
                         {
                             char *const agv[] = { (char*)"v4l2.exe", (char *)(0) };
-                            valrtn = execvp(GET_IMG_EXE, agv);
+                            valrtn = execvp("./" GET_IMG_EXE, agv);
                             mesg = strerror(errno);
                             sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
                             strcpy((sd_bufs + 8), mesg);
                             sndlen = 8 + strlen(mesg) + 1;
-                            fprintf(stdout, "Exec [ %s ] with execvp fail, %s.\n", GET_IMG_EXE, mesg);
+                            fprintf(stdout, "Exec [ %s ] with execvp fail, %s.\n", "./" GET_IMG_EXE, mesg);
                         } else {
                             wait(&valrtn);
                             if (errno != ECHILD) {
@@ -654,7 +664,7 @@ type_thread_func monite(void *arg)
                             sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
                             strcpy((sd_bufs + 8), mesg);
                             sndlen = 8 + strlen(mesg) + 1;
-                            fprintf(stdout, "Make image with [ %s ], %s.\n", GET_IMG_EXE, mesg);
+                            fprintf(stdout, "Make image with [ %s ], %s.\n", "./" GET_IMG_EXE, mesg);
                         }
 #else
                         char *mesg = "OS don't support v4l.";
@@ -701,7 +711,7 @@ type_thread_func monite(void *arg)
                                     cur = 0;
                                 }
                                 memset(sd_bufs + 32 + cur, pos[i], 1);
-                                SLEEP(1 / 10000);
+                                SLEEP(1.0 / 10000);
                                 cur++;
                             }
                             slice++;
@@ -810,9 +820,16 @@ type_thread_func monite(void *arg)
                     } break;
                     default: break;
                     }
-                    if (memcmp(user.chk, "P2P", 4) != 0)
+                    if ((memcmp(user.chk, "P2P", 4) != 0) && 
+                        (send(rcv_sock, sd_bufs, sndlen, 0) < 0))
                     {
-                        send(rcv_sock, sd_bufs, sndlen, 0);
+                        perror("Socket lost");
+#if defined _WIN32
+                        return NULL;
+#elif THREAD_PER_CONN || SOCK_CONN_TEST
+                        goto con_err1;
+                        break;
+#endif
                     }
 #ifdef _DEBUG
                     fprintf(stdout, ">>> 2-MSG [%0x,%0x]: ", sd_bufs[0], sd_bufs[1]);
@@ -832,20 +849,25 @@ type_thread_func monite(void *arg)
                 }
                 SLEEP(99);
             }
-        };
+        } else {
+            closesocket(rcv_sock);
+        }
         qq = flg;
         SLEEP(99);
     } while (!logged);
 
 con_err0:
-    for (int i = 0; i < MAX_ACTIVE; i++)
-        set_n_get_mem(&active[i], i);
-    memset(active[user_is_line(user.usr)].user, 0, 24);
+    {
+        for (int i = 0; i < MAX_ACTIVE; i++)
+            set_n_get_mem(&active[i], i);
+        memset(active[user_is_line(user.usr)].user, 0, 24);
+    }
 
-con_err1:
+con_err1: {
     closesocket(rcv_sock);
-    return NULL;
-    };
+    exit(errno);
+    }
+};
 
 type_thread_func commands(void *arg)
 {
@@ -1109,7 +1131,7 @@ int queryNetworkParams(const char * username, Network & network, const int max)
     for (int c = 0; c < max; c++) {
         set_n_get_mem(&active[c], c);
         if (memcmp(active[c].user, username, 24) == 0) {
-            memcpy(network.ip, active[c].netwk.ip, INET_ADDRSTRLEN);
+            memcpy((char*)network.ip, (char*)active[c].netwk.ip, INET_ADDRSTRLEN);
             network.port = active[c].netwk.port;
             network.socket = active[c].netwk.socket;
             return 0;
@@ -1118,12 +1140,12 @@ int queryNetworkParams(const char * username, Network & network, const int max)
     return -1;
 }
 // for Windows
-Network queryNetworkParams(int index)
+Network queryNetworkParams(int uid)
 {
     Network network;
-    memcpy(network.ip, users[index].netwk.ip, INET_ADDRSTRLEN);
-    network.socket = users[index].netwk.socket;
-    network.port = users[index].netwk.port;
+    memcpy((char*)network.ip, (char*)users[uid].netwk.ip, INET_ADDRSTRLEN);
+    network.socket = users[uid].netwk.socket;
+    network.port = users[uid].netwk.port;
     return network;
 }
 
@@ -1216,7 +1238,7 @@ int set_user_line(char user[24], Network& netwk) {
         if (active[i].user[0] == '\0')
         {
             memcpy(active[i].user, user, 24);
-            memcpy(active[i].netwk.ip, netwk.ip, INET_ADDRSTRLEN);
+            memcpy((char*)active[i].netwk.ip, (char*)netwk.ip, INET_ADDRSTRLEN);
             active[i].netwk.port = netwk.port;
             active[i].netwk.socket = netwk.socket;
             set_n_get_mem(&active[i], i, 1);
@@ -1236,7 +1258,7 @@ int set_user_quit(char user[24]) {
         if (strcmp(u, active[i].user) == 0)
         {
             memset(active[i].user, 0, 24);
-            memset(active[i].netwk.ip, 0, INET_ADDRSTRLEN);
+            memset((char*)active[i].netwk.ip, 0, INET_ADDRSTRLEN);
             active[i].netwk.socket = 0;
             active[i].netwk.port = 0;
             set_n_get_mem(&active[i], i, -1);
@@ -1263,7 +1285,7 @@ int set_user_peer(const char user[24], const char ip[INET_ADDRSTRLEN], const int
         return -3;
     for (int i = 0; i < MAX_USERS; i++) {
         if (strcmp(u, users[i].usr) == 0) {
-            strcpy(reinterpret_cast<char*>(users[i].netwk.ip), ip);
+            strcpy((char*)users[i].netwk.ip, ip);
             users[i].netwk.port = port;
             users[i].netwk.socket = sock;
             return 0;

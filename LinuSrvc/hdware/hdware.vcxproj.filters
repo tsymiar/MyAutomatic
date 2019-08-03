@@ -4,6 +4,7 @@
     <ClCompile Include="me909s.c" />
     <ClCompile Include="sample.c" />
     <ClCompile Include="v4l2.c" />
+    <ClCompile Include="gpio.h" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="v4l2.h" />
