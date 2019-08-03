@@ -119,7 +119,7 @@ int main(int argc, int **argv)
             printf("State changed inside 1.5s, select ret = %d.\n", ret);
         } else {
             tries++;
-            if (tries == 1/* && cmmat == 0*/) {
+            if (tries == 1 && cmmat == 0) {
                 sprintf(buff, "%s\r\n", ME909Arguments[0]);
                 write(me_fd, buff, strlen(buff) + 1);
                 usleep(100000);
@@ -154,6 +154,8 @@ int main(int argc, int **argv)
                     write(me_fd, buff, strlen(buff) + 1);
                     continue;
                 } else {
+                    if (strstr(rply, "OK"))
+                        continue;
                     if (cmmat == 0)
                         printf("First command '%s' reply:\n--------\n%s\n--------\n", ME909Arguments[0], rply);
                     else

@@ -21,6 +21,8 @@ parseRcvMsg(void* lprcv) {
         memset(rcv_buf, 0, 256);
         int rcvlen = recv(client->sock, rcv_buf, 256, 0);
         EnterCriticalSection(&wrcon);
+        if (rcvlen == 2 && memcmp(rcv_buf, "\0\0", 2) == 0)
+            continue;
         st_trans *mesg = (st_trans*)rcv_buf;
 #ifdef _DEBUG
         if (mesg->uiCmdMsg != CHATWITH) {
