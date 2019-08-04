@@ -173,13 +173,22 @@ function click2Submit(){
     }
     nativeXMLHttp("POST", link, param, function(rsp_text){
             if(rsp_text){
-                if(rsp_text.indexOf("ERROR:") !== -1 || rsp_text.indexOf("error") !== -1 ||
-                        rsp_text.indexOf("/<b>.*</b>/") !== -1){
-                    setPopDivNoScroll("clazz_pop_div", "id_pop_div", true, rsp_text);
+                if(rsp_text.indexOf("ERROR") !== -1 || rsp_text.indexOf("error") !== -1 ||
+                        rsp_text.indexOf("/<b>.*</b>/") !== -1 || rsp_text.indexOf("Warning") !== -1){
+                    var star = rsp_text.indexOf("<b>/var") + 3;
+                    var end_ = rsp_text.indexOf(".php");
+                    var _end = rsp_text.substr(star, end_ - star);
+                    var last = _end.lastIndexOf('/');
+                    var find = rsp_text.substr(star, last);
+                    setPopDivNoScroll("clazz_pop_div", "id_pop_div", true, rsp_text.replace(find, "..."));
                 }else{
-                    var json = JSON.parse(rsp_text);
-                    if(json.code === 200){
-                        alert(json.message);
+                    try {
+                        var json = JSON.parse(rsp_text);
+                        if(json.code === 200){
+                            alert(json.message);
+                        }
+                    } catch (e) {
+                        setPopDivNoScroll("clazz_pop_div", "id_pop_div", true, rsp_text + "<br>" + e);
                     }
                 }
             }

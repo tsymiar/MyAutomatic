@@ -5,6 +5,7 @@ ini_set('display_startup_errors',1);
 error_reporting(-1);
 ini_set('error_log', dirname(__FILE__) . '/logs/error.log');
 header('content-type:text/html; charset=utf8'); 
+ini_set('date.timezone','Asia/Shanghai');
 
 class User {
     
@@ -89,7 +90,8 @@ class DBUtil{
  
     // connect func
     private static function get_sql_link(){
-       $link = mysqli_connect("localhost","root","Psw123$") or die("ERROR connect to database:".mysql_errno().":".mysql_error());
+       $link = mysqli_connect("localhost","root","Psw123$") 
+           or die("ERROR connect to database(".mysql_errno()."): ".mysql_error());
        mysqli_select_db($link, "myautomatic") or die("Open `myautomatic` error.");
        $sql = 'set names utf8';
        mysqli_query($link, $sql) or die ("Set charset error.");
