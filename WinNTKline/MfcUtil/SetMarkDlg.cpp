@@ -1,35 +1,35 @@
 ﻿#include "stdafx.h"
 #include "afxdialogex.h"
 #include "Resource.h"
-#include "SettingsDlg.h"
+#include "SetMarkDlg.h"
 #include "IM/IMClient.h"
 
-IMPLEMENT_DYNAMIC(SettingsDlg, CDialogEx)
+IMPLEMENT_DYNAMIC(SetMarkDlg, CDialogEx)
 
-SettingsDlg::SettingsDlg(CWnd * pParent)
+SetMarkDlg::SetMarkDlg(CWnd * pParent)
     : CDialogEx(IDD_MARKDLG, pParent)
 {
 }
 
-SettingsDlg::SettingsDlg(void(*func)(char*))
+SetMarkDlg::SetMarkDlg(void(*func)(char*))
 {
-    setPswCallback = func;
+    settingCallback = func;
     callback = 1;
 }
 
-SettingsDlg::~SettingsDlg() {}
+SetMarkDlg::~SetMarkDlg() {}
 
-void SettingsDlg::DoDataExchange(CDataExchange* pDX)
+void SetMarkDlg::DoDataExchange(CDataExchange* pDX)
 {
     CDialogEx::DoDataExchange(pDX);
     DDX_Control(pDX, IDC_MARKS, m_Marks);
 }
 
-BEGIN_MESSAGE_MAP(SettingsDlg, CDialogEx)
-    ON_BN_CLICKED(IDOK, &SettingsDlg::OnBnClickedOk)
+BEGIN_MESSAGE_MAP(SetMarkDlg, CDialogEx)
+    ON_BN_CLICKED(IDOK, &SetMarkDlg::OnBnClickedOk)
 END_MESSAGE_MAP()
 
-int SettingsDlg::SetTitle(CString title)
+int SetMarkDlg::SetTitle(CString title)
 {
     if (!title.IsEmpty())
         ::SetWindowText(this->m_hWnd, title);
@@ -38,7 +38,7 @@ int SettingsDlg::SetTitle(CString title)
     return 0;
 }
 
-CString & SettingsDlg::GetMark(CString& text, CString& title)
+CString & SetMarkDlg::GetMark(CString& text, CString& title)
 {
     if (!title.IsEmpty())
         ::SetWindowText(this->m_hWnd, title);
@@ -47,7 +47,7 @@ CString & SettingsDlg::GetMark(CString& text, CString& title)
     return cs_Mark;
 }
 
-void SettingsDlg::OnBnClickedOk()
+void SetMarkDlg::OnBnClickedOk()
 {
     m_Marks.GetWindowText(cs_Mark);
     if (!!!checkPswValid((LPSTR)(LPCSTR)cs_Mark) && checkMark) {
@@ -55,12 +55,24 @@ void SettingsDlg::OnBnClickedOk()
         return;
     }
     if (callback)
-        setPswCallback((LPTSTR)(LPCTSTR)cs_Mark);
+        settingCallback((LPTSTR)(LPCTSTR)cs_Mark);
     CDialogEx::OnOK();
 }
 
-bool SettingsDlg::SetifCheck(bool check)
+bool SetMarkDlg::SetifCheck(bool check)
 {
+    if(check)
+        m_Marks.SetPasswordChar('*');
     return this->checkMark = check;
 }
 
+void SetMarkDlg::SetCallback(void(*func)(char*))
+{
+    settingCallback = func;
+    callback++;
+}
+
+int SetMarkDlg::GetCallTimes() 
+{
+    return callback;
+}

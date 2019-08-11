@@ -17,7 +17,8 @@
 #endif
 #include <process.h>
 #include <conio.h>
-typedef unsigned int Pthreadt;
+typedef unsigned int Pthreadt; 
+#define SLEEP(t) Sleep(t);
 #else
 #include <netinet/in.h>
 #include <sys/socket.h> 
@@ -44,6 +45,7 @@ typedef struct WSADATA {
 #define scanf_s scanf
 #define gets_s(c,v) gets(c)
 #define TRUE true
+#define SLEEP(t) usleep((int)1010.10f*(t));
 inline unsigned int _beginthreadex(
     void* _Security,
     const pthread_attr_t * attr,
@@ -190,13 +192,14 @@ const MENU menus[] =
     { 0x05,"设置密码" },
     { 0x06,"在线用户列表" },
     { 0x07,"聊天对象" },
-    { 0x08,"拍照" },
-    { 0x09,"下载照片" },
-    { 0x0A,"用户信息" },
-    { 0x0B,"创建群" },
-    { 0x0C,"加入群" },
-    { 0x0D,"查看群" },
-    { 0x0E,"退群" },
+    { 0x08,"P2P" },
+    { 0x09,"拍照" },
+    { 0x0A,"下载照片" },
+    { 0x0B,"群列表" },
+    { 0x0C,"群成员" },
+    { 0x0D,"创建群" },
+    { 0x0E,"参加群" },
+    { 0x0F,"退出群" },
 };
 
 enum  EM_MENU {
@@ -208,14 +211,14 @@ enum  EM_MENU {
     LOGOUT,
     SETPSW,
     ONLINE,
-    PEER2P,
     CHATWITH,
+    PEER2P,
     V4L2IMG,
     GETIMAGE,
-    USERSIGN,
+    VIEWGROUP,
+    USERGROUP,
     HOSTGROUP,
     JOINGROUP,
-    VIEWGROUP,
     EXITGROUP,
 };
 

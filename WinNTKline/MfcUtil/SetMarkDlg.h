@@ -1,14 +1,14 @@
 #pragma once
 #include "afxwin.h"
 
-class SettingsDlg : public CDialogEx
+class SetMarkDlg : public CDialogEx
 {
-    DECLARE_DYNAMIC(SettingsDlg)
+    DECLARE_DYNAMIC(SetMarkDlg)
 
 public:
-    SettingsDlg(CWnd* pParent = NULL);
-    SettingsDlg(void(*func)(char*));
-    virtual ~SettingsDlg();
+    SetMarkDlg(CWnd* pParent = NULL);
+    SetMarkDlg(void(*func)(char*));
+    virtual ~SetMarkDlg();
 
 #ifdef AFX_DESIGN_TIME
     enum { IDD = IDD_MARKDLG };
@@ -20,13 +20,15 @@ protected:
     DECLARE_MESSAGE_MAP()
 private:
     int callback = 0;
-    bool checkMark = true;
+    bool checkMark = false;
     CEdit m_Marks;
     CString cs_Mark;
-    void(*setPswCallback)(char* psw);
+    void(*settingCallback)(char* psw);
 public:
     int SetTitle(CString title);
     CString& GetMark(CString& text, CString& title);
     afx_msg void OnBnClickedOk();
     bool SetifCheck(bool check);
+    void SetCallback(void(*func)(char*));
+    int GetCallTimes();
 };

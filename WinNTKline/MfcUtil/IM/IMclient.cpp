@@ -201,7 +201,7 @@ int SendChatMesg(st_trans* msg)
         send(client.sock, (char*)&trans, len, 0);
         return -1;
     }
-    if (client.last.lastuser != '\0' && client.last.lastgrop[0] != '\0')
+    if (client.last.lastuser != NULL && client.last.lastgrop[0] != NULL)
     {
         memcpy(trans.username, client.last.lastuser, 24);
         memcpy(trans.group_name, client.last.lastgrop, 24);

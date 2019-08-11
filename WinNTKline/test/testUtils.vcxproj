@@ -223,7 +223,7 @@
     <ClInclude Include="..\MfcUtil\opencv\CvimgMat.h" />
     <ClInclude Include="..\MfcUtil\RegistDlg.h" />
     <ClInclude Include="..\MfcUtil\resource.h" />
-    <ClInclude Include="..\MfcUtil\SettingsDlg.h" />
+    <ClInclude Include="..\MfcUtil\SetMarkDlg.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -280,7 +280,7 @@
     <ClCompile Include="..\MfcUtil\security\MD5.cc">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\MfcUtil\SettingsDlg.cpp" />
+    <ClCompile Include="..\MfcUtil\SetMarkDlg.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

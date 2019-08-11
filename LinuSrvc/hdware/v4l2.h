@@ -53,7 +53,7 @@ int v4l2_init_dev(v4l2_device *v4l2_obj, char *device)
         device = (char*)DEFAULT_DEVICE;
     if ((v4l2_obj->v4l_fd = open(device, O_RDWR /*| O_NONBLOCK*//*Resource temporarily unavailable*/)) < 0)
     {
-        perror("v4l2_open fail");
+        perror("v4l2_init_dev open " DEFAULT_DEVICE " fail");
         return -1;
     }
     if (v4l2_get_capability(v4l2_obj))

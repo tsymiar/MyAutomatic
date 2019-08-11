@@ -69,6 +69,7 @@ sendallow;
 
 int aim2exit = 0;
 type_socket listen_socket;
+volatile type_socket current_socket = 0;
 static unsigned int g_threadNo_ = 0;
 
 struct Network {
@@ -285,9 +286,10 @@ type_thread_func monite(void *arg)
 #endif
             lol = sizeof(int);
         int val;
+        current_socket = rcv_sock;
         if (getsockopt(rcv_sock, SOL_SOCKET, SO_KEEPALIVE, reinterpret_cast<char*>(&val), &lol) == 0) {
             if (cur > 0)
-                fprintf(stderr, "### Connect-%d status changed (%s): socket going to close.\n", cur, strerror(errno));
+                fprintf(stderr, "### Connect--%d status changed, socket: %s.\n", cur, strerror(errno));
             if (errno != 0) {
                 set_user_quit(user.usr);
 #if defined _WIN32
@@ -405,12 +407,14 @@ type_thread_func monite(void *arg)
                     continue;
                 };
             } else if ((user.rsv == 0) && (user.uiCmdMsg == 0x3)) {
+                sprintf(sd_bufs + 2, "%x", NEVAL(-1));
                 strcpy((sd_bufs + 8), "Warning: user hasn't logged on yet.");
                 send(rcv_sock, sd_bufs, 48, 0);
                 fprintf(stdout, ">>> %s\n", sd_bufs + 8);
                 continue;
             } else {
                 strcpy((sd_bufs + 8), "Warning: please Register or Login at first.");
+                sprintf(sd_bufs + 2, "%x", NEVAL(-2));
                 send(rcv_sock, sd_bufs, 56, 0);
                 fprintf(stdout, ">>> %s\n", sd_bufs + 8);
                 continue;
@@ -519,7 +523,7 @@ type_thread_func monite(void *arg)
                             if (strlen(active[c].user) > 0) {
                                 sprintf(sd_bufs + 2, "%x", c);
                                 strcpy((sd_bufs + 8 * (c + 4)), active[c].user);
-                                if (sd_bufs + 8 * (c + 4) + 24 == '\0') {
+                                if ((sd_bufs + 8 * (c + 4) + 24) == (char*)'\0') {
                                     memset(sd_bufs + 8 * (c + 4) + 24, '\t', 1);
                                 }
                             } else if (active[c].user[0] == '\0')
@@ -658,7 +662,7 @@ type_thread_func monite(void *arg)
                                 if (access(IMAGE_FILE, 0) == 0) {
                                     mesg = (char*)"sucess";
                                 } else {
-                                    mesg = (char*)"not save image file";
+                                    mesg = (char*)"Not save image file";
                                 }
                             }
                             sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
@@ -678,9 +682,9 @@ type_thread_func monite(void *arg)
                         FILE * file = fopen(IMAGE_FILE, "rb");
                         if (file == NULL)
                         {
-                            sprintf((sd_bufs + 8), "Fail open file \"%s\".", IMAGE_FILE);
+                            sprintf((sd_bufs + 8), "Fail open image file \"%s\".", IMAGE_FILE);
                             fprintf(stdout, "%s\n", sd_bufs + 8);
-                            sndlen = 8 + strlen(IMAGE_FILE) + 22;
+                            sndlen = 8 + strlen(IMAGE_FILE) + 27;
                             break;
                         }
                         fseek(file, 0, SEEK_END);
@@ -722,7 +726,7 @@ type_thread_func monite(void *arg)
                     break;
                     case 0xA:
                     {
-                        strcpy((sd_bufs + 8), "Groups list:\n");
+                        strcpy((sd_bufs + 8), "Active group list: \n");
                         for (c = 0; c < MAX_GROUPS; c++) {
                             if (strlen(groups[c].group.name) >> 0) {
                                 sprintf(sd_bufs + 2, "%x", c);
@@ -735,50 +739,14 @@ type_thread_func monite(void *arg)
                     } break;
                     case 0xB:
                     {
-                        valrtn = host_group(user.usr, user.hgrp);
-                        sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
-                        if (valrtn == -2) {
-                            strcpy((sd_bufs + 8), "Host group rejected.");
-                            sndlen = 32;
-                        } else if (valrtn == -1) {
-                            join_group(valrtn, user.usr, reinterpret_cast<char*>(user.jgrp));
-                            sprintf((sd_bufs + 8), "%s, joined group: '%s'.", user.usr, user.jgrp);
-                            sndlen = 72;
-                        } else {
-                            sprintf((sd_bufs + 8), "Created group: %s.", user.hgrp);
-                            sndlen = 56;
-                        }
-                    } break;
-                    case 0xC:
-                    {
-                        valrtn = join_group(find_group(user.jgrp), user.usr, reinterpret_cast<char*>(user.jgrp));
-                        sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
-                        if (valrtn == -1) {
-                            strcpy((sd_bufs + 8), "You have already in this group.");
-                        } else if (valrtn == -2) {
-                            strcpy((sd_bufs + 8), "Wrong pass code to this group.");
-                        }
-                        sndlen = 48;
-                    } break;
-                    case 0xD:
-                    {
-                        valrtn = exit_group(find_group(user.ngrp), user.usr);
-                        sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
-                        if (valrtn == 0)
-                            strcpy((sd_bufs + 8), "Leave group successfully.");
-                        else
-                            strcpy((sd_bufs + 8), "You aren't yet in this group.");
-                        sndlen = 42;
-                    } break;
-                    case 0xE:
-                    {
                         valrtn = find_group(user.ngrp);
                         sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
                         if (valrtn == -1) {
                             strcpy((sd_bufs + 8), "No such group.");
                             sndlen = 32;
                         } else {
-                            strcpy((sd_bufs + 8), "User is member of group(s): \n");
+                            memset(sd_bufs + 2, 0, 2);
+                            strcpy((sd_bufs + 8), "Member(s) of the room:\n");
                             for (c = 0; c < MAX_MENBERS_PER_GROUP; c++) {
                                 if (strlen(groups[valrtn].group.members[c]) >> 0) {
                                     strcpy((sd_bufs + 8 * (c + 4)), groups[valrtn].group.members[c]);
@@ -788,6 +756,43 @@ type_thread_func monite(void *arg)
                                 break;
                             sndlen = 8 * (c + 4 + 4);
                         };
+                    } break;
+                    case 0xC:
+                    {
+                        valrtn = host_group(user.usr, user.hgrp);
+                        sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
+                        if (valrtn == -2) {
+                            strcpy((sd_bufs + 8), "Host group rejected.");
+                            sndlen = 32;
+                        } else if (valrtn == -1) {
+                            join_group(valrtn, user.usr, reinterpret_cast<char*>(user.jgrp));
+                            sprintf((sd_bufs + 8), "%s exist, %s joins group: '%s'.", user.hgrp, user.usr, user.jgrp);
+                            sndlen = 112;
+                        } else {
+                            sprintf((sd_bufs + 8), "Created group: %s.", user.hgrp);
+                            sndlen = 56;
+                        }
+                    } break;
+                    case 0xD:
+                    {
+                        valrtn = join_group(find_group(user.jgrp), user.usr, reinterpret_cast<char*>(user.jgrp));
+                        sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
+                        if (valrtn == -1) {
+                            strcpy((sd_bufs + 8), "You have already in this group.");
+                        } else if (valrtn == -2) {
+                            strcpy((sd_bufs + 8), "Wrong pass token to this group.");
+                        }
+                        sndlen = 48;
+                    } break;
+                    case 0xE:
+                    {
+                        valrtn = exit_group(find_group(user.ngrp), user.usr);
+                        sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
+                        if (valrtn == 0)
+                            strcpy((sd_bufs + 8), "Leave group successfully.");
+                        else
+                            strcpy((sd_bufs + 8), "You aren't yet in this group.");
+                        sndlen = 42;
                     } break;
                     case 0xF:
                     { //loop1
