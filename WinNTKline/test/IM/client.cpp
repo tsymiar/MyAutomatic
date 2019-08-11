@@ -21,8 +21,10 @@ parseRcvMsg(void* lprcv) {
         memset(rcv_buf, 0, 256);
         int rcvlen = recv(client->sock, rcv_buf, 256, 0);
         EnterCriticalSection(&wrcon);
-        if (rcvlen == 2 && memcmp(rcv_buf, "\0\0", 2) == 0)
+        if (rcvlen == 2 && memcmp(rcv_buf, "\0\0", 2) == 0) {
+            SLEEP(1);
             continue;
+        }
         st_trans *mesg = (st_trans*)rcv_buf;
 #ifdef _DEBUG
         if (mesg->uiCmdMsg != CHATWITH) {
@@ -138,7 +140,7 @@ st_trans* SetChatMesg(st_trans& trans) {
             g_printedInput = 1;
         }
 #else
-        fprintf(stdout, "Input chat message, limit on 16 characters.\n");
+        fprintf(stdout, "Set chat message, limit on 16 characters.\n");
         g_printedInput = 1;
 #endif
         memset(&trans.more_mesg.mesg, 0, 16);
@@ -149,9 +151,15 @@ st_trans* SetChatMesg(st_trans& trans) {
         }
         break;
     }
+    case VIEWGROUP:
+    {
+        fprintf(stdout, "Input group name limit on 24 characters.\n");
+        scanf_s("%s", trans.group_name, 24);
+        break;
+    }
     case HOSTGROUP:
     {
-        fprintf(stdout, "Input host group name AND group mark, divide with BLANK(' ').\n");
+        fprintf(stdout, "Input group name AND group mark be to host, divide with BLANK(' ').\n");
         scanf_s("%s %s", trans.group_host, (unsigned)_countof(trans.group_host), (trans.group_mark), (unsigned)_countof(trans.group_mark));
         break;
     }
@@ -159,12 +167,6 @@ st_trans* SetChatMesg(st_trans& trans) {
     {
         fprintf(stdout, "Input user name AND group name want to join, divide with BLANK(' ').\n");
         scanf_s("%s %s", trans.username, (unsigned)_countof(trans.username), (trans.group_join), (unsigned)_countof(trans.group_join));
-        break;
-    }
-    case VIEWGROUP:
-    {
-        fprintf(stdout, "Input group name limit on 24 characters.\n");
-        scanf_s("%s", trans.group_name, 24);
         break;
     }
     default:
@@ -223,13 +225,14 @@ int main()
             msg.more_mesg.cmd[0] = msg.uiCmdMsg = CHATWITH;
         }
         if (recieved > RCV_ERR) {
+            SetRecvState(RCV_ERR);
             int ret = SendChatMesg(SetChatMesg(msg));
             if (ret < 0) {
                 fprintf(stdout, "Error while setting chat message.\n");
                 return -1;
             }
         }
-        Sleep(100);
+        SLEEP(100);
     }
     return 0;
 }

@@ -73,7 +73,6 @@ void IMlogDlg::OnBnClickedOk()
             }
         }
     if (setUsrPsw((LPSTR)(LPCSTR)m_strAcnt, (LPSTR)(LPCSTR)m_strPsw))
-        //GetDlgItem(IDC_LISTFRND)->ShowWindow(SW_SHOW);
         CDialogEx::OnOK();
 }
 
@@ -87,9 +86,13 @@ void IMlogDlg::setVisable(int visable)
     this->visable = visable;
 }
 
-
 void IMlogDlg::OnBnClickedCancel()
 {
     this->visable = 0;
     CDialogEx::OnCancel();
+}
+
+char* IMlogDlg::getUsername() 
+{
+    return (LPSTR)(LPCSTR)(m_strAcnt);
 }

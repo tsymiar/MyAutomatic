@@ -14,6 +14,7 @@
 #include <errno.h>
 #include <termios.h>
 
+#define TIME_WAIT 10000
 #define MAX_BUF_LEN	1024
 const char *PortName = "/dev/ttyUSB0";
 
@@ -122,8 +123,7 @@ int main(int argc, int **argv)
             if (tries == 1 && cmmat == 0) {
                 sprintf(buff, "%s\r\n", ME909Arguments[0]);
                 write(me_fd, buff, strlen(buff) + 1);
-                usleep(100000);
-                flag = 0;
+                usleep(TIME_WAIT);
             } else {
                 if (tries > 1000) {
                     printf("Cause too many timeout, checking process exit!\n");
@@ -132,19 +132,23 @@ int main(int argc, int **argv)
                     }
                     cmmat = 11;
                     flag = 1;
+                } else {
+                    flag = 0;
+                    continue;
                 }
                 if (curr < 11) {
                     if (tries % 100 == 0) {
                         printf("Select(%d) TIMEOUT!\n", tries);
                     }
                     FD_SET(me_fd, &rdfds);
+                    usleep(TIME_WAIT);
                     continue;
                 }
             }
         }
         if (flag) {
             flag = 0;
-        } else do {
+        } else {
             memset(rply, 0, sizeof(rply));
             if (rd_stdin = read(me_fd, rply, sizeof(rply)) > 0) {
                 if (strstr(rply, ">")) {
@@ -154,7 +158,7 @@ int main(int argc, int **argv)
                     write(me_fd, buff, strlen(buff) + 1);
                     continue;
                 } else {
-                    if (strstr(rply, "OK"))
+                    if (strstr(rply, "OK") == NULL)
                         continue;
                     if (cmmat == 0)
                         printf("First command '%s' reply:\n--------\n%s\n--------\n", ME909Arguments[0], rply);
@@ -168,8 +172,8 @@ int main(int argc, int **argv)
                 start_pppd();
                 break;
             }
-            usleep(100000);
-        } while (0);
+            usleep(TIME_WAIT);
+        }
         memset(buff, 0, sizeof(buff));
         if (cmmat <= 10 && curr == 0) {
             printf("Current AT Command %d: %s\n", cmmat, ME909Arguments[cmmat]);

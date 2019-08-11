@@ -54,9 +54,6 @@
     <ClInclude Include="..\MfcUtil\html\cefWebKit.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\MfcUtil\SettingsDlg.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="..\MfcUtil\opencv\CvimgMat.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -79,6 +76,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\MfcUtil\resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\MfcUtil\SetMarkDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -131,9 +131,6 @@
     <ClCompile Include="..\MfcUtil\html\cefWebKit.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MfcUtil\SettingsDlg.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="..\MfcUtil\opencv\CvimgMat.cc">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -156,6 +153,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\MfcUtil\elem\Screen-Sharing.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\MfcUtil\SetMarkDlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

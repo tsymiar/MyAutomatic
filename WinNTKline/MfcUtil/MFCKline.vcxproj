@@ -302,7 +302,7 @@
     <ClInclude Include="security\encoding.h" />
     <ClInclude Include="security\MD5.h" />
     <ClInclude Include="security\verify.h" />
-    <ClInclude Include="SettingsDlg.h" />
+    <ClInclude Include="SetMarkDlg.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Stock\Stock.h" />
     <ClInclude Include="targetver.h" />
@@ -353,7 +353,7 @@
     <ClCompile Include="security\encoding.cc" />
     <ClCompile Include="security\MD5.cc" />
     <ClCompile Include="security\verify.cc" />
-    <ClCompile Include="SettingsDlg.cpp" />
+    <ClCompile Include="SetMarkDlg.cpp" />
     <ClCompile Include="test\Testcase.cpp" />
   </ItemGroup>
   <ItemGroup>

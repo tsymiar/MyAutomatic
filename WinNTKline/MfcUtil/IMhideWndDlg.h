@@ -52,10 +52,8 @@ private:
     BOOL m_hsFinished;      //隐藏或显示过程是否完成
     BOOL m_hiding;          //该参数只有在!m_hsFinished才有效
                             //真:正在隐藏,假:正在显示
-    st_setting imsetting;
+    st_setting m_imSetting;
     IMlogDlg* m_logDlg = NULL;
-
-    int IDX = 0;
 public:
     int logflg = 0;
     HICON m_hIcon;
