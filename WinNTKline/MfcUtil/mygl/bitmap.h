@@ -45,7 +45,7 @@ extern "C" {
         unsigned int   bfOffBits;        /* Offset to bitmap data */
     } BITMAPFILEHEADER;
 
-#  define BF_TYPE 0x4D42             /* "MB" */
+#  define BF_TYPE 0x4D42                 /* "MB" */
 
     typedef struct                       /**** BMP file info structure ****/
     {

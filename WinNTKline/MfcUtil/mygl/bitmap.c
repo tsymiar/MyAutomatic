@@ -19,7 +19,7 @@
 
 GLubyte *                          /* O - Bitmap data */
 LoadDIBitmap(const char *filename, /* I - File to load */
-    BITMAPINFO **info)    /* O - Bitmap information */
+    BITMAPINFO **info)             /* O - Bitmap information */
 {
     FILE             *fp;          /* Open file pointer */
     GLubyte          *bits;        /* Bitmap pixel bits */
