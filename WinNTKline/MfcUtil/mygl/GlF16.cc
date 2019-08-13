@@ -4,10 +4,10 @@
 */
 double     LastTime;          /* Last update time */
 GLuint     F16Body,           /* F-16 body */
-F16Rolleron[2];    /* F-16 rollerons */
+F16Rolleron[2];               /* F-16 rollerons */
 GLuint     F16Texture[3];     /* Camoflage texture objects */
 int        UseTexturing = 1;  /* Use texture mapping? */
-GLfloat	   Orient[3] =   /* Orientation of viewer */
+GLfloat	   Orient[3] =        /* Orientation of viewer */
 {
     15.0, 45.0, 30.0
 };

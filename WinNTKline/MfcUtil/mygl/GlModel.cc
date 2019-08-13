@@ -52,7 +52,7 @@ bool BMP::Load(const char *FileName) {
     }
     //计算图像的尺寸
     size = horizon * vertical * 3;
-    if ((fread(&planes, 2, 1, File)) != 1) {   //bmp填1
+    if ((fread(&planes, 2, 1, File)) != 1) {//bmp填1
         std::cout << "计算尺寸错误" << std::endl;
         return false;
     }
@@ -70,7 +70,7 @@ bool BMP::Load(const char *FileName) {
         return false;
     }
     //跳过24bit，监测RGB数据
-    fseek(File, 24, SEEK_CUR);    //读取数据
+    fseek(File, 24, SEEK_CUR);//读取数据
     Data = (char *)malloc(size);
     if (Data == NULL) {
         std::cout << "内存量不能锁定" << std::endl;
@@ -80,7 +80,7 @@ bool BMP::Load(const char *FileName) {
         std::cout << "不能读取数据" << std::endl;
         return false;
     }
-    for (i = 0; i < size; i += 3) { //bgr -> rgb
+    for (i = 0; i < size; i += 3) {//bgr -> rgb
         temp = Data[i];
         Data[i] = Data[i + 2];
         Data[i + 2] = temp;
@@ -100,18 +100,18 @@ void BMP::TexSet()
 
 AUX_RGBImageRec *LoadBMP(char *Filename)
 {
-    FILE *File = NULL;                                // File Handle
-    if (!Filename)                                  // Make Sure A Filename Was Given
+    FILE *File = NULL;                          // File Handle
+    if (!Filename)                              // Make Sure A Filename Was Given
     {
         return NULL;                            // If Not Return NULL
     }
-    File = fopen(Filename, "r");                       // Check To See If The File Exists
-    if (File)                                       // Does The File Exist?
+    File = fopen(Filename, "r");                // Check To See If The File Exists
+    if (File)                                   // Does The File Exist?
     {
         fclose(File);                           // Close The Handle
         return auxDIBImageLoad(Filename);
     }
-    return NULL;                                    // If Load Failed Return NULL
+    return NULL;                                // If Load Failed Return NULL
 }
 
 void __outdoor(bool oo)
@@ -196,13 +196,13 @@ void __ball()
 void GlModel::GlTexture(bool oo)
 {
     glEnable(GL_TEXTURE_2D);                            // Enable Texture Mapping
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE);                    // Set The Blending Function For Translucency
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);                // This Will Clear The Background Color To Black
-    glClearDepth(1.0);                                    // Enables Clearing Of The Depth Buffer
-    glDepthFunc(GL_LESS);                                // The Type Of Depth Test To Do
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE);                  // Set The Blending Function For Translucency
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);               // This Will Clear The Background Color To Black
+    glClearDepth(1.0);                                  // Enables Clearing Of The Depth Buffer
+    glDepthFunc(GL_LESS);                               // The Type Of Depth Test To Do
     glEnable(GL_DEPTH_TEST);                            // Enables Depth Testing
     glShadeModel(GL_SMOOTH);                            // Enables Smooth Color Shading
-    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);    // Really Nice Perspective Calculations
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);  // Really Nice Perspective Calculations
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
@@ -213,9 +213,9 @@ void GlModel::GlTexture(bool oo)
     __sphere(0, 0, 0, 0.2f, 20, 20);
 }
 
-int GlModel::LoadGLTexture()                                    // Load Bitmaps And Convert To Textures
+int GlModel::LoadGLTexture()                                // Load Bitmaps And Convert To Textures
 {
-    int load = FALSE;                                        // Status Indicator
+    int load = FALSE;                                       // Status Indicator
     AUX_RGBImageRec *TextureImage[NUM];
     for (int i = 0; i < NUM; i++)
         memset(TextureImage, i, sizeof(void *) * 1);        // Set The Pointer To NULL
@@ -223,7 +223,7 @@ int GlModel::LoadGLTexture()                                    // Load Bitmaps 
     if ((TextureImage[0] = LoadBMP("image/qdu.bmp")) &&
         (TextureImage[1] = LoadBMP("image/outdoor.bmp")) && (TextureImage[2] = LoadBMP("image/bkg.bmp")))
     {
-        load = TRUE;                            // Set The Status To TRUE
+        load = TRUE;                                       // Set The Status To TRUE
         for (int k = 0; k < NUM; k++)
         {
             glGenTextures(1, &texture[k]);
@@ -238,16 +238,16 @@ int GlModel::LoadGLTexture()                                    // Load Bitmaps 
         return NUM;
     for (int j = 0; j < NUM; j++)
     {
-        if (TextureImage[j])                            // If Texture Exists
+        if (TextureImage[j])                    // If Texture Exists
         {
-            if (TextureImage[j]->data)              // If Texture Image Exists
+            if (TextureImage[j]->data)          // If Texture Image Exists
             {
                 free(TextureImage[j]->data);    // Free The Texture Image Memory
             }
-            free(TextureImage[j]);                  // Free The Image Structure
+            free(TextureImage[j]);              // Free The Image Structure
         }
     }
-    return load;                                  // Return The Status
+    return load;                                // Return The Status
 }
 
 void GlModel::Load__QDU(int wide, int tall)

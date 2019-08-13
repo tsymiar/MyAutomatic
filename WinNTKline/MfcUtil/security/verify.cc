@@ -1,6 +1,6 @@
 ﻿#include "verify.h"
 
-//Hash的前8位与后8位进行异或产生8位字hash1.
+// Hash的前8位与后8位进行异或产生8位字hash1.
 unsigned char* get_hash1(unsigned char* ha, unsigned  char* sh, unsigned char* sa)
 {
     int i = 0;
@@ -9,7 +9,7 @@ unsigned char* get_hash1(unsigned char* ha, unsigned  char* sh, unsigned char* s
     return sa;
 }
 
-//用工作密钥对hash1进行加密运算(IDEA算法ECB)，结果为密押MIYA。
+// 用工作密钥对hash1进行加密运算(IDEA算法ECB)，结果为密押MIYA。
 unsigned char* get_MIYA(const struct KEYINFO workey, unsigned char* hash1, unsigned char* miya)
 {
     IDEA_KEY_SCHEDULE* wk = 0;
@@ -17,13 +17,12 @@ unsigned char* get_MIYA(const struct KEYINFO workey, unsigned char* hash1, unsig
     return miya;
 }
 
-//读取工作密钥并用对方公钥加密，输出加密密文并导出。
+// 读取工作密钥并用对方公钥加密，输出加密密文并导出。
 unsigned char* get_Ciphertext(char* filename, char* workey, unsigned char* text)
-{	// 打开公钥文件
+{   // 打开公钥文件
     FILE* fp;
     int len;
     RSA* rsa1;
-    //RSArefPubKey_st *pubkey;
     FILE* pub_fp = fopen(filename, "r");
     if (pub_fp == NULL) {
         printf("failed to open pub_key file %s!\n", filename);
@@ -55,7 +54,7 @@ unsigned char* get_Ciphertext(char* filename, char* workey, unsigned char* text)
     return text;
 }
 
-//提取字符串头或尾8个字节
+// 提取字符串头或尾8个字节
 char* extra_8bt(char* prim, char* bt, int h)
 {
     int i = 0;
@@ -70,7 +69,7 @@ char* extra_8bt(char* prim, char* bt, int h)
 
 unsigned int get_CRC32(char* InStr, unsigned int len)
 {
-    //生成Crc32的查询表     
+    // 生成Crc32的查询表     
     unsigned int Crc32Table[256];
     int i, j;
     unsigned int CRC;
@@ -85,7 +84,7 @@ unsigned int get_CRC32(char* InStr, unsigned int len)
         Crc32Table[i] = CRC;
     }
 
-    //开始计算CRC32校验值     
+    // 开始计算CRC32校验值     
     CRC = 0xffffffff;
     for (i = 0; (unsigned int)i < len; i++) {
         CRC = (CRC >> 8) ^ Crc32Table[(CRC & 0xFF) ^ InStr[i]];
@@ -97,7 +96,7 @@ unsigned int get_CRC32(char* InStr, unsigned int len)
 
 unsigned short get_CRC16(char* InStr, unsigned int len)
 {
-    //生成CRC16的查询表     
+    // 生成CRC16的查询表     
     unsigned short Crc16Table[256];
     unsigned int i, j;
     unsigned short CRC;
@@ -114,13 +113,13 @@ unsigned short get_CRC16(char* InStr, unsigned int len)
         Crc16Table[i] = CRC;
     }
 
-    //开始计算CRC16校验值     
+    // 开始计算CRC16校验值     
     CRC = 0x0000;
     for (i = 0; i < len; i++) {
         CRC = (CRC >> 8) ^ Crc16Table[(CRC & 0xFF) ^ InStr[i]];
 
     }
-    //CRC ^= 0x0000;       
+    // CRC ^= 0x0000;       
     return CRC;
 }
 
@@ -138,8 +137,7 @@ unsigned long cal_CRC(unsigned long dwPolynomial, unsigned long *ptr, int len)
             if (CRC & 0x80000000) {
                 CRC <<= 1;
                 CRC ^= dwPolynomial;
-            }
-            else
+            } else
                 CRC <<= 1;
             if (data & xbit)
                 CRC ^= dwPolynomial;
@@ -164,39 +162,6 @@ int get_CRC(unsigned char *data, int len, unsigned char CRC[2])
         CRC[1] ^= data[i * 2 + 1];
     }
     return 0;
-}
-
-//字符串拼接
-char * _strcat(unsigned char * strDest, unsigned char * strSrc)
-{
-    unsigned char * cp;
-    if ((strDest == NULL) || (strSrc == NULL))
-        return 0;//throw "buffer is empty";
-    cp = strDest;
-    while (*cp)
-        cp++; /* find end of strDest */
-    while ((*cp++ = *strSrc++) && (*strSrc != '\0')); /* Copy strSrc to end of strDest */
-    *cp++ = '\0';
-    return (char*)(strDest); /* return strDest */
-}
-
-//字符串复制
-unsigned char* _strcpy(unsigned char* strDest, const char* strSrc, int N)
-{
-    unsigned char * cp;
-    size_t available;
-    unsigned char* strDestCopy = (unsigned char*)strSrc;
-    cp = strDest;
-    available = N;
-    while ((*cp++ = *strSrc++) != 0 && --available > 0)
-    {
-    }
-
-    if (available == 0)
-    {
-
-    }
-    return strDestCopy;
 }
 
 void BCD_cut(unsigned char* TRUSTID, int cutlen, char* cut10)
@@ -224,24 +189,26 @@ void BCD_exp(unsigned char* Ascbuf, int len, char* exp)
 
 void RSA_check()
 {
-    //int ret;
-    //int rv=0;
-    FILE *fp = 0;
-    //RSA *key=0;
-    //char msg2[256];
-    char msg[] = "i, i have no data to enc";
-    //RSArefPubKey_st PUBLIC_KEY;
+    int ret;
+    int frv = 0;
+    FILE *stream = 0;
+    RSA *key = 0;
+    unsigned char msg2[256];
+    unsigned char msg[] = "test string to encrypt.";
+    RSArefPubKey_st PUBLIC_KEY;
     printf("%s", msg);
-    fp = fopen("PublicRSA", "r");
-    if (fp == NULL)
-        printf("fp error!");
+    stream = fopen("PublicRSA", "r");
+    if (stream == NULL)
+        printf("stream error!");
     else
-        fclose(fp);
-    //rv = read(fp, &PUBLIC_KEY, sizeof(RSArefPubKey_st));
-    //key = PEM_read_RSAPublicKey(fp, NULL/*&key*/, NULL, NULL);
-    //ret = RSA_public_encrypt(strlen(msg), (unsigned char *)msg, (unsigned char *)msg2, key, RSA_PKCS1_PADDING); // or RSA_PKCS1_OAEP_PADDING
-    //if(RSA_verify(NID_idea_ecb,)==1)
-    //	printf("验证成功\n");
+        fclose(stream);
+    stream = NULL;
+    frv = fread(&PUBLIC_KEY, 1, sizeof(RSArefPubKey_st), stream);
+    key = PEM_read_RSAPublicKey(stream, NULL/*&key*/, NULL, NULL);
+    ret = RSA_public_encrypt(strlen((char*)msg), msg, msg2, key, RSA_PKCS1_PADDING); // or RSA_PKCS1_OAEP_PADDING
+    if (RSA_verify(NID_idea_ecb, msg2, 256, msg, ret, key) == 1) {
+        printf("SUCCESS\n");
+    }
 }
 
 int i = 0;
@@ -261,51 +228,45 @@ void Verify(char out[])
     char code[] = { 0x05,0x05,0x06,0x01,0x04,0x0F,0x0D,0x0F,0x04,0x03,0x02,0x0B,0x0C,0x06,0x0B,0x06,0x09,0x0F,0x02,0x03 };
     printf("32字节:\t%s\n16字节:\t\t%s\n", out, get_Hash(out, 32, hash));
     printf("Hash前8位:\t");
-    extra_8bt(hash, (char*)ha, 1);//提取前8字节
+    // 提取前8字节
+    extra_8bt(hash, (char*)ha, 1);
     for (i = 0; i < 8; i++)
         printf("%c", ha[i]);
     printf("\n");
-    //CRC运算
+    // CRC运算
     get_CRC(ha, 8, CRC);
     hex_to_str((unsigned char*)CRC, cc);
     printf("\tCRC:%c(%02x),%c(%02x)\n", cc[0], cc[0], cc[1], cc[1]);
-    printf("\t复制：	");
-    _strcpy(ASC10, (char*)ha, 8);
+    printf("\t复制： ");
+    memcpy(ASC10, (char*)ha, 8);
     for (i = 0; i < 8; i++)
         printf("%c", ASC10[i]);
     printf("\n");
-    //拼接
-    _strcat(ASC10, (unsigned char*)cc);
+    // 拼接
+    strcat((char*)ASC10, cc);
     printf("\t原标识：");
     for (i = 0; i < 10; i++)
         printf("%c", ASC10[i]);
-    printf("\n\t	");
+    printf("\n\t ");
     for (i = 0; i < 10; i++)
         printf("%02x ", ASC10[i]);
     printf("\n");
     printf("\t中心标识：");
-    //BCD扩展
+    // BCD扩展
     asc_to_hex((unsigned char*)Hex20, ASC10, 20);
     for (i = 0; i < 10; i++)
         printf("%02X", (unsigned char)Hex20[i]);
-    /*printf("\n\t按10进制输出：	");
-    hex_to_str((unsigned char*)Hex20,BCD20);
-    printf("\n\t	");
-    for(i=0;i<20;i++)
-        printf("%c ",BCD20[i]);*/
     printf("\n");
     printf("\t定义一个中心标识：");
     for (i = 0; i < 20; i++)
         printf("%x", code[i]);
-    printf("\n\t将TRUSTID转成10位BCD码:");
-    ///////////////////////////////////
-    //BCD_cut((unsigned char*)code,20,BCD10);
+    printf("\n\t将TRUSTID转成10位BCD码：");
     BCD_cut((unsigned char*)code, 20, EBCD20);
     for (i = 0; i < 10; i++)
         printf("%c", (unsigned char)EBCD20[i]);
     printf("\n");
     printf("Hash后8位：\t");
-    //提取后8字节
+    // 提取后8字节
     extra_8bt(hash, (char*)sh, 0);
     for (i = 0; i < 8; i++)
         printf("%c", sh[i]);
@@ -318,7 +279,7 @@ void Verify(char out[])
     for (i = 0; i < 8; i++)
         printf("%02x", (unsigned char)hash1[i]);
     printf("\n");
-    //getchar();
+    // getchar();
 }
 
 void serify(char* str)
@@ -328,7 +289,7 @@ void serify(char* str)
     char out[32];
     md5_str(str, dig);
     printf("摘要:\t");
-    for (; i < 16; i++) //16位无符号整数
+    for (; i < 16; i++) // 16位无符号整数
         printf("%02x", (unsigned char)dig[i]);
     printf("\n");
     Verify(out);
@@ -336,12 +297,16 @@ void serify(char* str)
 
 void ferify(char* filename)
 {
-    //RSAPublic读取
+    // RSAPublic读取
     FILE *fp;
     char out[32];
-    if (filename[0] == 34) filename[strlen(filename) - 1] = 0, strcpy(filename, filename + 1);  //支持文件拖曳,但会多出双引号,这里是处理多余的双引号
-    if (!strcmp(filename, "exit")) exit(0);  //输入exit退出
-    if (!(fp = fopen(filename, "rb"))) { printf("Can not open this file!\n"); return/*continue*/; }  //以二进制打开文件
+    // 支持文件拖曳,但会多出双引号,这里是处理多余的双引号
+    if (filename[0] == 34) filename[strlen(filename) - 1] = 0, strcpy(filename, filename + 1);
+    if (!strcmp(filename, "exit")) exit(0);  // 输入exit退出
+    if (!(fp = fopen(filename, "rb"))) {
+        printf("Can not open this file!\n"); // 以二进制打开文件
+        return;
+    }
     md5_file(fp, out);
     Verify(out);
 }
@@ -355,7 +320,7 @@ void test_verify()
 #ifdef MD5FILE
         printf("Input file:PublicRSA\n");
         ferify("PublicRSA");
-        //	RSA_check();
+        // RSA_check();
 #else
         char encrypt[1024];
         printf("请输入要计算MD5值的字符串:");

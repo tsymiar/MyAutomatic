@@ -26,7 +26,7 @@ TextureLoad(char      *filename, /* I - Bitmap file to load */
 {
     int         i;               /* Looping var */
     BITMAPINFO	*info;           /* Bitmap information */
-    GLubyte	*bits;           /* Bitmap RGB pixels */
+    GLubyte	*bits;               /* Bitmap RGB pixels */
     GLubyte     *ptr;            /* Pointer into bit buffer */
     GLubyte     temp;            /* Swapping variable */
     GLenum      type;            /* Texture type */
