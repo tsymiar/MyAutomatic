@@ -21,7 +21,7 @@ parseRcvMsg(void* lprcv) {
         memset(rcv_buf, 0, 256);
         int rcvlen = recv(client->sock, rcv_buf, 256, 0);
         EnterCriticalSection(&wrcon);
-        if (rcvlen == 2 && memcmp(rcv_buf, "\0\0", 2) == 0) {
+        if (rcvlen == 2 && (rcv_buf[1] == '\0')) {
             SLEEP(1);
             continue;
         }
@@ -107,17 +107,23 @@ parseRcvMsg(void* lprcv) {
     };
 };
 
-st_trans* SetChatMesg(st_trans& trans) {
+st_trans* ParseChatMesg(st_trans& trans) {
+    memset(&trans.user_sign, 0, 24);
     switch (trans.uiCmdMsg)
     {
-    case REGISTER:
+    case REGISTER:        
+        fprintf(stdout, "Input a new username AND password to register, divide with BLANK(' ').\n");
+        scanf_s("%s %s", trans.username, 24, trans.password, 24);
         break;
     case LOGIN:
     {
         static char title[64];
-        if (trans.username != NULL) {
+        if (trans.username[0] != '\0') {
             sprintf(title, "Welcome %s", (char*)trans.username);
             SetConsoleTitle(title);
+        } else {
+            fprintf(stdout, "Input username AND password to login, divide with BLANK(' ').\n");
+            scanf_s("%s %s", trans.username, 24, trans.password, 24);
         }
         break;
     }
@@ -151,10 +157,10 @@ st_trans* SetChatMesg(st_trans& trans) {
         }
         break;
     }
-    case VIEWGROUP:
+    case USERGROUP: 
     {
-        fprintf(stdout, "Input group name limit on 24 characters.\n");
-        scanf_s("%s", trans.group_name, 24);
+        fprintf(stdout, "Input group name to show members in: ");
+        scanf_s("%s", trans.group_name, (unsigned)_countof(trans.group_name));
         break;
     }
     case HOSTGROUP:
@@ -165,15 +171,15 @@ st_trans* SetChatMesg(st_trans& trans) {
     }
     case JOINGROUP:
     {
-        fprintf(stdout, "Input user name AND group name want to join, divide with BLANK(' ').\n");
-        scanf_s("%s %s", trans.username, (unsigned)_countof(trans.username), (trans.group_join), (unsigned)_countof(trans.group_join));
+        fprintf(stdout, "Input group name you want to join in: ");
+        scanf_s("%s", (trans.group_join), (unsigned)_countof(trans.group_join));
         break;
     }
     default:
     {
         if (trans.value == 0x0)
         {
-            MessageBox(NULL, "Logging failure.", "message", MB_OK);
+            MessageBox(NULL, "LoggingIn failure.", "message", MB_OK);
             return &trans;
         }
     }
@@ -196,8 +202,10 @@ int main()
         memset(&msg, 0, sizeof(st_trans));
         int recieved = GetRecvState();
         g_printedInput = 0;
+#ifdef USR_TEST
         memcpy(msg.username, "AAAAA", 6);
         memcpy(msg.password, "AAAAA", 6);
+#endif
         memcpy(msg.peer_name, "iv9527", 7);
 #ifdef NDT_ONLY
         if (comm > 1) {
@@ -209,13 +217,13 @@ int main()
 #else
         int comm = 0;
         if (recieved == RCV_TCP || recieved == RCV_SCC) {
-            fprintf(stdout, "Input commond [1-13]: ");
+            fprintf(stdout, "Input commond [0-13]: ");
             if (scanf("%2d", &comm) <= 0) {
                 fprintf(stdout, "Input object format error.\n");
                 break;
             }
-            if (comm > 13 || comm < 1) {
-                fprintf(stdout, "Input value error: beyound [1,13].\n");
+            if (comm > 13 || comm < 0) {
+                fprintf(stdout, "Input value error: out of [0,13].\n");
                 break;
             }
         }
@@ -226,7 +234,7 @@ int main()
         }
         if (recieved > RCV_ERR) {
             SetRecvState(RCV_ERR);
-            int ret = SendChatMesg(SetChatMesg(msg));
+            int ret = SendChatMesg(ParseChatMesg(msg));
             if (ret < 0) {
                 fprintf(stdout, "Error while setting chat message.\n");
                 return -1;

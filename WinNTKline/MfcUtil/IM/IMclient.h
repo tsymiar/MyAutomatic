@@ -170,9 +170,9 @@ typedef struct MSG_TRANS {
         unsigned char user_newpass[24];
         unsigned char peer_name[24];
         unsigned char peer_port[24];
+        unsigned char group_name[24];
         unsigned char group_host[24];
         unsigned char group_join[24];
-        unsigned char group_name[24];
     };
     struct MoreMesg more_mesg;
 } st_trans;
