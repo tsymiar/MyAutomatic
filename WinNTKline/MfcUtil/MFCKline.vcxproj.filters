@@ -123,9 +123,6 @@
     <ClInclude Include="netwk\Simulation.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\LinuSrvc\gSOAPverify\soap\stdsoap2.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="html\cefWebKit.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -242,15 +239,6 @@
     <ClCompile Include="mygl\texture.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\LinuSrvc\gSOAPverify\soap\soapC.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\LinuSrvc\gSOAPverify\soap\soapClient.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\LinuSrvc\gSOAPverify\soap\stdsoap2.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="html\cefWebKit.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -290,6 +278,15 @@
     <ClCompile Include="SetMarkDlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\soapC.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\soapClient.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\stdsoap2.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="MFCKline.rc">
@@ -327,7 +324,7 @@
     <None Include="script\reptile.py">
       <Filter>配置文件</Filter>
     </None>
-    <None Include="..\..\LinuSrvc\gSOAPverify\file\myautomatic.sql">
+    <None Include="..\..\LinxSrvc\gSOAPverify\file\myautomatic.sql">
       <Filter>配置文件</Filter>
     </None>
   </ItemGroup>

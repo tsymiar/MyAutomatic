@@ -119,15 +119,6 @@
     <ClCompile Include="..\MfcUtil\netwk\Simulation.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\LinuSrvc\gSOAPverify\soap\soapC.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\LinuSrvc\gSOAPverify\soap\soapClient.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\LinuSrvc\gSOAPverify\soap\stdsoap2.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="..\MfcUtil\html\cefWebKit.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -156,6 +147,15 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\MfcUtil\SetMarkDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\soapC.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\soapClient.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\stdsoap2.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

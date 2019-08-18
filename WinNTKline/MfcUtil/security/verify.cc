@@ -199,16 +199,14 @@ void RSA_check()
     printf("%s", msg);
     stream = fopen("PublicRSA", "r");
     if (stream == NULL)
-        printf("stream error!");
-    else
-        fclose(stream);
-    stream = NULL;
+        return;
     frv = fread(&PUBLIC_KEY, 1, sizeof(RSArefPubKey_st), stream);
     key = PEM_read_RSAPublicKey(stream, NULL/*&key*/, NULL, NULL);
     ret = RSA_public_encrypt(strlen((char*)msg), msg, msg2, key, RSA_PKCS1_PADDING); // or RSA_PKCS1_OAEP_PADDING
     if (RSA_verify(NID_idea_ecb, msg2, 256, msg, ret, key) == 1) {
-        printf("SUCCESS\n");
+        printf("RSA_check SUCCESS\n");
     }
+    fclose(stream);
 }
 
 int i = 0;

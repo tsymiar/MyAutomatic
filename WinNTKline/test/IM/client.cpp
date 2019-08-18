@@ -1,6 +1,7 @@
 #include "IMclient.h"
 
-int g_printedInput = 0;
+#define USR_TEST
+volatile int g_printedInput = 0;
 const char youSaid[11] = "Msg Sent: ";
 
 void
@@ -14,7 +15,7 @@ parseRcvMsg(void* lprcv) {
     InitializeCriticalSection(&wrcon);
     st_client* client = (st_client*)lprcv;
     int fw_len = 0;
-    int count = 0;
+    volatile int count = 0;
     while (1) {
         if (client->flag == 0)
             continue;
@@ -27,7 +28,7 @@ parseRcvMsg(void* lprcv) {
         }
         st_trans *mesg = (st_trans*)rcv_buf;
 #ifdef _DEBUG
-        if (mesg->uiCmdMsg != CHATWITH) {
+        if ((mesg->uiCmdMsg != NETNDT) && (mesg->uiCmdMsg != GETIMAGE)) {
             for (int c = 0; c < rcvlen; c++)
                 fprintf(stdout, "%c", (unsigned char)rcv_buf[c]);
             fprintf(stdout, "\n");
@@ -38,6 +39,10 @@ parseRcvMsg(void* lprcv) {
                 fprintf(stdout, "\rRecieving...");
             } else {
                 fprintf(stdout, "\r%*c\rRecieving...\n%s", 64, ' ', youSaid);
+            }
+            if (mesg->value + 1 != 0) {
+                SetRecvState(RCV_NDT);
+                fprintf(stdout, "\r");
             }
         }
 #endif
@@ -53,14 +58,14 @@ parseRcvMsg(void* lprcv) {
                 struct MoreMesg p2pmsg;
                 memset(&p2pmsg, 0, sizeof(MoreMesg));
                 p2pmsg.cmd[0] = mesg->uiCmdMsg;
-                memcpy(&p2pmsg.mesg, "hello", 16);
+                memcpy(&p2pmsg.mesg, "hello", 6);
                 int parse = p2pMessage(mesg->username, ip, port, (char*)&p2pmsg);
                 if (parse == 0) {
                     SetRecvState(RCV_P2P);
                 }
             }
         }
-        if (mesg->uiCmdMsg == CHATWITH) {
+        if (mesg->uiCmdMsg == NETNDT) {
             if (atoi((const char*)mesg->recv_mesg.status) == 200) {
                 SetRecvState(RCV_NDT);
                 fprintf(stdout, "\r%*c\rRecieved: %s\n", 64, ' ', mesg->recv_mesg);
@@ -71,17 +76,20 @@ parseRcvMsg(void* lprcv) {
                 fprintf(stdout, "Status error.\n");
                 closesocket(client->sock);
                 exit(0);
+            } else {
+                g_printedInput = 2;
             }
         }
         if (mesg->uiCmdMsg == GETIMAGE) {
             int ndt_len = atoi(rcv_buf + 22);
-            if (count = 0) {
+            if (count == 0) {
                 fclose(fopen(filename, "w"));
                 count = 1;
             }
             FILE * file = fopen(filename, "ab+");
             if (fw_len == ndt_len) {
                 fclose(file);
+                SetRecvState(RCV_SCC);
                 continue;
             }
             fw_len = ndt_len;
@@ -136,18 +144,21 @@ st_trans* ParseChatMesg(st_trans& trans) {
     {
         break;
     }
-    case CHATWITH:
+    case NETNDT:
     {
         memcpy(trans.type, "NDT", 4);
-        trans.more_mesg.cmd[0] = CHATWITH;
+        memcpy(&trans.peer_name, "iv9527", 7);
+        trans.more_mesg.cmd[0] = NETNDT;
 #ifdef NDT_ONLY
         if (g_printedInput > -1) {
             fprintf(stdout, youSaid);
             g_printedInput = 1;
         }
 #else
-        fprintf(stdout, "Set chat message, limit on 16 characters.\n");
-        g_printedInput = 1;
+        if (g_printedInput != 2) {
+            fprintf(stdout, "Set chat message, limit on 16 characters.\n");
+            g_printedInput = 1;
+        }
 #endif
         memset(&trans.more_mesg.mesg, 0, 16);
         if (scanf_s("%s", &trans.more_mesg.mesg, 16) <= 0) {
@@ -200,13 +211,12 @@ int main()
         }
         st_trans msg;
         memset(&msg, 0, sizeof(st_trans));
-        int recieved = GetRecvState();
+        volatile int recieved = GetRecvState();
         g_printedInput = 0;
 #ifdef USR_TEST
         memcpy(msg.username, "AAAAA", 6);
         memcpy(msg.password, "AAAAA", 6);
 #endif
-        memcpy(msg.peer_name, "iv9527", 7);
 #ifdef NDT_ONLY
         if (comm > 1) {
             comm = CHATWITH;
@@ -230,7 +240,7 @@ int main()
         msg.uiCmdMsg = comm;
 #endif // NDT_ONLY
         if (recieved == RCV_NDT) {
-            msg.more_mesg.cmd[0] = msg.uiCmdMsg = CHATWITH;
+            msg.more_mesg.cmd[0] = msg.uiCmdMsg = NETNDT;
         }
         if (recieved > RCV_ERR) {
             SetRecvState(RCV_ERR);

@@ -629,7 +629,7 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
         g_setDlg->ShowWindow(SW_SHOW);
         g_setDlg->SetTitle("原密码");
         break;
-    case CHATWITH:
+    case NETNDT:
         sprintf(item, "%03d", ifsh);
         m_frndList.InsertItem(0, item);
         sprintf(item, "%03X", (ifsh + 11) * 13 - 19);

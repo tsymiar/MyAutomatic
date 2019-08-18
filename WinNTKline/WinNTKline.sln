@@ -5,13 +5,13 @@ VisualStudioVersion = 15.0.27130.2036
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WPFKline", "WPFKline\WPFKline\WPFKline.csproj", "{0652C320-7C16-41E3-A864-C70A672705A2}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gSOAPverify", "..\LinuSrvc\gSOAPverify\gSOAPverify.vcxproj", "{896FCF3C-250C-46EC-A419-1B5E27D0DD53}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gSOAPverify", "..\LinxSrvc\gSOAPverify\gSOAPverify.vcxproj", "{896FCF3C-250C-46EC-A419-1B5E27D0DD53}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IM", "..\LinuSrvc\IM\IM.vcxproj", "{28813B8F-EA1E-4039-9BDE-11F0EB52986C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IM", "..\LinxSrvc\IM\IM.vcxproj", "{28813B8F-EA1E-4039-9BDE-11F0EB52986C}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Linux", "Linux", "{9AF30FB0-9135-4EBA-B07E-16B1F1D98C76}"
 	ProjectSection(SolutionItems) = preProject
-		..\LinuSrvc\Makefile = ..\LinuSrvc\Makefile
+		..\LinxSrvc\Makefile = ..\LinxSrvc\Makefile
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Mix", "Mix", "{929677BC-1A53-4CD4-B120-259D6A7FDBDB}"
@@ -45,7 +45,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testUtils", "test\testUtils
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CvMlwk", "CvMlwk\CvMlwk.vcxproj", "{8FFF2EFE-1196-43BA-A3F3-A0B377628DAF}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "hdware", "..\LinuSrvc\hdware\hdware.vcxproj", "{85D69618-98CA-4A50-B519-9EA287F2D226}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "hdware", "..\LinxSrvc\hdware\hdware.vcxproj", "{85D69618-98CA-4A50-B519-9EA287F2D226}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

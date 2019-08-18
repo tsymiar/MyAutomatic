@@ -58,7 +58,7 @@ pthread_mutexattr_t attr;
 #endif
 
 #define GET_IMG_EXE "v4l2.exe"
-#define IMAGE_FILE "v4l2.jpg"
+#define IMAGE_BLOB "v4l2.yuv"
 
 #ifdef _WIN32
 CRITICAL_SECTION
@@ -337,7 +337,7 @@ type_thread_func monite(void *arg)
                 valrtn = new_user(user.usr, user.psw);
                 sprintf(sd_bufs + 2, "%x", NEVAL(valrtn + 1));
                 if (valrtn == -1) {
-                    sprintf((sd_bufs + 8), "New user: %s", user.usr);
+                    sprintf(sd_bufs + 8, "New user: %s", user.usr);
                     join_zone(0, user.usr, (char*)("all"));
                     snres = send(rcv_sock, sd_bufs, 48, 0);
                     fprintf(stdout, ">>> %s\n", sd_bufs + 8);
@@ -368,7 +368,7 @@ type_thread_func monite(void *arg)
                 valrtn = user_auth(user.usr, user.psw);
                 sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
                 if (valrtn == (loggedin = 1)) {
-                    sprintf((sd_bufs + 8), "[%s] logging on successfully.", user.usr);
+                    sprintf(sd_bufs + 8, "[%s] logging on successfully.", user.usr);
                     set_user_peer(user.usr, IP, PORT, rcv_sock);
                     Network sock;
                     memcpy((void*)sock.ip, IP, INET_ADDRSTRLEN),
@@ -380,7 +380,7 @@ type_thread_func monite(void *arg)
                 } else if (valrtn == 0) {
                     if (memcmp(user.usr, userName, 24) == 0) {
                         sprintf(sd_bufs + 2, "%x", NEVAL(-3));
-                        sprintf((sd_bufs + 8), "Another [%s] is on line.", user.usr);
+                        sprintf(sd_bufs + 8, "Another [%s] is on line.", user.usr);
                         snres = send(rcv_sock, sd_bufs, 64, 0);
                         if (snres < 0) {
                             fprintf(stderr, "### User status: %s\n", strerror(errno));
@@ -449,12 +449,11 @@ type_thread_func monite(void *arg)
                 flg = recv(rcv_sock, rcv_txt, 256, 0);
                 if (flg < 0 && flg != EWOULDBLOCK && flg != EAGAIN && flg != EINTR) {
                     set_user_quit(userName);
-                    fprintf(stderr, "### Lost connection with *[%s]: %s(%d)\n", userName, strerror(flg), flg);
-#if defined _WIN32
+                    fprintf(stderr, "### Lost connection with *[%s]: %s(%d)\n", userName, strerror(errno), flg);
+#if defined _WIN32 || !defined THREAD_PER_CONN || !defined SOCK_CONN_TEST
                     return NULL;
-#elif !defined (THREAD_PER_CONN || SOCK_CONN_TEST)
-                    loggedin = 0;
 #else
+                    loggedin = 0;
                     goto comm_err1;
 #endif
                 } else {
@@ -500,14 +499,14 @@ type_thread_func monite(void *arg)
                     case 0x2:
                         char susr[sizeof(user)];
                         sprintf(susr, "User: %s(--%s--);", user.usr, user.sign);
-                        memcpy(sd_bufs + 8, susr, strlen(susr) + 1);
+                        snprintf((sd_bufs + 8), strlen(susr) + 1, susr);
                         sndlen = 8 + strlen(susr) + 1;
                         break;
                     case 0x3:
                     {
                         flg = loggedin = 0;
                         set_user_quit(userName);
-                        sprintf((sd_bufs + 8), "[%s] has logout.", userName);
+                        sprintf(sd_bufs + 8, "[%s] has logout.", userName);
                         send(rcv_sock, sd_bufs, 48, 0);
                         fprintf(stderr, "### [%0x, %x]: %s\n", sd_bufs[1], static_cast<unsigned>(*user.chk), sd_bufs + 8);
                         continue;
@@ -515,11 +514,11 @@ type_thread_func monite(void *arg)
                     case 0x4:
                     {
                         valrtn = get_user_seq(user.usr);
-                        sprintf((sd_bufs + 2), "%x", NEVAL(valrtn));
+                        sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
                         if (1 == user_auth(user.usr, user.psw) && user.npsw != nullptr)
                             strcpy(users[valrtn].psw, user.npsw);
                         else
-                            memcpy((sd_bufs + 8), "Change password failure: user auth error.", 42);
+                            strcpy((sd_bufs + 8), "Change password failure: user auth error.");
                         sndlen = 56;
                     } break;
                     case 0x5:
@@ -601,7 +600,7 @@ type_thread_func monite(void *arg)
                         if (memcmp(user.chk, "NDT", 4) == 0) {
                             fprintf(stdout, "'%s' is communicating with '%s' via NDT.\n", user.usr, user.peer);
                         } else {
-                            sprintf((sd_bufs + 32), "Check message error for Network Data Translation.");
+                            strcpy((sd_bufs + 32), "Check message error for Network Data Translation.");
                             sndlen = 64;
                             break;
                         }
@@ -613,7 +612,7 @@ type_thread_func monite(void *arg)
                                 queryNetworkParams(user.peer, ndtnet);
 #endif
                                 if (ndtnet.ip == nullptr || ndtnet.port <= 0) {
-                                    sprintf((sd_bufs + 32), "Peer user ip or port value error.");
+                                    strcpy((sd_bufs + 32), "Peer user ip or port value error.");
                                     sndlen = 72;
                                 } else {
                                     char random = (char)(rand() % 255 + '\1');
@@ -624,27 +623,32 @@ type_thread_func monite(void *arg)
                                     strcpy((char*)&user.status, "200");
                                     memcpy(ndtmsg + 8, &user.peer_mesg.msg, 24);
                                     if (-1 != send(ndtnet.socket, ndtmsg, 32, 0)) {
-                                        sprintf((sd_bufs + 32), "[%c] NDT success to %s.", random, user.peer);
-                                        sndlen = 80;
+                                        if (ndtnet.socket == rcv_sock) {
+                                            strcpy((sd_bufs + 32), "Socket descriptor conflicts!.");
+                                            sndlen = 64;
+                                        } else {
+                                            sprintf(sd_bufs + 32, "[%c] NDT success to %s.", random, user.peer);
+                                            sndlen = 80;
+                                        }
                                     } else {
                                         struct stat sock_stat;
                                         if (EBADF == fstat(ndtnet.socket, &sock_stat)) {
                                             fprintf(stdout, "Error: socket descriptor - %d.\n", ndtnet.socket);
                                         } else {
-                                            fprintf(stdout, "Error: %s.\n", strerror(errno));
+                                            fprintf(stdout, "Error: %s(%I32d).\n", strerror(errno), ndtnet.socket);
                                         }
-                                        sprintf((sd_bufs + 32), "Got failure while senting a message.");
+                                        strcpy((sd_bufs + 32), "Got failure while senting a message.");
                                         sndlen = 72;
                                     }
                                 }
                             } else {
-                                valrtn = -2;
-                                strcpy((sd_bufs + 32), "User was offline!");
+                                snprintf((sd_bufs + 32), 18, "User was offline!");
+                                memset(sd_bufs + 2, NEVAL(-2), 1);
                                 sndlen = 56;
                             }
                         } else {
-                            valrtn = -3;
                             sprintf((sd_bufs + 32), "Get user network: No such user(%s)!", user.peer);
+                            sprintf((sd_bufs + 2), "%x", NEVAL(-3));
                             sndlen = 92;
                         }
                     } break;
@@ -654,7 +658,7 @@ type_thread_func monite(void *arg)
                         char *mesg = NULL;
                         if (vfork() == 0)
                         {
-                            char *const agv[] = { (char*)"v4l2.exe", (char *)(0) };
+                            char *const agv[] = { (char*)GET_IMG_EXE, (char *)(0) };
                             valrtn = execvp("./" GET_IMG_EXE, agv);
                             mesg = strerror(errno);
                             sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
@@ -666,7 +670,7 @@ type_thread_func monite(void *arg)
                             if (errno != ECHILD) {
                                 mesg = strerror(errno);
                             } else {
-                                if (access(IMAGE_FILE, 0) == 0) {
+                                if (access(IMAGE_BLOB"0", 0) == 0) {
                                     mesg = (char*)"sucess";
                                 } else {
                                     mesg = (char*)"Not save image file";
@@ -675,7 +679,7 @@ type_thread_func monite(void *arg)
                             sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
                             strcpy((sd_bufs + 8), mesg);
                             sndlen = 8 + strlen(mesg) + 1;
-                            fprintf(stdout, "Make image with [ %s ], %s.\n", "./" GET_IMG_EXE, mesg);
+                            fprintf(stdout, "Make image via '%s': %s.\n", "./" GET_IMG_EXE, mesg);
                         }
 #else
                         char *mesg = "OS don't support v4l.";
@@ -686,36 +690,36 @@ type_thread_func monite(void *arg)
                     } break;
                     case 0x9:
                     {
-                        FILE * file = fopen(IMAGE_FILE, "rb");
+                        FILE * file = fopen(IMAGE_BLOB"0", "rb");
                         if (file == NULL)
                         {
-                            sprintf((sd_bufs + 8), "Fail open image file \"%s\".", IMAGE_FILE);
+                            sprintf((sd_bufs + 8), "Fail read image file \"%s\".", IMAGE_BLOB);
                             fprintf(stdout, "%s\n", sd_bufs + 8);
-                            sndlen = 8 + strlen(IMAGE_FILE) + 27;
+                            sndlen = 8 + strlen(IMAGE_BLOB) + 27;
                             break;
                         }
                         fseek(file, 0, SEEK_END);
                         long lSize = ftell(file);
                         rewind(file);
-                        int num = lSize / sizeof(unsigned char);
-                        if (num > 2097152)
-                            num = 1024;
-                        memset(sd_bufs + 8, num, 6);
-                        unsigned char *pos = (unsigned char*)malloc(sizeof(unsigned char)*num);
+                        int bytes = lSize / sizeof(unsigned char);
+                        if (bytes > 2097152)
+                            bytes = 1024;
+                        memset(sd_bufs + 8, bytes, 6);
+                        unsigned char *pos = (unsigned char*)malloc(sizeof(unsigned char)*bytes);
                         if (pos == NULL)
                         {
-                            sprintf((sd_bufs + 8), "Fail malloc for \"%s\".", IMAGE_FILE);
+                            sprintf((sd_bufs + 8), "Fail malloc for \"%s\".", IMAGE_BLOB);
                             fprintf(stdout, "%s\n", sd_bufs + 8);
-                            sndlen = 8 + strlen(IMAGE_FILE) + 24;
+                            sndlen = 8 + strlen(IMAGE_BLOB) + 24;
                             break;
                         }
                         int slice = 0;
-                        while (int rcsz = fread(pos, sizeof(unsigned char), num, file) != 0 && !feof(file)) {
-                            fprintf(stdout, "File \"%s\" size = %d, rcsz = %d, slice = %d.\n", IMAGE_FILE, num, rcsz, slice);
+                        while (int rcsz = fread(pos, sizeof(unsigned char), bytes, file) != 0 && !feof(file)) {
+                            fprintf(stdout, "File \"%s\" size = %d, rcsz = %d, slice = %d.\n", IMAGE_BLOB, bytes, rcsz, slice);
                             sprintf((sd_bufs + 14), "%04d", slice);
                             volatile int cur = 0;
-                            for (int i = 0; i <= num; i++) {
-                                if (((i > 0) && (i % 224 == 0)) || (i == num)) {
+                            for (int i = 0; i <= bytes; i++) {
+                                if (((i > 0) && (i % 224 == 0)) || (i == bytes)) {
                                     sprintf((sd_bufs + 22), "%04d", i);
                                     send(rcv_sock, sd_bufs, 256, 0);
                                     memset(sd_bufs + 32, 0, 224);
@@ -724,9 +728,11 @@ type_thread_func monite(void *arg)
                                 memset(sd_bufs + 32 + cur, pos[i], 1);
                                 SLEEP(1.0 / 10000);
                                 cur++;
+                                fprintf(stdout, /*"\r%*c*/"\r%.2f%%", /*7, ' ',*/ i*100.f / bytes);
                             }
                             slice++;
                         }
+                        fprintf(stdout, "\r");
                         free(pos);
                         fclose(file);
                     }
@@ -1333,7 +1339,7 @@ int get_user_seq(char user[24]) {
         if (strcmp(u, users[i].usr) == 0)
             return i;
     };
-    return -1;
+    return -2;
 };
 int find_zone(unsigned char basis[24]) {
     char *x = (char*)basis;
