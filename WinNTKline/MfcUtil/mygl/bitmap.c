@@ -1,8 +1,8 @@
 /*
-* Windows BMP file functions for OpenGL.
-*
-* Written by Michael Sweet.
-*/
+ * Windows BMP file functions for OpenGL.
+ *
+ * Written by Michael Sweet.
+ */
 
 #include "bitmap.h"
 #include <stdio.h>
@@ -11,25 +11,25 @@
 
 
 #ifdef WIN32
-/*
-* 'LoadDIBitmap()' - Load a DIB/BMP file from disk.
-*
-* Returns a pointer to the bitmap if successful, NULL otherwise...
-*/
+ /*
+  * 'LoadDIBitmap()' - Load a DIB/BMP file from disk.
+  *
+  * Returns a pointer to the bitmap if successful, NULL otherwise...
+  */
 
 GLubyte *                          /* O - Bitmap data */
 LoadDIBitmap(const char *filename, /* I - File to load */
-    BITMAPINFO **info)             /* O - Bitmap information */
+             BITMAPINFO **info)    /* O - Bitmap information */
 {
     FILE             *fp;          /* Open file pointer */
     GLubyte          *bits;        /* Bitmap pixel bits */
-    unsigned int     bitsize;      /* Size of bitmap */
-    unsigned int     infosize;     /* Size of header information */
+    int              bitsize;      /* Size of bitmap */
+    int              infosize;     /* Size of header information */
     BITMAPFILEHEADER header;       /* File header */
 
 
-                                   /* Try opening the file; use "rb" mode to read this *binary* file. */
-    if (fopen_s(&fp, filename, "rb") != 0)
+    /* Try opening the file; use "rb" mode to read this *binary* file. */
+    if ((fp = fopen(filename, "rb")) == NULL)
         return (NULL);
 
     /* Read the file header and any following bitmap information... */
@@ -55,7 +55,7 @@ LoadDIBitmap(const char *filename, /* I - File to load */
         return (NULL);
     }
 
-    if (fread(*info, 1, infosize, fp) < infosize)
+    if (fread(*info, 1, infosize, fp) < (unsigned)infosize)
     {
         /* Couldn't read the bitmap header - return NULL... */
         free(*info);
@@ -64,13 +64,13 @@ LoadDIBitmap(const char *filename, /* I - File to load */
     }
 
     /* Now that we have all the header info read in, allocate memory for *
-    * the bitmap and read *it* in...                                    */
+     * the bitmap and read *it* in...                                    */
     if ((bitsize = (*info)->bmiHeader.biSizeImage) == 0)
         bitsize = ((*info)->bmiHeader.biWidth *
         (*info)->bmiHeader.biBitCount + 7) / 8 *
         abs((*info)->bmiHeader.biHeight);
 
-    if ((bits = (GLubyte*)malloc(bitsize)) == NULL)
+    if ((bits = (GLubyte *)malloc(bitsize)) == NULL)
     {
         /* Couldn't allocate memory - return NULL! */
         free(*info);
@@ -78,42 +78,41 @@ LoadDIBitmap(const char *filename, /* I - File to load */
         return (NULL);
     }
 
-    if (fread(bits, 1, bitsize, fp) < bitsize)
+    if (fread(bits, 1, bitsize, fp) < (unsigned)bitsize)
     {
         /* Couldn't read bitmap - free memory and return NULL! */
-        free(bits);
         free(*info);
+        free(bits);
         fclose(fp);
         return (NULL);
     }
 
     /* OK, everything went fine - return the allocated bitmap... */
-    free(*info);
     fclose(fp);
     return (bits);
 }
 
 
 /*
-* 'SaveDIBitmap()' - Save a DIB/BMP file to disk.
-*
-* Returns 0 on success or -1 on failure...
-*/
+ * 'SaveDIBitmap()' - Save a DIB/BMP file to disk.
+ *
+ * Returns 0 on success or -1 on failure...
+ */
 
 int                                /* O - 0 = success, -1 = failure */
 SaveDIBitmap(const char *filename, /* I - File to load */
-    BITMAPINFO *info,     /* I - Bitmap information */
-    GLubyte    *bits)     /* I - Bitmap data */
+             BITMAPINFO *info,     /* I - Bitmap information */
+             GLubyte    *bits)     /* I - Bitmap data */
 {
     FILE             *fp;          /* Open file pointer */
-    int              size;         /* Size of file */
-    unsigned	int	 infosize;     /* Size of bitmap info */
-    unsigned	int  bitsize;      /* Size of bitmap pixels */
+    int              size,         /* Size of file */
+                     infosize,     /* Size of bitmap info */
+                     bitsize;      /* Size of bitmap pixels */
     BITMAPFILEHEADER header;       /* File header */
 
 
-                                   /* Try opening the file; use "wb" mode to write this *binary* file. */
-    if (fopen_s(&fp, filename, "wb") != 0)
+    /* Try opening the file; use "wb" mode to write this *binary* file. */
+    if ((fp = fopen(filename, "wb")) == NULL)
         return (-1);
 
     /* Figure out the bitmap size */
@@ -161,14 +160,14 @@ SaveDIBitmap(const char *filename, /* I - File to load */
         return (-1);
     }
 
-    if (fwrite(info, 1, infosize, fp) < infosize)
+    if (fwrite(info, 1, infosize, fp) < (unsigned)infosize)
     {
         /* Couldn't write the bitmap header - return... */
         fclose(fp);
         return (-1);
     }
 
-    if (fwrite(bits, 1, bitsize, fp) < bitsize)
+    if (fwrite(bits, 1, bitsize, fp) < (unsigned)bitsize)
     {
         /* Couldn't write the bitmap - return... */
         fclose(fp);
@@ -182,9 +181,9 @@ SaveDIBitmap(const char *filename, /* I - File to load */
 
 
 #else /* !WIN32 */
-/*
-* Functions for reading and writing 16- and 32-bit little-endian integers.
-*/
+ /*
+  * Functions for reading and writing 16- and 32-bit little-endian integers.
+  */
 
 static unsigned short read_word(FILE *fp);
 static unsigned int   read_dword(FILE *fp);
@@ -196,14 +195,14 @@ static int            write_long(FILE *fp, int l);
 
 
 /*
-* 'LoadDIBitmap()' - Load a DIB/BMP file from disk.
-*
-* Returns a pointer to the bitmap if successful, NULL otherwise...
-*/
+ * 'LoadDIBitmap()' - Load a DIB/BMP file from disk.
+ *
+ * Returns a pointer to the bitmap if successful, NULL otherwise...
+ */
 
 GLubyte *                          /* O - Bitmap data */
 LoadDIBitmap(const char *filename, /* I - File to load */
-    BITMAPINFO **info)    /* O - Bitmap information */
+             BITMAPINFO **info)    /* O - Bitmap information */
 {
     FILE             *fp;          /* Open file pointer */
     GLubyte          *bits;        /* Bitmap pixel bits */
@@ -216,7 +215,7 @@ LoadDIBitmap(const char *filename, /* I - File to load */
     BITMAPFILEHEADER header;       /* File header */
 
 
-                                   /* Try opening the file; use "rb" mode to read this *binary* file. */
+    /* Try opening the file; use "rb" mode to read this *binary* file. */
     if ((fp = fopen(filename, "rb")) == NULL)
         return (NULL);
 
@@ -264,7 +263,7 @@ LoadDIBitmap(const char *filename, /* I - File to load */
         }
 
     /* Now that we have all the header info read in, allocate memory for *
-    * the bitmap and read *it* in...                                    */
+     * the bitmap and read *it* in...                                    */
     if ((bitsize = (*info)->bmiHeader.biSizeImage) == 0)
         bitsize = ((*info)->bmiHeader.biWidth *
         (*info)->bmiHeader.biBitCount + 7) / 8 *
@@ -306,23 +305,27 @@ LoadDIBitmap(const char *filename, /* I - File to load */
 
 
 /*
-* 'SaveDIBitmap()' - Save a DIB/BMP file to disk.
-*
-* Returns 0 on success or -1 on failure...
-*/
+ * 'SaveDIBitmap()' - Save a DIB/BMP file to disk.
+ *
+ * Returns 0 on success or -1 on failure...
+ */
 
 int                                /* O - 0 = success, -1 = failure */
 SaveDIBitmap(const char *filename, /* I - File to load */
-    BITMAPINFO *info,     /* I - Bitmap information */
-    GLubyte    *bits)     /* I - Bitmap data */
+             BITMAPINFO *info,     /* I - Bitmap information */
+             GLubyte    *bits)     /* I - Bitmap data */
 {
-    FILE *fp;                      /* Open file pointer */
-    int  size,                     /* Size of file */
-        infosize,                 /* Size of bitmap info */
-        bitsize;                  /* Size of bitmap pixels */
+    FILE    *fp;                   /* Open file pointer */
+    int     size,                  /* Size of file */
+        infosize,                  /* Size of bitmap info */
+        bitsize;                   /* Size of bitmap pixels */
+    GLubyte *ptr;                  /* Pointer into bitmap */
+    GLubyte temp;                  /* Temporary variable to swap red and blue */
+    int     x, y;                  /* X and Y position in image */
+    int     length;                /* Line length */
 
 
-                                  /* Try opening the file; use "wb" mode to write this *binary* file. */
+    /* Try opening the file; use "wb" mode to write this *binary* file. */
     if ((fp = fopen(filename, "wb")) == NULL)
         return (-1);
 
@@ -379,10 +382,24 @@ SaveDIBitmap(const char *filename, /* I - File to load */
     if (infosize > 40)
         if (fwrite(info->bmiColors, infosize - 40, 1, fp) < 1)
         {
-            /* Couldn't write the bitmap header - return... */
+            /* Couldn't write the bitmap color palette - return... */
             fclose(fp);
             return (-1);
         }
+
+#if 0
+    /* Swap red and blue */
+    length = (info->bmiHeader.biWidth * 3 + 3) & ~3;
+    for (y = 0; y < info->bmiHeader.biHeight; y++)
+        for (ptr = bits + y * length, x = info->bmiHeader.biWidth;
+            x > 0;
+            x--, ptr += 3)
+    {
+        temp = ptr[0];
+        ptr[0] = ptr[2];
+        ptr[2] = temp;
+    }
+#endif /* 0 */
 
     if (fwrite(bits, 1, bitsize, fp) < bitsize)
     {
@@ -398,8 +415,8 @@ SaveDIBitmap(const char *filename, /* I - File to load */
 
 
 /*
-* 'read_word()' - Read a 16-bit unsigned integer.
-*/
+ * 'read_word()' - Read a 16-bit unsigned integer.
+ */
 
 static unsigned short     /* O - 16-bit unsigned integer */
 read_word(FILE *fp)       /* I - File to read from */
@@ -414,8 +431,8 @@ read_word(FILE *fp)       /* I - File to read from */
 
 
 /*
-* 'read_dword()' - Read a 32-bit unsigned integer.
-*/
+ * 'read_dword()' - Read a 32-bit unsigned integer.
+ */
 
 static unsigned int               /* O - 32-bit unsigned integer */
 read_dword(FILE *fp)              /* I - File to read from */
@@ -432,8 +449,8 @@ read_dword(FILE *fp)              /* I - File to read from */
 
 
 /*
-* 'read_long()' - Read a 32-bit signed integer.
-*/
+ * 'read_long()' - Read a 32-bit signed integer.
+ */
 
 static int                        /* O - 32-bit signed integer */
 read_long(FILE *fp)               /* I - File to read from */
@@ -450,12 +467,12 @@ read_long(FILE *fp)               /* I - File to read from */
 
 
 /*
-* 'write_word()' - Write a 16-bit unsigned integer.
-*/
+ * 'write_word()' - Write a 16-bit unsigned integer.
+ */
 
 static int                     /* O - 0 on success, -1 on error */
 write_word(FILE           *fp, /* I - File to write to */
-    unsigned short w)   /* I - Integer to write */
+           unsigned short w)   /* I - Integer to write */
 {
     putc(w, fp);
     return (putc(w >> 8, fp));
@@ -463,12 +480,12 @@ write_word(FILE           *fp, /* I - File to write to */
 
 
 /*
-* 'write_dword()' - Write a 32-bit unsigned integer.
-*/
+ * 'write_dword()' - Write a 32-bit unsigned integer.
+ */
 
 static int                    /* O - 0 on success, -1 on error */
 write_dword(FILE         *fp, /* I - File to write to */
-    unsigned int dw)  /* I - Integer to write */
+            unsigned int dw)  /* I - Integer to write */
 {
     putc(dw, fp);
     putc(dw >> 8, fp);
@@ -478,12 +495,12 @@ write_dword(FILE         *fp, /* I - File to write to */
 
 
 /*
-* 'write_long()' - Write a 32-bit signed integer.
-*/
+ * 'write_long()' - Write a 32-bit signed integer.
+ */
 
 static int           /* O - 0 on success, -1 on error */
 write_long(FILE *fp, /* I - File to write to */
-    int  l)   /* I - Integer to write */
+           int  l)   /* I - Integer to write */
 {
     putc(l, fp);
     putc(l >> 8, fp);

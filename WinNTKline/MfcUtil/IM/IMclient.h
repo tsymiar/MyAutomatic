@@ -162,7 +162,7 @@ typedef struct MSG_TRANS {
         char password[24];
         char TOKEN[24];
         char peerIP[24];
-        char errMsg[24];
+        char errmsg[24];
         unsigned char group_mark[24];
     };
     union {
@@ -191,8 +191,8 @@ const MENU menus[] =
     { 0x03,"登出" },
     { 0x05,"设置密码" },
     { 0x06,"在线用户列表" },
-    { 0x07,"聊天对象" },
     { 0x08,"P2P" },
+    { 0x07,"NDT" },
     { 0x09,"拍照" },
     { 0x0A,"下载照片" },
     { 0x0B,"群列表" },
@@ -211,8 +211,8 @@ enum  EM_MENU {
     LOGOUT,
     SETPSW,
     ONLINE,
-    CHATWITH,
     PEER2P,
+    NETNDT,
     V4L2IMG,
     GETIMAGE,
     VIEWGROUP,

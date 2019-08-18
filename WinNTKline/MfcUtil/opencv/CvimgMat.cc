@@ -183,6 +183,7 @@ MatImgSet* CvimgMat::getImageSet(const String& img, const String& name)
     image->name = name;
     if (image->image.flags <= 0) {
         fprintf(stdout, "%s: source image flag invalid.\n", name.c_str());
+        free(image);
         return NULL;
     }
     return image;
@@ -275,6 +276,7 @@ int CvimgMat::bilateralImage(const String & src)
     image->name = name;
     if (image->image.flags <= 0) {
         fprintf(stdout, "%s: source image flag invalid.\n", name.c_str());
+        free(image);
         return -1;
     }
     int bilateralval = 8;
@@ -296,6 +298,7 @@ int CvimgMat::medianFilterImage(const String& src, int value)
     image->name = name;
     if (image->image.flags <= 0) {
         fprintf(stdout, "%s: source image flag invalid.\n", name.c_str());
+        free(image);
         return -1;
     }
     if (value % 2 == 0)
@@ -319,6 +322,7 @@ int CvimgMat::neighbourAverageImage(const String& src, Size ksize)
     image->ksize = ksize;
     if (image->set.image.flags <= 0) {
         fprintf(stdout, "GaussianFilter: source image flag invalid.\n");
+        free(image);
         return -1;
     }
     int value = 0;
@@ -340,6 +344,7 @@ int CvimgMat::thresholdImage(const String& src)
     image->name = name;
     if (image->image.flags <= 0) {
         fprintf(stdout, "%s: source image flag invalid.\n", name.c_str());
+        free(image);
         return -1;
     }
     int posTrackBar = 128;

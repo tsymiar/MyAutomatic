@@ -4,17 +4,17 @@
 
 ##### This is MyAutomatic, including
 
-LinuSrvc
+LinxSrvc
 -------
 * Go into the directory below ⇣
 
-  ####  [LinuSrvc](https://github.com/tsymiar/MyAutomatic/tree/auto-dev/LinuSrvc/gSOAPverify)
+  ####  [LinxSrvc](https://github.com/tsymiar/MyAutomatic/tree/auto-dev/LinxSrvc/gSOAPverify)
     to `make` the binary file; if makes OK, to run it:
     ```c
     ./bin/gSOAPverify 8080
      ```
      this is a `SOAP-server` which is to login the project.
-*  [IM](https://github.com/tsymiar/MyAutomatic/tree/auto-dev/LinuSrvc/IM)
+*  [IM](https://github.com/tsymiar/MyAutomatic/tree/auto-dev/LinxSrvc/IM)
     would compile with `Visual Studio 2017` on Windows;
     
     also, run `g++ IM.cc -std=c++11 -lpthread` if using linux.

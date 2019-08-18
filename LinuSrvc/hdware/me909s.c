@@ -44,19 +44,22 @@ int mem_usb_check() {
     }
     char* vendor, *prodid;
     const int maxlinesize = 256;
-    char* sperline = (char *)malloc(maxlinesize);
+    char* strperline = (char *)malloc(maxlinesize);
     while (!feof(fusb)
-        && fgets(sperline, maxlinesize - 1, fusb) != NULL
-        && sperline[strlen(sperline) - 1] == '\n') {
-        if (sperline[0] == 'P') {
-            vendor = strstr(sperline, "Vendor=");
-            prodid = strstr(sperline, "ProdID=");
+        && fgets(strperline, maxlinesize - 1, fusb) != NULL
+        && strperline[strlen(strperline) - 1] == '\n') {
+        if (strperline[0] == 'P') {
+            vendor = strstr(strperline, "Vendor=");
+            prodid = strstr(strperline, "ProdID=");
             if (memcmp("12d1", (void*)(vendor + 7), 4) == 0 &&
                 memcmp("15c1", (void*)(prodid + 7), 4) == 0)
-                return 0;
+                free(strperline);
+                close(fusb);
+            return 0;
         }
     }
-    free(sperline);
+    free(strperline);
+    close(fusb);
     return -2;
 }
 
