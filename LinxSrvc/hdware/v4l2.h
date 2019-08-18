@@ -122,7 +122,7 @@ int v4l2_try_format(v4l2_device *v4l2_obj, __u32 format)
     v4l2_obj->format.fmt.pix.pixelformat = format;
     if ((ioctl(v4l2_obj->v4l_fd, VIDIOC_TRY_FMT, &v4l2_obj->format) == -1) && (errno == EINVAL))
     {
-        perror("Not support format");
+        perror("Pixel format not support");
         return -2;
     }
     return 0;
@@ -134,7 +134,7 @@ int v4l2_request_buffers(v4l2_device *v4l2_obj, __u32 count)
     v4l2_obj->req.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     v4l2_obj->req.memory = V4L2_MEMORY_MMAP;
     if (-1 == ioctl(v4l2_obj->v4l_fd, VIDIOC_REQBUFS, &v4l2_obj->req)) {
-        perror("Request buffer error");
+        perror("Alloc buffer memory issue");
         return 0;
     };
     v4l2_obj->buffer = (struct _st_buf*)calloc(v4l2_obj->req.count, sizeof(*v4l2_obj->buffer));
@@ -152,7 +152,7 @@ int v4l2_mapping_buffers(v4l2_device *v4l2_obj, __u32 count)
         v4l2_obj->argp.index = i;
         // 查询缓冲区得到起始物理地址和大小  
         if (-1 == ioctl(v4l2_obj->v4l_fd, VIDIOC_QUERYBUF, &v4l2_obj->argp)) {
-            perror("Query buffer fail");
+            perror("Trans VIDIOC_REQBUFS buffer to point fail");
             exit(-1);
         }
         v4l2_obj->buffer[i].size = v4l2_obj->argp.length;
@@ -177,14 +177,14 @@ unsigned int v4l2_set_buffer_queue(v4l2_device *v4l2_obj, __u32 count)
         v4l2_obj->argp.memory = V4L2_MEMORY_MMAP;
         v4l2_obj->argp.index = i;
         if (-1 == ioctl(v4l2_obj->v4l_fd, VIDIOC_QBUF, &v4l2_obj->argp)) {
-            perror("Enqueue data issue");
+            perror("Get data from buffer issue");
             return -1;
         };
     }
     return i;
 }
 
-int v4l2_save_image_frame(v4l2_device *v4l2_obj, const char* flag)
+int v4l2_save_image_frame(v4l2_device *v4l2_obj, const char* prefix)
 {
     enum v4l2_buf_type type;
     v4l2_obj->argp.type = type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -203,18 +203,18 @@ int v4l2_save_image_frame(v4l2_device *v4l2_obj, const char* flag)
     v4l2_obj->argp.type = type;   
     v4l2_obj->argp.memory = V4L2_MEMORY_MMAP;
     if (-1 == ioctl(v4l2_obj->v4l_fd, VIDIOC_DQBUF, &v4l2_obj->argp)) {
-        perror("Dequeue data issue");
+        perror("Put data back to buffer issue");
         return -2;
     }
     char file[126];
-    snprintf(file, strlen(flag) + 1, "%s%d", flag, v4l2_obj->argp.index);
-    int yuv = open(file, O_WRONLY | O_CREAT, 0777);
+    sprintf(file, "%s%d", prefix, v4l2_obj->argp.index);
+    int yuv = open(file, O_WRONLY | O_CREAT, 0666);
     int result = write(yuv, v4l2_obj->buffer[v4l2_obj->argp.index].start,
         v4l2_obj->buffer[v4l2_obj->argp.index].size
-    //    (v4l2_obj->width ? : imgw) * (v4l2_obj->height ? : imgh)
+        // (v4l2_obj->width ? : IMGW) * (v4l2_obj->height ? : IMGH)
     );
     if (-1 == ioctl(v4l2_obj->v4l_fd, VIDIOC_QBUF, &v4l2_obj->argp)) {
-        perror("Re-enqueue data issue");
+        perror("Re-get buffer data issue");
         return -3;
     }
     int i = 0;
