@@ -1,11 +1,11 @@
-﻿#include "DepthView.h"
+﻿#include "Level2View.h"
 
-DepthView* DepthView::getDepth()
+Level2View* Level2View::getDepth()
 {
     return this;
 }
 
-DepthView::DepthView()
+Level2View::Level2View()
 {
     Pm = item.time.hour = item.time.min = 0;
     item.pc_ = .0f;
@@ -13,7 +13,7 @@ DepthView::DepthView()
     item.bs = nullptr;
 }
 
-void DepthView::FillChart(bool unfurl)
+void Level2View::FillChart(bool unfurl)
 {
     Okv.SwitchViewport(0);
     const float x = 0.72f;
@@ -22,7 +22,7 @@ void DepthView::FillChart(bool unfurl)
     fillItem(x);
 }
 
-void DepthView::DrawItem(OGLKview::Item item, int col)
+void Level2View::DrawItem(OGLKview::Item item, int col)
 {
     Okv.SwitchViewport(0);
     char time0[8] = " ";
@@ -41,7 +41,7 @@ void DepthView::DrawItem(OGLKview::Item item, int col)
     }
 }
 
-int DepthView::DrawItem(OGLKview::Item item, bool mode)
+int Level2View::DrawItem(OGLKview::Item item, bool mode)
 {
     char ti[8], time[8] = " ";
     const OGLKview::Color4f color = { 1,1,1,1 };
@@ -68,7 +68,7 @@ int DepthView::DrawItem(OGLKview::Item item, bool mode)
     return column;
 }
 
-void DepthView::SetBackground()
+void Level2View::SetBackground()
 {
     //glDisable(GL_DEPTH_TEST);
     Okv.SetColor({ 0,0,0 });
@@ -86,7 +86,7 @@ void DepthView::SetBackground()
     glEnd();
 }
 
-void DepthView::fillTable(bool unfurl, float x)
+void Level2View::fillTable(bool unfurl, float x)
 {
     const OGLKview::Point t_chart{ x,1.111f };
     if (unfurl)
@@ -115,14 +115,14 @@ void DepthView::fillTable(bool unfurl, float x)
     glEnd();
 }
 
-void DepthView::fillList(float x)
+void Level2View::fillList(float x)
 {
     OGLKview::Point pnt = { x, Py - 0.6f };
     const OGLKview::Color4f color = { 0.7f,0.7f,0.7f };
     Okv.DrawKtext("北京时间", pnt, 14, color);
 }
 
-void DepthView::fillAskBid(OGLKview::Point pnt)
+void Level2View::fillAskBid(OGLKview::Point pnt)
 {
     Okv.DrawKtext("卖5", pnt, 14, color, "宋体");
     pnt.y -= 0.066f;
@@ -141,7 +141,7 @@ void DepthView::fillAskBid(OGLKview::Point pnt)
     Okv.DrawKtext("买5", pnt, 14, color, "宋体");
 }
 
-void DepthView::fillItem(float x)
+void Level2View::fillItem(float x)
 {
     OGLKview::Point pnt = {x, (Py + 1.09F) / 2 + 0.011F};
     Okv.DrawKtext("卖1", pnt, 17, color, " ", false);
@@ -177,11 +177,11 @@ void DepthView::fillItem(float x)
     Okv.DrawKtext("仓差", pnt, 14, color, "黑体");
 }
 
-int DepthView::DelItem(int count)
+int Level2View::DelItem(int count)
 {
     return count;
 }
 
-DepthView::~DepthView()
+Level2View::~Level2View()
 {
 }

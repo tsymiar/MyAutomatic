@@ -1,9 +1,9 @@
-#ifndef VIEW_DEPTH_H_
-#define VIEW_DEPTH_H_
+#ifndef VIEW_LEVEL2_H_
+#define VIEW_LEVEL2_H_
 
 #include "MYGL/OGLKview.h"
 
-class DepthView
+class Level2View
 {
 private:
     float Py, Pm;
@@ -20,13 +20,13 @@ private:
 public:
     OGLKview::Item item;
 public:
-    DepthView();
-    DepthView* getDepth();
+    Level2View();
+    Level2View* getDepth();
     void FillChart(bool unfurl);
     void SetBackground();
     void DrawItem(OGLKview::Item item, int col);
     int DrawItem(OGLKview::Item item, bool mode = false);
     int DelItem(int item);
-    virtual ~DepthView();
+    virtual ~Level2View();
 };
-#endif // !VIEW_DEPTH_H_
+#endif // !VIEW_LEVEL2_H_

@@ -259,7 +259,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="boost\boostest.h" />
-    <ClInclude Include="deep\DepthView.h" />
+    <ClInclude Include="deep\Level2View.h" />
     <ClInclude Include="Def\MacroDef.h" />
     <ClInclude Include="dos\DOSCout.h" />
     <ClInclude Include="elem\COwnCtl.h" />
@@ -312,7 +312,7 @@
     <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\soapC.cpp" />
     <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\soapClient.cpp" />
     <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\stdsoap2.cpp" />
-    <ClCompile Include="deep\DepthView.cpp" />
+    <ClCompile Include="deep\Level2View.cpp" />
     <ClCompile Include="dos\DOSCout.cpp" />
     <ClCompile Include="elem\COwnCtl.cpp" />
     <ClCompile Include="elem\Screen-Sharing.cpp" />

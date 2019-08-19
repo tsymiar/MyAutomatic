@@ -4,7 +4,7 @@
 #include	"afxdialogex.h"
 #include	"MYGL/OGLKview.h"
 #include	"netwk/CTPclient.h"
-#include	"deep/DepthView.h"
+#include	"deep/Level2View.h"
 #include	"font/FontNehe.h"
 #include	"com/CommSet.h"
 #include	"dos/DOSCout.h"
@@ -82,8 +82,8 @@ public:
     CTabCtrl m_tab;
     CToolBar m_tool;
     DOSCout Dos;
-    DepthView object;
-    DepthView *depth = object.getDepth();
+    Level2View object;
+    Level2View *depth = object.getDepth();
 public:
     // 重载函数
     afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);

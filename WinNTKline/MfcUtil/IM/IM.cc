@@ -31,7 +31,7 @@
 #define ACC_REC "acnts"
 #define MAX_ACTIVE 30
 #define MAX_USERS 99
-#define MAX_GROUPS 10
+#define MAX_ZONES 10
 #define MAX_MENBERS_PER_GROUP 11
 //using namespace std;
 //C++11 std与socket.h中bind函数冲突
@@ -154,7 +154,7 @@ struct zone_file {
         memset(this, 0, sizeof(*this));
     }
     unsigned int getSize() const { return sizeof(*this) + zone.usrCnt * sizeof(member); }
-}zones[MAX_GROUPS];
+}zones[MAX_ZONES];
 
 
 void pipesig_handler(int s) {
@@ -740,7 +740,7 @@ type_thread_func monite(void *arg)
                     case 10:
                     {
                         strcpy((sd_bufs + 8), "Active zone list: \n");
-                        for (c = 0; c < MAX_GROUPS; c++) {
+                        for (c = 0; c < MAX_ZONES; c++) {
                             if (strlen(zones[c].zone.name) >> 0) {
                                 sprintf(sd_bufs + 2, "%x", c);
                                 strcpy((sd_bufs + 8 * (c + 4)), zones[c].zone.name);
@@ -778,7 +778,7 @@ type_thread_func monite(void *arg)
                             strcpy((sd_bufs + 8), "Host zone rejected.");
                             sndlen = 32;
                         } else if (valrtn < -2) {
-                            join_zone((valrtn + MAX_GROUPS + 3), user.usr, reinterpret_cast<char*>(user.join));
+                            join_zone((valrtn + MAX_ZONES + 3), user.usr, reinterpret_cast<char*>(user.join));
                             sprintf((sd_bufs + 8), "%s exist, %s joins the zone.", user.host, user.usr);
                             sndlen = 88;
                         } else {
@@ -1193,7 +1193,7 @@ int save_acnt() {
     if (dumpfile == nullptr)
         return -1;
     fwrite(users, sizeof(USER), MAX_USERS, dumpfile);
-    fwrite(zones, sizeof(zone_clazz), MAX_GROUPS, dumpfile);
+    fwrite(zones, sizeof(zone_clazz), MAX_ZONES, dumpfile);
     if (fclose(dumpfile) != 0)
         return -2;
     flush_all();
@@ -1207,7 +1207,7 @@ int load_acnt() {
         return -1;
     else {
         fread(users, sizeof(USER), MAX_USERS, dumpfile);
-        fread(zones, sizeof(zone_clazz), MAX_GROUPS, dumpfile);
+        fread(zones, sizeof(zone_clazz), MAX_ZONES, dumpfile);
         fclose(dumpfile);
         return 0;
     };
@@ -1345,7 +1345,7 @@ int find_zone(unsigned char basis[24]) {
     char *x = (char*)basis;
     if (x[0] == '\0')
         return -1;
-    for (int i = 0; i < MAX_GROUPS; i++) {
+    for (int i = 0; i < MAX_ZONES; i++) {
         if (strcmp(zones[i].zone.name, x) == 0)
             return i;
         for (int j = 0; j < MAX_MENBERS_PER_GROUP; j++) {
@@ -1360,9 +1360,9 @@ int host_zone(USER &user) {
     char *host = (char*)user.host;
     unsigned char* brf = user.host + 24;
     char* chief = user.usr;
-    for (int i = 0; i < MAX_GROUPS; i++) {
+    for (int i = 0; i < MAX_ZONES; i++) {
         if (strcmp(zones[i].zone.name, host) == 0) {
-            return i - MAX_GROUPS - 3;
+            return i - MAX_ZONES - 3;
         }
         if (strlen(zones[i].zone.name) == 0) {
             strcpy(zones[i].zone.name, host);
