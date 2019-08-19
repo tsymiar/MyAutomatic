@@ -40,10 +40,6 @@ parseRcvMsg(void* lprcv) {
             } else {
                 fprintf(stdout, "\r%*c\rRecieving...\n%s", 64, ' ', youSaid);
             }
-            if (mesg->value + 1 != 0) {
-                SetRecvState(RCV_NDT);
-                fprintf(stdout, "\r");
-            }
         }
 #endif
         if (mesg->uiCmdMsg == PEER2P) {
@@ -90,6 +86,7 @@ parseRcvMsg(void* lprcv) {
             if (fw_len == ndt_len) {
                 fclose(file);
                 SetRecvState(RCV_SCC);
+                fprintf(stdout, "\n");
                 continue;
             }
             fw_len = ndt_len;

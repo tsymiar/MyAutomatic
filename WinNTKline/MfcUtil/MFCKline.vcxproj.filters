@@ -150,9 +150,6 @@
     <ClInclude Include="com\Glalgorithm.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="deep\DepthView.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="elem\COwnCtl.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -163,6 +160,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="SetMarkDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="deep\Level2View.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -257,9 +257,6 @@
     <ClCompile Include="IM\IMclient.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="deep\DepthView.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="HOOK\jniNative.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -285,6 +282,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\stdsoap2.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="deep\Level2View.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

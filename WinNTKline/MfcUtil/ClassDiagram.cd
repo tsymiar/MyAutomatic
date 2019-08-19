@@ -15,13 +15,85 @@
   <Comment CommentText="---------">
     <Position X="7.43" Y="1.677" Height="0.284" Width="0.7" />
   </Comment>
-  <Class Name="OGLKview" Collapsed="true">
+  <Class Name="OGLKview">
     <Position X="7.75" Y="0.5" Width="1.25" />
     <Compartments>
       <Compartment Name="Nested Types" Collapsed="false" />
     </Compartments>
+    <NestedTypes>
+      <Struct Name="OGLKview::FixWhat" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>mygl\OGLKview.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+      <Struct Name="OGLKview::ViewSize" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>mygl\OGLKview.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+      <Typedef Name="OGLKview::SB" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>mygl\OGLKview.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Typedef>
+      <Struct Name="OGLKview::Charmarket" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>mygl\OGLKview.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+      <Struct Name="OGLKview::Fillitem" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>mygl\OGLKview.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+      <Struct Name="OGLKview::Dlginfo" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>mygl\OGLKview.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+      <Typedef Name="OGLKview::Color4f" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>mygl\OGLKview.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Typedef>
+      <Struct Name="OGLKview::Item" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>mygl\OGLKview.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+      <Struct Name="OGLKview::ZOOM" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>mygl\OGLKview.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+      <Struct Name="OGLKview::Market" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>mygl\OGLKview.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+      <Typedef Name="OGLKview::Point" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>mygl\OGLKview.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Typedef>
+      <Typedef Name="OGLKview::PROCGETCONSOLEWINDOW" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>mygl\OGLKview.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Typedef>
+      <Struct Name="OGLKview::OglAttr" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>mygl\OGLKview.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+      <Struct Name="OGLKview::Strmap" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>mygl\OGLKview.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+    </NestedTypes>
     <TypeIdentifier>
-      <HashCode>AEkQAhAhDAJABpABGUCSTgQOIACAAUEAJglFoJIpAgw=</HashCode>
+      <HashCode>AEkVAhA5DAJABrABGUCSThQOAACABUEAJglFoJMpAgw=</HashCode>
       <FileName>mygl\OGLKview.h</FileName>
     </TypeIdentifier>
   </Class>
@@ -31,14 +103,14 @@
       <Compartment Name="Nested Types" Collapsed="false" />
     </Compartments>
     <TypeIdentifier>
-      <HashCode>GECAAAEAQCEQBojCg5QSBVpgCDBAUAUgAIYFIEBYIDA=</HashCode>
+      <HashCode>GECAAAEAQCEQBojCg5QSBdpACTBAUAUgAIYFIEBYIDA=</HashCode>
       <FileName>MyOglDrawDlg.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="CIMhideWndDlg" Collapsed="true">
     <Position X="5.75" Y="1.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>GCCAGQEBBCAAoEgASLBAAQBAEChoJABAACAEAAQQQEA=</HashCode>
+      <HashCode>GCCAkQEBBCBAIEgASLBAAQBAECgoJABAACAEAAQQQEA=</HashCode>
       <FileName>IMhideWndDlg.h</FileName>
     </TypeIdentifier>
   </Class>
@@ -63,17 +135,17 @@
       <FileName>RegistDlg.h</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="DepthView" Collapsed="true">
+  <Class Name="Level2View" Collapsed="true">
     <Position X="9" Y="0.5" Width="1.25" />
     <TypeIdentifier>
-      <HashCode>BAAAAAgADMAAAAAAAEQAAAAAQAACAACAAACHAAEIgAA=</HashCode>
-      <FileName>deep\DepthView.h</FileName>
+      <HashCode>AAAAAAgADMQAAAAAAEQAACAgQAACAACAAACDAAGIAAA=</HashCode>
+      <FileName>deep\Level2View.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="IMlogDlg" Collapsed="true">
     <Position X="5.75" Y="0.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAAAEAABIAAABAgBAAAAAAAAAIAAAAAAJEAAAAAAA=</HashCode>
+      <HashCode>AAAICAEAABIAAAhAgBAAAAAAAACIAEAAAAJEAAgAAAA=</HashCode>
       <FileName>IMlogDlg.h</FileName>
     </TypeIdentifier>
   </Class>
@@ -94,7 +166,7 @@
   <Class Name="CLoginDlg" Collapsed="true">
     <Position X="4" Y="1.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AoAIGAEAIhBACEAAAhAIRAAAAAgEIkggYAAAAAwQAAA=</HashCode>
+      <HashCode>AoAIGAEAIhBACEAAAhAIRAAAAAgEIkgkYAAAAAwQAAA=</HashCode>
       <FileName>LoginDlg.h</FileName>
     </TypeIdentifier>
   </Class>
