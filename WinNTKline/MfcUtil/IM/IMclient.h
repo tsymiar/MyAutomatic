@@ -162,7 +162,7 @@ typedef struct MSG_TRANS {
         char password[24];
         char TOKEN[24];
         char peerIP[24];
-        char errmsg[24];
+        char ndt_msg[24];
         unsigned char group_mark[24];
     };
     union {

@@ -309,7 +309,7 @@ int aes_test() {
     vector<vector<unsigned char> > extendedKey(44);
     fill_Box();
     srand((unsigned)time(NULL));
-    string menu = "Please select one of the following options:\n\t1: Generate a new 128 bit key\n\t2: Use a default key.\n\t3. Use a test key.\n\t4.Import a key file.\n**Important Info: Key have to be ASCII format.**\n\n(1,2,3,4)?";
+    string menu = "Please select one of the following options:\n\t1: Generate a new 128 bit key\n\t2: Use a default key.\n\t3: Use a test key.\n\t4: Import a key file.\n**Important Info: Key have to be ASCII format.**\n\n(1,2,3,4)? ";
     while (true) {
         cout << menu << endl;
         cin >> choice;
@@ -343,7 +343,7 @@ int aes_test() {
             break;
         }
     }
-    string menu2 = "Please select one of the following options:\n\t1: Enter your own string.\n\t2. Read from a file.\n\t3.Use a default string.\n(1,2,3)";
+    string menu2 = "Please select one of the following options:\n\t1. Enter your own string.\n\t2. Read from a file.\n\t3. Use a default string.\n(1,2,3)";
     cout << "Your key is: " << endl;
     for (int i = 0; i < 16; i++)
         cout << key[i];

@@ -48,15 +48,15 @@ extern "C" {
       */
     extern int pthd_pool_add_task(pthd_pool_t *pool, void*(*routine)(void*), void *arg);
     /**
-      * @brief     等待线程退出
-      * @retval    0, sucess; -3, pthread join error;
-      */
-    extern int pthd_pool_wait();
-    /**
       * @brief     销毁线程池
       * @retval    0, sucess; -1, pool null; -2, mutex error; -3, pthread join error; -4, dispose;
       */
     extern int pthd_pool_destroy(pthd_pool_t *pool);
+    /**
+      * @brief     等待线程池执行
+      * @retval    0, sucess; -3, pthread join error;
+      */
+    extern int pthd_pool_wait(pthd_pool_t& pool);
 
 #ifdef __cplusplus
 }

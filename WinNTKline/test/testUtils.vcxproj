@@ -207,7 +207,7 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\MfcUtil\deep\DepthView.h" />
+    <ClInclude Include="..\MfcUtil\deep\Level2View.h" />
     <ClInclude Include="..\MfcUtil\dos\DOSCout.h" />
     <ClInclude Include="..\MfcUtil\elem\Screen-Sharing.h" />
     <ClInclude Include="..\MfcUtil\html\cefWebKit.h" />
@@ -234,9 +234,7 @@
     <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\soapC.cpp" />
     <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\soapClient.cpp" />
     <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\stdsoap2.cpp" />
-    <ClCompile Include="..\MfcUtil\deep\DepthView.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-    </ClCompile>
+    <ClCompile Include="..\MfcUtil\deep\Level2View.cpp" />
     <ClCompile Include="..\MfcUtil\dos\DOSCout.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>

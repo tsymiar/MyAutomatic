@@ -66,9 +66,6 @@
     <ClInclude Include="Resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\MfcUtil\deep\DepthView.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="..\MfcUtil\elem\Screen-Sharing.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -79,6 +76,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\MfcUtil\SetMarkDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\MfcUtil\deep\Level2View.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -140,9 +140,6 @@
     <ClCompile Include="..\MfcUtil\IM\IMclient.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MfcUtil\deep\DepthView.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="..\MfcUtil\elem\Screen-Sharing.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -156,6 +153,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\stdsoap2.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\MfcUtil\deep\Level2View.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
