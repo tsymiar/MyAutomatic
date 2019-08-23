@@ -1,7 +1,7 @@
 #include "IMclient.h"
 
 #define USR_TEST
-volatile int g_printedInput = 0;
+volatile int g_printed = 0;
 const char youSaid[11] = "Msg Sent: ";
 
 void
@@ -35,7 +35,7 @@ parseRcvMsg(void* lprcv) {
             SetRecvState(RCV_TCP);
         } else {
             SetRecvState(RCV_ERR);
-            if (g_printedInput >= 0) {
+            if (g_printed >= 0) {
                 fprintf(stdout, "\rRecieving...");
             } else {
                 fprintf(stdout, "\r%*c\rRecieving...\n%s", 64, ' ', youSaid);
@@ -65,7 +65,7 @@ parseRcvMsg(void* lprcv) {
             if (atoi((const char*)mesg->recv_mesg.status) == 200) {
                 SetRecvState(RCV_NDT);
                 fprintf(stdout, "\r%*c\rRecieved: %s\n", 64, ' ', mesg->recv_mesg);
-                if (g_printedInput > 0) {
+                if (g_printed > 0) {
                     fprintf(stdout, youSaid);
                 }
             } else if (rcvlen < 0) {
@@ -73,7 +73,9 @@ parseRcvMsg(void* lprcv) {
                 closesocket(client->sock);
                 exit(0);
             } else {
-                g_printedInput = 2;
+                fprintf(stdout, "\r%*c\r%s\n", 64, ' ', mesg->ndt_msg);
+                SetRecvState(RCV_TCP);
+                g_printed = 2;
             }
         }
         if (mesg->uiCmdMsg == GETIMAGE) {
@@ -84,9 +86,9 @@ parseRcvMsg(void* lprcv) {
             }
             FILE * file = fopen(filename, "ab+");
             if (fw_len == ndt_len) {
-                fclose(file);
                 SetRecvState(RCV_SCC);
                 fprintf(stdout, "\n");
+                fclose(file);
                 continue;
             }
             fw_len = ndt_len;
@@ -147,20 +149,20 @@ st_trans* ParseChatMesg(st_trans& trans) {
         memcpy(&trans.peer_name, "iv9527", 7);
         trans.more_mesg.cmd[0] = NETNDT;
 #ifdef NDT_ONLY
-        if (g_printedInput > -1) {
+        if (g_printed > -1) {
             fprintf(stdout, youSaid);
-            g_printedInput = 1;
+            g_printed = 1;
         }
 #else
-        if (g_printedInput != 2) {
+        if (g_printed != 2) {
             fprintf(stdout, "Set chat message, limit on 16 characters.\n");
-            g_printedInput = 1;
+            g_printed = 1;
         }
 #endif
         memset(&trans.more_mesg.mesg, 0, 16);
         if (scanf_s("%s", &trans.more_mesg.mesg, 16) <= 0) {
             fprintf(stdout, "Error: characters limit 16!\n");
-            g_printedInput = trans.uiCmdMsg = -1;
+            g_printed = trans.uiCmdMsg = -1;
             return &trans;
         }
         break;
@@ -209,7 +211,7 @@ int main()
         st_trans msg;
         memset(&msg, 0, sizeof(st_trans));
         volatile int recieved = GetRecvState();
-        g_printedInput = 0;
+        g_printed = 0;
 #ifdef USR_TEST
         memcpy(msg.username, "AAAAA", 6);
         memcpy(msg.password, "AAAAA", 6);
@@ -224,14 +226,14 @@ int main()
 #else
         int comm = 0;
         if (recieved == RCV_TCP || recieved == RCV_SCC) {
-            fprintf(stdout, "Input commond [0-13]: ");
-            if (scanf("%2d", &comm) <= 0) {
+            fprintf(stdout, "Input commond [1-13]: ");
+            if (scanf("%3d", &comm) <= 0) {
                 fprintf(stdout, "Input object format error.\n");
                 break;
             }
             if (comm > 13 || comm < 0) {
-                fprintf(stdout, "Input value error: out of [0,13].\n");
-                break;
+                fprintf(stdout, "Input value error: out of range [1,13].\n");
+                continue;
             }
         }
         msg.uiCmdMsg = comm;

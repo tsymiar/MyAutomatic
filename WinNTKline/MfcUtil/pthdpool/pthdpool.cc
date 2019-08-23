@@ -200,10 +200,7 @@ int pthd_pool_destroy(pthd_pool_t *pool)
     return err;
 }
 
-int pthd_pool_wait()
+int pthd_pool_wait(pthd_pool_t& pool)
 {
-    if (pthread_join(pthread_self(), null) != 0) {
-        return -3;
-    } else
-        return 0;
+    return (pthread_join(*pool.thrd_id, null) != 0) ? -3 : 0;
 }

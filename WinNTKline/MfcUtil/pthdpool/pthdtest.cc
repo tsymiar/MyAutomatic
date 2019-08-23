@@ -2,9 +2,9 @@
 #include <stdio.h>
 #ifdef _WIN32
 #include <Windows.h>
-#define SLEEP while (1) { Sleep(1); }
+#define SLEEP Sleep(1)
 #else
-#define SLEEP ;
+#define SLEEP usleep(1000)
 #endif
 volatile int val = 0;
 
@@ -13,7 +13,7 @@ void *pthd_routine1(void *arg)
     int * th = (int*)arg;
     while (val < 10)
     {
-        printf("val1: %d [thrd1=%d]\n", val, *th);
+        printf("thrd1: %d, [val=%d]\n", *th, val);
         val++;
     }
     return NULL;
@@ -25,7 +25,7 @@ void *pthd_routine2(void *arg)
     int * th = (int*)arg;
     while (val > 0)
     {
-        printf("val2: %d [thrd2=%d]\n", val, *th);
+        printf("thrd2: %d, [val=%d]\n", *th, val);
         val--;
     }
     return NULL;
@@ -37,7 +37,7 @@ void *pthd_routine3(void *arg)
     int * th = (int*)arg;
     while (val > 0)
     {
-        printf("val3: %d [thrd3=%d]\n", val, *th);
+        printf("thrd3: %d, [val=%d]\n", *th, val);
         val = val>>2;
     }
     return NULL;
@@ -45,18 +45,20 @@ void *pthd_routine3(void *arg)
 
 int main()
 {
-    int thrd = 3;
+    int thrd = 1;
     pthd_pool_t *pool = pthd_pool_init(5);
     int ret = pthd_pool_add_task(pool, &pthd_routine1, (void*)&thrd);
     printf("task1 ret = %d\n", ret);
     thrd++;
-    pthd_pool_wait();
+    pthd_pool_wait(*pool);
     ret = pthd_pool_add_task(pool, &pthd_routine2, (void*)&thrd);
     printf("task2 ret = %d\n", ret);
     thrd++;
-    pthd_pool_wait();
+    pthd_pool_wait(*pool);
     ret = pthd_pool_add_task(pool, &pthd_routine3, (void*)&thrd);
     printf("task3 ret = %d\n", ret);
-    SLEEP
+    while (1) { 
+	    SLEEP; 
+	}
     pthd_pool_destroy(pool);
 }

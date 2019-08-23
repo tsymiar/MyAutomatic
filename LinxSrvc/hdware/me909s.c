@@ -1,7 +1,7 @@
+#include <stdlib.h>
 #include <stdint.h>
 #include <unistd.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <getopt.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -54,12 +54,12 @@ int mem_usb_check() {
             if (memcmp("12d1", (void*)(vendor + 7), 4) == 0 &&
                 memcmp("15c1", (void*)(prodid + 7), 4) == 0)
                 free(strperline);
-                close(fusb);
+                fclose(fusb);
             return 0;
         }
     }
     free(strperline);
-    close(fusb);
+    fclose(fusb);
     return -2;
 }
 

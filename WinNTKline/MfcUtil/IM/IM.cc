@@ -583,7 +583,7 @@ type_thread_func monite(void *arg)
                                 // p2p_req2usr
                             } else {
                                 valrtn = -2;
-                                strcpy((sd_bufs + 32), "User was offline!");
+                                strcpy((sd_bufs + 32), "P2P peer user offline!");
                             }
                         } else {
                             valrtn = -3;
@@ -592,7 +592,7 @@ type_thread_func monite(void *arg)
                         sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
                         unsigned char *val = reinterpret_cast<unsigned char *>(&uiIP);
                         fprintf(stdout, ">>> get client peer [%u.%u.%u.%u:%s]\n", val[3], val[2], val[1], val[0], sd_bufs + 56);
-                        sndlen = 64;
+                        sndlen = 96;
                     } break;
                     case 0x7:
                     {
@@ -601,7 +601,7 @@ type_thread_func monite(void *arg)
                             fprintf(stdout, "'%s' is communicating with '%s' via NDT.\n", user.usr, user.peer);
                         } else {
                             strcpy((sd_bufs + 32), "Check message error for Network Data Translation.");
-                            sndlen = 64;
+                            sndlen = 88;
                             break;
                         }
                         valrtn = get_user_seq(user.peer);
@@ -638,18 +638,18 @@ type_thread_func monite(void *arg)
                                             fprintf(stdout, "Error: %s(%I32d).\n", strerror(errno), ndtnet.socket);
                                         }
                                         strcpy((sd_bufs + 32), "Got failure while senting a message.");
-                                        sndlen = 72;
+                                        sndlen = 80;
                                     }
                                 }
                             } else {
-                                snprintf((sd_bufs + 32), 18, "User was offline!");
+                                snprintf((sd_bufs + 32), 23, "NDT Peer User Offline!");
                                 memset(sd_bufs + 2, NEVAL(-2), 1);
-                                sndlen = 56;
+                                sndlen = 72;
                             }
                         } else {
                             sprintf((sd_bufs + 32), "Get user network: No such user(%s)!", user.peer);
                             sprintf((sd_bufs + 2), "%x", NEVAL(-3));
-                            sndlen = 92;
+                            sndlen = 96;
                         }
                     } break;
                     case 0x8:
