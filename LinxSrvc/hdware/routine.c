@@ -38,7 +38,7 @@ struct buffer * buffers = NULL;
 static unsigned int n_buffers = 0;
 
 FILE *fp;
-char *filename = "simple.yuv\0";
+char *filename = "test.yuv\0";
 
 static void errno_exit(const char * s) {
     fprintf(stderr, "%s error %d, %s\n", s, errno, strerror(errno));

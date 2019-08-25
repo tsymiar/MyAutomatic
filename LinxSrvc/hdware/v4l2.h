@@ -89,7 +89,7 @@ int v4l2_get_pixel_format(v4l2_device *v4l2_obj)
         fprintf(stdout, "\t%d. %s", v4l2_obj->fmtdesc.index + 1, v4l2_obj->fmtdesc.description);
         if (v4l2_obj->fmtdesc.pixelformat & v4l2_obj->format.fmt.pix.pixelformat)
         {
-            fprintf(stdout, " (desc=fmt).");
+            fprintf(stdout, " (fourcc&pixfmt).");
         }
         v4l2_obj->fmtdesc.index++;
         fprintf(stdout, "\n");
