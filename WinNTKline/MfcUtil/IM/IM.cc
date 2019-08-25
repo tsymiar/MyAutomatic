@@ -57,8 +57,10 @@ typedef void *type_thread_func;
 pthread_mutexattr_t attr;
 #endif
 
+#define __ "./"
+#define _0_ "0"
 #define GET_IMG_EXE "v4l2.exe"
-#define IMAGE_BLOB "v4l2.yuv"
+#define IMAGE_BLOB "image.jpg"
 
 #ifdef _WIN32
 CRITICAL_SECTION
@@ -658,20 +660,30 @@ type_thread_func monite(void *arg)
                         char *mesg = NULL;
                         if (vfork() == 0)
                         {
+#ifdef RASPI
+#undef GET_IMG_EXE
+#define GET_IMG_EXE "raspistill"
+#undef __ 
+#undef _0_
+#define __ ""
+#define _0_ ""
+                            char *const agv[] = { (char*)GET_IMG_EXE, (char*)"-o", (char*)"image.jpg", (char *)(0) };
+#else
                             char *const agv[] = { (char*)GET_IMG_EXE, (char *)(0) };
-                            valrtn = execvp("./" GET_IMG_EXE, agv);
+#endif
+                            valrtn = execvp(__ GET_IMG_EXE, agv);
                             mesg = strerror(errno);
                             sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
                             strcpy((sd_bufs + 8), mesg);
                             sndlen = 8 + strlen(mesg) + 1;
-                            fprintf(stdout, "Exec [ %s ] with execvp fail, %s.\n", "./" GET_IMG_EXE, mesg);
+                            fprintf(stdout, "Exec [ %s ] with execvp fail, %s.\n", __ GET_IMG_EXE, mesg);
                         } else {
                             wait(&valrtn);
                             if (errno != ECHILD) {
                                 mesg = strerror(errno);
                             } else {
-                                if (access(IMAGE_BLOB"0", 0) == 0) {
-                                    mesg = (char*)"sucess";
+                                if (access(IMAGE_BLOB _0_, 0) == 0) {
+                                    mesg = (char*)"success";
                                 } else {
                                     mesg = (char*)"Not save image file";
                                 }
@@ -679,7 +691,7 @@ type_thread_func monite(void *arg)
                             sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
                             strcpy((sd_bufs + 8), mesg);
                             sndlen = 8 + strlen(mesg) + 1;
-                            fprintf(stdout, "Make image via '%s': %s.\n", "./" GET_IMG_EXE, mesg);
+                            fprintf(stdout, "Make image via '%s': %s.\n", __ GET_IMG_EXE, mesg);
                         }
 #else
                         char *mesg = "OS don't support v4l.";
@@ -690,7 +702,7 @@ type_thread_func monite(void *arg)
                     } break;
                     case 0x9:
                     {
-                        FILE * file = fopen(IMAGE_BLOB"0", "rb");
+                        FILE * file = fopen(IMAGE_BLOB _0_, "rb");
                         if (file == NULL)
                         {
                             sprintf((sd_bufs + 8), "Fail read image file \"%s\".", IMAGE_BLOB);
@@ -715,24 +727,25 @@ type_thread_func monite(void *arg)
                         }
                         int slice = 0;
                         while (int rcsz = fread(pos, sizeof(unsigned char), bytes, file) != 0 && !feof(file)) {
-                            fprintf(stdout, "File \"%s\" size = %d, rcsz = %d, slice = %d.\n", IMAGE_BLOB, bytes, rcsz, slice);
+                            fprintf(stdout, "    "
+                                "File \"%s\" size = %d, item = %d, slice = %d.\r", IMAGE_BLOB, bytes, rcsz, slice);
                             sprintf((sd_bufs + 14), "%04d", slice);
                             volatile int cur = 0;
-                            for (int i = 0; i <= bytes; i++) {
+                            for (int i = 0; i <= bytes; ++i, ++cur) {
+                                memset(sd_bufs + 1, user.uiCmdMsg, 1);
                                 if (((i > 0) && (i % 224 == 0)) || (i == bytes)) {
                                     sprintf((sd_bufs + 22), "%04d", i);
                                     send(rcv_sock, sd_bufs, 256, 0);
                                     memset(sd_bufs + 32, 0, 224);
+                                    SLEEP(1.0 / 10000);
                                     cur = 0;
                                 }
                                 memset(sd_bufs + 32 + cur, pos[i], 1);
-                                SLEEP(1.0 / 10000);
-                                cur++;
-                                fprintf(stdout, /*"\r%*c*/"\r%.2f%%", /*7, ' ',*/ i*100.f / bytes);
+                                fprintf(stdout, /*"\r%*c*/"\r%.02f%%", /*7, ' ',*/ i*100.f / bytes);
                             }
                             slice++;
                         }
-                        fprintf(stdout, "\r");
+                        fprintf(stdout, "\r\n");
                         free(pos);
                         fclose(file);
                     }

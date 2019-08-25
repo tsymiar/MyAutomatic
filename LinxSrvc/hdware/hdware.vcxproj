@@ -111,7 +111,6 @@
   <ItemGroup>
     <ClCompile Include="gpio.h" />
     <ClCompile Include="me909s.c" />
-    <ClCompile Include="sample.c" />
     <ClCompile Include="v4l2.c" />
   </ItemGroup>
   <ItemGroup>
