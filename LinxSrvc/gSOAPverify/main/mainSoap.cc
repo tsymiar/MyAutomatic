@@ -172,7 +172,7 @@ int main_server(int argc, char** argv)
     soap_set_mode(&Soap, SOAP_C_UTFSTRING);
     soap_set_namespaces(&Soap, namespaces);
     // 如果没有参数，当作CGI程序处理
-    if (argc <2)
+    if (argc < 2)
     {
         // CGI 风格服务请求，单线程
         soap_serve(&Soap);
@@ -180,8 +180,7 @@ int main_server(int argc, char** argv)
         soap_destroy(&Soap);
         // 清除序列化数据
         soap_end(&Soap);
-    }
-    else
+    } else
     {
         struct soap * soap_thr[MAX_THR];
         pthread_t tid[MAX_THR];
@@ -207,7 +206,7 @@ int main_server(int argc, char** argv)
         fprintf(stderr, "======== Socket端口号:%s ========\n", argv[1]);
 
         // 生成服务线程
-        for (i = 0; i <MAX_THR; i++)
+        for (i = 0; i < MAX_THR; i++)
         {
             soap_thr[i] = soap_copy(&Soap);
             fprintf(stderr, " ++++\tthread %d.\n", i);
@@ -225,8 +224,7 @@ int main_server(int argc, char** argv)
                 {
                     soap_print_fault(&Soap, stderr);
                     continue;
-                }
-                else
+                } else
                 {
                     fprintf(stderr, "Server timed out \n");
                     break;
@@ -252,7 +250,7 @@ int main_server(int argc, char** argv)
                 usleep(1000);
             }
         }
-        for (i = 0; i< MAX_THR; i++)
+        for (i = 0; i < MAX_THR; i++)
         {
             fprintf(stderr, "Waiting for thread %d to terminate ..\n", i);
             pthread_join((pthread_t)tid[i], NULL);
@@ -280,16 +278,16 @@ int api__trans(struct soap *soap, char* msg, char* rtn[])
     char*    token = NULL;
     struct PARAM params[8];
     char *text[8] = { msg };
-    int noeq = str.charcount_(text, '=');
+    int noeq = str.charcount_(*text, '=');
     printf("GET:[%s][%d]\n", msg, noeq);
     token = strtok(msg, "@&");
     for (int i = 0; i < 8; i++) {
         text[i] = (char*)malloc(64);
     }
-    if (memcmp(token, "trans", 6) != 0 || strlen(token) > strlen("trans")) 
+    if (memcmp(token, "trans", 6) != 0 || strlen(token) > strlen("trans"))
     {
         memset(text[0], 0, 64);
-        memcpy(text[0], "illegal commond!", 17);
+        memcpy(text[0], "illegal command!", 17);
         return -1;
     }
     while (token != NULL)

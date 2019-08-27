@@ -17,7 +17,7 @@
 #endif
 #include <process.h>
 #include <conio.h>
-typedef unsigned int Pthreadt; 
+typedef unsigned int Pthreadt;
 #define SLEEP(t) Sleep(t);
 #else
 #include <netinet/in.h>
@@ -101,7 +101,7 @@ inline int WSACleanup() { return 0; }
 #endif
 
 constexpr int DEFAULT_PORT = 8877;
-constexpr char* filename = "recv.file";
+constexpr char* filename = "NoNameFile";
 
 struct P2P_NETWORK
 {
@@ -193,8 +193,8 @@ const MENU menus[] =
     { 0x06,"在线用户列表" },
     { 0x08,"P2P" },
     { 0x07,"NDT" },
-    { 0x09,"拍照" },
-    { 0x0A,"下载照片" },
+    { 0x09,"IMG" },
+    { 0x0A,"下载" },
     { 0x0B,"群列表" },
     { 0x0C,"群成员" },
     { 0x0D,"创建群" },
