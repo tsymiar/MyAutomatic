@@ -15,41 +15,68 @@ parseRcvMsg(void* lprcv) {
     InitializeCriticalSection(&wrcon);
     st_client* client = (st_client*)lprcv;
     int fw_len = 0;
+    int ui_val = 0;
     volatile int count = 0;
     while (1) {
         if (client->flag == 0)
             continue;
         memset(rcv_buf, 0, 256);
         int rcvlen = recv(client->sock, rcv_buf, 256, 0);
-        EnterCriticalSection(&wrcon);
         if (rcvlen == 2 && (rcv_buf[1] == '\0')) {
             SLEEP(1);
             continue;
         }
+        EnterCriticalSection(&wrcon);
         st_trans *mesg = (st_trans*)rcv_buf;
+        ui_val = mesg->uiCmdMsg;
 #ifdef _DEBUG
-        if ((mesg->uiCmdMsg != NETNDT) && (mesg->uiCmdMsg != GETIMAGE)) {
-            for (int c = 0; c < rcvlen; c++)
-                fprintf(stdout, "%c", (unsigned char)rcv_buf[c]);
-            fprintf(stdout, "\n");
+        if ((ui_val != NETNDT) && (ui_val != GETIMAGE)) {
+            for (int c = 0; c < rcvlen; c++) {
+#ifndef _WIN32
+                if (ui_val == 0) {
+                    g_printed = 0;
+                    fprintf(stdout, "\r");
+                }
+                if (c < 8) {
+                    if (c == 1) {
+                        fprintf(stdout, "[%x] ", rcv_buf[1]);
+                    } else {
+                        LeaveCriticalSection(&wrcon);
+                        continue;
+                    }
+                }
+                if (ui_val != 0)
+#endif
+                    fprintf(stdout, "%c", (unsigned char)rcv_buf[c]);
+            }
+#ifndef _WIN32
+            if (ui_val > 15)
+                ui_val = GETIMAGE;
+            if (mesg->uiCmdMsg != 0 && mesg->uiCmdMsg < 16)
+#endif
+                fprintf(stdout, "\n");
             SetRecvState(RCV_TCP);
         } else {
             SetRecvState(RCV_ERR);
             if (g_printed >= 0) {
+#ifdef _WIN32
                 fprintf(stdout, "\rRecieving...");
+#else
+                fprintf(stdout, "\r...");
+#endif
             } else {
                 fprintf(stdout, "\r%*c\rRecieving...\n%s", 64, ' ', youSaid);
             }
         }
 #endif
-        if (mesg->uiCmdMsg == PEER2P) {
+        if (ui_val == PEER2P) {
             int ip = atoi((const char*)mesg->peerIP);
             unsigned char *val = (unsigned char *)&ip;
             int port = atoi((const char*)mesg->peer_port);
             fprintf(stdout, "User:\t%s\nIP:\t%u.%u.%u.%u\nPORT:\t%d\n",
                 mesg->username, val[3], val[2], val[1], val[0], port);
             if (port <= 0) {
-                fprintf(stdout, "Error number of user port, stop send p2p message!\n");
+                fprintf(stdout, "Error number of user port, stopping send P2P message!\n");
             } else {
                 struct MoreMesg p2pmsg;
                 memset(&p2pmsg, 0, sizeof(MoreMesg));
@@ -61,7 +88,7 @@ parseRcvMsg(void* lprcv) {
                 }
             }
         }
-        if (mesg->uiCmdMsg == NETNDT) {
+        if (ui_val == NETNDT) {
             if (atoi((const char*)mesg->recv_mesg.status) == 200) {
                 SetRecvState(RCV_NDT);
                 fprintf(stdout, "\r%*c\rRecieved: %s\n", 64, ' ', mesg->recv_mesg);
@@ -71,6 +98,7 @@ parseRcvMsg(void* lprcv) {
             } else if (rcvlen < 0) {
                 fprintf(stdout, "Status error.\n");
                 closesocket(client->sock);
+                LeaveCriticalSection(&wrcon);
                 exit(0);
             } else {
                 fprintf(stdout, "\r%*c\r%s\n", 64, ' ', mesg->ndt_msg);
@@ -78,7 +106,7 @@ parseRcvMsg(void* lprcv) {
                 g_printed = 2;
             }
         }
-        if (mesg->uiCmdMsg == GETIMAGE) {
+        if (ui_val == GETIMAGE) {
             int ndt_len = atoi(rcv_buf + 22);
             if (count == 0) {
                 fclose(fopen(filename, "w"));
@@ -89,6 +117,7 @@ parseRcvMsg(void* lprcv) {
                 SetRecvState(RCV_SCC);
                 fprintf(stdout, "\n");
                 fclose(file);
+                LeaveCriticalSection(&wrcon);
                 continue;
             }
             fw_len = ndt_len;
@@ -118,7 +147,7 @@ st_trans* ParseChatMesg(st_trans& trans) {
     memset(&trans.user_sign, 0, 24);
     switch (trans.uiCmdMsg)
     {
-    case REGISTER:        
+    case REGISTER:
         fprintf(stdout, "Input a new username AND password to register, divide with BLANK(' ').\n");
         scanf_s("%s %s", trans.username, 24, trans.password, 24);
         break;
@@ -140,9 +169,6 @@ st_trans* ParseChatMesg(st_trans& trans) {
         break;
     }
     case PEER2P:
-    {
-        break;
-    }
     case NETNDT:
     {
         memcpy(trans.type, "NDT", 4);
@@ -155,7 +181,7 @@ st_trans* ParseChatMesg(st_trans& trans) {
         }
 #else
         if (g_printed != 2) {
-            fprintf(stdout, "Set chat message, limit on 16 characters.\n");
+            fprintf(stdout, "Set chatting message, limit on 16 characters.\n");
             g_printed = 1;
         }
 #endif
@@ -167,7 +193,7 @@ st_trans* ParseChatMesg(st_trans& trans) {
         }
         break;
     }
-    case USERGROUP: 
+    case USERGROUP:
     {
         fprintf(stdout, "Input group name to show members in: ");
         scanf_s("%s", trans.group_name, (unsigned)_countof(trans.group_name));
@@ -226,13 +252,13 @@ int main()
 #else
         int comm = 0;
         if (recieved == RCV_TCP || recieved == RCV_SCC) {
-            fprintf(stdout, "Input commond [1-13]: ");
+            fprintf(stdout, "Input command [1-13]: ");
             if (scanf("%3d", &comm) <= 0) {
-                fprintf(stdout, "Input object format error.\n");
+                fprintf(stdout, "Error command format to integer.\n");
                 break;
             }
             if (comm > 13 || comm < 0) {
-                fprintf(stdout, "Input value error: out of range [1,13].\n");
+                fprintf(stdout, "Error cmd value: out of range [1,13].\n");
                 continue;
             }
         }
@@ -245,7 +271,7 @@ int main()
             SetRecvState(RCV_ERR);
             int ret = SendChatMesg(ParseChatMesg(msg));
             if (ret < 0) {
-                fprintf(stdout, "Error while setting chat message.\n");
+                fprintf(stdout, "Error while set chatting message.\n");
                 return -1;
             }
         }

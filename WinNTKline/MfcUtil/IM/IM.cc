@@ -58,9 +58,9 @@ pthread_mutexattr_t attr;
 #endif
 
 #define __ "./"
-#define _0_ "0"
+#define _0_ "_0"
+#define IMAGE_BLOB "image"
 #define GET_IMG_EXE "v4l2.exe"
-#define IMAGE_BLOB "image.jpg"
 
 #ifdef _WIN32
 CRITICAL_SECTION
@@ -262,7 +262,8 @@ type_thread_func monite(void *arg)
     struct tm * lt;
     time(&t);
     lt = localtime(&t);
-    fprintf(stdout, "accepted peer address [%s:%d] (@ %d/%d/%d %d:%d:%d)\n", IP, PORT, lt->tm_year + 1900, lt->tm_mon, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
+    g_threadNo_++;
+    fprintf(stdout, "accepted peer(%d) address [%s:%d] (@ %d/%d/%d %d:%d:%d)\n", g_threadNo_, IP, PORT, lt->tm_year + 1900, lt->tm_mon, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
     bool set = true;
     setsockopt(rcv_sock, SOL_SOCKET, SO_KEEPALIVE, reinterpret_cast<const char*>(&set), sizeof(bool));
     if (rcv_sock
@@ -317,10 +318,9 @@ type_thread_func monite(void *arg)
 #endif
             } else {
 #ifdef _DEBUG
-                g_threadNo_++;
                 memcpy(&user, rcv_txt, sizeof(user));
                 fprintf(stdout, "----------------------------------------------------------------\
-                \n>>> 1-RCV [%0x,%0x]: %s, %d, %d\n", user.uiCmdMsg, static_cast<unsigned>(*user.chk), user.usr, flg, g_threadNo_);
+                \n>>> 1-RCV [%0x,%0x]: %s, %d, %d\n", user.uiCmdMsg, static_cast<unsigned>(*user.chk), user.usr, flg, THREAD_NUM - g_threadNo_);
                 for (c = 0; c < flg; c++)
                 {
                     if (c > 0 && c % 32 == 0)
@@ -626,7 +626,7 @@ type_thread_func monite(void *arg)
                                     memcpy(ndtmsg + 8, &user.peer_mesg.msg, 24);
                                     if (-1 != send(ndtnet.socket, ndtmsg, 32, 0)) {
                                         if (ndtnet.socket == rcv_sock) {
-                                            strcpy((sd_bufs + 32), "Socket descriptor conflicts!.");
+                                            strcpy((sd_bufs + 32), "Socket descriptor conflicts!");
                                             sndlen = 64;
                                         } else {
                                             sprintf(sd_bufs + 32, "[%c] NDT success to %s.", random, user.peer);
@@ -667,7 +667,7 @@ type_thread_func monite(void *arg)
 #undef _0_
 #define __ ""
 #define _0_ ""
-                            char *const agv[] = { (char*)GET_IMG_EXE, (char*)"-o", (char*)"image.jpg", (char *)(0) };
+                            char *const agv[] = { (char*)GET_IMG_EXE, (char*)"-o", (char*)IMAGE_BLOB, (char *)(0) };
 #else
                             char *const agv[] = { (char*)GET_IMG_EXE, (char *)(0) };
 #endif
@@ -715,7 +715,7 @@ type_thread_func monite(void *arg)
                         rewind(file);
                         int bytes = lSize / sizeof(unsigned char);
                         if (bytes > 2097152)
-                            bytes = 1024;
+                            bytes = 4096;
                         memset(sd_bufs + 8, bytes, 6);
                         unsigned char *pos = (unsigned char*)malloc(sizeof(unsigned char)*bytes);
                         if (pos == NULL)
@@ -727,12 +727,12 @@ type_thread_func monite(void *arg)
                         }
                         int slice = 0;
                         while (int rcsz = fread(pos, sizeof(unsigned char), bytes, file) != 0 && !feof(file)) {
-                            fprintf(stdout, "    "
+                            fprintf(stdout, "        "
                                 "File \"%s\" size = %d, item = %d, slice = %d.\r", IMAGE_BLOB, bytes, rcsz, slice);
                             sprintf((sd_bufs + 14), "%04d", slice);
+                            memset(sd_bufs + 1, user.uiCmdMsg, 1);
                             volatile int cur = 0;
                             for (int i = 0; i <= bytes; ++i, ++cur) {
-                                memset(sd_bufs + 1, user.uiCmdMsg, 1);
                                 if (((i > 0) && (i % 224 == 0)) || (i == bytes)) {
                                     sprintf((sd_bufs + 22), "%04d", i);
                                     send(rcv_sock, sd_bufs, 256, 0);
@@ -741,7 +741,7 @@ type_thread_func monite(void *arg)
                                     cur = 0;
                                 }
                                 memset(sd_bufs + 32 + cur, pos[i], 1);
-                                fprintf(stdout, /*"\r%*c*/"\r%.02f%%", /*7, ' ',*/ i*100.f / bytes);
+                                fprintf(stdout, /*"\r%*c*/"\r%.02f%% ", /*7, ' ',*/ i*100.f / bytes);
                             }
                             slice++;
                         }
@@ -850,8 +850,7 @@ type_thread_func monite(void *arg)
                                 strcpy((sd_bufs + 32), user.sign);
                                 send(rcv_sock, sd_bufs, 48, 0);
                             };
-                        }
-                        else {
+                        } else {
                             for (c = 0; c < MAX_MENBERS_PER_GROUP; c++) {
                                 if (!strlen(zones[valrtn].zone.members[c]) == 0)
                                 {
@@ -868,7 +867,7 @@ type_thread_func monite(void *arg)
                     } break;
                     default: break;
                     }
-                    if ((memcmp(user.chk, "P2P", 4) != 0) && 
+                    if ((memcmp(user.chk, "P2P", 4) != 0) &&
                         (send(rcv_sock, sd_bufs, sndlen, 0) < 0))
                     {
                         perror("Socket lost");
@@ -905,18 +904,19 @@ type_thread_func monite(void *arg)
     } while (!loggedin);
 
 comm_err0: {
-        for (int i = 0; i < MAX_ACTIVE; i++)
-            set_n_get_mem(&active[i], i);
-        memset(active[user_is_line(user.usr)].user, 0, 24);
+    for (int i = 0; i < MAX_ACTIVE; i++)
+        set_n_get_mem(&active[i], i);
+    memset(active[user_is_line(user.usr)].user, 0, 24);
     }
 #if !defined _WIN32
-comm_err1: {
-    closesocket(rcv_sock);
-    exit(errno);
-    }
+           comm_err1 : {
+               g_threadNo_--;
+               closesocket(rcv_sock);
+               exit(errno);
+           }
 #endif
-           return 0;
-};
+                       return 0;
+    };
 
 type_thread_func commands(void *arg)
 {
@@ -924,9 +924,9 @@ type_thread_func commands(void *arg)
     do {
         scanf("%32s", reinterpret_cast<char*>(&optionstr));
         if (strcmp(optionstr, "quit") == 0) {
-            closesocket(listen_socket);
-            fprintf(stdout, "saving accounts data to file %s.\n", ACC_REC);
             save_acnt();
+            closesocket(listen_socket);
+            fprintf(stdout, "Saved accounts to file \"%s\".\n", ACC_REC);
 #ifdef _WIN32
             WSACleanup();
             DeleteCriticalSection(&sendallow);
@@ -1028,7 +1028,7 @@ int inst_mesg(int argc, char * argv[])
         < 0) {
 #endif
         std::cerr << "ERROR(" << errno << "): " << strerror(errno) << std::endl;
-        return -1;
+        exit(-1);
     }
     if (listen(listen_socket, 50)
 #ifdef _WIN32
@@ -1039,7 +1039,7 @@ int inst_mesg(int argc, char * argv[])
         < 0) {
 #endif
         std::cerr << "ERROR(" << errno << "): " << strerror(errno) << std::endl;
-        return -1;
+        exit(-1);
     }
     int thdcnt = 0;
     struct sockaddr_in listenAddr;

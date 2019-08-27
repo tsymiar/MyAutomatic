@@ -206,8 +206,8 @@ int v4l2_save_image_frame(v4l2_device *v4l2_obj, const char* prefix)
         perror("Put data back to buffer issue");
         return -2;
     }
-    char file[126];
-    sprintf(file, "%s%d", prefix, v4l2_obj->argp.index);
+    char file[128];
+    sprintf(file, "%s_%d", prefix, v4l2_obj->argp.index);
     int yuv = open(file, O_WRONLY | O_CREAT, 0666);
     int result = write(yuv, v4l2_obj->buffer[v4l2_obj->argp.index].start,
         v4l2_obj->buffer[v4l2_obj->argp.index].size

@@ -127,7 +127,7 @@ unsigned long cal_CRC(unsigned long dwPolynomial, unsigned long *ptr, int len)
 {
     unsigned long    xbit;
     unsigned long    data;
-    unsigned long    CRC = 0xFFFFFFFF;    // init
+    unsigned long    CRC = 0xFFFFFFFF;
     int bits = 0;
     while (len--) {
         xbit = 1 << 31;

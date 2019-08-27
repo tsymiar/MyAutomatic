@@ -3,3 +3,4 @@ all:
 	make -C hdware all
 clean:
 	rm -f bin/*.exe
+	rm -rf obj

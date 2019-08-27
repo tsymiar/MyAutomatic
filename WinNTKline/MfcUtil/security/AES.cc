@@ -6,9 +6,11 @@
 #include <vector>
 #include <string>
 #include <sstream>
+
 using namespace std;
+
 vector<vector<unsigned char> > sBoxVector(16, vector<unsigned char>(16, 0));
-//vector<vector<unsigned char> > rConVector(11, vector<unsigned char>(4,0));
+
 unsigned char sBoxArray[256] = {
 0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
 0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0,
@@ -52,15 +54,6 @@ vector<vector<unsigned char> > storeArray(vector<unsigned char> byte, int tick, 
                 roundArry[i][j] = 0;
         }
     }
-    /*
-    for (int i =0; i<4; i++){
-        for(int j = 0; j<4;j++){
-            cout << "["<<roundArry[i][j]<<"]";
-        }
-        cout<<endl;
-    }
-    cout<<"--------------------------------------------"<<endl;
-    */
     return roundArry;
 }
 vector<unsigned char> rconMe(char count) {
@@ -74,7 +67,7 @@ vector<unsigned char> rconMe(char count) {
 }
 
 /**
-*fill_Box() Method
+* fill_Box() Method
 * Takes the already alocated s-box and configure it to be used as a 2-d table.
 */
 void fill_Box() {
@@ -88,26 +81,24 @@ void fill_Box() {
 }
 
 /**
-*void print1D Method
+* void print1D Method
 * Takes the a 1D vector and print out the contents
 */
 void print1D(vector<unsigned char> &print) {
     for (int j = 0; j < 4; j++) {
-        printf("%x", (unsigned int)print[j]);
-        //cout<<print[j];
+        fprintf(stdout, "%x", (unsigned int)print[j]);
     }
     cout << endl;
 }
 
 /**
-*void print1D Method
+* void print1D Method
 * Takes the a 1D vector and print out the contents
 */
 void print2D(vector<vector<unsigned char> > &print) {
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
-            printf("%x", (unsigned int)print[i][j]);
-            //cout<<print[i][j];
+            fprintf(stdout, "%x", (unsigned int)print[i][j]);
         }
         cout << endl;
     }
@@ -116,23 +107,18 @@ void print2D(vector<vector<unsigned char> > &print) {
 
 vector<unsigned char> subBytes(vector<unsigned char> subMe) {
     for (int i = 0; i < 4; i++) {
-        //cout<<((subMe[i]>>4)&0xf)<<(subMe[i]&0xf)<<endl;
         subMe[i] = sBoxVector[((subMe[i] >> 4) & 0xf)][(subMe[i] & 0xf)];
     }
     return subMe;
 }
 
 vector<unsigned char> rotate(vector<unsigned char> & inputWord, int numRotate) {
-    //cout<<"Before State. Iteration of "<<numRotate<<endl;
-    //print1D(inputWord);
     for (int j = 0; j < numRotate; j++) {
         unsigned char temp = inputWord[0];
         for (int i = 1; i < 4; i++)
             inputWord[i - 1] = inputWord[i];
         inputWord[3] = temp;
     }
-    //cout<<"After State."<<endl;
-    //print1D(inputWord);
     return inputWord;
 }
 
@@ -153,7 +139,7 @@ vector<unsigned char> shiftColumns(vector<unsigned char> input) {
                                     {0x03, 0x02, 0x01, 0x01},
                                     {0x01, 0x03, 0x02, 0x01},
                                     {0x01, 0x01, 0x03, 0x02} };
-    //for every Produce of 2, we have to shift left by 1 and xor with 0x1b if the left most bit is before shifted is 1
+    //// for every Produce of 2, we have to shift left by 1 and xor with 0x1b if the left most bit is before shifted is 1
     //
     //for(int col = 0; col<4;col++){
     //    // Multiply the row of A by the column of B to get the row, column of product.
@@ -161,11 +147,12 @@ vector<unsigned char> shiftColumns(vector<unsigned char> input) {
     //        mixedColumns[col] += input[inner] * aMatrix[inner][col] ;
     //    }
     //}
-
-    /*mixedColumns[0] = (0x2*input[0])^(0x3*input[1])^input[2]^input[3];
+    /*
+    mixedColumns[0] = (0x2*input[0])^(0x3*input[1])^input[2]^input[3];
     mixedColumns[1] = input[0]^(0x2*input[1])^(0x3*input[2])^input[3];
     mixedColumns[2] = input[0]^input[1]^(0x02*input[2])^(0x03*input[3]);
-    mixedColumns[3] = (0x03*input[0])^input[1]^input[2]^(0x02*input[3]);*/
+    mixedColumns[3] = (0x03*input[0])^input[1]^input[2]^(0x02*input[3]);
+    */
     mixedColumns[0] = charMult(input[0], 2) ^ charMult(input[1], 0x3) ^ input[2] ^ input[3];
     mixedColumns[1] = input[0] ^ charMult(input[1], 2) ^ charMult(input[2], 0x3) ^ input[3];
     mixedColumns[2] = input[0] ^ input[1] ^ charMult(input[2], 2) ^ charMult(input[3], 0x03);
@@ -175,15 +162,11 @@ vector<unsigned char> shiftColumns(vector<unsigned char> input) {
 }
 
 vector<unsigned char> g(vector<unsigned char> &test, int round) {
-    //print1D(test);
     test = rotate(test, 1);
-    //print1D(test);
     test = subBytes(test);
-    //print1D(test);
     vector<unsigned char> newRecon = rconMe(round);
     for (int i = 0; i < 4; i++)
         test[i] = test[i] ^ newRecon[i];
-    //print1D(test);
     return test;
 }
 
@@ -206,29 +189,22 @@ vector<vector<unsigned char> > expandKey(vector<vector<unsigned char> > key, int
         }
         currentRound++;
     }
-    //cout<<currentRound<<endl;
     //Start expanding key
     while (currentRound < 4 * (round + 1)) {
         temp[0] = expandedKey[currentRound - 1][0];
         temp[1] = expandedKey[currentRound - 1][1];
         temp[2] = expandedKey[currentRound - 1][2];
         temp[3] = expandedKey[currentRound - 1][3];
-        //print1D(temp);
         if (currentRound %nK == 0) {
             temp = g(temp, currentRound);
-            //print1D(temp);
         } else if (nK > 6 && currentRound%nK == 4)
             temp = subBytes(temp);
-        //print1D(temp);
         expandedKey[currentRound][0] = expandedKey[currentRound - nK][0] ^ temp[0];
         expandedKey[currentRound][1] = expandedKey[currentRound - nK][1] ^ temp[1];
         expandedKey[currentRound][2] = expandedKey[currentRound - nK][2] ^ temp[2];
         expandedKey[currentRound][3] = expandedKey[currentRound - nK][3] ^ temp[3];
         currentRound++;
-        //print2D(expandedKey);
     }
-    //print2D(expandedKey);
-
     return expandedKey;
 }
 
@@ -241,7 +217,6 @@ vector<vector<unsigned char> > encypt(vector<vector<unsigned char> > roundKey, v
             encyptedData[i][j] = dataSet[i][j] ^ roundKey[i][j];
         }
     }
-    //print2D(encyptedData);
     for (int r = 1; r < 11; r++) {
         //Subbing bytes
         for (int col = 0; col < 4; col++) {
@@ -255,7 +230,6 @@ vector<vector<unsigned char> > encypt(vector<vector<unsigned char> > roundKey, v
             encyptedData[col][2] = tempWord[2];
             encyptedData[col][3] = tempWord[3];
         }
-        //print2D(encyptedData);
         //Rotate Rows
         for (int row = 0; row < 4; row++) {
             tempWord[0] = encyptedData[0][row];
@@ -268,8 +242,7 @@ vector<vector<unsigned char> > encypt(vector<vector<unsigned char> > roundKey, v
             encyptedData[2][row] = tempWord[2];
             encyptedData[3][row] = tempWord[3];
         }
-        //    print2D(encyptedData);
-            //Mix Columns
+        //Mix Columns
         if (r != 10)
             for (int col1 = 0; col1 < 4; col1++) {
                 tempWord[0] = encyptedData[col1][0];
@@ -282,8 +255,7 @@ vector<vector<unsigned char> > encypt(vector<vector<unsigned char> > roundKey, v
                 encyptedData[col1][2] = tempWord[2];
                 encyptedData[col1][3] = tempWord[3];
             }
-        //print2D(encyptedData);
-        //add round key
+        //Add round key
         //round 0 uses key 0-3, round 1 uses 4-7, round 2 uses 8-11
         int currentRoundKey = 4 * r;
         for (int i = 0; i < 4; i++) {
@@ -292,7 +264,6 @@ vector<vector<unsigned char> > encypt(vector<vector<unsigned char> > roundKey, v
             encyptedData[i][2] = encyptedData[i][2] ^ roundKey[currentRoundKey + i][2];
             encyptedData[i][3] = encyptedData[i][3] ^ roundKey[currentRoundKey + i][3];
         }
-        //print2D(encyptedData);
     }
     return encyptedData;
 }
@@ -332,7 +303,7 @@ int aes_test() {
                 if (myfile.is_open()) {
                     while (myfile.good()) {
                         getline(myfile, fileKey);
-                        //cout << fileKey << endl;
+                        // cout << fileKey << endl;
                     }
                     myfile.close();
                 }
@@ -360,7 +331,6 @@ int aes_test() {
                 cout << "You have inputed '" << stringInput << "'. Beginning Encryption." << endl;
             } else if (choice == 2) {
                 cout << "What is your file name(include the extension)?" << endl;
-                //string file;
                 char* file = 0;
                 cin >> file;
                 ifstream myfile(file);
@@ -373,13 +343,11 @@ int aes_test() {
                 cout << "You have inputed '" << stringInput << "'. Beginning Encryption." << endl;
             } else {
                 defString = true;
-                //stringstream convert ( abc );
 
             }
             break;
         }
     }
-    //cout << "You have inputed '"<< stringInput <<"'. Beginning Encryption."<<endl;
     countBytes = stringInput.length();
     if (defString == true) {
         countBytes = 16;
@@ -411,8 +379,6 @@ int aes_test() {
         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < 4; j++) {
                 sprintf(buffer, "%02x", (unsigned int)encryptedBox[i][j]);
-                //buffer2+=encryptedBox[i][j];
-                //sprintf (buffer2, "%s",(unsigned char)encryptedBox[i][j]);
                 myfile << buffer;
                 outputArray[stringCount] = buffer;
                 printf("%s", buffer);
@@ -420,10 +386,7 @@ int aes_test() {
         } else cout << "Unable to open file";
     delete[] outputArray;
     cout << endl;
-    //printf ("%s",buffer2);
     myfile.close();
-    int pressEnter;
-    cin >> pressEnter;
-    cin >> pressEnter;
+    getchar();
     return 0;
 }
