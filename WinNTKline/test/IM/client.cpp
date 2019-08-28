@@ -90,8 +90,8 @@ parseRcvMsg(void* lprcv) {
         }
         if (ui_val == NETNDT) {
             if (atoi((const char*)mesg->recv_mesg.status) == 200) {
-                SetRecvState(RCV_NDT);
                 fprintf(stdout, "\r%*c\rRecieved: %s\n", 64, ' ', mesg->recv_mesg);
+                SetRecvState(RCV_NDT);
                 if (g_printed > 0) {
                     fprintf(stdout, youSaid);
                 }
@@ -251,10 +251,10 @@ int main()
         comm++;
 #else
         int comm = 0;
-        if (recieved == RCV_TCP || recieved == RCV_SCC) {
+        if (recieved >= RCV_SCC) {
             fprintf(stdout, "Input command [1-13]: ");
             if (scanf("%3d", &comm) <= 0) {
-                fprintf(stdout, "Error command format to integer.\n");
+                fprintf(stdout, "Command format to integer error .\n");
                 break;
             }
             if (comm > 13 || comm < 0) {

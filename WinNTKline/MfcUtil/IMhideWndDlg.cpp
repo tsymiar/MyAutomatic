@@ -32,7 +32,7 @@ static char THIS_FILE[] = __FILE__;
 
 IMPLEMENT_DYNAMIC(CIMhideWndDlg, CDialogEx)
 
-CIMhideWndDlg::CIMhideWndDlg(st_setting* setting, CWnd* pParent /*=NULL*/)
+CIMhideWndDlg::CIMhideWndDlg(st_sock* socks, CWnd* pParent /*=NULL*/)
     : CDialogEx(IDD_IMHIDEWND, pParent)
 {
     //{{AFX_DATA_INIT(CIMhideWndDlg)
@@ -40,8 +40,8 @@ CIMhideWndDlg::CIMhideWndDlg(st_setting* setting, CWnd* pParent /*=NULL*/)
     //}}AFX_DATA_INIT
     // Note that LoadIcon does not require a subsequent DestroyIcon in Win32
 
-    if (setting != NULL)
-        memcpy(&m_imSetting, setting, sizeof(st_setting));
+    if (socks != NULL)
+        memcpy(&m_imSocks, socks, sizeof(st_sock));
 
     m_isSizeChanged = FALSE;
     m_isSetTimer = FALSE;
@@ -179,7 +179,7 @@ int CIMhideWndDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
     //开启聊天
     //int err = InitChat(oimusr.addr);
-    StartChat(InitChat(&m_imSetting), servMsgCallback);
+    StartChat(InitChat(&m_imSocks), servMsgCallback);
     SetClientDlg(this);
     return 0;
 }
@@ -576,7 +576,7 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
     }
     CRect listrect;
     LVCOLUMN lvcol;
-    CRegistDlg m_crgist(m_imSetting.IP);
+    CRegistDlg m_crgist(m_imSocks.IP);
     int comsel = m_commbo.GetCurSel();
     char item[8];
     // memset(&msg, 0, sizeof(MSG_trans));

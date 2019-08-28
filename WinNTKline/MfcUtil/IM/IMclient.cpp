@@ -2,9 +2,9 @@
 
 using namespace std;
 
+st_sock socks;
 st_trans trans;
 st_client client;
-st_setting setting;
 
 // 参考该函数编写报文处理函数
 #ifdef _WIN32
@@ -46,7 +46,7 @@ runtime(void* param) {
     };
 };
 
-int InitChat(st_setting* sets) {
+int InitChat(st_sock* sock) {
     SetConsoleTitle("client v0.1");
     WSADATA wsaData;
     int erno = WSAStartup(0x202, &wsaData);
@@ -58,20 +58,20 @@ int InitChat(st_setting* sets) {
     InitializeCriticalSection(&client.wrcon);
     static char ipaddr[16];
     memset(ipaddr, 0, 16);
-    if (sets == NULL || sets->IP[0] == '\0' || sets->IP[0] < 0) {
+    if (sock == NULL || sock->IP[0] == '\0' || sock->IP[0] < 0) {
         fprintf_s(stdout, "Current OS is %d bit.\nNow enter server address: ", sizeof(void*) * 8);
         scanf_s("%16s", &ipaddr, 16);
         if (*ipaddr != 0) {
-            memcpy(setting.IP, &ipaddr, 16);
+            memcpy(socks.IP, &ipaddr, 16);
         }
     } else {
-        memcpy(&ipaddr, sets->IP, 16);
-        memcpy(&setting, sets, sizeof(st_setting));
+        memcpy(&ipaddr, sock->IP, 16);
+        memcpy(&socks, sock, sizeof(st_sock));
     }
-    if (sets != NULL && sets->PORT != 0) {
-        setting.PORT = sets->PORT;
+    if (sock != NULL && sock->PORT != 0) {
+        socks.PORT = sock->PORT;
     } else {
-        setting.PORT = DEFAULT_PORT;
+        socks.PORT = DEFAULT_PORT;
     }
     client.srvaddr.sin_family = AF_INET;
 #ifdef _UTILAPIS_
@@ -79,7 +79,7 @@ int InitChat(st_setting* sets) {
 #else
     client.srvaddr.sin_addr.s_addr = inet_addr(ipaddr);
 #endif
-    client.srvaddr.sin_port = htons(setting.PORT);
+    client.srvaddr.sin_port = htons(socks.PORT);
     char title[32];
     sprintf(title, "client: %s", ipaddr);
     SetConsoleTitle(title);
@@ -139,12 +139,12 @@ int StartChat(int erno,
     (*func)(void*)
 )
 {
-    setting.erno = erno;
+    client.erno = erno;
     if (erno != 0)
         return erno;
     else {
         if (func == NULL) {
-            setting.erno = -1;
+            client.erno = -1;
             func = [](void*) {
 #ifndef _WIN32
                 return (void*)
@@ -158,7 +158,7 @@ int StartChat(int erno,
 
 int CloseChat()
 {
-    setting.erno = -1;
+    client.erno = -1;
     if (!closesocket(client.sock))
         DeleteCriticalSection(&client.wrcon);
     return WSACleanup();
@@ -189,7 +189,7 @@ int SendChatMesg(st_trans* msg)
 {
     if (client.flag < 0) {
         MessageBox(NULL, "Connection status error, will exit!", "Quit", MB_OK);
-        return setting.erno = -1;
+        return (client.erno = -1);
     }
     int len = sizeof(trans);
     trans = { '\0', (unsigned char)(trans.uiCmdMsg & 0xff) };
@@ -235,9 +235,7 @@ RecvThreadProc(void* PrimaryUDP)
         );
         if (ret <= 0)
         {
-            if (client.count == 3) {
-
-            } else if (client.count < 3) {
+            if (client.count < 3) {
                 fprintf(stdout, "Recieve No Message: %s!\n", strerror(ret));
             } else {
                 if (client.count > 30) {
@@ -286,7 +284,7 @@ int p2pMessage(unsigned char *userName, int UserIP, unsigned int UserPort, char 
     }
     sockaddr_in addr;
     addr.sin_family = AF_INET;
-    addr.sin_port = htons(setting.PORT);
+    addr.sin_port = htons(socks.PORT);
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
     int bOptval = 1; // 端口复用
     int retSetsockopt = setsockopt(PrimaryUDP, SOL_SOCKET, SO_REUSEADDR, (char *)&bOptval, sizeof(bOptval));
