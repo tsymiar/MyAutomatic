@@ -469,7 +469,7 @@ type_thread_func monite(void *arg)
                             goto comm_err1;
 #endif
                         } else {
-                            fprintf(stderr, "### Request param invalid.\n");
+                            fprintf(stderr, "### Request parameter invalid.\n");
                             goto comm_err0;
                         }
                     }
@@ -572,13 +572,13 @@ type_thread_func monite(void *arg)
                                     strcpy((sd_bufs + 4), "P2P");
                                     sprintf((sd_bufs + 64), "%s request a hole.", user.usr);
                                     if (-1 != send(p2pnet.socket, sd_bufs, 108, 0)) {
-                                        fprintf(stdout, "Success send command to %s.\n", user.peer);
+                                        fprintf(stdout, "Have sent message to %s.\n", user.peer);
                                     } else {
                                         memset(sd_bufs + 8, 0, 248);
                                         sprintf(sd_bufs + 2, "%x", NEVAL(-1));
-                                        sprintf((sd_bufs + 32), "fail send command to %s.", user.peer);
+                                        sprintf((sd_bufs + 32), "failed send command to %s.", user.peer);
                                         send(rcv_sock, sd_bufs, sndlen, 0);
-                                        fprintf(stdout, "Got failure trans command to %s:%d (%s).\n", p2pnet.ip, p2pnet.port, strerror(errno));
+                                        fprintf(stdout, "Got failure trans message to %s:%d (%s).\n", p2pnet.ip, p2pnet.port, strerror(errno));
                                     }
                                     break;
                                 }
@@ -824,7 +824,7 @@ type_thread_func monite(void *arg)
                             }
                         } else {
                             sndlen = 64;
-                            sprintf((sd_bufs + 8), "Joining zone (%s) successfully.", user.join);
+                            sprintf((sd_bufs + 8), "Joining zone (%s) success.", user.join);
                         }
                     } break;
                     case 14:
@@ -833,7 +833,7 @@ type_thread_func monite(void *arg)
                         sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
                         sndlen = 42;
                         if (valrtn >= 0)
-                            strcpy((sd_bufs + 8), "Leave zone successfully.");
+                            strcpy((sd_bufs + 8), "Leave the zone success.");
                         else
                             strcpy((sd_bufs + 8), "You aren't yet in this zone.");
                     } break;
@@ -968,7 +968,7 @@ int inst_mesg(int argc, char * argv[])
         servport = atoi(argv[1]);
     }
     if (!load_acnt()) {
-        fprintf(stdout, "accounts load finish from [%s].\n", ACC_REC);
+        fprintf(stdout, "account loads finish from [%s].\n", ACC_REC);
     } else {
         strcpy(users[0].usr, "iv9527");
         strcpy(users[0].psw, "tesT123$");
@@ -1102,10 +1102,10 @@ int inst_mesg(int argc, char * argv[])
             int PID = 0;
             if ((PID = fork()) == 0)
             {
-                fprintf(stdout, "running child(%d) fork from main process.\n", thdcnt);
+                fprintf(stdout, "running child(%d) forks from Main process.\n", thdcnt);
                 monite(&msg_socket);
             } else
-                fprintf(stdout, "parent: process %d established.\n", PID);
+                fprintf(stdout, "Parent: process %d established.\n", PID);
         }
 #endif
 #endif
@@ -1188,7 +1188,7 @@ int queryNetworkParams(const char * username, Network & network, const int max)
     }
     return -1;
 }
-// for Windows
+//for Windows
 Network queryNetworkParams(int uid)
 {
     Network network;
@@ -1197,7 +1197,6 @@ Network queryNetworkParams(int uid)
     network.port = users[uid].netwk.port;
     return network;
 }
-
 //save accounts to file.
 int save_acnt() {
     flush_all();
@@ -1234,9 +1233,9 @@ int user_auth(char usr[24], char psw[24]) {
     {
         if ((strcmp(n, user.usr) == 0) && (strcmp(p, user.psw) == 0)) {
             if (user_is_line(n) == -1) {
-                return 1;   //success
+                return 1; //success
             } else
-                return 0;   //pass
+                return 0; //pass
         } else
             continue;
     };

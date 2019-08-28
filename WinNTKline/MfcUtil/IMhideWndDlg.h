@@ -11,7 +11,7 @@ class CIMhideWndDlg : public CDialogEx
     DECLARE_DYNAMIC(CIMhideWndDlg)
 
 public:
-    CIMhideWndDlg(st_setting* setting = nullptr, CWnd* pParent = NULL);   // 标准构造函数
+    CIMhideWndDlg(st_sock* sock = nullptr, CWnd* pParent = NULL);   // 标准构造函数
     virtual ~CIMhideWndDlg();
 
     // 对话框数据
@@ -52,7 +52,7 @@ private:
     BOOL m_hsFinished;      //隐藏或显示过程是否完成
     BOOL m_hiding;          //该参数只有在!m_hsFinished才有效
                             //真:正在隐藏,假:正在显示
-    st_setting m_imSetting;
+    st_sock m_imSocks;
     IMlogDlg* m_logDlg = NULL;
 public:
     int logflg = 0;

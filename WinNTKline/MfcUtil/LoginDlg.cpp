@@ -20,17 +20,18 @@ namespace logDlg
     struct soap soap;
     char dftip[] = "127.0.0.1";
     CString STrslt;
-    char auth[80];
+    char form[80];
     char m_Port[16];
 
-    struct SOAPELE {
+    struct SOAPELEM {
         struct soap soap;
-        st_setting sets;
-        st_trans imusr;
+        st_sock sock;
+        st_trans user;
         struct ArrayOfEmp2 rslt;
         char msg[64];
         char **__rslt;
-    } soapele;
+        int erno;
+    } elem;
 }
 
 using namespace logDlg;
@@ -103,25 +104,25 @@ BOOL CLoginDlg::OnInitDialog()
 
 unsigned int _stdcall call_soap_thrd(void* lr)
 {
-    int sz_t = sizeof(struct soap) + sizeof(st_setting) + sizeof(struct ArrayOfEmp2) + 1;
-    SOAPELE* ele = (SOAPELE*)malloc(sz_t);
-    ele->rslt = ArrayOfEmp2();
-    ele->sets = st_setting();
-    memcpy(ele, lr, sz_t);
-    ele->sets.erno = soap_call_api__trans(&ele->soap, ele->sets.addr, "", (char*)ele->imusr.uiCmdMsg, (char**)&ele->msg);
-    if (ele->sets.erno != 0)
+    int sz_t = sizeof(struct soap) + sizeof(st_sock) + sizeof(struct ArrayOfEmp2) + 1;
+    SOAPELEM* elem = (SOAPELEM*)malloc(sz_t);
+    elem->rslt = ArrayOfEmp2();
+    elem->sock = st_sock();
+    memcpy(elem, lr, sz_t);
+    elem->erno = soap_call_api__trans(&elem->soap, elem->sock.addr, "", (char*)elem->user.uiCmdMsg, (char**)&elem->msg);
+    if (elem->erno != 0)
     {
         CString msg;
-        msg.Format("%s\n%s", *soap_faultstring(&ele->soap), ele->msg);
+        msg.Format("%s\n%s", *soap_faultstring(&elem->soap), elem->msg);
         AfxMessageBox(msg);
     }
-    return ele->sets.erno;
+    return elem->erno;
 }
 
 void CLoginDlg::OnBnClickedLogin()
 {
     char hexmd5[32], out[32], addr[256];
-    memset(&soapele, 0, sizeof(SOAPELE));
+    memset(&elem, 0, sizeof(SOAPELEM));
     ::GetDlgItemText(this->m_hWnd, IDC_ACNT, m_acnt, 32);
     ::GetDlgItemText(this->m_hWnd, IDC_PSW, m_pswd, 32);
     ::GetDlgItemText(this->m_hWnd, IDC_PORT, m_Port, 16);
@@ -133,40 +134,40 @@ void CLoginDlg::OnBnClickedLogin()
     }
     md5_str(m_pswd, hexmd5);
     hex_to_str((unsigned char*)hexmd5, out);
-    memcpy(soapele.imusr.password, get_Hash(out, 16, out), 16);
-    sprintf_s(auth, "Login@acc=%s&psw=%s", m_acnt, soapele.imusr.password);
+    memcpy(elem.user.password, get_Hash(out, 16, out), 16);
+    sprintf_s(form, "Login@acc=%s&psw=%s", m_acnt, elem.user.password);
     if (m_IP[0] == '\0' || m_IP[0] == '\x30')
         sprintf_s(addr, 256, "http://%s:%s/myweb.cgi", dftip, m_Port);
     else
         sprintf_s(addr, 256, "http://%s:%s/myweb.cgi", m_IP, m_Port);
-    soapele.soap = logDlg::soap;
-    soapele.__rslt = new char*[M];
-    //soapele.__rslt[0] = (char *)malloc(sizeof(char) * M * 8);
-    memset(soapele.__rslt, 0, 32);
+    elem.soap = logDlg::soap;
+    elem.__rslt = new char*[M];
+    //elem.__rslt[0] = (char *)malloc(sizeof(char) * M * 8);
+    memset(elem.__rslt, 0, 32);
     for (int i = 1; i < M; i++)
     {
-        soapele.__rslt[i] = new char[16];
-        // soapele.__rslt[i - 1] + 8;
+        elem.__rslt[i] = new char[16];
+        // elem.__rslt[i - 1] + 8;
     }
-    memcpy(soapele.sets.auth, auth, sizeof(auth));
-    memcpy(soapele.sets.addr, addr, sizeof(addr));
-    memcpy(soapele.imusr.username, m_acnt, sizeof(m_acnt));
-    memcpy(soapele.sets.IP, m_IP, 16);
+    memcpy(elem.sock.form, form, sizeof(form));
+    memcpy(elem.sock.addr, addr, sizeof(addr));
+    memcpy(elem.user.username, m_acnt, sizeof(m_acnt));
+    memcpy(elem.sock.IP, m_IP, 16);
     //CloseHandle((HANDLE)_beginthreadex(NULL, 0, \
     //    (_beginthreadex_proc_type)&call_soap_thrd \
-    //    , (void *)&soapele, 0, NULL));
-    soapele.sets.erno = soap_call_api__login_by_key(&soapele.soap, soapele.sets.addr, "", 
-        (char*)soapele.imusr.username, (char*)soapele.imusr.password, soapele.rslt);
-    switch (soapele.sets.erno)
+    //    , (void *)&elem, 0, NULL));
+    elem.erno = soap_call_api__login_by_key(&elem.soap, elem.sock.addr, "",
+        (char*)elem.user.username, (char*)elem.user.password, elem.rslt);
+    switch (elem.erno)
     {
     case 0:
-        if (soapele.rslt.rslt.flag != 200)
+        if (elem.rslt.rslt.flag != 200)
             STrslt.Format("返回错误");
         else
         {
             m_Gl.Create(IDD_OGLIMG);
             m_Gl.ShowWindow(SW_SHOWNORMAL);
-            m_IMwnd = new CIMhideWndDlg(&soapele.sets);
+            m_IMwnd = new CIMhideWndDlg(&elem.sock);
             m_IMwnd->Create(IDD_IMHIDEWND);
             m_IMwnd->ShowWindow(SW_SHOWNORMAL);
             m_IMwnd->setWidgetHide();
@@ -182,12 +183,12 @@ void CLoginDlg::OnBnClickedLogin()
         STrslt.Format("网络错误");
         break;
     default:
-        STrslt.Format("%s:(%s)[%s]", *soap_faultcode(&soapele.soap), soapele.rslt.rslt.email, soapele.rslt.rslt.tell);
+        STrslt.Format("%s:(%s)[%s]", *soap_faultcode(&elem.soap), elem.rslt.rslt.email, elem.rslt.rslt.tell);
         break;
     }
     AfxMessageBox(STrslt);
-    delete[] soapele.__rslt;
-    //free(soapele.__rslt);
+    delete[] elem.__rslt;
+    //free(elem.__rslt);
 }
 
 void CLoginDlg::OnBnClickedCancel()
@@ -247,7 +248,7 @@ void CLoginDlg::SetCombox()
 void CLoginDlg::SetUserofini0()
 {
     CString user = { _T("") };
-    //    int cur = GetPrivateProfileInt((LPCTSTR)"0", (LPCTSTR)"", 10, (LPCTSTR)"cfg//ips.ini") - 10086;    //读入整型值
+    // int cur = GetPrivateProfileInt((LPCTSTR)"0", (LPCTSTR)"", 10, (LPCTSTR)"cfg//ips.ini") - 10086; //读入整型值
     GetPrivateProfileString(_T("0"), _T("user"), (LPCTSTR)"", user.GetBuffer(MAX_PATH), MAX_PATH, (LPCTSTR)"cfg//ips.ini");
     CWnd* p1 = GetDlgItem(IDC_ACNT);
     p1->SetWindowText(user);
@@ -300,8 +301,8 @@ void CLoginDlg::OnCbnSelchangeCom()
         break;
     case 1:
     {
-        memcpy(&soapele.sets.IP, m_IP, 16);
-        m_ComIM = new CIMhideWndDlg(&soapele.sets);
+        memcpy(&elem.sock.IP, m_IP, 16);
+        m_ComIM = new CIMhideWndDlg(&elem.sock);
         m_ComIM->Create(IDD_IMHIDEWND);
         m_ComIM->ShowWindow(SW_SHOWNORMAL);
     }

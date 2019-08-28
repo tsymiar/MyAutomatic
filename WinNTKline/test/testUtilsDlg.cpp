@@ -17,12 +17,8 @@
 
 #define LOOP_TIME 1
 
-struct SOELEM {
-	struct soap soap;
-	st_setting setting;
-} soelem;
-
-CLoginDlg logon; 
+extern st_sock socks;
+CLoginDlg login; 
 CTPclient* m_ctp = nullptr;
 MyOglDrawDlg *ogl = nullptr;
 CIMhideWndDlg *m_pIM = nullptr;
@@ -119,8 +115,8 @@ HCURSOR CtestUtilsDlg::OnQueryDragIcon()
 void CtestUtilsDlg::OnBnClickedToim()
 {
 	m_ipAddr.GetWindowText(a_IP, 16);
-	memcpy(soelem.setting.IP, a_IP, 16);
-	m_pIM = new CIMhideWndDlg(&soelem.setting);
+	memcpy(socks.IP, a_IP, 16);
+	m_pIM = new CIMhideWndDlg(&socks);
 	m_pIM->Create(IDD_IMHIDEWND);
 	m_pIM->ShowWindow(SW_SHOWNORMAL);
 }
@@ -128,18 +124,18 @@ void CtestUtilsDlg::OnBnClickedToim()
 void CtestUtilsDlg::OnBnClickedRegist()
 {
 	m_ipAddr.GetWindowText(a_IP, 16);
-	logon.testRegist(a_IP);
+    login.testRegist(a_IP);
 }
 
 void CtestUtilsDlg::OnBnClickedTestlog()
 {
 	m_Port.GetWindowText(a_Port); 
 	m_ipAddr.GetWindowText(a_IP, 16);
-	sprintf_s(soelem.setting.addr, 64, "http://%s:%d/myweb.cgi", a_IP, atoi(a_Port));
-	sprintf_s(soelem.setting.auth, 28, "trans@&acc=local&test=8888");
+	sprintf_s(socks.addr, 64, "http://%s:%d/myweb.cgi", a_IP, atoi(a_Port));
+	sprintf_s(socks.form, 28, "trans@&acc=local&test=8888");
 	for (int i = 0; i < LOOP_TIME; i++)
 	{
-		logon.testLogin(&soelem);
+        login.testLogin(&socks);
 		Sleep(10);
 	}
 }

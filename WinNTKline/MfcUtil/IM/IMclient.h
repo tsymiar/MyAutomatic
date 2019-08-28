@@ -120,6 +120,7 @@ typedef struct CLIENT
     void* Dlg;
     void(*fp2p)(void*);
     int count = 0;
+    int erno = -1;
     struct LAST
     {
         char lastuser[24];
@@ -127,13 +128,12 @@ typedef struct CLIENT
     } last;
 } st_client;
 
-typedef struct IM_SETTING {
-    int erno = -1;
+typedef struct IM_SOCK {
     char addr[MAX_PATH] = { NULL };
+    char form[80];
     char IP[16];
-    char auth[80];
     unsigned int PORT;
-} st_setting;
+} st_sock;
 
 struct MainMesg
 {
@@ -258,7 +258,7 @@ inline int checkPswValid(char* str)
     }
     return (z0 + zz + zZ + z_ == 4 ? 1 : 0);
 }
-int InitChat(st_setting* setting = NULL);
+int InitChat(st_sock* sock = NULL);
 int StartChat(int erno,
     void
 #ifndef _WIN32
