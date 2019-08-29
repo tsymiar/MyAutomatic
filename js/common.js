@@ -426,12 +426,16 @@ function nativeXMLHttp(method, link, param, callback) {
     }
     xmlhttp.open(method, link, true);
     xmlhttp.setRequestHeader("Content-Type","application/x-www-form-urlencoded;charset=utf-8");
-    xmlhttp.send(param);
+    try{
+        xmlhttp.send(param);
+    }catch (e) {
+        console.error(e);
+    }
     var i = 0;
     xmlhttp.onreadystatechange = function() {
         if(xmlhttp.readyState === 4 && xmlhttp.status === 200) {
             if (typeof (callback) === "function") { 
-                callback(xmlhttp.responseText);
+                callback(xmlhttp.responseText, xmlhttp.status);
             }
         }else if(i == 0){
             i++;
@@ -484,7 +488,7 @@ function requestJson(json, link, method, callback) {
     });
 }
 
-function pop_hide(){
+function pop_window_hide(){
     $('#ly').remove();
     setPopDivNoScroll("clazz_pop_div", "id_pop_div", false);
     setCookie("pop_state","hide");
@@ -497,6 +501,9 @@ function setPopDivNoScroll(clazz_pop_div, id_pop_div, display, text, top, left, 
     }catch(e){
         console.log("get "+id_pop_div+" element error\n"+e);
         return;
+    }
+    if(display) {
+        pop_window_hide();
     }
     var winNode = $("#"+id_pop_div);
     width = (width === null || width === undefined || width === 0) ? 300 : width;
@@ -539,7 +546,7 @@ function setPopDivNoScroll(clazz_pop_div, id_pop_div, display, text, top, left, 
     div_pop.style.display = 'block';
     winNode.after('<div id="ly" style="position:fixed; top:0; left:0; z-index:2; width:100%; height:100%; background:#f5f5f5; filter:alpha(opacity=70); opacity:0.7;display: none;"></div>');
     winNode.html(
-        '<div class="title">提示！<span class="hide" title="关闭" onclick="pop_hide()">✖</span></div>' +
+        '<div class="title">提示！<span class="hide" title="关闭" onclick="pop_window_hide()">✖</span></div>' +
         '<div id="content" style="word-wrap:break-word;margin: 3% 0 0 0;">'+ text +'</div>'
     );
     $('#ly').show();

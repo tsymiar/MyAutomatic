@@ -1,5 +1,6 @@
 
 var $form_elem = null;
+var g_Interval = null;
 
 var formArray = [
     "username",
@@ -131,6 +132,46 @@ $(document).ready(function() {
         $("#request").html("Submit");
         $("#reset").html("Reset");
     }
+    let url = window.location.search.substring(1);
+    if(url.indexOf("http://") !== -1 || url.indexOf("https://") !== -1) {
+        setPopDivNoScroll("clazz_pop_div", "id_pop_div", true, "<b><font size='2'>请稍等...<font><b>", 250);
+        nativeXMLHttp("POST", "trans/service.php", 
+        ("action=file_download&url=" + url), function(text) {
+            try {
+                var json = JSON.parse(text);
+                if (json.errno === 201) {
+                    let fileSize = "";
+                    let action = "action=file_download&query=" + json.message;
+                    g_Interval = setInterval(function(){
+                            if(fileSize !== "" && action.indexOf("&file=") === -1 && action.indexOf("&size=") === -1)
+                                action += fileSize;
+                            nativeXMLHttp("POST", "trans/service.php", action, function(text, status){
+                                try{
+                                    if(text.indexOf("ERROR") !== -1 || text.indexOf("Warning") !== -1 || text.indexOf("Fatal error") !== -1){
+                                        clearInterval(g_Interval);
+                                    }
+                                    var json = JSON.parse(text);
+                                    if(json.errno === 200 || status === 303){
+                                        clearInterval(g_Interval);
+                                        setPopDivNoScroll("clazz_pop_div", "id_pop_div", true, 
+                                        (json.data?json.data.href+"click to download":json.message), 250, null, null, 80);
+                                    }else if(json.errno === 201){
+                                        action = "action=file_download&file=" + json.message;
+                                    }else if(json.errno === 300){
+                                        setPopDivNoScroll("clazz_pop_div", "id_pop_div", true, json.message, 250);
+                                        fileSize = (json.data ? "&size=" + json.data.size : "");
+                                    }
+                                }catch(e){
+                                    setPopDivNoScroll("clazz_pop_div", "id_pop_div", true, text + "<br>" + e);
+                                }
+                            });
+                        },2400);
+                }
+            } catch (e) {
+                setPopDivNoScroll("clazz_pop_div", "id_pop_div", true, text + "<br>" + (text.indexOf("ERROR") == 0 ? "" : e));
+            }
+        });
+    }
 });
 
 function click2Submit(){
@@ -158,12 +199,11 @@ function click2Submit(){
             icon = arrVal = $(".ideal-file-filename").val();
         }
         if(arrKey === "date"){
-            var tmp1 = arrVal;
-            var tmp2 = tmp1.substr(tmp1.lastIndexOf("/") + 1);
-            var tmp3 = tmp1.substring(0,tmp1.lastIndexOf("/"))
-            var tmpVal = tmp2 + "/" + tmp3;
-            console.log(tmp1+"\n"+tmp2+"\n"+tmp3+"\n"+tmpVal);
-            arrVal = tmpVal.replace(/\//g,"-");
+            var tm1 = arrVal;
+            var tm2 = tm1.substr(tm1.lastIndexOf("/") + 1);
+            var tm3 = tm1.substring(0,tm1.lastIndexOf("/"))
+            var tmVal = tm2 + "/" + tm3;
+            arrVal = tmVal.replace(/\//g,"-");
         }
         if(i === formArray.length-1){
             param += (arrKey + "=" + arrVal);
@@ -184,7 +224,7 @@ function click2Submit(){
                 }else{
                     try {
                         var json = JSON.parse(rsp_text);
-                        if(json.code === 200){
+                        if(json.errno === 200){
                             alert(json.message);
                         }
                     } catch (e) {

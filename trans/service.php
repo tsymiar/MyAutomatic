@@ -19,11 +19,7 @@ include_once ('utils.php');
 class HandleBase {
     public static function handle_request(){}
     public static function handle_empty(){
-        $json = array();
-        $json["status"] = false;
-        $json["message"] = "No such method.";
-        $json = json_encode($json, JSON_PRETTY_PRINT);
-        echo $json;
+        User::errReport("No such method.");
     }
 }
 
@@ -63,11 +59,7 @@ class Regist extends HandleBase{
             $js_arr['site'] = $_POST['website'];
             $js_arr['`desc`'] = $_POST['comments'];
             $err = DBUtil::user_update(User::$table, $js_arr, $usrid);
-            $js_ret = array();
-            $js_ret['code'] = 200;
-            $js_ret['status'] = $err;
-            $js_ret['message'] = "SUCCESS";
-            echo json_encode($js_ret, JSON_PRETTY_PRINT);
+            User::errReport(0, 201, "SUCCESS", NULL, $err);
         }
     }
 }
@@ -143,23 +135,121 @@ class FileLoad extends HandleBase{
         }
     }
 
+    private static function trans_byte($byte){
+        $KB = 1024;
+        $MB = 1024 * $KB;
+        $GB = 1024 * $MB;
+        $TB = 1024 * $GB;
+        if ($byte == "") {
+            return $byte;
+        } elseif ($byte < $KB) {
+            return $byte . "B";
+        } elseif ($byte < $MB) {
+            return round($byte / $KB, 2) . "KB";
+        } elseif ($byte < $GB) {
+            return round($byte / $MB, 2) . "MB";
+        } elseif ($byte < $TB) {
+            return round($byte / $GB, 2) . "GB";
+        } else {
+            return round($byte / $TB, 2) . "TB";
+        }
+    }
+    
+    private static function get_filename($fdir){
+        $file = scandir($fdir);
+        foreach($file as $k=>$v){
+            if($v=="." || $v==".."){
+                continue;
+            }
+            if(abs(filemtime("./tempory/.") - filemtime("./tempory/".$v)) < 100) {
+                return $v;
+            }
+        }
+        return NULL;
+    }
+
     private static function handle_file_download(){
-        set_time_limit(0);
         // OS base dir </> is "../../../"(should base on httpd configure)
         // eg. server path </lib> here is <../../../lib>
-        $fpath = './file.html';
+        set_time_limit(0);
+        $fpath = "";
+        $url = isset($_REQUEST["url"]) ? $_REQUEST["url"] : NULL;
+        if(!empty($url)){
+            shell_exec("wget -b -nc --restrict-file-names=nocontrol -P ./tempory ".escapeshellarg($url));
+            $allow_type=array("iso","xls","xlsx","cpp","pdf","gif","mp3","mp4","zip","rar","doc","docx","mov","ppt","pptx","txt","7z","jpeg","jpg","JPEG","png");
+            //允许的文件类型
+            $torrent = explode(".",$url);
+            $file_end = end($torrent);
+            $file_end = strtolower($file_end);
+            //if(in_array($file_end,$allow_type))
+            {
+                $parent = dirname(__FILE__);
+                $fdir = $parent."/tempory";
+                if (!is_dir($fdir)){
+                    mkdir($fdir,0777,true);
+                }
+                $file = scandir($fdir);
+                $conname = "";//array();
+                $filetime = 0;
+                foreach($file as $k=>$v){
+                    if($v=="." || $v==".."){
+                        $filetime = filemtime("./tempory/".$v);
+                        continue;
+                    }
+                    /*
+                    $conname[] = substr($v,0,strpos($v,"."));
+                    if(filemtime("./tempory/".$conname) > $filetime) {
+                        $filetime = filemtime("./tempory/".$conname);
+                        $fpath = './tempory/'.$conname;
+                    }
+                    */
+                    $conname = $v;
+                    $delta = abs(filemtime("./tempory/.") - filemtime("./tempory/".$v));
+                    if($delta < 100) {
+                        $fpath = './tempory/'.$conname;
+                        break;
+                    }
+                }
+                exit(User::errReport(0, ($file ? 201 : 404), ($conname==""?self::get_filename($fdir):$conname) , NULL, !!$file));
+            }
+        } else if (isset($_REQUEST["query"])) {
+            $name = $_REQUEST["query"];
+            if($name == "" || $name == "null")
+                $name = self::get_filename("./tempory");
+            $fpath = "./tempory/".$name;
+            $size = filesize($fpath);
+            if(!isset($_REQUEST["size"]) || $size != intval($_REQUEST["size"])){
+                $ret = array();
+                $ret["size"] = $size;
+                exit(User::errReport(0, 300, "Downloading... ".self::trans_byte($size), $ret));
+            }else{
+                exit(User::errReport(0, 201, $name));
+            }
+        } else if (isset($_REQUEST["file"])) {
+            $name = $_REQUEST["file"];
+            if($name == "")
+                $name = self::get_filename("./tempory");
+            $ret = array();
+            $ret["href"] = '<a href="trans/getfile.php?file='.$name.'">';
+            exit(User::errReport(0, 200, NULL, $ret));
+        } else {
+            exit(User::errReport(0, 404));
+        }
+        echo User::errReport(0, 200);
+        Header("HTTP/1.1 303 See Other"); 
+        Header("Location: getfile.php?file=".$fpath);
         $file_pathinfo = pathinfo($fpath);
         $file_name = $file_pathinfo['basename'];
         //$file_extension = $file_pathinfo['extension'];
+        if($fpath == ""){exit("ERROR: local file not set.");}
         $handle = fopen($fpath,"rb");
         if (FALSE === $handle){
-            exit("ERROR: open file.");
+            exit("ERROR: open local file(".$fpath.").");
         }
-        $filesize = filesize($fpath);
-
-        header("Content-type:multipart/form-data");
-        header("Accept-Ranges:bytes");
-        header("Accept-Length:".$filesize);
+        $file_size = filesize($fpath);
+        header("Content-type:application/octet-stream");
+        header("Accept-ranges:bytes");
+        header("Accept-length:".$file_size);
         header("Content-Disposition: attachment; filename=".$file_name);
 
         while (!feof($handle)) {
@@ -178,9 +268,9 @@ $action = isset($_REQUEST["action"]) ? $_REQUEST["action"] : NULL;
 if(strpos($action, "file") === false){
     switch($action){
         case NULL:
-		case null:
-		case "null":
-		case "NULL":
+        case null:
+        case "null":
+        case "NULL":
             break;
         case ACTION_REGIST:
             Regist::handle_request();

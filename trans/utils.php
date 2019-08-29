@@ -27,13 +27,14 @@ class User {
     var $zip;  //手机号吗
     var $comments; //签名 
  
-    public static function errReport($err, $code = NULL, $msg = NULL, $data = NULL) { //报错
+    public static function errReport($err, $code = NULL, $msg = NULL, $data = NULL, $stat = true) { //报错
         if (!$code && !$msg) {
             echo "ERROR: $err.\n";
         } else {
             $json = array();
-            $json["code"] = $code;
-            $json["message"] = $msg;
+            $json["status"] = ($code == 200 ? $stat : false);
+            $json["errno"] = $code;
+            $json["message"] = ($code != 200 ? $msg : "SUCCESS");
             if($data){
                 $json["data"] = $data;
             }
