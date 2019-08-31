@@ -1,6 +1,7 @@
 
 var $form_elem = null;
 var g_Interval = null;
+let formdata = window.location.search.substring(1);
 
 var formArray = [
     "username",
@@ -132,11 +133,10 @@ $(document).ready(function() {
         $("#request").html("Submit");
         $("#reset").html("Reset");
     }
-    let url = window.location.search.substring(1);
-    if(url.indexOf("http://") !== -1 || url.indexOf("https://") !== -1) {
+    if(formdata.indexOf("http://") !== -1 || formdata.indexOf("https://") !== -1) {
         setPopDivNoScroll("clazz_pop_div", "id_pop_div", true, "<b><font size='2'>请稍等...<font><b>", 250);
         nativeXMLHttp("POST", "trans/service.php", 
-        ("action=file_download&url=" + url), function(text) {
+        ("action=file_download&url=" + formdata), function(text) {
             try {
                 var json = JSON.parse(text);
                 if (json.errno === 201) {
