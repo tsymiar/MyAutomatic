@@ -3,14 +3,17 @@
 import sys, os
 import web
 from handle import Handle
+from log import Log
 
 urls = (
     '/wx', 'Handle',
 )
 
+web.config.debug = True
+
 def main():
     app = web.application(urls, globals())
-    app.run()
+    app.run(Log)
 
 if __name__ == '__main__':
     # do the UNIX double-fork magic

@@ -7,7 +7,13 @@ import poster.encode
 from poster.streaminghttp import register_openers
 import traceback
 import sys
+import logging
 
+logging.basicConfig(level=logging.INFO,  
+                    format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',  
+                    datefmt='%a, %d %b %Y %H:%M:%S',  
+                    filename='/tmp/wechat.log',  
+                    filemode='w')                    
 def upload_image(filePath):
     myMedia = Media()
     accessToken = Basic().get_access_token()
@@ -32,32 +38,35 @@ class Media(object):
         headers = urlResp.info().__dict__['headers']
         if ('Content-Type: application/json\r\n' in headers) or ('Content-Type: text/plain\r\n' in headers):
             jsonDict = json.loads(urlResp.read())
-            print "GET jsonDict: ", jsonDict
+            logging.info("GET jsonDict: " + jsonDict)
         else:
             buffer = urlResp.read()   #素材的二进制
             mediaFile = file(saveName, "wb")
             mediaFile.write(buffer)
-            print "get successful"
+            logging.info("get successful")
     #上传图片
     def uplaod(self, accessToken, filePath, mediaType):
         try:
             openFile = open(filePath, "rb")
         except:
-            traceback.print_exc()
+            logging.warning(traceback.format_exc())
         param = {'media': openFile}
         postData, postHeaders = poster.encode.multipart_encode(param)
         postUrl = "https://api.weixin.qq.com/cgi-bin/media/upload?access_token=%s&type=%s" % (accessToken, mediaType)
         request = urllib2.Request(postUrl, postData, postHeaders)
         urlResp = urllib2.urlopen(url=request, timeout=15)
-        print 'Upload status:\n[', urlResp.getcode(), "] : ", urlResp.geturl(), "\n", urlResp.info()
+        try:
+            logging.info('Upload status:\n[' + bytes(urlResp.getcode()) + "] : " + urlResp.geturl() + "\n" + str(urlResp.info()))
+        except:
+            logging.error(traceback.format_exc())
         jsonDict = dict()
         try:
             jsonDict = json.loads(urlResp.read())#.decode(urlResp.info().get_param('charset') or 'utf-8'))
+        except:
+            logging.warning(traceback.format_exc())
             if type(jsonDict) is not dict:
                 sys.exit(0)
-        except:
-            traceback.print_exc()
-        print "POST jsonDict =", jsonDict
+        logging.info("POST jsonDict =" + str(jsonDict))
         mediaId = self.dict_get(jsonDict, 'media_id')
         if self.dict_get(jsonDict, 'type') == "image" and mediaId:
             return mediaId

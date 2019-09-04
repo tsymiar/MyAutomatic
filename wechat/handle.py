@@ -5,14 +5,19 @@ import hashlib
 import reply
 import receive
 import web
+import logging
 import traceback
 import parser
 
+logging.basicConfig(level=logging.INFO,  
+                    format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',  
+                    datefmt='%a, %d %b %Y %H:%M:%S',  
+                    filename='/tmp/wechat.log',  
+                    filemode='w')
 class Handle(object):
     def GET(self):
         try:
             data = web.input()
-            print data
             if len(data) == 0:
                 return "hello, handle wechat GET view"
             signature = data.signature
@@ -26,7 +31,7 @@ class Handle(object):
             sha1 = hashlib.sha1()
             map(sha1.update, list)
             hashcode = sha1.hexdigest()
-            print "handle/GET func: hashcode, signature: ", hashcode, signature
+            logging.info("handle/GET func: hashcode, signature: " + hashcode + signature)
             if hashcode == signature:
                 return echostr
             else:
@@ -36,7 +41,7 @@ class Handle(object):
     def POST(self):
         try:
             webData = web.data()
-            print "Handle Post webdata:\n", webData
+            logging.info("Handle Post webdata:\n" + webData)
             recMsg = receive.parse_xml(webData)
             if isinstance(recMsg, receive.MainMsg):
                 toUser = recMsg.FromUserName
@@ -49,19 +54,19 @@ class Handle(object):
                     try:
                         text = content['text']
                     except:
-                        traceback.print_exc()
+                        logging.warning(traceback.format_exc())
                     try:
                         media = content['mediaId']
                     except:
-                        traceback.print_exc()
-                    print "content: text =", text, ", media =", media
+                        logging.warning(traceback.format_exc())
+                    logging.info("content: text='" + text + "', media='" + media + "'.")
                     if text:
                         replyMsg = reply.TextMsg(toUser, fromUser, text)
                     elif media:
                         try:
                             replyMsg = reply.ImageMsg(toUser, fromUser, media)
                         except:
-                            traceback.print_exc()
+                            logging.warning(traceback.format_exc())
                     else:
                         replyMsg = reply.TextMsg(toUser, fromUser, "fail")
                     return replyMsg.send()
@@ -72,7 +77,7 @@ class Handle(object):
                 else:
                     return reply.MainMsg().send()
             else:
-                print "暂且不处理"
+                logging.info("暂且不处理")
                 return "success"
         except Exception, Argment:
             return Argment
