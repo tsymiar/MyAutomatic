@@ -7,18 +7,21 @@ int show_memory(char* ip, st_sys* sys)
     struct hostent *hostp;
     if (ip == nullptr)
         return -1;
+    if (sys != nullptr)
+        return -2;
     if (inet_aton(ip, &addr) != 0)
         hostp = gethostbyaddr((const char*)&addr, sizeof(addr), AF_INET);
     else
         hostp = gethostbyname(ip);
-    if (hostp != nullptr)
+    if (hostp != nullptr) {
         sys->s_host = hostp->h_name;
-    for (h_list = hostp->h_aliases; *h_list != nullptr; h_list++)
+        for (h_list = hostp->h_aliases; *h_list != nullptr; h_list++)
             sys->ss_alias = *h_list;
-    //printf("official hostname: %s\nalias: %s\n", sys->s_host, sys->ss_alias);
-    for (h_list = hostp->h_addr_list; *h_list != nullptr; h_list++) {
-        addr.s_addr = ((struct in_addr*)*h_list)->s_addr;
-        sys->ss_addr = inet_ntoa(addr);
+        //printf("official hostname: %s\nalias: %s\n", sys->s_host, sys->ss_alias);
+        for (h_list = hostp->h_addr_list; *h_list != nullptr; h_list++) {
+            addr.s_addr = ((struct in_addr*)*h_list)->s_addr;
+            sys->ss_addr = inet_ntoa(addr);
+        }
     }
     //printf("address: %s\n", sys->ss_addr);
     sys->li_cpu = sysconf(_SC_NPROCESSORS_CONF);  //CPU个数
@@ -33,33 +36,29 @@ int show_memory(char* ip, st_sys* sys)
     free_mem /= ONE_MB;                           //空闲的物理内存
     sys->mem_free = free_mem;
     //printf("CPU:\x20%ld core(s)\nmemory pages:\x20%ldK\ntotal RAM:\x20%lldMB\nFREE RAM:\x20%lldMB(%.3f%%)\n", sys->li_cpu, sys->li_page, sys->mem_all, sys->mem_free, 100.f*sys->mem_free / sys->mem_all);
-    if (sys != nullptr)
-        return 0;
-    else
-        return -1;
+    return 0;
 }
 
 int detect_eth_cable(char *ifname)
 {
     struct ethtool_value edata;
     struct ifreq ifr;
-    int fd = -1, err = 0;
-
-    memset(&ifr, 0, sizeof(ifr));
-    strcpy(ifr.ifr_name, ifname);
-
-    fd = socket(AF_INET, SOCK_DGRAM, 0);
+    int err = 0;
+    int fd = socket(AF_INET, SOCK_DGRAM, 0);
+    
     if (fd < 0) {
         perror("Cannot get control socket");
         return -1;
     }
+    memset(&ifr, 0, sizeof(ifr));
+    strcpy(ifr.ifr_name, ifname);
+
     edata.cmd = 0x0000000A;
     ifr.ifr_data = (__caddr_t)&edata;
     err = ioctl(fd, 0x8946, &ifr);
     if (err == 0) {
         fprintf(stdout, "Link detecting %s\n", edata.data ? "OK" : "fail");
-    }
-    else if (errno != EOPNOTSUPP) {
+    } else if (errno != EOPNOTSUPP) {
         perror("Cannot get link status");
     }
     return(edata.data == 1 ? 1 : 0);
