@@ -25,7 +25,7 @@ static struct GpioChip chips[] = {
 int gpio_is_valid(unsigned gpio)
 {
     char file[32];
-    sprintf(file, "%sgpio%d", GPIO_FILES, gpio);
+    sprintf(file, "%sgpio%u", GPIO_FILES, gpio);
     return access(file, 0);
 }
 
@@ -33,7 +33,7 @@ int gpio_request(unsigned int gpio, char* label)
 {
     int file;
     char value[64];
-    snprintf(value, sizeof(value), GPIO_FILES "/gpio%d/value", gpio);
+    snprintf(value, sizeof(value), GPIO_FILES "/gpio%u/value", gpio);
     file = open(value, O_RDONLY | O_NONBLOCK);
     if (file < 0) {
         perror(label);
@@ -57,7 +57,7 @@ int gpio_set_export(unsigned gpio, int direction_may_change)
     } else {
         file = open(GPIO_FILES "unexport", O_WRONLY);
     }
-    len = snprintf(pin, sizeof(pin), "%d", gpio);
+    len = snprintf(pin, sizeof(pin), "%u", gpio);
     ret = write(file, pin, len);
     if (ret == -1) {
         close(file);
@@ -82,7 +82,7 @@ int gpio_set_direct(unsigned gpio, int direct)
     char dir[64];
     int file;
     int ret = 0;
-    sprintf(dir, "%sgpio%d/direction", GPIO_FILES, gpio);
+    sprintf(dir, "%sgpio%u/direction", GPIO_FILES, gpio);
     file = open(dir, O_WRONLY);
     if (direct == 0) {
         ret = write(file, "in", 3);
@@ -101,7 +101,7 @@ int gpio_set_value(unsigned int gpio, int value)
 {
     int file;
     char val[64];
-    snprintf(val, sizeof(val), GPIO_FILES "gpio%d/value", gpio);
+    snprintf(val, sizeof(val), GPIO_FILES "gpio%u/value", gpio);
     file = open(val, O_WRONLY);
     if (file < 0) {
         perror("gpio_set_value");
@@ -121,13 +121,18 @@ int gpio_get_value(unsigned gpio)
     char val[64];
     char ch;
     int value;
-    snprintf(val, sizeof(val), GPIO_FILES "/gpio%d/value", gpio);
+    int len;
+    snprintf(val, sizeof(val), GPIO_FILES "/gpio%u/value", gpio);
     file = open(val, O_RDONLY);
     if (file < 0) {
         perror("gpio_get_value");
         return -1;
     }
-    read(file, &ch, 1);
+    len = read(file, &ch, 1);
+    if (len != 1) {
+        close(file);
+        return -2;
+    }
     if (ch != '0') {
         value = 1;
     } else {

@@ -31,7 +31,7 @@
 #define ACC_REC "acnts"
 #define MAX_ACTIVE 30
 #define MAX_USERS 99
-#define MAX_ZONES 10
+#define MAX_ZONES 9
 #define MAX_MENBERS_PER_GROUP 11
 //using namespace std;
 //C++11 std与socket.h中bind函数冲突
@@ -53,7 +53,7 @@ typedef socklen_t type_len;
 typedef void *type_thread_func;
 #define flush_all() fflush(stdin)
 #define closesocket(socket) close(socket)
-#define SLEEP(t) usleep((int)1010.10f*(t));
+#define SLEEP(t) wait((int)1.0f*(t));
 pthread_mutexattr_t attr;
 #endif
 
@@ -131,11 +131,14 @@ typedef struct user_mesg {
     };
     class PeerStruct
     {
+    private:
         unsigned char rsv[2];
     public:
-        unsigned char cmd[2];
-        unsigned char val[4];
+        PeerStruct() :msg{ 0 } {};
+        ~PeerStruct() {};
         char msg[16];
+        unsigned char cmd[2]{ 0 };
+        unsigned char val[4]{ 0 };
     } peer_mesg;
     char status[8];
 } USER;
@@ -171,6 +174,8 @@ template<typename T> int set_n_get_mem(T* shmem, int ndx = 0, int rw = 0);
 void func_waitpid(int signo);
 int queryNetworkParams(const char* username, Network& network, const int max = MAX_ACTIVE);
 Network queryNetworkParams(int uid);
+type_thread_func commands(void *arg);
+void wait(unsigned int tms);
 int user_auth(char usr[24], char psw[24]);
 int new_user(char usr[24], char psw[24]);
 int user_is_line(char user[24]);
@@ -200,7 +205,7 @@ int main(int argc, char* argv[])
             fprintf(stdout, "\tNo.\tuser\tIP\t\tPort\tsocket\n");
             for (int c = 0; c < MAX_ACTIVE; c++) {
                 if (&active != nullptr && active[c].user[0] != '\0') {
-                    fprintf(stdout, "\t%d\t%s\t%s\t%d\t%d\n", c + 1,
+                    fprintf(stdout, "\t%d\t%s\t%s\t%u\t%d\n", c + 1,
                         active[c].user, active[c].netwk.ip, active[c].netwk.port, active[c].netwk.socket);
                 }
             }
@@ -263,7 +268,7 @@ type_thread_func monite(void *arg)
     time(&t);
     lt = localtime(&t);
     g_threadNo_++;
-    fprintf(stdout, "accepted peer(%d) address [%s:%d] (@ %d/%d/%d %d:%d:%d)\n", g_threadNo_, IP, PORT, lt->tm_year + 1900, lt->tm_mon, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
+    fprintf(stdout, "accepted peer(%u) address [%s:%d] (@ %d/%02d/%02d-%02d:%02d:%02d)\n", g_threadNo_, IP, PORT, lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
     bool set = true;
     setsockopt(rcv_sock, SOL_SOCKET, SO_KEEPALIVE, reinterpret_cast<const char*>(&set), sizeof(bool));
     if (rcv_sock
@@ -304,12 +309,13 @@ type_thread_func monite(void *arg)
             cur++;
         }
         flg = recv(rcv_sock, rcv_txt, 256, 0);
+        // rcv_txt: inc--8 bit crc_head, 24 bit username, 24 bit password.
         if (qq != flg && flg != 0)
         {
             if (flg <= -1 && flg != EWOULDBLOCK && flg != EAGAIN && flg != EINTR) {
                 set_user_quit(user.usr);
                 fprintf(stderr, "----------------------------------------------------------------\
-                    \n### Client socket [%d] closed by itself just now.\n", rcv_sock);
+                    \n### Client socket [%u] closed by itself just now.\n", (unsigned)rcv_sock);
                 closesocket(rcv_sock);
 #ifdef _WIN32
                 break;
@@ -320,7 +326,7 @@ type_thread_func monite(void *arg)
 #ifdef _DEBUG
                 memcpy(&user, rcv_txt, sizeof(user));
                 fprintf(stdout, "----------------------------------------------------------------\
-                \n>>> 1-RCV [%0x,%0x]: %s, %d, %d\n", user.uiCmdMsg, static_cast<unsigned>(*user.chk), user.usr, flg, THREAD_NUM - g_threadNo_);
+                \n>>> 1-RCV [%0x,%0x]: %s, %d, %u\n", user.uiCmdMsg, static_cast<unsigned>(*user.chk), user.usr, flg, THREAD_NUM - g_threadNo_);
                 for (c = 0; c < flg; c++)
                 {
                     if (c > 0 && c % 32 == 0)
@@ -334,8 +340,8 @@ type_thread_func monite(void *arg)
             char userName[24];
             memset(userName, 0, 24);
             memcpy(sd_bufs, &user, 2);
-            // rcv_txt: inc--8 bit crc_head, 24 bit username, 24 bit password.
             if ((user.rsv == 0) && (user.uiCmdMsg == 0)) {
+                // user.usr: 8; user.psw: 32.
                 valrtn = new_user(user.usr, user.psw);
                 sprintf(sd_bufs + 2, "%x", NEVAL(valrtn + 1));
                 if (valrtn == -1) {
@@ -366,7 +372,6 @@ type_thread_func monite(void *arg)
                 continue;
                 break;
             } else if ((user.rsv == 0) && (user.uiCmdMsg == 0x1)) {
-                // user.usr: 8; password: 32.
                 valrtn = user_auth(user.usr, user.psw);
                 sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
                 if (valrtn == (loggedin = 1)) {
@@ -499,10 +504,10 @@ type_thread_func monite(void *arg)
                         sndlen = 48;
                         break;
                     case 0x2:
-                        char susr[sizeof(user)];
-                        sprintf(susr, "User: %s(--%s--);", user.usr, user.sign);
-                        snprintf((sd_bufs + 8), strlen(susr) + 1, susr);
-                        sndlen = 8 + strlen(susr) + 1;
+                        char mark[sizeof(user)];
+                        sprintf(mark, "User: %s(--%s--);", user.usr, user.sign);
+                        snprintf((sd_bufs + 8), strlen(mark) + 1, "%s", mark);
+                        sndlen = 8 + strlen(mark) + 1;
                         break;
                     case 0x3:
                     {
@@ -564,9 +569,9 @@ type_thread_func monite(void *arg)
                                     }
                                     s++;
                                 };
-                                sprintf((sd_bufs + 32), "%d", uiIP);
-                                sprintf((sd_bufs + 56), "%d", p2pnet.port);
-                                if (memcmp(user.chk, "P2P", 4) == 0) { // recieve a hole digging message
+                                sprintf((sd_bufs + 32), "%u", uiIP);
+                                sprintf((sd_bufs + 56), "%u", p2pnet.port);
+                                if (memcmp(user.chk, "P2P", 4) == 0) { // recieved a hole digging message
                                     fprintf(stdout, "'%s' is communicating with '%s' via P2P.\n", user.usr, user.peer);
                                     sprintf(sd_bufs + 2, "%x", NEVAL(0));
                                     strcpy((sd_bufs + 4), "P2P");
@@ -578,7 +583,7 @@ type_thread_func monite(void *arg)
                                         sprintf(sd_bufs + 2, "%x", NEVAL(-1));
                                         sprintf((sd_bufs + 32), "failed send command to %s.", user.peer);
                                         send(rcv_sock, sd_bufs, sndlen, 0);
-                                        fprintf(stdout, "Got failure trans message to %s:%d (%s).\n", p2pnet.ip, p2pnet.port, strerror(errno));
+                                        fprintf(stdout, "Got failure trans message to %s:%u (%s).\n", p2pnet.ip, p2pnet.port, strerror(errno));
                                     }
                                     break;
                                 }
@@ -790,8 +795,8 @@ type_thread_func monite(void *arg)
                         if (valrtn == -2) {
                             strcpy((sd_bufs + 8), "Host zone rejected.");
                             sndlen = 32;
-                        } else if (valrtn < -2) {
-                            join_zone((valrtn + MAX_ZONES + 3), user.usr, reinterpret_cast<char*>(user.join));
+                        } else if (valrtn < -2 && valrtn > -MAX_ZONES - 4) {
+                            join_zone(((valrtn + 3 + MAX_ZONES)), user.usr, reinterpret_cast<char*>(user.join));
                             sprintf((sd_bufs + 8), "%s exist, %s joins the zone.", user.host, user.usr);
                             sndlen = 88;
                         } else {
@@ -856,14 +861,14 @@ type_thread_func monite(void *arg)
                                 {
                                     sprintf(sd_bufs + 3, "%x", -3);
                                     int uil = user_is_line(zones[valrtn].zone.members[c]);
-                                    if (!(uil == -1)) {
+                                    if (uil != -1) {
                                         strcpy((sd_bufs + 8), user.usr);
                                         strcpy((sd_bufs + 32), user.sign);
                                         send(active[uil].netwk.socket, sd_bufs, 48, 0);
                                     }//if uil
                                 }//if strlen
-                            }//for
-                        }//else
+                            }//for MENBERS
+                        }//else valrtn
                     } break;
                     default: break;
                     }
@@ -917,49 +922,6 @@ comm_err0: {
 #endif
                        return 0;
     };
-
-type_thread_func commands(void *arg)
-{
-    char optionstr[24], name[24];
-    do {
-        scanf("%32s", reinterpret_cast<char*>(&optionstr));
-        if (strcmp(optionstr, "quit") == 0) {
-            save_acnt();
-            closesocket(listen_socket);
-            fprintf(stdout, "Saved accounts to file \"%s\".\n", ACC_REC);
-#ifdef _WIN32
-            WSACleanup();
-            DeleteCriticalSection(&sendallow);
-#else
-            pthread_mutex_destroy(&sendallow);
-#endif
-            aim2exit = 1;
-            SLEEP(2);
-            exit(0);
-        }
-        if (strcmp(optionstr, "kick") == 0) {
-            fprintf(stdout, "Kick whom out?\n");
-            scanf("%32s", reinterpret_cast<char*>(&name));
-            int rtn = user_is_line(name);
-            if (!(rtn == -1)) {
-#if !defined _WIN32
-                struct ONLINE active[MAX_ACTIVE];
-                memset(active, 0, sizeof(ONLINE) * MAX_ACTIVE);
-                for (int i = 0; i < MAX_ACTIVE; i++) {
-                    set_n_get_mem(&active[i], i);
-                }
-#endif
-                closesocket(active[rtn].netwk.socket);
-                fprintf(stdout, "User %s kicked out!\n", name);
-            };
-        };
-        if (strcmp(optionstr, "cls") == 0) {
-            system("CLS");
-        };
-        SLEEP(99);
-    } while (!(aim2exit));
-    return NULL;
-};
 
 int inst_mesg(int argc, char * argv[])
 {
@@ -1041,7 +1003,7 @@ int inst_mesg(int argc, char * argv[])
         std::cerr << "ERROR(" << errno << "): " << strerror(errno) << std::endl;
         exit(-1);
     }
-    int thdcnt = 0;
+    int thrdcnt = 0;
     struct sockaddr_in listenAddr;
     socklen_t listenLen = static_cast<socklen_t>(sizeof(listenAddr));
     getsockname(listen_socket, reinterpret_cast<struct sockaddr *>(&listenAddr), &listenLen);
@@ -1075,12 +1037,12 @@ int inst_mesg(int argc, char * argv[])
             fprintf(stdout, "accept [%s] success.\n", IPdotdec);
         }
 #ifdef _DEBUG
-        fprintf(stdout, ">>> Socket test-%d: val=%d\n", thdcnt, test_socket);
+        fprintf(stdout, ">>> Socket test-%d: val=%d\n", thrdcnt, test_socket);
 #endif
         closesocket(test_socket);
 #endif
 #ifdef THREAD_PER_CONN
-        if (THREAD_NUM != 0 && thdcnt == THREAD_NUM)
+        if (THREAD_NUM != 0 && thrdcnt == THREAD_NUM)
             break;
 #endif
 #ifdef _WIN32
@@ -1102,17 +1064,17 @@ int inst_mesg(int argc, char * argv[])
             int PID = 0;
             if ((PID = fork()) == 0)
             {
-                fprintf(stdout, "running child(%d) forks from Main process.\n", thdcnt);
+                fprintf(stdout, "running child(%d) forks from Main process.\n", thrdcnt);
                 monite(&msg_socket);
             } else
                 fprintf(stdout, "Parent: process %d established.\n", PID);
         }
 #endif
 #endif
-        thdcnt++;
+        thrdcnt++;
         SLEEP(99);
         } while (!aim2exit);
-        fprintf(stdout, ">>> Executing thread count = %d.\n", thdcnt);
+        fprintf(stdout, ">>> Executing thread count = %d.\n", thrdcnt);
 #ifdef THREAD_PER_CONN
         while (true)
             SLEEP(9);
@@ -1126,11 +1088,11 @@ template<typename T> int set_n_get_mem(T* shmem, int ndx, int rw) {
 #ifdef _SYS_SHM_H
     pthread_mutex_trylock(&sendallow);
     T *shared;
-    if ((shmids = shmget(IPCKEY, MAX_ACTIVE * sizeof(T), 0666 | IPCFLAG) < 0))
+    if ((shmids = shmget(IPCKEY, (MAX_ACTIVE * sizeof(T)), (0666 | IPCFLAG))) < 0)
     {
         if (EEXIST == errno)
         {
-            shmids = shmget(IPCKEY, MAX_ACTIVE * sizeof(T), 0666);
+            shmids = shmget(IPCKEY, (MAX_ACTIVE * sizeof(T)), 0666);
             shared = (T*)shmat(shmids, NULL, 0);
         } else
         {
@@ -1172,7 +1134,6 @@ void func_waitpid(int signo) {
     return;
 #endif
 }
-
 int queryNetworkParams(const char * username, Network & network, const int max)
 {
     struct ONLINE active[MAX_ACTIVE];
@@ -1197,30 +1158,78 @@ Network queryNetworkParams(int uid)
     network.port = users[uid].netwk.port;
     return network;
 }
-//save accounts to file.
+void wait(unsigned int tms)
+{
+    struct timeval time;
+    time.tv_sec = tms / 1000;
+    time.tv_usec = tms % 1000 * 1000;
+    select(0, NULL, NULL, NULL, &time);
+}
+type_thread_func commands(void *arg)
+{
+    char optionstr[24], name[24];
+    do {
+        scanf("%32s", reinterpret_cast<char*>(&optionstr));
+        if (strcmp(optionstr, "quit") == 0) {
+            save_acnt();
+            closesocket(listen_socket);
+            fprintf(stdout, "Saved accounts to file \"%s\".\n", ACC_REC);
+#ifdef _WIN32
+            WSACleanup();
+            DeleteCriticalSection(&sendallow);
+#else
+            pthread_mutex_destroy(&sendallow);
+#endif
+            aim2exit = 1;
+            SLEEP(2);
+            exit(0);
+        }
+        if (strcmp(optionstr, "kick") == 0) {
+            fprintf(stdout, "Kick whom out?\n");
+            scanf("%32s", reinterpret_cast<char*>(&name));
+            int rtn = user_is_line(name);
+            if (!(rtn == -1)) {
+#if !defined _WIN32
+                struct ONLINE active[MAX_ACTIVE];
+                memset(active, 0, sizeof(ONLINE) * MAX_ACTIVE);
+                for (int i = 0; i < MAX_ACTIVE; i++) {
+                    set_n_get_mem(&active[i], i);
+                }
+#endif
+                closesocket(active[rtn].netwk.socket);
+                fprintf(stdout, "User %s kicked out!\n", name);
+            };
+        };
+        if (strcmp(optionstr, "cls") == 0) {
+            system("CLS");
+        };
+        SLEEP(99);
+    } while (!(aim2exit));
+    return NULL;
+};
+//save accounts to local file.
 int save_acnt() {
     flush_all();
-    FILE *dumpfile = nullptr;
-    dumpfile = fopen(ACC_REC, "w");
-    if (dumpfile == nullptr)
+    FILE *dump = fopen(ACC_REC, "w");
+    if (dump == nullptr)
         return -1;
-    fwrite(users, sizeof(USER), MAX_USERS, dumpfile);
-    fwrite(zones, sizeof(zone_clazz), MAX_ZONES, dumpfile);
-    if (fclose(dumpfile) != 0)
+    fwrite(users, sizeof(USER), MAX_USERS, dump);
+    fwrite(zones, sizeof(zone_clazz), MAX_ZONES, dump);
+    if (fclose(dump) != 0)
         return -2;
     flush_all();
     return 0;
 };
-//load file system from disk.
+//load accounts from file system.
 int load_acnt() {
     flush_all();
-    FILE* dumpfile = fopen(ACC_REC, "r");
-    if (dumpfile == nullptr)
+    FILE* dump = fopen(ACC_REC, "r");
+    if (dump == nullptr)
         return -1;
     else {
-        fread(users, sizeof(USER), MAX_USERS, dumpfile);
-        fread(zones, sizeof(zone_clazz), MAX_ZONES, dumpfile);
-        fclose(dumpfile);
+        fread(users, sizeof(USER), MAX_USERS, dump);
+        fread(zones, sizeof(zone_clazz), MAX_ZONES, dump);
+        fclose(dump);
         return 0;
     };
     flush_all();
@@ -1426,7 +1435,7 @@ int free_zone(int at, char host[24]) {
         return -1;
     char *h = host;
     zone_clazz *zo = &zones[at].zone;
-    if (strcmp(zo->chief, host) == 0) {
+    if (strcmp(zo->chief, h) == 0) {
         memset(zo, 0, sizeof(zone_clazz));
         return 0;
     } else return -2;

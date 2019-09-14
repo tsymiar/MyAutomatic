@@ -83,12 +83,14 @@ LoadDIBitmap(const char *filename, /* I - File to load */
         /* Couldn't read bitmap - free memory and return NULL! */
         free(*info);
         free(bits);
-        fclose(fp);
-        return (NULL);
+        bits = NULL;
     }
 
     /* OK, everything went fine - return the allocated bitmap... */
     fclose(fp);
+    if (info) {
+        free(info);
+    }
     return (bits);
 }
 

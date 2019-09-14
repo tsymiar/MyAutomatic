@@ -1,7 +1,5 @@
 #include "IMclient.h"
 
-using namespace std;
-
 st_sock socks;
 st_trans trans;
 st_client client;
@@ -51,7 +49,7 @@ int InitChat(st_sock* sock) {
     WSADATA wsaData;
     int erno = WSAStartup(0x202, &wsaData);
     if (erno == SOCKET_ERROR) {
-        cerr << "WSAStartup failed with error " << WSAGetLastError() << endl;
+        std::cerr << "WSAStartup failed with error " << WSAGetLastError() << std::endl;
         WSACleanup();
         exit(0);
     }
@@ -59,8 +57,8 @@ int InitChat(st_sock* sock) {
     static char ipaddr[16];
     memset(ipaddr, 0, 16);
     if (sock == NULL || sock->IP[0] == '\0' || sock->IP[0] < 0) {
-        fprintf_s(stdout, "Current OS is %d bit.\nNow enter server address: ", sizeof(void*) * 8);
-        scanf_s("%16s", &ipaddr, 16);
+        fprintf_s(stdout, "Current OS is %u bit.\nNow enter server address: ", sizeof(void*) * 8);
+        scanf_s("%s", &ipaddr, 16);
         if (*ipaddr != 0) {
             memcpy(socks.IP, &ipaddr, 16);
         }
@@ -86,7 +84,7 @@ int InitChat(st_sock* sock) {
     client.sock = socket(AF_INET, SOCK_STREAM, 0);
     BOOL bReuseaddr = TRUE;
     if (client.sock == INVALID_SOCKET) {
-        cerr << "socket() invalid with error " << WSAGetLastError() << endl;
+        std::cerr << "socket() invalid with error " << WSAGetLastError() << std::endl;
         WSACleanup();
         exit(0);
     }
@@ -94,7 +92,8 @@ int InitChat(st_sock* sock) {
     SetRecvState(RCV_TCP);
     return 0;
 }
-string GetLastErrorToString(int errorCode)
+
+std::string GetLastErrorToString(int errorCode)
 {
 #ifdef _WIN32
     char *text;
@@ -103,7 +102,7 @@ string GetLastErrorToString(int errorCode)
         FORMAT_MESSAGE_IGNORE_INSERTS, NULL, errorCode,
         MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
         (LPTSTR)&text, 0, NULL);
-    string result(text);
+    std::string result(text);
     LocalFree(text);
     return result;
 #else
@@ -119,9 +118,9 @@ void* Chat_Msg(void* func)
 #endif
 {
     if (connect(client.sock, (struct sockaddr*)&client.srvaddr, sizeof(client.srvaddr)) == SOCKET_ERROR) {
-        cerr << "connect() error " << "[" <<
+        std::cerr << "connect() error " << "[" <<
             GetLastErrorToString(WSAGetLastError()).c_str()
-            << "] " << endl;
+            << "] " << std::endl;
         WSACleanup();
         exit(0);
     }
@@ -218,7 +217,7 @@ void*
 RecvThreadProc(void* PrimaryUDP)
 {
     int MAX_PACKET_SIZE = 256;
-    P2P_NETWORK* P2Psock = (P2P_NETWORK*)PrimaryUDP;
+    P2P_NETWORK* P2Psock = reinterpret_cast<P2P_NETWORK*>(PrimaryUDP);
     int len = sizeof(P2Psock->addr);
     for (;;)
     {
@@ -331,6 +330,8 @@ int p2pMessage(unsigned char *userName, int UserIP, unsigned int UserPort, char 
         int ppres = sendto(PrimaryUDP, (const char*)&MessagePeer, 32, 0, (const sockaddr*)&remote, sizeof(remote));
         //发送P2P消息体
         ppres = sendto(PrimaryUDP, (const char*)&Message, (int)strlen(Message) + 1, 0, (const sockaddr*)&remote, sizeof(remote));
+        if (ppres < 0)
+            return ppres;
         memset(&MessagePeer, 0, sizeof(st_trans));
         memcpy(&MessagePeer, Message, sizeof(st_trans));
         if (client.count == 0) {
