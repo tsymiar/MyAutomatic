@@ -2,7 +2,6 @@
 
 int show_memory(char* ip, st_sys* sys)
 {
-    char** h_list;
     struct in_addr addr;
     struct hostent *hostp;
     if (ip == nullptr)
@@ -15,6 +14,7 @@ int show_memory(char* ip, st_sys* sys)
         hostp = gethostbyname(ip);
     if (hostp != nullptr) {
         sys->s_host = hostp->h_name;
+        char** h_list;
         for (h_list = hostp->h_aliases; *h_list != nullptr; h_list++)
             sys->ss_alias = *h_list;
         //printf("official hostname: %s\nalias: %s\n", sys->s_host, sys->ss_alias);

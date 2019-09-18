@@ -33,7 +33,7 @@ if __name__ == '__main__':
     threads = []
     if len(sys.argv) > 1:
         url = sys.argv[1]
-    '''    
+    '''
     else    
         url = raw_input("Please enter a web address: \n> ")
     '''

@@ -10,7 +10,7 @@ unsigned char* get_hash1(unsigned char* ha, unsigned  char* sh, unsigned char* s
 }
 
 // 用工作密钥对hash1进行加密运算(IDEA算法ECB)，结果为密押MIYA。
-unsigned char* get_MIYA(const struct KEYINFO workey, unsigned char* hash1, unsigned char* miya)
+unsigned char* get_MIYA(const struct KEYINFO& workey, unsigned char* hash1, unsigned char* miya)
 {
     IDEA_KEY_SCHEDULE* wk = 0;
     idea_ecb_encrypt(hash1, miya, wk);
@@ -126,20 +126,19 @@ unsigned short get_CRC16(char* InStr, unsigned int len)
 unsigned long cal_CRC(unsigned long dwPolynomial, unsigned long *ptr, int len)
 {
     unsigned long    xbit;
-    unsigned long    data;
     unsigned long    CRC = 0xFFFFFFFF;
     int bits = 0;
     while (len--) {
         xbit = 1 << 31;
 
-        data = *ptr++;
+        unsigned long val = *ptr++;
         for (bits = 0; bits < 32; bits++) {
             if (CRC & 0x80000000) {
                 CRC <<= 1;
                 CRC ^= dwPolynomial;
             } else
                 CRC <<= 1;
-            if (data & xbit)
+            if (val & xbit)
                 CRC ^= dwPolynomial;
 
             xbit >>= 1;
@@ -166,21 +165,21 @@ int get_CRC(unsigned char *data, int len, unsigned char CRC[2])
 
 void BCD_cut(unsigned char* TRUSTID, int cutlen, char* cut10)
 {
-    unsigned char  i, j, k, m;
+    unsigned char  i, j;
     for (i = 0, j = 0; i < cutlen; i += 2)
     {
-        k = TRUSTID[i] << 4;
-        m = TRUSTID[i + 1];
+        unsigned char k = TRUSTID[i] << 4;
+        unsigned char m = TRUSTID[i + 1];
         cut10[j++] = k + m;
     }
 }
 
 void BCD_exp(unsigned char* Ascbuf, int len, char* exp)
 {
-    unsigned char  i, j;
+    unsigned char  i;
     for (i = len; i != 0; i--)
     {
-        j = Ascbuf[i - 1];
+        unsigned char j = Ascbuf[i - 1];
         exp[i * 2 - 1] = j & 0x0F;
         exp[i * 2 - 2] = j >> 4;
     }
@@ -201,6 +200,10 @@ void RSA_check()
     if (stream == NULL)
         return;
     frv = fread(&PUBLIC_KEY, 1, sizeof(RSArefPubKey_st), stream);
+    if (frv < 0) {
+        fclose(stream);
+        return;
+    }
     key = PEM_read_RSAPublicKey(stream, NULL/*&key*/, NULL, NULL);
     ret = RSA_public_encrypt(strlen((char*)msg), msg, msg2, key, RSA_PKCS1_PADDING); // or RSA_PKCS1_OAEP_PADDING
     if (RSA_verify(NID_idea_ecb, msg2, 256, msg, ret, key) == 1) {

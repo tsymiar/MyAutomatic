@@ -4,11 +4,11 @@ import sys
 import cv2
 import numpy as np
 import tensorflow as tf
+
 sys.path.append("..")
 
 from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as vis_util
-
 
 class TOD(object):
     def __init__(self):
@@ -72,10 +72,8 @@ class TOD(object):
             if cv2.waitKey(110) & 0xff == 27:
                 break
 
-
 if __name__ == '__main__':
     jpg = os.path.join('image', 'taoxi.jpg')
     image = cv2.imread(jpg)
     detecotr = TOD()
     detecotr.detect(image)
-    

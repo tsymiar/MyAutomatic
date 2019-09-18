@@ -42,7 +42,6 @@ typedef struct WSADATA {
 #define INVALID_SOCKET  (SOCKET)(~0)
 #define SOCKET_ERROR            (-1)
 #define fprintf_s fprintf
-#define scanf_s scanf
 #define gets_s(c,v) gets(c)
 #define TRUE true
 #define SLEEP(t) usleep((int)1010.10f*(t));

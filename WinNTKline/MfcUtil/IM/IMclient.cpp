@@ -35,11 +35,10 @@ runtime(void* param) {
                 client->flag = -1;
                 closesocket(client->sock);
                 exit(0);
-                break;
             }
-            continue;
-            Sleep(100);
             '...';
+            Sleep(100);
+            continue;
         };
     };
 };
@@ -57,8 +56,12 @@ int InitChat(st_sock* sock) {
     static char ipaddr[16];
     memset(ipaddr, 0, 16);
     if (sock == NULL || sock->IP[0] == '\0' || sock->IP[0] < 0) {
-        fprintf_s(stdout, "Current OS is %u bit.\nNow enter server address: ", sizeof(void*) * 8);
+        fprintf_s(stdout, "Current OS is %d bit.\nNow enter server address: ", (int)(sizeof(void*) * 8));
+#ifdef _WIN32
         scanf_s("%s", &ipaddr, 16);
+#else
+        scanf("%s", &ipaddr);
+#endif
         if (*ipaddr != 0) {
             memcpy(socks.IP, &ipaddr, 16);
         }
@@ -193,7 +196,7 @@ int SendChatMesg(st_trans* msg)
     int len = sizeof(trans);
     trans = { '\0', (unsigned char)(trans.uiCmdMsg & 0xff) };
     if (msg != NULL) {
-        if (msg->uiCmdMsg < 0)
+        if ((int)msg->uiCmdMsg < 0)
             return -2;
         memcpy(&trans, msg, sizeof(st_trans));
     } else {
@@ -328,6 +331,8 @@ int p2pMessage(unsigned char *userName, int UserIP, unsigned int UserPort, char 
         memcpy(MessagePeer.username, userName, 24);
         //发送P2P消息头
         int ppres = sendto(PrimaryUDP, (const char*)&MessagePeer, 32, 0, (const sockaddr*)&remote, sizeof(remote));
+        if (ppres < 0)
+            return ppres;
         //发送P2P消息体
         ppres = sendto(PrimaryUDP, (const char*)&Message, (int)strlen(Message) + 1, 0, (const sockaddr*)&remote, sizeof(remote));
         if (ppres < 0)

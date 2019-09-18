@@ -641,7 +641,6 @@ void StopLossB12(double system_times, int i)
     void _record1(char *txt1, char *txt2, double m, int n, int i);
     bool stopwinen = true;         //调试用
     bool stoplossen = false;       //调试用
-    bool stopfanen = false;        //调试用
 
     //止赢平仓
     if (Trade_dataB[i][2] == 1 && Trade_dataB[i][3] == 5 && (tick_BidPrice1[i][0] - Trade_dataB[i][5]) >= Trade_Stopwin[i] && stopwinen)
@@ -1158,7 +1157,6 @@ void WriteMdConfiguration()
 void WriteTradeConfiguration()
 {
     string ff2ss(double nums);
-    int    tn = 0;
 
     ofstream o_file("./AutoTrader.cfg", ios::trunc);
     for (int i = 0; i < 20; i++)

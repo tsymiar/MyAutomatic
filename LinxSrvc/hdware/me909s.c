@@ -72,11 +72,12 @@ int main(int argc, int **argv)
     tv.tv_usec = 500;
     char buff[256], rply[MAX_BUF_LEN];
     struct termios options;
-    int me_fd, ret, rd_stdin;
+    int me_fd, rd_stdin;
     int tries = 0;
     int flag = 0;
     int cmmat = 0;
     int curr = 0;
+    int ret;
 
     if (mem_usb_check() == -2 && errno != 13) {
         printf("Fail to check me909s model!\n");
@@ -153,7 +154,7 @@ int main(int argc, int **argv)
             flag = 0;
         } else {
             memset(rply, 0, sizeof(rply));
-            if (rd_stdin = read(me_fd, rply, sizeof(rply)) > 0) {
+            if ((rd_stdin = read(me_fd, rply, sizeof(rply))) > 0) {
                 if (strstr(rply, ">")) {
                     printf("Enter text to serial: ");
                     memset(buff, 0, sizeof(buff));

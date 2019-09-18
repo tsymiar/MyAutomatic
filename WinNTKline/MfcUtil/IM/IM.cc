@@ -795,7 +795,7 @@ type_thread_func monite(void *arg)
                         if (valrtn == -2) {
                             strcpy((sd_bufs + 8), "Host zone rejected.");
                             sndlen = 32;
-                        } else if (valrtn < -2 && valrtn > -MAX_ZONES - 4) {
+                        } else if (valrtn < -2 && valrtn > -MAX_ZONES - 3) {
                             join_zone(((valrtn + 3 + MAX_ZONES)), user.usr, reinterpret_cast<char*>(user.join));
                             sprintf((sd_bufs + 8), "%s exist, %s joins the zone.", user.host, user.usr);
                             sndlen = 88;
@@ -1012,10 +1012,12 @@ int inst_mesg(int argc, char * argv[])
     signal(SIGCHLD, &func_waitpid);
 #endif
     do {
-        struct sockaddr_in from;
-        type_len folen = static_cast<type_len>(sizeof(from));
+        struct sockaddr_in form;
+        type_len frmlen = static_cast<type_len>(sizeof(form));
+        if (frmlen < 0)
+            frmlen = 0;
 #ifdef SOCK_CONN_TEST
-        type_socket test_socket = accept(listen_socket, (struct sockaddr*)&from, &folen);
+        type_socket test_socket = accept(listen_socket, (struct sockaddr*)&form, &frmlen);
         if (test_socket
 #ifdef _WIN32
             == INVALID_SOCKET) {
@@ -1030,9 +1032,9 @@ int inst_mesg(int argc, char * argv[])
         {
             char IPdotdec[16];
 #ifdef _WIN32
-            memcpy(IPdotdec, inet_ntoa(from.sin_addr), 16);
+            memcpy(IPdotdec, inet_ntoa(form.sin_addr), 16);
 #else
-            inet_ntop(AF_INET, (void *)&from.sin_addr, IPdotdec, 16);
+            inet_ntop(AF_INET, (void *)&form.sin_addr, IPdotdec, 16);
 #endif
             fprintf(stdout, "accept [%s] success.\n", IPdotdec);
         }
@@ -1056,7 +1058,7 @@ int inst_mesg(int argc, char * argv[])
         pthread_t threadid;
         pthread_create(&threadid, NULL, monite, NULL);
 #elif !defined SOCK_CONN_TEST
-        type_socket msg_socket = accept(listen_socket, (struct sockaddr*)&from, &folen);
+        type_socket msg_socket = accept(listen_socket, (struct sockaddr*)&form, &frmlen);
         if (msg_socket < 0) {
             std::cerr << "ERROR(" << errno << "): " << strerror(errno) << std::endl;
             return -1;

@@ -172,7 +172,7 @@ int main_server(int argc, char** argv)
     soap_set_mode(&Soap, SOAP_C_UTFSTRING);
     soap_set_namespaces(&Soap, namespaces);
     // 如果没有参数，当作CGI程序处理
-    if (argc < 2)
+    if (argc <= 1)
     {
         // CGI 风格服务请求，单线程
         soap_serve(&Soap);
@@ -180,17 +180,15 @@ int main_server(int argc, char** argv)
         soap_destroy(&Soap);
         // 清除序列化数据
         soap_end(&Soap);
-    } else
-    {
+    } else {
         struct soap * soap_thr[MAX_THR];
         pthread_t tid[MAX_THR];
         int i, port = atoi(argv[1]);
-        SOAP_SOCKET m, cs;
         // 锁和条件变量初始化
         pthread_mutex_init(&queue_lock, NULL);
         pthread_cond_init(&queue_noti, NULL);
         // 绑定服务端口
-        m = soap_bind(&Soap, NULL, port, BACKLOG);
+        SOAP_SOCKET m = soap_bind(&Soap, NULL, port, BACKLOG);
         int vilid = 0;
         // 循环绑定直至服务套接字合法
         while (!soap_valid_socket(m))
@@ -213,12 +211,13 @@ int main_server(int argc, char** argv)
             pthread_create(&tid[i], NULL, (void*(*)(void*))process_queue, (void*)soap_thr[i]);
             usleep(50);
         }
-        int j = 0;
+        int j = 0; 
+        SOAP_SOCKET sock;
         for (;;)
         {
             // 接受客户端连接
-            cs = soap_accept(&Soap);
-            if (!soap_valid_socket(cs))
+            sock = soap_accept(&Soap);
+            if (!soap_valid_socket(sock))
             {
                 if (Soap.errnum)
                 {
@@ -236,7 +235,7 @@ int main_server(int argc, char** argv)
                 (int)(((Soap.ip) >> 24) & 0xFF), (int)(((Soap.ip) >> 16) & 0xFF), (int)(((Soap.ip) >> 8) & 0xFF), \
                 (int)((Soap.ip) & 0xFF), (int)(Soap.socket), logcnt);
             // 套接字入队，如果队列已满则循环等待
-            while (enqueue(cs, ips[j]) == SOAP_EOM)
+            while (enqueue(sock, ips[j]) == SOAP_EOM)
                 usleep(1000);
             j++;
             if (j >= MAX_THR)
@@ -274,13 +273,12 @@ int api__trans(struct soap *soap, char* msg, char* rtn[])
         char key[16];
         char value[16];
     };
-    char*    curstr[4] = { NULL };
-    char*    token = NULL;
+    char* curstr[4] = { NULL };
     struct PARAM params[8];
     char *text[8] = { msg };
     int noeq = str.charcount_(*text, '=');
+    char* token = strtok(msg, "@&");
     printf("GET:[%s][%d]\n", msg, noeq);
-    token = strtok(msg, "@&");
     for (int i = 0; i < 8; i++) {
         text[i] = (char*)malloc(64);
     }

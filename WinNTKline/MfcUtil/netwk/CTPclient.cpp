@@ -13,7 +13,6 @@ unsigned int __stdcall CTPclient::SimpleClient(void* P)
 {
     //线程要调用的函数
     int err;
-    int j = 0;
     SOCKET clientSock;
     WSADATA wsaData;//WSAata存储系统传回的关于WinSocket的信息
     CTPclient *m_ctp = new CTPclient;
@@ -64,7 +63,6 @@ unsigned int __stdcall CTPclient::SimpleClient(void* P)
         Str.Format(_T("%s"), LPCT);
         _ultoa_s(GetCurrentThreadId(), buffer, 10);//当前线程id
         send(clientSock, buffer, strlen(buffer) + 1, 0);//发送数据
-        j++;
     }
     if (m_ctp != nullptr)
         delete m_ctp;
@@ -75,9 +73,7 @@ unsigned int __stdcall CTPclient::SimpleClient(void* P)
 
 unsigned int __stdcall CTPclient::TradeMarket(void* P)
 {
-    MyOglDrawDlg* m_hWnd = (MyOglDrawDlg*)P;
-    TradeChannel trade;
-    CString str;
+    MyOglDrawDlg* m_hWnd = reinterpret_cast<MyOglDrawDlg*>(P);
     if (AllocConsole() && freopen("CONOUT$", "w", stderr)) {}
     TRDAPI = CThostFtdcTraderApi::CreateFtdcTraderApi(STFTDC.FLOW_PATH);
     TradeChannel *tdChnl = new TradeChannel();
@@ -87,6 +83,7 @@ unsigned int __stdcall CTPclient::TradeMarket(void* P)
     TRDAPI->SubscribePublicTopic(THOST_TERT_QUICK);
     TRDAPI->Init();
     TRDAPI->Join();
+    CString str;
     str.Format(_T("%d"), tdChnl->getRtn());
     CTPclient *m_ctp = new CTPclient;
     if (m_hWnd->m_hWnd != NULL)

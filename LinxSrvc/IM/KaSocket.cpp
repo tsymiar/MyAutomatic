@@ -3,9 +3,9 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <algorithm>
 #include <iostream>
 #include <cstdlib>
-#include <algorithm>
 #include <cstring>
 #include <thread>
 
@@ -23,7 +23,7 @@ KaSocket::KaSocket(const char * srvip, unsigned short servport)
     network.socket = ::socket(AF_INET, SOCK_STREAM, 0);
     if (network.socket < 0) {
         std::cerr
-            << "ERROR: socket (" << (errno != 0 ? strerror(errno) : std::to_string(network.socket)) << ")."
+            << "Creating socket (" << (errno != 0 ? strerror(errno) : std::to_string(network.socket)) << ")."
             << std::endl;
         return;
     }
@@ -41,7 +41,7 @@ int KaSocket::start()
     local.sin_port = htons((uint16_t)servport);
     if (::bind(listen_socket, reinterpret_cast<struct sockaddr*>(&local), sizeof(local)) < 0) {
         std::cerr
-            << "ERROR: bind sockaddr_in (" << (errno != 0 ? strerror(errno) : std::to_string(listen_socket)) << ")."
+            << "Binding sockaddr_in (" << (errno != 0 ? strerror(errno) : std::to_string(listen_socket)) << ")."
             << std::endl;
         close(listen_socket);
         return -1;
@@ -49,7 +49,7 @@ int KaSocket::start()
 
     if (listen(listen_socket, 50) < 0) {
         std::cerr
-            << "ERROR: listen (" << (errno != 0 ? strerror(errno) : std::to_string(listen_socket)) << ")."
+            << "Socket listen (" << (errno != 0 ? strerror(errno) : std::to_string(listen_socket)) << ")."
             << std::endl;
         close(listen_socket);
         return -2;
@@ -71,7 +71,7 @@ int KaSocket::start()
         int rcv_sock = network.socket = ::accept(listen_socket, reinterpret_cast<struct sockaddr*>(&sin), &len);
         if (rcv_sock < 0) {
             std::cerr
-                << "ERROR: accept (" << (errno != 0 ? strerror(errno) : std::to_string(rcv_sock)) << ")."
+                << "Socket accept (" << (errno != 0 ? strerror(errno) : std::to_string(rcv_sock)) << ")."
                 << std::endl;
             return -3;
         };
@@ -124,7 +124,7 @@ int KaSocket::connect()
             wait(100);
             tries++;
         } else {
-            std::cerr << "ERROR: tries to connect (" << "tries=" << tries << ", "
+            std::cerr << "Trying to connect (" << "tries=" << tries << ", "
                 << (errno != 0 ? strerror(errno) : "No error") << ")." << std::endl;
             notify(network.socket);
             return -1;
@@ -192,15 +192,16 @@ int KaSocket::recv(char * buff, int len)
         return 0;
     }
     // get ssid set to 'network', also repeat to server as a mark for search clients
-    std::lock_guard<std::mutex> lock(mtxlck);
     if (flag == size) {
         int ssid = reinterpret_cast<Head*>(header)->ssid;
         if (ssid != 0) {
+            std::lock_guard<std::mutex> lock(mtxlck);
             network.head.ssid = ssid;
             for (std::vector<Network>::iterator it = networks.begin(); it != networks.end(); ++it) {
                 if (verifySsid((*it), network.head.ssid)) {
                     it->head.ssid = setSsid(network, it->socket);
                 }
+                wait(1);
             }
             memcpy(buff, header, size);
         } else {
@@ -238,25 +239,36 @@ void KaSocket::setCallback(void(*func)(void *))
 void KaSocket::addCallback(void(*func)(void *))
 {
     if (std::find(callbacks.begin(), callbacks.end(), func) == callbacks.end()) {
+
         callbacks.push_back(func);
     }
 }
 
 void KaSocket::notify(int socket)
 {
+    //FIXME: signal SIGSEGV, Segmentation fault.
+    std::vector<Network>::iterator iter;
     for (std::vector<Network>::iterator it = networks.begin(); it != networks.end(); ++it) {
         if (socket < 0 || it->socket == socket) {
             if (socket < 0)
                 return;
-            it->running = false;
-            std::cout
-                << "### " << (server ? "Client" : "Server")
-                << "(" << it->IP << ":" << it->PORT << ") socket [" << it->socket << "] lost."
-                << std::endl;
-            close(it->socket);
-            it = networks.erase(it);
-            break;
+            {
+                std::lock_guard<std::mutex> lock(mtxlck);
+                iter = it;
+                it->running = false;
+                std::cerr
+                    << "### " << (server ? "Client" : "Server")
+                    << "(" << it->IP << ":" << it->PORT << ") socket [" << it->socket << "] lost."
+                    << std::endl;
+                if (networks.size() > 0) {
+                    close(it->socket);
+                    it = networks.erase(iter);
+                    if (networks.size() == 0)
+                        break;
+                }
+            }
         }
+        wait(1);
     }
 }
 
@@ -277,7 +289,7 @@ void KaSocket::heartBeat(Network& network)
     while (1) {
         if (::send(network.socket, "Ka", 2, 0) <= 0 &&
             errno != EWOULDBLOCK && errno != EAGAIN && errno != EINTR && errno != ETIMEDOUT) {
-            std::cout << "Heartbeat to " << network.IP << ":" << network.PORT << " arrests." << std::endl;
+            std::cerr << "Heartbeat to " << network.IP << ":" << network.PORT << " arrests." << std::endl;
             break;
         }
         wait(3000);
@@ -300,10 +312,10 @@ float KaSocket::setSsid(Network network, int socket)
         }
         s++;
     };
-    return  (network.PORT << 16 | socket << 4 | ip);
+    return (network.PORT << 16 | socket << 8 | ip);
 }
 
 bool KaSocket::verifySsid(Network network, int ssid)
 {
-    return (ssid >> 4) & 0x00ff == network.socket;
+    return (((ssid >> 8) & 0x00ff) == network.socket);
 }
