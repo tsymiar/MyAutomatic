@@ -4,7 +4,7 @@ idx=0
 for tmp in $(ls *.prototxt)
 do
   file=$tmp
-  echo $tmp 
+  echo $tmp
   if [ 99 -lt $(< $file wc -l) ]; then     #如果文件大于99行
     sed -n "1,/blobs {/p" $tmp > h_$idx    #第一行到含第一个'blobs'的行写入head  
     sed "1,/blobs {/d" $tmp > t_$idx       #删除第一行到含第一个'blobs'的行剩余内容写入tail

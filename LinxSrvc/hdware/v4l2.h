@@ -38,7 +38,7 @@ const int IMGH = 320;
 
 extern int v4l2_init_dev(v4l2_device*, char*);
 extern int v4l2_mapping_buffers(v4l2_device*, __u32);
-extern unsigned int v4l2_set_buffer_queue(v4l2_device*, __u32);
+extern int v4l2_set_buffer_queue(v4l2_device*, __u32);
 extern int v4l2_save_image_frame(v4l2_device*, const char*);
 extern int v4l2_close_dev(v4l2_device*);
 
@@ -169,13 +169,13 @@ int v4l2_mapping_buffers(v4l2_device *v4l2_obj, __u32 count)
     return i;
 }
 
-unsigned int v4l2_set_buffer_queue(v4l2_device *v4l2_obj, __u32 count)
+int v4l2_set_buffer_queue(v4l2_device *v4l2_obj, __u32 count)
 {
-    unsigned int i;
+    int i;
     for (i = 0; i < count; i++) {
         v4l2_obj->argp.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
         v4l2_obj->argp.memory = V4L2_MEMORY_MMAP;
-        v4l2_obj->argp.index = i;
+        v4l2_obj->argp.index = (unsigned)i;
         if (-1 == ioctl(v4l2_obj->v4l_fd, VIDIOC_QBUF, &v4l2_obj->argp)) {
             perror("Get data from buffer issue");
             return -1;

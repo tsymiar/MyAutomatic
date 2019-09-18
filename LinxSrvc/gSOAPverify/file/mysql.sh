@@ -1,19 +1,17 @@
 #!/bin/bash
 if [ "${1}" == "-i" ]; then
-	echo "导入数据库"
+	echo "import .sql file"
 	mysqldump -u root -p myautomatic < myautomatic.sql
-	echo "OK"
-	exit 0
+	exit "OK"
 else
-	echo 停止mysql
+	echo "kill mysql"
 	sudo mysqld stop
 	sudo chown -R mysql:mysql /var/lib/mysql
 	sudo ln -s /var/lib/mysql/mysql.sock /tmp/mysql.sock
-	echo 重启mysql
+	echo "restart mysql"
 	sudo /etc/init.d/mysql start
-	echo 启动mysqld_safe
+	echo "run mysqld_safe"
 	sudo mysqld_safe --user=mysql --skip-grant-tables --skip-networking
-	echo 输入mysql密码
+	echo "login mysql with password"
 	sudo mysql -u root -p
 fi
-

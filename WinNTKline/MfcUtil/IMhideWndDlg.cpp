@@ -519,7 +519,7 @@ void callbackPasswdSet(char* psw)
         setdlg->SetTitle("重置密码");
         strcpy((char*)transMsg.username, g_logDlg->getUsername());
         strcpy((char*)transMsg.user_newpass, psw);
-        if (psw != NULL && transMsg.password[0] != psw[0]) {
+        if (*psw != NULL && transMsg.password[0] != psw[0]) {
             SendChatMesg(&transMsg);
         }
     }
@@ -550,7 +550,7 @@ BOOL CIMhideWndDlg::DestroyWindow()
 
 UINT _NoMessageBox(LPVOID lparam)
 {
-    CIMhideWndDlg* ImWnd = (CIMhideWndDlg*)lparam;
+    CIMhideWndDlg* ImWnd = reinterpret_cast<CIMhideWndDlg*>(lparam);
     return
         ImWnd->MessageBox("[注册]\n----跳转到WEB注册页面\
                          \n[登陆]\n----请输入用户和密码\

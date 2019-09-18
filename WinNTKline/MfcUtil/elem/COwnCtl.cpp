@@ -78,7 +78,7 @@ void CMyMenu::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
     // TODO: 添加您的代码以绘制指定项
     CString strText;
     CDC *pDC = CDC::FromHandle(lpDrawItemStruct->hDC); //获取菜单项的设备句柄 
-    ItemInfo *item = (ItemInfo*)lpDrawItemStruct->itemData;
+    ItemInfo *item = reinterpret_cast<ItemInfo*>(lpDrawItemStruct->itemData);
     CRect rect(lpDrawItemStruct->rcItem);
 
     if (item->m_itemState == 0)//分隔条

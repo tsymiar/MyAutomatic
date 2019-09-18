@@ -59,6 +59,7 @@ LoadDIBitmap(const char *filename, /* I - File to load */
     {
         /* Couldn't read the bitmap header - return NULL... */
         free(*info);
+        free(info);
         fclose(fp);
         return (NULL);
     }
@@ -74,6 +75,7 @@ LoadDIBitmap(const char *filename, /* I - File to load */
     {
         /* Couldn't allocate memory - return NULL! */
         free(*info);
+        free(info);
         fclose(fp);
         return (NULL);
     }

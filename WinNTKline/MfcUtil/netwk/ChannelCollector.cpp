@@ -57,10 +57,11 @@ int MarketDataCollector::CtpMarketReqUserLogin()
     strcpy_s(req.BrokerID, STFTDC.BROKER_ID);
     strcpy_s(req.UserID, STFTDC.USER_ID);
     strcpy_s(req.Password, STFTDC.PASSWORD);
-    return iResult = TRDAPI->ReqUserLogin(&req, ++STFTDC.iReqID);
-    (cerr << "--->>> 发送用户登录请求: ", iResult == 0 ? cerr << "成功" : cerr << "失败 [" << iResult << (iResult != 0 ? "]" : "")) << endl;
+    iResult = TRDAPI->ReqUserLogin(&req, ++STFTDC.iReqID);
+    cerr << "--->>> 发送用户登录请求: ", iResult == 0 ? cerr << "成功" : cerr << "失败 [" << iResult << (iResult != 0 ? "]" : "") << endl;
     void onRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin,
         CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
+    return iResult;
 }
 
 void MarketDataCollector::OnRspUserLogin(CThostFtdcRspUserLoginField * pRspUserLogin, CThostFtdcRspInfoField * pRspInfo, int nRequestID, bool bIsLast)
@@ -402,7 +403,7 @@ int TradeChannel::CtpTrdReqUserLogin()
         strcpy_s(authReq.BrokerID, STFTDC.BROKER_ID);
         strcpy_s(authReq.UserID, STFTDC.INVESTOR_ID);
         strcpy_s(authReq.AuthCode, STFTDC.AUTHCODE);
-        if (iResult = TRDAPI->ReqAuthenticate(&authReq, ++STFTDC.iReqID) != 0)
+        if ((iResult = TRDAPI->ReqAuthenticate(&authReq, ++STFTDC.iReqID)) != 0)
             return iResult;
     }
     iResult = TRDAPI->ReqUserLogin(&req, ++STFTDC.iReqID);

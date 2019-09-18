@@ -32,7 +32,6 @@ bool BMP::Load(const char *FileName) {
     unsigned long i;
     unsigned short int planes;          // 面数
     unsigned short int bpp;             // 像素数
-    char temp;                          // 颜色
                                         // 打开图片
     if (fopen_s(&File, FileName, "rb") != 0) {
         std::cout << "图片不存在" << std::endl;
@@ -81,9 +80,9 @@ bool BMP::Load(const char *FileName) {
         return false;
     }
     for (i = 0; i < size; i += 3) {//bgr -> rgb
-        temp = Data[i];
+        char color = Data[i];
         Data[i] = Data[i + 2];
-        Data[i + 2] = temp;
+        Data[i + 2] = color;
     }
     return true;
 }
@@ -134,13 +133,12 @@ void __sphere(GLfloat xx, GLfloat yy, GLfloat zz, GLfloat radius, GLfloat M, GLf
     float step_xy = 2 * float(_PI_) / N;
     double x[4], y[4], z[4];
 
-    float angle_z = 0.0;
     float angle_xy = 0.0;
     int i = 0, j = 0;
     glBegin(GL_QUADS);
     for (i = 0; i < M; i++)
     {
-        angle_z = i * step_z;
+        float angle_z = i * step_z;
 
         for (j = 0; j < N; j++)
         {

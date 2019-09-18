@@ -1,7 +1,7 @@
 #pragma once
+#include <mutex>
 #include <string>
 #include <vector>
-#include <mutex>
 
 extern "C" {
     class KaSocket
@@ -34,13 +34,13 @@ extern "C" {
             bool running = false;
         } network; // current connect
         bool server = false;
+        std::mutex mtxlck;
         std::vector<Network> networks;
         std::vector<void(*)(void*)> callbacks;
-        std::mutex mtxlck;
         void notify(int socket);
         void runCallback(KaSocket* sock, void(*func)(void*));
         void heartBeat(Network& network);
         float setSsid(Network network, int socket);
-        bool verifySsid(Network network, int socket);
+        bool verifySsid(Network network, int ssid);
     };
 }

@@ -138,7 +138,6 @@ parseRcvMsg(void* lprcv) {
             SetChatActive(rcvlen);
             closesocket(client->sock);
             exit(0);
-            break;
         };
     };
 };
@@ -153,8 +152,8 @@ st_trans* ParseChatMesg(st_trans& trans) {
         break;
     case LOGIN:
     {
-        static char title[64];
         if (trans.username[0] != '\0') {
+            static char title[64];
             sprintf(title, "Welcome %s", (char*)trans.username);
             SetConsoleTitle(title);
         } else {

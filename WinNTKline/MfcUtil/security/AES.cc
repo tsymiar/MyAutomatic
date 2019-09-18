@@ -369,12 +369,12 @@ int aes_test() {
     }
     vector<vector<unsigned char> > encryptedBox = encypt(extendedKey, vectorList[0], numRounds);
     string *outputArray = new string[32];
-    int stringCount = 0;
     char buffer[32];
     string buffer2;
 
     cout << "Encrypted data is stored in file 'Encrypted.txt'" << endl;
     ofstream myfile("Encrypted.txt");
+    int stringCount = 0;
     if (myfile.is_open())
         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < 4; j++) {
