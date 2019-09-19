@@ -45,6 +45,9 @@ typedef struct WSADATA {
 #define gets_s(c,v) gets(c)
 #define TRUE true
 #define SLEEP(t) usleep((int)1010.10f*(t));
+#ifndef scanf_s
+#define scanf_s scanf
+#endif
 inline unsigned int _beginthreadex(
     void* _Security,
     const pthread_attr_t * attr,
