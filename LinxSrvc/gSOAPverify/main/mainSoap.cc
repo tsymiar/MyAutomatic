@@ -211,12 +211,11 @@ int main_server(int argc, char** argv)
             pthread_create(&tid[i], NULL, (void*(*)(void*))process_queue, (void*)soap_thr[i]);
             usleep(50);
         }
-        int j = 0; 
-        SOAP_SOCKET sock;
+        int j = 0;
         for (;;)
         {
             // 接受客户端连接
-            sock = soap_accept(&Soap);
+            SOAP_SOCKET sock = soap_accept(&Soap);
             if (!soap_valid_socket(sock))
             {
                 if (Soap.errnum)

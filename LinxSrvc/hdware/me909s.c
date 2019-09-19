@@ -77,7 +77,6 @@ int main(int argc, int **argv)
     int flag = 0;
     int cmmat = 0;
     int curr = 0;
-    int ret;
 
     if (mem_usb_check() == -2 && errno != 13) {
         printf("Fail to check me909s model!\n");
@@ -116,7 +115,7 @@ int main(int argc, int **argv)
 
     while (!flag)
     {
-        ret = select(STDIN_FILENO + 1, &rdfds, NULL, NULL, &tv);
+        int ret = select(STDIN_FILENO + 1, &rdfds, NULL, NULL, &tv);
         if (ret < 0) {
             perror("select");
             break;
