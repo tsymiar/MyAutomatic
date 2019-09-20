@@ -1,4 +1,4 @@
-#include "ShowImage.h"
+﻿#include "ShowImage.h"
 
 unsigned char* pixels = NULL;
 png_uint_32 width, height;

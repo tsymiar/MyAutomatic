@@ -12,10 +12,9 @@
 
 class Timer {
 public:
-    Timer() :expired_(true), try_to_expire_(false) {
-    }
+    Timer() :expired_(true), try_to_expire_(false) {}
 
-    Timer(const Timer& t) {
+    Timer(const Timer& t) :expired_(true), try_to_expire_(false) {
         expired_ = t.expired_.load();
         try_to_expire_ = t.try_to_expire_.load();
     }

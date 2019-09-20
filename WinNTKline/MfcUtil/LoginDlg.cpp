@@ -309,11 +309,8 @@ void CLoginDlg::OnCbnSelchangeCom()
     break;
     case 2:
         CloseHandle((HANDLE)_beginthreadex(NULL, 0, m_ctp->TradeMarket, (void*)this, 0, NULL));
-        if (!m_ctp)
-        {
-            delete m_ctp;
-            m_ctp = NULL;
-        }
+        delete m_ctp;
+        m_ctp = NULL;
         break;
     case 3:
         if (AllocConsole())

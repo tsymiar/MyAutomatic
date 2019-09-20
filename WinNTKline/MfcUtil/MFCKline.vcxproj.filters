@@ -260,9 +260,6 @@
     <ClCompile Include="HOOK\jniNative.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="elem\COwnCtl.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="elem\Screen-Sharing.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -285,6 +282,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="deep\Level2View.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="elem\CCustomCtl.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

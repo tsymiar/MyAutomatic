@@ -1,4 +1,4 @@
-
+﻿
 // MFCKline.cpp : 定义应用程序的类行为。
 //
 #include "MFCKline.h"

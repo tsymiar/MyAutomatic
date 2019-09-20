@@ -52,6 +52,7 @@ LoadDIBitmap(const char *filename, /* I - File to load */
     {
         /* Couldn't allocate memory for bitmap info - return NULL... */
         fclose(fp);
+        free(info);
         return (NULL);
     }
 
