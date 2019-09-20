@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "IM/IMClient.h"
 #include "afxwin.h"
 #include "afxcmn.h"

@@ -9,6 +9,7 @@ IMPLEMENT_DYNAMIC(SetMarkDlg, CDialogEx)
 SetMarkDlg::SetMarkDlg(CWnd * pParent)
     : CDialogEx(IDD_MARKDLG, pParent)
 {
+    settingCallback = NULL;
 }
 
 SetMarkDlg::SetMarkDlg(void(*func)(char*))

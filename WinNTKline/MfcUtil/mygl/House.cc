@@ -4,6 +4,7 @@ extern	TEXTURE_2D	**TextureList;
 
 House::House()
 {
+    texnum = 0;
 }
 
 // Create an OpenGL rendering context
@@ -333,7 +334,7 @@ unsigned char 	*House::OpenTexImage(INT2U TexIndex, INT2U *rslx, INT2U *rsly)
         }
     }
     free(image);
-    printf("%s : %ld=%ld\n", ImageName, srcx*srcy * 3, (long)i*j * 3);
+    printf("%s : %ld=%ld\n", ImageName, srcx*srcy * 3, (long)(i*j * 3));
     return(SImageData);
 }
 

@@ -6,7 +6,8 @@
 class Level2View
 {
 private:
-    float Py, Pm;
+    float Py = .0f;
+    float Pm = .0f;
     int hour = 0;
     int column = 0;
     int MAX_COL = 17;

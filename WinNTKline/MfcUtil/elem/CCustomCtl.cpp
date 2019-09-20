@@ -1,9 +1,9 @@
-// COwnCtl.cpp : 实现文件
+﻿// CCustomCtl.cpp : 实现文件
 //
 
 #include "stdafx.h"
 #include "MFCKline.h"
-#include "COwnCtl.h"
+#include "CCustomCtl.h"
 
 // CMyEdit 项目
 

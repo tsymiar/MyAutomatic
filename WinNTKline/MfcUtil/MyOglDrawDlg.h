@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 //#include	<afxstat_.h>
 #include	"MFCKline.h"
 #include	"afxdialogex.h"

@@ -314,7 +314,7 @@
     <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\stdsoap2.cpp" />
     <ClCompile Include="deep\Level2View.cpp" />
     <ClCompile Include="dos\DOSCout.cpp" />
-    <ClCompile Include="elem\COwnCtl.cpp" />
+    <ClCompile Include="elem\CCustomCtl.cpp" />
     <ClCompile Include="elem\Screen-Sharing.cpp" />
     <ClCompile Include="Font\FontNehe.cc" />
     <ClCompile Include="HOOK\injectDLL.cpp" />
