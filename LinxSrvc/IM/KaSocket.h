@@ -23,7 +23,7 @@ extern "C" {
     private:
         struct Head {
             char resv;
-            float ssid; //ssid = port | socket | ip 
+            volatile unsigned long long ssid; //ssid = port | socket | ip 
             int flag;
         };
         struct Network {
@@ -31,7 +31,7 @@ extern "C" {
             std::string IP;
             unsigned short PORT;
             Head head;
-            bool running = false;
+            volatile bool run_ = false;
         } network; // current connect
         bool server = false;
         std::mutex mtxlck;
@@ -40,7 +40,7 @@ extern "C" {
         void notify(int socket);
         void runCallback(KaSocket* sock, void(*func)(void*));
         void heartBeat(Network& network);
-        float setSsid(Network network, int socket);
-        bool verifySsid(Network network, int ssid);
+        unsigned long long setSsid(Network network, int socket);
+        bool verifySsid(Network network, unsigned long long ssid);
     };
 }
