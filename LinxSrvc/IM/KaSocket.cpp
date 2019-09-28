@@ -9,7 +9,7 @@
 #include <cstring>
 #include <thread>
 
-unsigned int g_threadNo_ = 0;
+static unsigned int g_threadNo_ = 0;
 
 KaSocket::KaSocket(unsigned short srvport)
 {
@@ -91,11 +91,11 @@ int KaSocket::start()
             network.IP.c_str(), network.PORT,
             lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
 
-        network.running = true;
-        networks.push_back(network);
+        network.run_ = true;
+        networks.emplace_back(network);
         std::cout << "socket monite: " << rcv_sock << "; waiting for massage." << std::endl;
 
-        Head head{ 0, setSsid(network, rcv_sock), 0 };
+        Head head{ 0, /*network.head.ssid = */setSsid(network, rcv_sock), 0 };
         ::send(rcv_sock, (char*)&head, sizeof(Head), 0);
 
         // std::thread(&KaSocket::heartBeat, this, network).detach();
@@ -130,7 +130,7 @@ int KaSocket::connect()
             return -1;
         }
     }
-    network.running = true;
+    network.run_ = true;
     for (std::vector<void(*)(void*)>::iterator it = callbacks.begin(); it != callbacks.end(); ++it) {
         std::thread(&KaSocket::runCallback, this, this, (*it)).detach();
     }
@@ -177,6 +177,7 @@ int KaSocket::broadcast(const char * data, int len)
             notify(it->socket);
             return -1;
         }
+        wait(1);
     }
     return 0;
 }
@@ -187,17 +188,23 @@ int KaSocket::recv(char * buff, int len)
     int size = sizeof(Head);
     char header[size];
     memset(header, 0, size);
+    if (server && networks.size() == 0) {
+        notify(network.socket);
+        return -1;
+    }
     int flag = ::recv(network.socket, header, size, 0);
     if (header[0] == 'K' && header[1] == 'a') {
         return 0;
     }
     // get ssid set to 'network', also repeat to server as a mark for search clients
     if (flag == size) {
-        int ssid = reinterpret_cast<Head*>(header)->ssid;
+        std::lock_guard<std::mutex> lock(mtxlck);
+        unsigned long long ssid = reinterpret_cast<Head*>(header)->ssid;
         if (ssid != 0) {
-            std::lock_guard<std::mutex> lock(mtxlck);
             network.head.ssid = ssid;
             for (std::vector<Network>::iterator it = networks.begin(); it != networks.end(); ++it) {
+                if (&(*it) == nullptr || &network == nullptr)
+                    continue;
                 if (verifySsid((*it), network.head.ssid)) {
                     it->head.ssid = setSsid(network, it->socket);
                 }
@@ -212,14 +219,16 @@ int KaSocket::recv(char * buff, int len)
     if (error <= 0 &&
         errno != EWOULDBLOCK && errno != EAGAIN && errno != EINTR && errno != ETIMEDOUT) {
         notify(network.socket);
-        error = -1;
+        error = -2;
     }
     return error;
 }
 
 bool KaSocket::running()
 {
-    return network.running;
+    if (!this)
+        return false;
+    return network.run_;
 }
 
 void KaSocket::wait(unsigned int tms)
@@ -239,23 +248,21 @@ void KaSocket::setCallback(void(*func)(void *))
 void KaSocket::addCallback(void(*func)(void *))
 {
     if (std::find(callbacks.begin(), callbacks.end(), func) == callbacks.end()) {
-
-        callbacks.push_back(func);
+        callbacks.emplace_back(func);
     }
 }
 
 void KaSocket::notify(int socket)
 {
-    //FIXME: signal SIGSEGV, Segmentation fault.
-    std::vector<Network>::iterator iter;
     for (std::vector<Network>::iterator it = networks.begin(); it != networks.end(); ++it) {
-        if (socket < 0 || it->socket == socket) {
-            if (socket < 0)
-                return;
+        if (socket < 0 || it->socket < 0 || networks.size() == 0)
+            return;
+        if (it->socket == socket && it->run_) {
             {
+                //FIXME: signal SIGSEGV, Segmentation fault.
                 std::lock_guard<std::mutex> lock(mtxlck);
-                iter = it;
-                it->running = false;
+                std::vector<Network>::iterator iter = it;
+                it->run_ = false;
                 std::cerr
                     << "### " << (server ? "Client" : "Server")
                     << "(" << it->IP << ":" << it->PORT << ") socket [" << it->socket << "] lost."
@@ -263,9 +270,8 @@ void KaSocket::notify(int socket)
                 if (networks.size() > 0) {
                     close(it->socket);
                     it = networks.erase(iter);
-                    if (networks.size() == 0)
-                        break;
-                }
+                    it--;
+                } else break;
             }
         }
         wait(1);
@@ -296,7 +302,7 @@ void KaSocket::heartBeat(Network& network)
     }
 }
 
-float KaSocket::setSsid(Network network, int socket)
+unsigned long long KaSocket::setSsid(Network network, int socket)
 {
     unsigned int ip = 0;
     const char* s = reinterpret_cast<char*>((unsigned char**)&network.IP);
@@ -315,7 +321,7 @@ float KaSocket::setSsid(Network network, int socket)
     return (network.PORT << 16 | socket << 8 | ip);
 }
 
-bool KaSocket::verifySsid(Network network, int ssid)
+bool KaSocket::verifySsid(Network network, unsigned long long ssid)
 {
     return (((ssid >> 8) & 0x00ff) == network.socket);
 }
