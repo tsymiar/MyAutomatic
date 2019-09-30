@@ -77,29 +77,29 @@ int KaSocket::start()
         };
 
         time_t t;
-        struct tm * lt;
-        time(&t);
-        lt = localtime(&t);
-        g_threadNo_++;
         bool set = true;
-        setsockopt(rcv_sock, SOL_SOCKET, SO_KEEPALIVE, reinterpret_cast<const char*>(&set), sizeof(bool));
-        getpeername(rcv_sock, reinterpret_cast<struct sockaddr *>(&peerAddr), &peerLen);
-        network.IP = inet_ntop(AF_INET, &peerAddr.sin_addr, ipAddr, sizeof(ipAddr));
-        network.PORT = ntohs(peerAddr.sin_port);
-        fprintf(stdout, "accepted peer(%u) address [%s:%d] (@ %d/%02d/%02d-%02d:%02d:%02d)\n",
-            g_threadNo_,
-            network.IP.c_str(), network.PORT,
-            lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
+        struct tm * lt;
+        {
+            std::lock_guard<std::mutex> lock(mtxlck);
+            time(&t);
+            lt = localtime(&t);
+            g_threadNo_++;
+            network.run_ = true;
+            setsockopt(rcv_sock, SOL_SOCKET, SO_KEEPALIVE, reinterpret_cast<const char*>(&set), sizeof(bool));
+            getpeername(rcv_sock, reinterpret_cast<struct sockaddr *>(&peerAddr), &peerLen);
+            network.IP = inet_ntop(AF_INET, &peerAddr.sin_addr, ipAddr, sizeof(ipAddr));
+            network.PORT = ntohs(peerAddr.sin_port);
+            networks.emplace_back(network);
+            fprintf(stdout, "accepted peer(%u) address [%s:%d] (@ %d/%02d/%02d-%02d:%02d:%02d)\n",
+                g_threadNo_,
+                network.IP.c_str(), network.PORT,
+                lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
 
-        network.run_ = true;
-        networks.emplace_back(network);
-        std::cout << "socket monite: " << rcv_sock << "; waiting for massage." << std::endl;
-
-        Head head{ 0, /*network.head.ssid = */setSsid(network, rcv_sock), 0 };
-        ::send(rcv_sock, (char*)&head, sizeof(Head), 0);
-
-        // std::thread(&KaSocket::heartBeat, this, network).detach();
-
+            Head head{ 0, /*network.head.ssid = */setSsid(network, rcv_sock), 0 };
+            ::send(rcv_sock, (char*)&head, sizeof(Head), 0);
+            // std::thread(&KaSocket::heartBeat, this, network).detach();
+            std::cout << "socket monitor: " << rcv_sock << "; waiting for massage." << std::endl;
+        }
         for (std::vector<void(*)(void*)>::iterator it = callbacks.begin(); it != callbacks.end(); ++it) {
             std::thread(&KaSocket::runCallback, this, this, (*it)).detach();
         }
@@ -164,6 +164,8 @@ int KaSocket::send(const char * data, int len)
 
 int KaSocket::broadcast(const char * data, int len)
 {
+    if (networks.size() == 0)
+        return -1;
     for (std::vector<Network>::iterator it = networks.begin(); it != networks.end(); ++it) {
         int head = sizeof(Head);
         int size = head + len;
@@ -175,7 +177,7 @@ int KaSocket::broadcast(const char * data, int len)
         if (error <= 0 &&
             errno != EWOULDBLOCK && errno != EAGAIN && errno != EINTR && errno != ETIMEDOUT) {
             notify(it->socket);
-            return -1;
+            continue;
         }
         wait(1);
     }
@@ -270,7 +272,10 @@ void KaSocket::notify(int socket)
                 if (networks.size() > 0) {
                     close(it->socket);
                     it = networks.erase(iter);
-                    it--;
+                    if (it != networks.begin())
+                        --it;
+                    if (it == networks.end())
+                        break;
                 } else break;
             }
         }
