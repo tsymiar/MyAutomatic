@@ -1,7 +1,8 @@
 #pragma once
-#include <mutex>
 #include <string>
 #include <vector>
+#include <deque>
+#include <mutex>
 
 extern "C" {
     class KaSocket
@@ -14,33 +15,45 @@ extern "C" {
         int connect();
         int send(const char* data, int len);
         int broadcast(const char* data, int len);
+        int transfer(const char* data, int len);
         int recv(char* buff, int len);
         bool running();
-        void wait(unsigned int tms);
+        static void wait(unsigned int tms);
         void setCallback(void(*func)(void*));
         void addCallback(void(*func)(void*));
+        void setMqid(std::string mqid);
         virtual ~KaSocket();
     private:
         struct Head {
             char resv;
-            volatile unsigned long long ssid; //ssid = port | socket | ip 
-            int flag;
+            int etag;
+            volatile unsigned long long ssid; //ssid = port | socket | ip
+            char mqid[32];
+            int size;
         };
         struct Network {
             int socket;
             std::string IP;
             unsigned short PORT;
-            Head head;
             volatile bool run_ = false;
-        } network; // current connect
+            Head flag;
+        } current;
         bool server = false;
-        std::mutex mtxlck;
+        volatile unsigned int g_threadNo_ = 0;
         std::vector<Network> networks;
         std::vector<void(*)(void*)> callbacks;
-        void notify(int socket);
+        void handleNotify(int socket);
         void runCallback(KaSocket* sock, void(*func)(void*));
-        void heartBeat(Network& network);
         unsigned long long setSsid(Network network, int socket);
         bool verifySsid(Network network, unsigned long long ssid);
+    public:
+        struct Message {
+            Head head;
+            std::string data;
+        };
+        int produce(Message& msg);
+        int consume();
+    private:
+        std::deque<Message*> *msgque = new std::deque<KaSocket::Message*>();
     };
 }
