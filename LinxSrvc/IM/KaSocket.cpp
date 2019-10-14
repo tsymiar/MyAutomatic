@@ -93,8 +93,8 @@ int KaSocket::start()
                 current.IP.c_str(), current.PORT,
                 lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
 
-            Head head{ 0, 0, current.flag.ssid = setSsid(current, rcv_sock), 0 };
-            ::send(rcv_sock, (char*)&head, sizeof(Head), 0);
+            Header head{ 0, 0, current.flag.ssid = setSsid(current, rcv_sock), 0 };
+            ::send(rcv_sock, (char*)&head, sizeof(Header), 0);
             networks.emplace_back(current);
 
             std::cout << "socket monitor: " << rcv_sock << "; waiting for massage." << std::endl;
@@ -138,7 +138,7 @@ int KaSocket::connect()
 
 int KaSocket::send(const char * data, int len)
 {
-    int head = sizeof(Head);
+    int head = sizeof(Header);
     size_t left = len + head;
     char mesg[left];
     memset(mesg, 0, left);
@@ -166,7 +166,7 @@ int KaSocket::broadcast(const char * data, int len)
     if (networks.size() == 0 || networks.begin() == networks.end())
         return -1;
     for (std::vector<Network>::iterator it = networks.begin(); it != networks.end(); ++it) {
-        int head = sizeof(Head);
+        int head = sizeof(Header);
         int size = head + len;
         char mesg[size];
         memset(mesg, 0, size);
@@ -183,12 +183,15 @@ int KaSocket::broadcast(const char * data, int len)
     return 0;
 }
 
-int KaSocket::transfer(const char * data, int len)
+int KaSocket::transfer(char * data, int len)
 { 
     if (networks.size() == 0 || networks.begin() == networks.end())
         return -1;
+    int res = this->recv(data, len);
+    if (res < 0)
+        return -1;
     for (std::vector<Network>::iterator it = networks.begin(); it != networks.end(); ++it) {
-        if (memcmp(it->flag.mqid, current.flag.mqid, sizeof(Head::mqid) == 0) 
+        if (memcmp(it->flag.mqid, current.flag.mqid, sizeof(Header::mqid) == 0) 
             && it->socket != current.socket) {
             if (::send(it->socket, data, len, 0) <= 0 &&
                 errno != EWOULDBLOCK && errno != EAGAIN && errno != EINTR && errno != ETIMEDOUT) {
@@ -198,12 +201,12 @@ int KaSocket::transfer(const char * data, int len)
             wait(1);
         }
     }
-    return 0;
+    return res;
 }
 
 int KaSocket::recv(char * buff, int len)
 {
-    int size = sizeof(Head);
+    int size = sizeof(Header);
     char header[size];
     memset(header, 0, size);
     if (server && networks.size() == 0) {
@@ -211,14 +214,19 @@ int KaSocket::recv(char * buff, int len)
         return -1;
     }
     int res = ::recv(current.socket, header, size, 0);
+    if (res < 0 &&
+        errno != EWOULDBLOCK && errno != EAGAIN && errno != EINTR && errno != ETIMEDOUT) {
+        handleNotify(current.socket);
+        return -2;
+    }
     // get ssid set to 'current', also repeat to server as a mark for search clients
     if (res == size) {
         std::mutex mtxlck;
         std::lock_guard<std::mutex> lock(mtxlck);
-        unsigned long long ssid = reinterpret_cast<Head*>(header)->ssid;
+        unsigned long long ssid = reinterpret_cast<Header*>(header)->ssid;
         if (ssid != 0) {
             current.flag.ssid = ntohl(ssid);
-            strcpy(current.flag.mqid, reinterpret_cast<Head*>(header)->mqid);
+            strcpy(current.flag.mqid, reinterpret_cast<Header*>(header)->mqid);
             for (std::vector<Network>::iterator it = networks.begin(); it != networks.end(); ++it) {
                 if (&(*it) == nullptr || &current == nullptr)
                     continue;
@@ -240,6 +248,16 @@ int KaSocket::recv(char * buff, int len)
         errno != EWOULDBLOCK && errno != EAGAIN && errno != EINTR && errno != ETIMEDOUT) {
         handleNotify(current.socket);
         err = -2;
+    }
+    Message* msg = reinterpret_cast<Message*>(buff);
+    int tag = msg->head.etag;
+    switch (tag) {
+    case 1:
+        memcpy(&msg->data, buff + size, err - size);
+        produce(*msg);
+        break;
+    default:
+        break;
     }
     return err + res;
 }
@@ -353,7 +371,17 @@ bool KaSocket::verifySsid(Network current, unsigned long long ssid)
 
 void KaSocket::setMqid(std::string mqid)
 {
-    memcpy(current.flag.mqid, mqid.c_str(), sizeof(Head::mqid));
+    memcpy(current.flag.mqid, mqid.c_str(), sizeof(Header::mqid));
+}
+
+int KaSocket::produceClient(Message & mesg)
+{
+    if (mesg.head.etag != 1)
+        mesg.head.etag = 1;
+    int res = this->send((char*)&mesg, sizeof(Message));
+    if (res < 0)
+        return -2;
+    return close(current.socket);
 }
 
 int KaSocket::produce(Message& msg)
@@ -361,7 +389,7 @@ int KaSocket::produce(Message& msg)
     if (msgque == nullptr)
         return -1;
     if (&msg != nullptr)
-        msgque->push_back(&msg);
+        msgque->emplace_back(new Message(msg));
     return msgque->size();
 }
 
@@ -371,6 +399,9 @@ int KaSocket::consume()
         return -1;
     if (msgque->empty())
         return 0;
+    Message* mesg = msgque->front();
     msgque->pop_front();
+    if (mesg != nullptr)
+        delete mesg;
     return msgque->size();
 }
