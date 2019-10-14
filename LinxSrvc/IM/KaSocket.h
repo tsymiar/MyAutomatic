@@ -15,7 +15,7 @@ extern "C" {
         int connect();
         int send(const char* data, int len);
         int broadcast(const char* data, int len);
-        int transfer(const char* data, int len);
+        int transfer(char* data, int len);
         int recv(char* buff, int len);
         bool running();
         static void wait(unsigned int tms);
@@ -24,7 +24,7 @@ extern "C" {
         void setMqid(std::string mqid);
         virtual ~KaSocket();
     private:
-        struct Head {
+        struct Header {
             char resv;
             int etag;
             volatile unsigned long long ssid; //ssid = port | socket | ip
@@ -36,7 +36,7 @@ extern "C" {
             std::string IP;
             unsigned short PORT;
             volatile bool run_ = false;
-            Head flag;
+            Header flag;
         } current;
         bool server = false;
         volatile unsigned int g_threadNo_ = 0;
@@ -48,12 +48,13 @@ extern "C" {
         bool verifySsid(Network network, unsigned long long ssid);
     public:
         struct Message {
-            Head head;
+            Header head;
             std::string data;
         };
+        int produceClient(Message &mesg);
+    private:
         int produce(Message& msg);
         int consume();
-    private:
         std::deque<Message*> *msgque = new std::deque<KaSocket::Message*>();
     };
 }
