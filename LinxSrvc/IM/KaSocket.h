@@ -49,12 +49,16 @@ extern "C" {
     public:
         struct Message {
             Header head;
-            std::string data;
+            struct Payload {
+                char topic[32];
+                std::string body;
+            } data;
         };
-        int produceClient(Message &mesg);
+        int produceClient(std::string & topic, std::string body, ...);
+        int consumeClient();
     private:
         int produce(Message& msg);
         int consume();
-        std::deque<Message*> *msgque = new std::deque<KaSocket::Message*>();
+        std::deque<Message*> *msgque = new std::deque<Message*>();
     };
 }
