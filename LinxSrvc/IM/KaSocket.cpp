@@ -73,15 +73,13 @@ int KaSocket::start()
                 << std::endl;
             return -3;
         };
-
-        time_t t;
-        bool set = true;
-        struct tm * lt;
         {
             std::mutex mtxlck;
             std::lock_guard<std::mutex> lock(mtxlck);
+            bool set = true;
+            time_t t;
             time(&t);
-            lt = localtime(&t);
+            struct tm *lt = localtime(&t);
             g_threadNo_++;
             current.run_ = true;
             setsockopt(rcv_sock, SOL_SOCKET, SO_KEEPALIVE, reinterpret_cast<const char*>(&set), sizeof(bool));
@@ -193,7 +191,7 @@ int KaSocket::transfer(char * data, int len)
     for (std::vector<Network>::iterator it = networks.begin(); it != networks.end(); ++it) {
         if (memcmp(it->flag.mqid, current.flag.mqid, sizeof(Header::mqid) == 0) 
             && it->socket != current.socket) {
-            if (::send(it->socket, data, len, 0) <= 0 &&
+            if (::send(it->socket, data, res, 0) <= 0 &&
                 errno != EWOULDBLOCK && errno != EAGAIN && errno != EINTR && errno != ETIMEDOUT) {
                 handleNotify(it->socket);
                 continue;
@@ -249,12 +247,17 @@ int KaSocket::recv(char * buff, int len)
         handleNotify(current.socket);
         err = -2;
     }
-    Message* msg = reinterpret_cast<Message*>(buff);
-    int tag = msg->head.etag;
+    Header* hh = reinterpret_cast<Header*>(header);
+    int tag = hh->etag; 
+    Message *mesg;
     switch (tag) {
     case 1:
-        memcpy(&msg->data, buff + size, err - size);
-        produce(*msg);
+        mesg = reinterpret_cast<Message*>(buff);
+        memcpy(&mesg->data, buff + size, err - size);
+        produce(*mesg);
+        break;
+    case 2:
+        consume();
         break;
     default:
         break;
@@ -374,14 +377,21 @@ void KaSocket::setMqid(std::string mqid)
     memcpy(current.flag.mqid, mqid.c_str(), sizeof(Header::mqid));
 }
 
-int KaSocket::produceClient(Message & mesg)
+int KaSocket::produceClient(std::string & topic, std::string body, ...)
 {
-    if (mesg.head.etag != 1)
-        mesg.head.etag = 1;
-    int res = this->send((char*)&mesg, sizeof(Message));
+    Message msg;
+    msg.head.etag = 1;
+    int size = topic.size();
+    memcpy(msg.data.topic, topic.c_str(), size > 32 ? 32 : size);
+    msg.data.body = body;
+    int res = this->send((char*)&msg, sizeof(Message));
     if (res < 0)
         return -2;
-    return close(current.socket);
+    return res;
+}
+
+int KaSocket::consumeClient() {
+    consume();
 }
 
 int KaSocket::produce(Message& msg)
