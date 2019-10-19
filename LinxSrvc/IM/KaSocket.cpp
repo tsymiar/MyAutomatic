@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <iostream>
 #include <cstdlib>
-#include <cstring>
 #include <thread>
 
 KaSocket::KaSocket(unsigned short srvport)
@@ -187,10 +186,9 @@ int KaSocket::transfer(char * data, int len)
         return -1;
     int res = this->recv(data, len);
     if (res < 0)
-        return -1;
+        return -2;
     for (std::vector<Network>::iterator it = networks.begin(); it != networks.end(); ++it) {
-        if (memcmp(it->flag.mqid, current.flag.mqid, sizeof(Header::mqid) == 0) 
-            && it->socket != current.socket) {
+        if (strcmp(it->flag.mqid, current.flag.mqid) == 0 && it->socket != current.socket) {
             if (::send(it->socket, data, res, 0) <= 0 &&
                 errno != EWOULDBLOCK && errno != EAGAIN && errno != EINTR && errno != ETIMEDOUT) {
                 handleNotify(it->socket);
@@ -224,12 +222,13 @@ int KaSocket::recv(char * buff, int len)
         unsigned long long ssid = reinterpret_cast<Header*>(header)->ssid;
         if (ssid != 0) {
             current.flag.ssid = ntohl(ssid);
-            strcpy(current.flag.mqid, reinterpret_cast<Header*>(header)->mqid);
+            memcpy(current.flag.mqid, reinterpret_cast<Header*>(header)->mqid, 32);
             for (std::vector<Network>::iterator it = networks.begin(); it != networks.end(); ++it) {
                 if (&(*it) == nullptr || &current == nullptr)
                     continue;
                 if (verifySsid((*it), current.flag.ssid)) {
                     it->flag.ssid = setSsid(current, it->socket);
+                    strcpy(it->flag.mqid, current.flag.mqid);
                 }
                 wait(1);
             }
@@ -245,22 +244,29 @@ int KaSocket::recv(char * buff, int len)
     if (err <= 0 &&
         errno != EWOULDBLOCK && errno != EAGAIN && errno != EINTR && errno != ETIMEDOUT) {
         handleNotify(current.socket);
-        err = -2;
+        err = -3;
     }
-    Header* hh = reinterpret_cast<Header*>(header);
-    int tag = hh->etag; 
-    Message *mesg;
+    Message mesg = *reinterpret_cast<Message*>(buff);
+    int tag = mesg.head.etag;
+    int ret = 0;
     switch (tag) {
     case 1:
-        mesg = reinterpret_cast<Message*>(buff);
-        memcpy(&mesg->data, buff + size, err - size);
-        produce(*mesg);
+        ret = produce(mesg);
         break;
     case 2:
-        consume();
+        ret = consume(mesg);
         break;
     default:
         break;
+    }
+    if (tag != 0) {
+        if (ret = 0)
+            strcpy(mesg.data.result, "SUCCESS");
+        else if (ret == -1)
+            strcpy(mesg.data.result, "NULLPTR");
+        else
+            strcpy(mesg.data.result, "FAIL");
+        this->send((char*)&mesg, sizeof(Message));
     }
     return err + res;
 }
@@ -372,46 +378,52 @@ bool KaSocket::verifySsid(Network current, unsigned long long ssid)
     return ((int)((ssid >> 8) & 0x00ff) == current.socket);
 }
 
-void KaSocket::setMqid(std::string mqid)
-{
-    memcpy(current.flag.mqid, mqid.c_str(), sizeof(Header::mqid));
-}
-
-int KaSocket::produceClient(std::string & topic, std::string body, ...)
+int KaSocket::produceClient(std::string body, ...)
 {
     Message msg;
-    msg.head.etag = 1;
-    int size = topic.size();
-    memcpy(msg.data.topic, topic.c_str(), size > 32 ? 32 : size);
-    msg.data.body = body;
+    memset(&msg, 0, sizeof(Message));
+    current.flag.etag = msg.head.etag = 1;
+    int size = body.size();
+    memcpy(msg.data.body, body.c_str(), size > 256 ? 256 : size);
     int res = this->send((char*)&msg, sizeof(Message));
     if (res < 0)
-        return -2;
+        return -1;
     return res;
 }
 
 int KaSocket::consumeClient() {
-    consume();
+    Message msg;
+    memset(&msg, 0, sizeof(Message));
+    current.flag.etag = msg.head.etag = 2;
+    return this->send((char*)&msg, sizeof(Message));
 }
 
 int KaSocket::produce(Message& msg)
 {
+    std::mutex mtxlck;
+    std::lock_guard<std::mutex> lock(mtxlck);
     if (msgque == nullptr)
         return -1;
+    int size = msgque->size();
     if (&msg != nullptr)
         msgque->emplace_back(new Message(msg));
-    return msgque->size();
+    return msgque->size() - size - 1;
 }
 
-int KaSocket::consume()
+int KaSocket::consume(Message& msg)
 {
+    std::mutex mtxlck;
+    std::lock_guard<std::mutex> lock(mtxlck);
     if (msgque == nullptr)
         return -1;
     if (msgque->empty())
-        return 0;
+        return -2;
+    int size = msgque->size();
     Message* mesg = msgque->front();
+    memcpy(&msg.head, &mesg->head, sizeof(Header));
+    memcpy(&msg.data, &mesg->data, sizeof(Message::Payload));
     msgque->pop_front();
     if (mesg != nullptr)
         delete mesg;
-    return msgque->size();
+    return size - msgque->size() - 1;
 }

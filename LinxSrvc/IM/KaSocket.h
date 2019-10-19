@@ -1,4 +1,5 @@
 #pragma once
+#include <cstring>
 #include <string>
 #include <vector>
 #include <deque>
@@ -21,14 +22,17 @@ extern "C" {
         static void wait(unsigned int tms);
         void setCallback(void(*func)(void*));
         void addCallback(void(*func)(void*));
-        void setMqid(std::string mqid);
+        // call after connect()
+        inline void setTopic(std::string topic) { 
+            memcpy(current.flag.mqid, topic.c_str(), 32);
+        };
         virtual ~KaSocket();
     private:
         struct Header {
             char resv;
             int etag;
             volatile unsigned long long ssid; //ssid = port | socket | ip
-            char mqid[32];
+            char mqid[32]; // topic
             int size;
         };
         struct Network {
@@ -50,15 +54,15 @@ extern "C" {
         struct Message {
             Header head;
             struct Payload {
-                char topic[32];
-                std::string body;
+                char result[32];
+                char body[256];
             } data;
         };
-        int produceClient(std::string & topic, std::string body, ...);
+        int produceClient(std::string body, ...);
         int consumeClient();
     private:
         int produce(Message& msg);
-        int consume();
+        int consume(Message& msg);
         std::deque<Message*> *msgque = new std::deque<Message*>();
     };
 }
