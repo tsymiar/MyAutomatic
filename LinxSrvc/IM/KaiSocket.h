@@ -6,12 +6,12 @@
 #include <mutex>
 
 extern "C" {
-    class KaSocket
+    class KaiSocket
     {
     public:
-        KaSocket() {};
-        KaSocket(unsigned short servport);
-        KaSocket(const char* srvip, unsigned short servport);
+        KaiSocket() {};
+        KaiSocket(unsigned short servport);
+        KaiSocket(const char* srvip, unsigned short servport);
         int start();
         int connect();
         int send(const char* data, int len);
@@ -26,7 +26,7 @@ extern "C" {
         inline void setTopic(std::string topic) { 
             memcpy(current.flag.mqid, topic.c_str(), 32);
         };
-        virtual ~KaSocket();
+        virtual ~KaiSocket();
     private:
         struct Header {
             char resv;
@@ -43,11 +43,12 @@ extern "C" {
             Header flag;
         } current;
         bool server = false;
+        bool thdref = false;
         volatile unsigned int g_threadNo_ = 0;
         std::vector<Network> networks;
         std::vector<void(*)(void*)> callbacks;
         void handleNotify(int socket);
-        void runCallback(KaSocket* sock, void(*func)(void*));
+        void runCallback(KaiSocket* sock, void(*func)(void*));
         unsigned long long setSsid(Network network, int socket);
         bool verifySsid(Network network, unsigned long long ssid);
     public:

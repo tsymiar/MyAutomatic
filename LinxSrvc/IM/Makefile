@@ -12,10 +12,10 @@ IM:
 client:
 	[ -z "$(ls $(GEN) &> /dev/null)" ] && mkdir $(GEN) || echo ""
 	g++ $(FLAG) -I$(IMLOCAL) $(CLIENTFILES) -o $(GEN)/client.exe $(PTHD)
-KaSocket:
-	g++ -c KaSocket.cpp -std=c++11 -lpthread
+Kai:
+	g++ -c KaiSocket.cc -std=c++11 -lpthread
 all:
 	make IM
 	make client
 clean:
-	rm -f $(GEN)/IM.exe $(GEN)/client.exe KaSocket.o
+	rm -f $(GEN)/IM.exe $(GEN)/client.exe KaiSocket.o
