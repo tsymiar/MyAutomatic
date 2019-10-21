@@ -1,4 +1,4 @@
-#include "KaSocket.h"
+#include "KaiSocket.h"
 
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -8,12 +8,12 @@
 #include <cstdlib>
 #include <thread>
 
-KaSocket::KaSocket(unsigned short srvport)
+KaiSocket::KaiSocket(unsigned short srvport)
 {
-    new (this)KaSocket(nullptr, srvport); // placement new
+    new (this)KaiSocket(nullptr, srvport); // placement new
 }
 
-KaSocket::KaSocket(const char * srvip, unsigned short servport)
+KaiSocket::KaiSocket(const char * srvip, unsigned short servport)
 {
     if (srvip != nullptr)
         current.IP = srvip;
@@ -27,7 +27,7 @@ KaSocket::KaSocket(const char * srvip, unsigned short servport)
     current.PORT = servport;
 }
 
-int KaSocket::start()
+int KaiSocket::start()
 {
     int listen_socket = current.socket;
     unsigned short servport = current.PORT;
@@ -96,7 +96,7 @@ int KaSocket::start()
 
             std::cout << "socket monitor: " << rcv_sock << "; waiting for massage." << std::endl;
             for (std::vector<void(*)(void*)>::iterator it = callbacks.begin(); it != callbacks.end(); ++it) {
-                std::thread(&KaSocket::runCallback, this, this, (*it)).detach();
+                std::thread(&KaiSocket::runCallback, this, this, (*it)).detach();
             }
             wait(100);
         }
@@ -104,7 +104,7 @@ int KaSocket::start()
     return 0;
 }
 
-int KaSocket::connect()
+int KaiSocket::connect()
 {
     sockaddr_in srvaddr;
     const char* ipaddr = current.IP.c_str();
@@ -128,12 +128,12 @@ int KaSocket::connect()
     }
     current.run_ = true;
     for (std::vector<void(*)(void*)>::iterator it = callbacks.begin(); it != callbacks.end(); ++it) {
-        std::thread(&KaSocket::runCallback, this, this, (*it)).detach();
+        std::thread(&KaiSocket::runCallback, this, this, (*it)).detach();
     }
     return 0;
 }
 
-int KaSocket::send(const char * data, int len)
+int KaiSocket::send(const char * data, int len)
 {
     int head = sizeof(Header);
     size_t left = len + head;
@@ -158,7 +158,7 @@ int KaSocket::send(const char * data, int len)
     return 0;
 }
 
-int KaSocket::broadcast(const char * data, int len)
+int KaiSocket::broadcast(const char * data, int len)
 {
     if (networks.size() == 0 || networks.begin() == networks.end())
         return -1;
@@ -180,7 +180,7 @@ int KaSocket::broadcast(const char * data, int len)
     return 0;
 }
 
-int KaSocket::transfer(char * data, int len)
+int KaiSocket::transfer(char * data, int len)
 { 
     if (networks.size() == 0 || networks.begin() == networks.end())
         return -1;
@@ -200,7 +200,7 @@ int KaSocket::transfer(char * data, int len)
     return res;
 }
 
-int KaSocket::recv(char * buff, int len)
+int KaiSocket::recv(char * buff, int len)
 {
     int size = sizeof(Header);
     char header[size];
@@ -232,7 +232,6 @@ int KaSocket::recv(char * buff, int len)
                 }
                 wait(1);
             }
-            memcpy(buff, header, size);
         } else {
             size = 0;
         }
@@ -240,6 +239,7 @@ int KaSocket::recv(char * buff, int len)
         if (header[0] == 'K' && header[1] == 'a')
             return 0;
     }
+    memcpy(buff, header, res);
     int err = ::recv(current.socket, buff + size, len, 0);
     if (err <= 0 &&
         errno != EWOULDBLOCK && errno != EAGAIN && errno != EINTR && errno != ETIMEDOUT) {
@@ -260,25 +260,25 @@ int KaSocket::recv(char * buff, int len)
         break;
     }
     if (tag != 0) {
-        if (ret = 0)
+        if (ret == 0)
             strcpy(mesg.data.result, "SUCCESS");
         else if (ret == -1)
             strcpy(mesg.data.result, "NULLPTR");
         else
-            strcpy(mesg.data.result, "FAIL");
+            strcpy(mesg.data.result, "FAILURE");
         this->send((char*)&mesg, sizeof(Message));
     }
     return err + res;
 }
 
-bool KaSocket::running()
+bool KaiSocket::running()
 {
     if (!this)
         return false;
     return current.run_;
 }
 
-void KaSocket::wait(unsigned int tms)
+void KaiSocket::wait(unsigned int tms)
 {
     struct timeval time;
     time.tv_sec = tms / 1000;
@@ -286,20 +286,20 @@ void KaSocket::wait(unsigned int tms)
     select(0, NULL, NULL, NULL, &time);
 }
 
-void KaSocket::setCallback(void(*func)(void *))
+void KaiSocket::setCallback(void(*func)(void *))
 {
     callbacks.clear();
     addCallback(func);
 }
 
-void KaSocket::addCallback(void(*func)(void *))
+void KaiSocket::addCallback(void(*func)(void *))
 {
     if (std::find(callbacks.begin(), callbacks.end(), func) == callbacks.end()) {
         callbacks.emplace_back(func);
     }
 }
 
-void KaSocket::handleNotify(int socket)
+void KaiSocket::handleNotify(int socket)
 {
     for (std::vector<Network>::iterator it = networks.begin(); it != networks.end(); ++it) {
         //FIXME: signal SIGSEGV, Segmentation fault.
@@ -329,15 +329,14 @@ void KaSocket::handleNotify(int socket)
     }
 }
 
-KaSocket::~KaSocket()
+KaiSocket::~KaiSocket()
 {
     close(current.socket);
 }
 
-void KaSocket::runCallback(KaSocket* sock, void(*func)(void *))
+void KaiSocket::runCallback(KaiSocket* sock, void(*func)(void *))
 {
-    if (func != nullptr) {
-        func(sock);
+    if (!server && !thdref) {
         // heartBeat
         std::thread(
             [](Network& current)
@@ -348,13 +347,17 @@ void KaSocket::runCallback(KaSocket* sock, void(*func)(void *))
                     std::cerr << "Heartbeat to " << current.IP << ":" << current.PORT << " arrests." << std::endl;
                     break;
                 }
-                KaSocket::wait(3000);
+                KaiSocket::wait(3000);
             }
         }, std::ref(current)).detach();
+        thdref = !thdref;
+    }
+    if (func != nullptr) {
+        func(sock);
     }
 }
 
-unsigned long long KaSocket::setSsid(Network current, int socket)
+unsigned long long KaiSocket::setSsid(Network current, int socket)
 {
     unsigned int ip = 0;
     const char* s = reinterpret_cast<char*>((unsigned char**)&current.IP);
@@ -373,12 +376,12 @@ unsigned long long KaSocket::setSsid(Network current, int socket)
     return (current.PORT << 16 | socket << 8 | ip);
 }
 
-bool KaSocket::verifySsid(Network current, unsigned long long ssid)
+bool KaiSocket::verifySsid(Network current, unsigned long long ssid)
 {
     return ((int)((ssid >> 8) & 0x00ff) == current.socket);
 }
 
-int KaSocket::produceClient(std::string body, ...)
+int KaiSocket::produceClient(std::string body, ...)
 {
     Message msg;
     memset(&msg, 0, sizeof(Message));
@@ -391,14 +394,14 @@ int KaSocket::produceClient(std::string body, ...)
     return res;
 }
 
-int KaSocket::consumeClient() {
+int KaiSocket::consumeClient() {
     Message msg;
     memset(&msg, 0, sizeof(Message));
     current.flag.etag = msg.head.etag = 2;
     return this->send((char*)&msg, sizeof(Message));
 }
 
-int KaSocket::produce(Message& msg)
+int KaiSocket::produce(Message& msg)
 {
     std::mutex mtxlck;
     std::lock_guard<std::mutex> lock(mtxlck);
@@ -410,7 +413,7 @@ int KaSocket::produce(Message& msg)
     return msgque->size() - size - 1;
 }
 
-int KaSocket::consume(Message& msg)
+int KaiSocket::consume(Message& msg)
 {
     std::mutex mtxlck;
     std::lock_guard<std::mutex> lock(mtxlck);
