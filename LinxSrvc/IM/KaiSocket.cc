@@ -160,6 +160,7 @@ int KaiSocket::send(const char * data, int len)
 
 int KaiSocket::broadcast(const char * data, int len)
 {
+    int bytes = 0;
     if (networks.size() == 0 || networks.begin() == networks.end())
         return -1;
     for (std::vector<Network>::iterator it = networks.begin(); it != networks.end(); ++it) {
@@ -169,28 +170,28 @@ int KaiSocket::broadcast(const char * data, int len)
         memset(mesg, 0, size);
         memcpy(mesg, &it->flag, head);
         memcpy(mesg + head, data, len);
-        int error = ::send(it->socket, mesg, size, 0);
-        if (error <= 0 &&
-            errno != EWOULDBLOCK && errno != EAGAIN && errno != EINTR && errno != ETIMEDOUT) {
+        bytes = ::send(it->socket, mesg, size, 0);
+        if (bytes <= 0) {
             handleNotify(it->socket);
             continue;
         }
         wait(1);
     }
-    return 0;
+    return bytes;
 }
 
 int KaiSocket::transfer(char * data, int len)
 { 
+    int res = ::recv(current.socket, data, len, 0);
+    if (res <= 0)
+        return res;
+    if (data[0] == 'K' && data[1] == 'a')
+        return 0;
     if (networks.size() == 0 || networks.begin() == networks.end())
-        return -1;
-    int res = this->recv(data, len);
-    if (res < 0)
         return -2;
     for (std::vector<Network>::iterator it = networks.begin(); it != networks.end(); ++it) {
         if (strcmp(it->flag.mqid, current.flag.mqid) == 0 && it->socket != current.socket) {
-            if (::send(it->socket, data, res, 0) <= 0 &&
-                errno != EWOULDBLOCK && errno != EAGAIN && errno != EINTR && errno != ETIMEDOUT) {
+            if (::send(it->socket, data, res, 0) <= 0) {
                 handleNotify(it->socket);
                 continue;
             }
@@ -210,8 +211,7 @@ int KaiSocket::recv(char * buff, int len)
         return -1;
     }
     int res = ::recv(current.socket, header, size, 0);
-    if (res < 0 &&
-        errno != EWOULDBLOCK && errno != EAGAIN && errno != EINTR && errno != ETIMEDOUT) {
+    if (res < 0) {
         handleNotify(current.socket);
         return -2;
     }
@@ -241,8 +241,7 @@ int KaiSocket::recv(char * buff, int len)
     }
     memcpy(buff, header, res);
     int err = ::recv(current.socket, buff + size, len, 0);
-    if (err <= 0 &&
-        errno != EWOULDBLOCK && errno != EAGAIN && errno != EINTR && errno != ETIMEDOUT) {
+    if (err <= 0) {
         handleNotify(current.socket);
         err = -3;
     }
@@ -301,6 +300,8 @@ void KaiSocket::addCallback(void(*func)(void *))
 
 void KaiSocket::handleNotify(int socket)
 {
+    if (errno == EINTR || errno == EAGAIN || errno == ETIMEDOUT || errno == EWOULDBLOCK)
+        return;
     for (std::vector<Network>::iterator it = networks.begin(); it != networks.end(); ++it) {
         //FIXME: signal SIGSEGV, Segmentation fault.
         std::mutex mtxlck;
@@ -345,6 +346,7 @@ void KaiSocket::runCallback(KaiSocket* sock, void(*func)(void *))
                 if (::send(current.socket, "Ka", 2, 0) <= 0 &&
                     errno != EWOULDBLOCK && errno != EAGAIN && errno != EINTR && errno != ETIMEDOUT) {
                     std::cerr << "Heartbeat to " << current.IP << ":" << current.PORT << " arrests." << std::endl;
+                    close(current.socket);
                     break;
                 }
                 KaiSocket::wait(3000);
