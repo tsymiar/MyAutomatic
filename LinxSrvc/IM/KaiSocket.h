@@ -23,7 +23,7 @@ extern "C" {
         void setCallback(void(*func)(void*));
         void addCallback(void(*func)(void*));
         // call after connect()
-        inline void setTopic(std::string topic) { 
+        inline void setTopic(std::string topic) {
             memcpy(current.flag.mqid, topic.c_str(), 32);
         };
         virtual ~KaiSocket();
