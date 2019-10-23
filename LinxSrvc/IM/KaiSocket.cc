@@ -180,14 +180,14 @@ int KaiSocket::broadcast(const char * data, int len)
     return bytes;
 }
 
-int KaiSocket::transfer(char * data, int len)
-{ 
+int KaiSocket::broker(char * data, int len)
+{
     int res = ::recv(current.socket, data, len, 0);
-    if (res <= 0)
+    if (res <= 0 || networks.size() == 0)
         return res;
     if (data[0] == 'K' && data[1] == 'a')
         return 0;
-    if (networks.size() == 0 || networks.begin() == networks.end())
+    if (networks.begin() == networks.end())
         return -2;
     for (std::vector<Network>::iterator it = networks.begin(); it != networks.end(); ++it) {
         if (strcmp(it->flag.mqid, current.flag.mqid) == 0 && it->socket != current.socket) {
@@ -318,12 +318,10 @@ void KaiSocket::handleNotify(int socket)
                     << std::endl;
                 if (networks.size() > 0) {
                     close(it->socket);
-                    it = networks.erase(iter);
-                    if (it != networks.begin())
-                        --it;
-                    if (it == networks.end())
-                        break;
-                } else break;
+                    networks.erase(iter);
+                    if (networks.end() == networks.erase(iter)) return;
+                    it == networks.begin();
+                } else return;
             }
         }
         wait(1);
@@ -340,18 +338,17 @@ void KaiSocket::runCallback(KaiSocket* sock, void(*func)(void *))
     if (!server && !thdref) {
         // heartBeat
         std::thread(
-            [](Network& current)
+            [](Network& current, KaiSocket* sock)
         {
             while (1) {
-                if (::send(current.socket, "Ka", 2, 0) <= 0 &&
-                    errno != EWOULDBLOCK && errno != EAGAIN && errno != EINTR && errno != ETIMEDOUT) {
+                if (::send(current.socket, "Ka", 2, 0) <= 0) {
                     std::cerr << "Heartbeat to " << current.IP << ":" << current.PORT << " arrests." << std::endl;
-                    close(current.socket);
+                    sock->handleNotify(current.socket);
                     break;
                 }
                 KaiSocket::wait(3000);
             }
-        }, std::ref(current)).detach();
+        }, std::ref(current), sock).detach();
         thdref = !thdref;
     }
     if (func != nullptr) {

@@ -12,21 +12,23 @@ extern "C" {
         KaiSocket() {};
         KaiSocket(unsigned short servport);
         KaiSocket(const char* srvip, unsigned short servport);
+        virtual ~KaiSocket();
         int start();
         int connect();
         int send(const char* data, int len);
         int broadcast(const char* data, int len);
-        int transfer(char* data, int len);
+        int broker(char* data, int len);
         int recv(char* buff, int len);
         bool running();
         static void wait(unsigned int tms);
         void setCallback(void(*func)(void*));
         void addCallback(void(*func)(void*));
         // call after connect()
-        inline void setTopic(std::string topic) {
+        // 3 - pubilsher; 4 - subscriber
+        inline void setTopic(std::string topic, int tag = 3) {
             memcpy(current.flag.mqid, topic.c_str(), 32);
+            current.flag.etag = tag;
         };
-        virtual ~KaiSocket();
     private:
         struct Header {
             char resv;
