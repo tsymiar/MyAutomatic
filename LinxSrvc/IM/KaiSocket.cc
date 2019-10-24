@@ -183,11 +183,15 @@ int KaiSocket::broadcast(const char * data, int len)
 int KaiSocket::broker(char * data, int len)
 {
     int res = ::recv(current.socket, data, len, 0);
-    if (res <= 0 || networks.size() == 0)
+    if (res < 0) {
+        handleNotify(current.socket);
+        return -1;
+    }
+    if (res == 0 || networks.size() == 1)
         return res;
     if (data[0] == 'K' && data[1] == 'a')
         return 0;
-    if (networks.begin() == networks.end())
+    if (networks.size() == 0 || networks.begin() == networks.end())
         return -2;
     for (std::vector<Network>::iterator it = networks.begin(); it != networks.end(); ++it) {
         if (strcmp(it->flag.mqid, current.flag.mqid) == 0 && it->socket != current.socket) {
