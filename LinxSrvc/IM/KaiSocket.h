@@ -57,7 +57,7 @@ extern "C" {
         struct Message {
             Header head;
             struct Payload {
-                char result[32];
+                char result[8];
                 char body[256];
             } data;
         };
