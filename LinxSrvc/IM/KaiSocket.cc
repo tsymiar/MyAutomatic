@@ -187,16 +187,17 @@ int KaiSocket::broker(char * data, int len)
         handleNotify(current.socket);
         return -1;
     }
-    if (res == 0 || networks.size() == 1)
-        return res;
     if (data[0] == 'K' && data[1] == 'a')
         return 0;
+    if (res == 0 || networks.size() == 1)
+        return res;
     if (networks.size() == 0 || networks.begin() == networks.end())
         return -2;
     for (std::vector<Network>::iterator it = networks.begin(); it != networks.end(); ++it) {
         if (strcmp(it->flag.mqid, current.flag.mqid) == 0 && it->socket != current.socket) {
             if (::send(it->socket, data, res, 0) <= 0) {
                 handleNotify(it->socket);
+                it = networks.begin();
                 continue;
             }
             wait(1);
@@ -322,9 +323,12 @@ void KaiSocket::handleNotify(int socket)
                     << std::endl;
                 if (networks.size() > 0) {
                     close(it->socket);
-                    networks.erase(iter);
+                    if (networks.size() == 1) {
+                        networks.clear();
+                        break;
+                    }
                     if (networks.end() == networks.erase(iter)) return;
-                    it == networks.begin();
+                    it = networks.begin();
                 } else return;
             }
         }
@@ -350,7 +354,7 @@ void KaiSocket::runCallback(KaiSocket* sock, void(*func)(void *))
                     sock->handleNotify(current.socket);
                     break;
                 }
-                KaiSocket::wait(3000);
+                KaiSocket::wait(30000);
             }
         }, std::ref(current), sock).detach();
         thdref = !thdref;
@@ -362,6 +366,8 @@ void KaiSocket::runCallback(KaiSocket* sock, void(*func)(void *))
 
 unsigned long long KaiSocket::setSsid(Network current, int socket)
 {
+    std::mutex mtxlck;
+    std::lock_guard<std::mutex> lock(mtxlck);
     unsigned int ip = 0;
     const char* s = reinterpret_cast<char*>((unsigned char**)&current.IP);
     unsigned char t = 0;
