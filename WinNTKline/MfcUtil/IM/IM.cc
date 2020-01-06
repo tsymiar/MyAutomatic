@@ -204,7 +204,7 @@ int main(int argc, char* argv[])
             }
             fprintf(stdout, "\tNo.\tuser\tIP\t\tPort\tsocket\n");
             for (int c = 0; c < MAX_ACTIVE; c++) {
-                if (&active != nullptr && active[c].user[0] != '\0') {
+                if (&active[0] != nullptr && active[c].user[0] != '\0') {
                     fprintf(stdout, "\t%d\t%s\t%s\t%u\t%d\n", c + 1,
                         active[c].user, active[c].netwk.ip, active[c].netwk.port, active[c].netwk.socket);
                 }
@@ -308,7 +308,7 @@ type_thread_func monite(void *arg)
             }
             cur++;
         }
-        flg = recv(rcv_sock, rcv_txt, 256, 0);
+        flg = (int)recv(rcv_sock, rcv_txt, 256, 0);
         // rcv_txt: inc--8 bit crc_head, 24 bit username, 24 bit password.
         if (qq != flg && flg != 0)
         {
@@ -336,7 +336,7 @@ type_thread_func monite(void *arg)
                 fprintf(stdout, "\n");
 #endif
             }
-            int snres = -1;
+            ssize_t snres = -1;
             char userName[24];
             memset(userName, 0, 24);
             memcpy(sd_bufs, &user, 2);
@@ -378,8 +378,8 @@ type_thread_func monite(void *arg)
                     sprintf(sd_bufs + 8, "[%s] logging on successfully.", user.usr);
                     set_user_peer(user.usr, IP, PORT, rcv_sock);
                     Network sock;
-                    memcpy((void*)sock.ip, IP, INET_ADDRSTRLEN),
-                        sock.port = PORT,
+                    static_cast<void>(memcpy((void*)sock.ip, IP, INET_ADDRSTRLEN)),
+                    static_cast<void>(sock.port = PORT),
                         sock.socket = rcv_sock;
                     set_user_line(user.usr, sock);
                     memcpy(userName, user.usr, 24);
@@ -453,7 +453,7 @@ type_thread_func monite(void *arg)
 #endif
                 }
                 memset(&user, 0, sizeof(user));
-                flg = recv(rcv_sock, rcv_txt, 256, 0);
+                flg = (int)recv(rcv_sock, rcv_txt, 256, 0);
                 if (flg < 0 && flg != EWOULDBLOCK && flg != EAGAIN && flg != EINTR) {
                     set_user_quit(userName);
                     fprintf(stderr, "### Lost connection with *[%s]: %s(%d)\n", userName, strerror(errno), flg);
@@ -507,7 +507,7 @@ type_thread_func monite(void *arg)
                         char mark[sizeof(user)];
                         sprintf(mark, "User: %s(--%s--);", user.usr, user.sign);
                         snprintf((sd_bufs + 8), strlen(mark) + 1, "%s", mark);
-                        sndlen = 8 + strlen(mark) + 1;
+                        sndlen = 8 + (int)strlen(mark) + 1;
                         break;
                     case 0x3:
                     {
@@ -522,7 +522,7 @@ type_thread_func monite(void *arg)
                     {
                         valrtn = get_user_seq(user.usr);
                         sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
-                        if (1 == user_auth(user.usr, user.psw) && user.npsw != nullptr)
+                        if (1 == user_auth(user.usr, user.psw) && &user.npsw[0] != nullptr)
                             strcpy(users[valrtn].psw, user.npsw);
                         else
                             strcpy((sd_bufs + 8), "Change password failure: user auth error.");
@@ -553,7 +553,7 @@ type_thread_func monite(void *arg)
                             if (user_is_line(user.peer) >= 0) {
                                 fprintf(stdout, "``` '%s' wants to P2P with '%s'\n", user.usr, user.peer);
                                 Network p2pnet = queryNetworkParams(valrtn);
-#if  !defined _WIN32
+#if !defined _WIN32
                                 queryNetworkParams(user.peer, p2pnet);
 #endif
                                 const char* s = reinterpret_cast<char*>((unsigned char**)&p2pnet.ip);
@@ -615,10 +615,10 @@ type_thread_func monite(void *arg)
                         if (valrtn >= 0) {
                             if (user_is_line(user.peer) >= 0) {
                                 Network ndtnet = queryNetworkParams(valrtn);
-#if  !defined _WIN32
+#if !defined _WIN32
                                 queryNetworkParams(user.peer, ndtnet);
 #endif
-                                if (ndtnet.ip == nullptr || ndtnet.port <= 0) {
+                                if (&ndtnet.ip[0] == nullptr || ndtnet.port == 0) {
                                     strcpy((sd_bufs + 32), "Peer user ip or port value error.");
                                     sndlen = 72;
                                 } else {
@@ -642,7 +642,7 @@ type_thread_func monite(void *arg)
                                         if (EBADF == fstat(ndtnet.socket, &sock_stat)) {
                                             fprintf(stdout, "Error: socket descriptor - %d.\n", ndtnet.socket);
                                         } else {
-                                            fprintf(stdout, "Error: %s(%I32d).\n", strerror(errno), ndtnet.socket);
+                                            fprintf(stdout, "Error: %s(%d).\n", strerror(errno), ndtnet.socket);
                                         }
                                         strcpy((sd_bufs + 32), "Got failure while senting a message.");
                                         sndlen = 80;
@@ -680,7 +680,7 @@ type_thread_func monite(void *arg)
                             mesg = strerror(errno);
                             sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
                             strcpy((sd_bufs + 8), mesg);
-                            sndlen = 8 + strlen(mesg) + 1;
+                            sndlen = 8 + (int)strlen(mesg) + 1;
                             fprintf(stdout, "Exec [ %s ] with execvp fail, %s.\n", __ GET_IMG_EXE, mesg);
                         } else {
                             wait(&valrtn);
@@ -695,7 +695,7 @@ type_thread_func monite(void *arg)
                             }
                             sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
                             strcpy((sd_bufs + 8), mesg);
-                            sndlen = 8 + strlen(mesg) + 1;
+                            sndlen = 8 + (int)strlen(mesg) + 1;
                             fprintf(stdout, "Make image via '%s': %s.\n", __ GET_IMG_EXE, mesg);
                         }
 #else
@@ -718,7 +718,7 @@ type_thread_func monite(void *arg)
                         fseek(file, 0, SEEK_END);
                         long lSize = ftell(file);
                         rewind(file);
-                        int bytes = lSize / sizeof(unsigned char);
+                        int bytes = (int)(lSize / sizeof(unsigned char));
                         if (bytes > 2097152)
                             bytes = 4096;
                         memset(sd_bufs + 8, bytes, 6);
@@ -857,7 +857,7 @@ type_thread_func monite(void *arg)
                             };
                         } else {
                             for (c = 0; c < MAX_MENBERS_PER_GROUP; c++) {
-                                if (!strlen(zones[valrtn].zone.members[c]) == 0)
+                                if (strlen(zones[valrtn].zone.members[c]) != 0)
                                 {
                                     sprintf(sd_bufs + 3, "%x", -3);
                                     int uil = user_is_line(zones[valrtn].zone.members[c]);
@@ -1008,7 +1008,7 @@ int inst_mesg(int argc, char * argv[])
     socklen_t listenLen = static_cast<socklen_t>(sizeof(listenAddr));
     getsockname(listen_socket, reinterpret_cast<struct sockaddr *>(&listenAddr), &listenLen);
     fprintf(stdout, "localhost listening [%s:%d].\n", inet_ntoa(listenAddr.sin_addr), servport);
-#ifdef _SYS_WAIT_H
+#if defined _SYS_WAIT_H || defined _SYS_WAIT_H_
     signal(SIGCHLD, &func_waitpid);
 #endif
     do {
@@ -1087,7 +1087,7 @@ template<typename T> int set_n_get_mem(T* shmem, int ndx, int rw) {
     int shmids = -1;
     if (ndx > MAX_ACTIVE)
         return rw;
-#ifdef _SYS_SHM_H
+#if defined _SYS_SHM_H || defined _SYS_SHM_H_
     pthread_mutex_trylock(&sendallow);
     T *shared;
     if ((shmids = shmget(IPCKEY, (MAX_ACTIVE * sizeof(T)), (0666 | IPCFLAG))) < 0)
@@ -1125,7 +1125,7 @@ template<typename T> int set_n_get_mem(T* shmem, int ndx, int rw) {
     return shmids;
 }
 void func_waitpid(int signo) {
-#ifdef _SYS_WAIT_H
+#if defined _SYS_WAIT_H || defined _SYS_WAIT_H_
     int stat;
     pid_t pid;
     while ((pid = waitpid(-1, &stat, WNOHANG)) > 0) {

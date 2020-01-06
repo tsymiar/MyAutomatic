@@ -51,3 +51,4 @@ QtCases/ui_*
 *.recipe
 WinNTKline/MfcUtil/image/taoxi.png
 WinNTKline/test/IM/acnts
+.DS_Store
