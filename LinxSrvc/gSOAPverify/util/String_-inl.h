@@ -430,7 +430,7 @@ inline int String_::charcount_(char *arr, char ch)
     if (arr == NULL) {
         return -1;
     }
-    while ((str = arr++) != '\0') {
+    while (*(str = arr++) != '\0') {
         if (*str == '\0') {
             break;
         }
