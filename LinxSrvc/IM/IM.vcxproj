@@ -65,7 +65,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>WSL_Clang_1_0</PlatformToolset>
+    <PlatformToolset>Remote_Clang_1_0</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <UseDebugLibraries>false</UseDebugLibraries>
@@ -135,8 +135,10 @@
       <AdditionalOptions>-g -lpthread %(AdditionalOptions)</AdditionalOptions>
       <PreprocessorDefinitions>_IM_;_DEBUG;THREAD_PER_CONN;</PreprocessorDefinitions>
     </ClCompile>
+    <Link />
     <Link>
-      <ForceUndefineSymbolReferences>pthread;%(ForceUndefineSymbolReferences)</ForceUndefineSymbolReferences>
+      <LibraryDependencies>pthread;%(LibraryDependencies)</LibraryDependencies>
+      <ForceUndefineSymbolReferences>-Wsign-conversion;%(ForceUndefineSymbolReferences)</ForceUndefineSymbolReferences>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
