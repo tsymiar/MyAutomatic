@@ -42,6 +42,9 @@ typedef SOCKET type_socket;
 typedef unsigned int pthread_t;
 #endif
 typedef unsigned int type_thread_func;
+#ifndef ssize_t
+typedef long ssize_t;
+#endif
 #define flush_all() _flushall()
 #ifndef _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS
@@ -1012,11 +1015,11 @@ int inst_mesg(int argc, char * argv[])
     signal(SIGCHLD, &func_waitpid);
 #endif
     do {
+#ifdef SOCK_CONN_TEST
         struct sockaddr_in form;
         type_len frmlen = static_cast<type_len>(sizeof(form));
         if (frmlen < 0)
             frmlen = 0;
-#ifdef SOCK_CONN_TEST
         type_socket test_socket = accept(listen_socket, (struct sockaddr*)&form, &frmlen);
         if (test_socket
 #ifdef _WIN32

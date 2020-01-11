@@ -178,7 +178,6 @@ void MarketDataCollector::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField * 
             }
 
             //***************************************************    
-
             for (int j = 59; j > 0; j--)
             {
                 tick_AskPrice1[i][j] = tick_AskPrice1[i][j - 1];

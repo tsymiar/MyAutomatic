@@ -16,3 +16,4 @@ copy ..\MfcUtil\cef\*.dll .\
 copy ..\MfcUtil\CTP\*.dll .\
 copy ..\MfcUtil\WPF\*.dll .\
 copy ..\MfcUtil\font\lib\*.dll .\
+copy %OPENCV%\bin\Debug\*.dll .\
