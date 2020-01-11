@@ -8,7 +8,7 @@ LinxSrvc
 -------
 * Go into the directory below ⇣
 
-  ####  [LinxSrvc](https://github.com/tsymiar/MyAutomatic/tree/auto-dev/LinxSrvc/gSOAPverify)
+  ####  [gSOAPverify](https://github.com/tsymiar/MyAutomatic/tree/auto-dev/LinxSrvc/gSOAPverify)
     to `make` the binary file; if makes OK, to run it:
     ```c
     ./bin/gSOAPverify 8080

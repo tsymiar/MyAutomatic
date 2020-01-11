@@ -10,29 +10,29 @@
 #include <sys/ioctl.h>
 #include <bits/types.h>
 
-#define	 ONE_MB (1024 * 1024)
+#define     ONE_MB (1024 * 1024)
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
-	struct ethtool_value
-	{
-		__uint32_t cmd;
-		__uint32_t data;
-	};
-	struct st_sys
-	{
-		long int li_cpu;
-		long int li_page;
-		long long mem_all;
-		long long mem_free;
-		char* s_host;
-		char* ss_alias;
-		char* ss_addr;
-	};
-	int show_memory(char* ip, st_sys* sys);
-	int detect_eth_cable(char *ifname);
+    struct ethtool_value
+    {
+        __uint32_t cmd;
+        __uint32_t data;
+    };
+    struct st_sys
+    {
+        long int li_cpu;
+        long int li_page;
+        long long mem_all;
+        long long mem_free;
+        char* s_host;
+        char* ss_alias;
+        char* ss_addr;
+    };
+    int show_memory(char* ip, st_sys* sys);
+    int detect_eth_cable(char *ifname);
 #ifdef __cplusplus
 }
 #endif
