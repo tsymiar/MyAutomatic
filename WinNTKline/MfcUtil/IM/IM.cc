@@ -1015,9 +1015,9 @@ int inst_mesg(int argc, char * argv[])
     signal(SIGCHLD, &func_waitpid);
 #endif
     do {
-#ifdef SOCK_CONN_TEST
-        struct sockaddr_in form;
+        struct sockaddr_in form = {};
         type_len frmlen = static_cast<type_len>(sizeof(form));
+#ifdef SOCK_CONN_TEST
         if (frmlen < 0)
             frmlen = 0;
         type_socket test_socket = accept(listen_socket, (struct sockaddr*)&form, &frmlen);

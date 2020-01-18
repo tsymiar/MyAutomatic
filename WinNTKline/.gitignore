@@ -25,6 +25,7 @@ MFC/
 [Oo]bj/
 [Gg]en/
 [Gg]eneratedFiles
+cache/
 
 # Visual Studio 2015 cache/options directory
 .vs/
