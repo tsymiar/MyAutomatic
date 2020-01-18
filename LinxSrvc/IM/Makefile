@@ -4,7 +4,7 @@ FLAG = -g -std=c++11 -D_DEBUG
 PTHD = -lpthread
 IMLOCAL=../../WinNTKline/MfcUtil/IM
 IMFILE=$(IMLOCAL)/IM.cc
-CLIENTLOCAL=../../WinNTKline/test/IM
+CLIENTLOCAL=../../WinNTKline/IMclient
 CLIENTFILES=$(IMLOCAL)/IMclient.cpp $(CLIENTLOCAL)/client.cpp
 IM:
 	[ -z "$(ls $(GEN) &> /dev/null)" ] && mkdir $(GEN) || echo ""
