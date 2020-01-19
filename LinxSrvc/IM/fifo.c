@@ -28,8 +28,7 @@ int write_fifo(const struct Fifo* fifo)
     printf("FIFO write: Process flag = %lld, command = %d, address = %p.\n", fifo->flag, fifo->cmd, fifo->addr);
     if (stat(FIFO_FILE, &statst) < 0 || access(FIFO_FILE, F_OK) != 0) {
         fprintf(stderr, "Fifo file does not exist.\n");
-    }
-    else {
+    } else {
         fileSize = statst.st_size;
         if (fileSize % fifoSize != 0) {
             fprintf(stdout, "File format may invalid.\n");
@@ -72,6 +71,7 @@ struct Fifo read_fifo(long long flag)
         return fifo;
     if (stat(FIFO_FILE, &statst) < 0) {
         perror("Stat FIFO fail");
+        return fifo;
     }
     if ((fdio = open(FIFO_FILE, O_RDONLY)) < 0
         && fdio != -1 && errno != ENXIO) {
@@ -80,10 +80,14 @@ struct Fifo read_fifo(long long flag)
     }
     while ((len = read(fdio, &fifo, fifoSize)) > 0) {
         if (fifo.flag == flag) {
-            close(fdio);
-            return fifo;
+            break;
+        } else {
+            printf("FIFO matching: Process flag = %lld, command = %d, address = %p.\n", fifo.flag, fifo.cmd, fifo.addr);
+            fifo.flag = -1;
+            write(fdio, (void*)'\0', 1);
+            fdio = open(FIFO_FILE, O_RDONLY);
+            continue;
         }
-        fifo.flag = -1;
     }
     close(fdio);
     return fifo;
@@ -116,8 +120,8 @@ int main(int argc, const char* argv[])
         .flag = flag,
         .addr = NULL };
     //std::thread th([](long long flag) {
-        struct Fifo fifo = read_fifo(flag);
-        printf("FIFO read: Process flag = %lld, command = %d, address = %p.\n", fifo.flag, fifo.cmd, fifo.addr);
+    struct Fifo fifo = read_fifo(flag);
+    printf("FIFO read: Process flag = %lld, command = %d, address = %p.\n", fifo.flag, fifo.cmd, fifo.addr);
     //    }, flag);
     //th.detach();
     write_fifo(&fifo0);

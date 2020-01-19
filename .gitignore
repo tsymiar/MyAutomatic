@@ -29,7 +29,6 @@
 
 #Others
 WinNTKline/MfcUtil/image/timg.png
-LinuxSrvc/gSOAPverify/bin
 WinNTKline/test/testUtils
 QtCases/GeneratedFiles
 QtCases/QtCases
@@ -51,4 +50,6 @@ QtCases/ui_*
 *.recipe
 WinNTKline/MfcUtil/image/taoxi.png
 WinNTKline/test/IM/acnts
+*/obj/
+*bin/
 .DS_Store
