@@ -1,4 +1,4 @@
-﻿#include "ShowImage.h"
+﻿#include "OglImage.h"
 
 unsigned char* pixels = NULL;
 png_uint_32 width, height;
@@ -13,7 +13,7 @@ int getRowBytes(int width) {
     }
 }
 
-int ShowImage::setPixels(const char* filename)
+int OglImage::setPixels(const char* filename)
 {
     png_structp png_ptr;
     png_infop info_ptr;
@@ -83,7 +83,7 @@ int ShowImage::setPixels(const char* filename)
     return EXIT_SUCCESS;
 }
 
-GLuint ShowImage::CreateTextureFromPng(const char* filename)
+GLuint OglImage::CreateTextureFromPng(const char* filename)
 {
     unsigned char header[8];
     int k;   // 循环计数器
@@ -204,7 +204,7 @@ GLuint ShowImage::CreateTextureFromPng(const char* filename)
     return textureID;
 }
 
-void ShowImage::loadGLTextures(const char* filename)
+void OglImage::loadGLTextures(const char* filename)
 {
     if (filename == NULL)
         return;
@@ -239,7 +239,7 @@ void ShowImage::loadGLTextures(const char* filename)
 #endif
 }
 
-void ShowImage::Show(const char* filename)
+void OglImage::Show(const char* filename)
 {
     if (filename == NULL)
         return;
@@ -257,7 +257,7 @@ void ShowImage::Show(const char* filename)
 }
 
 // 显示图片
-void ShowImage::Show() {
+void OglImage::Show() {
     glDisable(GL_DEPTH_TEST);
     // 是否设置图片透明度
     if (color_type == PNG_COLOR_TYPE_RGB) {

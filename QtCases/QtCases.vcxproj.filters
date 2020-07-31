@@ -36,9 +36,6 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="gluiobj.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="OpenGLWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -48,26 +45,17 @@
     <ClCompile Include="GeneratedFiles\qrc_openglwindow.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
-    <ClCompile Include="GeneratedFiles\Debug\moc_gluiobj.cpp">
-      <Filter>Generated Files\Debug</Filter>
-    </ClCompile>
     <ClCompile Include="GeneratedFiles\Debug\moc_OpenGLWindow.cpp">
       <Filter>Generated Files\Debug</Filter>
-    </ClCompile>
-    <ClCompile Include="GeneratedFiles\Release\moc_gluiobj.cpp">
-      <Filter>Generated Files\Release</Filter>
     </ClCompile>
     <ClCompile Include="GeneratedFiles\Release\moc_OpenGLWindow.cpp">
       <Filter>Generated Files\Release</Filter>
     </ClCompile>
-    <ClCompile Include="ShowImage.cpp">
+    <ClCompile Include="OglImage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="gluiobj.h">
-      <Filter>Header Files</Filter>
-    </CustomBuild>
     <CustomBuild Include="OpenGLWindow.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
@@ -88,7 +76,7 @@
     <ClInclude Include="..\WinNTKline\MfcUtil\com\qalgorithms.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ShowImage.h">
+    <ClInclude Include="OglImage.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

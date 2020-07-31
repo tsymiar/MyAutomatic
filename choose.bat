@@ -1,10 +1,10 @@
-<# : chooser.bat
-:: launches a File... Open sort of file chooser and outputs choice(s) to the console
+<# : choose.bat
+:: launches a Directory... Open sort of path chooser and outputs choice(s) to the console
 
 @echo off
 setlocal enabledelayedexpansion
 
-set local=BOOST CEFDIR QTDIR OPENCV OPENSSL PTHD_LIB86 JAVA_HOME
+set local=BOOST CEFDIR QTDIR OPENCV OPENSSL PTHD_LIB86 JAVA_HOME ZLIB
 set t=%local%
 :loop
 for /f "tokens=1*" %%a in ("%t%") do (
