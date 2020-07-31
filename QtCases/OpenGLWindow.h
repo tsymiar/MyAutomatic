@@ -1,6 +1,7 @@
 #ifndef OpenGLWindow_H
 #define OpenGLWindow_H
 
+#include "ui_openglwindow.h"
 #include "OglMaterial.h"
 
 class OpenGLWindow : public QOglMaterial

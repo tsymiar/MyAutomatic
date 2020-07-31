@@ -12,11 +12,12 @@
 #include <QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
 #include <QCoreApplication>
+#include <QMainWindow>
 #include <QEnterEvent>
 #include <QEventLoop>
 #include <QTimer>
 #include <QDebug>
-#include "ShowImage.h"
+#include "OglImage.h"
 
 #ifndef _PI_
 #define _PI_ 3.14159265f
@@ -62,7 +63,7 @@ private:
 #endif
     GLfloat xVal, yVal, zZoom, tHigh;
     int mX, mY;
-    ShowImage png;
+    OglImage png;
     void coord();
     QString text;
     void textout(int left = 10, int upon = 40, QColor color = Qt::yellow, float th = 1, QString family = nullptr);

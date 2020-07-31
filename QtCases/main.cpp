@@ -1,4 +1,3 @@
-#include "gluiobj.h"
 #include <QtPlugin>
 #include <QtWidgets/qmessagebox.h>
 #include "OpenGLWindow.h"

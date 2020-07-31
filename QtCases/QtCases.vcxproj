@@ -53,7 +53,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <PreprocessorDefinitions>UNICODE;WIN32;_AFXDLL;QT_CORE_LIB;QT_GUI_LIB;QT_NETWORK_LIB;QT_OPENGL_LIB;QT_QUICKWIDGETS_LIB;QT_SERIALPORT_LIB;QT_SVG_LIB;QT_UITOOLS_LIB;QT_WEBSOCKETS_LIB;QT_WIDGETS_LIB;QT_XML_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(libPNG);$(OPENCV)\include;$(SolutionDir)MfcUtil\mygl;$(SolutionDir)MfcUtil\font;$(SolutionDir)MfcUtil;.\GeneratedFiles;.;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtNetwork;$(QTDIR)\include\ActiveQt;$(QTDIR)\include\QtOpenGL;$(QTDIR)\include\QtQuickWidgets;$(QTDIR)\include\QtSerialPort;$(QTDIR)\include\QtSvg;$(QTDIR)\include\QtUiTools;$(QTDIR)\include\QtWebSockets;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtXml;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(libPNG);$(ZLIB);$(OPENCV)\include;$(SolutionDir)MfcUtil\mygl;$(SolutionDir)MfcUtil\font;$(SolutionDir)MfcUtil;.\GeneratedFiles;.;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtNetwork;$(QTDIR)\include\ActiveQt;$(QTDIR)\include\QtOpenGL;$(QTDIR)\include\QtQuickWidgets;$(QTDIR)\include\QtSerialPort;$(QTDIR)\include\QtSvg;$(QTDIR)\include\QtUiTools;$(QTDIR)\include\QtWebSockets;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtXml;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>MaxSpeed</Optimization>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
@@ -86,9 +86,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="GeneratedFiles\Debug\moc_gluiobj.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="GeneratedFiles\Debug\moc_OpenGLWindow.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -98,17 +95,13 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="GeneratedFiles\Release\moc_gluiobj.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="GeneratedFiles\Release\moc_OpenGLWindow.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="OglMaterial.cpp" />
     <ClCompile Include="OpenGLWindow.cpp" />
-    <ClCompile Include="gluiobj.cpp" />
-    <ClCompile Include="ShowImage.cpp" />
+    <ClCompile Include="OglImage.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="OpenGLWindow.h">
@@ -163,16 +156,6 @@
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </AdditionalInputs>
     </CustomBuild>
-    <CustomBuild Include="gluiobj.h">
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Moc%27ing gluiobj.h...</Message>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -DUNICODE -DWIN32 -D_AFXDLL -DQT_DLL -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_OPENGL_LIB -DQT_QUICKWIDGETS_LIB -DQT_SERIALPORT_LIB -DQT_SVG_LIB -DQT_UITOOLS_LIB -DQT_WEBSOCKETS_LIB -DQT_WIDGETS_LIB -DQT_XML_LIB -D_MBCS  "-I$(SolutionDir)MFCKline\mygl" "-I$(SolutionDir)MFCKline\font" "-I$(SolutionDir)MFCKline" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtGui" "-I$(QTDIR)\include\QtNetwork" "-I$(QTDIR)\include\ActiveQt" "-I$(QTDIR)\include\QtOpenGL" "-I$(QTDIR)\include\QtQuickWidgets" "-I$(QTDIR)\include\QtSerialPort" "-I$(QTDIR)\include\QtSvg" "-I$(QTDIR)\include\QtUiTools" "-I$(QTDIR)\include\QtWebSockets" "-I$(QTDIR)\include\QtWidgets" "-I$(QTDIR)\include\QtXml"</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Moc%27ing gluiobj.h...</Message>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -D_MBCS  "-I$(SolutionDir)MFCKline\mygl" "-I$(SolutionDir)MFCKline\font" "-I$(SolutionDir)MFCKline" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtGui" "-I$(QTDIR)\include\QtNetwork" "-I$(QTDIR)\include\ActiveQt" "-I$(QTDIR)\include\QtOpenGL" "-I$(QTDIR)\include\QtQuickWidgets" "-I$(QTDIR)\include\QtSerialPort" "-I$(QTDIR)\include\QtSvg" "-I$(QTDIR)\include\QtUiTools" "-I$(QTDIR)\include\QtWebSockets" "-I$(QTDIR)\include\QtWidgets" "-I$(QTDIR)\include\QtXml"</Command>
-    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <None Include="mkallcase.sh" />
@@ -181,7 +164,7 @@
   <ItemGroup>
     <ClInclude Include="..\WinNTKline\MfcUtil\com\qalgorithms.h" />
     <ClInclude Include="OglMaterial.h" />
-    <ClInclude Include="ShowImage.h" />
+    <ClInclude Include="OglImage.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
