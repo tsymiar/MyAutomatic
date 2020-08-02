@@ -4,7 +4,7 @@
 @echo off
 setlocal enabledelayedexpansion
 
-set local=BOOST CEFDIR QTDIR OPENCV OPENSSL PTHD_LIB86 JAVA_HOME ZLIB
+set local=BOOST CEFDIR QTDIR OPENCV OPENSSL PTHD_LIB86 JAVA_HOME ZLIB libPNG
 set t=%local%
 :loop
 for /f "tokens=1*" %%a in ("%t%") do (
