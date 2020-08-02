@@ -68,6 +68,8 @@ int OglImage::setPixels(const char* filename)
     }
     // 申请堆空间
     pixels = (unsigned char*)malloc(size);
+    if (pixels == NULL)
+        return EXIT_FAILURE;
     int i;
     for (i = 0; i < height; i++) {
         // 拷贝每行数据给pixel，
@@ -164,7 +166,7 @@ GLuint OglImage::CreateTextureFromPng(const char* filename)
     row_pointers = (png_bytep*)malloc(sizeof(png_bytep) * height);
 
     for (k = 0; k < height; k++)
-        row_pointers[k] = NULL;
+        memset(row_pointers[k], NULL, sizeof(png_bytep));
 
     // 通过扫描图片信息流中每一行，将数据赋值给动态数组
     for (k = 0; k < height; k++)

@@ -19,7 +19,6 @@ CMFCKlineApp::CMFCKlineApp()
     // 支持重新启动管理器
     m_dwRestartManagerSupportFlags = AFX_RESTART_MANAGER_SUPPORT_RESTART;
 
-    // TODO: 在此处添加构造代码，
     // 将所有重要的初始化放置在 InitInstance 中
 }
 
@@ -60,8 +59,6 @@ BOOL CMFCKlineApp::InitInstance()
     // 最终可执行文件的大小，则应移除下列
     // 不需要的特定初始化例程
     // 更改用于存储设置的注册表项
-    // TODO: 应适当修改该字符串，
-    // 例如修改为公司或组织名
     SetRegistryKey(_T("WinNT-Kline"));
 
     // 单例进程模式  
@@ -93,13 +90,11 @@ BOOL CMFCKlineApp::InitInstance()
 
     if (nResponse == IDOK)
     {
-        // TODO: 在此放置处理何时用
-        //  “确定”来关闭对话框的代码
+        //  放置处理“确定”对话框代码
     }
     else if (nResponse == IDCANCEL)
     {
-        // TODO: 在此放置处理何时用
-        //  “取消”来关闭对话框的代码
+        //  放置处理“取消”对话框代码
     }
     else if (nResponse == -1)
     {

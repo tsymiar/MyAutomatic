@@ -43,7 +43,7 @@ int mem_usb_check() {
         return -1;
     }
     char* vendor, *prodid;
-    const int maxlinesize = 256;
+    size_t maxlinesize = 256;
     char* strperline = (char *)malloc(maxlinesize);
     while (!feof(fusb)
         && fgets(strperline, maxlinesize - 1, fusb) != NULL
@@ -52,9 +52,10 @@ int mem_usb_check() {
             vendor = strstr(strperline, "Vendor=");
             prodid = strstr(strperline, "ProdID=");
             if (memcmp("12d1", (void*)(vendor + 7), 4) == 0 &&
-                memcmp("15c1", (void*)(prodid + 7), 4) == 0)
+                memcmp("15c1", (void*)(prodid + 7), 4) == 0) {
                 free(strperline);
                 fclose(fusb);
+            }
             return 0;
         }
     }
@@ -63,7 +64,7 @@ int mem_usb_check() {
     return -2;
 }
 
-int main(int argc, int **argv)
+int main(int argc, char **argv)
 {
     fd_set rdfds;
     FD_ZERO(&rdfds);
@@ -72,7 +73,8 @@ int main(int argc, int **argv)
     tv.tv_usec = 500;
     char buff[256], rply[MAX_BUF_LEN];
     struct termios options;
-    int me_fd, rd_stdin;
+    int me_fd;
+    ssize_t rd_stdin;
     int tries = 0;
     int flag = 0;
     int cmmat = 0;

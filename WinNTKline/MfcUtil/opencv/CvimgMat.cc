@@ -178,6 +178,8 @@ MatImgSet* CvimgMat::getImageSet(const String& img, const String& name)
     MatImgSet *image = NULL;
     int len = sizeof(String) + sizeof(Mat);
     image = (MatImgSet*)malloc(len);
+    if (image == NULL)
+        return NULL;
     memset(image, 0, len);
     image->image = getImageMat(img);
     image->name = name;
@@ -209,10 +211,12 @@ int CvimgMat::interestRegionImage(const String & src, const String & mask)
     if (!srcImage.data)
     {
         fprintf(stdout, "error imread roi image!\n");
-        return -1;
+        return -2;
     }
     int len = sizeof(ROIImages);
     ROIImages *images = reinterpret_cast<ROIImages*>(malloc(len));
+    if (images == NULL)
+        return -3;
     memset(images, 0, len);
     images->roiImages.rawImage = srcImage;
     images->roiImages.mskImage = logImage;
@@ -223,6 +227,8 @@ int CvimgMat::interestRegionImage(const String & src, const String & mask)
     namedWindow("ROI", WINDOW_AUTOSIZE);
     createTrackbar("align X", "ROI", &roival, xMax, onROIxyTrackBar, images);
     ROIImages *imagesy = reinterpret_cast<ROIImages*>(malloc(len));
+    if (imagesy == NULL)
+        return -4;
     memset(imagesy, 0, len);
     memcpy(imagesy, images, len);
     imagesy->flag = 1;
@@ -251,6 +257,8 @@ int CvimgMat::mixedModelImage(const String & img1, const String & img2)
     int iv = 0;
     int len = 2 * sizeof(Mat);
     MatImages* images = reinterpret_cast<MatImages*>(malloc(len));
+    if (images == NULL)
+        return -3;
     memset(images, 0, len);
     images->rawImage = image1;
     images->mskImage = image2;
@@ -265,16 +273,17 @@ int CvimgMat::mixedModelImage(const String & img1, const String & img2)
 int CvimgMat::bilateralImage(const String & src)
 {
     String name = "Bilateral";
-    MatImgSet *image = NULL;
     int len = sizeof(String) + sizeof(Mat);
-    image = (MatImgSet*)malloc(len);
+    MatImgSet* image = (MatImgSet*)malloc(len);
+    if (image == NULL)
+        return -1;
     memset(image, 0, len);
     image->image = getImageMat(src);
     image->name = name;
     if (image->image.flags <= 0) {
         fprintf(stdout, "%s: source image flag invalid.\n", name.c_str());
         free(image);
-        return -1;
+        return -2;
     }
     int bilateralval = 8;
     namedWindow(name, WINDOW_NORMAL);
@@ -289,13 +298,15 @@ int CvimgMat::medianFilterImage(const String& src, int value)
     String name = "MedianFilter";
     int len = sizeof(String) + sizeof(Mat);
     MatImgSet *image = reinterpret_cast<MatImgSet*>(malloc(len));
+    if (image == NULL)
+        return -1;
     memset(image, 0, len);
     image->image = getImageMat(src);
     image->name = name;
     if (image->image.flags <= 0) {
         fprintf(stdout, "%s: source image flag invalid.\n", name.c_str());
         free(image);
-        return -1;
+        return -2;
     }
     if (value % 2 == 0)
         value += 1;
@@ -311,6 +322,8 @@ int CvimgMat::neighbourAverageImage(const String& src, Size ksize)
     String name = "NeighbourAverage";
     int len = sizeof(MatImgSet) + sizeof(Size);
     GaussImage *image = reinterpret_cast<GaussImage*>(malloc(len));
+    if (image == NULL)
+        return -1;
     memset(image, 0, len);
     image->set.image = getImageMat(src);
     image->set.name = name;
@@ -318,7 +331,7 @@ int CvimgMat::neighbourAverageImage(const String& src, Size ksize)
     if (image->set.image.flags <= 0) {
         fprintf(stdout, "GaussianFilter: source image flag invalid.\n");
         free(image);
-        return -1;
+        return -2;
     }
     int value = 0;
     namedWindow(name);
@@ -333,13 +346,15 @@ int CvimgMat::thresholdImage(const String& src)
     String name = "Threshold";
     int len = sizeof(String) + sizeof(Mat);
     MatImgSet *image = reinterpret_cast<MatImgSet*>(malloc(len));
+    if (image == NULL)
+        return -1;
     memset(image, 0, len);
     image->image = getImageMat(src);
     image->name = name;
     if (image->image.flags <= 0) {
         fprintf(stdout, "%s: source image flag invalid.\n", name.c_str());
         free(image);
-        return -1;
+        return -2;
     }
     int posTrackBar = 128;
     namedWindow(name);

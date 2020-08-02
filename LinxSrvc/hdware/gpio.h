@@ -49,9 +49,9 @@ void gpio_free(int file)
 int gpio_set_export(unsigned gpio, int direction_may_change)
 {
     int file;
-    int ret = 0;
     char pin[64];
     int len = 0;
+    ssize_t ret = 0;
     if (direction_may_change == 1) {
         file = open(GPIO_FILES "export", O_WRONLY);
     } else {
@@ -121,7 +121,7 @@ int gpio_get_value(unsigned gpio)
     char val[64];
     char ch;
     int value;
-    int len;
+    ssize_t len;
     snprintf(val, sizeof(val), GPIO_FILES "/gpio%u/value", gpio);
     file = open(val, O_RDONLY);
     if (file < 0) {
