@@ -37,7 +37,7 @@ const int IMGW = 640;
 const int IMGH = 320;
 
 extern int v4l2_init_dev(v4l2_device*, char*);
-extern int v4l2_mapping_buffers(v4l2_device*, __u32);
+extern unsigned int v4l2_mapping_buffers(v4l2_device*, __u32);
 extern int v4l2_set_buffer_queue(v4l2_device*, __u32);
 extern int v4l2_save_image_frame(v4l2_device*, const char*);
 extern int v4l2_close_dev(v4l2_device*);
@@ -141,7 +141,7 @@ int v4l2_request_buffers(v4l2_device *v4l2_obj, __u32 count)
     return v4l2_obj->req.count;
 }
 
-int v4l2_mapping_buffers(v4l2_device *v4l2_obj, __u32 count)
+unsigned int v4l2_mapping_buffers(v4l2_device *v4l2_obj, __u32 count)
 {
     unsigned int i;
     int req_count = v4l2_request_buffers(v4l2_obj, count);
@@ -209,7 +209,7 @@ int v4l2_save_image_frame(v4l2_device *v4l2_obj, const char* prefix)
     char file[128];
     sprintf(file, "%s_%d", prefix, v4l2_obj->argp.index);
     int yuv = open(file, O_WRONLY | O_CREAT, 0666);
-    int result = write(yuv, v4l2_obj->buffer[v4l2_obj->argp.index].start,
+    ssize_t result = write(yuv, v4l2_obj->buffer[v4l2_obj->argp.index].start,
         v4l2_obj->buffer[v4l2_obj->argp.index].size
         // (v4l2_obj->width ? : IMGW) * (v4l2_obj->height ? : IMGH)
     );

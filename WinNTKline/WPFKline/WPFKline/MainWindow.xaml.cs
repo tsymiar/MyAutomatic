@@ -1,8 +1,9 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Windows;
-using System.IO;
 
 #pragma warning disable 1591
 
@@ -26,8 +27,10 @@ namespace WPFKline
         {
             if (File.Exists(fileName))
             {
-                using (Stream resourceStream = new FileStream(fileName, FileMode.Open))
+                Stream resourceStream = null;
+                try
                 {
+                    resourceStream = new FileStream(fileName, FileMode.Open);
                     using (StreamReader reader = new StreamReader(resourceStream, Encoding.GetEncoding("GB2312")))
                     {
                         //读每一行
@@ -63,6 +66,11 @@ namespace WPFKline
                         }
                         return res;
                     }
+                }
+                finally
+                {
+                    if (resourceStream != null)
+                        resourceStream.Dispose();
                 }
             }
             else

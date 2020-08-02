@@ -5,7 +5,7 @@ v4l:
 test:
 	gcc -g routine.c -o $(GEN)/routine.exe
 me909:
-	gcc -g me909s.c -o $(GEN)/me909.exe
+	gcc -std=gnu99 -g me909s.c -o $(GEN)/me909.exe
 all:
 	make v4l
 	make test

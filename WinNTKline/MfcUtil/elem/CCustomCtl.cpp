@@ -58,7 +58,6 @@ void CMyEdit::FillEdit(const char tmp[], int hexlen)
 
 void CMyMenu::MeasureItem(LPMEASUREITEMSTRUCT lpMeasureItemStruct)
 {
-    // TODO: 添加您的代码以确定指定项的大小
     lpMeasureItemStruct->itemWidth = NUM_ITEM_WIDTH;
     //ItemInfo *item;
     //item = (ItemInfo*)lpMeasureItemStruct->itemData;
@@ -75,7 +74,6 @@ void CMyMenu::MeasureItem(LPMEASUREITEMSTRUCT lpMeasureItemStruct)
 
 void CMyMenu::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 {
-    // TODO: 添加您的代码以绘制指定项
     CString strText;
     CDC *pDC = CDC::FromHandle(lpDrawItemStruct->hDC); //获取菜单项的设备句柄 
     ItemInfo *item = reinterpret_cast<ItemInfo*>(lpDrawItemStruct->itemData);

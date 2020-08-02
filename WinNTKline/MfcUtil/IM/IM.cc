@@ -56,7 +56,7 @@ typedef socklen_t type_len;
 typedef void *type_thread_func;
 #define flush_all() fflush(stdin)
 #define closesocket(socket) close(socket)
-#define SLEEP(t) wait((int)1.0f*(t));
+#define SLEEP(t) wait(t < 0.1f ? 1 : (int)(1.0f*(t)));
 pthread_mutexattr_t attr;
 #endif
 
@@ -161,7 +161,7 @@ struct zone_file {
     {
         memset(this, 0, sizeof(*this));
     }
-    unsigned int getSize() const { return sizeof(*this) + zone.usrCnt * sizeof(member); }
+    unsigned int getSize() const { return sizeof(*this) + (int)(zone.usrCnt * sizeof(member)); }
 }zones[MAX_ZONES];
 
 
@@ -237,7 +237,7 @@ int main(int argc, char* argv[])
 
 type_thread_func monite(void *arg)
 {
-    static USER user;
+    static USER user = {};
     int c, flg, cur = 0;
     int qq = 0, loggedin = 0;
     int valrtn;
