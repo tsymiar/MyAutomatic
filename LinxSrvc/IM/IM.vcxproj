@@ -53,6 +53,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'" Label="Configuration">
     <UseDebugLibraries>true</UseDebugLibraries>
+    <RemoteRootDir>~/projects/$(RootNamespace)/LinxSrvc</RemoteRootDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|MIPS'" Label="Configuration">
     <UseDebugLibraries>true</UseDebugLibraries>
@@ -78,6 +79,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <IntDir>$(ProjectDir)..\obj\$(Platform)\</IntDir>
     <TargetExt>.exe</TargetExt>
+    <RemoteDeployDir>$(RemoteRootDir)/$(ProjectName)/bin/$(Platform)/$(Configuration)</RemoteDeployDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|MIPS'">
     <TargetExt>.exe</TargetExt>
@@ -120,6 +122,9 @@
       <PreprocessorDefinitions>_IM_;_DEBUG;THREAD_PER_CONN;</PreprocessorDefinitions>
       <AdditionalOptions>-g -lpthread %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
+    <RemotePreBuildEvent>
+      <Command>if [ `ps -ef | grep IM.exe | grep -v "grep" | wc -l` -gt 0 ]; then killall -9 IM.exe &amp;&amp;  ps -A -ostat,ppid,pid,cmd | grep -e '^[Zz]' | grep IM.exe | awk '{print $2}' | xargs kill -9; else echo "IM.exe: no process found"; fi;</Command>
+    </RemotePreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|MIPS'">
     <Link>
