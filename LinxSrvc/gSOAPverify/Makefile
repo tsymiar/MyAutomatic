@@ -16,7 +16,7 @@ gSOAPverify:$(OUT)
 	g++ -g -c ./soap/stdsoap2.cpp
 	g++ $(FLAG) -c ./soap/soapServer.cpp
 	g++ $(FLAG) -c ./sys/sysstatus.cc -std=c++11
-	if [[ `command -v apt >/dev/null 2>&1 || { echo >&2 "-";}` == "-" ]]; then sudo apt-get install libmysqld-dev; else sudo yum install mariadb-devel; fi;
+	bash -c 'if [[ `command -v apt >/dev/null 2>&1 || { echo >&2 "-";}` == "-" ]]; then sudo yum install mariadb-devel -y; else sudo apt-get install libmysqld-dev -y; fi;'
 	g++ $(FLAG) -c ./sql/sqlofDB.cc $(SQL)
 	g++ $(FLAG) -c ./main/mainSoap.cc $(PTHD)
 	[ -z "$(ls $(GEN) &> /dev/null)" ] && mkdir $(GEN) || echo "exist"
