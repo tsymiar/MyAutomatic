@@ -14,7 +14,7 @@
 
 #pragma comment(lib, "WS2_32.lib")
 #ifdef PTHREAD_H
-#pragma comment(lib, "pthreadVC2.lib") 
+#pragma comment(lib, "pthreadVC2.lib")
 #endif
 #define CHEAK _sopen_s(&file,_file, O_RDONLY,0,0);\
 _sopen_s(&move,_moving, O_WRONLY | O_CREAT,0,0);\
@@ -66,6 +66,8 @@ private:
     HICON m_hIcon;
     HACCEL m_hAcc;
     CRITICAL_SECTION mutex;
+    NOTIFYICONDATA m_icon;//OnTaskShow
+    int m_szData = 0;
 private:
     NOTIFYICONDATA GetNotiIcon(HWND O_hWnd);
     void SetCurrentPosition(float winx, float winy);
@@ -76,14 +78,14 @@ public:
     char* ctpIP = NULL;
     int kPos = 0;
     float margin;
-    OGLKview  Ogl;
+    OGLKview  m_Ogl;
     CString title;
     GlModel model;
     CTabCtrl m_tab;
     CToolBar m_tool;
     DOSCout Dos;
     Level2View object;
-    Level2View *depth = object.getDepth();
+    Level2View* depth = object.getDepth();
 public:
     // 重载函数
     afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
@@ -126,7 +128,7 @@ public:
         char text[] = "Copying file....\r";
         char* file = "./mysql/libmysql.dll";
         char* moving = "../x64/gSOAPWeb/libmysql.dll";
-        FILE* fl = fopen(file, "rb"), *mv = fopen(moving, "a+");
+        FILE* fl = fopen(file, "rb"), * mv = fopen(moving, "a+");
         if (!(fl || mv))
         {
             for (; i < (int)sizeof(text) - 1; i++)
