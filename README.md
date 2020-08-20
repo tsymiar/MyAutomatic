@@ -2,34 +2,34 @@
 
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/6ec2893324eb4264b03f146e178affea)](https://www.codacy.com/app/tsymiar/MyAutomatic?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=tsymiar/MyAutomatic&amp;utm_campaign=Badge_Grade) [![996.icu](https://img.shields.io/badge/link-996.icu-red.svg)](https://996.icu)
 
-##### This is MyAutomatic, including
+##### This is MyAutomatic, including subprojects below ⇣
 
 LinxSrvc
 -------
-* Go into the directory below ⇣
+* Generats binary files by executing `make` into [gSOAPverify](https://github.com/tsymiar/MyAutomatic/tree/auto-dev/LinxSrvc/gSOAPverify) directory.
 
-  ####  [gSOAPverify](https://github.com/tsymiar/MyAutomatic/tree/auto-dev/LinxSrvc/gSOAPverify)
-    to `make` the binary file; if makes OK, to run it:
+    If makes OK, then try:
     ```c
     ./bin/gSOAPverify 8080
      ```
-     this is a `SOAP-server` which is to login the project.
+     to run it, it's a `SOAP-server` which is to verify login.
 *  [IM](https://github.com/tsymiar/MyAutomatic/tree/auto-dev/LinxSrvc/IM)
-    would compile with `Visual Studio 2017` on Windows;
+    could be compiled with `Visual Studio 2017` installed on Windows;
     
-    also, run `g++ IM.cc -std=c++11 -lpthread` if using linux.
-    
-    [IM.cc](https://raw.githubusercontent.com/tsymiar/MyAutomatic/auto-dev/WinNTKline/MfcUtil/IM/IM.cc), the source code.
-    
-Qtcases
+    also, run `g++ IM.cc -std=c++11 -lpthread` to compile if using linux/MacOS. [IM.cc](https://raw.githubusercontent.com/tsymiar/MyAutomatic/auto-dev/WinNTKline/MfcUtil/IM/IM.cc), is the source file.
+*  hardware
+
+   Some scattered .c files to driver hardwares such as `me909s`, GPIO, etc.
+
+QtCases
 -------
-  #####  [QtCases](https://github.com/tsymiar/MyAutomatic/tree/auto-dev/QtCases) Qt with OpenGL.
+  #####  [QtCases](https://github.com/tsymiar/MyAutomatic/tree/auto-dev/QtCases) is Qt with OpenGL.
   
 ## [WinNTKline](https://github.com/tsymiar/MyAutomatic/blob/auto-dev/WinNTKline):
 > 
-######  [Microsoft .NET Framework 3.5](https://www.microsoft.com/en-US/download/details.aspx?id=25150)
+######  [Microsoft .NET Framework 3.5](https://www.microsoft.com/en-US/download/details.aspx?id=25150) needed if compile WinNTKline
 
-| CVML |
+| CvMlwk |
 |:----:|
 ```c
 OpenCV && some Machine Learning learning cases.
@@ -44,7 +44,7 @@ A MFC solution to register, catch log, show K-line, simulate ctp ... etc.
 ```c
 A K-line application using C#.
 ```
-| test |
+| testUtils |
 |:--------:|
 >`testcases to test files of` _MfcUtil_ .
 
