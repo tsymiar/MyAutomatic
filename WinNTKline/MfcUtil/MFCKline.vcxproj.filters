@@ -150,9 +150,6 @@
     <ClInclude Include="com\Glalgorithm.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="elem\COwnCtl.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="elem\Screen-Sharing.h">
       <Filter>头文件</Filter>
     </ClInclude>
