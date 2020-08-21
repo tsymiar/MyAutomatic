@@ -274,7 +274,6 @@ call.bat</Command>
     <ClInclude Include="deep\Level2View.h" />
     <ClInclude Include="Def\MacroDef.h" />
     <ClInclude Include="dos\DOSCout.h" />
-    <ClInclude Include="elem\COwnCtl.h" />
     <ClInclude Include="elem\Screen-Sharing.h" />
     <ClInclude Include="Font\FontNehe.h" />
     <ClInclude Include="HOOK\injectDLL.h" />
