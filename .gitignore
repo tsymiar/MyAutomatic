@@ -53,3 +53,4 @@ WinNTKline/test/IM/acnts
 */obj/
 *bin/
 .DS_Store
+*.xcuserstate
