@@ -21,8 +21,8 @@ typedef unsigned int Pthreadt;
 #define SLEEP(t) Sleep(t);
 #else
 #include <netinet/in.h>
-#include <sys/socket.h> 
-#include <sys/types.h> 
+#include <sys/socket.h>
+#include <sys/types.h>
 #include <pthread.h>
 #include <mutex>
 #include <unistd.h>
@@ -32,7 +32,7 @@ typedef unsigned int Pthreadt;
 typedef int SOCKET;
 typedef pthread_mutex_t CRITICAL_SECTION;
 typedef int                 BOOL;
-typedef void*(*_beginthreadex_proc_type)(void*);
+typedef void* (*_beginthreadex_proc_type)(void*);
 typedef pthread_t Pthreadt;
 typedef struct WSADATA {
     char w;
@@ -50,11 +50,11 @@ typedef struct WSADATA {
 #endif
 inline unsigned int _beginthreadex(
     void* _Security,
-    const pthread_attr_t * attr,
+    const pthread_attr_t* attr,
     _beginthreadex_proc_type start,
-    void *__restrict arg,
+    void* __restrict arg,
     unsigned _InitFlag,
-    Pthreadt * __newthread)
+    Pthreadt* __newthread)
 {
     return pthread_create(__newthread, attr, start, arg);
 }
@@ -62,7 +62,7 @@ inline int closesocket(SOCKET socket) {
     return close(socket);
 }
 inline int Sleep(unsigned long t) {
-    return usleep((int)1010.10f*(t));
+    return usleep((int)1010.10f * (t));
 }
 inline char* strcpy_s(char(strDestination)[], char const* src) {
     return strcpy(strDestination, src);
@@ -70,7 +70,7 @@ inline char* strcpy_s(char(strDestination)[], char const* src) {
 inline int _countof(unsigned char* _Array) {
     return strlen((const char*)_Array) + 1;
 }
-inline char* _itoa(int val, char*str, int rdx) {
+inline char* _itoa(int val, char* str, int rdx) {
     sprintf(str, "%d", val);
     return str;
 }
@@ -271,7 +271,7 @@ int StartChat(int erno,
 int SendChatMesg(st_trans* msg = NULL);
 int callbackLog(char* usr, char* psw);
 int CloseChat();
-int p2pMessage(unsigned char *userName, int UserIP, unsigned int UserPort, char const *Message);
+int p2pMessage(unsigned char* userName, int UserIP, unsigned int UserPort, char const* Message);
 #ifdef _WIN32
 int SetClientDlg(void* Wnd);
 #endif

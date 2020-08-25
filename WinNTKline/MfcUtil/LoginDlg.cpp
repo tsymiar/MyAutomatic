@@ -17,7 +17,6 @@
 namespace logDlg
 {
 #define M 8
-    struct soap soap;
     char dftip[] = "127.0.0.1";
     CString STrslt;
     char form[80];
@@ -26,10 +25,10 @@ namespace logDlg
     struct SOAPELEM {
         struct soap soap;
         st_sock sock;
-        st_trans user;
         struct ArrayOfEmp2 rslt;
-        char msg[64];
-        char **__rslt;
+        st_trans user;
+        char msg[512];
+        char** __rslt;
         int erno;
     } elem;
 }
@@ -43,7 +42,6 @@ IMPLEMENT_DYNAMIC(CLoginDlg, CDialogEx)
 CLoginDlg::CLoginDlg(CWnd* pParent /*=NULL*/)
     : CDialogEx(IDD_LOGINDLG, pParent)
 {
-
 }
 
 CLoginDlg::~CLoginDlg()
@@ -94,7 +92,7 @@ BOOL CLoginDlg::OnInitDialog()
     SetIcon(m_hIcon, TRUE);            // 设置大图标
     SetIcon(m_hIcon, FALSE);        // 设置小图标
 
-    soap_init(&logDlg::soap);
+    soap_init(&logDlg::elem.soap);
     SetCombox();
     m_editPsw.SetLimitText(16);
     m_ipCtrl.SetAddress(127, 0, 0, 1);
@@ -104,15 +102,24 @@ BOOL CLoginDlg::OnInitDialog()
 
 unsigned int _stdcall call_soap_thrd(void* lr)
 {
-    int sz_t = sizeof(struct soap) + sizeof(st_sock) + sizeof(struct ArrayOfEmp2) + 1;
+    int sz_t = sizeof(SOAPELEM);
     SOAPELEM* elem = (SOAPELEM*)malloc(sz_t);
+    memset(elem, 0, sz_t);
     elem->rslt = ArrayOfEmp2();
     elem->sock = st_sock();
-    memcpy(elem, lr, sz_t);
+    memcpy(&elem->msg, "Failed to call remote method！", 32);
+    memcpy(&elem->sock, lr, sizeof(st_sock));
+    if (elem->sock.addr[0] == NULL) {
+        AfxMessageBox("获取请求链接错误！");
+        return -1;
+    }
+    if (elem->soap.state == 0)
+        soap_init(&elem->soap);
     elem->erno = soap_call_api__trans(&elem->soap, elem->sock.addr, "", (char*)elem->user.uiCmdMsg, (char**)&elem->msg);
     if (elem->erno != 0)
     {
         CString msg;
+        soap_sprint_fault(&elem->soap, elem->msg, 512);
         msg.Format("%s\n%s", *soap_faultstring(&elem->soap), elem->msg);
         AfxMessageBox(msg);
     }
@@ -140,8 +147,8 @@ void CLoginDlg::OnBnClickedLogin()
         sprintf_s(addr, 256, "http://%s:%s/myweb.cgi", dftip, m_Port);
     else
         sprintf_s(addr, 256, "http://%s:%s/myweb.cgi", m_IP, m_Port);
-    elem.soap = logDlg::soap;
-    elem.__rslt = new char*[M];
+    elem.soap = logDlg::elem.soap;
+    elem.__rslt = new char* [M];
     //elem.__rslt[0] = (char *)malloc(sizeof(char) * M * 8);
     memset(elem.__rslt, 0, 32);
     for (int i = 1; i < M; i++)
@@ -242,7 +249,7 @@ void CLoginDlg::SetCombox()
     m_combo.InsertString(3, _T("Simulator"));
     m_combo.InsertString(4, _T("GLKline"));
     m_combo.InsertString(5, _T("CvimgMat"));
-    m_combo.SetCurSel(0);  // 默认选择第一项 
+    m_combo.SetCurSel(0);  // 默认选择第一项
 }
 
 void CLoginDlg::SetUserofini0()
@@ -263,7 +270,7 @@ void CLoginDlg::getNsetIPs()
     int secNum = GetPrivateProfileString(NULL, NULL, (LPCTSTR)"", configStr, MAX_INI, file);
     int cfgNum = 0;
     int offset = 0;
-    char *curstr = configStr + offset;
+    char* curstr = configStr + offset;
     for (offset; offset < secNum;)
     {
         offset += strlen(curstr) + 1;
@@ -284,7 +291,6 @@ void CLoginDlg::getNsetIPs()
     }
     cnt_flg = 1;
 }
-
 
 void CLoginDlg::OnCbnSelchangeCom()
 {
@@ -346,9 +352,9 @@ INT_PTR CLoginDlg::testRegist(char* m_IP)
     return m_crgist.DoModal();
 }
 
-BOOL CLoginDlg::testLogin(void* log)
+BOOL CLoginDlg::testLogin(st_sock& log)
 {
     return CloseHandle((HANDLE)_beginthreadex(NULL, 0, \
         (_beginthreadex_proc_type)&call_soap_thrd\
-        , log, 0, NULL));
+        , &log, 0, NULL));
 }
