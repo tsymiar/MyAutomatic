@@ -27,7 +27,7 @@ parseRcvMsg(void* lprcv) {
             continue;
         }
         EnterCriticalSection(&wrcon);
-        st_trans *mesg = (st_trans*)rcv_buf;
+        st_trans* mesg = (st_trans*)rcv_buf;
         ui_val = mesg->uiCmdMsg;
 #ifdef _DEBUG
         if ((ui_val != NETNDT) && (ui_val != GETIMAGE)) {
@@ -71,7 +71,7 @@ parseRcvMsg(void* lprcv) {
 #endif
         if (ui_val == PEER2P) {
             int ip = atoi((const char*)mesg->peerIP);
-            unsigned char *val = (unsigned char *)&ip;
+            unsigned char* val = (unsigned char*)&ip;
             int port = atoi((const char*)mesg->peer_port);
             fprintf(stdout, "User:\t%s\nIP:\t%u.%u.%u.%u\nPORT:\t%d\n",
                 mesg->username, val[3], val[2], val[1], val[0], port);
@@ -112,7 +112,7 @@ parseRcvMsg(void* lprcv) {
                 fclose(fopen(filename, "w"));
                 count = 1;
             }
-            FILE * file = fopen(filename, "ab+");
+            FILE* file = fopen(filename, "ab+");
             if (fw_len == ndt_len) {
                 SetRecvState(RCV_SCC);
                 fprintf(stdout, "\n");
@@ -222,9 +222,49 @@ st_trans* ParseChatMesg(st_trans& trans) {
     return &trans;
 }
 
-int main()
+bool is_ip_valid(char s[])
 {
-    if (StartChat(InitChat(), parseRcvMsg) < 0)
+    int val = 0, dot = 0;
+    size_t len = strlen(s);
+    if (s[0] == '.')
+        return false;
+    if (s[0] <= '9' && s[0] >= '0')
+        val = val + s[0] - '0';
+    else
+        return false;
+    for (int i = 1; i < len; i++)
+    {
+        if ((s[i] > '9' || s[i] < '0') && s[i] != '.')
+            return false;
+        if (s[i] == '.' && s[i - 1] == '.')
+            return false;
+        if (s[i] == '.')
+        {
+            val = 0; dot++;
+        } else
+        {
+            val = val * 10 + s[i] - '0';
+            if (val > 255)
+                return false;
+        }
+    }
+    if (dot == 3)
+        return true;
+    else
+        return false;
+}
+
+int main(int argc, char* argv[])
+{
+    st_sock sock = {};
+    memset(&sock, 0, sizeof(st_sock));
+    if (argc > 1) {
+        if (!is_ip_valid(argv[1]))
+            fprintf(stdout, "Error: '%s' not in correct IP format.\n", argv[1]);
+        else
+            memcpy(sock.IP, argv[1], strlen(argv[1]) + 1);
+    }
+    if (StartChat(InitChat(&sock), parseRcvMsg) < 0)
         return -1;
 #ifdef NDT_ONLY
     int comm = 1;

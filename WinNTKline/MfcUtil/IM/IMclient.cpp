@@ -1,8 +1,8 @@
-﻿#include "IMclient.h"
+#include "IMclient.h"
 
-st_sock socks;
-st_trans trans;
-st_client client;
+static st_sock socks = {};
+static st_trans trans = {};
+static st_client client = {};
 
 // 参考该函数编写报文处理函数
 #ifdef _WIN32
@@ -95,7 +95,7 @@ int InitChat(st_sock* sock) {
 std::string GetLastErrorToString(int errorCode)
 {
 #ifdef _WIN32
-    char *text;
+    char* text;
     // 设置FORMAT_MESSAGE_ALLOCATE_BUFFER标志分配内存时需要LocalFree释放
     FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
         FORMAT_MESSAGE_IGNORE_INSERTS, NULL, errorCode,
@@ -162,7 +162,7 @@ int CloseChat()
     return WSACleanup();
 }
 
-int callbackLog(char * usr, char * psw)
+int callbackLog(char* usr, char* psw)
 {
     trans.uiCmdMsg = 0x1;
     memset(trans.username, 0, 24);
@@ -226,7 +226,7 @@ RecvThreadProc(void* PrimaryUDP)
         memset(recvbuf, 0, 256);
         int ret = recvfrom(P2Psock->socket, (char*)recvbuf, MAX_PACKET_SIZE, 0, (sockaddr*)&P2Psock->addr,
 #ifdef _WIN32
-            &len
+            & len
 #else
             (socklen_t*)(&len)
 #endif
@@ -272,7 +272,7 @@ RecvThreadProc(void* PrimaryUDP)
 //流程：首先，直接向某个客户的外网IP发送消息，如果会话状态无效，则该消息发送端等待超时；
 //判断超时后，发送端发送请求到服务器要求“打洞”，然后服务器请求该客户向本机发送打洞消息。
 //重复MAXRETRY次
-int p2pMessage(unsigned char *userName, int UserIP, unsigned int UserPort, char const *Message)
+int p2pMessage(unsigned char* userName, int UserIP, unsigned int UserPort, char const* Message)
 {
     SOCKET PrimaryUDP = socket(AF_INET, SOCK_DGRAM, 0);
     if (PrimaryUDP < 0)
@@ -285,7 +285,7 @@ int p2pMessage(unsigned char *userName, int UserIP, unsigned int UserPort, char 
     addr.sin_port = htons(socks.PORT);
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
     int bOptval = 1; // 端口复用
-    int retSetsockopt = setsockopt(PrimaryUDP, SOL_SOCKET, SO_REUSEADDR, (char *)&bOptval, sizeof(bOptval));
+    int retSetsockopt = setsockopt(PrimaryUDP, SOL_SOCKET, SO_REUSEADDR, (char*)&bOptval, sizeof(bOptval));
     int MAXRETRY = 5;
     if (SOCKET_ERROR == retSetsockopt)
     {

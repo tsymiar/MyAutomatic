@@ -9,24 +9,26 @@
 pthread_mutex_t queue_lock;      // 队列锁
 pthread_cond_t  queue_noti;      // 条件变量
 SOAP_SOCKET     queue[MAX_QUEUE];// 数组队列
-int head = 0, tail = 0;          // 队列头队列尾初始化         
-void *process_queue(void *);     // 线程入口函数
+int head = 0, tail = 0;          // 队列头队列尾初始化
+void* process_queue(void*);      // 线程入口函数
 int enqueue(SOAP_SOCKET, unsigned long ip); // 入队列函数
 SOAP_SOCKET dequeue(void);       // 出队列函数
 unsigned long dequeue_ip();
 static unsigned long ips[MAX_QUEUE];
 int logcnt = 0;
 
-void * process_queue(void * soap)
+void* process_queue(void* soap)
 {
-    struct soap * tsoap = (struct soap *)soap;
+    if (soap == nullptr)
+        return nullptr;
+    struct soap* tsoap = (struct soap*)soap;
     for (;;)
     {
         tsoap->socket = dequeue();
         tsoap->ip = dequeue_ip();
         if (!soap_valid_socket(tsoap->socket))
         {
-#ifdef DEBUG  
+#ifdef DEBUG
             fprintf(stderr, "Thread %d terminating\n", (int)(long)tsoap->user);
 #endif
             break;
@@ -89,7 +91,7 @@ unsigned long dequeue_ip()
     return ip;
 }
 
-int http_get(struct soap *soap)
+int http_get(struct soap* soap)
 #ifdef NS_HTTPPOST
 {
     soap_response(soap, SOAP_HTML);
@@ -97,7 +99,7 @@ int http_get(struct soap *soap)
     soap_end_send(soap);
     return SOAP_OK;
 }
-int http_post(struct soap *soap, const char *endpoint, const char *host, int port, const char *path, const char *action, size_t count)
+int http_post(struct soap* soap, const char* endpoint, const char* host, int port, const char* path, const char* action, size_t count)
 #endif
 {
     FILE* stream = 0;
@@ -181,7 +183,7 @@ int main_server(int argc, char** argv)
         // 清除序列化数据
         soap_end(&Soap);
     } else {
-        struct soap * soap_thr[MAX_THR];
+        struct soap* soap_thr[MAX_THR];
         pthread_t tid[MAX_THR];
         int i, port = atoi(argv[1]);
         // 锁和条件变量初始化
@@ -208,7 +210,7 @@ int main_server(int argc, char** argv)
         {
             soap_thr[i] = soap_copy(&Soap);
             fprintf(stderr, " ++++\tthread %d.\n", i);
-            pthread_create(&tid[i], NULL, (void*(*)(void*))process_queue, (void*)soap_thr[i]);
+            pthread_create(&tid[i], NULL, (void* (*)(void*))process_queue, (void*)soap_thr[i]);
             usleep(50);
         }
         int j = 0;
@@ -264,7 +266,7 @@ int main_server(int argc, char** argv)
     return 0;
 }
 
-int api__trans(struct soap *soap, char* msg, char* rtn[])
+int api__trans(struct soap* soap, char* msg, char* rtn[])
 {
     int j = 0;
     String_ str;
@@ -274,14 +276,14 @@ int api__trans(struct soap *soap, char* msg, char* rtn[])
     };
     char* curstr[4] = { NULL };
     struct PARAM params[8];
-    char *text[8] = { msg };
+    char* text[8] = { msg };
     int noeq = str.charcount_(*text, '=');
     char* token = strtok(msg, "@&");
     printf("GET:[%s][%d]\n", msg, noeq);
     for (int i = 0; i < 8; i++) {
         text[i] = (char*)malloc(64);
     }
-    if (memcmp(token, "trans", 6) != 0 || strlen(token) > strlen("trans"))
+    if (token != NULL && (memcmp(token, "trans", 6) != 0 || strlen(token) > strlen("trans")))
     {
         memset(text[0], 0, 64);
         memcpy(text[0], "illegal command!", 17);
@@ -309,18 +311,18 @@ int api__trans(struct soap *soap, char* msg, char* rtn[])
     return 0;
 }
 
-int api__get_server_status(struct soap *soap, xsd_string cmd, xsd_string& status)
+int api__get_server_status(struct soap* soap, xsd_string cmd, xsd_string& status)
 {
     st_sys ss = { 0 };
     char gt[8];
     if (memcmp(cmd, "1000", 5) == 0)
         show_memory((char*)"localhost", &ss);
-    status = gcvt(100.f*ss.mem_free / ss.mem_all, 5, gt);
+    status = gcvt(100.f * ss.mem_free / ss.mem_all, 5, gt);
     cout << status << endl;
     return 0;
 }
 
-int api__login_by_key(struct soap*, char *usr, char *psw, struct ArrayOfEmp2 &ccc)
+int api__login_by_key(struct soap*, char* usr, char* psw, struct ArrayOfEmp2& ccc)
 {
     struct queryInfo info;
     ccc.rslt.flag = -3;
