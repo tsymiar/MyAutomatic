@@ -270,6 +270,7 @@ call.bat</Command>
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\LinxSrvc\gSOAPverify\util\String_-inl.h" />
     <ClInclude Include="boost\boostest.h" />
     <ClInclude Include="deep\Level2View.h" />
     <ClInclude Include="Def\MacroDef.h" />

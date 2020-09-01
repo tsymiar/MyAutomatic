@@ -203,7 +203,7 @@ int main_server(int argc, char** argv)
             m = soap_bind(&Soap, NULL, port, BACKLOG);
             vilid++;
         }
-        fprintf(stderr, "======== Socket端口号:%s ========\n", argv[1]);
+        fprintf(stderr, "======== Socket端口: %s ========\n", argv[1]);
 
         // 生成服务线程
         for (i = 0; i < MAX_THR; i++)
@@ -280,6 +280,11 @@ int api__trans(struct soap* soap, char* msg, char* rtn[])
     int noeq = str.charcount_(*text, '=');
     char* token = strtok(msg, "@&");
     printf("GET:[%s][%d]\n", msg, noeq);
+    if (noeq != 0 || msg == NULL) {
+        memset(text[0], 0, 64);
+        memcpy(text[0], "request uri error!", 19);
+        return -1;
+    }
     for (int i = 0; i < 8; i++) {
         text[i] = (char*)malloc(64);
     }
@@ -287,7 +292,7 @@ int api__trans(struct soap* soap, char* msg, char* rtn[])
     {
         memset(text[0], 0, 64);
         memcpy(text[0], "illegal command!", 17);
-        return -1;
+        return -2;
     }
     while (token != NULL)
     {
@@ -301,13 +306,12 @@ int api__trans(struct soap* soap, char* msg, char* rtn[])
     }
     for (int k = 0; k < j; k++)
     {
-        sprintf(text[k], "param(%d):%s[%s]", k, params[k].key, params[k].value);
+        sprintf(text[k], "Param(%d): %s[%s]", k, params[k].key, params[k].value);
+        cout << text[k] << endl;
     }
     j = 0;
     token = NULL;
-    rtn = (char**)malloc(64);
-    memcpy(rtn, *text, 64);
-    cout << rtn << endl;
+    rtn = text;
     return 0;
 }
 
@@ -318,7 +322,7 @@ int api__get_server_status(struct soap* soap, xsd_string cmd, xsd_string& status
     if (memcmp(cmd, "1000", 5) == 0)
         show_memory((char*)"localhost", &ss);
     status = gcvt(100.f * ss.mem_free / ss.mem_all, 5, gt);
-    cout << status << endl;
+    cout << cmd << ": " << status << endl;
     return 0;
 }
 

@@ -162,6 +162,9 @@
     <ClInclude Include="deep\Level2View.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\LinxSrvc\gSOAPverify\util\String_-inl.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MFCKline.cpp">

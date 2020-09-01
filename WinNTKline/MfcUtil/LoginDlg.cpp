@@ -115,14 +115,19 @@ unsigned int _stdcall call_soap_thrd(void* lr)
     }
     if (elem->soap.state == 0)
         soap_init(&elem->soap);
-    elem->erno = soap_call_api__trans(&elem->soap, elem->sock.addr, "", (char*)elem->user.uiCmdMsg, (char**)&elem->msg);
+    elem->erno = soap_call_api__trans(&elem->soap, elem->sock.addr, (char*)&(elem->user.uiCmdMsg), elem->sock.form, (char**)&elem->msg);
+    CString msg;
     if (elem->erno != 0)
     {
-        CString msg;
         soap_sprint_fault(&elem->soap, elem->msg, 512);
         msg.Format("%s\n%s", *soap_faultstring(&elem->soap), elem->msg);
-        AfxMessageBox(msg);
+    } else {
+        char* status = new char[64];
+        soap_call_api__get_server_status(&elem->soap, elem->sock.addr, "", "1000", status);
+        msg.Format("登录成功\n%s\n%s", elem->msg, status);
+        delete status;
     }
+    AfxMessageBox(msg);
     return elem->erno;
 }
 
