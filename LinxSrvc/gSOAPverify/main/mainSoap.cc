@@ -1,10 +1,10 @@
 //
 #include"../util/String_-inl.h"
-#include"mainSoap.h"
-#include"../sql/sqlofDB.h"
-#include"../sys/sysstatus.h"
+#include"../sql/sqlDbReq.h"
+#include"../sys/status.h"
 #include"../soap/soapStub.h"
 #include"../soap/myweb.nsmap"
+#include"mainSoap.h"
 
 pthread_mutex_t queue_lock;      // 队列锁
 pthread_cond_t  queue_noti;      // 条件变量
@@ -268,29 +268,28 @@ int main_server(int argc, char** argv)
 
 int api__trans(struct soap* soap, char* msg, char* rtn[])
 {
-    int j = 0;
     String_ str;
     struct PARAM {
         char key[16];
         char value[16];
     };
+    static int j = 0;
     char* curstr[4] = { NULL };
     struct PARAM params[8];
     char* text[8] = { msg };
     int noeq = str.charcount_(*text, '=');
     char* token = strtok(msg, "@&");
     printf("GET:[%s][%d]\n", msg, noeq);
-    if (noeq != 0 || msg == NULL) {
+    for (int i = 0; i < 8; i++) {
+        text[i] = (char*)malloc(64);
         memset(text[0], 0, 64);
+    }
+    if (noeq < 0 || msg == NULL) {
         memcpy(text[0], "request uri error!", 19);
         return -1;
     }
-    for (int i = 0; i < 8; i++) {
-        text[i] = (char*)malloc(64);
-    }
     if (token != NULL && (memcmp(token, "trans", 6) != 0 || strlen(token) > strlen("trans")))
     {
-        memset(text[0], 0, 64);
         memcpy(text[0], "illegal command!", 17);
         return -2;
     }

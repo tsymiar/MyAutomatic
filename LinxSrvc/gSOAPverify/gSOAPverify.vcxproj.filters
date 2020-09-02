@@ -21,13 +21,13 @@
     <ClCompile Include="soap\soapC.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="sys\sysstatus.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="sql\sqlofDB.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="main\mainSoap.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="sql\sqlDbReq.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="sys\status.cc">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -44,12 +44,6 @@
     <ClInclude Include="soap\soapStub.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="sys\sysstatus.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="sql\sqlofDB.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="main\mainSoap.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -57,6 +51,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="util\ListStack.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="sql\sqlDbReq.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="sys\status.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

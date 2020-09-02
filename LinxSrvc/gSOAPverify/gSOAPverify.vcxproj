@@ -39,8 +39,8 @@
     <ClCompile Include="soap\soapC.cpp" />
     <ClCompile Include="soap\soapServer.cpp" />
     <ClCompile Include="soap\stdsoap2.cpp" />
-    <ClCompile Include="sql\sqlofDB.cc" />
-    <ClCompile Include="sys\sysstatus.cc" />
+    <ClCompile Include="sql\sqlDbReq.cc" />
+    <ClCompile Include="sys\status.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main\mainSoap.h" />
@@ -48,8 +48,8 @@
     <ClInclude Include="soap\soapStub.h" />
     <ClInclude Include="soap\stdsoap2.h" />
     <ClInclude Include="soap\webapi.h" />
-    <ClInclude Include="sql\sqlofDB.h" />
-    <ClInclude Include="sys\sysstatus.h" />
+    <ClInclude Include="sql\sqlDbReq.h" />
+    <ClInclude Include="sys\status.h" />
     <ClInclude Include="util\ListStack.h" />
     <ClInclude Include="util\String_-inl.h" />
   </ItemGroup>

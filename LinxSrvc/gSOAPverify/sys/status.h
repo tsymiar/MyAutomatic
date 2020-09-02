@@ -10,7 +10,7 @@
 #include <sys/ioctl.h>
 #include <bits/types.h>
 
-#define     ONE_MB (1024 * 1024)
+#define ONE_MB (1024 * 1024)
 
 #ifdef __cplusplus
 extern "C"
@@ -32,7 +32,7 @@ extern "C"
         char* ss_addr;
     };
     int show_memory(char* ip, st_sys* sys);
-    int detect_eth_cable(char *ifname);
+    int detect_eth_cable(char* ifname);
 #ifdef __cplusplus
 }
 #endif
