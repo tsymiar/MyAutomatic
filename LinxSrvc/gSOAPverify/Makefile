@@ -4,8 +4,8 @@ GEN = $(CUR)/bin
 PRJ = $(OBJ)/gSOAPverify
 FILE= ./soap/myweb.wsdl
 FLAG= -Wall -g
-SYS = sysstatus.o
-MAIN = sqlofDB.o mainSoap.o
+SYS = status.o
+MAIN = sqlDbReq.o mainSoap.o
 SOAP= soapC.o stdsoap2.o soapServer.o
 BIT = $(shell if [ `getconf LONG_BIT` -eq '64' ];then echo 64;fi;)
 SQL = -std=c++11 -L/usr/lib$(BIT)/mysql -lmysqlclient
@@ -15,9 +15,9 @@ gSOAPverify:$(OUT)
 	g++ $(FLAG) -c ./soap/soapC.cpp
 	g++ -g -c ./soap/stdsoap2.cpp
 	g++ $(FLAG) -c ./soap/soapServer.cpp
-	g++ $(FLAG) -c ./sys/sysstatus.cc -std=c++11
-	bash -c 'if [[ `command -v apt >/dev/null 2>&1 || { echo >&2 "-";}` == "-" ]]; then sudo yum install mariadb-devel -y; else sudo apt-get install libmysqld-dev -y; fi;'
-	g++ $(FLAG) -c ./sql/sqlofDB.cc $(SQL)
+	g++ $(FLAG) -c ./sys/status.cc -std=c++11
+	bash -c 'if [[ `command -v apt >/dev/null 2>&1 || { echo >&2 "-";}` == "-" ]]; then sudo yum install mariadb-devel -y; else sudo apt-get install libmysql++-dev -y; fi;'
+	g++ $(FLAG) -c ./sql/sqlDbReq.cc $(SQL)
 	g++ $(FLAG) -c ./main/mainSoap.cc $(PTHD)
 	[ -z "$(ls $(GEN) &> /dev/null)" ] && mkdir $(GEN) || echo "exist"
 	g++ $(FLAG) -o $(GEN)/gSOAPverify $(SYS) $(SOAP) $(MAIN) $(SQL) $(PTHD)

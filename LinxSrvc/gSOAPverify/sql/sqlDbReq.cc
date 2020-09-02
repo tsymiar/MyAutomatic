@@ -1,4 +1,4 @@
-#include "sqlofDB.h"
+#include "sqlDbReq.h"
 
 using namespace std;
 
@@ -16,8 +16,8 @@ char psw[] = "Psw123$";
 char db[] = "myautomatic";
 string table = "glkline";
 char LL[] = "\033[K>>>";
-MYSQL_RES *RES = nullptr;
-MYSQL_FIELD *field = NULL;
+MYSQL_RES* RES = nullptr;
+MYSQL_FIELD* field = NULL;
 unsigned int rownum;
 unsigned int fieldnum;
 MYSQL_ROW fetch = NULL;
@@ -61,7 +61,7 @@ bool get_rslt_raw(struct queryInfo* info)
 void* test_connect(void* lp)
 {
     char val = 1;
-    mysql_options(&mysql, MYSQL_OPT_RECONNECT, (char*)& val);
+    mysql_options(&mysql, MYSQL_OPT_RECONNECT, (char*)&val);
     while (1)
     {
         if (mysql_ping(&mysql) != 0) {
@@ -121,7 +121,7 @@ void sqlClose()
     mysql_close(&mysql);
 }
 
-int get_rslt_new(queryInfo * info)
+int get_rslt_new(queryInfo* info)
 {
     sprintf(sql, "SELECT email,tell FROM %s WHERE `psw`='%s'" /*AND user='%s'"*/, table.c_str(), info->raw.psw/*, info->raw.acc*/);
     cout << LL << "SQL(" << cnt << "):[\033[34m" << sql << "\033[0m]" << endl;
