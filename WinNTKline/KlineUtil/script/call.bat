@@ -9,11 +9,11 @@ echo
 )else (
 md cfg
 )
-copy ..\MfcUtil\cfg\*.ini .\cfg
-copy ..\MfcUtil\data .\data
-copy ..\MfcUtil\CTP\*.dll .\
-copy ..\MfcUtil\WPF\*.dll .\
-copy ..\MfcUtil\font\lib\*.dll .\
+copy ..\KlineUtil\cfg\*.ini .\cfg
+copy ..\KlineUtil\data .\data
+copy ..\KlineUtil\CTP\*.dll .\
+copy ..\KlineUtil\WPF\*.dll .\
+copy ..\KlineUtil\font\lib\*.dll .\
 copy %OPENCV%\bin\Debug\*.dll .\
 copy %CEFDIR%\Debug\libcef.dll .\
 copy %CEFDIR%\Debug\chrome_elf.dll .\

@@ -89,7 +89,7 @@
   <ItemGroup>
     <Reference Include="AmCharts.Windows.Stock, Version=1.1.0.0, Culture=neutral, PublicKeyToken=6a0af00bd7de39d1, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\MfcUtil\WPF\AmCharts.Windows.Stock.dll</HintPath>
+      <HintPath>..\..\KlineUtil\WPF\AmCharts.Windows.Stock.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />

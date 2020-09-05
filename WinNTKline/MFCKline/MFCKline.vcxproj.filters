@@ -33,136 +33,139 @@
     <ClInclude Include="MFCKline.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="WPF\WPFhost.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="dos\DOSCout.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Stock\Stock.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Font\FontNehe.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="MyOglDrawDlg.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Def\MacroDef.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="security\encoding.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="security\MD5.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="LoginDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="boost\boostest.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="RegistDlg.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="HOOK\injectDLL.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="IM\IMclient.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="IMhideWndDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="web\myweb.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="com\binarytree-inl.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="com\CommSet.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="com\CPUID.H">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="com\_MACRO_.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="IMlogDlg.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="pthdpool\pthdpool.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="netwk\ChannelCollector.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="netwk\GEThttp.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="mygl\bitmap.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="mygl\GlF16.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="mygl\GlModel.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="mygl\House.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="mygl\OGLKview.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="mygl\texture.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="netwk\Simulation.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="html\cefWebKit.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="com\auto_tchar.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="opencv\CvimgMat.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="com\Timer.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="html\MfcHtmlView.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="com\Singleton.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="netwk\CTPclient.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="opencv\opencv2\opencv_modules.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="com\Glalgorithm.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="elem\Screen-Sharing.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="security\verify.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="SetMarkDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="deep\Level2View.h">
+    <ClInclude Include="..\..\LinxSrvc\gSOAPverify\util\String_-inl.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\LinxSrvc\gSOAPverify\util\String_-inl.h">
+    <ClInclude Include="..\KlineUtil\com\Initialise-inl.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KlineUtil\com\Timer.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KlineUtil\com\Singleton.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KlineUtil\elem\Screen-Sharing.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KlineUtil\html\MfcHtmlView.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KlineUtil\deep\Level2View.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KlineUtil\Def\MacroDef.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KlineUtil\HOOK\injectDLL.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KlineUtil\Font\FontNehe.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KlineUtil\com\Glalgorithm.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KlineUtil\dos\DOSCout.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KlineUtil\com\CPUID.H">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KlineUtil\com\CommSet.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KlineUtil\html\cefWebKit.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KlineUtil\boost\boostest.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KlineUtil\com\binarytree-inl.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KlineUtil\com\auto_tchar.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KlineUtil\com\_MACRO_.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KlineUtil\WPF\WPFhost.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KlineUtil\security\verify.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KlineUtil\Stock\Stock.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KlineUtil\mygl\texture.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KlineUtil\netwk\Simulation.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KlineUtil\pthdpool\pthdpool.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KlineUtil\opencv\opencv2\opencv_modules.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KlineUtil\mygl\OGLKview.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KlineUtil\web\myweb.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KlineUtil\security\MD5.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KlineUtil\IM\IMclient.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KlineUtil\mygl\House.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KlineUtil\mygl\GlModel.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KlineUtil\mygl\GlF16.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KlineUtil\netwk\GEThttp.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KlineUtil\security\encoding.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KlineUtil\opencv\CvimgMat.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KlineUtil\netwk\CTPclient.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KlineUtil\netwk\ChannelCollector.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KlineUtil\mygl\bitmap.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -173,100 +176,19 @@
     <ClCompile Include="MFCKlineDlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="dos\DOSCout.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="MyOglDrawDlg.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="font\FontNehe.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="security\encoding.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="security\MD5.cc">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="LoginDlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="security\AES.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="RegistDlg.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="HOOK\injectDLL.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="IMhideWndDlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="test\Testcase.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="IMlogDlg.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="pthdpool\pthdpool.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="netwk\ChannelCollector.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="netwk\GEThttp.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="netwk\Simulation.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="mygl\bitmap.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="mygl\GlF16.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="mygl\GlModel.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="mygl\House.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="mygl\OGLKview.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="mygl\texture.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="html\cefWebKit.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="IM\TCPsocket.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="opencv\CvimgMat.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="html\MfcHtmlView.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="netwk\CTPclient.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="IM\IMclient.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="HOOK\jniNative.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="elem\Screen-Sharing.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="IM\IM.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="security\verify.cc">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="SetMarkDlg.cpp">
@@ -281,10 +203,91 @@
     <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\stdsoap2.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="deep\Level2View.cpp">
+    <ClCompile Include="..\KlineUtil\elem\CCustomCtl.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="elem\CCustomCtl.cpp">
+    <ClCompile Include="..\KlineUtil\html\cefWebKit.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KlineUtil\dos\DOSCout.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KlineUtil\Font\FontNehe.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KlineUtil\IM\IM.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KlineUtil\HOOK\injectDLL.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KlineUtil\deep\Level2View.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KlineUtil\HOOK\jniNative.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KlineUtil\html\MfcHtmlView.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KlineUtil\elem\Screen-Sharing.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KlineUtil\security\AES.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KlineUtil\mygl\bitmap.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KlineUtil\netwk\ChannelCollector.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KlineUtil\netwk\CTPclient.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KlineUtil\opencv\CvimgMat.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KlineUtil\security\encoding.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KlineUtil\netwk\GEThttp.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KlineUtil\mygl\GlF16.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KlineUtil\mygl\GlModel.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KlineUtil\IM\IMclient.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KlineUtil\mygl\House.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KlineUtil\security\MD5.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KlineUtil\mygl\OGLKview.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KlineUtil\pthdpool\pthdpool.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KlineUtil\netwk\Simulation.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KlineUtil\IM\TCPsocket.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KlineUtil\test\Testcase.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KlineUtil\mygl\texture.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KlineUtil\security\verify.cc">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -294,71 +297,64 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="com\plus1second">
-      <Filter>头文件</Filter>
-    </None>
-    <None Include="com\Initialise-inl.h">
-      <Filter>头文件</Filter>
-    </None>
-    <None Include="ClassDiagram.cd">
-      <Filter>配置文件</Filter>
-    </None>
-    <None Include="web\myweb.nsmap">
-      <Filter>配置文件</Filter>
-    </None>
-    <None Include="cfg\ips.ini">
-      <Filter>配置文件</Filter>
-    </None>
-    <None Include="web\BareBonesBrowserLaunch.java">
-      <Filter>配置文件</Filter>
-    </None>
-    <None Include="web\client.java">
-      <Filter>配置文件</Filter>
-    </None>
-    <None Include="script\blobstxt.sh">
-      <Filter>配置文件</Filter>
-    </None>
-    <None Include="script\call.bat">
-      <Filter>配置文件</Filter>
-    </None>
-    <None Include="script\reptile.py">
-      <Filter>配置文件</Filter>
-    </None>
     <None Include="..\..\LinxSrvc\gSOAPverify\file\myautomatic.sql">
       <Filter>配置文件</Filter>
     </None>
+    <None Include="..\KlineUtil\web\BareBonesBrowserLaunch.java">
+      <Filter>配置文件</Filter>
+    </None>
+    <None Include="..\KlineUtil\ClassDiagram.cd" />
+    <None Include="..\KlineUtil\com\plus1second">
+      <Filter>头文件</Filter>
+    </None>
+    <None Include="..\KlineUtil\cfg\ips.ini">
+      <Filter>配置文件</Filter>
+    </None>
+    <None Include="..\KlineUtil\script\call.bat">
+      <Filter>配置文件</Filter>
+    </None>
+    <None Include="..\KlineUtil\script\blobstxt.sh">
+      <Filter>配置文件</Filter>
+    </None>
+    <None Include="..\KlineUtil\web\Client.java">
+      <Filter>配置文件</Filter>
+    </None>
+    <None Include="..\KlineUtil\web\myweb.nsmap">
+      <Filter>配置文件</Filter>
+    </None>
+    <None Include="..\KlineUtil\script\reptile.py">
+      <Filter>配置文件</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="res\MFCKline.ico">
+    <Image Include="..\KlineUtil\res\bit+.bmp">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="res\graph_line24_h.bmp">
+    <Image Include="..\KlineUtil\res\bmp00001.bmp">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="res\bmp00001.bmp">
+    <Image Include="..\KlineUtil\res\graph_line24_h.bmp">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="res\top1_h.bmp">
+    <Image Include="..\KlineUtil\res\icon1.ico">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="res\icon1.ico">
+    <Image Include="..\KlineUtil\res\MFCKline.ico">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="res\bit+.bmp">
+    <Image Include="..\KlineUtil\res\top1_h.bmp">
       <Filter>资源文件</Filter>
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <Manifest Include="res\windows.manifest">
+    <Text Include="..\KlineUtil\IM\MSG.txt">
+      <Filter>配置文件</Filter>
+    </Text>
+    <Text Include="..\KlineUtil\ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="..\KlineUtil\res\windows.manifest">
       <Filter>配置文件</Filter>
     </Manifest>
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="ReadMe.txt">
-      <Filter>配置文件</Filter>
-    </Text>
-    <Text Include="IM\MSG.txt">
-      <Filter>配置文件</Filter>
-    </Text>
   </ItemGroup>
 </Project>

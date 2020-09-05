@@ -21,7 +21,7 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{FB5497B1-D980-4851-A42E-2AFD1A0126D8}</ProjectGuid>
-    <RootNamespace>test</RootNamespace>
+    <RootNamespace>TestUtils</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
     <Keyword>MFCProj</Keyword>
     <ProjectName>testUtils</ProjectName>
@@ -100,7 +100,7 @@
       <Optimization>MaxSpeed</Optimization>
       <PreprocessorDefinitions>_WINSOCK_DEPRECATED_NO_WARNINGS;_UTILAPIS_;_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(libPNG);$(CEFDIR);$(OPENCV)\include;$(SolutionDir)MfcUtil;$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\font;$(SolutionDir)..\LinxSrvc\gSOAPverify\soap</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(libPNG);$(CEFDIR);$(OPENCV)\include;$(SolutionDir)KlineUtil;$(SolutionDir)KlineUtil\CTP;$(SolutionDir)KlineUtil\font;$(SolutionDir)MFCKline;$(SolutionDir)..\LinxSrvc\gSOAPverify\soap</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>
       </DisableSpecificWarnings>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
@@ -109,7 +109,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalLibraryDirectories>$(CEFDIR)\$(Configuration);$(libPNG)\lib\$(Configuration);$(OPENCV)\lib\$(Configuration);$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\GL\lib;$(SolutionDir)MfcUtil\font\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CEFDIR)\$(Configuration);$(libPNG)\lib\$(Configuration);$(OPENCV)\lib\$(Configuration);$(SolutionDir)KlineUtil\CTP;$(SolutionDir)KlineUtil\GL\lib;$(SolutionDir)KlineUtil\font\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>glu32.lib;opengl32.lib;libpng16.lib;zlib.lib;thosttraderapi.lib;thostmduserapi.lib;libcef.lib;libcef_dll_wrapper.lib;opencv_calib3d330d.lib;opencv_highgui330d.lib;opencv_photo330d.lib;opencv_video330d.lib;opencv_core330d.lib;opencv_imgcodecs330d.lib;opencv_shape330d.lib;opencv_videoio330d.lib;opencv_dnn330d.lib;opencv_imgproc330d.lib;opencv_stitching330d.lib;opencv_videostab330d.lib;opencv_features2d330d.lib;opencv_ml330d.lib;opencv_superres330d.lib;opencv_flann330d.lib;opencv_objdetect330d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Midl>
@@ -130,12 +130,12 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_UTILAPIS_;_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(libPNG);$(CEFDIR);$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\font;$(SolutionDir)..\LinxSrvc\gSOAPverify\soap;$(SolutionDir)MfcUtil</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(libPNG);$(CEFDIR);$(OPENCV)\include;$(SolutionDir)KlineUtil;$(SolutionDir)KlineUtil\CTP;$(SolutionDir)KlineUtil\font;$(SolutionDir)MFCKline;$(SolutionDir)..\LinxSrvc\gSOAPverify\soap</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4819</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalLibraryDirectories>$(libPNG)\lib\$(Configuration);$(CEFDIR)\$(Configuration);$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\font\lib;$(SolutionDir)MfcUtil\GL\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(libPNG)\lib\$(Configuration);$(CEFDIR)\$(Configuration);$(SolutionDir)KlineUtil\CTP;$(SolutionDir)KlineUtil\font\lib;$(SolutionDir)KlineUtil\GL\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>glu32.lib;opengl32.lib;libpng16.lib;zlib.lib;thosttraderapi.lib;thostmduserapi.lib;libcef.lib;libcef_dll_wrapper.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Midl>
@@ -158,13 +158,13 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(libPNG);$(CEFDIR);$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\font;$(SolutionDir)..\LinxSrvc\gSOAPverify\soap;$(SolutionDir)MfcUtil</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(libPNG);$(CEFDIR);$(OPENCV)\include;$(SolutionDir)KlineUtil;$(SolutionDir)KlineUtil\CTP;$(SolutionDir)KlineUtil\font;$(SolutionDir)MFCKline;$(SolutionDir)..\LinxSrvc\gSOAPverify\soap</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(libPNG)\lib\$(Configuration);$(CEFDIR)\$(Configuration);$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\font\lib;$(SolutionDir)MfcUtil\GL\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(libPNG)\lib\$(Configuration);$(CEFDIR)\$(Configuration);$(SolutionDir)KlineUtil\CTP;$(SolutionDir)KlineUtil\font\lib;$(SolutionDir)KlineUtil\GL\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>glu32.lib;opengl32.lib;libpng16.lib;zlib.lib;thosttraderapi.lib;thostmduserapi.lib;libcef.lib;libcef_dll_wrapper.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Midl>
@@ -187,13 +187,13 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(libPNG);$(CEFDIR);$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\font;$(SolutionDir)..\LinxSrvc\gSOAPverify\soap;$(SolutionDir)MfcUtil</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(libPNG);$(CEFDIR);$(OPENCV)\include;$(SolutionDir)KlineUtil;$(SolutionDir)KlineUtil\CTP;$(SolutionDir)KlineUtil\font;$(SolutionDir)MFCKline;$(SolutionDir)..\LinxSrvc\gSOAPverify\soap</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(libPNG)\lib\$(Configuration);$(CEFDIR)\$(Configuration);$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\font\lib;$(SolutionDir)MfcUtil\GL\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(libPNG)\lib\$(Configuration);$(CEFDIR)\$(Configuration);$(SolutionDir)KlineUtil\CTP;$(SolutionDir)KlineUtil\font\lib;$(SolutionDir)KlineUtil\GL\lib</AdditionalLibraryDirectories>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -207,23 +207,25 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\MfcUtil\deep\Level2View.h" />
-    <ClInclude Include="..\MfcUtil\dos\DOSCout.h" />
-    <ClInclude Include="..\MfcUtil\elem\Screen-Sharing.h" />
-    <ClInclude Include="..\MfcUtil\html\cefWebKit.h" />
-    <ClInclude Include="..\MfcUtil\IMhideWndDlg.h" />
-    <ClInclude Include="..\MfcUtil\IMlogDlg.h" />
-    <ClInclude Include="..\MfcUtil\IM\IMclient.h" />
-    <ClInclude Include="..\MfcUtil\LoginDlg.h" />
-    <ClInclude Include="..\MfcUtil\mygl\OGLKview.h" />
-    <ClInclude Include="..\MfcUtil\MyOglDrawDlg.h" />
-    <ClInclude Include="..\MfcUtil\netwk\ChannelCollector.h" />
-    <ClInclude Include="..\MfcUtil\netwk\CTPclient.h" />
-    <ClInclude Include="..\MfcUtil\netwk\Simulation.h" />
-    <ClInclude Include="..\MfcUtil\opencv\CvimgMat.h" />
-    <ClInclude Include="..\MfcUtil\RegistDlg.h" />
-    <ClInclude Include="..\MfcUtil\resource.h" />
-    <ClInclude Include="..\MfcUtil\SetMarkDlg.h" />
+    <ClInclude Include="..\KlineUtil\deep\Level2View.h" />
+    <ClInclude Include="..\KlineUtil\dos\DOSCout.h" />
+    <ClInclude Include="..\KlineUtil\elem\Screen-Sharing.h" />
+    <ClInclude Include="..\KlineUtil\html\cefWebKit.h" />
+    <ClInclude Include="..\KlineUtil\IMlogDlg.h" />
+    <ClInclude Include="..\KlineUtil\IM\IMclient.h" />
+    <ClInclude Include="..\KlineUtil\LoginDlg.h" />
+    <ClInclude Include="..\KlineUtil\mygl\OGLKview.h" />
+    <ClInclude Include="..\KlineUtil\netwk\ChannelCollector.h" />
+    <ClInclude Include="..\KlineUtil\netwk\CTPclient.h" />
+    <ClInclude Include="..\KlineUtil\netwk\Simulation.h" />
+    <ClInclude Include="..\KlineUtil\opencv\CvimgMat.h" />
+    <ClInclude Include="..\KlineUtil\resource.h" />
+    <ClInclude Include="..\MFCKline\IMhideWndDlg.h" />
+    <ClInclude Include="..\MFCKline\IMlogDlg.h" />
+    <ClInclude Include="..\MFCKline\LoginDlg.h" />
+    <ClInclude Include="..\MFCKline\MyOglDrawDlg.h" />
+    <ClInclude Include="..\MFCKline\RegistDlg.h" />
+    <ClInclude Include="..\MFCKline\SetMarkDlg.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -234,45 +236,45 @@
     <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\soapC.cpp" />
     <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\soapClient.cpp" />
     <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\stdsoap2.cpp" />
-    <ClCompile Include="..\MfcUtil\deep\Level2View.cpp" />
-    <ClCompile Include="..\MfcUtil\dos\DOSCout.cpp">
+    <ClCompile Include="..\KlineUtil\deep\Level2View.cpp" />
+    <ClCompile Include="..\KlineUtil\dos\DOSCout.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\MfcUtil\elem\Screen-Sharing.cpp" />
-    <ClCompile Include="..\MfcUtil\html\cefWebKit.cpp">
+    <ClCompile Include="..\KlineUtil\elem\Screen-Sharing.cpp" />
+    <ClCompile Include="..\KlineUtil\html\cefWebKit.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\MfcUtil\html\MfcHtmlView.cpp" />
-    <ClCompile Include="..\MfcUtil\IMhideWndDlg.cpp" />
-    <ClCompile Include="..\MfcUtil\IMlogDlg.cpp" />
-    <ClCompile Include="..\MfcUtil\IM\IMclient.cpp">
+    <ClCompile Include="..\KlineUtil\html\MfcHtmlView.cpp" />
+    <ClCompile Include="..\KlineUtil\IM\IMclient.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\MfcUtil\LoginDlg.cpp" />
-    <ClCompile Include="..\MfcUtil\mygl\OGLKview.cc">
+    <ClCompile Include="..\KlineUtil\mygl\OGLKview.cc">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\MfcUtil\MyOglDrawDlg.cpp" />
-    <ClCompile Include="..\MfcUtil\netwk\ChannelCollector.cpp">
+    <ClCompile Include="..\KlineUtil\netwk\ChannelCollector.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\MfcUtil\netwk\CTPclient.cpp">
+    <ClCompile Include="..\KlineUtil\netwk\CTPclient.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\MfcUtil\netwk\Simulation.cpp">
+    <ClCompile Include="..\KlineUtil\netwk\Simulation.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\MfcUtil\opencv\CvimgMat.cc">
+    <ClCompile Include="..\KlineUtil\opencv\CvimgMat.cc">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\MfcUtil\RegistDlg.cpp" />
-    <ClCompile Include="..\MfcUtil\security\encoding.cc">
+    <ClCompile Include="..\KlineUtil\security\encoding.cc">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\MfcUtil\security\MD5.cc">
+    <ClCompile Include="..\KlineUtil\security\MD5.cc">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\MfcUtil\SetMarkDlg.cpp" />
+    <ClCompile Include="..\MFCKline\IMhideWndDlg.cpp" />
+    <ClCompile Include="..\MFCKline\IMlogDlg.cpp" />
+    <ClCompile Include="..\MFCKline\LoginDlg.cpp" />
+    <ClCompile Include="..\MFCKline\MyOglDrawDlg.cpp" />
+    <ClCompile Include="..\MFCKline\RegistDlg.cpp" />
+    <ClCompile Include="..\MFCKline\SetMarkDlg.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -283,23 +285,23 @@
     <ClCompile Include="testUtilsDlg.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\MfcUtil\MFCKline.rc" />
+    <ResourceCompile Include="..\MFCKline\MFCKline.rc" />
     <ResourceCompile Include="testUtils.rc" />
   </ItemGroup>
   <ItemGroup>
     <None Include="res\testUtils.rc2" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\MfcUtil\res\bit+.bmp" />
-    <Image Include="..\MfcUtil\res\bmp00001.bmp" />
-    <Image Include="..\MfcUtil\res\graph_line24_h.bmp" />
-    <Image Include="..\MfcUtil\res\icon1.ico" />
-    <Image Include="..\MfcUtil\res\MFCKline.ico" />
-    <Image Include="..\MfcUtil\res\top1_h.bmp" />
+    <Image Include="..\KlineUtil\res\bit+.bmp" />
+    <Image Include="..\KlineUtil\res\bmp00001.bmp" />
+    <Image Include="..\KlineUtil\res\graph_line24_h.bmp" />
+    <Image Include="..\KlineUtil\res\icon1.ico" />
+    <Image Include="..\KlineUtil\res\MFCKline.ico" />
+    <Image Include="..\KlineUtil\res\top1_h.bmp" />
     <Image Include="res\testUtils.ico" />
   </ItemGroup>
   <ItemGroup>
-    <Manifest Include="..\MfcUtil\res\windows.manifest" />
+    <Manifest Include="..\KlineUtil\res\windows.manifest" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

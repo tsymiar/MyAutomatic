@@ -1,6 +1,6 @@
 #include "OglMaterial.h"
 
-QOglMaterial::QOglMaterial(QWidget *parent)
+QOglMaterial::QOglMaterial(QWidget* parent)
     : QOpenGLWidget(parent)
 {
 #ifdef _GLVBO_
@@ -32,7 +32,7 @@ QOglMaterial::~QOglMaterial()
 *   matrix主要是模型视图矩阵，控制位置和旋转等
 * ******************************************** */
 /* 顶点着色器 */
-static const char *vertexShaderSourceCore =
+static const char* vertexShaderSourceCore =
 "attribute vec4 vPosition;\n"
 "uniform highp mat4 matrix;\n"
 "attribute lowp vec4 a_color;\n"
@@ -48,12 +48,11 @@ static const char *vertexShaderSourceCore =
 * ******************************************** */
 
 /* 片段着色器 */
-static const char *fragmentShaderSourceCore =
+static const char* fragmentShaderSourceCore =
 "varying lowp vec4 v_color;\n"
 "void main() {\n"
 "   gl_FragColor = v_color;\n"
 "}\n";
-
 
 /* 2.1 图形顶点坐标 */
 GLfloat vVertices[] = {
@@ -150,7 +149,7 @@ void QOglMaterial::initializeGL()
         return;
     }
 
-    // 1.3 设置属性位置，将vPosition属性设置为位置0, vertex为位置1 
+    // 1.3 设置属性位置，将vPosition属性设置为位置0, vertex为位置1
     /*
     program->bindAttributeLocation("vertex", 1);
     program->bindAttributeLocation("vPosition", 0);
@@ -177,7 +176,7 @@ void QOglMaterial::initializeGL()
 #ifdef  OGL_KVIEW_H_
     kv.AdjustDraw(640, 480);
 #else
-    png.setPixels("../WinNTKline/MfcUtil/image/atlas.png");
+    png.setPixels("../WinNTKline/KlineUtil/image/atlas.png");
 #endif
 #endif // _GLVBO_
 }
@@ -225,7 +224,7 @@ void QOglMaterial::paintGL()
 #ifdef  OGL_KVIEW_H_
     kv.InitGraph();
     kv.DrawCoord(0, 0);
-    kv.GetMarkDatatoDraw("../MfcUtil/data/SH600747.DAT");
+    kv.GetMarkDatatoDraw("../KlineUtil/data/SH600747.DAT");
     qDebug() << "(" << kv.lastmarket.price << ")";
 #else
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -264,8 +263,7 @@ void QOglMaterial::paintGL()
     if (bingo)
     {
         textout(30, 40, Qt::red, 3, "Helvetica");
-    }
-    else
+    } else
     {
         coord();
         textout();

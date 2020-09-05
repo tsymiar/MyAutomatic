@@ -21,40 +21,31 @@
     <ClInclude Include="targetver.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\MfcUtil\dos\DOSCout.h">
+    <ClInclude Include="..\KlineUtil\dos\DOSCout.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\MfcUtil\LoginDlg.h">
+    <ClInclude Include="..\KlineUtil\LoginDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\MfcUtil\RegistDlg.h">
+    <ClInclude Include="..\KlineUtil\IMlogDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\MfcUtil\IMhideWndDlg.h">
+    <ClInclude Include="..\KlineUtil\mygl\OGLKview.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\MfcUtil\MyOglDrawDlg.h">
+    <ClInclude Include="..\KlineUtil\netwk\ChannelCollector.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\MfcUtil\IMlogDlg.h">
+    <ClInclude Include="..\KlineUtil\netwk\Simulation.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\MfcUtil\mygl\OGLKview.h">
+    <ClInclude Include="..\KlineUtil\IM\IMclient.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\MfcUtil\netwk\ChannelCollector.h">
+    <ClInclude Include="..\KlineUtil\html\cefWebKit.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\MfcUtil\netwk\Simulation.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\MfcUtil\IM\IMclient.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\MfcUtil\html\cefWebKit.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\MfcUtil\opencv\CvimgMat.h">
+    <ClInclude Include="..\KlineUtil\opencv\CvimgMat.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="testUtils.h">
@@ -66,19 +57,34 @@
     <ClInclude Include="Resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\MfcUtil\elem\Screen-Sharing.h">
+    <ClInclude Include="..\KlineUtil\elem\Screen-Sharing.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\MfcUtil\netwk\CTPclient.h">
+    <ClInclude Include="..\KlineUtil\netwk\CTPclient.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\MfcUtil\resource.h">
+    <ClInclude Include="..\KlineUtil\resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\MfcUtil\SetMarkDlg.h">
+    <ClInclude Include="..\KlineUtil\deep\Level2View.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\MfcUtil\deep\Level2View.h">
+    <ClInclude Include="..\MFCKline\IMhideWndDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\MFCKline\IMlogDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\MFCKline\LoginDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\MFCKline\MyOglDrawDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\MFCKline\RegistDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\MFCKline\SetMarkDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -86,46 +92,31 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MfcUtil\security\encoding.cc">
+    <ClCompile Include="..\KlineUtil\security\encoding.cc">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MfcUtil\security\MD5.cc">
+    <ClCompile Include="..\KlineUtil\security\MD5.cc">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MfcUtil\dos\DOSCout.cpp">
+    <ClCompile Include="..\KlineUtil\dos\DOSCout.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MfcUtil\LoginDlg.cpp">
+    <ClCompile Include="..\KlineUtil\netwk\ChannelCollector.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MfcUtil\RegistDlg.cpp">
+    <ClCompile Include="..\KlineUtil\mygl\OGLKview.cc">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MfcUtil\IMhideWndDlg.cpp">
+    <ClCompile Include="..\KlineUtil\netwk\Simulation.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MfcUtil\MyOglDrawDlg.cpp">
+    <ClCompile Include="..\KlineUtil\html\cefWebKit.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MfcUtil\IMlogDlg.cpp">
+    <ClCompile Include="..\KlineUtil\opencv\CvimgMat.cc">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MfcUtil\netwk\ChannelCollector.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\MfcUtil\mygl\OGLKview.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\MfcUtil\netwk\Simulation.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\MfcUtil\html\cefWebKit.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\MfcUtil\opencv\CvimgMat.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\MfcUtil\html\MfcHtmlView.cpp">
+    <ClCompile Include="..\KlineUtil\html\MfcHtmlView.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="testUtilsDlg.cpp">
@@ -134,16 +125,13 @@
     <ClCompile Include="testUtils.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MfcUtil\netwk\CTPclient.cpp">
+    <ClCompile Include="..\KlineUtil\netwk\CTPclient.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MfcUtil\IM\IMclient.cpp">
+    <ClCompile Include="..\KlineUtil\IM\IMclient.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MfcUtil\elem\Screen-Sharing.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\MfcUtil\SetMarkDlg.cpp">
+    <ClCompile Include="..\KlineUtil\elem\Screen-Sharing.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\soapC.cpp">
@@ -155,12 +143,30 @@
     <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\stdsoap2.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MfcUtil\deep\Level2View.cpp">
+    <ClCompile Include="..\KlineUtil\deep\Level2View.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\MFCKline\IMhideWndDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\MFCKline\IMlogDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\MFCKline\LoginDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\MFCKline\MyOglDrawDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\MFCKline\RegistDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\MFCKline\SetMarkDlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\MfcUtil\MFCKline.rc">
+    <ResourceCompile Include="..\MFCKline\MFCKline.rc">
       <Filter>资源文件</Filter>
     </ResourceCompile>
     <ResourceCompile Include="testUtils.rc">
@@ -168,22 +174,22 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\MfcUtil\res\MFCKline.ico">
+    <Image Include="..\KlineUtil\res\MFCKline.ico">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="..\MfcUtil\res\icon1.ico">
+    <Image Include="..\KlineUtil\res\icon1.ico">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="..\MfcUtil\res\graph_line24_h.bmp">
+    <Image Include="..\KlineUtil\res\graph_line24_h.bmp">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="..\MfcUtil\res\bmp00001.bmp">
+    <Image Include="..\KlineUtil\res\bmp00001.bmp">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="..\MfcUtil\res\top1_h.bmp">
+    <Image Include="..\KlineUtil\res\top1_h.bmp">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="..\MfcUtil\res\bit+.bmp">
+    <Image Include="..\KlineUtil\res\bit+.bmp">
       <Filter>资源文件</Filter>
     </Image>
     <Image Include="res\testUtils.ico">
@@ -196,6 +202,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Manifest Include="..\MfcUtil\res\windows.manifest" />
+    <Manifest Include="..\KlineUtil\res\windows.manifest" />
   </ItemGroup>
 </Project>
