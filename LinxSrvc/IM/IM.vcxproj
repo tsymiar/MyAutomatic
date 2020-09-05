@@ -108,10 +108,10 @@
     <IntDir>$(ProjectDir)..\obj\$(Platform)\</IntDir>
   </PropertyGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\WinNTKline\MfcUtil\IM\IM.cc" />
+    <None Include="Makefile" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Makefile" />
+    <ClCompile Include="..\..\WinNTKline\KlineUtil\IM\IM.cc" />
   </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <Link>

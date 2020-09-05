@@ -1,21 +1,21 @@
-CUR  = `pwd`
-GEN  = $(CUR)/../bin
+CUR = `pwd`
+GEN = $(CUR)/../bin
+OBJ = $(CUR)/../obj
 FLAG = -g -std=c++11 -D_DEBUG 
 PTHD = -lpthread
-IMLOCAL=../../WinNTKline/MfcUtil/IM
+IMLOCAL=../../WinNTKline/KlineUtil/IM
 IMFILE=$(IMLOCAL)/IM.cc
 CLIENTLOCAL=../../WinNTKline/IMclient
 CLIENTFILES=$(IMLOCAL)/IMclient.cpp $(CLIENTLOCAL)/client.cpp
+all: IM client Kai
 IM:
-	[ -z "$(ls $(GEN) &> /dev/null)" ] && mkdir $(GEN) || echo ""
+	[ ! -d "$(GEN)" ] && mkdir $(GEN)
 	g++ $(FLAG) $(IMFILE) -o $(GEN)/IM.exe $(PTHD)
 client:
-	[ -z "$(ls $(GEN) &> /dev/null)" ] && mkdir $(GEN) || echo ""
 	g++ $(FLAG) -I$(IMLOCAL) $(CLIENTFILES) -o $(GEN)/client.exe $(PTHD)
 Kai:
+	[ ! -d "$(OBJ)" ] && mkdir $(OBJ)
 	g++ -c KaiSocket.cc -std=c++11 -lpthread
-all:
-	make IM
-	make client
+	mv *.o $(OBJ)/
 clean:
-	rm -f $(GEN)/IM.exe $(GEN)/client.exe KaiSocket.o
+	rm -f $(GEN)/IM.exe $(GEN)/client.exe $(OBJ)/*.o

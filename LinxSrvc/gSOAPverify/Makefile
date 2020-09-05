@@ -16,18 +16,19 @@ gSOAPverify:$(OUT)
 	g++ -g -c ./soap/stdsoap2.cpp
 	g++ $(FLAG) -c ./soap/soapServer.cpp
 	g++ $(FLAG) -c ./sys/status.cc -std=c++11
-	bash -c 'if [[ `command -v apt >/dev/null 2>&1 || { echo >&2 "-";}` == "-" ]]; then sudo yum install mariadb-devel -y; else sudo apt-get install libmysql++-dev -y; fi;'
+#	bash -c '`command -v apt >/dev/null 2>&1 || { echo >&2 "-";}` == "-"'
+	if [ ! -d "/usr/include/mysql" ]]; then if [[ `command -v apt` == "" ]; then sudo yum install mariadb-devel -y; else sudo apt-get install libmysql++-dev -y; fi; fi;
 	g++ $(FLAG) -c ./sql/sqlDbReq.cc $(SQL)
 	g++ $(FLAG) -c ./main/mainSoap.cc $(PTHD)
-	[ -z "$(ls $(GEN) &> /dev/null)" ] && mkdir $(GEN) || echo "exist"
+	[ ! -d "`pwd`/bin" ] && mkdir `pwd`/bin || echo ${GEN}
 	g++ $(FLAG) -o $(GEN)/gSOAPverify $(SYS) $(SOAP) $(MAIN) $(SQL) $(PTHD)
 	$(shell if [ -f $(FILE) ]; then if [ -d $(GEN) ]; then cp $(FILE) $(GEN)/;fi;else @echo "file <$(FILE)> don't exist.";fi;)
 	$(shell if [ -d $(PRJ) ]; then rm -rf $(OBJ);fi;)
-	mkdir $(OBJ) $(PRJ)
+	[ ! -d "$(OBJ)" ] && mkdir -p $(PRJ)
 	mv ./*.o $(PRJ)
 	echo make OK
 all: 
-	if[ `ps -fe| grep gSOAPverify | grep -v grep` -eq 0 ];then killall -9 gSOAPverify;else echo "making gSOAPverify.";fi
+	if[ `ps -fe| grep gSOAPverify | grep -v grep` -eq 0 ];then killall -9 gSOAPverify;else echo "making gSOAPverify.";fi;
 	make clear
 	make
 	$(GEN)/gSOAPverify 8080
