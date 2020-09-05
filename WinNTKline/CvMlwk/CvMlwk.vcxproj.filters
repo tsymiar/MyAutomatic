@@ -21,31 +21,31 @@
     <ClCompile Include="CvmlMain.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MfcUtil\tensor\ShannonEntropy.cpp">
+    <ClCompile Include="..\KlineUtil\tensor\ShannonEntropy.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MfcUtil\opencv\CvimgMat.cc">
+    <ClCompile Include="..\KlineUtil\opencv\CvimgMat.cc">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\MfcUtil\tensor\CPyTensor.hpp">
+    <ClInclude Include="..\KlineUtil\tensor\CPyTensor.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\MfcUtil\tensor\ShannonEntropy.h">
+    <ClInclude Include="..\KlineUtil\tensor\ShannonEntropy.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\MfcUtil\opencv\CvimgMat.h">
+    <ClInclude Include="..\KlineUtil\opencv\CvimgMat.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\MfcUtil\tensor\object_detect.py">
+    <None Include="..\KlineUtil\tensor\object_detect.py">
       <Filter>脚本</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\MfcUtil\image\taoxi.jpg">
+    <Image Include="..\KlineUtil\image\taoxi.jpg">
       <Filter>资源文件</Filter>
     </Image>
   </ItemGroup>

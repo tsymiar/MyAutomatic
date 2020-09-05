@@ -97,7 +97,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>CVML;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(OPENCV)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(OPENCV)\include;$(SolutionDir)KlineUtil;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile />
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
     </ClCompile>
@@ -133,7 +133,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>CVML;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(OPENCV)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(OPENCV)\include;$(SolutionDir)KlineUtil;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile />
     </ClCompile>
     <Link>
@@ -155,7 +155,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>CVML;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(PTYHONPATH)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(PTYHONPATH)\include;$(SolutionDir)KlineUtil;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile />
     </ClCompile>
     <Link>
@@ -167,24 +167,24 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\MfcUtil\opencv\CvimgMat.cc">
+    <ClCompile Include="..\KlineUtil\opencv\CvimgMat.cc">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\MfcUtil\tensor\ShannonEntropy.cpp">
+    <ClCompile Include="..\KlineUtil\tensor\ShannonEntropy.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="CvmlMain.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\MfcUtil\opencv\CvimgMat.h" />
-    <ClInclude Include="..\MfcUtil\tensor\CPyTensor.hpp" />
-    <ClInclude Include="..\MfcUtil\tensor\ShannonEntropy.h" />
+    <ClInclude Include="..\KlineUtil\opencv\CvimgMat.h" />
+    <ClInclude Include="..\KlineUtil\tensor\CPyTensor.hpp" />
+    <ClInclude Include="..\KlineUtil\tensor\ShannonEntropy.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\MfcUtil\tensor\object_detect.py" />
+    <None Include="..\KlineUtil\tensor\object_detect.py" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\MfcUtil\image\taoxi.jpg" />
+    <Image Include="..\KlineUtil\image\taoxi.jpg" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

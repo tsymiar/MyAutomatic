@@ -113,7 +113,7 @@
       <EnablePREfast>false</EnablePREfast>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DisableSpecificWarnings>4793;4819</DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>$(BOOST);$(CEFDIR);$(QTDIR)\include;$(OPENCV)\include;$(OPENSSL)\include;$(PTHD_LIB86)\..\..\include;$(JAVA_HOME)\include\win32;$(SolutionDir)MfcUtil;$(SolutionDir)MfcUtil\font;$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\mygl;$(SolutionDir)MfcUtil\Index;$(SolutionDir)MfcUtil\opencv;$(SolutionDir)..\LinxSrvc\gSOAPverify\soap;.\GeneratedFiles\$(ConfigurationName);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;$(BOOST);$(CEFDIR);$(QTDIR)\include;$(OPENCV)\include;$(OPENSSL)\include;$(PTHD_LIB86)\..\..\include;$(JAVA_HOME)\include\win32;$(SolutionDir)KlineUtil;$(SolutionDir)KlineUtil\font;$(SolutionDir)KlineUtil\CTP;$(SolutionDir)KlineUtil\mygl;$(SolutionDir)KlineUtil\Index;$(SolutionDir)KlineUtil\opencv;$(SolutionDir)..\LinxSrvc\gSOAPverify\soap;.\GeneratedFiles\$(ConfigurationName);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAs>CompileAsCpp</CompileAs>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -128,7 +128,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <AdditionalLibraryDirectories>$(PTHD_LIB86);$(QTDIR)\lib;$(CEFDIR)\$(Configuration);$(OPENSSL)\lib;$(OPENCV)\lib\$(Configuration);$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\GL\lib;$(SolutionDir)MfcUtil\font\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(PTHD_LIB86);$(QTDIR)\lib;$(CEFDIR)\$(Configuration);$(OPENSSL)\lib;$(OPENCV)\lib\$(Configuration);$(SolutionDir)KlineUtil;$(SolutionDir)KlineUtil\CTP;$(SolutionDir)KlineUtil\GL\lib;$(SolutionDir)KlineUtil\font\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>opencv_calib3d330d.lib;opencv_highgui330d.lib;opencv_photo330d.lib;opencv_video330d.lib;opencv_core330d.lib;opencv_imgcodecs330d.lib;opencv_shape330d.lib;opencv_videoio330d.lib;opencv_dnn330d.lib;opencv_imgproc330d.lib;opencv_stitching330d.lib;opencv_videostab330d.lib;opencv_features2d330d.lib;opencv_ml330d.lib;opencv_superres330d.lib;opencv_flann330d.lib;opencv_objdetect330d.lib;Qt5Gui.lib;Qt5Core.lib;Qt5OpenGL.lib;Qt5Widgets.lib;pthreadVC2.lib;libcef.lib;libcrypto.lib;libcef_dll_wrapper.lib;thosttraderapi.lib;thostmduserapi.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Midl>
@@ -149,7 +149,7 @@
       </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>copy "$(ProjectDir)script\call.bat" "$(TargetDir)"
+      <Command>copy "$(ProjectDir)..\KlineUtil\script\call.bat" "$(TargetDir)"
 set TARGET=$(TargetDir)
 cd "$(TargetDir)"
 %TARGET:~0,3%
@@ -168,14 +168,14 @@ call.bat</Command>
       </DisableSpecificWarnings>
       <SDLCheck>true</SDLCheck>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>$(BOOST);$(CEFDIR);$(OPENSSL);$(QTDIR)\include;$(OPENCV)\include;$(PTHREAD)\include;$(JAVA_HOME)\include\win32;$(SolutionDir)MfcUtil;$(SolutionDir)MfcUtil\font;$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\mygl;$(SolutionDir)MfcUtil\Index;$(SolutionDir)MfcUtil\opencv;$(SolutionDir)..\LinxSrvc\gSOAPverify\soap;.\GeneratedFiles\$(ConfigurationName);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BOOST);$(CEFDIR);$(OPENSSL);$(QTDIR)\include;$(OPENCV)\include;$(PTHREAD)\include;$(JAVA_HOME)\include\win32;$(SolutionDir)KlineUtil;$(SolutionDir)KlineUtil\font;$(SolutionDir)KlineUtil\CTP;$(SolutionDir)KlineUtil\mygl;$(SolutionDir)KlineUtil\Index;$(SolutionDir)KlineUtil\opencv;$(SolutionDir)..\LinxSrvc\gSOAPverify\soap;.\GeneratedFiles\$(ConfigurationName);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>NotSet</TargetMachine>
       <AdditionalOptions>/NODEFAULTLIB:"libcmt.lib" %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalLibraryDirectories>$(PTHD_LIB86);$(QTDIR)\lib;$(CEFDIR)\$(Configuration);$(OPENCV)\lib\$(Configuration);$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\GL\lib;$(SolutionDir)MfcUtil\font\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(PTHD_LIB86);$(QTDIR)\lib;$(CEFDIR)\$(Configuration);$(OPENCV)\lib\$(Configuration);$(SolutionDir)KlineUtil\CTP;$(SolutionDir)KlineUtil\GL\lib;$(SolutionDir)KlineUtil\font\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>opencv_calib3d330d.lib;opencv_highgui330d.lib;opencv_photo330d.lib;opencv_video330d.lib;opencv_core330d.lib;opencv_imgcodecs330d.lib;opencv_shape330d.lib;opencv_videoio330d.lib;opencv_dnn330d.lib;opencv_imgproc330d.lib;opencv_stitching330d.lib;opencv_videostab330d.lib;opencv_features2d330d.lib;opencv_ml330d.lib;opencv_superres330d.lib;opencv_flann330d.lib;opencv_objdetect330d.lib;Qt5Gui.lib;Qt5Core.lib;Qt5OpenGL.lib;Qt5Widgets.lib;pthreadVC2.lib;libcef.lib;libcef_dll_wrapper.lib;thosttraderapi.lib;thostmduserapi.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Midl>
@@ -205,14 +205,14 @@ call.bat</Command>
       <CompileAs>CompileAsCpp</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(BOOST);$(CEFDIR);$(OPENSSL);$(QTDIR)\include;$(OPENCV)\include;$(PTHREAD)\include;$(JAVA_HOME)\include\win32;$(SolutionDir)MfcUtil;$(SolutionDir)MfcUtil\font;$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\mygl;$(SolutionDir)MfcUtil\Index;$(SolutionDir)MfcUtil\opencv;$(SolutionDir)..\LinxSrvc\gSOAPverify\soap;.\GeneratedFiles\$(ConfigurationName);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BOOST);$(CEFDIR);$(OPENSSL);$(QTDIR)\include;$(OPENCV)\include;$(PTHREAD)\include;$(JAVA_HOME)\include\win32;$(SolutionDir)KlineUtil;$(SolutionDir)KlineUtil\font;$(SolutionDir)KlineUtil\CTP;$(SolutionDir)KlineUtil\mygl;$(SolutionDir)KlineUtil\Index;$(SolutionDir)KlineUtil\opencv;$(SolutionDir)..\LinxSrvc\gSOAPverify\soap;.\GeneratedFiles\$(ConfigurationName);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(PTHD_LIB86);$(QTDIR)\lib;$(CEFDIR)\$(Configuration);$(OPENCV)\lib\$(Configuration);$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\GL\lib;$(SolutionDir)MfcUtil\font\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(PTHD_LIB86);$(QTDIR)\lib;$(CEFDIR)\$(Configuration);$(OPENCV)\lib\$(Configuration);$(SolutionDir)KlineUtil\CTP;$(SolutionDir)KlineUtil\GL\lib;$(SolutionDir)KlineUtil\font\lib</AdditionalLibraryDirectories>
       <AdditionalOptions>/SAFESEH:NO %(AdditionalOptions)</AdditionalOptions>
       <AdditionalDependencies>libcef.lib;Qt5Gui.lib;Qt5Core.lib;Qt5OpenGL.lib;Qt5Widgets.lib;pthreadVC2.lib;cef_sandbox.lib;libcef_dll_wrapper.lib;thosttraderapi.lib;thostmduserapi.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <TargetMachine>NotSet</TargetMachine>
@@ -239,7 +239,7 @@ call.bat</Command>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(BOOST);$(CEFDIR);$(OPENSSL);$(QTDIR)\include;$(OPENCV)\include;$(PTHREAD)\include;$(JAVA_HOME)\include\win32;$(SolutionDir)MfcUtil;$(SolutionDir)MfcUtil\font;$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\mygl;$(SolutionDir)MfcUtil\Index;$(SolutionDir)MfcUtil\opencv;$(SolutionDir)..\LinxSrvc\gSOAPverify\soap;.\GeneratedFiles\$(ConfigurationName);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BOOST);$(CEFDIR);$(OPENSSL);$(QTDIR)\include;$(OPENCV)\include;$(PTHREAD)\include;$(JAVA_HOME)\include\win32;$(SolutionDir)KlineUtil;$(SolutionDir)KlineUtil\font;$(SolutionDir)KlineUtil\CTP;$(SolutionDir)KlineUtil\mygl;$(SolutionDir)KlineUtil\Index;$(SolutionDir)KlineUtil\opencv;$(SolutionDir)..\LinxSrvc\gSOAPverify\soap;.\GeneratedFiles\$(ConfigurationName);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAsManaged>true</CompileAsManaged>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -248,7 +248,7 @@ call.bat</Command>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(PTHD_LIB86);$(QTDIR)\lib;$(CEFDIR)\$(Configuration);$(OPENCV)\lib\$(Configuration);$(SolutionDir)MfcUtil\CTP;$(SolutionDir)MfcUtil\GL\lib;$(SolutionDir)MfcUtil\font\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(PTHD_LIB86);$(QTDIR)\lib;$(CEFDIR)\$(Configuration);$(OPENCV)\lib\$(Configuration);$(SolutionDir)KlineUtil\CTP;$(SolutionDir)KlineUtil\GL\lib;$(SolutionDir)KlineUtil\font\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>opencv_calib3d330.lib;opencv_highgui330.lib;opencv_photo330.lib;opencv_video330.lib;opencv_core330.lib;opencv_imgcodecs330.lib;opencv_shape330.lib;opencv_videoio330.lib;opencv_dnn330.lib;opencv_imgproc330.lib;opencv_stitching330.lib;opencv_videostab330.lib;opencv_features2d330.lib;opencv_ml330.lib;opencv_superres330.lib;opencv_flann330.lib;opencv_objdetect330.lib;opencv_ts330.lib;Qt5Gui.lib;Qt5Core.lib;Qt5OpenGL.lib;Qt5Widgets.lib;pthreadVC2.lib;libcef.lib;cef_sandbox.lib;libcef_dll_wrapper.lib;thosttraderapi.lib;thostmduserapi.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Midl>
@@ -266,130 +266,133 @@ call.bat</Command>
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <Text Include="IM\MSG.txt" />
-    <Text Include="ReadMe.txt" />
+    <Manifest Include="..\KlineUtil\res\windows.manifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\KlineUtil\IM\MSG.txt" />
+    <Text Include="..\KlineUtil\ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\LinxSrvc\gSOAPverify\util\String_-inl.h" />
-    <ClInclude Include="boost\boostest.h" />
-    <ClInclude Include="deep\Level2View.h" />
-    <ClInclude Include="Def\MacroDef.h" />
-    <ClInclude Include="dos\DOSCout.h" />
-    <ClInclude Include="elem\Screen-Sharing.h" />
-    <ClInclude Include="Font\FontNehe.h" />
-    <ClInclude Include="HOOK\injectDLL.h" />
-    <ClInclude Include="html\cefWebKit.h" />
-    <ClInclude Include="html\MfcHtmlView.h" />
-    <ClInclude Include="com\auto_tchar.h" />
-    <ClInclude Include="com\binarytree-inl.h" />
-    <ClInclude Include="com\CommSet.h" />
-    <ClInclude Include="com\CPUID.H" />
-    <ClInclude Include="com\Glalgorithm.h" />
-    <ClInclude Include="com\Singleton.hpp" />
-    <ClInclude Include="com\Timer.hpp" />
-    <ClInclude Include="com\_MACRO_.h" />
-    <ClInclude Include="IMlogDlg.h" />
-    <ClInclude Include="IMhideWndDlg.h" />
-    <ClInclude Include="IM\IMclient.h" />
+    <ClInclude Include="..\KlineUtil\boost\boostest.h" />
+    <ClInclude Include="..\KlineUtil\deep\Level2View.h" />
+    <ClInclude Include="..\KlineUtil\Def\MacroDef.h" />
+    <ClInclude Include="..\KlineUtil\dos\DOSCout.h" />
+    <ClInclude Include="..\KlineUtil\elem\Screen-Sharing.h" />
+    <ClInclude Include="..\KlineUtil\Font\FontNehe.h" />
+    <ClInclude Include="..\KlineUtil\HOOK\injectDLL.h" />
+    <ClInclude Include="..\KlineUtil\IM\IMclient.h" />
+    <ClInclude Include="..\KlineUtil\html\cefWebKit.h" />
+    <ClInclude Include="..\KlineUtil\html\MfcHtmlView.h" />
+    <ClInclude Include="..\KlineUtil\com\auto_tchar.h" />
+    <ClInclude Include="..\KlineUtil\com\binarytree-inl.h" />
+    <ClInclude Include="..\KlineUtil\com\CommSet.h" />
+    <ClInclude Include="..\KlineUtil\com\CPUID.H" />
+    <ClInclude Include="..\KlineUtil\com\Glalgorithm.h" />
+    <ClInclude Include="..\KlineUtil\com\Singleton.hpp" />
+    <ClInclude Include="..\KlineUtil\com\Timer.hpp" />
+    <ClInclude Include="..\KlineUtil\com\_MACRO_.h" />
+    <ClInclude Include="..\KlineUtil\com\Initialise-inl.h" />
+    <ClInclude Include="..\KlineUtil\mygl\bitmap.h" />
+    <ClInclude Include="..\KlineUtil\mygl\GlF16.h" />
+    <ClInclude Include="..\KlineUtil\mygl\GlModel.h" />
+    <ClInclude Include="..\KlineUtil\mygl\House.h" />
+    <ClInclude Include="..\KlineUtil\mygl\OGLKview.h" />
+    <ClInclude Include="..\KlineUtil\mygl\texture.h" />
+    <ClInclude Include="..\KlineUtil\netwk\ChannelCollector.h" />
+    <ClInclude Include="..\KlineUtil\netwk\CTPclient.h" />
+    <ClInclude Include="..\KlineUtil\netwk\GEThttp.h" />
+    <ClInclude Include="..\KlineUtil\netwk\Simulation.h" />
+    <ClInclude Include="..\KlineUtil\opencv\CvimgMat.h" />
+    <ClInclude Include="..\KlineUtil\opencv\opencv2\opencv_modules.hpp" />
+    <ClInclude Include="..\KlineUtil\pthdpool\pthdpool.h" />
+    <ClInclude Include="..\KlineUtil\security\encoding.h" />
+    <ClInclude Include="..\KlineUtil\security\MD5.h" />
+    <ClInclude Include="..\KlineUtil\security\verify.h" />
+    <ClInclude Include="..\KlineUtil\Stock\Stock.h" />
+    <ClInclude Include="..\KlineUtil\web\myweb.h" />
+    <ClInclude Include="..\KlineUtil\WPF\WPFhost.h" />
     <ClInclude Include="LoginDlg.h" />
-    <ClInclude Include="MFCKline.h" />
-    <ClInclude Include="MFCKlineDlg.h" />
-    <ClInclude Include="mygl\bitmap.h" />
-    <ClInclude Include="mygl\GlF16.h" />
-    <ClInclude Include="mygl\GlModel.h" />
-    <ClInclude Include="mygl\House.h" />
-    <ClInclude Include="mygl\OGLKview.h" />
-    <ClInclude Include="mygl\texture.h" />
-    <ClInclude Include="MyOglDrawDlg.h" />
-    <ClInclude Include="netwk\ChannelCollector.h" />
-    <ClInclude Include="netwk\CTPclient.h" />
-    <ClInclude Include="netwk\GEThttp.h" />
-    <ClInclude Include="netwk\Simulation.h" />
-    <ClInclude Include="opencv\CvimgMat.h" />
-    <ClInclude Include="opencv\opencv2\opencv_modules.hpp" />
-    <ClInclude Include="pthdpool\pthdpool.h" />
+    <ClInclude Include="IMlogDlg.h" />
     <ClInclude Include="RegistDlg.h" />
-    <ClInclude Include="Resource.h" />
-    <ClInclude Include="security\encoding.h" />
-    <ClInclude Include="security\MD5.h" />
-    <ClInclude Include="security\verify.h" />
     <ClInclude Include="SetMarkDlg.h" />
+    <ClInclude Include="IMhideWndDlg.h" />
+    <ClInclude Include="MyOglDrawDlg.h" />
+    <ClInclude Include="MFCKlineDlg.h" />
+    <ClInclude Include="MFCKline.h" />
+    <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
-    <ClInclude Include="Stock\Stock.h" />
     <ClInclude Include="targetver.h" />
-    <ClInclude Include="web\myweb.h" />
-    <ClInclude Include="WPF\WPFhost.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\soapC.cpp" />
     <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\soapClient.cpp" />
     <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\stdsoap2.cpp" />
-    <ClCompile Include="deep\Level2View.cpp" />
-    <ClCompile Include="dos\DOSCout.cpp" />
-    <ClCompile Include="elem\CCustomCtl.cpp" />
-    <ClCompile Include="elem\Screen-Sharing.cpp" />
-    <ClCompile Include="Font\FontNehe.cc" />
-    <ClCompile Include="HOOK\injectDLL.cpp" />
-    <ClCompile Include="HOOK\jniNative.cpp" />
-    <ClCompile Include="html\cefWebKit.cpp" />
-    <ClCompile Include="html\MfcHtmlView.cpp" />
-    <ClCompile Include="IMlogDlg.cpp" />
-    <ClCompile Include="IMhideWndDlg.cpp" />
-    <ClCompile Include="IM\IM.cc">
+    <ClCompile Include="..\KlineUtil\deep\Level2View.cpp" />
+    <ClCompile Include="..\KlineUtil\dos\DOSCout.cpp" />
+    <ClCompile Include="..\KlineUtil\elem\CCustomCtl.cpp" />
+    <ClCompile Include="..\KlineUtil\elem\Screen-Sharing.cpp" />
+    <ClCompile Include="..\KlineUtil\Font\FontNehe.cc" />
+    <ClCompile Include="..\KlineUtil\HOOK\injectDLL.cpp" />
+    <ClCompile Include="..\KlineUtil\HOOK\jniNative.cpp" />
+    <ClCompile Include="..\KlineUtil\html\cefWebKit.cpp" />
+    <ClCompile Include="..\KlineUtil\html\MfcHtmlView.cpp" />
+    <ClCompile Include="..\KlineUtil\IM\IM.cc">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="IM\IMclient.cpp" />
-    <ClCompile Include="IM\TCPsocket.cpp" />
+    <ClCompile Include="..\KlineUtil\IM\IMclient.cpp" />
+    <ClCompile Include="..\KlineUtil\IM\TCPsocket.cpp" />
+    <ClCompile Include="..\KlineUtil\mygl\bitmap.c" />
+    <ClCompile Include="..\KlineUtil\mygl\GlF16.cc" />
+    <ClCompile Include="..\KlineUtil\mygl\GlModel.cc" />
+    <ClCompile Include="..\KlineUtil\mygl\House.cc" />
+    <ClCompile Include="..\KlineUtil\mygl\OGLKview.cc" />
+    <ClCompile Include="..\KlineUtil\mygl\texture.c" />
+    <ClCompile Include="..\KlineUtil\netwk\ChannelCollector.cpp" />
+    <ClCompile Include="..\KlineUtil\netwk\CTPclient.cpp" />
+    <ClCompile Include="..\KlineUtil\netwk\GEThttp.cpp" />
+    <ClCompile Include="..\KlineUtil\netwk\Simulation.cpp" />
+    <ClCompile Include="..\KlineUtil\opencv\CvimgMat.cc" />
+    <ClCompile Include="..\KlineUtil\pthdpool\pthdpool.cc" />
+    <ClCompile Include="..\KlineUtil\security\AES.cc" />
+    <ClCompile Include="..\KlineUtil\security\encoding.cc" />
+    <ClCompile Include="..\KlineUtil\security\MD5.cc" />
+    <ClCompile Include="..\KlineUtil\security\verify.cc" />
+    <ClCompile Include="..\KlineUtil\test\Testcase.cpp" />
     <ClCompile Include="LoginDlg.cpp" />
     <ClCompile Include="MFCKline.cpp" />
     <ClCompile Include="MFCKlineDlg.cpp" />
-    <ClCompile Include="mygl\bitmap.c" />
-    <ClCompile Include="mygl\GlF16.cc" />
-    <ClCompile Include="mygl\GlModel.cc" />
-    <ClCompile Include="mygl\House.cc" />
-    <ClCompile Include="mygl\OGLKview.cc" />
-    <ClCompile Include="mygl\texture.c" />
     <ClCompile Include="MyOglDrawDlg.cpp" />
-    <ClCompile Include="netwk\ChannelCollector.cpp" />
-    <ClCompile Include="netwk\CTPclient.cpp" />
-    <ClCompile Include="netwk\GEThttp.cpp" />
-    <ClCompile Include="netwk\Simulation.cpp" />
-    <ClCompile Include="opencv\CvimgMat.cc" />
-    <ClCompile Include="pthdpool\pthdpool.cc" />
     <ClCompile Include="RegistDlg.cpp" />
-    <ClCompile Include="security\AES.cc" />
-    <ClCompile Include="security\encoding.cc" />
-    <ClCompile Include="security\MD5.cc" />
-    <ClCompile Include="security\verify.cc" />
     <ClCompile Include="SetMarkDlg.cpp" />
-    <ClCompile Include="test\Testcase.cpp" />
+    <ClCompile Include="IMlogDlg.cpp" />
+    <ClCompile Include="IMhideWndDlg.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="MFCKline.rc" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\LinxSrvc\gSOAPverify\file\myautomatic.sql" />
-    <None Include="cfg\ips.ini" />
-    <None Include="ClassDiagram.cd" />
-    <None Include="com\Initialise-inl.h" />
-    <None Include="com\plus1second" />
-    <None Include="script\blobstxt.sh" />
-    <None Include="script\call.bat" />
-    <None Include="script\reptile.py" />
-    <None Include="web\BareBonesBrowserLaunch.java" />
-    <None Include="web\Client.java" />
-    <None Include="web\myweb.nsmap" />
+    <None Include="..\KlineUtil\cfg\ips.ini" />
+    <None Include="..\KlineUtil\ClassDiagram.cd" />
+    <None Include="..\KlineUtil\com\plus1second" />
+    <None Include="..\KlineUtil\script\blobstxt.sh" />
+    <None Include="..\KlineUtil\script\call.bat" />
+    <None Include="..\KlineUtil\script\reptile.py" />
+    <None Include="..\KlineUtil\web\BareBonesBrowserLaunch.java" />
+    <None Include="..\KlineUtil\web\Client.java" />
+    <None Include="..\KlineUtil\web\myweb.nsmap" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="res\bit+.bmp" />
-    <Image Include="res\bmp00001.bmp" />
-    <Image Include="res\graph_line24_h.bmp" />
-    <Image Include="res\icon1.ico" />
-    <Image Include="res\MFCKline.ico" />
-    <Image Include="res\top1_h.bmp" />
+    <Image Include="..\KlineUtil\res\bit+.bmp" />
+    <Image Include="..\KlineUtil\res\bmp00001.bmp" />
+    <Image Include="..\KlineUtil\res\graph_line24_h.bmp" />
+    <Image Include="..\KlineUtil\res\icon1.ico" />
+    <Image Include="..\KlineUtil\res\MFCKline.ico" />
+    <Image Include="..\KlineUtil\res\top1_h.bmp" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="AmCharts.Windows.Stock">
@@ -420,9 +423,6 @@ call.bat</Command>
     <Reference Include="WindowsBase">
       <HintPath>C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\WindowsBase.dll</HintPath>
     </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <Manifest Include="res\windows.manifest" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\WPFKline\WPFKline\WPFKline.csproj">

@@ -1,7 +1,7 @@
 #ifndef _CTPCLIENT_H_
 #define _CTPCLIENT_H_
 
-#include "../MyOglDrawDlg.h"
+#include "MyOglDrawDlg.h"
 
 class CTPclient
 {

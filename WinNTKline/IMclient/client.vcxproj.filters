@@ -10,15 +10,15 @@
     <ClCompile Include="client.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MfcUtil\IM\IM.cc">
+    <ClCompile Include="..\KlineUtil\IM\IM.cc">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MfcUtil\IM\IMclient.cpp">
+    <ClCompile Include="..\KlineUtil\IM\IMclient.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\MfcUtil\IM\IMclient.h">
+    <ClInclude Include="..\KlineUtil\IM\IMclient.h">
       <Filter>源文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -89,7 +89,7 @@ namespace WPFKline
 #if DEBUG
                     @"\data\SH600747.DAT";
 #else
-                @"\..\..\..\..\MfcUtil\data\SH600747.DAT";
+                @"\..\..\..\..\KlineUtil\data\SH600747.DAT";
 #endif
                 LoadData(txtFilePath.Text);
                 stockSet.ItemsSource = Data;

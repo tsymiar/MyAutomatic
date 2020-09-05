@@ -5,7 +5,7 @@ using namespace cv;
 
 Mat g_imageMat;
 
-String imgFiles = "../MfcUtil/image/taoxi.";
+String imgFiles = "../KlineUtil/image/taoxi.";
 const String g_jpegFile = imgFiles + "jpeg";
 static String g_jpgFile = imgFiles + "jpg";
 
@@ -22,16 +22,16 @@ struct GaussImage {
     Size ksize;
 };
 
-void createAlphaMat(Mat &mat)
+void createAlphaMat(Mat& mat)
 {
     for (int i = 0; i < mat.rows; ++i)
     {
         for (int j = 0; j < mat.cols; ++j)
         {
-            Vec4b&rgba = mat.at<Vec4b>(i, j);
+            Vec4b& rgba = mat.at<Vec4b>(i, j);
             rgba[0] = UCHAR_MAX;
-            rgba[1] = saturate_cast<uchar>((float(mat.cols - j)) / ((float)mat.cols) *UCHAR_MAX);
-            rgba[2] = saturate_cast<uchar>((float(mat.rows - i)) / ((float)mat.rows) *UCHAR_MAX);
+            rgba[1] = saturate_cast<uchar>((float(mat.cols - j)) / ((float)mat.cols) * UCHAR_MAX);
+            rgba[2] = saturate_cast<uchar>((float(mat.rows - i)) / ((float)mat.rows) * UCHAR_MAX);
             rgba[3] = saturate_cast<uchar>(0.5 * (rgba[1] + rgba[2]));
         }
     }
@@ -46,8 +46,7 @@ int saveMat2PNG(int w, int h, const String& name)
     compression_params.push_back(9);
     try {
         imwrite(name, mat, compression_params);
-    }
-    catch (std::runtime_error& ex) {
+    } catch (std::runtime_error& ex) {
         fprintf(stderr, "error trans jpeg to PNG format: %s\n", ex.what());
         return -1;
     }
@@ -57,7 +56,7 @@ int saveMat2PNG(int w, int h, const String& name)
 
 static void onROIxyTrackBar(int fix, void* usrdata)
 {
-    ROIImages *images = reinterpret_cast<ROIImages*>(usrdata);
+    ROIImages* images = reinterpret_cast<ROIImages*>(usrdata);
     // images->rawImage.flags < 0 ? (Mat*)memcpy(images, usrdata, sizeof(RoiImages)) : &imread(dstPng);
     if (images->roiImages.rawImage.flags <= 0) {
         Mat img = imread(g_jpegFile);
@@ -87,7 +86,7 @@ static void onROIxyTrackBar(int fix, void* usrdata)
 
 static void onBilateralTrackBar(int d, void* usrdata)
 {
-    MatImgSet *src = (MatImgSet*)(usrdata);
+    MatImgSet* src = (MatImgSet*)(usrdata);
     if (src->image.flags < 0) {
         src->image = g_imageMat;
     }
@@ -98,7 +97,7 @@ static void onBilateralTrackBar(int d, void* usrdata)
 
 static void onMedianFilterTrackBar(int ksize, void* usrdata)
 {
-    MatImgSet *src = (MatImgSet*)(usrdata);
+    MatImgSet* src = (MatImgSet*)(usrdata);
     if (ksize == 3 || ksize == 5) {
         src->image = imread(g_jpgFile, CV_8U | CV_16U | CV_32F);
     }
@@ -115,7 +114,7 @@ static void onMedianFilterTrackBar(int ksize, void* usrdata)
 
 static void onNeighbourAverageTrackBar(int ksize, void* usrdata)
 {
-    GaussImage *src = reinterpret_cast<GaussImage*>(usrdata);
+    GaussImage* src = reinterpret_cast<GaussImage*>(usrdata);
     imshow(src->set.name, src->set.image);
     if (src->ksize == Size(3, 3)) {
         int size = 0;
@@ -133,7 +132,7 @@ static void onNeighbourAverageTrackBar(int ksize, void* usrdata)
 
 static void onThreshTrackBar(int old, void* usrdata)
 {
-    MatImgSet *src = reinterpret_cast<MatImgSet*>(usrdata);
+    MatImgSet* src = reinterpret_cast<MatImgSet*>(usrdata);
     if (src->image.flags <= 0) {
         src->image = g_imageMat;
     }
@@ -146,7 +145,7 @@ static void onThreshTrackBar(int old, void* usrdata)
 
 static void onMixedTrackBar(int value, void* usrdata)
 {
-    MatImages *images = reinterpret_cast<MatImages*>(usrdata);
+    MatImages* images = reinterpret_cast<MatImages*>(usrdata);
     double alpha = value / 255.0;
     double beta = (1.0 - alpha);
     Mat mixImage;
@@ -175,7 +174,7 @@ Mat CvimgMat::getImageMat(const String& img, int flg)
 
 MatImgSet* CvimgMat::getImageSet(const String& img, const String& name)
 {
-    MatImgSet *image = NULL;
+    MatImgSet* image = NULL;
     int len = sizeof(String) + sizeof(Mat);
     image = (MatImgSet*)malloc(len);
     if (image == NULL)
@@ -191,7 +190,7 @@ MatImgSet* CvimgMat::getImageSet(const String& img, const String& name)
     return image;
 }
 
-int CvimgMat::interestRegionImage(const String & src, const String & mask)
+int CvimgMat::interestRegionImage(const String& src, const String& mask)
 {
     saveMat2PNG(90, 90, g_jpegFile);
     Mat logImage = imread(mask);
@@ -214,7 +213,7 @@ int CvimgMat::interestRegionImage(const String & src, const String & mask)
         return -2;
     }
     int len = sizeof(ROIImages);
-    ROIImages *images = reinterpret_cast<ROIImages*>(malloc(len));
+    ROIImages* images = reinterpret_cast<ROIImages*>(malloc(len));
     if (images == NULL)
         return -3;
     memset(images, 0, len);
@@ -226,7 +225,7 @@ int CvimgMat::interestRegionImage(const String & src, const String & mask)
     int yMax = srcImage.rows - logImage.rows;
     namedWindow("ROI", WINDOW_AUTOSIZE);
     createTrackbar("align X", "ROI", &roival, xMax, onROIxyTrackBar, images);
-    ROIImages *imagesy = reinterpret_cast<ROIImages*>(malloc(len));
+    ROIImages* imagesy = reinterpret_cast<ROIImages*>(malloc(len));
     if (imagesy == NULL)
         return -4;
     memset(imagesy, 0, len);
@@ -239,7 +238,7 @@ int CvimgMat::interestRegionImage(const String & src, const String & mask)
     return 0;
 }
 
-int CvimgMat::mixedModelImage(const String & img1, const String & img2)
+int CvimgMat::mixedModelImage(const String& img1, const String& img2)
 {
     Mat image1 = imread(img1);
     saveMat2PNG(image1.rows, image1.cols, g_jpegFile);
@@ -270,7 +269,7 @@ int CvimgMat::mixedModelImage(const String & img1, const String & img2)
     return 0;
 }
 
-int CvimgMat::bilateralImage(const String & src)
+int CvimgMat::bilateralImage(const String& src)
 {
     String name = "Bilateral";
     int len = sizeof(String) + sizeof(Mat);
@@ -297,7 +296,7 @@ int CvimgMat::medianFilterImage(const String& src, int value)
 {
     String name = "MedianFilter";
     int len = sizeof(String) + sizeof(Mat);
-    MatImgSet *image = reinterpret_cast<MatImgSet*>(malloc(len));
+    MatImgSet* image = reinterpret_cast<MatImgSet*>(malloc(len));
     if (image == NULL)
         return -1;
     memset(image, 0, len);
@@ -321,7 +320,7 @@ int CvimgMat::neighbourAverageImage(const String& src, Size ksize)
 {
     String name = "NeighbourAverage";
     int len = sizeof(MatImgSet) + sizeof(Size);
-    GaussImage *image = reinterpret_cast<GaussImage*>(malloc(len));
+    GaussImage* image = reinterpret_cast<GaussImage*>(malloc(len));
     if (image == NULL)
         return -1;
     memset(image, 0, len);
@@ -345,7 +344,7 @@ int CvimgMat::thresholdImage(const String& src)
 {
     String name = "Threshold";
     int len = sizeof(String) + sizeof(Mat);
-    MatImgSet *image = reinterpret_cast<MatImgSet*>(malloc(len));
+    MatImgSet* image = reinterpret_cast<MatImgSet*>(malloc(len));
     if (image == NULL)
         return -1;
     memset(image, 0, len);
@@ -369,7 +368,7 @@ int CvimgMat::cvmatTest(const String& file)
     if (!file.empty() && file.length() > 0) {
         g_jpgFile = file;
     }
-    const cv::String bkgImage = "../MfcUtil/image/qdu.bmp";
+    const cv::String bkgImage = "../KlineUtil/image/qdu.bmp";
     g_imageMat = getImageMat(g_jpgFile);
 
     interestRegionImage(bkgImage, g_jpegFile);
