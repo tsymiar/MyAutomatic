@@ -18,11 +18,11 @@ struct api__result
 	xsd_string email;
 };
 
-struct ArrayOfEmp2
+struct api__ArrayOfEmp2
 {
 	struct api__result rslt;
 };
 
 int api__trans(xsd_string msg, xsd_string rtn[]);
-int api__get_server_status(xsd_string cmd, xsd_string& status);
-int api__login_by_key(xsd_string usr, xsd_string psw, struct ArrayOfEmp2& ccc);
+int api__get_server_status(xsd_string req, xsd_string& rsp);
+int api__login_by_key(xsd_string usr, xsd_string psw, struct api__ArrayOfEmp2& stat);

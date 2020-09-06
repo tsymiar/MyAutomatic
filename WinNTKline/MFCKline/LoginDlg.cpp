@@ -8,7 +8,7 @@
 #include "netwk/Simulation.h"
 
 //应加到具体源文件中
-#include "web\myweb.h"
+#include "http/myweb.h"
 #include "myweb.nsmap"
 #include "security\MD5.h"
 
@@ -25,7 +25,7 @@ namespace logDlg
     struct SOAPELEM {
         struct soap soap;
         st_sock sock;
-        struct ArrayOfEmp2 rslt;
+        struct api__ArrayOfEmp2 rslt;
         st_trans user;
         char msg[512];
         char** __rslt;
@@ -105,7 +105,7 @@ unsigned int _stdcall call_soap_thrd(void* lr)
     int sz_t = sizeof(SOAPELEM);
     SOAPELEM* elem = (SOAPELEM*)malloc(sz_t);
     memset(elem, 0, sz_t);
-    elem->rslt = ArrayOfEmp2();
+    elem->rslt = api__ArrayOfEmp2();
     elem->sock = st_sock();
     memcpy(&elem->msg, "Failed to call remote method！", 32);
     memcpy(&elem->sock, lr, sizeof(st_sock));

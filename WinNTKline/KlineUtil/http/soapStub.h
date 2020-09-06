@@ -11,7 +11,6 @@ A commercial use license is available from Genivia Inc., contact@genivia.com
 --------------------------------------------------------------------------------
 */
 
-
 #ifndef soapStub_H
 #define soapStub_H
 #include "stdsoap2.h"
@@ -19,13 +18,11 @@ A commercial use license is available from Genivia Inc., contact@genivia.com
 # error "GSOAP VERSION 208106 MISMATCH IN GENERATED CODE VERSUS LIBRARY CODE: PLEASE REINSTALL PACKAGE"
 #endif
 
-
 /******************************************************************************\
  *                                                                            *
  * Types with Custom Serializers                                              *
  *                                                                            *
 \******************************************************************************/
-
 
 /******************************************************************************\
  *                                                                            *
@@ -46,24 +43,24 @@ struct api__login_by_key;	/* rpcapi.h:28 */
 #define SOAP_TYPE_api__result (10)
 /* complex XML schema type 'api:result': */
 struct SOAP_CMAC api__result {
-      public:
-        /** Required element 'flag' of XML schema type 'xsd-int' */
-        long flag;
-        /** Required element 'idx' of XML schema type 'xsd-int' */
-        long idx;
-        /** Required element 'age' of XML schema type 'xsd-int' */
-        long age;
-        /** Optional element 'tell' of XML schema type 'xsd-string' */
-        char *tell;
-        /** Optional element 'email' of XML schema type 'xsd-string' */
-        char *email;
-      public:
-        /** Return unique type id SOAP_TYPE_api__result */
-        long soap_type() const { return SOAP_TYPE_api__result; }
-        /** Constructor with member initializations */
-        api__result() : flag(), idx(), age(), tell(), email() { }
-        /** Friend allocator */
-        friend SOAP_FMAC1 api__result * SOAP_FMAC2 soap_instantiate_api__result(struct soap*, int, const char*, const char*, size_t*);
+public:
+    /** Required element 'flag' of XML schema type 'xsd-int' */
+    long flag;
+    /** Required element 'idx' of XML schema type 'xsd-int' */
+    long idx;
+    /** Required element 'age' of XML schema type 'xsd-int' */
+    long age;
+    /** Optional element 'tell' of XML schema type 'xsd-string' */
+    char* tell;
+    /** Optional element 'email' of XML schema type 'xsd-string' */
+    char* email;
+public:
+    /** Return unique type id SOAP_TYPE_api__result */
+    long soap_type() const { return SOAP_TYPE_api__result; }
+    /** Constructor with member initializations */
+    api__result() : flag(), idx(), age(), tell(), email() { }
+    /** Friend allocator */
+    friend SOAP_FMAC1 api__result* SOAP_FMAC2 soap_instantiate_api__result(struct soap*, int, const char*, const char*, size_t*);
 };
 #endif
 
@@ -72,16 +69,16 @@ struct SOAP_CMAC api__result {
 #define SOAP_TYPE_api__ArrayOfEmp2 (11)
 /* complex XML schema type 'api:ArrayOfEmp2': */
 struct SOAP_CMAC api__ArrayOfEmp2 {
-      public:
-        /** Required element 'rslt' of XML schema type 'api:result' */
-        struct api__result rslt;
-      public:
-        /** Return unique type id SOAP_TYPE_api__ArrayOfEmp2 */
-        long soap_type() const { return SOAP_TYPE_api__ArrayOfEmp2; }
-        /** Constructor with member initializations */
-        api__ArrayOfEmp2() : rslt() { }
-        /** Friend allocator */
-        friend SOAP_FMAC1 api__ArrayOfEmp2 * SOAP_FMAC2 soap_instantiate_api__ArrayOfEmp2(struct soap*, int, const char*, const char*, size_t*);
+public:
+    /** Required element 'rslt' of XML schema type 'api:result' */
+    struct api__result rslt;
+public:
+    /** Return unique type id SOAP_TYPE_api__ArrayOfEmp2 */
+    long soap_type() const { return SOAP_TYPE_api__ArrayOfEmp2; }
+    /** Constructor with member initializations */
+    api__ArrayOfEmp2() : rslt() { }
+    /** Friend allocator */
+    friend SOAP_FMAC1 api__ArrayOfEmp2* SOAP_FMAC2 soap_instantiate_api__ArrayOfEmp2(struct soap*, int, const char*, const char*, size_t*);
 };
 #endif
 
@@ -90,16 +87,16 @@ struct SOAP_CMAC api__ArrayOfEmp2 {
 #define SOAP_TYPE_api__transResponse (14)
 /* complex XML schema type 'api:transResponse': */
 struct SOAP_CMAC api__transResponse {
-      public:
-        /** Optional element 'rtn' of XML schema type 'xsd-string' */
-        char **rtn;
-      public:
-        /** Return unique type id SOAP_TYPE_api__transResponse */
-        long soap_type() const { return SOAP_TYPE_api__transResponse; }
-        /** Constructor with member initializations */
-        api__transResponse() : rtn() { }
-        /** Friend allocator */
-        friend SOAP_FMAC1 api__transResponse * SOAP_FMAC2 soap_instantiate_api__transResponse(struct soap*, int, const char*, const char*, size_t*);
+public:
+    /** Optional element 'rtn' of XML schema type 'xsd-string' */
+    char** rtn;
+public:
+    /** Return unique type id SOAP_TYPE_api__transResponse */
+    long soap_type() const { return SOAP_TYPE_api__transResponse; }
+    /** Constructor with member initializations */
+    api__transResponse() : rtn() { }
+    /** Friend allocator */
+    friend SOAP_FMAC1 api__transResponse* SOAP_FMAC2 soap_instantiate_api__transResponse(struct soap*, int, const char*, const char*, size_t*);
 };
 #endif
 
@@ -108,16 +105,16 @@ struct SOAP_CMAC api__transResponse {
 #define SOAP_TYPE_api__trans (15)
 /* complex XML schema type 'api:trans': */
 struct SOAP_CMAC api__trans {
-      public:
-        /** Optional element 'msg' of XML schema type 'xsd-string' */
-        char *msg;
-      public:
-        /** Return unique type id SOAP_TYPE_api__trans */
-        long soap_type() const { return SOAP_TYPE_api__trans; }
-        /** Constructor with member initializations */
-        api__trans() : msg() { }
-        /** Friend allocator */
-        friend SOAP_FMAC1 api__trans * SOAP_FMAC2 soap_instantiate_api__trans(struct soap*, int, const char*, const char*, size_t*);
+public:
+    /** Optional element 'msg' of XML schema type 'xsd-string' */
+    char* msg;
+public:
+    /** Return unique type id SOAP_TYPE_api__trans */
+    long soap_type() const { return SOAP_TYPE_api__trans; }
+    /** Constructor with member initializations */
+    api__trans() : msg() { }
+    /** Friend allocator */
+    friend SOAP_FMAC1 api__trans* SOAP_FMAC2 soap_instantiate_api__trans(struct soap*, int, const char*, const char*, size_t*);
 };
 #endif
 
@@ -126,16 +123,16 @@ struct SOAP_CMAC api__trans {
 #define SOAP_TYPE_api__get_server_statusResponse (18)
 /* complex XML schema type 'api:get-server-statusResponse': */
 struct SOAP_CMAC api__get_server_statusResponse {
-      public:
-        /** Required element 'rsp' of XML schema type 'xsd-string' */
-        char *rsp;
-      public:
-        /** Return unique type id SOAP_TYPE_api__get_server_statusResponse */
-        long soap_type() const { return SOAP_TYPE_api__get_server_statusResponse; }
-        /** Constructor with member initializations */
-        api__get_server_statusResponse() : rsp() { }
-        /** Friend allocator */
-        friend SOAP_FMAC1 api__get_server_statusResponse * SOAP_FMAC2 soap_instantiate_api__get_server_statusResponse(struct soap*, int, const char*, const char*, size_t*);
+public:
+    /** Required element 'rsp' of XML schema type 'xsd-string' */
+    char* rsp;
+public:
+    /** Return unique type id SOAP_TYPE_api__get_server_statusResponse */
+    long soap_type() const { return SOAP_TYPE_api__get_server_statusResponse; }
+    /** Constructor with member initializations */
+    api__get_server_statusResponse() : rsp() { }
+    /** Friend allocator */
+    friend SOAP_FMAC1 api__get_server_statusResponse* SOAP_FMAC2 soap_instantiate_api__get_server_statusResponse(struct soap*, int, const char*, const char*, size_t*);
 };
 #endif
 
@@ -144,16 +141,16 @@ struct SOAP_CMAC api__get_server_statusResponse {
 #define SOAP_TYPE_api__get_server_status (19)
 /* complex XML schema type 'api:get-server-status': */
 struct SOAP_CMAC api__get_server_status {
-      public:
-        /** Optional element 'req' of XML schema type 'xsd-string' */
-        char *req;
-      public:
-        /** Return unique type id SOAP_TYPE_api__get_server_status */
-        long soap_type() const { return SOAP_TYPE_api__get_server_status; }
-        /** Constructor with member initializations */
-        api__get_server_status() : req() { }
-        /** Friend allocator */
-        friend SOAP_FMAC1 api__get_server_status * SOAP_FMAC2 soap_instantiate_api__get_server_status(struct soap*, int, const char*, const char*, size_t*);
+public:
+    /** Optional element 'req' of XML schema type 'xsd-string' */
+    char* req;
+public:
+    /** Return unique type id SOAP_TYPE_api__get_server_status */
+    long soap_type() const { return SOAP_TYPE_api__get_server_status; }
+    /** Constructor with member initializations */
+    api__get_server_status() : req() { }
+    /** Friend allocator */
+    friend SOAP_FMAC1 api__get_server_status* SOAP_FMAC2 soap_instantiate_api__get_server_status(struct soap*, int, const char*, const char*, size_t*);
 };
 #endif
 
@@ -162,18 +159,18 @@ struct SOAP_CMAC api__get_server_status {
 #define SOAP_TYPE_api__login_by_key (22)
 /* complex XML schema type 'api:login-by-key': */
 struct SOAP_CMAC api__login_by_key {
-      public:
-        /** Optional element 'usr' of XML schema type 'xsd-string' */
-        char *usr;
-        /** Optional element 'psw' of XML schema type 'xsd-string' */
-        char *psw;
-      public:
-        /** Return unique type id SOAP_TYPE_api__login_by_key */
-        long soap_type() const { return SOAP_TYPE_api__login_by_key; }
-        /** Constructor with member initializations */
-        api__login_by_key() : usr(), psw() { }
-        /** Friend allocator */
-        friend SOAP_FMAC1 api__login_by_key * SOAP_FMAC2 soap_instantiate_api__login_by_key(struct soap*, int, const char*, const char*, size_t*);
+public:
+    /** Optional element 'usr' of XML schema type 'xsd-string' */
+    char* usr;
+    /** Optional element 'psw' of XML schema type 'xsd-string' */
+    char* psw;
+public:
+    /** Return unique type id SOAP_TYPE_api__login_by_key */
+    long soap_type() const { return SOAP_TYPE_api__login_by_key; }
+    /** Constructor with member initializations */
+    api__login_by_key() : usr(), psw() { }
+    /** Friend allocator */
+    friend SOAP_FMAC1 api__login_by_key* SOAP_FMAC2 soap_instantiate_api__login_by_key(struct soap*, int, const char*, const char*, size_t*);
 };
 #endif
 
@@ -183,13 +180,13 @@ struct SOAP_CMAC api__login_by_key {
 #define SOAP_TYPE_SOAP_ENV__Header (23)
 /* SOAP_ENV__Header: */
 struct SOAP_CMAC SOAP_ENV__Header {
-      public:
-        /** Return unique type id SOAP_TYPE_SOAP_ENV__Header */
-        long soap_type() const { return SOAP_TYPE_SOAP_ENV__Header; }
-        /** Constructor with member initializations */
-        SOAP_ENV__Header() { }
-        /** Friend allocator */
-        friend SOAP_FMAC1 SOAP_ENV__Header * SOAP_FMAC2 soap_instantiate_SOAP_ENV__Header(struct soap*, int, const char*, const char*, size_t*);
+public:
+    /** Return unique type id SOAP_TYPE_SOAP_ENV__Header */
+    long soap_type() const { return SOAP_TYPE_SOAP_ENV__Header; }
+    /** Constructor with member initializations */
+    SOAP_ENV__Header() { }
+    /** Friend allocator */
+    friend SOAP_FMAC1 SOAP_ENV__Header* SOAP_FMAC2 soap_instantiate_SOAP_ENV__Header(struct soap*, int, const char*, const char*, size_t*);
 };
 #endif
 #endif
@@ -201,18 +198,18 @@ struct SOAP_CMAC SOAP_ENV__Header {
 /* Type SOAP_ENV__Code is a recursive data type, (in)directly referencing itself through its (base or derived class) members */
 /* SOAP_ENV__Code: */
 struct SOAP_CMAC SOAP_ENV__Code {
-      public:
-        /** Optional element 'SOAP-ENV:Value' of XML schema type 'xsd:QName' */
-        char *SOAP_ENV__Value;
-        /** Optional element 'SOAP-ENV:Subcode' of XML schema type 'SOAP-ENV:Code' */
-        struct SOAP_ENV__Code *SOAP_ENV__Subcode;
-      public:
-        /** Return unique type id SOAP_TYPE_SOAP_ENV__Code */
-        long soap_type() const { return SOAP_TYPE_SOAP_ENV__Code; }
-        /** Constructor with member initializations */
-        SOAP_ENV__Code() : SOAP_ENV__Value(), SOAP_ENV__Subcode() { }
-        /** Friend allocator */
-        friend SOAP_FMAC1 SOAP_ENV__Code * SOAP_FMAC2 soap_instantiate_SOAP_ENV__Code(struct soap*, int, const char*, const char*, size_t*);
+public:
+    /** Optional element 'SOAP-ENV:Value' of XML schema type 'xsd:QName' */
+    char* SOAP_ENV__Value;
+    /** Optional element 'SOAP-ENV:Subcode' of XML schema type 'SOAP-ENV:Code' */
+    struct SOAP_ENV__Code* SOAP_ENV__Subcode;
+public:
+    /** Return unique type id SOAP_TYPE_SOAP_ENV__Code */
+    long soap_type() const { return SOAP_TYPE_SOAP_ENV__Code; }
+    /** Constructor with member initializations */
+    SOAP_ENV__Code() : SOAP_ENV__Value(), SOAP_ENV__Subcode() { }
+    /** Friend allocator */
+    friend SOAP_FMAC1 SOAP_ENV__Code* SOAP_FMAC2 soap_instantiate_SOAP_ENV__Code(struct soap*, int, const char*, const char*, size_t*);
 };
 #endif
 #endif
@@ -223,19 +220,19 @@ struct SOAP_CMAC SOAP_ENV__Code {
 #define SOAP_TYPE_SOAP_ENV__Detail (26)
 /* SOAP_ENV__Detail: */
 struct SOAP_CMAC SOAP_ENV__Detail {
-      public:
-        char *__any;
-        /** Any type of element 'fault' assigned to fault with its SOAP_TYPE_<typename> assigned to __type */
-        /** Do not create a cyclic data structure through this member unless SOAP encoding or SOAP_XML_GRAPH are used for id-ref serialization */
-        int __type;
-        void *fault;
-      public:
-        /** Return unique type id SOAP_TYPE_SOAP_ENV__Detail */
-        long soap_type() const { return SOAP_TYPE_SOAP_ENV__Detail; }
-        /** Constructor with member initializations */
-        SOAP_ENV__Detail() : __any(), __type(), fault() { }
-        /** Friend allocator */
-        friend SOAP_FMAC1 SOAP_ENV__Detail * SOAP_FMAC2 soap_instantiate_SOAP_ENV__Detail(struct soap*, int, const char*, const char*, size_t*);
+public:
+    char* __any;
+    /** Any type of element 'fault' assigned to fault with its SOAP_TYPE_<typename> assigned to __type */
+    /** Do not create a cyclic data structure through this member unless SOAP encoding or SOAP_XML_GRAPH are used for id-ref serialization */
+    int __type;
+    void* fault;
+public:
+    /** Return unique type id SOAP_TYPE_SOAP_ENV__Detail */
+    long soap_type() const { return SOAP_TYPE_SOAP_ENV__Detail; }
+    /** Constructor with member initializations */
+    SOAP_ENV__Detail() : __any(), __type(), fault() { }
+    /** Friend allocator */
+    friend SOAP_FMAC1 SOAP_ENV__Detail* SOAP_FMAC2 soap_instantiate_SOAP_ENV__Detail(struct soap*, int, const char*, const char*, size_t*);
 };
 #endif
 #endif
@@ -246,16 +243,16 @@ struct SOAP_CMAC SOAP_ENV__Detail {
 #define SOAP_TYPE_SOAP_ENV__Reason (29)
 /* SOAP_ENV__Reason: */
 struct SOAP_CMAC SOAP_ENV__Reason {
-      public:
-        /** Optional element 'SOAP-ENV:Text' of XML schema type 'xsd:string' */
-        char *SOAP_ENV__Text;
-      public:
-        /** Return unique type id SOAP_TYPE_SOAP_ENV__Reason */
-        long soap_type() const { return SOAP_TYPE_SOAP_ENV__Reason; }
-        /** Constructor with member initializations */
-        SOAP_ENV__Reason() : SOAP_ENV__Text() { }
-        /** Friend allocator */
-        friend SOAP_FMAC1 SOAP_ENV__Reason * SOAP_FMAC2 soap_instantiate_SOAP_ENV__Reason(struct soap*, int, const char*, const char*, size_t*);
+public:
+    /** Optional element 'SOAP-ENV:Text' of XML schema type 'xsd:string' */
+    char* SOAP_ENV__Text;
+public:
+    /** Return unique type id SOAP_TYPE_SOAP_ENV__Reason */
+    long soap_type() const { return SOAP_TYPE_SOAP_ENV__Reason; }
+    /** Constructor with member initializations */
+    SOAP_ENV__Reason() : SOAP_ENV__Text() { }
+    /** Friend allocator */
+    friend SOAP_FMAC1 SOAP_ENV__Reason* SOAP_FMAC2 soap_instantiate_SOAP_ENV__Reason(struct soap*, int, const char*, const char*, size_t*);
 };
 #endif
 #endif
@@ -266,32 +263,32 @@ struct SOAP_CMAC SOAP_ENV__Reason {
 #define SOAP_TYPE_SOAP_ENV__Fault (30)
 /* SOAP_ENV__Fault: */
 struct SOAP_CMAC SOAP_ENV__Fault {
-      public:
-        /** Optional element 'faultcode' of XML schema type 'xsd:QName' */
-        char *faultcode;
-        /** Optional element 'faultstring' of XML schema type 'xsd:string' */
-        char *faultstring;
-        /** Optional element 'faultactor' of XML schema type 'xsd:string' */
-        char *faultactor;
-        /** Optional element 'detail' of XML schema type 'SOAP-ENV:Detail' */
-        struct SOAP_ENV__Detail *detail;
-        /** Optional element 'SOAP-ENV:Code' of XML schema type 'SOAP-ENV:Code' */
-        struct SOAP_ENV__Code *SOAP_ENV__Code;
-        /** Optional element 'SOAP-ENV:Reason' of XML schema type 'SOAP-ENV:Reason' */
-        struct SOAP_ENV__Reason *SOAP_ENV__Reason;
-        /** Optional element 'SOAP-ENV:Node' of XML schema type 'xsd:string' */
-        char *SOAP_ENV__Node;
-        /** Optional element 'SOAP-ENV:Role' of XML schema type 'xsd:string' */
-        char *SOAP_ENV__Role;
-        /** Optional element 'SOAP-ENV:Detail' of XML schema type 'SOAP-ENV:Detail' */
-        struct SOAP_ENV__Detail *SOAP_ENV__Detail;
-      public:
-        /** Return unique type id SOAP_TYPE_SOAP_ENV__Fault */
-        long soap_type() const { return SOAP_TYPE_SOAP_ENV__Fault; }
-        /** Constructor with member initializations */
-        SOAP_ENV__Fault() : faultcode(), faultstring(), faultactor(), detail(), SOAP_ENV__Code(), SOAP_ENV__Reason(), SOAP_ENV__Node(), SOAP_ENV__Role(), SOAP_ENV__Detail() { }
-        /** Friend allocator */
-        friend SOAP_FMAC1 SOAP_ENV__Fault * SOAP_FMAC2 soap_instantiate_SOAP_ENV__Fault(struct soap*, int, const char*, const char*, size_t*);
+public:
+    /** Optional element 'faultcode' of XML schema type 'xsd:QName' */
+    char* faultcode;
+    /** Optional element 'faultstring' of XML schema type 'xsd:string' */
+    char* faultstring;
+    /** Optional element 'faultactor' of XML schema type 'xsd:string' */
+    char* faultactor;
+    /** Optional element 'detail' of XML schema type 'SOAP-ENV:Detail' */
+    struct SOAP_ENV__Detail* detail;
+    /** Optional element 'SOAP-ENV:Code' of XML schema type 'SOAP-ENV:Code' */
+    struct SOAP_ENV__Code* SOAP_ENV__Code;
+    /** Optional element 'SOAP-ENV:Reason' of XML schema type 'SOAP-ENV:Reason' */
+    struct SOAP_ENV__Reason* SOAP_ENV__Reason;
+    /** Optional element 'SOAP-ENV:Node' of XML schema type 'xsd:string' */
+    char* SOAP_ENV__Node;
+    /** Optional element 'SOAP-ENV:Role' of XML schema type 'xsd:string' */
+    char* SOAP_ENV__Role;
+    /** Optional element 'SOAP-ENV:Detail' of XML schema type 'SOAP-ENV:Detail' */
+    struct SOAP_ENV__Detail* SOAP_ENV__Detail;
+public:
+    /** Return unique type id SOAP_TYPE_SOAP_ENV__Fault */
+    long soap_type() const { return SOAP_TYPE_SOAP_ENV__Fault; }
+    /** Constructor with member initializations */
+    SOAP_ENV__Fault() : faultcode(), faultstring(), faultactor(), detail(), SOAP_ENV__Code(), SOAP_ENV__Reason(), SOAP_ENV__Node(), SOAP_ENV__Role(), SOAP_ENV__Detail() { }
+    /** Friend allocator */
+    friend SOAP_FMAC1 SOAP_ENV__Fault* SOAP_FMAC2 soap_instantiate_SOAP_ENV__Fault(struct soap*, int, const char*, const char*, size_t*);
 };
 #endif
 #endif
@@ -302,23 +299,22 @@ struct SOAP_CMAC SOAP_ENV__Fault {
  *                                                                            *
 \******************************************************************************/
 
-
 /* (built-in):0 */
 #ifndef SOAP_TYPE__XML
 #define SOAP_TYPE__XML (5)
-typedef char *_XML;
+typedef char* _XML;
 #endif
 
 /* (built-in):0 */
 #ifndef SOAP_TYPE__QName
 #define SOAP_TYPE__QName (6)
-typedef char *_QName;
+typedef char* _QName;
 #endif
 
 /* rpcapi.h:9 */
 #ifndef SOAP_TYPE_xsd_string
 #define SOAP_TYPE_xsd_string (7)
-typedef char *xsd_string;
+typedef char* xsd_string;
 #endif
 
 /* rpcapi.h:10 */
@@ -332,7 +328,6 @@ typedef long xsd_int;
  * Serializable Types                                                         *
  *                                                                            *
 \******************************************************************************/
-
 
 /* char has binding name 'byte' for type 'xsd:byte' */
 #ifndef SOAP_TYPE_byte
@@ -460,6 +455,15 @@ typedef long xsd_int;
  *                                                                            *
 \******************************************************************************/
 
+/******************************************************************************\
+ *                                                                            *
+ * Client-Side Call Stub Functions                                            *
+ *                                                                            *
+\******************************************************************************/
+
+SOAP_FMAC5 int SOAP_FMAC6 soap_call_api__trans(struct soap* soap, const char* soap_endpoint, const char* soap_action, char* msg, char** rtn);
+SOAP_FMAC5 int SOAP_FMAC6 soap_call_api__get_server_status(struct soap* soap, const char* soap_endpoint, const char* soap_action, char* req, char*& rsp);
+SOAP_FMAC5 int SOAP_FMAC6 soap_call_api__login_by_key(struct soap* soap, const char* soap_endpoint, const char* soap_action, char* usr, char* psw, struct api__ArrayOfEmp2& stat);
 
 /******************************************************************************\
  *                                                                            *
@@ -467,12 +471,12 @@ typedef long xsd_int;
  *                                                                            *
 \******************************************************************************/
 
-    /** Web service operation 'api__trans' implementation, should return SOAP_OK or error code */
-    SOAP_FMAC5 int SOAP_FMAC6 api__trans(struct soap*, char *msg, char **rtn);
-    /** Web service operation 'api__get_server_status' implementation, should return SOAP_OK or error code */
-    SOAP_FMAC5 int SOAP_FMAC6 api__get_server_status(struct soap*, char *req, char *&rsp);
-    /** Web service operation 'api__login_by_key' implementation, should return SOAP_OK or error code */
-    SOAP_FMAC5 int SOAP_FMAC6 api__login_by_key(struct soap*, char *usr, char *psw, struct api__ArrayOfEmp2 &stat);
+/** Web service operation 'api__trans' implementation, should return SOAP_OK or error code */
+SOAP_FMAC5 int SOAP_FMAC6 api__trans(struct soap*, char* msg, char** rtn);
+/** Web service operation 'api__get_server_status' implementation, should return SOAP_OK or error code */
+SOAP_FMAC5 int SOAP_FMAC6 api__get_server_status(struct soap*, char* req, char*& rsp);
+/** Web service operation 'api__login_by_key' implementation, should return SOAP_OK or error code */
+SOAP_FMAC5 int SOAP_FMAC6 api__login_by_key(struct soap*, char* usr, char* psw, struct api__ArrayOfEmp2& stat);
 
 /******************************************************************************\
  *                                                                            *

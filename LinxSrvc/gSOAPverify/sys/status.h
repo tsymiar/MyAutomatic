@@ -31,7 +31,7 @@ extern "C"
         char* ss_alias;
         char* ss_addr;
     };
-    int show_memory(char* ip, st_sys* sys);
+    int get_mem_stat(char* ip, st_sys* sys);
     int detect_eth_cable(char* ifname);
 #ifdef __cplusplus
 }

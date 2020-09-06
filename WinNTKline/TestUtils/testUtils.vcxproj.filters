@@ -137,9 +137,6 @@
     <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\soapC.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\soapClient.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\stdsoap2.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -162,6 +159,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\MFCKline\SetMarkDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KlineUtil\http\soapClient.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

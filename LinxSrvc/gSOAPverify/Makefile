@@ -17,7 +17,7 @@ gSOAPverify:$(OUT)
 	g++ $(FLAG) -c ./soap/soapServer.cpp
 	g++ $(FLAG) -c ./sys/status.cc -std=c++11
 #	bash -c '`command -v apt >/dev/null 2>&1 || { echo >&2 "-";}` == "-"'
-	if [ ! -d "/usr/include/mysql" ]]; then if [[ `command -v apt` == "" ]; then sudo yum install mariadb-devel -y; else sudo apt-get install libmysql++-dev -y; fi; fi;
+	if [ ! -d "/usr/include/mysql" ]; then if [ `command -v apt` == "" ]; then sudo yum install mariadb-devel -y; else sudo apt-get install libmysql++-dev -y; fi; fi;
 	g++ $(FLAG) -c ./sql/sqlDbReq.cc $(SQL)
 	g++ $(FLAG) -c ./main/mainSoap.cc $(PTHD)
 	[ ! -d "`pwd`/bin" ] && mkdir `pwd`/bin || echo ${GEN}

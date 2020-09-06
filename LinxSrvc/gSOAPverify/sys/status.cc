@@ -1,6 +1,6 @@
 #include "status.h"
 
-int show_memory(char* ip, st_sys* sys)
+int get_mem_stat(char* ip, st_sys* sys)
 {
     struct in_addr addr;
     struct hostent* hostp;

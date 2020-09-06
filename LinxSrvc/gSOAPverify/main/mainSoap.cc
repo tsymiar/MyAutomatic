@@ -314,14 +314,14 @@ int api__trans(struct soap* soap, char* msg, char* rtn[])
     return 0;
 }
 
-int api__get_server_status(struct soap* soap, xsd_string cmd, xsd_string& status)
+int api__get_server_status(struct soap* soap, xsd_string req, xsd_string& rsp)
 {
     st_sys ss = { 0 };
     char gt[8];
-    if (memcmp(cmd, "1000", 5) == 0)
-        show_memory((char*)"localhost", &ss);
-    status = gcvt(100.f * ss.mem_free / ss.mem_all, 5, gt);
-    cout << cmd << ": " << status << endl;
+    if (req != NULL && strlen(req) >= 4 && memcmp(req, "1000", 5) == 0)
+        get_mem_stat((char*)"localhost", &ss);
+    rsp = gcvt(100.f * ss.mem_free / ss.mem_all, 5, gt);
+    cout << req << ": " << rsp << endl;
     return 0;
 }
 
