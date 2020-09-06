@@ -38,7 +38,7 @@
     <ClInclude Include="soap\stdsoap2.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="soap\webapi.h">
+    <ClInclude Include="soap\rpcapi.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="soap\soapStub.h">
@@ -74,6 +74,9 @@
       <Filter>其他</Filter>
     </None>
     <None Include="file\gitbase.sh">
+      <Filter>其他</Filter>
+    </None>
+    <None Include="soap\make.sh">
       <Filter>其他</Filter>
     </None>
   </ItemGroup>

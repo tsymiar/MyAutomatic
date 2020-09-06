@@ -234,7 +234,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\soapC.cpp" />
-    <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\soapClient.cpp" />
     <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\stdsoap2.cpp" />
     <ClCompile Include="..\KlineUtil\deep\Level2View.cpp" />
     <ClCompile Include="..\KlineUtil\dos\DOSCout.cpp">
@@ -245,6 +244,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\KlineUtil\html\MfcHtmlView.cpp" />
+    <ClCompile Include="..\KlineUtil\http\soapClient.cpp" />
     <ClCompile Include="..\KlineUtil\IM\IMclient.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>

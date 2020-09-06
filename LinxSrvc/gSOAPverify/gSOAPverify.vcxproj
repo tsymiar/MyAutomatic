@@ -47,7 +47,7 @@
     <ClInclude Include="soap\soapH.h" />
     <ClInclude Include="soap\soapStub.h" />
     <ClInclude Include="soap\stdsoap2.h" />
-    <ClInclude Include="soap\webapi.h" />
+    <ClInclude Include="soap\rpcapi.h" />
     <ClInclude Include="sql\sqlDbReq.h" />
     <ClInclude Include="sys\status.h" />
     <ClInclude Include="util\ListStack.h" />
@@ -58,6 +58,7 @@
     <None Include="file\mysql.sh" />
     <None Include="file\shadowsocks.sh" />
     <None Include="Makefile" />
+    <None Include="soap\make.sh" />
     <None Include="soap\myweb.nsmap" />
   </ItemGroup>
   <ItemGroup>

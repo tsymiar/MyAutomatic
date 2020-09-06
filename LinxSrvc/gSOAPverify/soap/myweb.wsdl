@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <definitions name="myweb"
   targetNamespace="http://localhost/myweb.wsdl"
- xmlns:tns="http://localhost/myweb.wsdl"
+  xmlns:tns="http://localhost/myweb.wsdl"
   xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
   xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -31,13 +31,8 @@
             <element name="flag" type="xsd-int" minOccurs="1" maxOccurs="1"/><!-- api__result::flag -->
             <element name="idx" type="xsd-int" minOccurs="1" maxOccurs="1"/><!-- api__result::idx -->
             <element name="age" type="xsd-int" minOccurs="1" maxOccurs="1"/><!-- api__result::age -->
-            <element name="tell" type="xsd-string" minOccurs="0" maxOccurs="1" nillable="true"/><!-- api__result::tell -->
-            <element name="email" type="xsd-string" minOccurs="0" maxOccurs="1" nillable="true"/><!-- api__result::email -->
-          </sequence>
-    </complexType>
-    <complexType name="ArrayOfEmp2"><!-- ArrayOfEmp2 -->
-          <sequence>
-            <element name="rslt" type="api:result" minOccurs="1" maxOccurs="1"/><!-- ArrayOfEmp2::rslt -->
+            <element name="tell" type="xsd-string" minOccurs="0" maxOccurs="1"/><!-- api__result::tell -->
+            <element name="email" type="xsd-string" minOccurs="0" maxOccurs="1"/><!-- api__result::email -->
           </sequence>
     </complexType>
   </schema>
@@ -45,28 +40,28 @@
 </types>
 
 <message name="transRequest">
-  <part name="msg" type="xsd:string"/><!-- api__trans::msg -->
+  <part name="msg" type="xsd-string"/><!-- api__trans::msg -->
 </message>
 
 <message name="transResponse">
-  <part name="rtn" type="xsd:string"/><!-- api__trans::rtn -->
+  <part name="rtn" type="xsd-string"/><!-- api__trans::rtn -->
 </message>
 
 <message name="get-server-statusRequest">
-  <part name="cmd" type="xsd-string"/><!-- api__get_server_status::cmd -->
+  <part name="req" type="xsd-string"/><!-- api__get_server_status::req -->
 </message>
 
 <message name="get-server-statusResponse">
-  <part name="status" type="xsd-string"/><!-- api__get_server_status::status -->
+  <part name="rsp" type="xsd-string"/><!-- api__get_server_status::rsp -->
 </message>
 
-<message name="login-by-keyRequest">
+<message name="login-by-key">
   <part name="usr" type="xsd-string"/><!-- api__login_by_key::usr -->
   <part name="psw" type="xsd-string"/><!-- api__login_by_key::psw -->
 </message>
 
-<message name="login-by-keyResponse">
-  <part name="ccc" type="api:ArrayOfEmp2"/><!-- api__login_by_key::ccc -->
+<message name="ArrayOfEmp2">
+  <part name="rslt" type="api:result"/><!-- api__login_by_key::rslt -->
 </message>
 
 <portType name="mywebPortType">
@@ -82,8 +77,8 @@
   </operation>
   <operation name="login-by-key">
     <documentation>Service definition of function api__login_by_key</documentation>
-    <input message="tns:login-by-keyRequest"/>
-    <output message="tns:login-by-keyResponse"/>
+    <input message="tns:login-by-key"/>
+    <output message="tns:ArrayOfEmp2"/>
   </operation>
 </portType>
 
@@ -92,38 +87,36 @@
   <operation name="trans">
     <SOAP:operation style="rpc" soapAction=""/>
     <input>
-          <SOAP:body use="encoded" namespace="urn:myweb" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+          <SOAP:body use="encoded" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="urn:myweb"/>
     </input>
     <output>
-          <SOAP:body use="encoded" namespace="urn:myweb" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+          <SOAP:body use="encoded" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="urn:myweb"/>
     </output>
   </operation>
   <operation name="get-server-status">
     <SOAP:operation style="rpc" soapAction=""/>
     <input>
-          <SOAP:body use="encoded" namespace="urn:myweb" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+          <SOAP:body use="encoded" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="urn:myweb"/>
     </input>
     <output>
-          <SOAP:body use="encoded" namespace="urn:myweb" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+          <SOAP:body use="encoded" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="urn:myweb"/>
     </output>
   </operation>
   <operation name="login-by-key">
     <SOAP:operation style="rpc" soapAction=""/>
     <input>
-          <SOAP:body use="encoded" namespace="urn:myweb" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+          <SOAP:body use="encoded" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="urn:myweb"/>
     </input>
     <output>
-          <SOAP:body use="encoded" namespace="urn:myweb" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+          <SOAP:body use="encoded" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="urn:myweb"/>
     </output>
   </operation>
 </binding>
 
 <service name="myweb">
-  <documentation>gSOAP 2.8.30 generated service definition</documentation>
+  <documentation>gSOAP 2.8.106 generated service definition</documentation>
   <port name="myweb" binding="tns:myweb">
     <SOAP:address location="http://localhost/myweb.cgi/myweb.cgi"/>
-  </port>  <port name="myweb" binding="tns:myweb">
-    <SOAP:address location="http://localhost/myweb.cgi"/>
   </port>
 </service>
 

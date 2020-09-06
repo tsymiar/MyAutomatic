@@ -310,7 +310,7 @@ call.bat</Command>
     <ClInclude Include="..\KlineUtil\security\MD5.h" />
     <ClInclude Include="..\KlineUtil\security\verify.h" />
     <ClInclude Include="..\KlineUtil\Stock\Stock.h" />
-    <ClInclude Include="..\KlineUtil\web\myweb.h" />
+    <ClInclude Include="..\KlineUtil\http\myweb.h" />
     <ClInclude Include="..\KlineUtil\WPF\WPFhost.h" />
     <ClInclude Include="LoginDlg.h" />
     <ClInclude Include="IMlogDlg.h" />
@@ -326,7 +326,6 @@ call.bat</Command>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\soapC.cpp" />
-    <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\soapClient.cpp" />
     <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\stdsoap2.cpp" />
     <ClCompile Include="..\KlineUtil\deep\Level2View.cpp" />
     <ClCompile Include="..\KlineUtil\dos\DOSCout.cpp" />
@@ -337,6 +336,7 @@ call.bat</Command>
     <ClCompile Include="..\KlineUtil\HOOK\jniNative.cpp" />
     <ClCompile Include="..\KlineUtil\html\cefWebKit.cpp" />
     <ClCompile Include="..\KlineUtil\html\MfcHtmlView.cpp" />
+    <ClCompile Include="..\KlineUtil\http\soapClient.cpp" />
     <ClCompile Include="..\KlineUtil\IM\IM.cc">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -379,12 +379,12 @@ call.bat</Command>
     <None Include="..\KlineUtil\cfg\ips.ini" />
     <None Include="..\KlineUtil\ClassDiagram.cd" />
     <None Include="..\KlineUtil\com\plus1second" />
+    <None Include="..\KlineUtil\http\Client.java" />
+    <None Include="..\KlineUtil\http\myweb.nsmap" />
     <None Include="..\KlineUtil\script\blobstxt.sh" />
     <None Include="..\KlineUtil\script\call.bat" />
     <None Include="..\KlineUtil\script\reptile.py" />
-    <None Include="..\KlineUtil\web\BareBonesBrowserLaunch.java" />
-    <None Include="..\KlineUtil\web\Client.java" />
-    <None Include="..\KlineUtil\web\myweb.nsmap" />
+    <None Include="..\KlineUtil\http\BareBonesBrowserLaunch.java" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\KlineUtil\res\bit+.bmp" />

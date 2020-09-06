@@ -14,13 +14,8 @@
             <element name="flag" type="xsd-int" minOccurs="1" maxOccurs="1"/><!-- api__result::flag -->
             <element name="idx" type="xsd-int" minOccurs="1" maxOccurs="1"/><!-- api__result::idx -->
             <element name="age" type="xsd-int" minOccurs="1" maxOccurs="1"/><!-- api__result::age -->
-            <element name="tell" type="xsd-string" minOccurs="0" maxOccurs="1" nillable="true"/><!-- api__result::tell -->
-            <element name="email" type="xsd-string" minOccurs="0" maxOccurs="1" nillable="true"/><!-- api__result::email -->
-          </sequence>
-    </complexType>
-    <complexType name="ArrayOfEmp2"><!-- ArrayOfEmp2 -->
-          <sequence>
-            <element name="rslt" type="api:result" minOccurs="1" maxOccurs="1"/><!-- ArrayOfEmp2::rslt -->
+            <element name="tell" type="xsd-string" minOccurs="0" maxOccurs="1"/><!-- api__result::tell -->
+            <element name="email" type="xsd-string" minOccurs="0" maxOccurs="1"/><!-- api__result::email -->
           </sequence>
     </complexType>
   </schema>

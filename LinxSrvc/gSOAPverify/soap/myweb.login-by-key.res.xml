@@ -1,21 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope
-  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
-  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-  xmlns:api="urn:myweb">
- <SOAP-ENV:Body  SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
-  <api:login-by-keyResponse>
-   <ccc>
-    <rslt>
-     <flag>0</flag>
-     <idx>0</idx>
-     <age>0</age>
-     <tell></tell>
-     <email></email>
-    </rslt>
-   </ccc>
-  </api:login-by-keyResponse>
+    xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+    xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:api="urn:myweb">
+ <SOAP-ENV:Body SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+  <api:ArrayOfEmp2>
+   <rslt>
+    <flag>0</flag>
+    <idx>0</idx>
+    <age>0</age>
+    <tell></tell>
+    <email></email>
+   </rslt>
+  </api:ArrayOfEmp2>
  </SOAP-ENV:Body>
 </SOAP-ENV:Envelope>
