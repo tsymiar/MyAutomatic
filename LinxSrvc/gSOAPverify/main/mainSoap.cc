@@ -325,7 +325,7 @@ int api__get_server_status(struct soap* soap, xsd_string req, xsd_string& rsp)
     return 0;
 }
 
-int api__login_by_key(struct soap*, char* usr, char* psw, struct ArrayOfEmp2& ccc)
+int api__login_by_key(struct soap*, char* usr, char* psw, struct api__ArrayOfEmp2& ccc)
 {
     struct queryInfo info;
     ccc.rslt.flag = -3;
