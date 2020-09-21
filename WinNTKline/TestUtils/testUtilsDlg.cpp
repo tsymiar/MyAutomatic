@@ -18,11 +18,11 @@
 
 #define LOOP_TIME 1
 
-st_sock socks{};
-CLoginDlg login{};
-CTPclient* m_ctp = nullptr;
-MyOglDrawDlg* ogl = nullptr;
-CIMhideWndDlg* m_pIM = nullptr;
+st_sock socks = {};
+CLoginDlg login = {};
+CTPclient* g_ctp = nullptr;
+MyOglDrawDlg* g_ogl = nullptr;
+CIMhideWndDlg* g_pIM = nullptr;
 
 IMPLEMENT_DYNCREATE(CWebBrowser2, CWnd)
 
@@ -34,6 +34,9 @@ CtestUtilsDlg::CtestUtilsDlg(CWnd* pParent /*=NULL*/)
 
 CtestUtilsDlg::~CtestUtilsDlg()
 {
+    Initialise::freeLeak(g_ogl);
+    Initialise::freeLeak(g_ctp);
+    Initialise::freeLeak(g_pIM);
 }
 
 void CtestUtilsDlg::DoDataExchange(CDataExchange* pDX)
@@ -112,9 +115,9 @@ void CtestUtilsDlg::OnBnClickedToim()
 {
     m_ipAddr.GetWindowText(a_IP, 16);
     memcpy(socks.IP, a_IP, 16);
-    m_pIM = new CIMhideWndDlg(&socks);
-    m_pIM->Create(IDD_IMHIDEWND);
-    m_pIM->ShowWindow(SW_SHOWNORMAL);
+    g_pIM = new CIMhideWndDlg(&socks);
+    g_pIM->Create(IDD_IMHIDEWND);
+    g_pIM->ShowWindow(SW_SHOWNORMAL);
 }
 
 void CtestUtilsDlg::OnBnClickedRegist()
@@ -138,15 +141,15 @@ void CtestUtilsDlg::OnBnClickedTestlog()
 
 void CtestUtilsDlg::OnBnClickedKline()
 {
-    ogl = new MyOglDrawDlg();
-    ogl->Create(IDD_OGLIMG);
-    ogl->ShowWindow(SW_SHOWNORMAL);
+    g_ogl = new MyOglDrawDlg();
+    g_ogl->Create(IDD_OGLIMG);
+    g_ogl->ShowWindow(SW_SHOWNORMAL);
 }
 
 void CtestUtilsDlg::OnBnClickedCtp()
 {
-    m_ctp = new CTPclient();
-    CloseHandle((HANDLE)_beginthreadex(NULL, 0, m_ctp->TradeMarket, (void*)this, 0, NULL));
+    g_ctp = new CTPclient();
+    CloseHandle((HANDLE)_beginthreadex(NULL, 0, g_ctp->TradeMarket, (void*)this, 0, NULL));
 }
 
 void CtestUtilsDlg::OnBnClickedSimbtn()
@@ -172,9 +175,6 @@ void CtestUtilsDlg::OnBnClickedImser()
 
 void CtestUtilsDlg::OnBnClickedOk()
 {
-    Initialise::freeLeak(ogl);
-    Initialise::freeLeak(m_ctp);
-    Initialise::freeLeak(m_pIM);
     CDialog::OnOK();
 }
 

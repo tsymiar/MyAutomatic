@@ -1,7 +1,23 @@
+#pragma once
+
+#if (defined __linux ) || (defined sprintf_s)
+#undef sprintf_s
+#define sprintf_s sprintf
+#endif // __linux
+
+#define Concat(x,y) (x##y)
+// #define ToChar(x) (#@x)
+#define toString(x) (#x)
+
 #ifdef _STRING_
 #include <string>
 //未使用STL的string类时
 typedef std::string String_;
+#define c_str_ c_str
+#define size_ size
+#define trim_ trim
+#define equals_ equals
+#define replace_ replace
 
 inline unsigned char* fix_strerr(unsigned char* str)
 {
@@ -33,15 +49,6 @@ inline unsigned char* fix_strerr(unsigned char* str)
 #include <istream>
 #include <ostream>
 
-#if (defined __linux ) || (defined sprintf_s)
-#undef sprintf_s
-#define sprintf_s sprintf
-#endif // __linux
-
-#define Concat(x,y) x##y
-// #define ToChar(x) #@x
-#define toString(x) #x
-
 using namespace std;
 
 class String_ {
@@ -71,7 +78,7 @@ public:
     template<typename T> bool equals_(T object);
     int indexOf_(String_ str);
     String_ replace_(char old, char rplc);
-    char charAt_(int z);
+    char charAt_(size_t z);
     String_ reverse_();
     String_ toLowerCase_();
     String_ toUpperCase_();
@@ -184,7 +191,7 @@ inline istream& operator >> (istream& input, String_& s)
 inline String_ String_::trim_()
 {
     int i = 0, j = 0, k = 0;
-    int len = (int)strlen_(m_data);
+    size_t len = strlen_(m_data);
     for (; i < len; i++) {
         if (m_data[i] != ' ') {
             j = i;
@@ -216,7 +223,7 @@ inline bool String_::equals_(T object)
 
 inline int String_::indexOf_(String_ str)
 {
-    int len = (int)strlen_(m_data);
+    size_t len = strlen_(m_data);
     for (int i = 0; i < len; i++) {
         if (memcmp_(&m_data[i], str.c_str_(), (int)str.size_()) == 0) {
             return i;
@@ -227,7 +234,7 @@ inline int String_::indexOf_(String_ str)
 
 inline String_ String_::replace_(char old, char rplc)
 {
-    int len = (int)strlen_(m_data);
+    size_t len = strlen_(m_data);
     char* str = new char[len];
     strcpy_(str, m_data, len);
     for (int i = 0; i < len; i++) {
@@ -239,9 +246,9 @@ inline String_ String_::replace_(char old, char rplc)
     return str;
 }
 
-inline char String_::charAt_(int z)
+inline char String_::charAt_(size_t z)
 {
-    if (z < 0 || z >(int)strlen_(m_data)) {
+    if (z < 0 || z > strlen_(m_data)) {
         return 0;
     } else {
         return m_data[z];
@@ -250,10 +257,10 @@ inline char String_::charAt_(int z)
 
 inline String_ String_::reverse_()
 {
-    int len = (int)strlen_(m_data);
+    size_t len = strlen_(m_data);
     char* str = new char[len + 1];
     strcpy_(str, m_data, len);
-    for (int i = 0; i < len / 2; i++)
+    for (size_t i = 0; i < len / 2; i++)
     {
         char t = str[i];
         str[i] = str[len - i - 1]; str[len - i - 1] = t;
@@ -264,7 +271,7 @@ inline String_ String_::reverse_()
 
 inline String_ String_::toLowerCase_()
 {
-    int len = (int)strlen_(m_data);
+    size_t len = strlen_(m_data);
     char* str = new char[len];
     strcpy_(str, m_data, len);
     for (int i = 0; i < len; i++) {
@@ -279,7 +286,7 @@ inline String_ String_::toLowerCase_()
 
 inline String_ String_::toUpperCase_()
 {
-    int len = (int)strlen_(m_data);
+    size_t len = strlen_(m_data);
     char* str = new char[len];
     strcpy_(str, m_data, len);
     for (int i = 0; i < len; i++) {
@@ -410,8 +417,8 @@ inline unsigned char* String_::strsub_(unsigned char* ch, int pos, int len)
 // 字符串逆序输出
 inline char* String_::reverse_(char* src, char* cst)
 {
-    int len = (int)strlen_(src);
-    char* dest = (char*)malloc((size_t)len + 1);//为\0分配一个空间
+    size_t len = strlen_(src);
+    char* dest = (char*)malloc(len + 1);//为\0分配一个空间
     char* d = dest;
     char* s = &src[len - 1];//指向最后一个字符
     while (len-- != 0)
@@ -482,7 +489,7 @@ inline char* String_::charstrmove_(char* w, char ch, int d, bool fore)
 {
     int i = 0;
     char* t = w;
-    int len = (int)strlen_(w);
+    size_t len = strlen_(w);
     while (*t)
     {
         if (*t == ch)
@@ -516,7 +523,7 @@ inline char* String_::charposmove_(char* w, int m, int d, bool fore)
 {
     int i = 0;
     m -= 1;
-    int len = (int)strlen_(w);
+    size_t len = strlen_(w);
     char* s = new char[len + 1];
     strcpy_(s, w);
     if (fore)
@@ -538,7 +545,7 @@ inline char* String_::charposmove_(char* w, int m, int d, bool fore)
 inline char* String_::strmove_(char* w, int m, bool fore)
 {
     int i = 0;
-    int len = (int)strlen_(w);
+    size_t len = strlen_(w);
     char* s = new char[len + 1];
     strcpy_(s, w);
     if (m > len)
