@@ -190,7 +190,7 @@ inline istream& operator >> (istream& input, String_& s)
 
 inline String_ String_::trim_()
 {
-    int i = 0, j = 0, k = 0;
+    unsigned int i = 0, j = 0, k = 0;
     size_t len = strlen_(m_data);
     for (; i < len; i++) {
         if (m_data[i] != ' ') {
@@ -224,7 +224,7 @@ inline bool String_::equals_(T object)
 inline int String_::indexOf_(String_ str)
 {
     size_t len = strlen_(m_data);
-    for (int i = 0; i < len; i++) {
+    for (unsigned int i = 0; i < len; i++) {
         if (memcmp_(&m_data[i], str.c_str_(), (int)str.size_()) == 0) {
             return i;
         }
@@ -237,7 +237,7 @@ inline String_ String_::replace_(char old, char rplc)
     size_t len = strlen_(m_data);
     char* str = new char[len];
     strcpy_(str, m_data, len);
-    for (int i = 0; i < len; i++) {
+    for (unsigned int i = 0; i < len; i++) {
         if (m_data[i] == old) {
             str[i] = rplc;
         }
@@ -260,7 +260,7 @@ inline String_ String_::reverse_()
     size_t len = strlen_(m_data);
     char* str = new char[len + 1];
     strcpy_(str, m_data, len);
-    for (size_t i = 0; i < len / 2; i++)
+    for (unsigned int i = 0; i < len / 2; i++)
     {
         char t = str[i];
         str[i] = str[len - i - 1]; str[len - i - 1] = t;
@@ -274,7 +274,7 @@ inline String_ String_::toLowerCase_()
     size_t len = strlen_(m_data);
     char* str = new char[len];
     strcpy_(str, m_data, len);
-    for (int i = 0; i < len; i++) {
+    for (unsigned int i = 0; i < len; i++) {
         char up = m_data[i];
         if (up >= 65 && up <= 90) {
             str[i] = m_data[i] + 32;
@@ -289,7 +289,7 @@ inline String_ String_::toUpperCase_()
     size_t len = strlen_(m_data);
     char* str = new char[len];
     strcpy_(str, m_data, len);
-    for (int i = 0; i < len; i++) {
+    for (unsigned int i = 0; i < len; i++) {
         char low = m_data[i];
         if (low >= 97 && low <= 122) {
             str[i] = m_data[i] - 32;
@@ -502,7 +502,7 @@ inline char* String_::charstrmove_(char* w, char ch, int d, bool fore)
     strcpy_(r, w);
     if (fore)
     {
-        (d > len - m) ? (d = len - m) : 0;
+        (d > int(len) - m) ? (d = len - m) : 0;
         for (i = 0; i < d; i++)
             w[m + i] = *(r + m + (i + 1));
         w[m + d] = *(r + m);
@@ -528,7 +528,7 @@ inline char* String_::charposmove_(char* w, int m, int d, bool fore)
     strcpy_(s, w);
     if (fore)
     {
-        (d > len - m) ? (d = len - m) : 0;
+        (d > int(len) - m) ? (d = len - m) : 0;
         for (i = 0; i < d; i++)
             w[m + i] = s[m + (i + 1)];
         w[m + d] = s[m];
@@ -548,7 +548,7 @@ inline char* String_::strmove_(char* w, int m, bool fore)
     size_t len = strlen_(w);
     char* s = new char[len + 1];
     strcpy_(s, w);
-    if (m > len)
+    if (m > int(len))
         m = len;
     if (!fore)
     {
@@ -562,7 +562,7 @@ inline char* String_::strmove_(char* w, int m, bool fore)
         }
     } else
     {
-        for (int t = 0; t < len - m; t++)
+        for (unsigned int t = 0; t < len - m; t++)
         {
             w[t + m] = *(s + t);
         }
