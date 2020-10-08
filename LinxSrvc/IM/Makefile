@@ -9,12 +9,12 @@ CLIENTLOCAL=../../WinNTKline/IMclient
 CLIENTFILES=$(IMLOCAL)/IMclient.cpp $(CLIENTLOCAL)/client.cpp
 all: IM client Kai
 IM:
-	[ ! -d "$(GEN)" ] && mkdir $(GEN)
+	if [ ! -d "$(GEN)" ]; then mkdir $(GEN); fi;
 	g++ $(FLAG) $(IMFILE) -o $(GEN)/IM.exe $(PTHD)
 client:
 	g++ $(FLAG) -I$(IMLOCAL) $(CLIENTFILES) -o $(GEN)/client.exe $(PTHD)
 Kai:
-	[ ! -d "$(OBJ)" ] && mkdir $(OBJ)
+	if [ ! -d "$(OBJ)" ]; then mkdir $(OBJ); fi;
 	g++ -c KaiSocket.cc -std=c++11 -lpthread
 	mv *.o $(OBJ)/
 clean:
