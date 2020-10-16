@@ -21,8 +21,8 @@ extern "C" {
         int recv(char* buff, int len);
         bool running();
         static void wait(unsigned int tms);
-        void setCallback(void(*func)(void*));
-        void addCallback(void(*func)(void*));
+        void setCallback(int(*func)(KaiSocket*));
+        void addCallback(int(*func)(KaiSocket*));
         // call after connect()
         // 3 - pubilsher; 4 - subscriber
         inline void setTopic(std::string topic, int tag = 3) {
@@ -48,9 +48,9 @@ extern "C" {
         bool thdref = false;
         volatile unsigned int g_threadNo_ = 0;
         std::vector<Network> networks;
-        std::vector<void(*)(void*)> callbacks;
+        std::vector<int(*)(KaiSocket*)> callbacks;
         void handleNotify(int socket);
-        void runCallback(KaiSocket* sock, void(*func)(void*));
+        void runCallback(KaiSocket* sock, int (*func)(KaiSocket*));
         unsigned long long setSsid(Network network, int socket);
         bool verifySsid(Network network, unsigned long long ssid);
     public:
@@ -66,6 +66,6 @@ extern "C" {
     private:
         int produce(Message& msg);
         int consume(Message& msg);
-        std::deque<Message*> *msgque = new std::deque<Message*>();
+        std::deque<Message*>* msgque = new std::deque<Message*>();
     };
 }

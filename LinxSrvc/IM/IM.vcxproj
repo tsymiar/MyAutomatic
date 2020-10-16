@@ -108,10 +108,15 @@
     <IntDir>$(ProjectDir)..\obj\$(Platform)\</IntDir>
   </PropertyGroup>
   <ItemGroup>
+    <None Include="KaiSocket.md" />
     <None Include="Makefile" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\WinNTKline\KlineUtil\IM\IM.cc" />
+    <ClCompile Include="KaiSocket.cc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="KaiSocket.h" />
   </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <Link>
