@@ -13,7 +13,7 @@ KaiSocket::KaiSocket(unsigned short srvport)
     new (this)KaiSocket(nullptr, srvport); // placement new
 }
 
-KaiSocket::KaiSocket(const char * srvip, unsigned short servport)
+KaiSocket::KaiSocket(const char* srvip, unsigned short servport)
 {
     if (srvip != nullptr)
         current.IP = srvip;
@@ -54,7 +54,7 @@ int KaiSocket::start()
 
     struct sockaddr_in listenAddr;
     socklen_t listenLen = static_cast<socklen_t>(sizeof(listenAddr));
-    getsockname(listen_socket, reinterpret_cast<struct sockaddr *>(&listenAddr), &listenLen);
+    getsockname(listen_socket, reinterpret_cast<struct sockaddr*>(&listenAddr), &listenLen);
     std::cout << "localhost listening [" << inet_ntoa(listenAddr.sin_addr) << ":" << servport << "]." << std::endl;
 
     char ipAddr[INET_ADDRSTRLEN];
@@ -78,11 +78,11 @@ int KaiSocket::start()
             bool set = true;
             time_t t;
             time(&t);
-            struct tm *lt = localtime(&t);
+            struct tm* lt = localtime(&t);
             g_threadNo_++;
             current.run_ = true;
             setsockopt(rcv_sock, SOL_SOCKET, SO_KEEPALIVE, reinterpret_cast<const char*>(&set), sizeof(bool));
-            getpeername(rcv_sock, reinterpret_cast<struct sockaddr *>(&peerAddr), &peerLen);
+            getpeername(rcv_sock, reinterpret_cast<struct sockaddr*>(&peerAddr), &peerLen);
             current.IP = inet_ntop(AF_INET, &peerAddr.sin_addr, ipAddr, sizeof(ipAddr));
             current.PORT = ntohs(peerAddr.sin_port);
             fprintf(stdout, "accepted peer(%u) address [%s:%d] (@ %d/%02d/%02d-%02d:%02d:%02d)\n",
@@ -95,7 +95,7 @@ int KaiSocket::start()
             networks.emplace_back(current);
 
             std::cout << "socket monitor: " << rcv_sock << "; waiting for massage." << std::endl;
-            for (std::vector<void(*)(void*)>::iterator it = callbacks.begin(); it != callbacks.end(); ++it) {
+            for (std::vector<int(*)(KaiSocket*)>::iterator it = callbacks.begin(); it != callbacks.end(); ++it) {
                 std::thread(&KaiSocket::runCallback, this, this, (*it)).detach();
             }
             wait(100);
@@ -127,13 +127,16 @@ int KaiSocket::connect()
         }
     }
     current.run_ = true;
-    for (std::vector<void(*)(void*)>::iterator it = callbacks.begin(); it != callbacks.end(); ++it) {
+    for (std::vector<int(*)(KaiSocket*)>::iterator it = callbacks.begin(); it != callbacks.end(); ++it) {
         std::thread(&KaiSocket::runCallback, this, this, (*it)).detach();
+    }
+    while (running()) {
+        wait(100);
     }
     return 0;
 }
 
-int KaiSocket::send(const char * data, int len)
+int KaiSocket::send(const char* data, int len)
 {
     int head = sizeof(Header);
     size_t left = len + head;
@@ -141,7 +144,7 @@ int KaiSocket::send(const char * data, int len)
     memset(mesg, 0, left);
     memcpy(mesg, &current.flag, head);
     memcpy(mesg + head, data, len);
-    const char *ptr = mesg;
+    const char* ptr = mesg;
     while (left > 0) {
         ssize_t wrote;
         if ((wrote = write(current.socket, ptr, left)) <= 0) {
@@ -158,7 +161,7 @@ int KaiSocket::send(const char * data, int len)
     return 0;
 }
 
-int KaiSocket::broadcast(const char * data, int len)
+int KaiSocket::broadcast(const char* data, int len)
 {
     int bytes = 0;
     if (networks.size() == 0 || networks.begin() == networks.end())
@@ -180,7 +183,7 @@ int KaiSocket::broadcast(const char * data, int len)
     return bytes;
 }
 
-int KaiSocket::broker(char * data, int len)
+int KaiSocket::broker(char* data, int len)
 {
     int res = ::recv(current.socket, data, len, 0);
     if (res < 0) {
@@ -206,7 +209,7 @@ int KaiSocket::broker(char * data, int len)
     return res;
 }
 
-int KaiSocket::recv(char * buff, int len)
+int KaiSocket::recv(char* buff, int len)
 {
     int size = sizeof(Header);
     char header[size];
@@ -290,13 +293,13 @@ void KaiSocket::wait(unsigned int tms)
     select(0, NULL, NULL, NULL, &time);
 }
 
-void KaiSocket::setCallback(void(*func)(void *))
+void KaiSocket::setCallback(int(*func)(KaiSocket*))
 {
     callbacks.clear();
     addCallback(func);
 }
 
-void KaiSocket::addCallback(void(*func)(void *))
+void KaiSocket::addCallback(int(*func)(KaiSocket*))
 {
     if (std::find(callbacks.begin(), callbacks.end(), func) == callbacks.end()) {
         callbacks.emplace_back(func);
@@ -341,26 +344,28 @@ KaiSocket::~KaiSocket()
     close(current.socket);
 }
 
-void KaiSocket::runCallback(KaiSocket* sock, void(*func)(void *))
+void KaiSocket::runCallback(KaiSocket* sock, int (*func)(KaiSocket*))
 {
     if (!server && !thdref) {
         // heartBeat
         std::thread(
             [](Network& current, KaiSocket* sock)
-        {
-            while (1) {
-                if (::send(current.socket, "Ka", 2, 0) <= 0) {
-                    std::cerr << "Heartbeat to " << current.IP << ":" << current.PORT << " arrests." << std::endl;
-                    sock->handleNotify(current.socket);
-                    break;
+            {
+                while (1) {
+                    if (::send(current.socket, "Ka", 2, 0) <= 0) {
+                        std::cerr << "Heartbeat to " << current.IP << ":" << current.PORT << " arrests." << std::endl;
+                        sock->handleNotify(current.socket);
+                        break;
+                    }
+                    KaiSocket::wait(30000);
                 }
-                KaiSocket::wait(30000);
-            }
-        }, std::ref(current), sock).detach();
-        thdref = !thdref;
+            }, std::ref(current), sock).detach();
+            thdref = !thdref;
     }
     if (func != nullptr) {
-        func(sock);
+        while (sock->running()) {
+            func(sock);
+        }
     }
 }
 
