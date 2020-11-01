@@ -7,12 +7,16 @@ struct List {
     void* addr;
     List* next;
     List(void* elem) : prev(0), next(0), addr(0) {
-        addr = (List *)malloc(sizeof(List));
-        if (addr) {
+        addr = (List*)malloc(sizeof(List));
+        if (addr != NULL) {
             prev = next = this;
             addr = elem;
         }
     };
+    ~List() {
+        if (addr != NULL)
+            free(addr);
+    }
 };
 
 struct Stack {
@@ -30,7 +34,7 @@ struct Tree {
 
 template <typename Element> class LinkedList {
 private:
-    List *list = nullptr;
+    List* list = nullptr;
     int count = 0;
 public:
     typedef List* PosPtr;
@@ -39,9 +43,10 @@ public:
         count++;
     };
     ~LinkedList() {
-        makeEmpty();
+        if (makeEmpty() != nullptr)
+            delete list;
     }
-    List *get() {
+    List* get() {
         return list;
     }
     PosPtr find(Element elem);
@@ -65,11 +70,11 @@ public:
 
 template <typename Element> class ListStack {
 private:
-    Stack *stack = new Stack(nullptr);
+    Stack* stack = new Stack(nullptr);
 public:
     ListStack(Element S) {
         stack->addr = (void*)S;
-    };  
+    };
     ~ListStack() {
         dispose();
     };
@@ -83,7 +88,7 @@ public:
 
 template <typename Element> class BinaryTree {
 private:
-    Tree *tree = new Tree(nullptr);
+    Tree* tree = new Tree(nullptr);
 public:
     typedef Tree* PosPtr;
     BinaryTree(Tree T) {
@@ -99,7 +104,7 @@ public:
 };
 
 template<typename Element>
-inline List * LinkedList<Element>::find(Element elem)
+inline List* LinkedList<Element>::find(Element elem)
 {
     PosPtr ppos = list;
     int i = 0;
@@ -125,7 +130,7 @@ inline List * LinkedList<Element>::find(Element elem)
 }
 
 template<typename Element>
-inline List * LinkedList<Element>::find_previous(Element elem)
+inline List* LinkedList<Element>::find_previous(Element elem)
 {
     List* ppos = find(elem);
     if (ppos == nullptr)
@@ -134,9 +139,9 @@ inline List * LinkedList<Element>::find_previous(Element elem)
 }
 
 template<typename Element>
-inline List * LinkedList<Element>::insert(Element elem, PosPtr ppos)
+inline List* LinkedList<Element>::insert(Element elem, PosPtr ppos)
 {
-    List *temp = new List(0);
+    List* temp = new List(0);
     temp->prev = list;
     if (ppos != nullptr && nullptr != find((Element)ppos->addr) && list->addr != ppos->addr) {
         temp->next = temp->prev;
@@ -153,12 +158,12 @@ inline List * LinkedList<Element>::insert(Element elem, PosPtr ppos)
 }
 
 template<typename Element>
-inline List * LinkedList<Element>::insert(int index, Element element)
+inline List* LinkedList<Element>::insert(int index, Element element)
 {
     if (index <= 0 || index > count) {
         return nullptr;
     }
-    List *elem = new List((void*)element);
+    List* elem = new List((void*)element);
     List* buff = first();
     int it = 0;
     while (buff != nullptr) {
@@ -176,10 +181,10 @@ inline List * LinkedList<Element>::insert(int index, Element element)
 }
 
 template<typename Element>
-inline List * LinkedList<Element>::add(Element elem)
+inline List* LinkedList<Element>::add(Element elem)
 {
-    List *tmp1 = new List((void*)elem);
-    List *tmp2 = list->prev;
+    List* tmp1 = new List((void*)elem);
+    List* tmp2 = list->prev;
     tmp1->prev = tmp2;
     tmp1->next = tmp2->next;
     tmp2->next->prev = tmp1;
@@ -189,7 +194,7 @@ inline List * LinkedList<Element>::add(Element elem)
 }
 
 template<typename Element>
-inline List * LinkedList<Element>::get(int num)
+inline List* LinkedList<Element>::get(int num)
 {
     if (num < 0 || num >= count)
         return nullptr;
@@ -266,7 +271,7 @@ inline List* LinkedList<Element>::last()
 }
 
 template<typename Element>
-inline List * LinkedList<Element>::makeEmpty()
+inline List* LinkedList<Element>::makeEmpty()
 {
     if (list->addr != nullptr) {
         list->addr = nullptr;
@@ -317,7 +322,8 @@ template<typename Element>
 inline void ListStack<Element>::dispose()
 {
     if (stack != nullptr) {
-        delete stack->next;
+        if (stack->next != nullptr)
+            delete stack->next;
         delete stack;
         stack = nullptr;
     }
