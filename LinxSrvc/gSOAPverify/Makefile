@@ -28,7 +28,7 @@ gSOAPverify:$(OUT)
 	mv ./*.o $(PRJ)
 	echo make OK
 all: 
-	if[ `ps -fe| grep gSOAPverify | grep -v grep` -eq 0 ];then killall -9 gSOAPverify;else echo "making gSOAPverify.";fi;
+	if [ `ps -fe| grep gSOAPverify | grep -v grep` -eq 0 ]; then killall -9 gSOAPverify;else echo "making gSOAPverify.";fi;
 	make clear
 	make
 	$(GEN)/gSOAPverify 8080
