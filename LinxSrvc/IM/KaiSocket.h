@@ -4,6 +4,7 @@
 #include <vector>
 #include <deque>
 #include <mutex>
+#include <functional>
 
 extern "C" {
     class KaiSocket
@@ -21,8 +22,11 @@ extern "C" {
         int recv(char* buff, int len);
         bool running();
         static void wait(unsigned int tms);
-        void setCallback(int(*func)(KaiSocket*));
-        void addCallback(int(*func)(KaiSocket*));
+        void registCallback(int(*func)(KaiSocket*));
+        void appendCallback(int(*func)(KaiSocket*));
+        void appendCallback(std::function<int(KaiSocket*)>);
+        void setResponseHandle(void(*func)(char*, int), char*, int&);
+        void setRequestHandle(void(*func)(char*, int), char*, int&);
         // call after connect()
         // 3 - pubilsher; 4 - subscriber
         inline void setTopic(std::string topic, int tag = 3) {
@@ -44,11 +48,13 @@ extern "C" {
             volatile bool run_ = false;
             Header flag;
         } current;
-        bool server = false;
         bool thdref = false;
+        bool m_clientMode = true;
         volatile unsigned int g_threadNo_ = 0;
         std::vector<Network> networks;
         std::vector<int(*)(KaiSocket*)> callbacks;
+        void(*submit)(char*, int);
+        void(*recieve)(char*, int);
         void handleNotify(int socket);
         void runCallback(KaiSocket* sock, int (*func)(KaiSocket*));
         unsigned long long setSsid(Network network, int socket);
@@ -57,11 +63,12 @@ extern "C" {
         struct Message {
             Header head;
             struct Payload {
-                char result[8];
+                char stat[8];
                 char body[256];
             } data;
         };
-        int produceClient(std::string body, ...);
+        const int WAIT_TIME = 100;
+        int produceClient(std::string payload, ...);
         int consumeClient();
     private:
         int produce(Message& msg);
