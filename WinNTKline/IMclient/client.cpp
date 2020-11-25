@@ -8,7 +8,8 @@ void
 #ifndef _WIN32
 *
 #endif
-parseRcvMsg(void* lprcv) {
+parseRcvMsg(void* lprcv)
+{
     static char rcv_buf[256];
     static char srv_net[32];
     CRITICAL_SECTION wrcon;
@@ -108,11 +109,17 @@ parseRcvMsg(void* lprcv) {
         }
         if (ui_val == GETIMAGE) {
             int ndt_len = atoi(rcv_buf + 22);
+            FILE* file = NULL;
             if (count == 0) {
-                fclose(fopen(filename, "w"));
+                file = fopen(filename, "w");
+                if (file == NULL)
+                    continue;
+                fclose(file);
                 count = 1;
             }
-            FILE* file = fopen(filename, "ab+");
+            file = fopen(filename, "ab+");
+            if (file == NULL)
+                continue;
             if (fw_len == ndt_len) {
                 SetRecvState(RCV_SCC);
                 fprintf(stdout, "\n");
@@ -142,10 +149,10 @@ parseRcvMsg(void* lprcv) {
     };
 };
 
-st_trans* ParseChatMesg(st_trans& trans) {
+st_trans* ParseChatMesg(st_trans& trans)
+{
     memset(&trans.user_sign, 0, 24);
-    switch (trans.uiCmdMsg)
-    {
+    switch (trans.uiCmdMsg) {
     case REGISTER:
         fprintf(stdout, "Input a new username AND password to register, divide with BLANK(' ').\n");
         scanf_s("%s %s", trans.username, 24, trans.password, 24);
@@ -212,8 +219,7 @@ st_trans* ParseChatMesg(st_trans& trans) {
     }
     default:
     {
-        if (trans.value == 0x0)
-        {
+        if (trans.value == 0x0) {
             MessageBox(NULL, "LoggingIn failure.", "message", MB_OK);
             return &trans;
         }
@@ -232,17 +238,14 @@ bool is_ip_valid(char s[])
         val = val + s[0] - '0';
     else
         return false;
-    for (int i = 1; i < len; i++)
-    {
+    for (int i = 1; i < len; i++) {
         if ((s[i] > '9' || s[i] < '0') && s[i] != '.')
             return false;
         if (s[i] == '.' && s[i - 1] == '.')
             return false;
-        if (s[i] == '.')
-        {
+        if (s[i] == '.') {
             val = 0; dot++;
-        } else
-        {
+        } else {
             val = val * 10 + s[i] - '0';
             if (val > 255)
                 return false;
