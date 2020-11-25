@@ -10,8 +10,8 @@
 #include <conio.h>
 #else
 #include <netinet/in.h>
-#include <sys/socket.h> 
-#include <sys/types.h> 
+#include <sys/socket.h>
+#include <sys/types.h>
 #include <sys/shm.h>
 #include <sys/ipc.h>
 #include <sys/wait.h>
@@ -53,12 +53,18 @@ typedef long ssize_t;
 #else
 typedef int type_socket;
 typedef socklen_t type_len;
-typedef void *type_thread_func;
+typedef void* type_thread_func;
 #define flush_all() fflush(stdin)
 #define closesocket(socket) close(socket)
 #define SLEEP(t) wait(t < 0.1f ? 1 : (int)(1.0f*(t)));
 pthread_mutexattr_t attr;
 #endif
+
+/*-------------------- Message Format --------------------*/
+/* ____________________________________________________________________________________________________________________________________________________________________________ */
+/* |  rsv(1)  |  uiCmdMsg(1)  |  rtn(2)  |  chk(4)  |  usr(24)  | psw/TOKEN/peerIP(24) | peer/port/sign/npsw/host/join/seek(24) |     PeerStruct peer_mesg     |  status (8)  | */
+/* | reserved | cmd msg of ui | error No | checksum | user name | cert or udp peer ip  |                                        | rsv(2) msg(16) cmd(2) val(4) | if nessasery | */
+/* ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————— */
 
 #define __ "./"
 #define _0_ "_0"
@@ -164,8 +170,8 @@ struct zone_file {
     unsigned int getSize() const { return sizeof(*this) + (int)(zone.usrCnt * sizeof(member)); }
 }zones[MAX_ZONES];
 
-
-void pipesig_handler(int s) {
+void pipesig_handler(int s)
+{
 #ifdef _UNISTD_H
     write(STDERR_FILENO, "Signal: caught a SIGPIPE!\n", 27);
     exit(0);
@@ -177,7 +183,7 @@ template<typename T> int set_n_get_mem(T* shmem, int ndx = 0, int rw = 0);
 void func_waitpid(int signo);
 int queryNetworkParams(const char* username, Network& network, const int max = MAX_ACTIVE);
 Network queryNetworkParams(int uid);
-type_thread_func commands(void *arg);
+type_thread_func commands(void* arg);
 void wait(unsigned int tms);
 int user_auth(char usr[24], char psw[24]);
 int new_user(char usr[24], char psw[24]);
@@ -189,8 +195,8 @@ int get_user_seq(char user[24]);
 int save_acnt();
 int load_acnt();
 int find_zone(unsigned char basis[24]);
-int host_zone(USER &user);
-int join_zone(int at, char usr[24], char zone[24], char *cert = NULL);
+int host_zone(USER& user);
+int join_zone(int at, char usr[24], char zone[24], char* cert = NULL);
 int exit_zone(int at, char usr[24]);
 int free_zone(int at, char host[24]);
 
@@ -226,8 +232,7 @@ int main(int argc, char* argv[])
 #ifdef _WIN32
     inst_mesg(1, { nullptr });
 #else
-    if (fork() == 0)
-    {
+    if (fork() == 0) {
         signal(SIGPIPE, pipesig_handler);
         inst_mesg(argc, argv);
     }
@@ -235,7 +240,7 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-type_thread_func monite(void *arg)
+type_thread_func monite(void* arg)
 {
     static USER user = {};
     int c, flg, cur = 0;
@@ -247,7 +252,7 @@ type_thread_func monite(void *arg)
     memset(active, 0, sizeof(ONLINE) * MAX_ACTIVE);
 #endif
     type_socket rcv_sock = 0;
-    type_socket *sock = reinterpret_cast<type_socket*>(arg);
+    type_socket* sock = reinterpret_cast<type_socket*>(arg);
     char ipAddr[INET_ADDRSTRLEN];
     struct sockaddr_in peerAddr;
     socklen_t peerLen = static_cast<socklen_t>(sizeof(peerAddr));
@@ -263,11 +268,11 @@ type_thread_func monite(void *arg)
         rcv_sock = accept(listen_socket, reinterpret_cast<struct sockaddr*>(&sin), &len);
 #endif
     }
-    getpeername(rcv_sock, reinterpret_cast<struct sockaddr *>(&peerAddr), &peerLen);
+    getpeername(rcv_sock, reinterpret_cast<struct sockaddr*>(&peerAddr), &peerLen);
     const char* IP = inet_ntop(AF_INET, &peerAddr.sin_addr, ipAddr, sizeof(ipAddr));
     const int PORT = ntohs(peerAddr.sin_port);
     time_t t;
-    struct tm * lt;
+    struct tm* lt;
     time(&t);
     lt = localtime(&t);
     g_threadNo_++;
@@ -313,8 +318,7 @@ type_thread_func monite(void *arg)
         }
         flg = (int)recv(rcv_sock, rcv_txt, 256, 0);
         // rcv_txt: inc--8 bit crc_head, 24 bit username, 24 bit password.
-        if (qq != flg && flg != 0)
-        {
+        if (qq != flg && flg != 0) {
             if (flg <= -1 && flg != EWOULDBLOCK && flg != EAGAIN && flg != EINTR) {
                 set_user_quit(user.usr);
                 fprintf(stderr, "----------------------------------------------------------------\
@@ -330,8 +334,7 @@ type_thread_func monite(void *arg)
                 memcpy(&user, rcv_txt, sizeof(user));
                 fprintf(stdout, "----------------------------------------------------------------\
                 \n>>> 1-RCV [%0x,%0x]: %s, %d, %u\n", user.uiCmdMsg, static_cast<unsigned>(*user.chk), user.usr, flg, THREAD_NUM - g_threadNo_);
-                for (c = 0; c < flg; c++)
-                {
+                for (c = 0; c < flg; c++) {
                     if (c > 0 && c % 32 == 0)
                         fprintf(stdout, "\n");
                     fprintf(stdout, "%02x ", static_cast<unsigned char>(rcv_txt[c]));
@@ -382,7 +385,7 @@ type_thread_func monite(void *arg)
                     set_user_peer(user.usr, IP, PORT, rcv_sock);
                     Network sock;
                     static_cast<void>(memcpy((void*)sock.ip, IP, INET_ADDRSTRLEN)),
-                    static_cast<void>(sock.port = PORT),
+                        static_cast<void>(sock.port = PORT),
                         sock.socket = rcv_sock;
                     set_user_line(user.usr, sock);
                     memcpy(userName, user.usr, 24);
@@ -487,8 +490,7 @@ type_thread_func monite(void *arg)
 #ifdef _DEBUG
                     fprintf(stdout, "----------------------------------------------------------------\
                     \n>>> 2-RCV [%d,%x]: %s, %d\n", user.uiCmdMsg, static_cast<unsigned>(*user.chk), user.usr, flg);
-                    for (c = 0; c < flg; c++)
-                    {
+                    for (c = 0; c < flg; c++) {
                         if (c > 0 && c % 32 == 0)
                             fprintf(stdout, "\n");
                         fprintf(stdout, "%02x ", static_cast<unsigned char>(rcv_txt[c]));
@@ -498,10 +500,8 @@ type_thread_func monite(void *arg)
                 }
                 unsigned int sndlen = 256;
                 memset(sd_bufs, 0, sndlen);
-                if (user.rsv == 0)
-                {
-                    switch (sd_bufs[1] = user.uiCmdMsg)
-                    {
+                if (user.rsv == 0) {
+                    switch (sd_bufs[1] = user.uiCmdMsg) {
                     case 0x01:
                         strcpy((sd_bufs + 8), "User has already on-line.");
                         sndlen = 48;
@@ -600,7 +600,7 @@ type_thread_func monite(void *arg)
                             sprintf((sd_bufs + 32), "Get user network: No such user(%s)!", user.peer);
                         }
                         sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
-                        unsigned char *val = reinterpret_cast<unsigned char *>(&uiIP);
+                        unsigned char* val = reinterpret_cast<unsigned char*>(&uiIP);
                         fprintf(stdout, ">>> get client peer [%u.%u.%u.%u:%s]\n", val[3], val[2], val[1], val[0], sd_bufs + 56);
                         sndlen = 96;
                     } break;
@@ -665,19 +665,18 @@ type_thread_func monite(void *arg)
                     case 0x8:
                     {
 #if !defined _WIN32
-                        char *mesg = NULL;
-                        if (vfork() == 0)
-                        {
+                        char* mesg = NULL;
+                        if (vfork() == 0) {
 #ifdef RASPI
 #undef GET_IMG_EXE
 #define GET_IMG_EXE "raspistill"
-#undef __ 
+#undef __
 #undef _0_
 #define __ ""
 #define _0_ ""
-                            char *const agv[] = { (char*)GET_IMG_EXE, (char*)"-o", (char*)IMAGE_BLOB, (char *)(0) };
+                            char* const agv[] = { (char*)GET_IMG_EXE, (char*)"-o", (char*)IMAGE_BLOB, (char*)(0) };
 #else
-                            char *const agv[] = { (char*)GET_IMG_EXE, (char *)(0) };
+                            char* const agv[] = { (char*)GET_IMG_EXE, (char*)(0) };
 #endif
                             valrtn = execvp(__ GET_IMG_EXE, agv);
                             mesg = strerror(errno);
@@ -702,7 +701,7 @@ type_thread_func monite(void *arg)
                             fprintf(stdout, "Make image via '%s': %s.\n", __ GET_IMG_EXE, mesg);
                         }
 #else
-                        char *mesg = "OS don't support v4l.";
+                        char* mesg = "OS don't support v4l.";
                         sndlen = 32;
                         strcpy((sd_bufs + 8), mesg);
                         fprintf(stdout, "%s\n", mesg);
@@ -710,9 +709,8 @@ type_thread_func monite(void *arg)
                     } break;
                     case 0x9:
                     {
-                        FILE * file = fopen(IMAGE_BLOB _0_, "rb");
-                        if (file == NULL)
-                        {
+                        FILE* file = fopen(IMAGE_BLOB _0_, "rb");
+                        if (file == NULL) {
                             sprintf((sd_bufs + 8), "Fail read image file \"%s\".", IMAGE_BLOB);
                             fprintf(stdout, "%s\n", sd_bufs + 8);
                             sndlen = 8 + strlen(IMAGE_BLOB) + 27;
@@ -721,41 +719,41 @@ type_thread_func monite(void *arg)
                         fseek(file, 0, SEEK_END);
                         long lSize = ftell(file);
                         rewind(file);
-                        int bytes = (int)(lSize / sizeof(unsigned char));
-                        if (bytes > 2097152)
-                            bytes = 4096;
-                        memset(sd_bufs + 8, bytes, 6);
-                        unsigned char *pos = (unsigned char*)malloc(sizeof(unsigned char)*bytes);
-                        if (pos == NULL)
-                        {
+                        int block = (int)(lSize / sizeof(unsigned char));
+                        if (block > 2097152)
+                            block = 4096;
+                        memset(sd_bufs + 8, lSize, 6);
+                        unsigned char* pos = (unsigned char*)malloc(sizeof(unsigned char) * block);
+                        if (pos == NULL) {
                             sprintf((sd_bufs + 8), "Fail malloc for \"%s\".", IMAGE_BLOB);
                             fprintf(stdout, "%s\n", sd_bufs + 8);
                             sndlen = 8 + strlen(IMAGE_BLOB) + 24;
                             break;
                         }
-                        int slice = 0;
-                        while (int rcsz = fread(pos, sizeof(unsigned char), bytes, file) != 0 && !feof(file)) {
+                        int slice = 0, len = 0;
+                        while (bool rcsz = (len = fread(pos, sizeof(unsigned char), block, file)) != 0 && !feof(file)
+                            || (block > len && len > 0)) {
                             fprintf(stdout, "        "
-                                "File \"%s\" size = %d, item = %d, slice = %d.\r", IMAGE_BLOB, bytes, rcsz, slice);
+                                "File \"%s\": total = %d, slice = %d, read = %d.\r", IMAGE_BLOB, lSize, slice, len);
                             sprintf((sd_bufs + 14), "%04d", slice);
                             memset(sd_bufs + 1, user.uiCmdMsg, 1);
-                            volatile int cur = 0;
-                            for (int i = 0; i <= bytes; ++i, ++cur) {
-                                if (((i > 0) && (i % 224 == 0)) || (i == bytes)) {
+                            volatile int offset = 0;
+                            for (int i = 0; i <= len; ++i, ++offset) {
+                                if (((i > 0) && (i % 224 == 0)) || (i == len)) {
                                     sprintf((sd_bufs + 22), "%04d", i);
                                     send(rcv_sock, sd_bufs, 256, 0);
                                     memset(sd_bufs + 32, 0, 224);
                                     SLEEP(1.0 / 10000);
-                                    cur = 0;
+                                    offset = 0;
                                 }
-                                memset(sd_bufs + 32 + cur, pos[i], 1);
-                                fprintf(stdout, /*"\r%*c*/"\r%.02f%% ", /*7, ' ',*/ i*100.f / bytes);
+                                memset(sd_bufs + 32 + offset, pos[i], 1);
+                                fprintf(stdout, /*"\r%*c*/"\r%.02f%% ", /*7, ' ',*/ i * 100.f / len);
                             }
                             slice++;
                         }
                         fprintf(stdout, "\r\n");
-                        free(pos);
                         fclose(file);
+                        free(pos);
                     }
                     break;
                     case 10:
@@ -860,8 +858,7 @@ type_thread_func monite(void *arg)
                             };
                         } else {
                             for (c = 0; c < MAX_MENBERS_PER_GROUP; c++) {
-                                if (strlen(zones[valrtn].zone.members[c]) != 0)
-                                {
+                                if (strlen(zones[valrtn].zone.members[c]) != 0) {
                                     sprintf(sd_bufs + 3, "%x", -3);
                                     int uil = user_is_line(zones[valrtn].zone.members[c]);
                                     if (uil != -1) {
@@ -876,8 +873,7 @@ type_thread_func monite(void *arg)
                     default: break;
                     }
                     if ((memcmp(user.chk, "P2P", 4) != 0) &&
-                        (send(rcv_sock, sd_bufs, sndlen, 0) < 0))
-                    {
+                        (send(rcv_sock, sd_bufs, sndlen, 0) < 0)) {
                         perror("Socket lost");
 #if defined _WIN32
                         return NULL;
@@ -911,22 +907,23 @@ type_thread_func monite(void *arg)
         SLEEP(99);
     } while (!loggedin);
 
-comm_err0: {
-    for (int i = 0; i < MAX_ACTIVE; i++)
-        set_n_get_mem(&active[i], i);
-    memset(active[user_is_line(user.usr)].user, 0, 24);
+comm_err0:
+    {
+        for (int i = 0; i < MAX_ACTIVE; i++)
+            set_n_get_mem(&active[i], i);
+        memset(active[user_is_line(user.usr)].user, 0, 24);
     }
 #if !defined _WIN32
-           comm_err1 : {
-               g_threadNo_--;
-               closesocket(rcv_sock);
-               exit(errno);
-           }
+    comm_err1 : {
+        g_threadNo_--;
+        closesocket(rcv_sock);
+        exit(errno);
+    }
 #endif
-                       return 0;
-    };
+    return 0;
+};
 
-int inst_mesg(int argc, char * argv[])
+int inst_mesg(int argc, char* argv[])
 {
     int servport = DEFAULT_PORT;
     if (argc == 2 && atoi(argv[1]) != 0) {
@@ -1009,7 +1006,7 @@ int inst_mesg(int argc, char * argv[])
     int thrdcnt = 0;
     struct sockaddr_in listenAddr;
     socklen_t listenLen = static_cast<socklen_t>(sizeof(listenAddr));
-    getsockname(listen_socket, reinterpret_cast<struct sockaddr *>(&listenAddr), &listenLen);
+    getsockname(listen_socket, reinterpret_cast<struct sockaddr*>(&listenAddr), &listenLen);
     fprintf(stdout, "localhost listening [%s:%d].\n", inet_ntoa(listenAddr.sin_addr), servport);
 #if defined _SYS_WAIT_H || defined _SYS_WAIT_H_
     signal(SIGCHLD, &func_waitpid);
@@ -1031,13 +1028,12 @@ int inst_mesg(int argc, char * argv[])
 #endif
             std::cerr << "ERROR(" << errno << "): " << strerror(errno) << std::endl;
             return -1;
-        } else
-        {
+        } else {
             char IPdotdec[16];
 #ifdef _WIN32
             memcpy(IPdotdec, inet_ntoa(form.sin_addr), 16);
 #else
-            inet_ntop(AF_INET, (void *)&form.sin_addr, IPdotdec, 16);
+            inet_ntop(AF_INET, (void*)&form.sin_addr, IPdotdec, 16);
 #endif
             fprintf(stdout, "accept [%s] success.\n", IPdotdec);
         }
@@ -1067,8 +1063,7 @@ int inst_mesg(int argc, char * argv[])
             return -1;
         } else {
             int PID = 0;
-            if ((PID = fork()) == 0)
-            {
+            if ((PID = fork()) == 0) {
                 fprintf(stdout, "running child(%d) forks from Main process.\n", thrdcnt);
                 monite(&msg_socket);
             } else
@@ -1078,29 +1073,27 @@ int inst_mesg(int argc, char * argv[])
 #endif
         thrdcnt++;
         SLEEP(99);
-        } while (!aim2exit);
-        fprintf(stdout, ">>> Executing thread count = %d.\n", thrdcnt);
+    } while (!aim2exit);
+    fprintf(stdout, ">>> Executing thread count = %d.\n", thrdcnt);
 #ifdef THREAD_PER_CONN
-        while (true)
-            SLEEP(9);
+    while (true)
+        SLEEP(9);
 #endif
-        return 0;
+    return 0;
     }
-template<typename T> int set_n_get_mem(T* shmem, int ndx, int rw) {
+template<typename T> int set_n_get_mem(T * shmem, int ndx, int rw)
+{
     int shmids = -1;
     if (ndx > MAX_ACTIVE)
         return rw;
 #if defined _SYS_SHM_H || defined _SYS_SHM_H_
     pthread_mutex_trylock(&sendallow);
-    T *shared;
-    if ((shmids = shmget(IPCKEY, (MAX_ACTIVE * sizeof(T)), (0666 | IPCFLAG))) < 0)
-    {
-        if (EEXIST == errno)
-        {
+    T* shared;
+    if ((shmids = shmget(IPCKEY, (MAX_ACTIVE * sizeof(T)), (0666 | IPCFLAG))) < 0) {
+        if (EEXIST == errno) {
             shmids = shmget(IPCKEY, (MAX_ACTIVE * sizeof(T)), 0666);
             shared = (T*)shmat(shmids, NULL, 0);
-        } else
-        {
+        } else {
             fprintf(stderr, "fail to shmget.\n");
             exit(-1);
         }
@@ -1114,12 +1107,10 @@ template<typename T> int set_n_get_mem(T* shmem, int ndx, int rw) {
     } else if (rw + 1 == 0) {
         memset(shared + ndx * sizeof(T), 0, sizeof(T));
     } else {
-        if (shmdt(shared) == -1)
-        {
+        if (shmdt(shared) == -1) {
             fprintf(stderr, "shmdt: detach segment fail.\n");
         }
-        if (shmctl(shmids, IPC_RMID, 0) == -1)
-        {
+        if (shmctl(shmids, IPC_RMID, 0) == -1) {
             fprintf(stderr, "shmctl(IPC_RMID) fail.\n");
         }
     }
@@ -1127,7 +1118,8 @@ template<typename T> int set_n_get_mem(T* shmem, int ndx, int rw) {
 #endif
     return shmids;
 }
-void func_waitpid(int signo) {
+void func_waitpid(int signo)
+{
 #if defined _SYS_WAIT_H || defined _SYS_WAIT_H_
     int stat;
     pid_t pid;
@@ -1138,8 +1130,8 @@ void func_waitpid(int signo) {
     }
     return;
 #endif
-}
-int queryNetworkParams(const char * username, Network & network, const int max)
+    }
+int queryNetworkParams(const char* username, Network & network, const int max)
 {
     struct ONLINE active[MAX_ACTIVE];
     memset(active, 0, sizeof(active));
@@ -1170,7 +1162,7 @@ void wait(unsigned int tms)
     time.tv_usec = tms % 1000 * 1000;
     select(0, NULL, NULL, NULL, &time);
 }
-type_thread_func commands(void *arg)
+type_thread_func commands(void* arg)
 {
     char optionstr[24], name[24];
     do {
@@ -1199,12 +1191,12 @@ type_thread_func commands(void *arg)
                 memset(active, 0, sizeof(ONLINE) * MAX_ACTIVE);
                 for (int i = 0; i < MAX_ACTIVE; i++) {
                     set_n_get_mem(&active[i], i);
-                }
+        }
 #endif
                 closesocket(active[rtn].netwk.socket);
                 fprintf(stdout, "User %s kicked out!\n", name);
-            };
-        };
+    };
+};
         if (strcmp(optionstr, "cls") == 0) {
             system("CLS");
         };
@@ -1213,9 +1205,10 @@ type_thread_func commands(void *arg)
     return NULL;
 };
 //save accounts to local file.
-int save_acnt() {
+int save_acnt()
+{
     flush_all();
-    FILE *dump = fopen(ACC_REC, "w");
+    FILE* dump = fopen(ACC_REC, "w");
     if (dump == nullptr)
         return -1;
     fwrite(users, sizeof(USER), MAX_USERS, dump);
@@ -1226,7 +1219,8 @@ int save_acnt() {
     return 0;
 };
 //load accounts from file system.
-int load_acnt() {
+int load_acnt()
+{
     flush_all();
     FILE* dump = fopen(ACC_REC, "r");
     if (dump == nullptr)
@@ -1239,12 +1233,12 @@ int load_acnt() {
     };
     flush_all();
 };
-int user_auth(char usr[24], char psw[24]) {
-    char *n = usr, *p = psw;
+int user_auth(char usr[24], char psw[24])
+{
+    char* n = usr, * p = psw;
     if (n == nullptr)
         return -1;
-    for (auto& user : users)
-    {
+    for (auto& user : users) {
         if ((strcmp(n, user.usr) == 0) && (strcmp(p, user.psw) == 0)) {
             if (user_is_line(n) == -1) {
                 return 1; //success
@@ -1256,20 +1250,20 @@ int user_auth(char usr[24], char psw[24]) {
     //wrong param
     return -2;
 };
-int new_user(char usr[24], char psw[24]) {
+int new_user(char usr[24], char psw[24])
+{
     if (usr[0] == '\0')
         return -4;
     if (0 <= get_user_seq(usr)) {
         return -3;
     }
-    char *n = usr;
-    char *p = psw;
+    char* n = usr;
+    char* p = psw;
     for (int i = 0; i < MAX_USERS; i++) {
         if (strcmp(n, users[i].usr) == 0)
             return i;
     }
-    for (auto& user : users)
-    {
+    for (auto& user : users) {
         if (user.usr[0] == '\0') {
             strcpy(user.usr, n);
             strcpy(user.psw, p);
@@ -1279,8 +1273,9 @@ int new_user(char usr[24], char psw[24]) {
     }
     return -2;
 };
-int user_is_line(char user[24]) {
-    char *tomatch = user;
+int user_is_line(char user[24])
+{
+    char* tomatch = user;
 #if !defined _WIN32
     struct ONLINE active[MAX_ACTIVE];  // = { 0, "" };
     memset(active, 0, sizeof(ONLINE) * MAX_ACTIVE);
@@ -1292,15 +1287,15 @@ int user_is_line(char user[24]) {
     }
     return -1;
 };
-int set_user_line(char user[24], Network& netwk) {
+int set_user_line(char user[24], Network & netwk)
+{
 #if !defined _WIN32
     struct ONLINE active[MAX_ACTIVE];  // = { 0, "" };
     memset(active, 0, sizeof(ONLINE) * MAX_ACTIVE);
 #endif
     for (int i = 0; i < MAX_ACTIVE; i++) {
         set_n_get_mem(&active[i], i);
-        if (active[i].user[0] == '\0')
-        {
+        if (active[i].user[0] == '\0') {
             memcpy(active[i].user, user, 24);
             memcpy((char*)active[i].netwk.ip, (char*)netwk.ip, INET_ADDRSTRLEN);
             active[i].netwk.port = netwk.port;
@@ -1310,17 +1305,17 @@ int set_user_line(char user[24], Network& netwk) {
         }
     }
     return 0;
-};
-int set_user_quit(char user[24]) {
-    char *u = user;
+        };
+int set_user_quit(char user[24])
+{
+    char* u = user;
 #if !defined _WIN32
     struct ONLINE active[MAX_ACTIVE];  // = { 0, "" };
     memset(active, 0, sizeof(active));
 #endif
     for (int i = 0; i < MAX_ACTIVE; i++) {
         set_n_get_mem(&active[i], i);
-        if (strcmp(u, active[i].user) == 0)
-        {
+        if (strcmp(u, active[i].user) == 0) {
             memset(active[i].user, 0, 24);
             memset((char*)active[i].netwk.ip, 0, INET_ADDRSTRLEN);
             active[i].netwk.socket = 0;
@@ -1357,8 +1352,9 @@ int set_user_peer(const char user[24], const char ip[INET_ADDRSTRLEN], const int
     }
     return -4;
 }
-int get_user_seq(char user[24]) {
-    char *u = user;
+int get_user_seq(char user[24])
+{
+    char* u = user;
     if (u[0] == '\0')
         return -1;
     for (int i = 0; i < MAX_USERS; i++) {
@@ -1367,8 +1363,9 @@ int get_user_seq(char user[24]) {
     };
     return -2;
 };
-int find_zone(unsigned char basis[24]) {
-    char *x = (char*)basis;
+int find_zone(unsigned char basis[24])
+{
+    char* x = (char*)basis;
     if (x[0] == '\0')
         return -1;
     for (int i = 0; i < MAX_ZONES; i++) {
@@ -1382,8 +1379,9 @@ int find_zone(unsigned char basis[24]) {
 
     return -2;
 };
-int host_zone(USER &user) {
-    char *host = (char*)user.host;
+int host_zone(USER & user)
+{
+    char* host = (char*)user.host;
     unsigned char* brf = user.host + 24;
     char* chief = user.usr;
     for (int i = 0; i < MAX_ZONES; i++) {
@@ -1400,9 +1398,10 @@ int host_zone(USER &user) {
     };
     return -2;
 };
-int join_zone(int at, char usr[24], char zone[24], char* cert) {
+int join_zone(int at, char usr[24], char zone[24], char* cert)
+{
     int i;
-    char *m = usr, *z = zone;
+    char* m = usr, * z = zone;
     if (at < 0)
         return -1;
     if (zones[at].zone.members[MAX_MENBERS_PER_GROUP - 1][0] != '\0')
@@ -1423,8 +1422,9 @@ int join_zone(int at, char usr[24], char zone[24], char* cert) {
     };
     return -4;
 };
-int exit_zone(int at, char usr[24]) {
-    char *m = usr;
+int exit_zone(int at, char usr[24])
+{
+    char* m = usr;
     if (at < 0)
         return -1;
     for (int i = 0; i < MAX_MENBERS_PER_GROUP; i++) {
@@ -1435,11 +1435,12 @@ int exit_zone(int at, char usr[24]) {
     };
     return -2;
 };
-int free_zone(int at, char host[24]) {
+int free_zone(int at, char host[24])
+{
     if (at < 0)
         return -1;
-    char *h = host;
-    zone_clazz *zo = &zones[at].zone;
+    char* h = host;
+    zone_clazz* zo = &zones[at].zone;
     if (strcmp(zo->chief, h) == 0) {
         memset(zo, 0, sizeof(zone_clazz));
         return 0;
