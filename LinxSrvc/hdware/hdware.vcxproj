@@ -110,8 +110,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gpio.h" />
-    <ClCompile Include="me909s.c" />
-    <ClCompile Include="v4l2.c" />
+    <ClCompile Include="me909s.h" />
+    <ClCompile Include="routine.c" />
+    <ClCompile Include="test.c" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Makefile" />
