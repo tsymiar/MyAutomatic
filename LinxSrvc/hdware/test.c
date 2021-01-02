@@ -23,7 +23,7 @@ int main(int argc, char** argv)
 #elif defined(GPIO)
 
 #elif defined(ME9S)
-    mes_main(argc, argv)
+    mes_main(argc, argv);
 #endif
-        return 0;
+    return 0;
 }

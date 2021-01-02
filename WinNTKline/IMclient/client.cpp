@@ -91,7 +91,7 @@ parseRcvMsg(void* lprcv)
         }
         if (ui_val == NETNDT) {
             if (atoi((const char*)mesg->recv_mesg.status) == 200) {
-                fprintf(stdout, "\r%*c\rRecieved: %s\n", 64, ' ', mesg->recv_mesg);
+                fprintf(stdout, "\r%*c\rRecieved: %s\n", 64, ' ', mesg->recv_mesg.message);
                 SetRecvState(RCV_NDT);
                 if (g_printed > 0) {
                     fprintf(stdout, youSaid);
@@ -141,7 +141,7 @@ parseRcvMsg(void* lprcv)
             sprintf(srv_net, "Connection lost!\n%s:%d", inet_ntoa(client->srvaddr.sin_addr), client->srvaddr.sin_port);
             char title[32];
             sprintf(title, "socket: %s", _itoa((int)client->sock, (char*)mesg, 10));
-            MessageBox(NULL, srv_net, title, MB_OK);
+            MessageBox(0, srv_net, title, MB_OK);
             SetChatActive(rcvlen);
             closesocket(client->sock);
             exit(0);
@@ -192,7 +192,7 @@ st_trans* ParseChatMesg(st_trans& trans)
         }
 #endif
         memset(&trans.more_mesg.mesg, 0, 16);
-        if (scanf_s("%s", &trans.more_mesg.mesg, 16) <= 0) {
+        if (scanf_s("%s", &trans.more_mesg.mesg.message, 16) <= 0) {
             fprintf(stdout, "Error: characters limit 16!\n");
             g_printed = trans.uiCmdMsg = -1;
             return &trans;
@@ -219,8 +219,8 @@ st_trans* ParseChatMesg(st_trans& trans)
     }
     default:
     {
-        if (trans.value == 0x0) {
-            MessageBox(NULL, "LoggingIn failure.", "message", MB_OK);
+        if (trans.value[0] == 0x0) {
+            MessageBox(0, "LoggingIn failure.", "message", MB_OK);
             return &trans;
         }
     }
