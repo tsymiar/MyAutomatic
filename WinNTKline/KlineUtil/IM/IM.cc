@@ -243,10 +243,11 @@ int main(int argc, char* argv[])
 type_thread_func monite(void* arg)
 {
     static USER user = {};
+    constexpr int BUFF_SIZE = 256;
     int c, flg, cur = 0;
     int qq = 0, loggedin = 0;
-    int valrtn;
-    char sd_bufs[256], rcv_txt[256];
+    int valrtn = -1;
+    char sd_bufs[BUFF_SIZE], rcv_txt[BUFF_SIZE];
 #if !defined _WIN32
     struct ONLINE active[MAX_ACTIVE];
     memset(active, 0, sizeof(ONLINE) * MAX_ACTIVE);
@@ -292,8 +293,8 @@ type_thread_func monite(void* arg)
     };
     fprintf(stdout, "socket monite: %d; waiting for massage.\n", rcv_sock);
     do {
-        memset(sd_bufs, 0, 256);
-        memset(rcv_txt, 0, 256);
+        memset(sd_bufs, 0, BUFF_SIZE);
+        memset(rcv_txt, 0, BUFF_SIZE);
         memset(&user, 0, sizeof(user));
 #ifdef _WIN32
         int
@@ -316,7 +317,7 @@ type_thread_func monite(void* arg)
             }
             cur++;
         }
-        flg = (int)recv(rcv_sock, rcv_txt, 256, 0);
+        flg = (int)recv(rcv_sock, rcv_txt, BUFF_SIZE, 0);
         // rcv_txt: inc--8 bit crc_head, 24 bit username, 24 bit password.
         if (qq != flg && flg != 0) {
             if (flg <= -1 && flg != EWOULDBLOCK && flg != EAGAIN && flg != EINTR) {
@@ -459,7 +460,7 @@ type_thread_func monite(void* arg)
 #endif
                 }
                 memset(&user, 0, sizeof(user));
-                flg = (int)recv(rcv_sock, rcv_txt, 256, 0);
+                flg = (int)recv(rcv_sock, rcv_txt, BUFF_SIZE, 0);
                 if (flg < 0 && flg != EWOULDBLOCK && flg != EAGAIN && flg != EINTR) {
                     set_user_quit(userName);
                     fprintf(stderr, "### Lost connection with *[%s]: %s(%d)\n", userName, strerror(errno), flg);
@@ -498,7 +499,7 @@ type_thread_func monite(void* arg)
                     fprintf(stdout, "\n");
 #endif
                 }
-                unsigned int sndlen = 256;
+                unsigned int sndlen = BUFF_SIZE;
                 memset(sd_bufs, 0, sndlen);
                 if (user.rsv == 0) {
                     switch (sd_bufs[1] = user.uiCmdMsg) {
@@ -731,18 +732,19 @@ type_thread_func monite(void* arg)
                             break;
                         }
                         int slice = 0, len = 0;
+                        constexpr int CHIP = 224;
                         while (bool rcsz = (len = fread(pos, sizeof(unsigned char), block, file)) != 0 && !feof(file)
                             || (block > len && len > 0)) {
                             fprintf(stdout, "        "
-                                "File \"%s\": total = %d, slice = %d, read = %d.\r", IMAGE_BLOB, lSize, slice, len);
+                                "File \"%s\": total = %ld, slice = %d, read = %d.\r", IMAGE_BLOB, lSize, slice, len);
                             sprintf((sd_bufs + 14), "%04d", slice);
                             memset(sd_bufs + 1, user.uiCmdMsg, 1);
                             volatile int offset = 0;
                             for (int i = 0; i <= len; ++i, ++offset) {
-                                if (((i > 0) && (i % 224 == 0)) || (i == len)) {
+                                if (((i > 0) && (i % CHIP == 0)) || (i == len)) {
                                     sprintf((sd_bufs + 22), "%04d", i);
-                                    send(rcv_sock, sd_bufs, 256, 0);
-                                    memset(sd_bufs + 32, 0, 224);
+                                    send(rcv_sock, sd_bufs, BUFF_SIZE, 0);
+                                    memset(sd_bufs + 32, 0, CHIP);
                                     SLEEP(1.0 / 10000);
                                     offset = 0;
                                 }
@@ -1080,7 +1082,7 @@ int inst_mesg(int argc, char* argv[])
         SLEEP(9);
 #endif
     return 0;
-    }
+}
 template<typename T> int set_n_get_mem(T * shmem, int ndx, int rw)
 {
     int shmids = -1;
@@ -1130,7 +1132,7 @@ void func_waitpid(int signo)
     }
     return;
 #endif
-    }
+}
 int queryNetworkParams(const char* username, Network & network, const int max)
 {
     struct ONLINE active[MAX_ACTIVE];
@@ -1191,12 +1193,12 @@ type_thread_func commands(void* arg)
                 memset(active, 0, sizeof(ONLINE) * MAX_ACTIVE);
                 for (int i = 0; i < MAX_ACTIVE; i++) {
                     set_n_get_mem(&active[i], i);
-        }
+                }
 #endif
                 closesocket(active[rtn].netwk.socket);
                 fprintf(stdout, "User %s kicked out!\n", name);
-    };
-};
+            };
+        };
         if (strcmp(optionstr, "cls") == 0) {
             system("CLS");
         };
@@ -1305,7 +1307,7 @@ int set_user_line(char user[24], Network & netwk)
         }
     }
     return 0;
-        };
+};
 int set_user_quit(char user[24])
 {
     char* u = user;
