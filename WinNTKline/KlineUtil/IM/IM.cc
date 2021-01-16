@@ -723,7 +723,7 @@ type_thread_func monite(void* arg)
                         int block = (int)(lSize / sizeof(unsigned char));
                         if (block > 2097152)
                             block = 4096;
-                        memset(sd_bufs + 8, lSize, 6);
+                        memset(sd_bufs + 8, (int)lSize, 6);
                         unsigned char* pos = (unsigned char*)malloc(sizeof(unsigned char) * block);
                         if (pos == NULL) {
                             sprintf((sd_bufs + 8), "Fail malloc for \"%s\".", IMAGE_BLOB);
@@ -731,12 +731,13 @@ type_thread_func monite(void* arg)
                             sndlen = 8 + strlen(IMAGE_BLOB) + 24;
                             break;
                         }
-                        int slice = 0, len = 0;
+                        int slice = 0;
+                        size_t len = 0;
                         constexpr int CHIP = 224;
-                        while (bool rcsz = (len = fread(pos, sizeof(unsigned char), block, file)) != 0 && !feof(file)
+                        while (bool rcsz = ((len = fread(pos, sizeof(unsigned char), block, file)) != 0 && !feof(file))
                             || (block > len && len > 0)) {
                             fprintf(stdout, "        "
-                                "File \"%s\": total = %ld, slice = %d, read = %d.\r", IMAGE_BLOB, lSize, slice, len);
+                                    "File \"%s\": total = %ld, slice = %d, read = %zu.\r", IMAGE_BLOB, lSize, slice, len);
                             sprintf((sd_bufs + 14), "%04d", slice);
                             memset(sd_bufs + 1, user.uiCmdMsg, 1);
                             volatile int offset = 0;
