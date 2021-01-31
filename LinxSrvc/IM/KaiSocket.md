@@ -37,8 +37,8 @@ int main()
 {
     if (fork() == 0) {
         KaiSocket* server = new KaiSocket(9999);
-        server->setCallback(reciever);
-        server->addCallback(sender);
+        server->registCallback(reciever);
+        server->appendCallback(sender);
         server->start();
         delete server;
     }
@@ -51,8 +51,8 @@ Writing a client is more simple. Just use `reciever` and `sender` above as callb
 int main()
 {
     KaiSocket* client = new KaiSocket("192.168.1.1", 9999);
-    client->setCallback(reciever);
-    client->addCallback(sender);
+    client->registCallback(reciever);
+    client->appendCallback(sender);
     client->connect();
     delete client;
 }

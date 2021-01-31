@@ -387,13 +387,18 @@ KaiSocket::~KaiSocket()
     close(current.socket);
 }
 
+KaiSocket& KaiSocket::GetInstance()
+{
+    static KaiSocket socket;
+    return socket;
+}
+
 void KaiSocket::runCallback(KaiSocket* sock, int (*func)(KaiSocket*))
 {
     if (m_clientMode && !thdref) {
         // heartBeat
         std::thread(
-            [](Network& current, KaiSocket* sock)
-            {
+            [](Network& current, KaiSocket* sock) {
                 while (sock->running()) {
                     if (::send(current.socket, "Kai", 3, 0) <= 0) {
                         std::cerr << "Heartbeat to " << current.IP << ":" << current.PORT << " arrests." << std::endl;
@@ -453,7 +458,8 @@ int KaiSocket::produceClient(std::string body, ...)
     return res;
 }
 
-int KaiSocket::consumeClient() {
+int KaiSocket::consumeClient()
+{
     Message msg = {};
     memset(&msg, 0, sizeof(Message));
     current.flag.etag = msg.head.etag = 2;
