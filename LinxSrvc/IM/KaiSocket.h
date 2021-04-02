@@ -7,8 +7,7 @@
 #include <mutex>
 #include <functional>
 // extern "C" {
-class KaiSocket
-{
+class KaiSocket {
 public:
     KaiSocket() {};
     KaiSocket(unsigned short servport);
@@ -35,8 +34,7 @@ public:
         memcpy(current.flag.mqid, topic.c_str(), 32);
         current.flag.etag = tag;
     };
-    struct SharedKaiSocket : std::enable_shared_from_this<KaiSocket>
-    {
+    struct SharedKaiSocket : std::enable_shared_from_this<KaiSocket> {
         std::shared_ptr<KaiSocket> GetSharedInstance()
         {
             return shared_from_this();
@@ -63,10 +61,10 @@ private:
         Header flag;
     } current;
     bool thdref = false;
-    bool m_clientMode = true;
+    bool m_isClient = true;
     volatile unsigned int g_threadNo_ = 0;
-    std::vector<Network> networks;
-    std::vector<int(*)(KaiSocket*)> callbacks;
+    std::vector<Network> networks{};
+    std::vector<int(*)(KaiSocket*)> callbacks{};
     void(*submit)(char*, int);
     void(*recieve)(char*, int);
     void handleNotify(int socket);
