@@ -34,7 +34,7 @@
 #define MAX_ZONES 9
 #define MAX_MENBERS_PER_GROUP 11
 //using namespace std;
-//C++11 std与socket.h中bind函数冲突
+//'C++11 std' bind func conflicts with in 'socket.h'
 #ifdef _WIN32
 typedef int type_len;
 typedef SOCKET type_socket;
@@ -60,11 +60,11 @@ typedef void* type_thread_func;
 pthread_mutexattr_t attr;
 #endif
 
-/*-------------------- Message Format --------------------*/
-/* ____________________________________________________________________________________________________________________________________________________________________________ */
-/* |  rsv(1)  |  uiCmdMsg(1)  |  rtn(2)  |  chk(4)  |  usr(24)  | psw/TOKEN/peerIP(24) | peer/port/sign/npsw/host/join/seek(24) |     PeerStruct peer_mesg     |  status (8)  | */
-/* | reserved | cmd msg of ui | error No | checksum | user name | cert or udp peer ip  |                                        | rsv(2) msg(16) cmd(2) val(4) | if nessasery | */
-/* ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————— */
+/*-------------------- Message Structure --------------------*/
+/* ._______________________________________________________________________________________________________________________________________________________. */
+/* |  rsv(1)  |  uiCmdMsg(1)  |  rtn(2)  |  chk(4)  |  usr(24)  | psw/TOKEN/peerIP(24) | peer/port/sign/npsw |     PeerStruct peer_mesg     |  status (8)  | */
+/* | reserved | cmd msg of ui | error No | checksum | user name | cert or udp peer ip  | host/join/seek(24)  | rsv(2) msg(16) cmd(2) val(4) | if nessasery | */
+/* + ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————— + */
 
 #define __ "./"
 #define _0_ "_0"
@@ -106,8 +106,7 @@ struct user_clazz {
     char intro[24];
 }users[MAX_USERS];
 
-struct member
-{
+struct member {
     user_clazz user[MAX_MENBERS_PER_GROUP];
 
     member()
@@ -138,8 +137,7 @@ typedef struct user_mesg {
         unsigned char join[24];
         unsigned char seek[24];
     };
-    class PeerStruct
-    {
+    class PeerStruct {
     private:
         unsigned char rsv[2];
     public:
@@ -215,7 +213,7 @@ int main(int argc, char* argv[])
             for (int c = 0; c < MAX_ACTIVE; c++) {
                 if (&active[0] != nullptr && active[c].user[0] != '\0') {
                     fprintf(stdout, "\t%d\t%s\t%s\t%u\t%d\n", c + 1,
-                        active[c].user, active[c].netwk.ip, active[c].netwk.port, active[c].netwk.socket);
+                            active[c].user, active[c].netwk.ip, active[c].netwk.port, active[c].netwk.socket);
                 }
             }
             exit(0);
@@ -720,7 +718,7 @@ type_thread_func monite(void* arg)
                         fseek(file, 0, SEEK_END);
                         long lSize = ftell(file);
                         rewind(file);
-                        int block = (int)(lSize / sizeof(unsigned char));
+                        size_t block = (size_t)(lSize / sizeof(unsigned char));
                         if (block > 2097152)
                             block = 4096;
                         memset(sd_bufs + 8, (int)lSize, 6);
@@ -735,13 +733,13 @@ type_thread_func monite(void* arg)
                         size_t len = 0;
                         constexpr int CHIP = 224;
                         while (bool rcsz = ((len = fread(pos, sizeof(unsigned char), block, file)) != 0 && !feof(file))
-                            || (block > len && len > 0)) {
+                               || (block > len && len > 0)) {
                             fprintf(stdout, "        "
-                                "File \"%s\": total = %ld, slice = %d, read = %zu.\r", IMAGE_BLOB, lSize, slice, len);
+                                    "File \"%s\": total = %ld, slice = %d, read = %zu.\r", IMAGE_BLOB, lSize, slice, len);
                             sprintf((sd_bufs + 14), "%04d", slice);
                             memset(sd_bufs + 1, user.uiCmdMsg, 1);
                             volatile int offset = 0;
-                            for (int i = 0; i <= len; ++i, ++offset) {
+                            for (size_t i = 0; i <= len; ++i, ++offset) {
                                 if (((i > 0) && (i % CHIP == 0)) || (i == len)) {
                                     sprintf((sd_bufs + 22), "%04d", i);
                                     send(rcv_sock, sd_bufs, BUFF_SIZE, 0);

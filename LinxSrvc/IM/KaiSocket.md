@@ -25,9 +25,8 @@ int reciever(KaiSocket* kaisock) {
 int sender(KaiSocket* kaisock) {
     char* rcv_txt = new char[64];
     memset(rcv_txt, 0, 64);
-    scanf("%s", rcv_txt);
+    scanf("%s\n", rcv_txt);
     kaisock->send(rcv_txt, 64);
-    fprintf(stdout, "----------------\n");
     delete []rcv_txt;
     return 0;
 }

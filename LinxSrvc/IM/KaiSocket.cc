@@ -60,7 +60,7 @@ int KaiSocket::start()
     char ipAddr[INET_ADDRSTRLEN];
     struct sockaddr_in peerAddr;
     socklen_t peerLen = static_cast<socklen_t>(sizeof(peerAddr));
-    m_clientMode = false;
+    m_isClient = false;
 
     while (1) {
         struct sockaddr_in sin;
@@ -73,10 +73,10 @@ int KaiSocket::start()
             return -3;
         };
         {
-            std::mutex mtxlck;
+            std::mutex mtxlck{};
             std::lock_guard<std::mutex> lock(mtxlck);
             bool set = true;
-            time_t t;
+            time_t t{};
             time(&t);
             struct tm* lt = localtime(&t);
             g_threadNo_++;
@@ -86,9 +86,9 @@ int KaiSocket::start()
             current.IP = inet_ntop(AF_INET, &peerAddr.sin_addr, ipAddr, sizeof(ipAddr));
             current.PORT = ntohs(peerAddr.sin_port);
             fprintf(stdout, "accepted peer(%u) address [%s:%d] (@ %d/%02d/%02d-%02d:%02d:%02d)\n",
-                g_threadNo_,
-                current.IP.c_str(), current.PORT,
-                lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
+                    g_threadNo_,
+                    current.IP.c_str(), current.PORT,
+                    lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
 
             Header head{ 0, 0, current.flag.ssid = setSsid(current, rcv_sock), 0 };
             ::send(rcv_sock, (char*)&head, sizeof(Header), 0);
@@ -218,7 +218,7 @@ int KaiSocket::recv(char* buff, int len)
     int size = sizeof(Header);
     char header[size];
     memset(header, 0, size);
-    if (!m_clientMode && networks.size() == 0) {
+    if (!m_isClient && networks.size() == 0) {
         handleNotify(current.socket);
         return -1;
     }
@@ -364,7 +364,7 @@ void KaiSocket::handleNotify(int socket)
                 std::vector<Network>::iterator iter = it;
                 it->run_ = false;
                 std::cerr
-                    << "### " << (m_clientMode ? "Server" : "Client")
+                    << "### " << (m_isClient ? "Server" : "Client")
                     << "(" << it->IP << ":" << it->PORT << ") socket [" << it->socket << "] lost."
                     << std::endl;
                 if (networks.size() > 0) {
@@ -395,7 +395,7 @@ KaiSocket& KaiSocket::GetInstance()
 
 void KaiSocket::runCallback(KaiSocket* sock, int (*func)(KaiSocket*))
 {
-    if (m_clientMode && !thdref) {
+    if (m_isClient && !thdref) {
         // heartBeat
         std::thread(
             [](Network& current, KaiSocket* sock) {
@@ -413,8 +413,9 @@ void KaiSocket::runCallback(KaiSocket* sock, int (*func)(KaiSocket*))
     if (func != nullptr) {
         while (sock->running()) {
             int ret = func(sock);
-            if (ret != 0)
+            if (ret != 0) {
                 std::cerr << "Callback status = " << ret << std::endl;
+            }
         }
     }
 }
