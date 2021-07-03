@@ -1,7 +1,8 @@
-#include <stdlib.h>
+#pragma once
 #include <unistd.h>
-#include <fcntl.h>
+#include <stdlib.h>
 #include <stdio.h>
+#include <fcntl.h>
 
 #define GPIO_FILES "/sys/class/gpio/"
 
@@ -12,7 +13,7 @@ enum GpioValue {
 
 struct GpioChip {
     unsigned long gpio;
-    char *name;
+    char* name;
 };
 
 static struct GpioChip chips[] = {
@@ -41,7 +42,7 @@ int gpio_request(unsigned int gpio, char* label)
     return file;
 }
 
-void gpio_free(int file) 
+void gpio_free(int file)
 {
     close(file);
 }

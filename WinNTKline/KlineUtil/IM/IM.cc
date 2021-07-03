@@ -10,8 +10,8 @@
 #include <conio.h>
 #else
 #include <netinet/in.h>
-#include <sys/socket.h> 
-#include <sys/types.h> 
+#include <sys/socket.h>
+#include <sys/types.h>
 #include <sys/shm.h>
 #include <sys/ipc.h>
 #include <sys/wait.h>
@@ -34,7 +34,7 @@
 #define MAX_ZONES 9
 #define MAX_MENBERS_PER_GROUP 11
 //using namespace std;
-//C++11 std与socket.h中bind函数冲突
+//'C++11 std' bind func conflicts with in 'socket.h'
 #ifdef _WIN32
 typedef int type_len;
 typedef SOCKET type_socket;
@@ -53,12 +53,18 @@ typedef long ssize_t;
 #else
 typedef int type_socket;
 typedef socklen_t type_len;
-typedef void *type_thread_func;
+typedef void* type_thread_func;
 #define flush_all() fflush(stdin)
 #define closesocket(socket) close(socket)
 #define SLEEP(t) wait(t < 0.1f ? 1 : (int)(1.0f*(t)));
 pthread_mutexattr_t attr;
 #endif
+
+/*-------------------- Message Structure --------------------*/
+/* ._______________________________________________________________________________________________________________________________________________________. */
+/* |  rsv(1)  |  uiCmdMsg(1)  |  rtn(2)  |  chk(4)  |  usr(24)  | psw/TOKEN/peerIP(24) | peer/port/sign/npsw |     PeerStruct peer_mesg     |  status (8)  | */
+/* | reserved | cmd msg of ui | error No | checksum | user name | cert or udp peer ip  | host/join/seek(24)  | rsv(2) msg(16) cmd(2) val(4) | if nessasery | */
+/* + ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————— + */
 
 #define __ "./"
 #define _0_ "_0"
@@ -76,6 +82,7 @@ int aim2exit = 0;
 type_socket listen_socket;
 volatile type_socket current_socket = 0;
 static unsigned int g_threadNo_ = 0;
+const int FiledSize = 24;
 
 struct Network {
     volatile unsigned char ip[INET_ADDRSTRLEN];
@@ -84,7 +91,7 @@ struct Network {
 };
 
 struct ONLINE {
-    char user[24];
+    char user[FiledSize];
     Network netwk;
 }
 #ifdef _WIN32
@@ -93,15 +100,14 @@ active[MAX_ACTIVE]
 ;
 
 struct user_clazz {
-    char usr[24];
-    char psw[24];
+    char usr[FiledSize];
+    char psw[FiledSize];
     Network netwk;
-    unsigned char hgrp[24];
-    char intro[24];
+    unsigned char hgrp[FiledSize];
+    char intro[FiledSize];
 }users[MAX_USERS];
 
-struct member
-{
+struct member {
     user_clazz user[MAX_MENBERS_PER_GROUP];
 
     member()
@@ -115,25 +121,24 @@ typedef struct user_mesg {
     unsigned char uiCmdMsg;
     unsigned char rtn[2];
     unsigned char chk[4];
-    char usr[24];
+    char usr[FiledSize];
     union {
-        char psw[24];
-        char TOKEN[24];
-        char peerIp[24];
+        char psw[FiledSize];
+        char TOKEN[FiledSize];
+        char peerIp[FiledSize];
     };
     union {
-        char peer[24];
+        char peer[FiledSize];
         // peer port
-        char port[24];
-        char sign[24];
-        char npsw[24];
+        char port[FiledSize];
+        char sign[FiledSize];
+        char npsw[FiledSize];
         // zone to user
-        unsigned char host[24];
-        unsigned char join[24];
-        unsigned char seek[24];
+        unsigned char host[FiledSize];
+        unsigned char join[FiledSize];
+        unsigned char seek[FiledSize];
     };
-    class PeerStruct
-    {
+    class PeerStruct {
     private:
         unsigned char rsv[2];
     public:
@@ -147,12 +152,12 @@ typedef struct user_mesg {
 } USER;
 
 struct zone_clazz {
-    char name[24];
-    char cert[24];
-    char members[MAX_MENBERS_PER_GROUP][24];
+    char name[FiledSize];
+    char cert[FiledSize];
+    char members[MAX_MENBERS_PER_GROUP][FiledSize];
     unsigned int usrCnt;
-    char chief[24];
-    char brief[24];
+    char chief[FiledSize];
+    char brief[FiledSize];
 };
 
 struct zone_file {
@@ -164,10 +169,10 @@ struct zone_file {
     unsigned int getSize() const { return sizeof(*this) + (int)(zone.usrCnt * sizeof(member)); }
 }zones[MAX_ZONES];
 
-
-void pipesig_handler(int s) {
+void pipesig_handler(int s)
+{
 #ifdef _UNISTD_H
-    write(STDERR_FILENO, "Signal: caught a SIGPIPE!\n", 27);
+    write(STDERR_FILENO, "Signal: caught a SIGPIPE!\n", 27); // 27: write buffer size.
     exit(0);
 #endif
 }
@@ -177,22 +182,22 @@ template<typename T> int set_n_get_mem(T* shmem, int ndx = 0, int rw = 0);
 void func_waitpid(int signo);
 int queryNetworkParams(const char* username, Network& network, const int max = MAX_ACTIVE);
 Network queryNetworkParams(int uid);
-type_thread_func commands(void *arg);
+type_thread_func commands(void* arg);
 void wait(unsigned int tms);
-int user_auth(char usr[24], char psw[24]);
-int new_user(char usr[24], char psw[24]);
-int user_is_line(char user[24]);
-int set_user_line(char user[24], Network& netwk);
-int set_user_peer(const char user[24], const char ip[INET_ADDRSTRLEN], const int port, type_socket sock);
-int set_user_quit(char user[24]);
-int get_user_seq(char user[24]);
+int user_auth(char usr[FiledSize], char psw[FiledSize]);
+int new_user(char usr[FiledSize], char psw[FiledSize]);
+int user_is_line(char user[FiledSize]);
+int set_user_line(char user[FiledSize], Network& netwk);
+int set_user_peer(const char user[FiledSize], const char ip[INET_ADDRSTRLEN], const int port, type_socket sock);
+int set_user_quit(char user[FiledSize]);
+int get_user_seq(char user[FiledSize]);
 int save_acnt();
 int load_acnt();
-int find_zone(unsigned char basis[24]);
-int host_zone(USER &user);
-int join_zone(int at, char usr[24], char zone[24], char *cert = NULL);
-int exit_zone(int at, char usr[24]);
-int free_zone(int at, char host[24]);
+int find_zone(unsigned char basis[FiledSize]);
+int host_zone(USER& user);
+int join_zone(int at, char usr[FiledSize], char zone[FiledSize], char* cert = NULL);
+int exit_zone(int at, char usr[FiledSize]);
+int free_zone(int at, char host[FiledSize]);
 
 int main(int argc, char* argv[])
 {
@@ -209,7 +214,7 @@ int main(int argc, char* argv[])
             for (int c = 0; c < MAX_ACTIVE; c++) {
                 if (&active[0] != nullptr && active[c].user[0] != '\0') {
                     fprintf(stdout, "\t%d\t%s\t%s\t%u\t%d\n", c + 1,
-                        active[c].user, active[c].netwk.ip, active[c].netwk.port, active[c].netwk.socket);
+                            active[c].user, active[c].netwk.ip, active[c].netwk.port, active[c].netwk.socket);
                 }
             }
             exit(0);
@@ -226,8 +231,7 @@ int main(int argc, char* argv[])
 #ifdef _WIN32
     inst_mesg(1, { nullptr });
 #else
-    if (fork() == 0)
-    {
+    if (fork() == 0) {
         signal(SIGPIPE, pipesig_handler);
         inst_mesg(argc, argv);
     }
@@ -235,19 +239,20 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-type_thread_func monite(void *arg)
+type_thread_func monite(void* arg)
 {
     static USER user = {};
+    constexpr int BUFF_SIZE = 256;
     int c, flg, cur = 0;
     int qq = 0, loggedin = 0;
-    int valrtn;
-    char sd_bufs[256], rcv_txt[256];
+    int valrtn = -1;
+    char sd_bufs[BUFF_SIZE], rcv_txt[BUFF_SIZE];
 #if !defined _WIN32
     struct ONLINE active[MAX_ACTIVE];
     memset(active, 0, sizeof(ONLINE) * MAX_ACTIVE);
 #endif
     type_socket rcv_sock = 0;
-    type_socket *sock = reinterpret_cast<type_socket*>(arg);
+    type_socket* sock = reinterpret_cast<type_socket*>(arg);
     char ipAddr[INET_ADDRSTRLEN];
     struct sockaddr_in peerAddr;
     socklen_t peerLen = static_cast<socklen_t>(sizeof(peerAddr));
@@ -263,11 +268,11 @@ type_thread_func monite(void *arg)
         rcv_sock = accept(listen_socket, reinterpret_cast<struct sockaddr*>(&sin), &len);
 #endif
     }
-    getpeername(rcv_sock, reinterpret_cast<struct sockaddr *>(&peerAddr), &peerLen);
+    getpeername(rcv_sock, reinterpret_cast<struct sockaddr*>(&peerAddr), &peerLen);
     const char* IP = inet_ntop(AF_INET, &peerAddr.sin_addr, ipAddr, sizeof(ipAddr));
     const int PORT = ntohs(peerAddr.sin_port);
     time_t t;
-    struct tm * lt;
+    struct tm* lt;
     time(&t);
     lt = localtime(&t);
     g_threadNo_++;
@@ -287,8 +292,8 @@ type_thread_func monite(void *arg)
     };
     fprintf(stdout, "socket monite: %d; waiting for massage.\n", rcv_sock);
     do {
-        memset(sd_bufs, 0, 256);
-        memset(rcv_txt, 0, 256);
+        memset(sd_bufs, 0, BUFF_SIZE);
+        memset(rcv_txt, 0, BUFF_SIZE);
         memset(&user, 0, sizeof(user));
 #ifdef _WIN32
         int
@@ -311,10 +316,9 @@ type_thread_func monite(void *arg)
             }
             cur++;
         }
-        flg = (int)recv(rcv_sock, rcv_txt, 256, 0);
+        flg = (int)recv(rcv_sock, rcv_txt, BUFF_SIZE, 0);
         // rcv_txt: inc--8 bit crc_head, 24 bit username, 24 bit password.
-        if (qq != flg && flg != 0)
-        {
+        if (qq != flg && flg != 0) {
             if (flg <= -1 && flg != EWOULDBLOCK && flg != EAGAIN && flg != EINTR) {
                 set_user_quit(user.usr);
                 fprintf(stderr, "----------------------------------------------------------------\
@@ -330,8 +334,7 @@ type_thread_func monite(void *arg)
                 memcpy(&user, rcv_txt, sizeof(user));
                 fprintf(stdout, "----------------------------------------------------------------\
                 \n>>> 1-RCV [%0x,%0x]: %s, %d, %u\n", user.uiCmdMsg, static_cast<unsigned>(*user.chk), user.usr, flg, THREAD_NUM - g_threadNo_);
-                for (c = 0; c < flg; c++)
-                {
+                for (c = 0; c < flg; c++) {
                     if (c > 0 && c % 32 == 0)
                         fprintf(stdout, "\n");
                     fprintf(stdout, "%02x ", static_cast<unsigned char>(rcv_txt[c]));
@@ -340,34 +343,35 @@ type_thread_func monite(void *arg)
 #endif
             }
             ssize_t snres = -1;
-            char userName[24];
-            memset(userName, 0, 24);
-            memcpy(sd_bufs, &user, 2);
+            const int UsrSet = 8;
+            char userName[FiledSize];
+            memset(userName, 0, FiledSize);
+            memcpy(sd_bufs, &user, 2); // 2: head bytes
             if ((user.rsv == 0) && (user.uiCmdMsg == 0)) {
                 // user.usr: 8; user.psw: 32.
                 valrtn = new_user(user.usr, user.psw);
                 sprintf(sd_bufs + 2, "%x", NEVAL(valrtn + 1));
                 if (valrtn == -1) {
-                    sprintf(sd_bufs + 8, "New user: %s", user.usr);
+                    sprintf(sd_bufs + UsrSet, "New user: %s", user.usr);
                     join_zone(0, user.usr, (char*)("all"));
                     snres = send(rcv_sock, sd_bufs, 48, 0);
-                    fprintf(stdout, ">>> %s\n", sd_bufs + 8);
+                    fprintf(stdout, ">>> %s\n", sd_bufs + UsrSet);
                 } else if (valrtn == -2) {
-                    strcpy((sd_bufs + 8), "Too many users.");
+                    strcpy((sd_bufs + UsrSet), "Too many users.");
                     snres = send(rcv_sock, sd_bufs, 28, 0);
-                    fprintf(stdout, ">>> %s\n", sd_bufs + 8);
+                    fprintf(stdout, ">>> %s\n", sd_bufs + UsrSet);
                 } else if (valrtn >= 0) {
-                    strcpy((sd_bufs + 8), "User already exists.");
+                    strcpy((sd_bufs + UsrSet), "User already exists.");
                     snres = send(rcv_sock, sd_bufs, 32, 0);
-                    fprintf(stdout, ">>> %s\n", sd_bufs + 8);
+                    fprintf(stdout, ">>> %s\n", sd_bufs + UsrSet);
                 } else if (valrtn == -3) {
-                    strcpy((sd_bufs + 8), "Same user name exist.");
+                    strcpy((sd_bufs + UsrSet), "Same user name exist.");
                     snres = send(rcv_sock, sd_bufs, 32, 0);
-                    fprintf(stdout, ">>> %s\n", sd_bufs + 8);
+                    fprintf(stdout, ">>> %s\n", sd_bufs + UsrSet);
                 } else if (valrtn == -4) {
-                    strcpy((sd_bufs + 8), "User name error.");
+                    strcpy((sd_bufs + UsrSet), "User name error.");
                     snres = send(rcv_sock, sd_bufs, 32, 0);
-                    fprintf(stdout, ">>> %s\n", sd_bufs + 8);
+                    fprintf(stdout, ">>> %s\n", sd_bufs + UsrSet);
                 };
                 if (snres < 0) {
                     fprintf(stderr, "### Socket status: %s\n", strerror(errno));
@@ -378,19 +382,19 @@ type_thread_func monite(void *arg)
                 valrtn = user_auth(user.usr, user.psw);
                 sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
                 if (valrtn == (loggedin = 1)) {
-                    sprintf(sd_bufs + 8, "[%s] logging on successfully.", user.usr);
+                    sprintf(sd_bufs + UsrSet, "[%s] logging on successfully.", user.usr);
                     set_user_peer(user.usr, IP, PORT, rcv_sock);
                     Network sock;
                     static_cast<void>(memcpy((void*)sock.ip, IP, INET_ADDRSTRLEN)),
-                    static_cast<void>(sock.port = PORT),
+                        static_cast<void>(sock.port = PORT),
                         sock.socket = rcv_sock;
                     set_user_line(user.usr, sock);
-                    memcpy(userName, user.usr, 24);
+                    memcpy(userName, user.usr, FiledSize);
                     send(rcv_sock, sd_bufs, 64, 0);
                 } else if (valrtn == 0) {
-                    if (memcmp(user.usr, userName, 24) == 0) {
+                    if (memcmp(user.usr, userName, FiledSize) == 0) {
                         sprintf(sd_bufs + 2, "%x", NEVAL(-3));
-                        sprintf(sd_bufs + 8, "Another [%s] is on line.", user.usr);
+                        sprintf(sd_bufs + UsrSet, "Another [%s] is on line.", user.usr);
                         snres = send(rcv_sock, sd_bufs, 64, 0);
                         if (snres < 0) {
                             fprintf(stderr, "### User status: %s\n", strerror(errno));
@@ -400,23 +404,23 @@ type_thread_func monite(void *arg)
                             goto comm_err1;
 #endif
                         } else
-                            fprintf(stdout, ">>> %s\n", sd_bufs + 8);
+                            fprintf(stdout, ">>> %s\n", sd_bufs + UsrSet);
                         continue;
                     } else {
                         sprintf((sd_bufs + 2), "%02x", 0xe8);
-                        sprintf((sd_bufs + 8), "LoggingIn status invalid, will close this socket.");
+                        sprintf((sd_bufs + UsrSet), "LoggingIn status invalid, will close this socket.");
                         set_user_quit(user.usr);
                         send(rcv_sock, sd_bufs, 64, 0);
                         closesocket(rcv_sock);
-                        fprintf(stdout, ">>> %s\n", sd_bufs + 8);
+                        fprintf(stdout, ">>> %s\n", sd_bufs + UsrSet);
                         loggedin = 0;
                         continue;
                     }
                 } else if (valrtn < 0) {
                     sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
-                    strcpy((sd_bufs + 8), "Error: check username/password again.");
+                    strcpy((sd_bufs + UsrSet), "Error: check username/password again.");
                     send(rcv_sock, sd_bufs, 48, 0);
-                    fprintf(stdout, ">>> %s\n", sd_bufs + 8);
+                    fprintf(stdout, ">>> %s\n", sd_bufs + UsrSet);
                     continue;
                 } else {
                     fprintf(stdout, ">>> Unknown Error!\n");
@@ -424,15 +428,15 @@ type_thread_func monite(void *arg)
                 };
             } else if ((user.rsv == 0) && (user.uiCmdMsg == 0x3)) {
                 sprintf(sd_bufs + 2, "%x", NEVAL(-1));
-                strcpy((sd_bufs + 8), "Warning: user hasn't logged on yet.");
+                strcpy((sd_bufs + UsrSet), "Warning: user hasn't logged on yet.");
                 send(rcv_sock, sd_bufs, 48, 0);
-                fprintf(stdout, ">>> %s\n", sd_bufs + 8);
+                fprintf(stdout, ">>> %s\n", sd_bufs + UsrSet);
                 continue;
             } else {
-                strcpy((sd_bufs + 8), "Warning: please Register(0) or Login(1) at first.");
+                strcpy((sd_bufs + UsrSet), "Warning: please Register(0) or Login(1) at first.");
                 sprintf(sd_bufs + 2, "%x", NEVAL(-2));
                 send(rcv_sock, sd_bufs, 56, 0);
-                fprintf(stdout, ">>> %s\n", sd_bufs + 8);
+                fprintf(stdout, ">>> %s\n", sd_bufs + UsrSet);
                 continue;
             }
 #ifdef _DEBUG
@@ -456,7 +460,7 @@ type_thread_func monite(void *arg)
 #endif
                 }
                 memset(&user, 0, sizeof(user));
-                flg = (int)recv(rcv_sock, rcv_txt, 256, 0);
+                flg = (int)recv(rcv_sock, rcv_txt, BUFF_SIZE, 0);
                 if (flg < 0 && flg != EWOULDBLOCK && flg != EAGAIN && flg != EINTR) {
                     set_user_quit(userName);
                     fprintf(stderr, "### Lost connection with *[%s]: %s(%d)\n", userName, strerror(errno), flg);
@@ -487,8 +491,7 @@ type_thread_func monite(void *arg)
 #ifdef _DEBUG
                     fprintf(stdout, "----------------------------------------------------------------\
                     \n>>> 2-RCV [%d,%x]: %s, %d\n", user.uiCmdMsg, static_cast<unsigned>(*user.chk), user.usr, flg);
-                    for (c = 0; c < flg; c++)
-                    {
+                    for (c = 0; c < flg; c++) {
                         if (c > 0 && c % 32 == 0)
                             fprintf(stdout, "\n");
                         fprintf(stdout, "%02x ", static_cast<unsigned char>(rcv_txt[c]));
@@ -496,29 +499,28 @@ type_thread_func monite(void *arg)
                     fprintf(stdout, "\n");
 #endif
                 }
-                unsigned int sndlen = 256;
+                unsigned long sndlen = BUFF_SIZE;
                 memset(sd_bufs, 0, sndlen);
-                if (user.rsv == 0)
-                {
-                    switch (sd_bufs[1] = user.uiCmdMsg)
-                    {
+                if (user.rsv == 0) {
+                    switch (sd_bufs[1] = user.uiCmdMsg) {
                     case 0x01:
-                        strcpy((sd_bufs + 8), "User has already on-line.");
+                        strcpy((sd_bufs + UsrSet), "User has already on-line.");
                         sndlen = 48;
                         break;
                     case 0x2:
                         char mark[sizeof(user)];
                         sprintf(mark, "User: %s(--%s--);", user.usr, user.sign);
-                        snprintf((sd_bufs + 8), strlen(mark) + 1, "%s", mark);
-                        sndlen = 8 + (int)strlen(mark) + 1;
+                        snprintf((sd_bufs + UsrSet), strlen(mark) + 1, "%s", mark);
+                        sndlen = UsrSet + strlen(mark) + 1;
                         break;
                     case 0x3:
                     {
                         flg = loggedin = 0;
                         set_user_quit(userName);
-                        sprintf(sd_bufs + 8, "[%s] has logout.", userName);
+                        sprintf(sd_bufs + UsrSet, "[%s] has logout.", userName);
                         send(rcv_sock, sd_bufs, 48, 0);
-                        fprintf(stderr, "### [%0x, %x]: %s\n", sd_bufs[1], static_cast<unsigned>(*user.chk), sd_bufs + 8);
+                        fprintf(stderr, "### [%0x, %x]: %s\n", sd_bufs[1],
+                                static_cast<unsigned>(*user.chk), sd_bufs + UsrSet);
                         continue;
                     }
                     case 0x4:
@@ -528,29 +530,29 @@ type_thread_func monite(void *arg)
                         if (1 == user_auth(user.usr, user.psw) && &user.npsw[0] != nullptr)
                             strcpy(users[valrtn].psw, user.npsw);
                         else
-                            strcpy((sd_bufs + 8), "Change password failure: user auth error.");
+                            strcpy((sd_bufs + UsrSet), "Change password failure: user auth error.");
                         sndlen = 56;
                     } break;
                     case 0x5:
                     {
-                        strcpy((sd_bufs + 8), "Users on-line list:\n");
+                        strcpy((sd_bufs + UsrSet), "Users on-line list:\n");
                         for (c = 0; c < MAX_ACTIVE; c++) {
                             set_n_get_mem(&active[c], c);
                             if (strlen(active[c].user) > 0) {
                                 sprintf(sd_bufs + 2, "%x", c);
-                                strcpy((sd_bufs + 8 * (c + 4)), active[c].user);
-                                if ((sd_bufs + 8 * (c + 4) + 24) == (char*)'\0') {
-                                    memset(sd_bufs + 8 * (c + 4) + 24, '\t', 1);
+                                strcpy((sd_bufs + UsrSet * (c + 4)), active[c].user);
+                                if ((sd_bufs + UsrSet * (c + 4) + FiledSize) == (char*)'\0') {
+                                    memset(sd_bufs + UsrSet * (c + 4) + FiledSize, '\t', 1);
                                 }
                             } else if (active[c].user[0] == '\0')
                                 break;
                         };
-                        sndlen = 8 * (c + 4 + 4);
+                        sndlen = UsrSet * (c + 4 + 4);
                     } break;
                     case 0x6:
                     {
                         unsigned int uiIP = 0;
-                        strcpy((sd_bufs + 8), user.usr);
+                        strcpy((sd_bufs + UsrSet), user.usr);
                         valrtn = get_user_seq(user.peer);
                         if (valrtn >= 0) {
                             if (user_is_line(user.peer) >= 0) {
@@ -582,7 +584,7 @@ type_thread_func monite(void *arg)
                                     if (-1 != send(p2pnet.socket, sd_bufs, 108, 0)) {
                                         fprintf(stdout, "Have sent message to %s.\n", user.peer);
                                     } else {
-                                        memset(sd_bufs + 8, 0, 248);
+                                        memset(sd_bufs + UsrSet, 0, 248);
                                         sprintf(sd_bufs + 2, "%x", NEVAL(-1));
                                         sprintf((sd_bufs + 32), "failed send command to %s.", user.peer);
                                         send(rcv_sock, sd_bufs, sndlen, 0);
@@ -600,13 +602,13 @@ type_thread_func monite(void *arg)
                             sprintf((sd_bufs + 32), "Get user network: No such user(%s)!", user.peer);
                         }
                         sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
-                        unsigned char *val = reinterpret_cast<unsigned char *>(&uiIP);
+                        unsigned char* val = reinterpret_cast<unsigned char*>(&uiIP);
                         fprintf(stdout, ">>> get client peer [%u.%u.%u.%u:%s]\n", val[3], val[2], val[1], val[0], sd_bufs + 56);
                         sndlen = 96;
                     } break;
                     case 0x7:
                     {
-                        strcpy((sd_bufs + 8), user.usr);
+                        strcpy((sd_bufs + UsrSet), user.usr);
                         if (memcmp(user.chk, "NDT", 4) == 0) {
                             fprintf(stdout, "'%s' is communicating with '%s' via NDT.\n", user.usr, user.peer);
                         } else {
@@ -631,7 +633,7 @@ type_thread_func monite(void *arg)
                                     memcpy(ndtmsg, &user, 4);
                                     sprintf(ndtmsg + 4, "%c", random);
                                     strcpy((char*)&user.status, "200");
-                                    memcpy(ndtmsg + 8, &user.peer_mesg.msg, 24);
+                                    memcpy(ndtmsg + UsrSet, &user.peer_mesg.msg, FiledSize);
                                     if (-1 != send(ndtnet.socket, ndtmsg, 32, 0)) {
                                         if (ndtnet.socket == rcv_sock) {
                                             strcpy((sd_bufs + 32), "Socket descriptor conflicts!");
@@ -665,25 +667,24 @@ type_thread_func monite(void *arg)
                     case 0x8:
                     {
 #if !defined _WIN32
-                        char *mesg = NULL;
-                        if (vfork() == 0)
-                        {
+                        char* mesg = NULL;
+                        if (vfork() == 0) {
 #ifdef RASPI
 #undef GET_IMG_EXE
 #define GET_IMG_EXE "raspistill"
-#undef __ 
+#undef __
 #undef _0_
 #define __ ""
 #define _0_ ""
-                            char *const agv[] = { (char*)GET_IMG_EXE, (char*)"-o", (char*)IMAGE_BLOB, (char *)(0) };
+                            char* const agv[] = { (char*)GET_IMG_EXE, (char*)"-o", (char*)IMAGE_BLOB, (char*)(0) };
 #else
-                            char *const agv[] = { (char*)GET_IMG_EXE, (char *)(0) };
+                            char* const agv[] = { (char*)GET_IMG_EXE, (char*)(0) };
 #endif
                             valrtn = execvp(__ GET_IMG_EXE, agv);
                             mesg = strerror(errno);
                             sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
-                            strcpy((sd_bufs + 8), mesg);
-                            sndlen = 8 + (int)strlen(mesg) + 1;
+                            strcpy((sd_bufs + UsrSet), mesg);
+                            sndlen = UsrSet + (int)strlen(mesg) + 1;
                             fprintf(stdout, "Exec [ %s ] with execvp fail, %s.\n", __ GET_IMG_EXE, mesg);
                         } else {
                             wait(&valrtn);
@@ -697,98 +698,99 @@ type_thread_func monite(void *arg)
                                 }
                             }
                             sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
-                            strcpy((sd_bufs + 8), mesg);
-                            sndlen = 8 + (int)strlen(mesg) + 1;
+                            strcpy((sd_bufs + UsrSet), mesg);
+                            sndlen = UsrSet + (int)strlen(mesg) + 1;
                             fprintf(stdout, "Make image via '%s': %s.\n", __ GET_IMG_EXE, mesg);
                         }
 #else
-                        char *mesg = "OS don't support v4l.";
+                        char* mesg = "OS don't support v4l.";
                         sndlen = 32;
-                        strcpy((sd_bufs + 8), mesg);
+                        strcpy((sd_bufs + UsrSet), mesg);
                         fprintf(stdout, "%s\n", mesg);
 #endif
                     } break;
                     case 0x9:
                     {
-                        FILE * file = fopen(IMAGE_BLOB _0_, "rb");
-                        if (file == NULL)
-                        {
-                            sprintf((sd_bufs + 8), "Fail read image file \"%s\".", IMAGE_BLOB);
-                            fprintf(stdout, "%s\n", sd_bufs + 8);
-                            sndlen = 8 + strlen(IMAGE_BLOB) + 27;
+                        FILE* file = fopen(IMAGE_BLOB _0_, "rb");
+                        if (file == NULL) {
+                            sprintf((sd_bufs + UsrSet), "Fail read image file \"%s\".", IMAGE_BLOB);
+                            fprintf(stdout, "%s\n", sd_bufs + UsrSet);
+                            sndlen = UsrSet + strlen(IMAGE_BLOB) + 27;
                             break;
                         }
                         fseek(file, 0, SEEK_END);
                         long lSize = ftell(file);
                         rewind(file);
-                        int bytes = (int)(lSize / sizeof(unsigned char));
-                        if (bytes > 2097152)
-                            bytes = 4096;
-                        memset(sd_bufs + 8, bytes, 6);
-                        unsigned char *pos = (unsigned char*)malloc(sizeof(unsigned char)*bytes);
-                        if (pos == NULL)
-                        {
-                            sprintf((sd_bufs + 8), "Fail malloc for \"%s\".", IMAGE_BLOB);
-                            fprintf(stdout, "%s\n", sd_bufs + 8);
-                            sndlen = 8 + strlen(IMAGE_BLOB) + 24;
+                        size_t block = (size_t)(lSize / sizeof(unsigned char));
+                        if (block > 2097152)
+                            block = 4096;
+                        memset(sd_bufs + UsrSet, (int)lSize, 6);
+                        unsigned char* pos = (unsigned char*)malloc(sizeof(unsigned char) * block);
+                        if (pos == NULL) {
+                            sprintf((sd_bufs + UsrSet), "Fail malloc for \"%s\".", IMAGE_BLOB);
+                            fprintf(stdout, "%s\n", sd_bufs + UsrSet);
+                            sndlen = UsrSet + strlen(IMAGE_BLOB) + FiledSize;
                             break;
                         }
                         int slice = 0;
-                        while (int rcsz = fread(pos, sizeof(unsigned char), bytes, file) != 0 && !feof(file)) {
+                        size_t len = 0;
+                        constexpr int CHIP = 224;
+                        while (bool rcsz = ((len = fread(pos, sizeof(unsigned char), block, file)) != 0 && !feof(file))
+                               || (block > len && len > 0)) {
                             fprintf(stdout, "        "
-                                "File \"%s\" size = %d, item = %d, slice = %d.\r", IMAGE_BLOB, bytes, rcsz, slice);
+                                    "File \"%s\": total = %ld, slice = %d, read = %zu.\r", IMAGE_BLOB, lSize, slice, len);
                             sprintf((sd_bufs + 14), "%04d", slice);
                             memset(sd_bufs + 1, user.uiCmdMsg, 1);
-                            volatile int cur = 0;
-                            for (int i = 0; i <= bytes; ++i, ++cur) {
-                                if (((i > 0) && (i % 224 == 0)) || (i == bytes)) {
-                                    sprintf((sd_bufs + 22), "%04d", i);
-                                    send(rcv_sock, sd_bufs, 256, 0);
-                                    memset(sd_bufs + 32, 0, 224);
+                            volatile int offset = 0;
+                            for (size_t i = 0; i <= len; ++i, ++offset) {
+                                if (((i > 0) && (i % CHIP == 0)) || (i == len)) {
+                                    sprintf((sd_bufs + 22), "%04zu", i);
+                                    send(rcv_sock, sd_bufs, BUFF_SIZE, 0);
+                                    memset(sd_bufs + 32, 0, CHIP);
                                     SLEEP(1.0 / 10000);
-                                    cur = 0;
+                                    offset = 0;
                                 }
-                                memset(sd_bufs + 32 + cur, pos[i], 1);
-                                fprintf(stdout, /*"\r%*c*/"\r%.02f%% ", /*7, ' ',*/ i*100.f / bytes);
+                                memset(sd_bufs + 32 + offset, pos[i], 1);
+                                fprintf(stdout, /*"\r%*c*/"\r%.02f%% ", /*7, ' ',*/ i * 100.f / len);
                             }
                             slice++;
                         }
                         fprintf(stdout, "\r\n");
-                        free(pos);
                         fclose(file);
+                        free(pos);
                     }
                     break;
                     case 10:
                     {
-                        strcpy((sd_bufs + 8), "Active zone list: \n");
+                        strcpy((sd_bufs + UsrSet), "Active zone list: \n");
                         for (c = 0; c < MAX_ZONES; c++) {
                             if (strlen(zones[c].zone.name) >> 0) {
                                 sprintf(sd_bufs + 2, "%x", c);
-                                strcpy((sd_bufs + 8 * (c + 4)), zones[c].zone.name);
+                                strcpy((sd_bufs + UsrSet * (c + 4)), zones[c].zone.name);
                             };
                             if (zones[c].zone.name[0] == '\0')
                                 break;
                         };
-                        sndlen = 8 * (c + 4 + 3);
+                        sndlen = UsrSet * (c + 4 + 3);
                     } break;
                     case 11:
                     {
                         valrtn = find_zone(user.seek);
                         sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
                         if (valrtn == -2) {
-                            sprintf((sd_bufs + 8), "No such [%s] zone.", user.seek);
+                            sprintf((sd_bufs + UsrSet), "No such [%s] zone.", user.seek);
                             sndlen = 56;
                         } else {
                             memset(sd_bufs + 2, 0, 2);
-                            strcpy((sd_bufs + 8), "Member(s) of the zone:\n");
+                            strcpy((sd_bufs + UsrSet), "Member(s) of the zone:\n");
                             for (c = 0; c < MAX_MENBERS_PER_GROUP; c++) {
                                 if (strlen(zones[valrtn].zone.members[c]) >> 0) {
-                                    strcpy((sd_bufs + 8 * (c + 4)), zones[valrtn].zone.members[c]);
+                                    strcpy((sd_bufs + UsrSet * (c + 4)), zones[valrtn].zone.members[c]);
                                 };
                             };
                             if (valrtn == -1 || zones[valrtn].zone.members[c][0] == '\0')
                                 break;
-                            sndlen = 8 * (c + 4 + 4);
+                            sndlen = UsrSet * (c + 4 + 4);
                         };
                     } break;
                     case 12:
@@ -796,14 +798,14 @@ type_thread_func monite(void *arg)
                         valrtn = host_zone(user);
                         sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
                         if (valrtn == -2) {
-                            strcpy((sd_bufs + 8), "Host zone rejected.");
+                            strcpy((sd_bufs + UsrSet), "Host zone rejected.");
                             sndlen = 32;
                         } else if (valrtn < -2 && valrtn > -MAX_ZONES - 3) {
                             join_zone(((valrtn + 3 + MAX_ZONES)), user.usr, reinterpret_cast<char*>(user.join));
-                            sprintf((sd_bufs + 8), "%s exist, %s joins the zone.", user.host, user.usr);
+                            sprintf((sd_bufs + UsrSet), "%s exist, %s joins the zone.", user.host, user.usr);
                             sndlen = 88;
                         } else {
-                            sprintf((sd_bufs + 8), "Create zone '%s' as host.", user.host);
+                            sprintf((sd_bufs + UsrSet), "Create zone '%s' as host.", user.host);
                             sndlen = 64;
                         }
                     } break;
@@ -815,24 +817,24 @@ type_thread_func monite(void *arg)
                             sndlen = 48;
                             switch (valrtn) {
                             case -1:
-                                strcpy((sd_bufs + 8), "Can not find such zone name.");
+                                strcpy((sd_bufs + UsrSet), "Can not find such zone name.");
                                 break;
                             case -2:
-                                strcpy((sd_bufs + 8), "Limits: zone was full for new members.");
+                                strcpy((sd_bufs + UsrSet), "Limits: zone was full for new members.");
                                 break;
                             case -3:
-                                strcpy((sd_bufs + 8), "You have already joined this zone.");
+                                strcpy((sd_bufs + UsrSet), "You have already joined this zone.");
                                 break;
                             case -4:
-                                strcpy((sd_bufs + 8), "Wrong pass token to this zone.");
+                                strcpy((sd_bufs + UsrSet), "Wrong pass token to this zone.");
                                 break;
                             default:
-                                strcpy((sd_bufs + 8), "Unknown error.");
+                                strcpy((sd_bufs + UsrSet), "Unknown error.");
                                 break;
                             }
                         } else {
                             sndlen = 64;
-                            sprintf((sd_bufs + 8), "Joining zone (%s) success.", user.join);
+                            sprintf((sd_bufs + UsrSet), "Joining zone (%s) success.", user.join);
                         }
                     } break;
                     case 14:
@@ -841,9 +843,9 @@ type_thread_func monite(void *arg)
                         sprintf(sd_bufs + 2, "%x", NEVAL(valrtn));
                         sndlen = 42;
                         if (valrtn >= 0)
-                            strcpy((sd_bufs + 8), "Leave the zone success.");
+                            strcpy((sd_bufs + UsrSet), "Leave the zone success.");
                         else
-                            strcpy((sd_bufs + 8), "You aren't yet in this zone.");
+                            strcpy((sd_bufs + UsrSet), "You aren't yet in this zone.");
                     } break;
                     case 15:
                     {
@@ -854,18 +856,17 @@ type_thread_func monite(void *arg)
                         if (valrtn < 0) {
                             if (-1 != user_is_line(user.usr)) {
                                 sprintf(sd_bufs + 3, "%x", -1);
-                                strcpy((sd_bufs + 8), user.usr);
+                                strcpy((sd_bufs + UsrSet), user.usr);
                                 strcpy((sd_bufs + 32), user.sign);
                                 send(rcv_sock, sd_bufs, 48, 0);
                             };
                         } else {
                             for (c = 0; c < MAX_MENBERS_PER_GROUP; c++) {
-                                if (strlen(zones[valrtn].zone.members[c]) != 0)
-                                {
+                                if (strlen(zones[valrtn].zone.members[c]) != 0) {
                                     sprintf(sd_bufs + 3, "%x", -3);
                                     int uil = user_is_line(zones[valrtn].zone.members[c]);
                                     if (uil != -1) {
-                                        strcpy((sd_bufs + 8), user.usr);
+                                        strcpy((sd_bufs + UsrSet), user.usr);
                                         strcpy((sd_bufs + 32), user.sign);
                                         send(active[uil].netwk.socket, sd_bufs, 48, 0);
                                     }//if uil
@@ -876,8 +877,7 @@ type_thread_func monite(void *arg)
                     default: break;
                     }
                     if ((memcmp(user.chk, "P2P", 4) != 0) &&
-                        (send(rcv_sock, sd_bufs, sndlen, 0) < 0))
-                    {
+                        (send(rcv_sock, sd_bufs, sndlen, 0) < 0)) {
                         perror("Socket lost");
 #if defined _WIN32
                         return NULL;
@@ -911,22 +911,23 @@ type_thread_func monite(void *arg)
         SLEEP(99);
     } while (!loggedin);
 
-comm_err0: {
-    for (int i = 0; i < MAX_ACTIVE; i++)
-        set_n_get_mem(&active[i], i);
-    memset(active[user_is_line(user.usr)].user, 0, 24);
+comm_err0:
+    {
+        for (int i = 0; i < MAX_ACTIVE; i++)
+            set_n_get_mem(&active[i], i);
+        memset(active[user_is_line(user.usr)].user, 0, FiledSize);
     }
 #if !defined _WIN32
-           comm_err1 : {
-               g_threadNo_--;
-               closesocket(rcv_sock);
-               exit(errno);
-           }
+    comm_err1 : {
+        g_threadNo_--;
+        closesocket(rcv_sock);
+        exit(errno);
+    }
 #endif
-                       return 0;
-    };
+    return 0;
+};
 
-int inst_mesg(int argc, char * argv[])
+int inst_mesg(int argc, char* argv[])
 {
     int servport = DEFAULT_PORT;
     if (argc == 2 && atoi(argv[1]) != 0) {
@@ -1009,7 +1010,7 @@ int inst_mesg(int argc, char * argv[])
     int thrdcnt = 0;
     struct sockaddr_in listenAddr;
     socklen_t listenLen = static_cast<socklen_t>(sizeof(listenAddr));
-    getsockname(listen_socket, reinterpret_cast<struct sockaddr *>(&listenAddr), &listenLen);
+    getsockname(listen_socket, reinterpret_cast<struct sockaddr*>(&listenAddr), &listenLen);
     fprintf(stdout, "localhost listening [%s:%d].\n", inet_ntoa(listenAddr.sin_addr), servport);
 #if defined _SYS_WAIT_H || defined _SYS_WAIT_H_
     signal(SIGCHLD, &func_waitpid);
@@ -1031,13 +1032,12 @@ int inst_mesg(int argc, char * argv[])
 #endif
             std::cerr << "ERROR(" << errno << "): " << strerror(errno) << std::endl;
             return -1;
-        } else
-        {
+        } else {
             char IPdotdec[16];
 #ifdef _WIN32
             memcpy(IPdotdec, inet_ntoa(form.sin_addr), 16);
 #else
-            inet_ntop(AF_INET, (void *)&form.sin_addr, IPdotdec, 16);
+            inet_ntop(AF_INET, (void*)&form.sin_addr, IPdotdec, 16);
 #endif
             fprintf(stdout, "accept [%s] success.\n", IPdotdec);
         }
@@ -1067,8 +1067,7 @@ int inst_mesg(int argc, char * argv[])
             return -1;
         } else {
             int PID = 0;
-            if ((PID = fork()) == 0)
-            {
+            if ((PID = fork()) == 0) {
                 fprintf(stdout, "running child(%d) forks from Main process.\n", thrdcnt);
                 monite(&msg_socket);
             } else
@@ -1078,29 +1077,27 @@ int inst_mesg(int argc, char * argv[])
 #endif
         thrdcnt++;
         SLEEP(99);
-        } while (!aim2exit);
-        fprintf(stdout, ">>> Executing thread count = %d.\n", thrdcnt);
+    } while (!aim2exit);
+    fprintf(stdout, ">>> Executing thread count = %d.\n", thrdcnt);
 #ifdef THREAD_PER_CONN
-        while (true)
-            SLEEP(9);
+    while (true)
+        SLEEP(9);
 #endif
-        return 0;
-    }
-template<typename T> int set_n_get_mem(T* shmem, int ndx, int rw) {
+    return 0;
+}
+template<typename T> int set_n_get_mem(T * shmem, int ndx, int rw)
+{
     int shmids = -1;
     if (ndx > MAX_ACTIVE)
         return rw;
 #if defined _SYS_SHM_H || defined _SYS_SHM_H_
     pthread_mutex_trylock(&sendallow);
-    T *shared;
-    if ((shmids = shmget(IPCKEY, (MAX_ACTIVE * sizeof(T)), (0666 | IPCFLAG))) < 0)
-    {
-        if (EEXIST == errno)
-        {
+    T* shared;
+    if ((shmids = shmget(IPCKEY, (MAX_ACTIVE * sizeof(T)), (0666 | IPCFLAG))) < 0) {
+        if (EEXIST == errno) {
             shmids = shmget(IPCKEY, (MAX_ACTIVE * sizeof(T)), 0666);
             shared = (T*)shmat(shmids, NULL, 0);
-        } else
-        {
+        } else {
             fprintf(stderr, "fail to shmget.\n");
             exit(-1);
         }
@@ -1114,12 +1111,10 @@ template<typename T> int set_n_get_mem(T* shmem, int ndx, int rw) {
     } else if (rw + 1 == 0) {
         memset(shared + ndx * sizeof(T), 0, sizeof(T));
     } else {
-        if (shmdt(shared) == -1)
-        {
+        if (shmdt(shared) == -1) {
             fprintf(stderr, "shmdt: detach segment fail.\n");
         }
-        if (shmctl(shmids, IPC_RMID, 0) == -1)
-        {
+        if (shmctl(shmids, IPC_RMID, 0) == -1) {
             fprintf(stderr, "shmctl(IPC_RMID) fail.\n");
         }
     }
@@ -1127,7 +1122,8 @@ template<typename T> int set_n_get_mem(T* shmem, int ndx, int rw) {
 #endif
     return shmids;
 }
-void func_waitpid(int signo) {
+void func_waitpid(int signo)
+{
 #if defined _SYS_WAIT_H || defined _SYS_WAIT_H_
     int stat;
     pid_t pid;
@@ -1139,13 +1135,13 @@ void func_waitpid(int signo) {
     return;
 #endif
 }
-int queryNetworkParams(const char * username, Network & network, const int max)
+int queryNetworkParams(const char* username, Network & network, const int max)
 {
     struct ONLINE active[MAX_ACTIVE];
     memset(active, 0, sizeof(active));
     for (int c = 0; c < max; c++) {
         set_n_get_mem(&active[c], c);
-        if (memcmp(active[c].user, username, 24) == 0) {
+        if (memcmp(active[c].user, username, FiledSize) == 0) {
             memcpy((char*)network.ip, (char*)active[c].netwk.ip, INET_ADDRSTRLEN);
             network.port = active[c].netwk.port;
             network.socket = active[c].netwk.socket;
@@ -1170,9 +1166,9 @@ void wait(unsigned int tms)
     time.tv_usec = tms % 1000 * 1000;
     select(0, NULL, NULL, NULL, &time);
 }
-type_thread_func commands(void *arg)
+type_thread_func commands(void* arg)
 {
-    char optionstr[24], name[24];
+    char optionstr[FiledSize], name[FiledSize];
     do {
         scanf("%32s", reinterpret_cast<char*>(&optionstr));
         if (strcmp(optionstr, "quit") == 0) {
@@ -1213,9 +1209,10 @@ type_thread_func commands(void *arg)
     return NULL;
 };
 //save accounts to local file.
-int save_acnt() {
+int save_acnt()
+{
     flush_all();
-    FILE *dump = fopen(ACC_REC, "w");
+    FILE* dump = fopen(ACC_REC, "w");
     if (dump == nullptr)
         return -1;
     fwrite(users, sizeof(USER), MAX_USERS, dump);
@@ -1226,7 +1223,8 @@ int save_acnt() {
     return 0;
 };
 //load accounts from file system.
-int load_acnt() {
+int load_acnt()
+{
     flush_all();
     FILE* dump = fopen(ACC_REC, "r");
     if (dump == nullptr)
@@ -1239,12 +1237,12 @@ int load_acnt() {
     };
     flush_all();
 };
-int user_auth(char usr[24], char psw[24]) {
-    char *n = usr, *p = psw;
+int user_auth(char usr[FiledSize], char psw[FiledSize])
+{
+    char* n = usr, * p = psw;
     if (n == nullptr)
         return -1;
-    for (auto& user : users)
-    {
+    for (auto& user : users) {
         if ((strcmp(n, user.usr) == 0) && (strcmp(p, user.psw) == 0)) {
             if (user_is_line(n) == -1) {
                 return 1; //success
@@ -1256,20 +1254,20 @@ int user_auth(char usr[24], char psw[24]) {
     //wrong param
     return -2;
 };
-int new_user(char usr[24], char psw[24]) {
+int new_user(char usr[FiledSize], char psw[FiledSize])
+{
     if (usr[0] == '\0')
         return -4;
     if (0 <= get_user_seq(usr)) {
         return -3;
     }
-    char *n = usr;
-    char *p = psw;
+    char* n = usr;
+    char* p = psw;
     for (int i = 0; i < MAX_USERS; i++) {
         if (strcmp(n, users[i].usr) == 0)
             return i;
     }
-    for (auto& user : users)
-    {
+    for (auto& user : users) {
         if (user.usr[0] == '\0') {
             strcpy(user.usr, n);
             strcpy(user.psw, p);
@@ -1279,8 +1277,9 @@ int new_user(char usr[24], char psw[24]) {
     }
     return -2;
 };
-int user_is_line(char user[24]) {
-    char *tomatch = user;
+int user_is_line(char user[FiledSize])
+{
+    char* tomatch = user;
 #if !defined _WIN32
     struct ONLINE active[MAX_ACTIVE];  // = { 0, "" };
     memset(active, 0, sizeof(ONLINE) * MAX_ACTIVE);
@@ -1292,16 +1291,16 @@ int user_is_line(char user[24]) {
     }
     return -1;
 };
-int set_user_line(char user[24], Network& netwk) {
+int set_user_line(char user[FiledSize], Network & netwk)
+{
 #if !defined _WIN32
     struct ONLINE active[MAX_ACTIVE];  // = { 0, "" };
     memset(active, 0, sizeof(ONLINE) * MAX_ACTIVE);
 #endif
     for (int i = 0; i < MAX_ACTIVE; i++) {
         set_n_get_mem(&active[i], i);
-        if (active[i].user[0] == '\0')
-        {
-            memcpy(active[i].user, user, 24);
+        if (active[i].user[0] == '\0') {
+            memcpy(active[i].user, user, FiledSize);
             memcpy((char*)active[i].netwk.ip, (char*)netwk.ip, INET_ADDRSTRLEN);
             active[i].netwk.port = netwk.port;
             active[i].netwk.socket = netwk.socket;
@@ -1311,17 +1310,17 @@ int set_user_line(char user[24], Network& netwk) {
     }
     return 0;
 };
-int set_user_quit(char user[24]) {
-    char *u = user;
+int set_user_quit(char user[FiledSize])
+{
+    char* u = user;
 #if !defined _WIN32
     struct ONLINE active[MAX_ACTIVE];  // = { 0, "" };
     memset(active, 0, sizeof(active));
 #endif
     for (int i = 0; i < MAX_ACTIVE; i++) {
         set_n_get_mem(&active[i], i);
-        if (strcmp(u, active[i].user) == 0)
-        {
-            memset(active[i].user, 0, 24);
+        if (strcmp(u, active[i].user) == 0) {
+            memset(active[i].user, 0, FiledSize);
             memset((char*)active[i].netwk.ip, 0, INET_ADDRSTRLEN);
             active[i].netwk.socket = 0;
             active[i].netwk.port = 0;
@@ -1331,7 +1330,7 @@ int set_user_quit(char user[24]) {
     }
     return 0;
 }
-int set_user_peer(const char user[24], const char ip[INET_ADDRSTRLEN], const int port, type_socket sock)
+int set_user_peer(const char user[FiledSize], const char ip[INET_ADDRSTRLEN], const int port, type_socket sock)
 {
     const char* u = user;
     if (ip[0] == '\0')
@@ -1357,8 +1356,9 @@ int set_user_peer(const char user[24], const char ip[INET_ADDRSTRLEN], const int
     }
     return -4;
 }
-int get_user_seq(char user[24]) {
-    char *u = user;
+int get_user_seq(char user[FiledSize])
+{
+    char* u = user;
     if (u[0] == '\0')
         return -1;
     for (int i = 0; i < MAX_USERS; i++) {
@@ -1367,8 +1367,9 @@ int get_user_seq(char user[24]) {
     };
     return -2;
 };
-int find_zone(unsigned char basis[24]) {
-    char *x = (char*)basis;
+int find_zone(unsigned char basis[FiledSize])
+{
+    char* x = (char*)basis;
     if (x[0] == '\0')
         return -1;
     for (int i = 0; i < MAX_ZONES; i++) {
@@ -1382,9 +1383,10 @@ int find_zone(unsigned char basis[24]) {
 
     return -2;
 };
-int host_zone(USER &user) {
-    char *host = (char*)user.host;
-    unsigned char* brf = user.host + 24;
+int host_zone(USER & user)
+{
+    char* host = (char*)user.host;
+    unsigned char* brf = user.host + FiledSize;
     char* chief = user.usr;
     for (int i = 0; i < MAX_ZONES; i++) {
         if (strcmp(zones[i].zone.name, host) == 0) {
@@ -1400,9 +1402,10 @@ int host_zone(USER &user) {
     };
     return -2;
 };
-int join_zone(int at, char usr[24], char zone[24], char* cert) {
+int join_zone(int at, char usr[FiledSize], char zone[FiledSize], char* cert)
+{
     int i;
-    char *m = usr, *z = zone;
+    char* m = usr, * z = zone;
     if (at < 0)
         return -1;
     if (zones[at].zone.members[MAX_MENBERS_PER_GROUP - 1][0] != '\0')
@@ -1423,23 +1426,25 @@ int join_zone(int at, char usr[24], char zone[24], char* cert) {
     };
     return -4;
 };
-int exit_zone(int at, char usr[24]) {
-    char *m = usr;
+int exit_zone(int at, char usr[FiledSize])
+{
+    char* m = usr;
     if (at < 0)
         return -1;
     for (int i = 0; i < MAX_MENBERS_PER_GROUP; i++) {
         if (strcmp(zones[at].zone.members[i], m) == 0) {
-            memset(zones[at].zone.members[i], 0, 24);
+            memset(zones[at].zone.members[i], 0, FiledSize);
             return i;
         };
     };
     return -2;
 };
-int free_zone(int at, char host[24]) {
+int free_zone(int at, char host[FiledSize])
+{
     if (at < 0)
         return -1;
-    char *h = host;
-    zone_clazz *zo = &zones[at].zone;
+    char* h = host;
+    zone_clazz* zo = &zones[at].zone;
     if (strcmp(zo->chief, h) == 0) {
         memset(zo, 0, sizeof(zone_clazz));
         return 0;

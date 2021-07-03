@@ -15,7 +15,9 @@ client:
 	g++ $(FLAG) -I$(IMLOCAL) $(CLIENTFILES) -o $(GEN)/client.exe $(PTHD)
 Kai:
 	if [ ! -d "$(OBJ)" ]; then mkdir $(OBJ); fi;
-	g++ -c KaiSocket.cc -std=c++11 -lpthread
+	g++ -c KaiSocket.cc -std=c++11 -lpthread -Wno-c++11-narrowing
+	g++ KaiSocket.cc main.cpp -std=c++11 -pthread -DCLIENT -o client -Wno-c++11-narrowing
+	g++ KaiSocket.cc main.cpp -std=c++11 -pthread -o server -Wno-c++11-narrowing
 	mv *.o $(OBJ)/
 clean:
 	rm -f $(GEN)/IM.exe $(GEN)/client.exe $(OBJ)/*.o
