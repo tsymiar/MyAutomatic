@@ -27,25 +27,27 @@ typedef enum {
 } io_method;
 
 struct buffer {
-    void * start;
+    void* start;
     size_t length;
 };
 
-static char * dev_name = NULL;
+static char* dev_name = NULL;
 static io_method io = IO_METHOD_MMAP;
 static int fd = -1;
-struct buffer * buffers = NULL;
+struct buffer* buffers = NULL;
 static unsigned int n_buffers = 0;
 
-FILE *fp;
-char *filename = "test.yuv\0";
+FILE* fp;
+char* filename = "test.yuv\0";
 
-static void errno_exit(const char * s) {
+static void errno_exit(const char* s)
+{
     fprintf(stderr, "%s error %d, %s\n", s, errno, strerror(errno));
     exit(EXIT_FAILURE);
 }
 
-static int xioctl(int fd, int request, void * arg) {
+static int xioctl(int fd, int request, void* arg)
+{
     int r;
     do {
         r = ioctl(fd, request, arg);
@@ -53,11 +55,13 @@ static int xioctl(int fd, int request, void * arg) {
     return r;
 }
 
-static void process_image(const void * p, int size) {
+static void process_image(const void* p, int size)
+{
     fwrite(p, size, 1, fp);
 }
 
-static int read_frame(void) {
+static int read_frame(void)
+{
     struct v4l2_buffer buf;
     unsigned int i;
 
@@ -138,7 +142,7 @@ static int read_frame(void) {
 
         assert(i < n_buffers);
 
-        process_image((void *)buf.m.userptr, buf.length);
+        process_image((void*)buf.m.userptr, buf.length);
 
         if (-1 == xioctl(fd, VIDIOC_QBUF, &buf))
             errno_exit("VIDIOC_QBUF");
@@ -149,7 +153,8 @@ static int read_frame(void) {
     return 1;
 }
 
-static void mainloop(void) {
+static void mainloop(void)
+{
     unsigned int count;
 
     count = 100;
@@ -189,7 +194,8 @@ static void mainloop(void) {
     }
 }
 
-static void stop_capturing(void) {
+static void stop_capturing(void)
+{
     enum v4l2_buf_type type;
 
     switch (io) {
@@ -208,7 +214,8 @@ static void stop_capturing(void) {
     }
 }
 
-static void start_capturing(void) {
+static void start_capturing(void)
+{
     unsigned int i;
     enum v4l2_buf_type type;
 
@@ -263,7 +270,8 @@ static void start_capturing(void) {
     }
 }
 
-static void uninit_device(void) {
+static void uninit_device(void)
+{
     unsigned int i;
 
     switch (io) {
@@ -286,7 +294,8 @@ static void uninit_device(void) {
     free(buffers);
 }
 
-static void init_read(unsigned int buffer_size) {
+static void init_read(unsigned int buffer_size)
+{
     buffers = calloc(1, sizeof(*buffers));
 
     if (!buffers) {
@@ -303,7 +312,8 @@ static void init_read(unsigned int buffer_size) {
     }
 }
 
-static void init_mmap(void) {
+static void init_mmap(void)
+{
     struct v4l2_requestbuffers req;
 
     CLEAR(req);
@@ -317,8 +327,7 @@ static void init_mmap(void) {
             fprintf(stderr, "%s does not support "
                 "memory mapping\n", dev_name);
             exit(EXIT_FAILURE);
-        }
-        else {
+        } else {
             errno_exit("VIDIOC_REQBUFS");
         }
     }
@@ -357,7 +366,8 @@ static void init_mmap(void) {
     }
 }
 
-static void init_userp(unsigned int buffer_size) {
+static void init_userp(unsigned int buffer_size)
+{
     struct v4l2_requestbuffers req;
     unsigned int page_size;
 
@@ -375,8 +385,7 @@ static void init_userp(unsigned int buffer_size) {
             fprintf(stderr, "%s does not support "
                 "user pointer i/o\n", dev_name);
             exit(EXIT_FAILURE);
-        }
-        else {
+        } else {
             errno_exit("VIDIOC_REQBUFS");
         }
     }
@@ -400,7 +409,8 @@ static void init_userp(unsigned int buffer_size) {
     }
 }
 
-static void init_device(void) {
+static void init_device(void)
+{
     struct v4l2_capability cap;
     struct v4l2_cropcap cropcap;
     struct v4l2_crop crop;
@@ -411,8 +421,7 @@ static void init_device(void) {
         if (EINVAL == errno) {
             fprintf(stderr, "%s is no V4L2 device\n", dev_name);
             exit(EXIT_FAILURE);
-        }
-        else {
+        } else {
             errno_exit("VIDIOC_QUERYCAP");
         }
     }
@@ -461,8 +470,7 @@ static void init_device(void) {
                 break;
             }
         }
-    }
-    else {
+    } else {
         /* Errors ignored. */
     }
 
@@ -502,14 +510,16 @@ static void init_device(void) {
     }
 }
 
-static void close_device(void) {
+static void close_device(void)
+{
     if (-1 == close(fd))
         errno_exit("close");
 
     fd = -1;
 }
 
-static void open_device(void) {
+static void open_device(void)
+{
     struct stat st;
 
     if (-1 == stat(dev_name, &st)) {
@@ -532,7 +542,8 @@ static void open_device(void) {
     }
 }
 
-static void usage(FILE * fp, int argc, char ** argv) {
+static void usage(FILE* fp, int argc, char** argv)
+{
     fprintf(fp, "Usage: %s [options]\n\n"
         "Options:\n"
         "-d | --device name   Video device name [/dev/video]\n"
@@ -550,7 +561,8 @@ static const struct option long_options[] = { { "device", required_argument,
         NULL, 'm' }, { "read", no_argument, NULL, 'r' }, { "userp", no_argument,
         NULL, 'u' }, { 0, 0, 0, 0 } };
 
-int main(int argc, char ** argv) {
+int main(int argc, char** argv)
+{
     dev_name = "/dev/video0";
 
     for (;;) {

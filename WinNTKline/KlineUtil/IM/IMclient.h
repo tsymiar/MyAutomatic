@@ -36,7 +36,7 @@ typedef void* (*_beginthreadex_proc_type)(void*);
 typedef pthread_t Pthreadt;
 typedef struct WSADATA {
     char w;
-};
+} WsaData;
 #define MAX_PATH          260
 #define MB_OK                       0x00000000L
 #define INVALID_SOCKET  (SOCKET)(~0)
@@ -58,44 +58,56 @@ inline unsigned int _beginthreadex(
 {
     return pthread_create(__newthread, attr, start, arg);
 }
-inline int closesocket(SOCKET socket) {
+inline int closesocket(SOCKET socket)
+{
     return close(socket);
 }
-inline int Sleep(unsigned long t) {
+inline int Sleep(unsigned long t)
+{
     return usleep((int)1010.10f * (t));
 }
-inline char* strcpy_s(char(strDestination)[], char const* src) {
+inline char* strcpy_s(char(strDestination)[], char const* src)
+{
     return strcpy(strDestination, src);
 }
-inline int _countof(unsigned char* _Array) {
+inline int _countof(unsigned char* _Array)
+{
     return strlen((const char*)_Array) + 1;
 }
-inline char* _itoa(int val, char* str, int rdx) {
+inline char* _itoa(int val, char* str, int rdx)
+{
     sprintf(str, "%d", val);
     return str;
 }
-inline int InitializeCriticalSection(CRITICAL_SECTION* mutex) {
+inline int InitializeCriticalSection(CRITICAL_SECTION* mutex)
+{
     pthread_mutexattr_t attr;
     pthread_mutexattr_init(&attr);
     pthread_mutexattr_settype(&attr, PTHREAD_PROCESS_SHARED);
     return pthread_mutex_init(mutex, &attr);
 }
-inline int EnterCriticalSection(CRITICAL_SECTION* mutex) {
+inline int EnterCriticalSection(CRITICAL_SECTION* mutex)
+{
     return pthread_mutex_trylock(mutex);
 }
-inline int LeaveCriticalSection(CRITICAL_SECTION* mutex) {
+inline int LeaveCriticalSection(CRITICAL_SECTION* mutex)
+{
     return pthread_mutex_unlock(mutex);
 }
-inline int DeleteCriticalSection(CRITICAL_SECTION* mutex) {
+inline int DeleteCriticalSection(CRITICAL_SECTION* mutex)
+{
     return pthread_mutex_destroy(mutex);
 }
-inline int SetConsoleTitle(char* title) {
+inline int SetConsoleTitle(char* title)
+{
     return fprintf(stdout, "------ %s ------\n", title);
 }
-inline int MessageBox(int flag, char* message, char* title, int s) {
+inline int MessageBox(int flag, char* message, char* title, int s)
+{
     return fprintf(stdout, "------ %s ------\n>>>\t%s\n", title, message);
 }
-inline int WSAGetLastError() {
+inline int WSAGetLastError()
+{
     return errno;
 }
 inline int WSAStartup(int, WSADATA*) { return 0; }
@@ -107,13 +119,13 @@ constexpr char* filename = "NoNameFile";
 
 struct P2P_NETWORK
 {
-    SOCKET socket = NULL;
+    SOCKET socket = 0;
     sockaddr_in addr;
 };
 
 typedef struct CLIENT
 {
-    SOCKET sock = NULL;
+    SOCKET sock = 0;
     sockaddr_in srvaddr;
     CRITICAL_SECTION wrcon;
     char url[64];
@@ -131,7 +143,7 @@ typedef struct CLIENT
 } st_client;
 
 typedef struct IM_SOCK {
-    char addr[MAX_PATH] = { NULL };
+    char addr[MAX_PATH] = { '\0' };
     char form[80];
     char IP[16];
     unsigned int PORT;
@@ -238,23 +250,17 @@ inline int checkPswValid(char* str)
     int zz = 0;
     int zZ = 0;
     int z_ = 0;
-    for (int i = 0; i < (int)strlen(str); i++)
-    {
+    for (int i = 0; i < (int)strlen(str); i++) {
         char ansi = str[i];
-        if (ansi <= '9' && ansi >= '0')
-        {
+        if (ansi <= '9' && ansi >= '0') {
             z0 = 1;
-        } else if (ansi <= 'z' && ansi >= 'a')
-        {
+        } else if (ansi <= 'z' && ansi >= 'a') {
             zz = 1;
-        } else if (ansi <= 'Z' && ansi >= 'A')
-        {
+        } else if (ansi <= 'Z' && ansi >= 'A') {
             zZ = 1;
-        } else if (ansi > 127)
-        {
+        } else if (ansi > 127) {
             z_ = 0;
-        } else
-        {
+        } else {
             z_ = 1;
         }
     }

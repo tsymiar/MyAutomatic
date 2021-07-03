@@ -10,7 +10,8 @@ unsigned int __stdcall
 #else
 void*
 #endif
-runtime(void* param) {
+runtime(void* param)
+{
     static char srv_net[32];
     static char rcv_buf[256];
     CRITICAL_SECTION wrcon;
@@ -30,7 +31,7 @@ runtime(void* param) {
             sprintf(srv_net, "Connection lost!\n%s:%d", inet_ntoa(client->srvaddr.sin_addr), client->srvaddr.sin_port);
             char title[32];
             sprintf(title, "socket: %s", _itoa((int)client->sock, rcv_buf, 10));
-            MessageBox(NULL, srv_net, title, MB_OK);
+            MessageBox(0, srv_net, title, MB_OK);
             if (rcvlen == -1) {
                 client->flag = -1;
                 closesocket(client->sock);
@@ -43,7 +44,8 @@ runtime(void* param) {
     };
 };
 
-int InitChat(st_sock* sock) {
+int InitChat(st_sock* sock)
+{
     SetConsoleTitle("client v0.1");
     WSADATA wsaData;
     int erno = WSAStartup(0x202, &wsaData);
@@ -57,7 +59,7 @@ int InitChat(st_sock* sock) {
     memset(ipaddr, 0, 16);
     if (sock == NULL || sock->IP[0] == '\0' || sock->IP[0] < 0) {
         fprintf_s(stdout, "Current OS is %d bit.\nNow enter server address: ", (int)(sizeof(void*) * 8));
-        scanf_s("%s", &ipaddr, 16);
+        scanf_s("%s", (char*)&ipaddr, 16);
         if (*ipaddr != 0) {
             memcpy(socks.IP, &ipaddr, 16);
         }
@@ -186,7 +188,7 @@ int SetClientDlg(void* Wnd)
 int SendChatMesg(st_trans* msg)
 {
     if (client.flag < 0) {
-        MessageBox(NULL, "Connection status error, will exit!", "Quit", MB_OK);
+        MessageBox(0, "Connection status error, will exit!", "Quit", MB_OK);
         return (client.erno = -1);
     }
     int len = sizeof(trans);
@@ -199,8 +201,7 @@ int SendChatMesg(st_trans* msg)
         send(client.sock, (char*)&trans, len, 0);
         return -1;
     }
-    if (client.last.lastuser != NULL && client.last.lastgrop[0] != NULL)
-    {
+    if (client.last.lastuser[0] != 0 && client.last.lastgrop[0] != 0) {
         memcpy(trans.username, client.last.lastuser, 24);
         memcpy(trans.group_name, client.last.lastgrop, 24);
     }
@@ -218,9 +219,8 @@ RecvThreadProc(void* PrimaryUDP)
     int MAX_PACKET_SIZE = 256;
     P2P_NETWORK* P2Psock = reinterpret_cast<P2P_NETWORK*>(PrimaryUDP);
     int len = sizeof(P2Psock->addr);
-    for (;;)
-    {
-        if (client.flag == 0 || P2Psock->socket == NULL)
+    for (;;) {
+        if (client.flag == 0 || P2Psock->socket == 0)
             continue;
         char recvbuf[256];
         memset(recvbuf, 0, 256);
@@ -231,8 +231,7 @@ RecvThreadProc(void* PrimaryUDP)
             (socklen_t*)(&len)
 #endif
         );
-        if (ret <= 0)
-        {
+        if (ret <= 0) {
             if (client.count < 3) {
                 fprintf(stdout, "Recieve No Message: %s!\n", strerror(ret));
             } else {
@@ -254,8 +253,7 @@ RecvThreadProc(void* PrimaryUDP)
             fprintf(stdout, "Message from [%s:%d] >>\n", inet_ntoa(peer), port);
             fprintf(stdout, "----------------------------------------------------------------\n");
             int c = 0;
-            for (c = 0; c < ret; c++)
-            {
+            for (c = 0; c < ret; c++) {
                 if (c > 0 && c % 32 == 0)
                     fprintf(stdout, "\n");
                 fprintf(stdout, "%02x ", (unsigned char)recvbuf[c]);
@@ -275,8 +273,7 @@ RecvThreadProc(void* PrimaryUDP)
 int p2pMessage(unsigned char* userName, int UserIP, unsigned int UserPort, char const* Message)
 {
     SOCKET PrimaryUDP = socket(AF_INET, SOCK_DGRAM, 0);
-    if (PrimaryUDP < 0)
-    {
+    if (PrimaryUDP < 0) {
         std::cout << "UDP socket error!" << std::endl;
         return 0;
     }
@@ -287,13 +284,11 @@ int p2pMessage(unsigned char* userName, int UserIP, unsigned int UserPort, char 
     int bOptval = 1; // 端口复用
     int retSetsockopt = setsockopt(PrimaryUDP, SOL_SOCKET, SO_REUSEADDR, (char*)&bOptval, sizeof(bOptval));
     int MAXRETRY = 5;
-    if (SOCKET_ERROR == retSetsockopt)
-    {
+    if (SOCKET_ERROR == retSetsockopt) {
         std::cout << "setsockopt() error!" << std::endl;
         return 0;
     }
-    if (bind(PrimaryUDP, (const sockaddr*)&addr, (int)sizeof(addr)) < 0)
-    {
+    if (bind(PrimaryUDP, (const sockaddr*)&addr, (int)sizeof(addr)) < 0) {
         std::cout << "socket binding failure!" << std::endl;
         return 0;
     }
@@ -309,8 +304,7 @@ int p2pMessage(unsigned char* userName, int UserIP, unsigned int UserPort, char 
         //请求服务器“打洞”
         SendChatMesg(&MessageHost);
     }
-    for (int trytime = 0; trytime < MAXRETRY; trytime++)
-    {
+    for (int trytime = 0; trytime < MAXRETRY; trytime++) {
         sockaddr_in remote;
         remote.sin_family = AF_INET;
         remote.sin_port = htons(UserPort);
@@ -345,8 +339,7 @@ int p2pMessage(unsigned char* userName, int UserIP, unsigned int UserPort, char 
         }
         client.count++;
         //等待接收消息线程修改标志
-        for (int i = 0; i < 10; i++)
-        {
+        for (int i = 0; i < 10; i++) {
             if (client.flag >= 0 && client.flag < 2)
                 Sleep(300);
             else

@@ -1,7 +1,5 @@
-#include <stdlib.h>
-#include <stdint.h>
+#pragma once
 #include <unistd.h>
-#include <stdio.h>
 #include <getopt.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -11,12 +9,15 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/select.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <stdio.h>
 #include <errno.h>
 #include <termios.h>
 
 #define TIME_WAIT 10000
 #define MAX_BUF_LEN	1024
-const char *PortName = "/dev/ttyUSB0";
+const char* PortName = "/dev/ttyUSB0";
 
 const char ME909Arguments[11][49] = {
     "ATZ",
@@ -32,19 +33,21 @@ const char ME909Arguments[11][49] = {
     "ATDT*99***1#"
 };
 
-int start_pppd() {
+int start_pppd()
+{
     return 0;
 }
 
-int mem_usb_check() {
+int mem_usb_check()
+{
     FILE* fusb = fopen("/sys/kernel/debug/usb/devices", "r");
     if (fusb == NULL) {
         perror("WARN: fail to read usb list file");
         return -1;
     }
-    char* vendor, *prodid;
+    char* vendor, * prodid;
     size_t maxlinesize = 256;
-    char* strperline = (char *)malloc(maxlinesize);
+    char* strperline = (char*)malloc(maxlinesize);
     while (!feof(fusb)
         && fgets(strperline, maxlinesize - 1, fusb) != NULL
         && strperline[strlen(strperline) - 1] == '\n') {
@@ -64,7 +67,7 @@ int mem_usb_check() {
     return -2;
 }
 
-int main(int argc, char **argv)
+int mes_main(int argc, char** argv)
 {
     fd_set rdfds;
     FD_ZERO(&rdfds);
@@ -115,8 +118,7 @@ int main(int argc, char **argv)
         printf("Serial of %s being ready...\n", PortName);
     }
 
-    while (!flag)
-    {
+    while (!flag) {
         int ret = select(STDIN_FILENO + 1, &rdfds, NULL, NULL, &tv);
         if (ret < 0) {
             perror("select");
