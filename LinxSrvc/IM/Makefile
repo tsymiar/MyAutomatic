@@ -17,10 +17,9 @@ client:
 	$(CXX) $(FLAG) -I$(IMLOCAL) $(CLIENTFILES) -o $(GEN)/Client.exe $(PTHD)
 Kai:
 	if [ ! -d "$(OBJ)" ]; then mkdir $(OBJ); fi;
-	$(CXX) -c KaiSocket.cc $(FLAG) $(PTHD) $(EXP)
-	$(CXX) KaiSocket.cc main.cpp $(FLAG) $(PTHD) -DCLIENT -o client.exe $(EXP)
-	$(CXX) KaiSocket.cc main.cpp $(FLAG) $(PTHD) -o server.exe $(EXP)
+	$(CXX) -c $(CUR)/KaiSocket.cc  $(FLAG) $(PTHD) $(EXP)
+	$(CXX) -g $(CUR)/KaiSocket.cc $(CUR)/main.cpp $(FLAG) $(PTHD) -DCLIENT -o $(GEN)/kaiclient $(EXP)
+	$(CXX) -g $(CUR)/KaiSocket.cc $(CUR)/main.cpp $(FLAG) $(PTHD) -o $(GEN)/kaiserver $(EXP)
 	mv *.o $(OBJ)/
 clean:
-	rm -f $(GEN)/IM.exe $(GEN)/Client.exe $(OBJ)/*.o
-	rm -f *.exe
+	rm -rf $(GEN)/IM.exe* $(GEN)/client.exe* $(OBJ)/*.o $(GEN)/kai*

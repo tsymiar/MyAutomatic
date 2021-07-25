@@ -35,6 +35,7 @@ Project("{911E67C6-3D85-4FCE-B560-20A9C3E3FF48}") = "cmd", "C:\Windows\System32\
 		UseLegacyDebugEngines = No
 		LaunchSQLEngine = No
 		AttachLaunchAction = No
+		IORedirection = Auto
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MFCKline", "MFCKline\MFCKline.vcxproj", "{C0FF2B6D-EDD9-4E65-8CA8-1C4968F76D48}"
@@ -46,6 +47,15 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "hdware", "..\LinxSrvc\hdware\hdware.vcxproj", "{85D69618-98CA-4A50-B519-9EA287F2D226}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IM(Win32)", "IMclient\client.vcxproj", "{6B864007-F9E8-4469-92BA-2387CCEB1573}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "authorize", "authorize", "{E87A52AC-DBC1-404D-9B81-B10AF13E5A12}"
+	ProjectSection(SolutionItems) = preProject
+		..\LinxSrvc\AuthAgent\AuthAgent.cpp = ..\LinxSrvc\AuthAgent\AuthAgent.cpp
+		..\LinxSrvc\AuthAgent\HttpEvent.cpp = ..\LinxSrvc\AuthAgent\HttpEvent.cpp
+		..\LinxSrvc\AuthAgent\AuthAgent.h = ..\LinxSrvc\AuthAgent\AuthAgent.h
+		..\LinxSrvc\AuthAgent\Logging.h = ..\LinxSrvc\AuthAgent\Logging.h
+		..\LinxSrvc\AuthAgent\CMakeLists.txt = ..\LinxSrvc\AuthAgent\CMakeLists.txt
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -227,6 +237,7 @@ Global
 		{8FFF2EFE-1196-43BA-A3F3-A0B377628DAF} = {929677BC-1A53-4CD4-B120-259D6A7FDBDB}
 		{85D69618-98CA-4A50-B519-9EA287F2D226} = {9AF30FB0-9135-4EBA-B07E-16B1F1D98C76}
 		{6B864007-F9E8-4469-92BA-2387CCEB1573} = {929677BC-1A53-4CD4-B120-259D6A7FDBDB}
+		{E87A52AC-DBC1-404D-9B81-B10AF13E5A12} = {9AF30FB0-9135-4EBA-B07E-16B1F1D98C76}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {93EEEDB3-53AB-4CDD-B9D0-EA6E1F28D058}
