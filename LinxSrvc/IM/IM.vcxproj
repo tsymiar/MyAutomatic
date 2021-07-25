@@ -108,12 +108,13 @@
     <IntDir>$(ProjectDir)..\obj\$(Platform)\</IntDir>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="KaiSocket.md" />
+    <None Include="readme.md" />
     <None Include="Makefile" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\WinNTKline\KlineUtil\IM\IM.cc" />
     <ClCompile Include="KaiSocket.cc" />
+    <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="KaiSocket.h" />
