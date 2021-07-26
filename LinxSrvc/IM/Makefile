@@ -2,8 +2,10 @@ EXP =
 CUR = `pwd`
 GEN = $(CUR)/../bin
 OBJ = $(CUR)/../obj
-CXX = $(shell bash -c "if [[ \"$(command -v nvcc >/dev/null 2>&1 || { echo g++; EXP=-Wno-c++11-narrowing; })\" == \"\" ]];then echo nvcc;fi;")
-FLAG = -g -std=c++11 -D_DEBUG 
+#CXX = $(shell bash -c "if [[ \"$(command -v nvcc >/dev/null 2>&1 || { echo g++; EXP=-Wno-c++11-narrowing; })\" == \"\" ]];then echo nvcc;else echo g++;fi;")
+CXX = g++ #clang nvcc
+EXP = -Wno-c++11-narrowing
+FLAG = -g -std=c++11 -D_DEBUG
 PTHD = -lpthread
 IMLOCAL=../../WinNTKline/KlineUtil/IM
 IMFILE=$(IMLOCAL)/IM.cc

@@ -14,4 +14,4 @@ all:
 	make me909
 #	make test
 clean:
-	rm -f $(GEN)/v4l2.exe $(GEN)/gpio.exe $(GEN)/me909.exe $(GEN)/routine.exe
+	rm -vf $(GEN)/v4l2.exe $(GEN)/gpio.exe $(GEN)/me909.exe $(GEN)/routine.exe
