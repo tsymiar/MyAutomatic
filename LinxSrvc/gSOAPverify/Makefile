@@ -47,5 +47,5 @@ clear:
 	rm -f ./*.o ./core.* $(PRJ)/*.o `ls *.o | egrep -v soapC.o stdsoap2.o soapServer.o`
 	rm -rf $(GEN) $(OBJ)
 	rm -f /etc/init.d/gSOAPverify /usr/sbin/gSOAPverify
-	rm -rf S77_SOAP \
+	rm -rvf S77_SOAP \
 	y

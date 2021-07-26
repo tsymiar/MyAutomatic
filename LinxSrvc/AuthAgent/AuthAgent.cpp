@@ -7,12 +7,14 @@ using namespace std;
 
 int main(int argc, char** argv)
 {
-    if (argc > 1) {
-        Message("usage: %s", argv[1]);
-        return 1;
+    int i = 0;
+    Message("usage: ");
+    while (i < argc) {
+        Message("%s", argv[i]);
+        i++;
     }
 
-    StartServer(8081);
+    StartServer(8080);
 
     cout << "Hello CMake." << endl;
     return 0;

@@ -35,7 +35,7 @@ QtCases/QtCases
 QtCases/moc_*
 QtCases/ui_*
 */Debug
-/.vs
+/.vs*
 *.tlog
 *.log
 *.patch

@@ -1,7 +1,9 @@
 all:
 	make -C IM all
 	make -C hdware all
+	make -C AuthAgent build
 	make -C gSOAPverify
 clean:
-	rm -rf bin/*.exe *.o obj
+	make -C AuthAgent cleanAll
 	make -C gSOAPverify clean
+	rm -rvf bin/*.exe* obj

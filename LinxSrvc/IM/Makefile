@@ -2,7 +2,7 @@ EXP =
 CUR = `pwd`
 GEN = $(CUR)/../bin
 OBJ = $(CUR)/../obj
-CXX =$(shell bash -c "if [[ \"$(command -v nvcc >/dev/null 2>&1 || { echo g++; EXP=-Wno-c++11-narrowing; })\" == \"\" ]];then echo nvcc;fi;")
+CXX = $(shell bash -c "if [[ \"$(command -v nvcc >/dev/null 2>&1 || { echo g++; EXP=-Wno-c++11-narrowing; })\" == \"\" ]];then echo nvcc;fi;")
 FLAG = -g -std=c++11 -D_DEBUG 
 PTHD = -lpthread
 IMLOCAL=../../WinNTKline/KlineUtil/IM
@@ -18,8 +18,7 @@ client:
 Kai:
 	if [ ! -d "$(OBJ)" ]; then mkdir $(OBJ); fi;
 	$(CXX) -c $(CUR)/KaiSocket.cc  $(FLAG) $(PTHD) $(EXP)
-	$(CXX) -g $(CUR)/KaiSocket.cc $(CUR)/main.cpp $(FLAG) $(PTHD) -DCLIENT -o $(GEN)/kaiclient $(EXP)
-	$(CXX) -g $(CUR)/KaiSocket.cc $(CUR)/main.cpp $(FLAG) $(PTHD) -o $(GEN)/kaiserver $(EXP)
+	$(CXX) -g $(CUR)/KaiSocket.cc $(CUR)/main.cpp $(FLAG) $(PTHD) -o $(GEN)/kaics.exe $(EXP)
 	mv *.o $(OBJ)/
 clean:
-	rm -rf $(GEN)/IM.exe* $(GEN)/client.exe* $(OBJ)/*.o $(GEN)/kai*
+	rm -rvf $(GEN)/*.exe* $(OBJ)
