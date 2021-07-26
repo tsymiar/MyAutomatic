@@ -28,14 +28,18 @@
 *.app
 
 #Others
-WinNTKline/MfcUtil/image/timg.png
+WinNTKline/MfcUtil/image/taoxi.png
 WinNTKline/test/testUtils
+WinNTKline/test/IM/acnts
+LinxSrvc/*/build
 QtCases/GeneratedFiles
 QtCases/QtCases
 QtCases/moc_*
 QtCases/ui_*
 */Debug
 /.vs*
+*/obj
+*bin
 *.tlog
 *.log
 *.patch
@@ -48,9 +52,5 @@ QtCases/ui_*
 *.pdb
 *.merged
 *.recipe
-WinNTKline/MfcUtil/image/taoxi.png
-WinNTKline/test/IM/acnts
-*/obj/
-*bin/
 .DS_Store
 *.xcuserstate

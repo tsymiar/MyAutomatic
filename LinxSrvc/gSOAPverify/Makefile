@@ -1,6 +1,6 @@
 CUR = `pwd`
-OBJ = ../obj
 GEN = $(CUR)/bin
+OBJ = $(CUR)../obj
 PRJ = $(OBJ)/gSOAPverify
 FILE= ./soap/myweb.wsdl
 FLAG= -Wall -g
@@ -45,7 +45,7 @@ clean:
 	rm -f ./*.o ./core.* $(GEN)/*.a $(GEN)/*.out $(GEN)/core.* $(PRJ)/*.o
 clear:
 	rm -f ./*.o ./core.* $(PRJ)/*.o `ls *.o | egrep -v soapC.o stdsoap2.o soapServer.o`
-	rm -rf $(GEN) $(OBJ)
+	rm -rvf $(GEN) $(OBJ)
 	rm -f /etc/init.d/gSOAPverify /usr/sbin/gSOAPverify
 	rm -rvf S77_SOAP \
 	y

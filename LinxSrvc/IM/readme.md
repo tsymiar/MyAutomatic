@@ -5,8 +5,7 @@ First of all, create a new instance with sentence `KaiSocket* server = new KaiSo
 * e.g:
 ```c
 #include "KaiSocket.h"
-#include <string.h>
-#include <unistd.h>
+
 int reciever(KaiSocket* kaisock) {
     char* rcv_txt = new char[64];
     memset(rcv_txt, 0, 64);

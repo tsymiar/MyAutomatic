@@ -1,6 +1,6 @@
 <h1 align = "center">MyAutomatic</h1>
 
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/6ec2893324eb4264b03f146e178affea)](https://www.codacy.com/app/tsymiar/MyAutomatic?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=tsymiar/MyAutomatic&amp;utm_campaign=Badge_Grade) [![996.icu](https://img.shields.io/badge/link-996.icu-red.svg)](https://996.icu)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/af21f03e75a14429a74a0ec437d41993)](https://www.codacy.com/gh/tsymiar/MyAutomatic/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=tsymiar/MyAutomatic&amp;utm_campaign=Badge_Grade) [![996.icu](https://img.shields.io/badge/link-996.icu-red.svg)](https://996.icu)
 
 ##### This is MyAutomatic, including subprojects below ⇣
 
