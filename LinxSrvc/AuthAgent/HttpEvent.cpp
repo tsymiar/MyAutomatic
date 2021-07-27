@@ -3,6 +3,7 @@
 #include <string.h>
 #include <sys/queue.h>
 #include <string>
+#include <vector>
 
 #include "event2/http.h"
 #include "event2/http_struct.h"
@@ -14,6 +15,13 @@
 #include "event2/buffer_compat.h"
 
 #include "Logging.h"
+#include "utils.h"
+
+using namespace std;
+
+vector<const char*> headList = {
+    "server",
+};
 
 int StartClient(const char* url, const char* filename = NULL);
 
@@ -36,10 +44,11 @@ int ReadHeaderDoneCallback(struct evhttp_request* remote_rsp, void* arg)
 
 void ReadChunkCallback(struct evhttp_request* remote_rsp, void* arg)
 {
-    char buf[4096];
+    const int len = 4096;
+    char buf[len];
     struct evbuffer* evbuf = evhttp_request_get_input_buffer(remote_rsp);
     int n = 0;
-    while ((n = evbuffer_remove(evbuf, buf, 4096)) > 0) {
+    while ((n = evbuffer_remove(evbuf, buf, len)) > 0) {
         fwrite(buf, n, 1, stdout);
     }
 }
@@ -201,23 +210,41 @@ void GenericHandler(struct evhttp_request* req, void* arg)
     Message("request url: %s", dec_uri);
     struct evkeyvalq head;
     evhttp_parse_query(dec_uri, &head);
-    const char* param = evhttp_find_header(&head, "server");
-    Message("request param: server = %s", param);
-    param = (param == NULL ? "" : param);
-    std::string ip;
-    char* post_data;
-    std::string server(param);
-    size_t pos = (server.empty() ? 0 : server.find(":"));
+    string url = dec_uri;
+    free(dec_uri);
+    vector<string> list = parseUri(url);
+    for (auto it = list.begin(); it != list.end(); ++it) {
+        Message("%s", it->c_str());
+    }
+    char* post_data = NULL;
+    string ip = "";
+    string sport = "";
+    uint32_t port = 0;
+    string server("");
+    for (auto it = headList.begin(); it != headList.end(); ++it) {
+        const char* ptr = evhttp_find_header(&head, *it);
+        if (ptr == NULL) continue;
+        string val(ptr);
+        size_t len = val.size();
+        Message("request param: %s = %s", *it, val.c_str());
+        if (string(*it) == "server") {
+            server = val;
+        }
+    }
+    ssize_t pos = (server.empty() ? 0 : server.find(":"));
     if (pos <= 0) {
         Error("can't find ':' in '%s'!", server.c_str());
         goto success;
         return;
     }
     ip = server.substr(0, pos);
-    Message("request ip = %s", ip.c_str());
+    sport = server.substr(pos + 1, server.size() - 1);
+    if (isNum(sport)) {
+        port = atoi(sport.c_str());
+    }
+    Message("request from %s:%d", ip.c_str(), port);
     post_data = (char*)EVBUFFER_DATA(req->input_buffer);
     Message("request post_data = %s", post_data);
-    free(dec_uri);
     goto success;
 
 success:

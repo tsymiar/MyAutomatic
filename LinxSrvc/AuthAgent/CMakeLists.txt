@@ -5,25 +5,30 @@ project ("AuthAgent")
 set(TARGET AuthAgent)
 
 add_executable (${TARGET}
-	"AuthAgent.cpp"
-	"HttpEvent.cpp"
+    AuthAgent.cpp
+    HttpEvent.cpp
 )
 
-include_directories (${WITH_EVENT}/include)
+include_directories (
+    /usr/local/include
+    /usr/include
+)
 
-find_library(EVENT_LIB event ${WITH_EVENT}/lib /usr/local/lib NOTFOUND)
+find_library(EVENT_LIB event ${APPOINT_EVENT}/lib /usr/lib /usr/local/lib NOTFOUND)
+
+add_definitions(-std=c++11)
 
 target_link_libraries (${TARGET}
-	-fPIC
-	-Wall
-	-ggdb
-	${EVENT_LIB}
+    -fPIC
+    -Wall
+    -ggdb
+    ${EVENT_LIB}
 )
 
 if (DEFINED ENV{WITH_LEVELDB})
-	include_directories (${WITH_LEVELDB}/include)
-	find_library(LEVELDB_LIB leveldb ${WITH_LEVELDB}/lib /usr/local/lib NOTFOUND)
-	if (NOT LEVELDB_LIB STREQUAL "LEVELDB_LIB-NOTFOUND")
-		target_link_libraries (${TARGET} ${LEVELDB_LIB})
-	endif()
+    include_directories (${WITH_LEVELDB}/include)
+    find_library(LEVELDB_LIB leveldb ${WITH_LEVELDB}/lib /usr/local/lib NOTFOUND)
+    if (NOT LEVELDB_LIB STREQUAL "LEVELDB_LIB-NOTFOUND")
+        target_link_libraries (${TARGET} ${LEVELDB_LIB})
+    endif()
 endif()

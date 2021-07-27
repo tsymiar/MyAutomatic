@@ -1,6 +1,6 @@
 CUR = `pwd`
 GEN = $(CUR)/bin
-OBJ = $(CUR)../obj
+OBJ = $(CUR)/../obj
 PRJ = $(OBJ)/gSOAPverify
 FILE= ./soap/myweb.wsdl
 FLAG= -Wall -g
