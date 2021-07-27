@@ -7,7 +7,7 @@ EXECUTALBE:=$(PROJECT_BASE)/../bin/$(TARGET)
 
 $(BUILD_PATH)/Makefile:
 	mkdir -p $(BUILD_PATH) && cd $(BUILD_PATH) \
-	&& cmake $(PROJECT_BASE) -DWITH_EVENT=/usr/local/Cellar/libevent/2.1.12
+	&& cmake $(PROJECT_BASE) -DAPPOINT_EVENT=/usr/local
 
 $(EXECUTALBE):$(BUILD_PATH)/Makefile
 	$(MAKE_COMMAND) -C $(BUILD_PATH)

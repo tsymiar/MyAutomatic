@@ -37,6 +37,7 @@ QtCases/QtCases
 QtCases/moc_*
 QtCases/ui_*
 */Debug
+/build
 /.vs*
 */obj
 *bin
