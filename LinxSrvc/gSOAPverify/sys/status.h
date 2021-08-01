@@ -8,7 +8,6 @@
 #include <net/if.h>
 #include <arpa/inet.h>
 #include <sys/ioctl.h>
-#include <bits/types.h>
 
 #define ONE_MB (1024 * 1024)
 

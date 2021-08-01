@@ -1,7 +1,9 @@
-#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <unistd.h>
+#include <sys/wait.h>
 #include <sys/queue.h>
+#include <stdio.h>
+#include <string.h>
 #include <string>
 #include <vector>
 
@@ -23,10 +25,23 @@ vector<const char*> headList = {
     "server",
 };
 
-int StartClient(const char* url, const char* filename = NULL);
+int StartClient(const char* url, const char* fileName = NULL);
+void Response(struct evhttp_request* request, int errno0 = HTTP_OK, string errmsg = {});
 
 void RemoteReadCallback(struct evhttp_request* remote_rsp, void* arg)
 {
+    event_base_loopexit((struct event_base*)arg, NULL);
+}
+
+void RemoteRequestErrorCallback(enum evhttp_request_error error, void* arg)
+{
+    Error("request failed!");
+    event_base_loopexit((struct event_base*)arg, NULL);
+}
+
+void RemoteConnectionCloseCallback(struct evhttp_connection* connection, void* arg)
+{
+    Error("remote connection closed!");
     event_base_loopexit((struct event_base*)arg, NULL);
 }
 
@@ -51,21 +66,76 @@ void ReadChunkCallback(struct evhttp_request* remote_rsp, void* arg)
     while ((n = evbuffer_remove(evbuf, buf, len)) > 0) {
         fwrite(buf, n, 1, stdout);
     }
+    fwrite("\n", 1, 1, stdout);
 }
 
-void RemoteRequestErrorCallback(enum evhttp_request_error error, void* arg)
+void GenericHandler(struct evhttp_request* req, void* arg)
 {
-    Error("request failed!");
-    event_base_loopexit((struct event_base*)arg, NULL);
+    const char* req_uri = evhttp_request_get_uri(req);
+    char* dec_uri = evhttp_decode_uri(req_uri);
+    Message("request url: %s", dec_uri);
+    struct evkeyvalq head;
+    evhttp_parse_query(dec_uri, &head);
+    string url = dec_uri;
+    free(dec_uri);
+    vector<string> list = parseUri(url);
+    for (auto it = list.begin(); it != list.end(); ++it) {
+        Message("> %s", it->c_str());
+        if (*it == "log") {
+            char* post_data = NULL;
+            string ip = "";
+            string sport = "";
+            uint32_t port = 0;
+            string server("");
+            for (auto it = headList.begin(); it != headList.end(); ++it) {
+                const char* ptr = evhttp_find_header(&head, *it);
+                if (ptr == NULL) continue;
+                string val(ptr);
+                size_t len = val.size();
+                Message("request param: %s = %s", *it, val.c_str());
+                if (string(*it) == "server") {
+                    server = val;
+                }
+                pid_t childpid = fork();
+                if (childpid == 0) {
+                    if (string(*it) == "save") {
+                        //
+                    }
+                    exit(0);
+                } else if (childpid > 0) {
+                    pid_t pid = 0;
+                    do {
+                        pid = waitpid(childpid, NULL, WNOHANG);
+                        if (pid == 0) {
+                            Message("No child exited");
+                        }
+                    } while (pid == 0);
+                    if (pid == childpid)
+                        Message("successfully release child %d", pid);
+                    else
+                        Message("some error occured");
+                }
+            }
+            ssize_t pos = (server.empty() ? 0 : server.find(":"));
+            if (pos <= 0) {
+                Error("can't find ':' in '%s'!", server.c_str());
+                Response(req, HTTP_BADMETHOD);
+                return;
+            }
+            ip = server.substr(0, pos);
+            sport = server.substr(pos + 1, server.size() - 1);
+            if (isNum(sport)) {
+                port = atoi(sport.c_str());
+            }
+            Message("request from %s:%d", ip.c_str(), port);
+            post_data = (char*)EVBUFFER_DATA(req->input_buffer);
+            Message("request post_data = %s", post_data);
+        }
+    }
+    Response(req);
 }
 
-void RemoteConnectionCloseCallback(struct evhttp_connection* connection, void* arg)
-{
-    Error("remote connection closed!");
-    event_base_loopexit((struct event_base*)arg, NULL);
-}
-
-int StartClient(const char* url, const char* filename)
+int StartClient(const char* url, const char* fileName)
 {
     const char* user_agent = "Mozilla/5.0 (Macintosh;"
         " Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Safari/605.1.15";
@@ -141,15 +211,15 @@ int StartClient(const char* url, const char* filename)
     sprintf(conbuf, "http://%s", host);
     evhttp_add_header(output_headers, "Origin", conbuf);
     sprintf(conbuf, "application/x-www-form-urlencoded;charset=utf-8");
-    if (filename != NULL) {
-        Message("setting '%s' form-data", filename);
+    if (fileName != NULL) {
+        Message("setting '%s' form-data", fileName);
         evbuffer* output_buffer = evhttp_request_get_output_buffer(request);
         const char* boundary = "------WebKitFormBoundaryAu886z32WLCM1Fl0\r\n";
         int bndlen = strlen(boundary);
         evbuffer_add(output_buffer, boundary, bndlen);
 
         char bndbuf[256];
-        sprintf(bndbuf, "Content-Disposition: form-data; name=\"file\"; filename=\"%s\"\r\n", filename);
+        sprintf(bndbuf, "Content-Disposition: form-data; name=\"file\"; filename=\"%s\"\r\n", fileName);
         bndlen += strlen(bndbuf);
         evbuffer_add(output_buffer, bndbuf, strlen(bndbuf));
 
@@ -157,13 +227,13 @@ int StartClient(const char* url, const char* filename)
         bndlen += strlen(bndbuf);
         evbuffer_add(output_buffer, bndbuf, strlen(bndbuf));
 
-        FILE* fd = fopen(filename, "rb");
+        FILE* fd = fopen(fileName, "rb");
         char buf[1024];
         size_t s;
         size_t bts = 0;
 
         if (!fd) {
-            Error("Open file '%s' error!", filename);
+            Error("Open file '%s' error!", fileName);
             goto error;
             return -6;
         }
@@ -203,64 +273,6 @@ error:
     return 0;
 }
 
-void GenericHandler(struct evhttp_request* req, void* arg)
-{
-    const char* req_uri = evhttp_request_get_uri(req);
-    char* dec_uri = evhttp_decode_uri(req_uri);
-    Message("request url: %s", dec_uri);
-    struct evkeyvalq head;
-    evhttp_parse_query(dec_uri, &head);
-    string url = dec_uri;
-    free(dec_uri);
-    vector<string> list = parseUri(url);
-    for (auto it = list.begin(); it != list.end(); ++it) {
-        Message("%s", it->c_str());
-    }
-    char* post_data = NULL;
-    string ip = "";
-    string sport = "";
-    uint32_t port = 0;
-    string server("");
-    for (auto it = headList.begin(); it != headList.end(); ++it) {
-        const char* ptr = evhttp_find_header(&head, *it);
-        if (ptr == NULL) continue;
-        string val(ptr);
-        size_t len = val.size();
-        Message("request param: %s = %s", *it, val.c_str());
-        if (string(*it) == "server") {
-            server = val;
-        }
-    }
-    ssize_t pos = (server.empty() ? 0 : server.find(":"));
-    if (pos <= 0) {
-        Error("can't find ':' in '%s'!", server.c_str());
-        goto success;
-        return;
-    }
-    ip = server.substr(0, pos);
-    sport = server.substr(pos + 1, server.size() - 1);
-    if (isNum(sport)) {
-        port = atoi(sport.c_str());
-    }
-    Message("request from %s:%d", ip.c_str(), port);
-    post_data = (char*)EVBUFFER_DATA(req->input_buffer);
-    Message("request post_data = %s", post_data);
-    goto success;
-
-success:
-    {
-        struct evbuffer* buf = evbuffer_new();
-        if (!buf) {
-            Message("failed to create response buffer!");
-            return;
-        }
-        const char* reply = "{\n\tstatus:true,\n\terrno:200\n}";
-        evbuffer_add_printf(buf, "%s", reply);
-        evhttp_send_reply(req, HTTP_OK, "OK", buf);
-        evbuffer_free(buf);
-    }
-}
-
 int StartServer(short port)
 {
     const char* addr = "127.0.0.1";
@@ -289,4 +301,22 @@ int StartServer(short port)
     event_base_dispatch(base);
     evhttp_free(http);
     return 0;
+}
+
+void Response(struct evhttp_request* request, int errno0, string errmsg)
+{
+    struct evbuffer* buf = evbuffer_new();
+    if (!buf) {
+        Message("failed to create response buffer!");
+        return;
+    }
+    const char* status = (errno0 == HTTP_OK ? "true" : "false");
+    string reply =
+        "{\n\t\"errno\": " + to_string(errno0) +
+        ",\n\t\"status\": " + string(status) +
+        (errno0 != HTTP_OK ? ",\n\t\"errmsg\": \"" + errmsg + "\"" : "") +
+        "\n}";
+    evbuffer_add_printf(buf, "%s", reply.c_str());
+    evhttp_send_reply(request, HTTP_OK, "OK", buf);
+    evbuffer_free(buf);
 }

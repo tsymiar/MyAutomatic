@@ -1,8 +1,6 @@
 #include "KaiSocket.h"
 
-#ifdef __linux
 #include <unistd.h>
-#endif
 
 int reciever(KaiSocket* kaisock) {
     char* rcv_txt = new char[64];
@@ -36,9 +34,7 @@ int main(int argc, char* argv[])
     if (argc > 1) {
         client = (argv[1] == "-C" ? true : false);
     }
-#ifdef __linux
     if (fork() == 0) {
-#endif
         KaiSocket* kai = nullptr;
         if (client) {
             kai = new KaiSocket("192.168.1.1", 9999);
@@ -52,7 +48,5 @@ int main(int argc, char* argv[])
         else
             kai->start();
         delete kai;
-#ifdef __linux
     }
-#endif
 }

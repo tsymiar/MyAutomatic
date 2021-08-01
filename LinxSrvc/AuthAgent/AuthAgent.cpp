@@ -2,6 +2,7 @@
 
 #include "HttpEvent.h"
 #include "Logging.h"
+#include "utils.h"
 
 using namespace std;
 
@@ -14,8 +15,12 @@ int main(int argc, char** argv)
         i++;
     }
 
-    StartServer(8080);
+    short port = 8080;
+    if (argc > 1 && isNum(argv[1])) {
+        port = atoi(argv[1]);
+    }
+    StartServer(port);
 
-    cout << "Hello CMake." << endl;
+    cout << "Hello AuthAgent." << endl;
     return 0;
 }

@@ -12,6 +12,10 @@ SQL = -std=c++11 -L/usr/lib$(BIT)/mysql -lmysqlclient
 PTHD= -std=c++11 -lpthread #-lgsoap++#-L/usr/local/gSOAP/lib/libsoap++
 FLAG += -DNS_DEBUG
 gSOAPverify:$(OUT)
+ifeq ($(shell uname), Darwin)
+	@echo MacOS not suported!
+	exit 1;
+endif
 	g++ $(FLAG) -c ./soap/soapC.cpp
 	g++ -g -c ./soap/stdsoap2.cpp
 	g++ $(FLAG) -c ./soap/soapServer.cpp
@@ -27,7 +31,7 @@ gSOAPverify:$(OUT)
 	[ ! -d "$(OBJ)" ] && mkdir -p $(PRJ)
 	mv ./*.o $(PRJ)
 	echo make OK
-all: 
+all:
 	if [ `ps -fe| grep gSOAPverify | grep -v grep` -eq 0 ]; then killall -9 gSOAPverify;else echo "making gSOAPverify.";fi;
 	make clear
 	make
@@ -41,7 +45,7 @@ install:
 	cd /etc/rc3.d/
 	ln -sf ../init.d/gSOAPverify ./S77_SOAP
 	cp -R ./readme/* /var/www/html
-clean:	
+clean:
 	rm -f ./*.o ./core.* $(GEN)/*.a $(GEN)/*.out $(GEN)/core.* $(PRJ)/*.o
 clear:
 	rm -f ./*.o ./core.* $(PRJ)/*.o `ls *.o | egrep -v soapC.o stdsoap2.o soapServer.o`

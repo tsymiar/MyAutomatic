@@ -9,9 +9,10 @@ me909:
 routine:
 	gcc -g routine.c -o $(GEN)/routine.exe
 all:
+ifeq ($(shell uname), Linux)
 	make v4l
+endif
 	make gpio
 	make me909
-#	make test
 clean:
 	rm -vf $(GEN)/v4l2.exe $(GEN)/gpio.exe $(GEN)/me909.exe $(GEN)/routine.exe
