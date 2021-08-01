@@ -4,7 +4,6 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <sys/ioctl.h>
-#include <linux/types.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>

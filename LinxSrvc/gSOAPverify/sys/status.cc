@@ -26,7 +26,7 @@ int get_mem_stat(char* ip, st_sys* sys)
     long page_size = sysconf(_SC_PAGESIZE);       //系统页面大小bits
     sys->li_page = page_size / 1024;
     long num_pages = sysconf(_SC_PHYS_PAGES);     //系统中物理页数
-    long free_pages = sysconf(_SC_AVPHYS_PAGES);  //系统可用的页面数
+    long free_pages = sysconf(_SC_PAGE_SIZE);     //系统可用的页面数
     long long  mem = (long long)((long long)num_pages * (long long)page_size);
     mem /= ONE_MB;                                //总物理内存
     sys->mem_all = mem;
@@ -51,7 +51,7 @@ int detect_eth_cable(char* ifname)
     strcpy(ifr.ifr_name, ifname);
 
     ethval.cmd = 0x0000000A;
-    ifr.ifr_data = (__caddr_t)&ethval;
+    ifr.ifr_data = (caddr_t)&ethval;
     if (ioctl(fd, 0x8946, &ifr) == 0) {
         fprintf(stdout, "Link detecting %s\n", ethval.data ? "OK" : "fail");
     } else if (errno != EOPNOTSUPP) {
