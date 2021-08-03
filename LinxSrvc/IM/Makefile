@@ -4,7 +4,7 @@ GEN = $(CUR)/../bin
 OBJ = $(CUR)/../obj
 #CXX = $(shell bash -c "if [[ \"$(command -v nvcc >/dev/null 2>&1 || { echo g++; EXP=-Wno-c++11-narrowing; })\" == \"\" ]];then echo nvcc;else echo g++;fi;")
 CXX = g++ #clang nvcc
-EXP = -Wno-c++11-narrowing
+EXP = -Wno-c++11-narrowing -Wno-unused-command-line-argument
 FLAG = -g -std=c++11 -D_DEBUG
 PTHD = -lpthread
 IMLOCAL=../../WinNTKline/KlineUtil/IM

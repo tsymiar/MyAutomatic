@@ -210,7 +210,12 @@ int KaiSocket::broker(char* data, int len)
     }
     return res;
 }
-
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wtautological-undefined-compare"
+#pragma GCC diagnostic ignored "-Wtautological-pointer-compare"
+#pragma GCC diagnostic ignored "-Wundefined-bool-conversion"
+#endif
 int KaiSocket::recv(char* buff, int len)
 {
     if (buff == nullptr || len == 0)
@@ -288,7 +293,9 @@ bool KaiSocket::running()
         return false;
     return current.run_;
 }
-
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 void KaiSocket::wait(unsigned int tms)
 {
     const int THOS = 1000;
@@ -474,7 +481,7 @@ int KaiSocket::produce(Message& msg)
     if (msgque == nullptr)
         return -1;
     int size = msgque->size();
-    if (&msg != nullptr)
+    if (msg.head.ssid != 0)
         msgque->emplace_back(new Message(msg));
     return msgque->size() - size - 1;
 }

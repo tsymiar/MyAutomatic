@@ -37,7 +37,14 @@ runtime(void* param)
                 closesocket(client->sock);
                 exit(0);
             }
-            '...';
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-value"
+#endif
+            "...";
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
             Sleep(100);
             continue;
         };
@@ -146,10 +153,11 @@ int StartChat(int erno,
         if (func == NULL) {
             client.erno = -1;
             func = [](void*) {
+                fprintf_s(stdout, "Lambda null func.\n");
 #ifndef _WIN32
-                return (void*)
+                return (void*)0;
 #endif
-                    fprintf_s(stdout, "Lambda null func.\n"); };
+            };
         }
     }
     Pthreadt threads;
@@ -188,7 +196,7 @@ int SetClientDlg(void* Wnd)
 int SendChatMesg(st_trans* msg)
 {
     if (client.flag < 0) {
-        MessageBox(0, "Connection status error, will exit!", "Quit", MB_OK);
+        MessageBox(0, const_cast<char*>("Connection status error, will exit!"), const_cast<char*>("Quit"), MB_OK);
         return (client.erno = -1);
     }
     int len = sizeof(trans);

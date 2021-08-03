@@ -1,19 +1,19 @@
 ﻿#include "AuthAgent.h"
 
 #include "HttpEvent.h"
-#include "Logging.h"
-#include "utils.h"
+#include "Utils.h"
 
 using namespace std;
 
 int main(int argc, char** argv)
 {
     int i = 0;
-    Message("usage: ");
+    cout << "usage:" << endl;
     while (i < argc) {
-        Message("%s", argv[i]);
+        cout << " " << argv[i];
         i++;
     }
+    cout << endl;
 
     short port = 8080;
     if (argc > 1 && isNum(argv[1])) {
