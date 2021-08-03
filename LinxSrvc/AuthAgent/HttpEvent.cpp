@@ -16,8 +16,8 @@
 #include "event2/keyvalq_struct.h" 
 #include "event2/buffer_compat.h"
 
-#include "Logging.h"
-#include "utils.h"
+#include "Log.h"
+#include "Utils.h"
 
 using namespace std;
 
@@ -28,14 +28,15 @@ vector<const char*> headList = {
 int StartClient(const char* url, const char* fileName = NULL);
 void Response(struct evhttp_request* request, int errno0 = HTTP_OK, string errmsg = {});
 
-void RemoteReadCallback(struct evhttp_request* remote_rsp, void* arg)
+void RemoteReadCallback(struct evhttp_request* remote_host, void* arg)
 {
+    Message("remote_rsp: %s:%d", remote_host->remote_host, remote_host->remote_port);
     event_base_loopexit((struct event_base*)arg, NULL);
 }
 
 void RemoteRequestErrorCallback(enum evhttp_request_error error, void* arg)
 {
-    Error("request failed!");
+    Error("request failed: %d!", error);
     event_base_loopexit((struct event_base*)arg, NULL);
 }
 
@@ -275,8 +276,6 @@ error:
 
 int StartServer(short port)
 {
-    const char* addr = "127.0.0.1";
-
     struct event_base* base = event_base_new();
     if (!base) {
         Error("create event base failed!");
@@ -289,9 +288,10 @@ int StartServer(short port)
         return -1;
     }
 
+    const char* addr = "0.0.0.0";
     int ret = evhttp_bind_socket(http, addr, port);
     if (ret != 0) {
-        Error("http bind socket failed: %d!", port);
+        Error("http bind socket failed(%d): %d!", ret, port);
         return -1;
     }
 

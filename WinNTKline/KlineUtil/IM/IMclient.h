@@ -47,6 +47,10 @@ typedef struct WSADATA {
 #define SLEEP(t) usleep((int)1010.10f*(t));
 #ifndef scanf_s
 #define scanf_s scanf
+#ifdef __GNUC__
+#pragma GCC diagnostic ignored "-Wformat"
+#pragma GCC diagnostic ignored "-Wformat-extra-args"
+#endif
 #endif
 inline unsigned int _beginthreadex(
     void* _Security,
@@ -98,7 +102,7 @@ inline int DeleteCriticalSection(CRITICAL_SECTION* mutex)
 {
     return pthread_mutex_destroy(mutex);
 }
-inline int SetConsoleTitle(char* title)
+inline int SetConsoleTitle(const char* title)
 {
     return fprintf(stdout, "------ %s ------\n", title);
 }
@@ -115,7 +119,7 @@ inline int WSACleanup() { return 0; }
 #endif
 
 constexpr int DEFAULT_PORT = 8877;
-constexpr char* filename = "NoNameFile";
+constexpr const char* filename = "NoNameFile";
 
 struct P2P_NETWORK
 {

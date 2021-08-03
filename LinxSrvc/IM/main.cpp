@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
 {
     bool client = false;
     if (argc > 1) {
-        client = (argv[1] == "-C" ? true : false);
+        client = (std::string(argv[1]) == "-C" ? true : false);
     }
     if (fork() == 0) {
         KaiSocket* kai = nullptr;

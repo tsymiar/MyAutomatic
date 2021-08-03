@@ -220,7 +220,7 @@ st_trans* ParseChatMesg(st_trans& trans)
     default:
     {
         if (trans.value[0] == 0x0) {
-            MessageBox(0, "LoggingIn failure.", "message", MB_OK);
+            MessageBox(0, const_cast<char*>("LoggingIn failure."), const_cast<char*>("message"), MB_OK);
             return &trans;
         }
     }
