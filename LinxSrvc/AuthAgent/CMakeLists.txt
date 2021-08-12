@@ -7,6 +7,7 @@ set(TARGET AuthAgent)
 add_executable (${TARGET}
     AuthAgent.cpp
     HttpEvent.cpp
+    Utils.cpp
 )
 
 include_directories (

@@ -21,8 +21,11 @@
 
 using namespace std;
 
-vector<const char*> headList = {
+vector<string> headList = {
     "server",
+    "flag",
+    "username",
+    "token"
 };
 
 int StartClient(const char* url, const char* fileName = NULL);
@@ -70,70 +73,79 @@ void ReadChunkCallback(struct evhttp_request* remote_rsp, void* arg)
     fwrite("\n", 1, 1, stdout);
 }
 
-void GenericHandler(struct evhttp_request* req, void* arg)
+void GenericHandler(struct evhttp_request* req_ptr, void* arg)
 {
-    const char* req_uri = evhttp_request_get_uri(req);
+    int status = 0;
+    const char* req_uri = evhttp_request_get_uri(req_ptr);
     char* dec_uri = evhttp_decode_uri(req_uri);
-    Message("request url: %s", dec_uri);
     struct evkeyvalq head;
     evhttp_parse_query(dec_uri, &head);
     string url = dec_uri;
     free(dec_uri);
     vector<string> list = parseUri(url);
-    for (auto it = list.begin(); it != list.end(); ++it) {
-        Message("> %s", it->c_str());
-        if (*it == "log") {
-            char* post_data = NULL;
-            string ip = "";
-            string sport = "";
-            uint32_t port = 0;
-            string server("");
+    Message("request url: %s", url.c_str());
+    int filedes[2];
+    if (pipe(filedes) < 0) {
+        Error("failed to create a pipe.");
+        return;
+    }
+    pid_t childpid = fork();
+    if (childpid == 0) {
+        if (list.size() > 0 && list[0] == "log") {
+            status = HTTP_OK;
             for (auto it = headList.begin(); it != headList.end(); ++it) {
-                const char* ptr = evhttp_find_header(&head, *it);
+                const char* ptr = evhttp_find_header(&head, it->c_str());
                 if (ptr == NULL) continue;
                 string val(ptr);
                 size_t len = val.size();
-                Message("request param: %s = %s", *it, val.c_str());
-                if (string(*it) == "server") {
-                    server = val;
-                }
-                pid_t childpid = fork();
-                if (childpid == 0) {
-                    if (string(*it) == "save") {
-                        //
+                Message("request param: %s = %s", it->c_str(), val.c_str());
+                if (*it == "server") {
+                    string server(val);
+                    uint32_t port = 0;
+                    ssize_t pos = (server.empty() ? 0 : server.find(":"));
+                    string ip = server.substr(0, pos);
+                    string subport = server.substr(pos + 1, server.size() - 1);
+                    if (isNum(subport)) {
+                        port = atoi(subport.c_str());
                     }
-                    exit(0);
-                } else if (childpid > 0) {
-                    pid_t pid = 0;
-                    do {
-                        pid = waitpid(childpid, NULL, WNOHANG);
-                        if (pid == 0) {
-                            Message("No child exited");
-                        }
-                    } while (pid == 0);
-                    if (pid == childpid)
-                        Message("successfully release child %d", pid);
-                    else
-                        Message("some error occured");
+                    if (pos <= 0) {
+                        Error("can't find ':' in '%s'!", server.c_str());
+                        status = HTTP_NOTIMPLEMENTED;
+                        break;
+                    }
+                    Message("server parse = %s:%d", ip.c_str(), port);
+                    char* post_data = (char*)EVBUFFER_DATA(req_ptr->input_buffer);
+                    Message("request post_data = %s", post_data);
+                }
+                if (*it == "flag") {
+                    Message("flag = %s", val.c_str());
                 }
             }
-            ssize_t pos = (server.empty() ? 0 : server.find(":"));
-            if (pos <= 0) {
-                Error("can't find ':' in '%s'!", server.c_str());
-                Response(req, HTTP_BADMETHOD);
-                return;
+            if (list.size() > 1 && list[1] == "save") {
+                Message("cmd = %s", getVariable(url, "cmd").c_str());
             }
-            ip = server.substr(0, pos);
-            sport = server.substr(pos + 1, server.size() - 1);
-            if (isNum(sport)) {
-                port = atoi(sport.c_str());
-            }
-            Message("request from %s:%d", ip.c_str(), port);
-            post_data = (char*)EVBUFFER_DATA(req->input_buffer);
-            Message("request post_data = %s", post_data);
+        } else {
+            status = HTTP_BADMETHOD;
+        }
+        close(filedes[0]);
+        write(filedes[1], &status, sizeof(int));
+        exit(0);
+    } else if (childpid > 0) {
+        pid_t pid = 0;
+        do {
+            pid = waitpid(childpid, NULL, WNOHANG);
+        } while (pid == 0);
+        close(filedes[1]);
+        if (read(filedes[0], &status, sizeof(int)) < 0) {
+            Error("failed to read status from filedes[0]");
+        }
+        Response(req_ptr, status);
+        if (pid == childpid) {
+            Message("successfully release child %d", pid);
+        } else {
+            Error("some error occured");
         }
     }
-    Response(req);
 }
 
 int StartClient(const char* url, const char* fileName)
