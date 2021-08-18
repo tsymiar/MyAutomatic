@@ -12,6 +12,24 @@ for /f "tokens=1*" %%a in ("%t%") do (
     for /f "delims=" %%I in ('powershell -noprofile "iex (${%~f0} | out-string)"') do (
         echo "%%a = %%~I"
 	    setx %%a %%~I
+        if "%%a" == "PTHD_LIB86" (
+            setx PTHD %PTHD_LIB86:~0,-8%
+            set PATH=%PATH%;%%~I\dll\x86
+        )
+        if exist %%~I\bin (
+            if exist %%~I\bin\Debug (
+                set PATH=%PATH%;%%~I\bin\Debug
+            ) else (
+                set PATH=%PATH%;%%~I\bin
+            )
+        )
+        if exist %%~I\lib (
+            if exist %%~I\lib\Debug (
+                set PATH=%PATH%;%%~I\lib\Debug
+            ) else (
+                set PATH=%PATH%;%%~I\lib
+            )
+        )
     )
     set t=%%b
 )

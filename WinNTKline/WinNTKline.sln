@@ -18,6 +18,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Mix", "Mix", "{929677BC-1A5
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "K-line", "K-line", "{748D08E6-622E-4CD2-9AC7-7766F288389B}"
 	ProjectSection(SolutionItems) = preProject
+		..\choose.bat = ..\choose.bat
+		..\clean.bat = ..\clean.bat
 		..\README.md = ..\README.md
 		KlineUtil\res\windows.manifest = KlineUtil\res\windows.manifest
 	EndProjectSection
@@ -51,10 +53,10 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "authorize", "authorize", "{E87A52AC-DBC1-404D-9B81-B10AF13E5A12}"
 	ProjectSection(SolutionItems) = preProject
 		..\LinxSrvc\AuthAgent\AuthAgent.cpp = ..\LinxSrvc\AuthAgent\AuthAgent.cpp
-		..\LinxSrvc\AuthAgent\HttpEvent.cpp = ..\LinxSrvc\AuthAgent\HttpEvent.cpp
 		..\LinxSrvc\AuthAgent\AuthAgent.h = ..\LinxSrvc\AuthAgent\AuthAgent.h
-		..\LinxSrvc\AuthAgent\Logging.h = ..\LinxSrvc\AuthAgent\Logging.h
 		..\LinxSrvc\AuthAgent\CMakeLists.txt = ..\LinxSrvc\AuthAgent\CMakeLists.txt
+		..\LinxSrvc\AuthAgent\HttpEvent.cpp = ..\LinxSrvc\AuthAgent\HttpEvent.cpp
+		..\LinxSrvc\AuthAgent\Logging.h = ..\LinxSrvc\AuthAgent\Logging.h
 	EndProjectSection
 EndProject
 Global
