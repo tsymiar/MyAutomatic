@@ -5,7 +5,8 @@
 #include <winsock2.h>
 #include <tchar.h>
 #include <time.h>
-#include "conio.h"
+#include <conio.h>
+#include <errno.h>
 #define random(x) (rand()%x*0.001f)
 #pragma comment( lib, "ws2_32.lib" )  
 #ifdef _DEBUG  
@@ -17,6 +18,9 @@ static char THIS_FILE[] = __FILE__;
 #pragma warning (disable:4996)
 //#define addr_out(ip) inet_ntop(ip)
 #define addr_out(ip) inet_ntoa(ip)
+#ifndef EWOULDBLOCK
+#define EWOULDBLOCK (10035L)
+#endif
 
 using namespace std;
 
