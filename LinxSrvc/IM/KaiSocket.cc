@@ -15,8 +15,9 @@ KaiSocket::KaiSocket(unsigned short srvport)
 
 KaiSocket::KaiSocket(const char* srvip, unsigned short servport)
 {
-    if (srvip != nullptr)
+    if (srvip != nullptr) {
         current.IP = srvip;
+    }
     current.socket = ::socket(AF_INET, SOCK_STREAM, 0);
     if (current.socket < 0) {
         std::cerr
@@ -44,7 +45,8 @@ int KaiSocket::start()
         return -1;
     }
 
-    if (listen(listen_socket, 50) < 0) {
+    const int backlog = 50;
+    if (listen(listen_socket, backlog) < 0) {
         std::cerr
             << "Socket listen (" << (errno != 0 ? strerror(errno) : std::to_string(listen_socket)) << ")."
             << std::endl;
@@ -331,10 +333,11 @@ void KaiSocket::setResponseHandle(void(*func)(char*, int), char* data, int& size
         if (sock == nullptr)
             return -1;
         int len = sock->recv(data, size);
-        if (len == size)
+        if (len == size) {
             func(data, size);
-        else if (len != 0)
+        } else if (len != 0) {
             std::cerr << "Recieved size/len (" << len << ", " << size << ") not match." << std::endl;
+        }
         size = len;
         return size;
     };
@@ -348,8 +351,9 @@ void KaiSocket::setRequestHandle(void(*func)(char*, int), char* data, int& size)
             return -1;
         func(data, size);
         int len = sock->send(data, size);
-        if (len != size)
+        if (len != size) {
             std::cerr << "Sent size/len (" << len << ", " << size << ") not match." << std::endl;
+        }
         size = len;
         return size;
     };
@@ -412,7 +416,7 @@ void KaiSocket::runCallback(KaiSocket* sock, int (*func)(KaiSocket*))
                         sock->handleNotify(current.socket);
                         break;
                     }
-                    KaiSocket::wait(30000);
+                    KaiSocket::wait(30000); // heartbeat frequency
                 }
             }, std::ref(current), sock).detach();
             thdref = !thdref;
@@ -481,8 +485,9 @@ int KaiSocket::produce(Message& msg)
     if (msgque == nullptr)
         return -1;
     int size = msgque->size();
-    if (msg.head.ssid != 0)
+    if (msg.head.ssid != 0) {
         msgque->emplace_back(new Message(msg));
+    }
     return msgque->size() - size - 1;
 }
 
@@ -499,7 +504,8 @@ int KaiSocket::consume(Message& msg)
     memcpy(&msg.head, &mesg->head, sizeof(Header));
     memcpy(&msg.data, &mesg->data, sizeof(Message::Payload));
     msgque->pop_front();
-    if (mesg != nullptr)
+    if (mesg != nullptr) {
         delete mesg;
+    }
     return size - msgque->size() - 1;
 }
