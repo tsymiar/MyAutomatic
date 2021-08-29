@@ -61,12 +61,12 @@ private:
         Header flag;
     } current;
     bool thdref = false;
-    bool m_isClient = true;
+    bool m_isClient = false;
     volatile unsigned int g_threadNo_ = 0;
     std::vector<Network> networks{};
     std::vector<int(*)(KaiSocket*)> callbacks{};
-    void(*submit)(char*, int);
-    void(*recieve)(char*, int);
+    void(*submit)(char*, int) = nullptr;
+    void(*recieve)(char*, int) = nullptr;
     void handleNotify(int socket);
     void runCallback(KaiSocket* sock, int (*func)(KaiSocket*));
     unsigned long long setSsid(Network network, int socket);
