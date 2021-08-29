@@ -10,7 +10,7 @@ PTHD = -lpthread
 IMLOCAL=../../WinNTKline/KlineUtil/IM
 IMFILE=$(IMLOCAL)/IM.cc
 CLIENTLOCAL=../../WinNTKline/IMclient
-CLIENTFILES=$(IMLOCAL)/IMclient.cpp $(CLIENTLOCAL)/client.cpp
+CLIENTFILES=$(IMLOCAL)/client.cc $(CLIENTLOCAL)/imclient.cpp
 all: IM client Kai
 IM:
 	if [ ! -d "$(GEN)" ]; then mkdir $(GEN); fi;
