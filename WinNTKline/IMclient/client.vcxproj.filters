@@ -7,18 +7,21 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="client.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="..\KlineUtil\IM\IM.cc">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\KlineUtil\IM\IMclient.cpp">
+    <ClCompile Include="imclient.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KlineUtil\IM\client.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KlineUtil\IM\TCPsocket.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\KlineUtil\IM\IMclient.h">
+    <ClInclude Include="..\KlineUtil\IM\client.h">
       <Filter>源文件</Filter>
     </ClInclude>
   </ItemGroup>

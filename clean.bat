@@ -2,6 +2,8 @@
 set BATDIR=%~dp0
 echo locate: @ %BATDIR%
 cd %BATDIR%
+echo clean build
+rd /s /q build
 echo clean LinxSrvc
 rd /s /q LinxSrvc\obj
 echo clean cache

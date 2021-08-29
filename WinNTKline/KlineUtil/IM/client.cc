@@ -1,4 +1,4 @@
-﻿#include "IMclient.h"
+﻿#include "client.h"
 
 static st_sock socks = {};
 static st_trans trans = {};

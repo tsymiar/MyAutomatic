@@ -1,4 +1,4 @@
-#include "IMclient.h"
+#include "client.h"
 
 #define USR_TEST
 volatile int g_printed = 0;
