@@ -113,8 +113,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\WinNTKline\KlineUtil\IM\IM.cc" />
+    <ClCompile Include="KaiMain.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="KaiSocket.cc" />
-    <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="KaiSocket.h" />

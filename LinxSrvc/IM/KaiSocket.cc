@@ -88,9 +88,9 @@ int KaiSocket::start()
             current.IP = inet_ntop(AF_INET, &peerAddr.sin_addr, ipAddr, sizeof(ipAddr));
             current.PORT = ntohs(peerAddr.sin_port);
             fprintf(stdout, "accepted peer(%u) address [%s:%d] (@ %d/%02d/%02d-%02d:%02d:%02d)\n",
-                    g_threadNo_,
-                    current.IP.c_str(), current.PORT,
-                    lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
+                g_threadNo_,
+                current.IP.c_str(), current.PORT,
+                lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
 
             Header head{ 0, 0, current.flag.ssid = setSsid(current, rcv_sock), 0 };
             ::send(rcv_sock, (char*)&head, sizeof(Header), 0);
@@ -225,10 +225,11 @@ int KaiSocket::recv(char* buff, int len)
     int size = sizeof(Header);
     char header[size];
     memset(header, 0, size);
-    if (!m_isClient && networks.size() == 0) {
+    if (networks.size() == 0) {
         handleNotify(current.socket);
         return -1;
     }
+    m_isClient = true;
     int res = ::recv(current.socket, header, size, 0);
     if (res < 0) {
         handleNotify(current.socket);
@@ -416,7 +417,7 @@ void KaiSocket::runCallback(KaiSocket* sock, int (*func)(KaiSocket*))
                         sock->handleNotify(current.socket);
                         break;
                     }
-                    KaiSocket::wait(30000); // heartbeat frequency
+                    KaiSocket::wait(30000); // frequency
                 }
             }, std::ref(current), sock).detach();
             thdref = !thdref;

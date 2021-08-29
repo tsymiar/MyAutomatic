@@ -1,6 +1,7 @@
 #include "KaiSocket.h"
 
 #include <unistd.h>
+#include <iostream>
 
 int reciever(KaiSocket* kaisock) {
     char* rcv_txt = new char[64];
@@ -21,9 +22,14 @@ int reciever(KaiSocket* kaisock) {
 int sender(KaiSocket* kaisock) {
     char* rcv_txt = new char[64];
     memset(rcv_txt, 0, 64);
-    scanf("%s\n", rcv_txt);
-    kaisock->send(rcv_txt, 64);
-    fprintf(stdout, "----------------\n");
+    char c;
+    while ((std::cin >> rcv_txt).get(c)) {
+        kaisock->send(rcv_txt, 64);
+        fprintf(stdout, "----------------\n");
+        if (c == '\n') {
+            break;
+        }
+    }
     delete[]rcv_txt;
     return 0;
 }
