@@ -3,34 +3,34 @@
 #include <unistd.h>
 #include <iostream>
 
-int reciever(KaiSocket* kaisock) {
-    char* rcv_txt = new char[64];
-    memset(rcv_txt, 0, 64);
-    int rcvlen = kaisock->recv(rcv_txt, 64);
+int reciever(KaiSocket* kai) {
+    char* text = new char[64];
+    memset(text, 0, 64);
+    int rcvlen = kai->recv(text, 64);
     if (rcvlen > 0) {
         for (int c = 0; c < rcvlen; c++) {
             if (c > 0 && c % 32 == 0)
                 fprintf(stdout, "\n");
-            fprintf(stdout, "%02x ", static_cast<unsigned char>(rcv_txt[c]));
+            fprintf(stdout, "%02x ", static_cast<unsigned char>(text[c]));
         }
         fprintf(stdout, "\n");
     }
-    delete[]rcv_txt;
+    delete[]text;
     return 0;
 }
 
-int sender(KaiSocket* kaisock) {
-    char* rcv_txt = new char[64];
-    memset(rcv_txt, 0, 64);
+int sender(KaiSocket* kai) {
+    char* text = new char[64];
+    memset(text, 0, 64);
     char c;
-    while ((std::cin >> rcv_txt).get(c)) {
-        kaisock->send(rcv_txt, 64);
+    while ((std::cin >> text).get(c)) {
+        kai->send(text, 64);
         fprintf(stdout, "----------------\n");
         if (c == '\n') {
             break;
         }
     }
-    delete[]rcv_txt;
+    delete[]text;
     return 0;
 }
 
@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
         } else {
             kai = new KaiSocket(9999);
         }
-        kai->registCallback(reciever);
+        kai->registerCallback(reciever);
         kai->appendCallback(sender);
         if (client)
             kai->connect();

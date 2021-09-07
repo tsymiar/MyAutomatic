@@ -22,17 +22,24 @@ public:
     int recv(char* buff, int len);
     bool running();
     static void wait(unsigned int tms);
-    void registCallback(int(*func)(KaiSocket*));
+    void registerCallback(int(*func)(KaiSocket*));
     void appendCallback(int(*func)(KaiSocket*));
     void appendCallback(std::function<int(KaiSocket*)>);
     void setResponseHandle(void(*func)(char*, int), char*, int&);
     void setRequestHandle(void(*func)(char*, int), char*, int&);
+    enum KaiRoles {
+        Producer = 1,
+        Consumer,
+        Pubilsher,
+        Subscriber
+    };
     // call after connect()
-    // 3 - pubilsher; 4 - subscriber
-    inline void setTopic(std::string topic, int tag = 3)
+    int ProduceClient(const std::string& body, ...);
+    int ConsumeClient();
+    inline void SetTopic(const std::string& topic, int tag = Pubilsher)
     {
-        memcpy(current.flag.mqid, topic.c_str(), 32);
-        current.flag.etag = tag;
+        memcpy(m_network.flag.mqid, topic.c_str(), 32);
+        m_network.flag.etag = tag;
     };
     struct SharedKaiSocket : std::enable_shared_from_this<KaiSocket> {
         std::shared_ptr<KaiSocket> GetSharedInstance()
@@ -59,19 +66,17 @@ private:
         unsigned short PORT;
         volatile bool run_ = false;
         Header flag;
-    } current;
-    bool thdref = false;
+    } m_network;
     bool m_isClient = false;
     volatile unsigned int g_threadNo_ = 0;
-    std::vector<Network> networks{};
-    std::vector<int(*)(KaiSocket*)> callbacks{};
+    std::vector<Network> m_networks{};
+    std::vector<int(*)(KaiSocket*)> m_callbacks{};
     void(*submit)(char*, int) = nullptr;
-    void(*recieve)(char*, int) = nullptr;
+    void(*receive)(char*, int) = nullptr;
     void handleNotify(int socket);
     void runCallback(KaiSocket* sock, int (*func)(KaiSocket*));
-    unsigned long long setSsid(Network network, int socket);
-    bool verifySsid(Network network, unsigned long long ssid);
-public:
+    unsigned long long setSsid(const Network& network, int socket);
+    bool verifySsid(int key, unsigned long long ssid);
     struct Message {
         Header head;
         struct Payload {
@@ -79,11 +84,7 @@ public:
             char body[256];
         } data;
     };
-    const int WAIT_TIME = 100;
-    int produceClient(std::string payload, ...);
-    int consumeClient();
-private:
-    int produce(Message& msg);
+    int produce(const Message& msg);
     int consume(Message& msg);
     std::deque<Message*>* msgque = new std::deque<Message*>();
 };

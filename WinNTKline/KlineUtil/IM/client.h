@@ -1,4 +1,4 @@
-﻿#ifndef _IMCIENT_H
+#ifndef _IMCIENT_H
 #define _IMCIENT_H
 #include <iostream>
 #include <fstream>
