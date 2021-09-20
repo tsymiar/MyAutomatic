@@ -1,13 +1,12 @@
 ﻿#pragma once
-#include "IM/IMClient.h"
+#include "IM/Client.h"
 #include "afxwin.h"
 #include "afxcmn.h"
 #include "IMlogDlg.h"
 
 // CIMhideWndDlg 对话框
 
-class CIMhideWndDlg : public CDialogEx
-{
+class CIMhideWndDlg : public CDialogEx {
     DECLARE_DYNAMIC(CIMhideWndDlg)
 
 public:
@@ -66,7 +65,7 @@ public:
     void setWidgetHide();
     afx_msg void OnBnClickedExit();
     afx_msg void OnCbnSelchangeComm();
-    afx_msg void OnNMDblclkListfrnd(NMHDR *pNMHDR, LRESULT *pResult);
+    afx_msg void OnNMDblclkListfrnd(NMHDR* pNMHDR, LRESULT* pResult);
     afx_msg void OnPaint();
     afx_msg void OnBnClickedSeeknew();
     afx_msg BOOL DestroyWindow();

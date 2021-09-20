@@ -1,4 +1,4 @@
-#ifndef _IMCIENT_H
+﻿#ifndef _IMCIENT_H
 #define _IMCIENT_H
 #include <iostream>
 #include <fstream>
@@ -121,14 +121,12 @@ inline int WSACleanup() { return 0; }
 constexpr int DEFAULT_PORT = 8877;
 constexpr const char* filename = "NoNameFile";
 
-struct P2P_NETWORK
-{
+struct P2P_NETWORK {
     SOCKET socket = 0;
     sockaddr_in addr;
 };
 
-typedef struct CLIENT
-{
+typedef struct CLIENT {
     SOCKET sock = 0;
     sockaddr_in srvaddr;
     CRITICAL_SECTION wrcon;
@@ -139,8 +137,7 @@ typedef struct CLIENT
     void(*fp2p)(void*);
     int count = 0;
     int erno = -1;
-    struct LAST
-    {
+    struct LAST {
         char lastuser[24];
         char lastgrop[24];
     } last;
@@ -153,14 +150,12 @@ typedef struct IM_SOCK {
     unsigned int PORT;
 } st_sock;
 
-struct MainMesg
-{
+struct MainMesg {
     unsigned char message[16];
     unsigned char status[8];
 };
 
-struct MoreMesg
-{
+struct MoreMesg {
     unsigned char rsv[2];
     unsigned char cmd[2];
     unsigned char val[4];
