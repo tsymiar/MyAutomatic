@@ -214,7 +214,7 @@ int main(int argc, char* argv[])
             for (int c = 0; c < MAX_ACTIVE; c++) {
                 if (&active[0] != nullptr && active[c].user[0] != '\0') {
                     fprintf(stdout, "\t%d\t%s\t%s\t%u\t%d\n", c + 1,
-                            active[c].user, active[c].netwk.ip, active[c].netwk.port, active[c].netwk.socket);
+                        active[c].user, active[c].netwk.ip, active[c].netwk.port, active[c].netwk.socket);
                 }
             }
             exit(0);
@@ -520,7 +520,7 @@ type_thread_func monite(void* arg)
                         sprintf(sd_bufs + UsrSet, "[%s] has logout.", userName);
                         send(rcv_sock, sd_bufs, 48, 0);
                         fprintf(stderr, "### [%0x, %x]: %s\n", sd_bufs[1],
-                                static_cast<unsigned>(*user.chk), sd_bufs + UsrSet);
+                            static_cast<unsigned>(*user.chk), sd_bufs + UsrSet);
                         continue;
                     }
                     case 0x4:
@@ -736,9 +736,9 @@ type_thread_func monite(void* arg)
                         size_t len = 0;
                         constexpr int CHIP = 224;
                         while (bool rcsz = ((len = fread(pos, sizeof(unsigned char), block, file)) != 0 && !feof(file))
-                               || (block > len && len > 0)) {
+                            || (block > len && len > 0)) {
                             fprintf(stdout, "        "
-                                    "File \"%s\": total = %ld, slice = %d, read = %zu.\r", IMAGE_BLOB, lSize, slice, len);
+                                "File \"%s\": total = %ld, slice = %d, read = %zu.\r", IMAGE_BLOB, lSize, slice, len);
                             sprintf((sd_bufs + 14), "%04d", slice);
                             memset(sd_bufs + 1, user.uiCmdMsg, 1);
                             volatile int offset = 0;

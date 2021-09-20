@@ -238,7 +238,7 @@ bool is_ip_valid(char s[])
         val = val + s[0] - '0';
     else
         return false;
-    for (int i = 1; i < len; i++) {
+    for (size_t i = 1; i < len; i++) {
         if ((s[i] > '9' || s[i] < '0') && s[i] != '.')
             return false;
         if (s[i] == '.' && s[i - 1] == '.')

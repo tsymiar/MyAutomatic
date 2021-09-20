@@ -2,7 +2,7 @@
 #include "afxdialogex.h"
 #include "Resource.h"
 #include "SetMarkDlg.h"
-#include "IM/IMClient.h"
+#include "IM/client.h"
 
 IMPLEMENT_DYNAMIC(SetMarkDlg, CDialogEx)
 

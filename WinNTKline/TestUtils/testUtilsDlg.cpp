@@ -1,5 +1,3 @@
-//
-
 #include "stdafx.h"
 #include "testUtils.h"
 #include "testUtilsDlg.h"
@@ -10,7 +8,7 @@
 #include "LoginDlg.h"
 #include "IMhideWndDlg.h"
 #include "html\CWebBrowser2.h"
-#include "IM/IMclient.h"
+#include "IM/client.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -18,11 +16,13 @@
 
 #define LOOP_TIME 1
 
-st_sock socks = {};
-CLoginDlg login = {};
-CTPclient* g_ctp = nullptr;
-MyOglDrawDlg* g_ogl = nullptr;
-CIMhideWndDlg* g_pIM = nullptr;
+namespace {
+    st_sock socks = {};
+    CLoginDlg login = {};
+    CTPclient* g_ctp = nullptr;
+    MyOglDrawDlg* g_ogl = nullptr;
+    CIMhideWndDlg* g_pIM = nullptr;
+};
 
 IMPLEMENT_DYNCREATE(CWebBrowser2, CWnd)
 
@@ -68,15 +68,13 @@ BOOL CtestUtilsDlg::OnInitDialog()
     SetIcon(m_hIcon, FALSE);
 
     m_ipAddr.GetWindowText(a_IP, 16);
-    if (a_IP[0] == '\0' || a_IP[0] == '\x30')
-    {
+    if (a_IP[0] == '\0' || a_IP[0] == '\x30') {
         sprintf_s(a_IP, 16, "192.168.137.7");
         m_ipAddr.SetAddress(ntohl(inet_addr(a_IP)));
     }
 
     m_Port.GetWindowText(a_Port);
-    if (a_Port.IsEmpty())
-    {
+    if (a_Port.IsEmpty()) {
         a_Port = "8080";
         m_Port.SetWindowText(a_Port);
     }
@@ -86,8 +84,7 @@ BOOL CtestUtilsDlg::OnInitDialog()
 
 void CtestUtilsDlg::OnPaint()
 {
-    if (IsIconic())
-    {
+    if (IsIconic()) {
         CPaintDC dc(this);
 
         SendMessage(WM_ICONERASEBKGND, reinterpret_cast<WPARAM>(dc.GetSafeHdc()), 0);
@@ -100,8 +97,7 @@ void CtestUtilsDlg::OnPaint()
         int y = (rect.Height() - cyIcon + 1) / 2;
 
         dc.DrawIcon(x, y, m_hIcon);
-    } else
-    {
+    } else {
         CDialogEx::OnPaint();
     }
 }
@@ -132,8 +128,7 @@ void CtestUtilsDlg::OnBnClickedTestlog()
     m_ipAddr.GetWindowText(a_IP, 16);
     sprintf_s(socks.addr, 64, "http://%s:%d/myweb.cgi", a_IP, atoi(a_Port));
     sprintf_s(socks.form, 28, "trans@&acc=local&test=8888");
-    for (int i = 0; i < LOOP_TIME; i++)
-    {
+    for (int i = 0; i < LOOP_TIME; i++) {
         login.testLogin(socks);
         Sleep(10);
     }
@@ -154,8 +149,7 @@ void CtestUtilsDlg::OnBnClickedCtp()
 
 void CtestUtilsDlg::OnBnClickedSimbtn()
 {
-    if (AllocConsole())
-    {
+    if (AllocConsole()) {
         if (freopen("CONOUT$", "w", stderr) != nullptr)
             Simulation();
     }

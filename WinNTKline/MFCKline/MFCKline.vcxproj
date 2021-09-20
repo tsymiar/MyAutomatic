@@ -113,7 +113,7 @@
       <EnablePREfast>false</EnablePREfast>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DisableSpecificWarnings>4793;4819</DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>.;$(BOOST);$(CEFDIR);$(QTDIR)\include;$(OPENCV)\include;$(OPENSSL)\include;$(PTHD_LIB86)\..\..\include;$(JAVA_HOME)\include\win32;$(SolutionDir)KlineUtil;$(SolutionDir)KlineUtil\font;$(SolutionDir)KlineUtil\CTP;$(SolutionDir)KlineUtil\mygl;$(SolutionDir)KlineUtil\Index;$(SolutionDir)KlineUtil\opencv;$(SolutionDir)..\LinxSrvc\gSOAPverify\soap;.\GeneratedFiles\$(ConfigurationName);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;$(BOOST);$(CEFDIR);$(QTDIR)\include;$(OPENCV)\include;$(OPENSSL)\include;$(PTHD_LIB86)\..\..\include;$(JAVA_HOME)\include\win32;$(SolutionDir)KlineUtil;$(SolutionDir)KlineUtil\IM;$(SolutionDir)KlineUtil\font;$(SolutionDir)KlineUtil\CTP;$(SolutionDir)KlineUtil\mygl;$(SolutionDir)KlineUtil\Index;$(SolutionDir)KlineUtil\opencv;$(SolutionDir)..\LinxSrvc\gSOAPverify\soap;.\GeneratedFiles\$(ConfigurationName);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAs>CompileAsCpp</CompileAs>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -329,6 +329,7 @@ cd "..\$(ConfigurationName)"
   <ItemGroup>
     <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\soapC.cpp" />
     <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\stdsoap2.cpp" />
+    <ClCompile Include="..\IMclient\imclient.cpp" />
     <ClCompile Include="..\KlineUtil\deep\Level2View.cpp" />
     <ClCompile Include="..\KlineUtil\dos\DOSCout.cpp" />
     <ClCompile Include="..\KlineUtil\elem\CCustomCtl.cpp" />
@@ -339,14 +340,16 @@ cd "..\$(ConfigurationName)"
     <ClCompile Include="..\KlineUtil\html\cefWebKit.cpp" />
     <ClCompile Include="..\KlineUtil\html\MfcHtmlView.cpp" />
     <ClCompile Include="..\KlineUtil\http\soapClient.cpp" />
+    <ClCompile Include="..\KlineUtil\IM\client.cc" />
     <ClCompile Include="..\KlineUtil\IM\IM.cc">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\KlineUtil\IM\IMclient.cpp" />
-    <ClCompile Include="..\KlineUtil\IM\TCPsocket.cpp" />
+    <ClCompile Include="..\KlineUtil\IM\TCPsocket.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\KlineUtil\mygl\bitmap.c" />
     <ClCompile Include="..\KlineUtil\mygl\GlF16.cc" />
     <ClCompile Include="..\KlineUtil\mygl\GlModel.cc" />
