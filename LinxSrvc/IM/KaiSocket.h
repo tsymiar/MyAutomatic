@@ -6,41 +6,57 @@
 #include <memory>
 #include <mutex>
 #include <functional>
-// extern "C" {
+
 class KaiSocket {
 public:
-    KaiSocket() {};
-    KaiSocket(unsigned short servport);
-    KaiSocket(const char* srvip, unsigned short servport);
-    virtual ~KaiSocket();
-    KaiSocket& GetInstance();
+    typedef int(*KAISOCKHOOK)(KaiSocket*);
+    KaiSocket() = default;
+    explicit KaiSocket(unsigned short lstnprt);
+    KaiSocket(const char* srvip, unsigned short srvport);
+    virtual ~KaiSocket() = default;
+    static KaiSocket& GetInstance();
+    // workflow
     int start();
     int connect();
-    int send(const char* data, int len);
+    int send(const uint8_t* data, size_t len);
     int broadcast(const char* data, int len);
-    int broker(char* data, int len);
-    int recv(char* buff, int len);
-    bool running();
+    int broker();
+    int recv(char* buff, int size);
     static void wait(unsigned int tms);
-    void registerCallback(int(*func)(KaiSocket*));
-    void appendCallback(int(*func)(KaiSocket*));
-    void appendCallback(std::function<int(KaiSocket*)>);
-    void setResponseHandle(void(*func)(char*, int), char*, int&);
-    void setRequestHandle(void(*func)(char*, int), char*, int&);
+    void finish();
+    // callback
+    void registerCallback(KAISOCKHOOK func);
+    void appendCallback(KAISOCKHOOK func);
+    void appendCallback(const std::function<int(KaiSocket*)>&);
+    void setResponseHandle(void(*func)(uint8_t*, size_t), uint8_t*, size_t&);
+    void setRequestHandle(void(*func)(uint8_t*, size_t), uint8_t*, size_t&);
+    // after connect()
+    void SetTopic(const std::string& topic, int tag = Producer);
+    int Publisher(const std::string& topic, const std::string& payload, ...);
+    ssize_t Subscriber(const std::string& message);
+public:
     enum KaiRoles {
         Producer = 1,
-        Consumer,
-        Pubilsher,
-        Subscriber
+        Consumer
     };
-    // call after connect()
-    int ProduceClient(const std::string& body, ...);
-    int ConsumeClient();
-    inline void SetTopic(const std::string& topic, int tag = Pubilsher)
-    {
-        memcpy(m_network.flag.mqid, topic.c_str(), 32);
-        m_network.flag.etag = tag;
+    struct Header {
+        char rsv;
+        int etag;
+        volatile unsigned long long ssid; //ssid = port | socket | ip
+        char topic[32];
+        unsigned int size;
     };
+    struct Message {
+        Header head{};
+        struct Payload {
+            char stat[8];
+            char body[0];
+        } data{};
+        void* operator new(size_t, const Message& msg) {
+            return (void*)(&msg);
+        }
+    };
+public:
     struct SharedKaiSocket : std::enable_shared_from_this<KaiSocket> {
         std::shared_ptr<KaiSocket> GetSharedInstance()
         {
@@ -53,13 +69,6 @@ public:
         return std::make_shared<T>(std::forward<Args>(args)...);
     }
 private:
-    struct Header {
-        char resv;
-        int etag;
-        volatile unsigned long long ssid; //ssid = port | socket | ip
-        char mqid[32]; // topic
-        int size;
-    };
     struct Network {
         int socket;
         std::string IP;
@@ -68,24 +77,19 @@ private:
         Header flag;
     } m_network;
     bool m_isClient = false;
-    volatile unsigned int g_threadNo_ = 0;
+    volatile unsigned int m_threadNo_ = 0;
+    std::mutex m_lock = {};
     std::vector<Network> m_networks{};
     std::vector<int(*)(KaiSocket*)> m_callbacks{};
+    std::deque<Message*>* m_msgQue = new(std::nothrow)std::deque<Message*>();
     void(*submit)(char*, int) = nullptr;
     void(*receive)(char*, int) = nullptr;
-    void handleNotify(int socket);
-    void runCallback(KaiSocket* sock, int (*func)(KaiSocket*));
-    unsigned long long setSsid(const Network& network, int socket);
-    bool verifySsid(int key, unsigned long long ssid);
-    struct Message {
-        Header head;
-        struct Payload {
-            char stat[8];
-            char body[256];
-        } data;
-    };
+private:
+    uint64_t setSsid(const Network& network, int socket);
+    void handleNotify(Network& network);
+    void runCallback(KaiSocket* sock, KAISOCKHOOK func);
+    bool verifySsid(int key, uint64_t ssid);
+    bool running();
     int produce(const Message& msg);
     int consume(Message& msg);
-    std::deque<Message*>* msgque = new std::deque<Message*>();
 };
-// }
