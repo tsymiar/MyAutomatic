@@ -3,12 +3,22 @@
 #include <unistd.h>
 #include <iostream>
 
-int reciever(KaiSocket* kai) {
+using namespace std;
+
+enum Rules {
+    SERVER,
+    BROKER,
+    CLIENT,
+    PUBLISH,
+    SUBSCRIBE
+};
+
+int hook0(KaiSocket* kai) {
     char* text = new char[64];
     memset(text, 0, 64);
-    int rcvlen = kai->recv(text, 64);
-    if (rcvlen > 0) {
-        for (int c = 0; c < rcvlen; c++) {
+    int len = kai->recv(text, 64);
+    if (len > 0) {
+        for (int c = 0; c < len; c++) {
             if (c > 0 && c % 32 == 0)
                 fprintf(stdout, "\n");
             fprintf(stdout, "%02x ", static_cast<unsigned char>(text[c]));
@@ -19,40 +29,70 @@ int reciever(KaiSocket* kai) {
     return 0;
 }
 
-int sender(KaiSocket* kai) {
-    char* text = new char[64];
+int hook1(KaiSocket* kai) {
+    auto* text = new uint8_t[64];
     memset(text, 0, 64);
     char c;
-    while ((std::cin >> text).get(c)) {
-        kai->send(text, 64);
-        fprintf(stdout, "----------------\n");
-        if (c == '\n') {
-            break;
-        }
-    }
+    (cin >> text).get(c);
+    kai->send(text, 64);
+    cout << "----------------" << endl;
     delete[]text;
     return 0;
 }
 
-int main(int argc, char* argv[])
-{
-    bool client = false;
+int main(int argc, char* argv[]) {
+    Rules rule = SERVER;
     if (argc > 1) {
-        client = (std::string(argv[1]) == "-C" ? true : false);
+        string argv1 = string(argv[1]);
+        rule = (argv1 == "-C" ? CLIENT :
+            (argv1 == "-S" ? SUBSCRIBE :
+                (argv1 == "-P" ? PUBLISH :
+                    (argv1 == "-B" ? BROKER : SERVER))));
     }
-    if (fork() == 0) {
-        KaiSocket* kai = nullptr;
-        if (client) {
-            kai = new KaiSocket("192.168.1.1", 9999);
+    pid_t child = fork();
+    if (child == 0) {
+        KaiSocket* kai;
+        if (rule >= CLIENT) {
+            kai = new(nothrow)KaiSocket("127.0.0.1", 9999);
         } else {
-            kai = new KaiSocket(9999);
+            kai = new(nothrow)KaiSocket(9999);
         }
-        kai->registerCallback(reciever);
-        kai->appendCallback(sender);
-        if (client)
+        if (rule == CLIENT || rule == SERVER) {
+            kai->registerCallback(hook0);
+            kai->appendCallback(hook1);
+        }
+        char values[][10] = { "SERVER", "BROKER", "CLIENT", "PUBLISH", "SUBSCRIBE" };
+        cout << argv[0] << ": run as " << rule << "[" << values[rule] << "]" << endl;
+        string topic = "topic";
+        if (argc > 2) {
+            topic = string(argv[2]);
+        }
+        string payload = "a123+/";
+        switch (rule) {
+        case CLIENT:
             kai->connect();
-        else
+            break;
+        case SERVER:
             kai->start();
+            break;
+        case BROKER:
+            kai->broker();
+            break;
+        case SUBSCRIBE:
+            kai->Subscriber(topic);
+            break;
+        case PUBLISH:
+            if (argc > 3) {
+                payload = string(argv[3]);
+            }
+            kai->Publisher(topic, payload);
+        default:
+            break;
+        }
         delete kai;
+    } else if (child > 0) {
+        cout << "child process " << child << " started" << endl;
+    } else {
+        cout << "kai-socket fork failed" << endl;
     }
 }
