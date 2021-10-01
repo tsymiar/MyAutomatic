@@ -27,22 +27,11 @@
 *.out
 *.app
 
-#Others
-WinNTKline/MfcUtil/image/taoxi.png
-WinNTKline/test/testUtils
-WinNTKline/test/IM/acnts
-LinxSrvc/*/build
-QtCases/GeneratedFiles
-QtCases/QtCases
-QtCases/moc_*
-QtCases/ui_*
-*/Debug
-/build
-/.vs*
-*/obj
-*bin
+# Logs
 *.tlog
 *.log
+
+# Patch database
 *.patch
 *-hard
 *.con
@@ -55,3 +44,15 @@ QtCases/ui_*
 *.recipe
 .DS_Store
 *.xcuserstate
+
+# Built files
+*/GeneratedFiles
+*cmake-build-*
+*/build
+*.idea
+*/moc_*
+*/ui_*
+/.vs*
+*Debug
+*bin
+*obj

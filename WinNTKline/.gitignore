@@ -26,6 +26,9 @@ MFC/
 [Gg]en/
 [Gg]eneratedFiles
 cache/
+MfcUtil/image/taoxi.png
+test/testUtils
+test/IM/acnts
 
 # Visual Studio 2015 cache/options directory
 .vs/
