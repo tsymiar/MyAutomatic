@@ -4,7 +4,9 @@
     <DebugChildProcesses>true</DebugChildProcesses>
     <DebuggerFlavor>LinuxDebugger</DebuggerFlavor>
     <DebuggerType>NativeOnly</DebuggerType>
-    <RemoteDebugTarget>173.199.127.68 (username=, port=22, authentication=Password)</RemoteDebugTarget>
+    <RemoteDebugTarget>-168912478;$(REMOTE_IP) (username=, port=22, authentication=Password)</RemoteDebugTarget>
+    <RemoteDebuggingTarget>$(REMOTE_IP) (username=, port=22, authentication=Password)</RemoteDebuggingTarget>
+    <RemoteTarget>-168912478;$(REMOTE_IP) (username=, port=22, authentication=Password)</RemoteTarget>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|MIPS'">
     <DebugChildProcesses>true</DebugChildProcesses>

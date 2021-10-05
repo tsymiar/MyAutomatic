@@ -20,7 +20,7 @@ client:
 Kai:
 	if [ ! -d "$(OBJ)" ]; then mkdir $(OBJ); fi;
 	$(CXX) -c $(CUR)/KaiSocket.cc  $(FLAG) $(PTHD) $(EXP)
-	$(CXX) -g $(CUR)/KaiSocket.cc $(CUR)/KaiMain.cpp $(FLAG) $(PTHD) -o $(GEN)/kaics.exe $(EXP)
+	$(CXX) -g $(CUR)/KaiSocket.cc $(CUR)/KaiTest.cpp $(FLAG) $(PTHD) -o $(GEN)/kaics.exe $(EXP)
 	mv *.o $(OBJ)/
 clean:
 	rm -rvf $(GEN)/*.exe* $(OBJ)

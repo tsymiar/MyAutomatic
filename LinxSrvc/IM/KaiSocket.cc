@@ -435,7 +435,7 @@ void KaiSocket::runCallback(KaiSocket* sock, KAISOCKHOOK func)
     }
 }
 
-unsigned long long KaiSocket::setSsid(const Network& network, int socket)
+uint64_t KaiSocket::setSsid(const Network& network, int socket)
 {
     std::lock_guard<std::mutex> lock(m_lock);
     unsigned int ip = 0;
@@ -455,7 +455,7 @@ unsigned long long KaiSocket::setSsid(const Network& network, int socket)
     return (network.PORT << 16 | socket << 8 | ip);
 }
 
-bool KaiSocket::verifySsid(int key, unsigned long long ssid)
+bool KaiSocket::verifySsid(int key, uint64_t ssid)
 {
     std::lock_guard<std::mutex> lock(m_lock);
     return ((int)((ssid >> 8) & 0x00ff) == key);

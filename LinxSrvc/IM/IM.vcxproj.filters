@@ -1,14 +1,22 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="..\..\WinNTKline\KlineUtil\IM\IM.cc" />
     <ClCompile Include="KaiSocket.cc">
       <Filter>Kai</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\WinNTKline\KlineUtil\IM\IM.cc">
+      <Filter>IM</Filter>
+    </ClCompile>
+    <ClCompile Include="KaiTest.cpp">
+      <Filter>Kai</Filter>
+    </ClCompile>
+    <ClCompile Include="fifo.c">
+      <Filter>IM</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Makefile" />
-    <None Include="KaiSocket.md">
+    <None Include="readme.md">
       <Filter>Kai</Filter>
     </None>
   </ItemGroup>
@@ -16,10 +24,18 @@
     <Filter Include="Kai">
       <UniqueIdentifier>{c44b1778-dc5d-4570-8ee1-fc9ec64d0e15}</UniqueIdentifier>
     </Filter>
+    <Filter Include="IM">
+      <UniqueIdentifier>{275696c1-028e-4a68-8ceb-07b2a2b707f0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="KaiSocket.h">
       <Filter>Kai</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="CMakeLists.txt">
+      <Filter>Kai</Filter>
+    </Text>
   </ItemGroup>
 </Project>
