@@ -49,6 +49,7 @@
 */GeneratedFiles
 *cmake-build-*
 */build
+build
 *.idea
 */moc_*
 */ui_*

@@ -1,1 +1,3 @@
-*.txt
+.vs/
+*.db
+slnx.sqlite
