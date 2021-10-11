@@ -7,10 +7,43 @@
 #include <mutex>
 #include <functional>
 
+enum KaiRoles {
+    NONAME = 0,
+    PRODUCER,
+    CONSUMER,
+    SERVER,
+    BROKER,
+    CLIENT,
+    PUBLISH,
+    SUBSCRIBE
+};
+
 class KaiSocket {
 public:
+    // #pragma pack(1)
+    struct Header {
+        char rsv;
+        int etag;
+        volatile unsigned long long ssid; //ssid = port | socket | ip
+        char topic[32];
+        unsigned int size;
+    } __attribute__((packed));
+    struct Message {
+        Header head{};
+        struct Payload {
+            char stat[8];
+            char body[0];
+        } __attribute__((packed)) data {};
+        void* operator new(size_t, const Message& msg) {
+            static void* mss = (void*)(&msg);
+            return mss;
+        }
+    } __attribute__((packed));
     typedef int(*KAISOCKHOOK)(KaiSocket*);
+    typedef void(*RECVCALLBACK)(const Message&);
+    static char G_KaiRole[][0xa];
     KaiSocket() = default;
+public:
     explicit KaiSocket(unsigned short lstnprt);
     KaiSocket(const char* srvip, unsigned short srvport);
     virtual ~KaiSocket() = default;
@@ -18,12 +51,12 @@ public:
     // workflow
     int start();
     int connect();
-    int send(const uint8_t* data, size_t len);
-    int broadcast(const char* data, int len);
     int broker();
-    int recv(char* buff, int size);
-    static void wait(unsigned int tms);
+    ssize_t send(const uint8_t* data, size_t len);
+    ssize_t recv(uint8_t* buff, size_t size);
+    ssize_t broadcast(const uint8_t* data, size_t len);
     void finish();
+    static void wait(unsigned int tms);
     // callback
     void registerCallback(KAISOCKHOOK func);
     void appendCallback(KAISOCKHOOK func);
@@ -31,31 +64,9 @@ public:
     void setResponseHandle(void(*func)(uint8_t*, size_t), uint8_t*, size_t&);
     void setRequestHandle(void(*func)(uint8_t*, size_t), uint8_t*, size_t&);
     // after connect()
-    void SetTopic(const std::string& topic, int tag = Producer);
-    int Publisher(const std::string& topic, const std::string& payload, ...);
-    ssize_t Subscriber(const std::string& message);
-public:
-    enum KaiRoles {
-        Producer = 1,
-        Consumer
-    };
-    struct Header {
-        char rsv;
-        int etag;
-        volatile unsigned long long ssid; //ssid = port | socket | ip
-        char topic[32];
-        unsigned int size;
-    };
-    struct Message {
-        Header head{};
-        struct Payload {
-            char stat[8];
-            char body[0];
-        } data{};
-        void* operator new(size_t, const Message& msg) {
-            return (void*)(&msg);
-        }
-    };
+    void SetTopic(const std::string& topic, Header& header);
+    ssize_t Publisher(const std::string& topic, const std::string& payload, ...);
+    ssize_t Subscriber(const std::string& message, RECVCALLBACK callback = nullptr);
 public:
     struct SharedKaiSocket : std::enable_shared_from_this<KaiSocket> {
         std::shared_ptr<KaiSocket> GetSharedInstance()
@@ -81,15 +92,14 @@ private:
     std::mutex m_lock = {};
     std::vector<Network> m_networks{};
     std::vector<int(*)(KaiSocket*)> m_callbacks{};
-    std::deque<Message*>* m_msgQue = new(std::nothrow)std::deque<Message*>();
-    void(*submit)(char*, int) = nullptr;
-    void(*receive)(char*, int) = nullptr;
+    std::deque<const Message*>* m_msgQue = new(std::nothrow)std::deque<const Message*>();
 private:
-    uint64_t setSsid(const Network& network, int socket);
+    uint64_t setSsid(const Network& network, int socket = 0);
     void handleNotify(Network& network);
     void runCallback(KaiSocket* sock, KAISOCKHOOK func);
     bool verifySsid(int key, uint64_t ssid);
     bool running();
     int produce(const Message& msg);
     int consume(Message& msg);
+    ssize_t sendto(Network, const uint8_t*, size_t);
 };

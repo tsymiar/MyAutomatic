@@ -5,16 +5,8 @@
 
 using namespace std;
 
-enum Rules {
-    SERVER,
-    BROKER,
-    CLIENT,
-    PUBLISH,
-    SUBSCRIBE
-};
-
 int hook0(KaiSocket* kai) {
-    char* text = new char[64];
+    uint8_t* text = new uint8_t[64];
     memset(text, 0, 64);
     int len = kai->recv(text, 64);
     if (len > 0) {
@@ -41,10 +33,10 @@ int hook1(KaiSocket* kai) {
 }
 
 int main(int argc, char* argv[]) {
-    Rules rule = SERVER;
+    KaiRoles role = SERVER;
     if (argc > 1) {
         string argv1 = string(argv[1]);
-        rule = (argv1 == "-C" ? CLIENT :
+        role = (argv1 == "-C" ? CLIENT :
             (argv1 == "-S" ? SUBSCRIBE :
                 (argv1 == "-P" ? PUBLISH :
                     (argv1 == "-B" ? BROKER : SERVER))));
@@ -52,23 +44,22 @@ int main(int argc, char* argv[]) {
     pid_t child = fork();
     if (child == 0) {
         KaiSocket* kai;
-        if (rule >= CLIENT) {
+        if (role >= CLIENT) {
             kai = new(nothrow)KaiSocket("127.0.0.1", 9999);
         } else {
             kai = new(nothrow)KaiSocket(9999);
         }
-        if (rule == CLIENT || rule == SERVER) {
+        if (role == CLIENT || role == SERVER) {
             kai->registerCallback(hook0);
             kai->appendCallback(hook1);
         }
-        char values[][10] = { "SERVER", "BROKER", "CLIENT", "PUBLISH", "SUBSCRIBE" };
-        cout << argv[0] << ": run as " << rule << "[" << values[rule] << "]" << endl;
+        cout << argv[0] << ": run as [" << role << "](" << KaiSocket::G_KaiRole[role] << ")" << endl;
         string topic = "topic";
         if (argc > 2) {
             topic = string(argv[2]);
         }
         string payload = "a123+/";
-        switch (rule) {
+        switch (role) {
         case CLIENT:
             kai->connect();
             break;
