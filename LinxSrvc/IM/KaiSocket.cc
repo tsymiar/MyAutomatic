@@ -1,17 +1,34 @@
 #include "KaiSocket.h"
 
+#ifdef _WIN32
+#include <Ws2tcpip.h>
+#include <Windows.h>
+#else
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#endif
 #include <algorithm>
 #include <iostream>
 #include <cstdlib>
 #include <thread>
 #include <cmath>
 
+#ifdef _WIN32
+#define close(s) {closesocket(s);WSACleanup();}
+typedef int socklen_t;
+#ifndef INET_ADDRSTRLEN
+#define INET_ADDRSTRLEN 16
+#endif
+#define usleep(u) Sleep((u)/1000)
+#define write(a,b,c) ::send(a,(char*)(b),c,0)
+#else
+#define WSACleanup()
+#endif
+
 static bool g_thrStat = false;
 static unsigned int g_maxRetryTimes = 100;
-char KaiSocket::G_KaiRole[][0xa] = { "NONAME", "PRODUCER", "CONSUMER", "SERVER", "BROKER", "CLIENT", "PUBLISH", "SUBSCRIBE" };
+char KaiSocket::G_KaiRole[][0xa] = { "NONE", "PRODUCER", "CONSUMER", "SERVER", "BROKER", "CLIENT", "PUBLISH", "SUBSCRIBE" };
 namespace {
     const unsigned int g_wait100ms = 100;
     const size_t HEAD_SIZE = sizeof(KaiSocket::Header);
@@ -24,6 +41,15 @@ KaiSocket::KaiSocket(unsigned short lstnprt)
 
 KaiSocket::KaiSocket(const char* srvip, unsigned short srvport)
 {
+#ifdef _WIN32
+    WSADATA wsaData;
+    if (WSAStartup(srvport, &wsaData) == SOCKET_ERROR) {
+        std::cerr << "WSAStartup failed with error " << WSAGetLastError() << std::endl;
+        WSACleanup();
+        std::cerr << "ERROR(" << errno << "): " << strerror(errno) << std::endl;
+        return;
+    }
+#endif // _WIN32
     if (srvip != nullptr) {
         m_network.IP = srvip;
     }
@@ -32,14 +58,21 @@ KaiSocket::KaiSocket(const char* srvip, unsigned short srvport)
         std::cerr
             << "Generating socket (" << (errno != 0 ? strerror(errno) : std::to_string(m_network.socket)) << ")."
             << std::endl;
+        WSACleanup();
         return;
     }
     m_network.PORT = srvport;
 }
 
+KaiSocket& KaiSocket::GetInstance()
+{
+    static KaiSocket socket;
+    return socket;
+}
+
 int KaiSocket::start()
 {
-    int listen_socket = m_network.socket;
+    SOCKET listen_socket = m_network.socket;
     unsigned short srvport = m_network.PORT;
 
     struct sockaddr_in local { };
@@ -72,7 +105,7 @@ int KaiSocket::start()
     while (true) {
         struct sockaddr_in sin { };
         auto len = static_cast<socklen_t>(sizeof(sin));
-        int rcv_sock = m_network.socket = ::accept(listen_socket, reinterpret_cast<struct sockaddr*>(&sin), &len);
+        SOCKET rcv_sock = m_network.socket = ::accept(listen_socket, reinterpret_cast<struct sockaddr*>(&sin), &len);
         if (rcv_sock < 0) {
             std::cerr
                 << "Socket accept (" << (errno != 0 ? strerror(errno) : std::to_string(rcv_sock)) << ")."
@@ -129,7 +162,7 @@ int KaiSocket::connect()
     std::cout << "------ Client v0.1 " << ipaddr << ":" << m_network.PORT << " ------" << std::endl;
     bool addrreuse = false;
     setsockopt(m_network.socket, SOL_SOCKET, SO_REUSEADDR, (const char*)&addrreuse, sizeof(bool));
-    int tries = 0;
+    unsigned int tries = 0;
     while (::connect(m_network.socket, (struct sockaddr*)&srvaddr, sizeof(srvaddr)) == (-1)) {
         if (tries < g_maxRetryTimes) {
             wait(g_wait100ms * (int)pow(2, tries));
@@ -149,65 +182,6 @@ int KaiSocket::connect()
         wait(g_wait100ms);
     }
     return 0;
-}
-
-ssize_t KaiSocket::sendto(Network network, const uint8_t* data, size_t len)
-{
-    if (data == nullptr || len == 0)
-        return 0;
-    size_t left = len;
-    auto* msg = new uint8_t[left];
-    memset(msg, 0, left);
-    memcpy(msg, data, len);
-    while (left > 0) {
-        ssize_t wrote = 0;
-        if ((wrote = write(network.socket, msg + wrote, left)) <= 0) {
-            if (wrote < 0 && errno == EINTR)
-                wrote = 0; /* call write() again */
-            else {
-                handleNotify(network);
-                delete[] msg;
-                return -1; /* error */
-            }
-        }
-        left -= wrote;
-    }
-    delete[] msg;
-    return (len - left);
-}
-
-ssize_t KaiSocket::send(const uint8_t* data, size_t len)
-{
-    ssize_t stat = 0;
-    for (auto& network : m_networks) {
-        ssize_t size = sendto(network, data, len);
-        if (size < 0) {
-            handleNotify(network);
-            stat = -1;
-        }
-    }
-    return stat;
-}
-
-ssize_t KaiSocket::broadcast(const uint8_t* data, size_t len)
-{
-    if (m_networks.empty() || m_networks.begin() == m_networks.end())
-        return -1;
-    ssize_t bytes = 0;
-    for (auto& network : m_networks) {
-        size_t size = HEAD_SIZE + len;
-        auto* message = new uint8_t[size];
-        memset(message, 0, size);
-        memcpy(message, &network.flag, HEAD_SIZE);
-        memcpy(message + HEAD_SIZE, data, len);
-        bytes = ::send(network.socket, message, size, 0);
-        if (bytes <= 0) {
-            handleNotify(network);
-            continue;
-        }
-        wait(1);
-    }
-    return bytes;
 }
 
 int proxyhook(KaiSocket* kai)
@@ -255,7 +229,7 @@ ssize_t KaiSocket::recv(uint8_t* buff, size_t size)
         handleNotify(m_network);
         return -1;
     }
-    ssize_t res = ::recv(m_network.socket, &header, len, 0);
+    ssize_t res = ::recv(m_network.socket, reinterpret_cast<char*>(&header), len, 0);
     if (res < 0) {
         handleNotify(m_network);
         return -2;
@@ -286,18 +260,22 @@ ssize_t KaiSocket::recv(uint8_t* buff, size_t size)
     memcpy(m_network.flag.topic, header.topic, sizeof(Header::topic));
     memcpy(buff, &header, len);
     size_t total = m_network.flag.size;
-    auto* message = new uint8_t[total];
+    auto* message = new(std::nothrow) uint8_t[total];
+    if (message == nullptr) {
+        std::cerr << __FUNCTION__ << ": message malloc failed!" << std::endl;
+        return -1;
+    }
     ssize_t left = m_network.flag.size - len;
     ssize_t err = -1;
     if (left > 0) {
-        err = ::recv(m_network.socket, (message + len), left, 0);
+        err = ::recv(m_network.socket, reinterpret_cast<char*>(message + len), left, 0);
         if (err <= 0) {
             handleNotify(m_network);
             return -3;
         }
     }
     Message msg = *reinterpret_cast<Message*>(buff);
-    int stat = 0;
+    ssize_t stat = 0;
     switch (msg.head.etag) {
     case PRODUCER:
         stat = produce(msg);
@@ -317,7 +295,7 @@ ssize_t KaiSocket::recv(uint8_t* buff, size_t size)
             if (strcmp(network.flag.topic, m_network.flag.topic) == 0
                 && network.flag.ssid == subSsid
                 && network.flag.etag == CONSUMER) { // only consume should be sent
-                if ((stat == this->sendto(network, message, total)) < 0) {
+                if ((stat = this->sendto(network, message, total)) < 0) {
                     std::cerr << __FUNCTION__ << ": sendto [" << network.socket << "], " << total << " failed." << std::endl;
                     continue;
                 }
@@ -345,7 +323,7 @@ bool KaiSocket::running()
     return m_network.run_;
 }
 
-#if (defined __GNUC__ && __APPLE__ )
+#if (defined __GNUC__ && __APPLE__)
 #pragma GCC diagnostic pop
 #endif
 
@@ -361,7 +339,59 @@ void KaiSocket::wait(unsigned int tms)
 #else
     usleep(1000 * tms);
 #endif
+}
+
+ssize_t KaiSocket::sendto(Network network, const uint8_t* data, size_t len)
+{
+    if (data == nullptr || len == 0)
+        return 0;
+    int left = (int)len;
+    auto* msg = new uint8_t[left];
+    memset(msg, 0, left);
+    memcpy(msg, data, len);
+    while (left > 0) {
+        ssize_t wrote = 0;
+        if ((wrote = write(network.socket, reinterpret_cast<char*>(msg + wrote), left)) <= 0) {
+            if (wrote < 0 && errno == EINTR)
+                wrote = 0; /* call write() again */
+            else {
+                handleNotify(network);
+                delete[] msg;
+                return -1; /* error */
+            }
+        }
+        left -= wrote;
     }
+    delete[] msg;
+    return ssize_t(len - left);
+}
+
+ssize_t KaiSocket::broadcast(const uint8_t* data, size_t len)
+{
+    if (m_networks.empty() || m_networks.begin() == m_networks.end())
+        return -1;
+    ssize_t bytes = 0;
+    for (auto& network : m_networks) {
+        size_t size = HEAD_SIZE + len;
+        auto* message = new(std::nothrow) uint8_t[size];
+        if (message == nullptr) {
+            std::cerr << __FUNCTION__ << ": message malloc failed!" << std::endl;
+            return -1;
+        }
+        memset(message, 0, size);
+        memcpy(message, &network.flag, HEAD_SIZE);
+        memcpy(message + HEAD_SIZE, data, len);
+        ssize_t stat = sendto(network, message, size);
+        if (stat <= 0) {
+            handleNotify(network);
+            stat = 0;
+            continue;
+        }
+        bytes += stat;
+        wait(1);
+    }
+    return bytes;
+}
 
 void KaiSocket::registerCallback(KAISOCKHOOK func)
 {
@@ -382,39 +412,6 @@ void KaiSocket::appendCallback(const std::function<int(KaiSocket*)>& func)
     appendCallback(hook);
 }
 
-void KaiSocket::setResponseHandle(void(*func)(uint8_t*, size_t), uint8_t* data, size_t& size)
-{
-    auto hook = [func, data, &size](KaiSocket* sock)-> size_t {
-        if (sock == nullptr)
-            return -1;
-        size_t len = sock->recv(data, size);
-        if (len == size) {
-            func(data, size);
-        } else if (len != 0) {
-            std::cerr << "Received size/len (" << len << ", " << size << ") mismatch." << std::endl;
-        }
-        size = len;
-        return size;
-    };
-    appendCallback(hook);
-}
-
-void KaiSocket::setRequestHandle(void(*func)(uint8_t*, size_t), uint8_t* data, size_t& size)
-{
-    auto hook = [func, data, &size](KaiSocket* sock)-> size_t {
-        if (sock == nullptr)
-            return -1;
-        func(data, size);
-        size_t len = sock->send(data, size);
-        if (len != size) {
-            std::cerr << "Sent size/len (" << len << ", " << size << ") mismatch." << std::endl;
-        }
-        size = len;
-        return size;
-    };
-    appendCallback(hook);
-}
-
 void KaiSocket::handleNotify(Network& network)
 {
     if (errno == EINTR || errno == EAGAIN || errno == ETIMEDOUT || errno == EWOULDBLOCK) {
@@ -423,7 +420,7 @@ void KaiSocket::handleNotify(Network& network)
     }
     std::lock_guard<std::mutex> lock(m_lock);
     for (auto it = m_networks.begin(); it != m_networks.end(); ++it) {
-        if (it->socket < 0 || it->socket < 0 || m_networks.empty())
+        if (it->socket < 0 || m_network.socket < 0 || m_networks.empty())
             return;
         if (it->socket == network.socket && it->run_) {
             auto iter = it;
@@ -443,12 +440,6 @@ void KaiSocket::handleNotify(Network& network)
         }
         wait(1);
     }
-}
-
-KaiSocket& KaiSocket::GetInstance()
-{
-    static KaiSocket socket;
-    return socket;
 }
 
 void KaiSocket::runCallback(KaiSocket* sock, KAISOCKHOOK func)
@@ -485,7 +476,7 @@ void KaiSocket::runCallback(KaiSocket* sock, KAISOCKHOOK func)
     }
 }
 
-uint64_t KaiSocket::setSsid(const Network& network, int socket)
+uint64_t KaiSocket::setSsid(const Network& network, SOCKET socket)
 {
     std::lock_guard<std::mutex> lock(m_lock);
     unsigned int ip = 0;
@@ -508,10 +499,43 @@ uint64_t KaiSocket::setSsid(const Network& network, int socket)
     return (network.PORT << 16 | socket << 8 | ip);
 }
 
-bool KaiSocket::verifySsid(int key, uint64_t ssid)
+bool KaiSocket::verifySsid(SOCKET key, uint64_t ssid)
 {
     std::lock_guard<std::mutex> lock(m_lock);
     return ((int)((ssid >> 8) & 0x00ff) == key);
+}
+
+void KaiSocket::setResponseHandle(void(*func)(uint8_t*, size_t), uint8_t* data, size_t& size)
+{
+    auto hook = [func, data, &size](KaiSocket* sock)-> size_t {
+        if (sock == nullptr)
+            return -1;
+        size_t len = sock->recv(data, size);
+        if (len == size) {
+            func(data, size);
+        } else if (len != 0) {
+            std::cerr << "Received size/len (" << len << ", " << size << ") mismatch." << std::endl;
+        }
+        size = len;
+        return size;
+    };
+    appendCallback(hook);
+}
+
+void KaiSocket::setRequestHandle(void(*func)(uint8_t*, size_t), uint8_t* data, size_t& size)
+{
+    auto hook = [func, data, &size](KaiSocket* sock)-> size_t {
+        if (sock == nullptr)
+            return -1;
+        func(data, size);
+        size_t len = sock->send(data, size);
+        if (len != size) {
+            std::cerr << "Sent size/len (" << len << ", " << size << ") mismatch." << std::endl;
+        }
+        size = len;
+        return size;
+    };
+    appendCallback(hook);
 }
 
 int KaiSocket::produce(const Message& msg)
@@ -555,6 +579,11 @@ void KaiSocket::finish()
     m_msgQue = nullptr;
 }
 
+ssize_t KaiSocket::send(const uint8_t* data, size_t len)
+{
+    return broadcast(data, len);
+}
+
 void KaiSocket::SetTopic(const std::string& topic, Header& header)
 {
     size_t size = topic.size();
@@ -570,17 +599,17 @@ void KaiSocket::SetTopic(const std::string& topic, Header& header)
 ssize_t KaiSocket::Subscriber(const std::string& message, RECVCALLBACK callback)
 {
     if (this->connect() < 0)
-        return -1;
+        return -2;
     Message msg = {};
     const size_t Size = sizeof(Message);
     bool flag = false;
     do {
         memset(&msg, 0, Size);
-        ssize_t len = ::recv(m_network.socket, &msg, Size, 0);
+        ssize_t len = ::recv(m_network.socket, reinterpret_cast<char*>(&msg), Size, 0);
         if (len < 0) {
             std::cerr << __FUNCTION__ << ": recv head fail, " << strerror(errno) << std::endl;
             handleNotify(m_network);
-            return -2;
+            return -3;
         }
         char* kai = (char*)(&msg);
         if (kai[0] == 'K' && kai[1] == 'a' && kai[2] == 'i')
@@ -593,12 +622,12 @@ ssize_t KaiSocket::Subscriber(const std::string& message, RECVCALLBACK callback)
                 msg.head.ssid = setSsid(m_network);
             }
             // parse message divide to topic/etc...
-            std::string topic = message; // "message.sub()...";
+            const std::string topic = message; // "message.sub()...";
             SetTopic(topic, msg.head);
             len = sendto(m_network, (uint8_t*)&msg, Size);
             if (len < 0) {
                 std::cerr << __FUNCTION__ << ": sendto " << strerror(errno) << std::endl;
-                return -3;
+                return -4;
             }
             std::cout << __FUNCTION__ << " as " << KaiSocket::G_KaiRole[msg.head.etag]
                 << ", MQ topic: '" << msg.head.topic << "'." << std::endl;
@@ -606,11 +635,15 @@ ssize_t KaiSocket::Subscriber(const std::string& message, RECVCALLBACK callback)
         if (msg.head.size > Size) {
             size_t remain = msg.head.size - Size;
             auto* body = new(std::nothrow) uint8_t[remain];
-            len = ::recv(m_network.socket, body, remain, 0);
+            if (body == nullptr) {
+                std::cerr << __FUNCTION__ << ": body malloc failed!" << std::endl;
+                return -1;
+            }
+            len = ::recv(m_network.socket, reinterpret_cast<char*>(body), remain, 0);
             if (len < 0) {
                 std::cerr << __FUNCTION__ << ": recv body fail, " << strerror(errno) << std::endl;
                 handleNotify(m_network);
-                return -4;
+                return -5;
             } else {
                 memcpy(msg.data.body, body, len);
                 if (callback != nullptr) {
@@ -637,11 +670,11 @@ ssize_t KaiSocket::Subscriber(const std::string& message, RECVCALLBACK callback)
                 std::cerr << "consume fail, socket: " << it->socket << ", topic: " << msg.head.mqid << "(" << it->flag.mqid << ")" << std::endl;
             }
             wait(1);
+            }
         }
-    }
 #endif
     return 0;
-}
+    }
 
 ssize_t KaiSocket::Publisher(const std::string& topic, const std::string& payload, ...)
 {
@@ -658,18 +691,22 @@ ssize_t KaiSocket::Publisher(const std::string& topic, const std::string& payloa
     memset(&msg, 0, sizeof(Message));
     size = (size > maxLen ? maxLen : size);
     size_t msgLen = sizeof msg + size;
-    msg.head.size = msgLen;
+    msg.head.size = static_cast<unsigned int>(msgLen);
     msg.head.etag = PRODUCER;
     SetTopic(topic, msg.head);
     if (this->connect() != 0) {
-        std::cerr << __FUNCTION__ << ": connect failed" << std::endl;
-        return -1;
+        std::cerr << __FUNCTION__ << ": connect failed!" << std::endl;
+        return -2;
     }
     auto* message = new(std::nothrow) uint8_t[msgLen];
+    if (message == nullptr) {
+        std::cerr << __FUNCTION__ << ": message malloc failed!" << std::endl;
+        return -1;
+    }
     memcpy(message, &msg, sizeof(Message));
     memcpy(message + sizeof(msg), payload.c_str(), size);
     this->produce(msg);
-    size_t len = this->send(message, msgLen);
+    ssize_t len = this->send(message, msgLen);
     if (len <= 0) {
         this->consume(msg);
     }

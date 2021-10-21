@@ -4,12 +4,10 @@ project(kaics)
 
 set(CMAKE_CXX_STANDARD 14)
 set(TARGET kaics.exe)
+set(OPTION "-fPIC -Wall -pthread -ggdb")
 
 file(GLOB SRC_FILE_LIST "Kai*")
 
 add_executable (${TARGET} ${SRC_FILE_LIST})
 
-target_link_libraries (${TARGET}
-        -fPIC
-        -Wall
-        -ggdb)
+target_link_libraries (${TARGET} ${OPTION})
