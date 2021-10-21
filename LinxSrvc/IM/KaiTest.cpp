@@ -1,6 +1,8 @@
 #include "KaiSocket.h"
 
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 #include <iostream>
 
 using namespace std;
@@ -41,8 +43,10 @@ int main(int argc, char* argv[]) {
                 (argv1 == "-P" ? PUBLISH :
                     (argv1 == "-B" ? BROKER : SERVER))));
     }
+#ifndef _WIN32
     pid_t child = fork();
     if (child == 0) {
+#endif
         KaiSocket* kai;
         if (role >= CLIENT) {
             kai = new(nothrow)KaiSocket("127.0.0.1", 9999);
@@ -81,9 +85,11 @@ int main(int argc, char* argv[]) {
             break;
         }
         delete kai;
+#ifndef _WIN32
     } else if (child > 0) {
         cout << "child process " << child << " started" << endl;
     } else {
         cout << "kai-socket fork failed" << endl;
     }
+#endif
 }

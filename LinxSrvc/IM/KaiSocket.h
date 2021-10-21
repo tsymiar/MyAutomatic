@@ -8,7 +8,7 @@
 #include <functional>
 
 enum KaiRoles {
-    NONAME = 0,
+    NONE = 0,
     PRODUCER,
     CONSUMER,
     SERVER,
@@ -18,9 +18,21 @@ enum KaiRoles {
     SUBSCRIBE
 };
 
+#ifdef _WIN32
+#define WINDOWS_IGNORE_PACKING_MISMATCH
+#pragma warning(disable:4996)
+#define packed
+#define __attribute__(a)
+typedef int ssize_t;
+#pragma comment(lib, "WS2_32.lib")
+#include <WinSock2.h>
+#else
+using SOCKET = int;
+#endif
+
 class KaiSocket {
 public:
-    // #pragma pack(1)
+#pragma pack(1)
     struct Header {
         char rsv;
         int etag;
@@ -28,17 +40,24 @@ public:
         char topic[32];
         unsigned int size;
     } __attribute__((packed));
+#pragma pack()
+#pragma pack(1)
     struct Message {
         Header head{};
         struct Payload {
             char stat[8];
+#ifdef _WIN32
+            char body[256];
+#else
             char body[0];
+#endif
         } __attribute__((packed)) data {};
         void* operator new(size_t, const Message& msg) {
             static void* mss = (void*)(&msg);
             return mss;
         }
     } __attribute__((packed));
+#pragma pack()
     typedef int(*KAISOCKHOOK)(KaiSocket*);
     typedef void(*RECVCALLBACK)(const Message&);
     static char G_KaiRole[][0xa];
@@ -81,7 +100,7 @@ public:
     }
 private:
     struct Network {
-        int socket;
+        SOCKET socket;
         std::string IP;
         unsigned short PORT;
         volatile bool run_ = false;
@@ -94,12 +113,12 @@ private:
     std::vector<int(*)(KaiSocket*)> m_callbacks{};
     std::deque<const Message*>* m_msgQue = new(std::nothrow)std::deque<const Message*>();
 private:
-    uint64_t setSsid(const Network& network, int socket = 0);
+    uint64_t setSsid(const Network& network, SOCKET socket = 0);
+    ssize_t sendto(Network, const uint8_t*, size_t);
     void handleNotify(Network& network);
     void runCallback(KaiSocket* sock, KAISOCKHOOK func);
-    bool verifySsid(int key, uint64_t ssid);
+    bool verifySsid(SOCKET key, uint64_t ssid);
     bool running();
     int produce(const Message& msg);
     int consume(Message& msg);
-    ssize_t sendto(Network, const uint8_t*, size_t);
 };
