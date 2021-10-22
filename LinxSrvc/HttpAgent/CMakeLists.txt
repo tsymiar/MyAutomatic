@@ -1,14 +1,12 @@
 ﻿cmake_minimum_required (VERSION 3.8)
 
-project ("AuthAgent")
+project ("HttpAgent")
 
-set(TARGET AuthAgent)
+set(TARGET HttpAgent)
 
-add_executable (${TARGET}
-    AuthAgent.cpp
-    HttpEvent.cpp
-    Utils.cpp
-)
+file(GLOB SRC_FILE_LIST "*.cpp")
+
+add_executable (${TARGET} ${SRC_FILE_LIST})
 
 include_directories (
     /usr/local/include

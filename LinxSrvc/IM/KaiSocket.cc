@@ -286,7 +286,10 @@ ssize_t KaiSocket::recv(uint8_t* buff, size_t size)
     default:
         break;
     }
-    std::cout << __FUNCTION__ << ": " << G_KaiRole[msg.head.etag] << " operated count = " << (stat > 0 ? std::to_string(stat) : "0") << std::endl;
+    if (msg.head.etag >= NONE && msg.head.etag <= SUBSCRIBE) {
+        std::cout << __FUNCTION__ << ": " << G_KaiRole[msg.head.etag] << " operated count = "
+            << (stat > 0 ? std::to_string(stat) : "0") << std::endl;
+    }
     if (msg.head.etag != 0) {
         using namespace std;
         msg.head.ssid = setSsid(m_network);

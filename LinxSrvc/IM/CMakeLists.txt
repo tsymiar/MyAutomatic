@@ -1,13 +1,18 @@
 cmake_minimum_required(VERSION 3.0)
 
-project(kaics)
+project(kaics CXX)
 
 set(CMAKE_CXX_STANDARD 14)
-set(TARGET kaics.exe)
-set(OPTION "-fPIC -Wall -pthread -ggdb")
+set(TARGET kaics)
+set(OPTION "-fPIC -pthread")
+set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g -ggdb")
+set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
+set(CMAKE_CXX_FLAGS "-std=c++0x ${CMAKE_CXX_FLAGS} -g -ftest-coverage -fprofile-arcs -Wno-deprecated")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/../jniLibs/${ANDROID_ABI})
 
-file(GLOB SRC_FILE_LIST "Kai*")
+file(GLOB SRC_FILE_LIST "Kai*[^Test]*.*")
 
-add_executable (${TARGET} ${SRC_FILE_LIST})
+add_library(${TARGET} SHARED ${SRC_FILE_LIST})
+add_executable (${TARGET}.exe ${SRC_FILE_LIST} KaiTest.cpp)
 
 target_link_libraries (${TARGET} ${OPTION})
