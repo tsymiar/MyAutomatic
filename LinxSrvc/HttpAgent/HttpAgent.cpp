@@ -1,4 +1,4 @@
-﻿#include "AuthAgent.h"
+﻿#include "HttpAgent.h"
 
 #include "HttpEvent.h"
 #include "Utils.h"
@@ -21,6 +21,6 @@ int main(int argc, char** argv)
     }
     StartServer(port);
 
-    cout << "Hello AuthAgent." << endl;
+    cout << "Hello HttpAgent." << endl;
     return 0;
 }
