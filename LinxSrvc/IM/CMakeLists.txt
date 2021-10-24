@@ -10,9 +10,11 @@ set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
 set(CMAKE_CXX_FLAGS "-std=c++0x ${CMAKE_CXX_FLAGS} -g -ftest-coverage -fprofile-arcs -Wno-deprecated")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/../jniLibs/${ANDROID_ABI})
 
+add_definitions(-DFULLY_COMPILE)
+
 file(GLOB SRC_FILE_LIST "Kai*[^Test]*.*")
 
 add_library(${TARGET} SHARED ${SRC_FILE_LIST})
-add_executable (${TARGET}.exe ${SRC_FILE_LIST} KaiTest.cpp)
+add_executable(${TARGET}.exe ${SRC_FILE_LIST} KaiTest.cpp)
 
-target_link_libraries (${TARGET} ${OPTION})
+target_link_libraries(${TARGET} ${OPTION})

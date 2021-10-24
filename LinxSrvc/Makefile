@@ -6,5 +6,6 @@ all:
 clean:
 	make -C HttpAgent cleanAll
 	make -C gSOAPverify clean
+	make -C IM clean
 	rm -rvf bin/*.exe* ./obj
 	rm -rvf jniLibs
