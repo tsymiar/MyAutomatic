@@ -21,6 +21,7 @@ enum KaiRoles {
 #ifdef _WIN32
 #define WINDOWS_IGNORE_PACKING_MISMATCH
 #pragma warning(disable:4996)
+#pragma warning(disable:4267)
 #define packed
 #define __attribute__(a)
 typedef int ssize_t;
@@ -62,30 +63,35 @@ public:
     typedef void(*RECVCALLBACK)(const Message&);
     static char G_KaiRole[][0xa];
     KaiSocket() = default;
+    virtual ~KaiSocket() = default;
 public:
+#ifdef FULLY_COMPILE
     explicit KaiSocket(unsigned short lstnprt);
     KaiSocket(const char* srvip, unsigned short srvport);
-    virtual ~KaiSocket() = default;
+#else
+    int Initialize(unsigned short lstnprt);
+#endif
+    int Initialize(const char* srvip, unsigned short srvport);
     static KaiSocket& GetInstance();
     // workflow
     int start();
     int connect();
-    int broker();
+    //
+    int Broker();
+    ssize_t Publisher(const std::string& topic, const std::string& payload, ...);
+    ssize_t Subscriber(const std::string& message, RECVCALLBACK callback = nullptr);
+    // packaged
+    static void wait(unsigned int tms);
     ssize_t send(const uint8_t* data, size_t len);
     ssize_t recv(uint8_t* buff, size_t size);
     ssize_t broadcast(const uint8_t* data, size_t len);
-    void finish();
-    static void wait(unsigned int tms);
     // callback
     void registerCallback(KAISOCKHOOK func);
     void appendCallback(KAISOCKHOOK func);
+#ifdef FULLY_COMPILE
     void appendCallback(const std::function<int(KaiSocket*)>&);
     void setResponseHandle(void(*func)(uint8_t*, size_t), uint8_t*, size_t&);
     void setRequestHandle(void(*func)(uint8_t*, size_t), uint8_t*, size_t&);
-    // after connect()
-    void SetTopic(const std::string& topic, Header& header);
-    ssize_t Publisher(const std::string& topic, const std::string& payload, ...);
-    ssize_t Subscriber(const std::string& message, RECVCALLBACK callback = nullptr);
 public:
     struct SharedKaiSocket : std::enable_shared_from_this<KaiSocket> {
         std::shared_ptr<KaiSocket> GetSharedInstance()
@@ -98,27 +104,30 @@ public:
     {
         return std::make_shared<T>(std::forward<Args>(args)...);
     }
+#endif
+    // private members should be deleted in release version head-file
 private:
     struct Network {
         SOCKET socket;
         std::string IP;
         unsigned short PORT;
         volatile bool run_ = false;
+        bool client = false;
         Header flag;
     } m_network;
-    bool m_isClient = false;
-    volatile unsigned int m_threadNo_ = 0;
     std::mutex m_lock = {};
     std::vector<Network> m_networks{};
     std::vector<int(*)(KaiSocket*)> m_callbacks{};
-    std::deque<const Message*>* m_msgQue = new(std::nothrow)std::deque<const Message*>();
+    static std::deque<const Message*>* m_msgQue;
 private:
     uint64_t setSsid(const Network& network, SOCKET socket = 0);
-    ssize_t sendto(Network, const uint8_t*, size_t);
+    ssize_t writes(Network, const uint8_t*, size_t);
+    bool checkSsid(SOCKET key, uint64_t ssid);
+    bool running();
+    void finish();
     void handleNotify(Network& network);
     void runCallback(KaiSocket* sock, KAISOCKHOOK func);
-    bool verifySsid(SOCKET key, uint64_t ssid);
-    bool running();
+    void setTopic(const std::string& topic, Header& header);
     int produce(const Message& msg);
     int consume(Message& msg);
 };
