@@ -6,6 +6,7 @@
 #else
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <signal.h>
 #include <unistd.h>
 #endif
 #include <algorithm>
@@ -36,6 +37,11 @@ namespace {
     const size_t HEAD_SIZE = sizeof(KaiSocket::Header);
 }
 
+void signalCatch(int signo)
+{
+    std::cout << "Caught signal: " << signo << std::endl;
+}
+
 int KaiSocket::Initialize(const char* srvip, unsigned short srvport)
 {
 #ifdef _WIN32
@@ -45,6 +51,8 @@ int KaiSocket::Initialize(const char* srvip, unsigned short srvport)
         WSACleanup();
         return -1;
     }
+#else
+    signal(SIGPIPE, signalCatch);
 #endif // _WIN32
     if (srvip != nullptr) {
         m_network.IP = srvip;
@@ -577,7 +585,7 @@ int KaiSocket::produce(const Message& msg)
         // Message* mess = new(msg)Message();
         m_msgQue->emplace_back(&msg);
     }
-    return static_cast<int>(m_msgQue->size() - size - 1);
+    return static_cast<int>(m_msgQue->size() - size);
 }
 
 int KaiSocket::consume(Message& msg)
@@ -591,9 +599,11 @@ int KaiSocket::consume(Message& msg)
     const Message* msgQ = m_msgQue->front();
     memcpy(&msg.head, &msgQ->head, HEAD_SIZE);
     memcpy(&msg.data, &msgQ->data, sizeof(Message::Payload));
-    m_msgQue->pop_front();
-
-    return static_cast<int>(size - m_msgQue->size() - 1);
+    if (size > 0) {
+        m_msgQue->pop_front();
+    }
+    // if 1: success, 0: nothing
+    return static_cast<int>(size - m_msgQue->size());
 }
 
 void KaiSocket::finish()
@@ -643,7 +653,7 @@ ssize_t KaiSocket::Subscriber(const std::string& message, RECVCALLBACK callback)
         char* kai = (char*)(&msg);
         if (kai[0] == 'K' && kai[1] == 'a' && kai[2] == 'i')
             continue;
-        flag = (msg.head.ssid != 0);
+        flag = (msg.head.ssid != 0 || len == 0);
         if (msg.head.size == 0) {
             msg.head.size = Size;
             msg.head.etag = CONSUMER;
@@ -703,7 +713,7 @@ ssize_t KaiSocket::Subscriber(const std::string& message, RECVCALLBACK callback)
                     << msg.head.topic << "(" << it->flag.topic << ")" << std::endl;
             }
             wait(1);
-}
+        }
     }
 #endif
     return 0;
