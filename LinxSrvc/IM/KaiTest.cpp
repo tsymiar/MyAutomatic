@@ -7,8 +7,8 @@
 
 using namespace std;
 
-int hook0(KaiSocket* kai);
-int hook1(KaiSocket* kai);
+int hook0(KaiSocket*);
+int hook1(KaiSocket*);
 
 int main(int argc, char* argv[]) {
     KaiRoles role = SERVER;
