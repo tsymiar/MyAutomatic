@@ -33,104 +33,110 @@ unsigned int __stdcall SocketThread(void* lp)
             port = arg;
     }
     srand((int)time(0));
-    cout << "Starting up TCP: " << port << endl;
-
-    WSADATA wsa; //用于WSAstartup填充
-    int err = WSAStartup(0x101, &wsa); //WSAstartup初始化WINDOWS SOCKET API
+    cout << "启动TCP服务: " << port << endl;
+    // 用于WSAstartup填充
+    WSADATA wsa;
+    // WSAstartup初始化WINDOWS SOCKET API
+    int err = WSAStartup(0x101, &wsa);
 
     if (err != 0) {
         cout << "初始化套接字失败！" << endl;
         return -1;
     }
-    //重置字节流套接口
+    // 重置字节流套接口
     if (LOBYTE(wsa.wVersion) != 1 || HIBYTE(wsa.wVersion) != 1) {
         WSACleanup();
         return 0;
     }
-    //设置服务器端套接字
-    SOCKET sockSrv = socket(AF_INET, SOCK_STREAM, 0);//基于TCP
-    if (sockSrv == INVALID_SOCKET) {
+    // 设置服务器端套接字 基于TCP
+    SOCKET serSock = socket(AF_INET, SOCK_STREAM, 0);
+    if (serSock == INVALID_SOCKET) {
         cout << "无效的套接字！" << endl;
-        return -1;
+        return -2;
     }
-    //描述本地信息
-    sockaddr_in addrSrv; //本地端口信息
-    addrSrv.sin_addr.S_un.S_addr = INADDR_ANY;//接受所有连接
-    addrSrv.sin_family = AF_INET;
-    addrSrv.sin_port = htons((u_short)port); //本地服务器端口号
+    // 描述本地端口信息
+    sockaddr_in local;
+    // 接受所有连接
+    local.sin_addr.S_un.S_addr = INADDR_ANY;
+    local.sin_family = AF_INET;
+    // 本地服务器端口号
+    local.sin_port = htons((u_short)port);
     int optval = 1;
-    //检测对方主机是否崩溃，避免（服务器）永远阻塞于TCP连接的输入。
-    setsockopt(sockSrv, SOL_SOCKET, SO_REUSEADDR, (char*)&optval, sizeof(optval));
+    // 检测对方主机是否崩溃，避免（服务器）永远阻塞于TCP连接的输入。
+    setsockopt(serSock, SOL_SOCKET, SO_REUSEADDR, (char*)&optval, sizeof(optval));
     cout << "绑定..." << endl;//绑定
-    if (bind(sockSrv, (sockaddr*)&addrSrv, sizeof(addrSrv)) != 0) {
-        closesocket(sockSrv);
+    if (bind(serSock, (sockaddr*)&local, sizeof(local)) != 0) {
+        closesocket(serSock);
         cout << "绑定端口失败，端口被占用！" << endl;
-        return -1;
+        return -3;
     }
-    //监听
+    // 监听
     cout << "监听..." << endl;
-    if (listen(sockSrv, 5) != 0) {
-        closesocket(sockSrv);
+    if (listen(serSock, 5) != 0) {
+        closesocket(serSock);
         cout << "监听端口失败！" << endl;
-        return -1;
+        return -4;
     }
-    sockaddr_in cliSock = addrSrv; //客户端端口信息
-    SOCKET MAXSOCKFD = sockSrv;
-    int len = sizeof(cliSock);
-    u_long ul = 0;
+    long item = 0;
     fd_set rdfs;
     FD_ZERO(&rdfs);
-    //永真循环，接收客户端连接，并发送相应信息  
+    // 永真循环，接收客户端连接，并发送相应信息  
     while (1) {
-        FD_SET(sockSrv, &rdfs);
-        char __data[8];
-        sprintf(__data, "%f", random(1000));
-        timeval timeout{ 3, 0 };
+        SOCKET sockClt = 0;
+        SOCKET MAXSOCKFD = serSock;
+        FD_SET(serSock, &rdfs);
+        timeval timeout{ 0, 3000 };
         if (select((int)(MAXSOCKFD + 1), &rdfs, NULL, NULL, &timeout) > 0) {
-            int item = 0;
-            SOCKET sockClt;
-            if (FD_ISSET(sockSrv, &rdfs) > 0) {
+            if (FD_ISSET(serSock, &rdfs) > 0) {
+                // 客户端套接字端口信息
+                sockaddr_in cliSock = local;
+                int len = sizeof(cliSock);
+                sockClt = accept(serSock, (sockaddr*)&cliSock, &len);
+                char __data[8];
+                sprintf(__data, "%f", random(1000));
                 char clibuf[32];
-                //客户端套接字
-                sockClt = accept(sockSrv, (sockaddr*)&cliSock, &len);
                 sprintf_s(clibuf, __data, addr_out(cliSock.sin_addr), item);
-                cout << "---------------------------------" << endl \
-                    << "(" << item << ")" << clibuf << endl \
-                    << "---------------------------------" << endl;
                 send(sockClt, clibuf, (int)strlen(clibuf) + 1, 0);
+                u_long ul = 0;
                 int iResult = ioctlsocket(sockClt, FIONBIO, (unsigned long*)&ul);
-                char buff[1024];
-                int lencv = recv(sockClt, buff, sizeof(buff) - 1, 0);
-                if (lencv == SOCKET_ERROR) {
-                    cout << "网络异常。" << endl; \
+                cout << "---------------------------------" << endl \
+                    << "(" << item << "," << iResult << ")" << clibuf << endl \
+                    << "---------------------------------" << endl;
+                int lencv = 0;
+                do {
+                    char rcvbuff[1024];
+                    lencv = recv(sockClt, rcvbuff, sizeof(rcvbuff) - 1, 0);
+                    if (lencv == SOCKET_ERROR) {
+                        cout << "网络异常。" << endl; \
+                            continue;
+                    } else if (lencv > 0) {
+                        printf("已接收数据：");
+                        for (int c = 0; c < lencv; c++) {
+                            if (c % 32 == 0)
+                                printf("\n");
+                            printf("%02x ", (unsigned char)rcvbuff[c]);
+                        }
+                        printf("\n");
                         continue;
-                } else if (lencv > 0) {
-                    printf("socket connect sucess\n");
-                    for (int c = 0; c < lencv; c++) {
-                        if (c % 32 == 0)
-                            printf("\n");
-                        printf("%02x ", (unsigned char)buff[c]);
+                    } else if (lencv < 0) {
+                        if (errno == EINTR || errno == EWOULDBLOCK) {
+                            cout << "慢系统调用(slow system call)" <<
+                                ntohl((u_long)inet_addr(inet_ntoa(cliSock.sin_addr))) << endl;
+                            continue;
+                        } else
+                            printf("连接异常，请重试！\n"); // fail
+                    } else if (lencv == 0) {
+                        cout << "客户端已断开。" << endl;
                     }
-                    printf("\n");
-                    continue;
-                } else if (lencv < 0) {
-                    if (errno == EINTR || errno == EWOULDBLOCK) {
-                        cout << "慢系统调用(slow system call)" <<
-                            ntohl((u_long)inet_addr(inet_ntoa(cliSock.sin_addr))) << endl;
-                        continue;
-                    } else
-                        printf("socket disconnected!connect again!\n"); // fail
-                } else if (lencv == 0) {
-                    cout << "客户端已断开。" << endl;
-                }
+                } while (lencv > 0);
                 item++;
             }
-            MAXSOCKFD = (int)(MAXSOCKFD > (int)sockClt ? MAXSOCKFD : sockClt);
+            MAXSOCKFD = (MAXSOCKFD > (int)sockClt ? MAXSOCKFD : sockClt);
         }
     }
-    //关闭套接字  
-    closesocket(sockSrv);
-    //撤销WINDOWS SOCKET API  
+    // 关闭套接字  
+    closesocket(serSock);
+    // 撤销WINDOWS SOCKET API  
     WSACleanup();
     return 0;
 }
