@@ -23,6 +23,7 @@ typedef int socklen_t;
 #endif
 #define usleep(u) Sleep((u)/1000)
 #define write(a,b,c) ::send(a,(char*)(b),c,0)
+#define signal(_1,_2) {}
 #else
 #define WSACleanup()
 #endif
@@ -50,7 +51,7 @@ int KaiSocket::Initialize(const char* srvip, unsigned short srvport)
         std::cerr << "WSAStartup failed with error " << WSAGetLastError() << std::endl;
         WSACleanup();
         return -1;
-    }
+}
 #else
     signal(SIGPIPE, signalCatch);
 #endif // _WIN32
@@ -217,11 +218,15 @@ int proxyhook(KaiSocket* kai)
     memset(&msg, 0, Size);
     int len = kai->recv(reinterpret_cast<uint8_t*>(&msg), Size);
     if (len > 0) {
-        std::cout
-            << __FUNCTION__ << ": message from " << KaiSocket::G_KaiRole[msg.head.etag]
-            << " [" << msg.data.stat << "], MQ topic: '" << msg.head.topic
-            << "', len = " << len
-            << std::endl;
+        if (msg.head.etag >= NONE && msg.head.etag <= SUBSCRIBE) {
+            std::cout
+                << __FUNCTION__ << ": message from " << KaiSocket::G_KaiRole[msg.head.etag]
+                << " [" << msg.data.stat << "], MQ topic: '" << msg.head.topic
+                << "', len = " << len
+                << std::endl;
+        } else {
+            std::cout << __FUNCTION__ << ": msg tag = " << msg.head.etag << "[" << msg.head.size << "]" << std::endl;
+        }
     }
     return len;
 }
@@ -639,9 +644,10 @@ ssize_t KaiSocket::Subscriber(const std::string& message, RECVCALLBACK callback)
 {
     if (this->connect() < 0)
         return -2;
+    signal(SIGPIPE, signalCatch);
     Message msg = {};
     const size_t Size = HEAD_SIZE + sizeof(Message::Payload::stat);
-    bool flag = false;
+    volatile bool flag = false;
     do {
         memset(&msg, 0, Size);
         ssize_t len = ::recv(m_network.socket, reinterpret_cast<char*>(&msg), Size, 0);
@@ -668,7 +674,7 @@ ssize_t KaiSocket::Subscriber(const std::string& message, RECVCALLBACK callback)
                 std::cerr << __FUNCTION__ << ": writes " << strerror(errno) << std::endl;
                 return -4;
             }
-            std::cout << __FUNCTION__ << " as " << KaiSocket::G_KaiRole[msg.head.etag]
+            std::cout << __FUNCTION__ << " run as " << KaiSocket::G_KaiRole[msg.head.etag]
                 << ", MQ topic: '" << msg.head.topic << "'." << std::endl;
         }
         if (msg.head.size > Size) {
@@ -726,7 +732,7 @@ ssize_t KaiSocket::Publisher(const std::string& topic, const std::string& payloa
         std::cerr << __FUNCTION__ << ": topic/payload is null" << std::endl;
     } else {
         this->m_network.run_ = false;
-        m_callbacks.clear();
+        if (m_callbacks.size() > 0) m_callbacks.clear();
         g_maxTimes = 0;
     }
     const int maxLen = 256;
@@ -741,6 +747,7 @@ ssize_t KaiSocket::Publisher(const std::string& topic, const std::string& payloa
         std::cerr << __FUNCTION__ << ": connect failed!" << std::endl;
         return -2;
     }
+    signal(SIGPIPE, signalCatch);
     auto* message = new(std::nothrow) uint8_t[msgLen];
     if (message == nullptr) {
         std::cerr << __FUNCTION__ << ": message malloc failed!" << std::endl;
