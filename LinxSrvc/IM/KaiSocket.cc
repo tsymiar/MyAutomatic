@@ -95,13 +95,12 @@ KaiSocket& KaiSocket::GetInstance()
 
 int KaiSocket::start()
 {
-    SOCKET listen_socket = m_network.socket;
-    unsigned short srvport = m_network.PORT;
-
     struct sockaddr_in local { };
+    unsigned short srvport = m_network.PORT;
+    local.sin_port = htons(srvport);
     local.sin_family = AF_INET;
     local.sin_addr.s_addr = INADDR_ANY;
-    local.sin_port = htons(srvport);
+    SOCKET listen_socket = m_network.socket;
     if (::bind(listen_socket, reinterpret_cast<struct sockaddr*>(&local), sizeof(local)) < 0) {
         std::cerr
             << "Binding socket address (" << (errno != 0 ? strerror(errno) : std::to_string(listen_socket)) << ")."
@@ -138,7 +137,6 @@ int KaiSocket::start()
         {
             std::mutex mtxLck{};
             std::lock_guard<std::mutex> lock(mtxLck);
-            bool set = true;
             time_t t{};
             time(&t);
             struct tm* lt = localtime(&t);
@@ -146,6 +144,7 @@ int KaiSocket::start()
             struct sockaddr_in peeraddr { };
             auto peerLen = static_cast<socklen_t>(sizeof(peeraddr));
             g_thrNo_++;
+            bool set = true;
             setsockopt(rcv_sock, SOL_SOCKET, SO_KEEPALIVE, reinterpret_cast<const char*>(&set), sizeof(bool));
             getpeername(rcv_sock, reinterpret_cast<struct sockaddr*>(&peeraddr), &peerLen);
             m_network.IP = inet_ntop(AF_INET, &peeraddr.sin_addr, ipaddr, sizeof(ipaddr));
@@ -416,6 +415,8 @@ ssize_t KaiSocket::broadcast(const uint8_t* data, size_t len)
         std::cerr << __FUNCTION__ << ": no network is to send!" << std::endl;
         return -2;
     }
+    std::mutex mtxLck = {};
+    std::lock_guard<std::mutex> lock(mtxLck);
     ssize_t bytes = 0;
     for (auto& network : m_networks) {
         ssize_t stat = writes(network, data, len);
@@ -465,7 +466,7 @@ void KaiSocket::handleNotify(Network& network)
                 m_networks.clear();
                 break;
             }
-            if (m_networks.end() == m_networks.erase(iter))
+            if (m_networks.empty() || m_networks.end() == m_networks.erase(iter))
                 return;
             it = m_networks.begin();
         }
@@ -527,7 +528,7 @@ uint64_t KaiSocket::setSsid(const Network& network, SOCKET socket)
     if (socket == 0) {
         socket = network.socket;
     }
-    return (network.PORT << 16 | socket << 8 | ip);
+    return ((uint64_t)network.PORT << 16 | socket << 8 | ip);
 }
 
 bool KaiSocket::checkSsid(SOCKET key, uint64_t ssid)
@@ -581,7 +582,7 @@ void KaiSocket::setRequestHandle(void(*func)(uint8_t*, size_t), uint8_t* data, s
 int KaiSocket::produce(const Message& msg)
 {
     if (m_msgQue == nullptr) {
-        std::cerr << "Message struct queue is null." << std::endl;
+        std::cerr << __FUNCTION__ << ": msgque struct is null." << std::endl;
         return -1;
     }
     std::lock_guard<std::mutex> lock(m_lock);
@@ -596,7 +597,7 @@ int KaiSocket::produce(const Message& msg)
 int KaiSocket::consume(Message& msg)
 {
     if (m_msgQue == nullptr || m_msgQue->empty()) {
-        std::cerr << "Message struct queue is null/empty." << std::endl;
+        std::cerr << __FUNCTION__ << ": msgque struct is null/empty." << std::endl;
         return -1;
     }
     std::lock_guard<std::mutex> lock(m_lock);
@@ -630,6 +631,7 @@ ssize_t KaiSocket::send(const uint8_t* data, size_t len)
 
 void KaiSocket::setTopic(const std::string& topic, Header& header)
 {
+    std::lock_guard<std::mutex> lock(m_lock);
     size_t size = topic.size();
     if (size > sizeof(header.topic)) {
         std::cerr << __FUNCTION__ << ": topic length " << size << " out of bounds." << std::endl;
@@ -694,6 +696,7 @@ ssize_t KaiSocket::Subscriber(const std::string& message, RECVCALLBACK callback)
                 msg.data.stat[0] = 'O';
                 msg.data.stat[1] = 'K';
                 memcpy(msg.data.body, body, len);
+                msg.data.body[len] = '\0';
                 if (callback != nullptr) {
                     callback(msg);
                 }
@@ -732,7 +735,7 @@ ssize_t KaiSocket::Publisher(const std::string& topic, const std::string& payloa
         std::cerr << __FUNCTION__ << ": topic/payload is null" << std::endl;
     } else {
         this->m_network.run_ = false;
-        if (m_callbacks.size() > 0) m_callbacks.clear();
+        if (!m_callbacks.empty()) m_callbacks.clear();
         g_maxTimes = 0;
     }
     const int maxLen = 256;
@@ -747,7 +750,6 @@ ssize_t KaiSocket::Publisher(const std::string& topic, const std::string& payloa
         std::cerr << __FUNCTION__ << ": connect failed!" << std::endl;
         return -2;
     }
-    signal(SIGPIPE, signalCatch);
     auto* message = new(std::nothrow) uint8_t[msgLen];
     if (message == nullptr) {
         std::cerr << __FUNCTION__ << ": message malloc failed!" << std::endl;
