@@ -21,6 +21,7 @@ target_link_libraries (${TARGET}
     -fPIC
     -Wall
     -ggdb
+    -pthread
     ${EVENT_LIB}
 )
 

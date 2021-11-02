@@ -7,8 +7,8 @@ using namespace std;
 
 int main(int argc, char** argv)
 {
+    cout << "Usage: " << argv[0] << " port[url], actually:" << endl;
     int i = 0;
-    cout << "Usage:" << endl;
     while (i < argc) {
         cout << " " << argv[i];
         i++;
@@ -16,10 +16,16 @@ int main(int argc, char** argv)
     cout << endl;
 
     short port = 8080;
-    if (argc > 1 && isNum(argv[1])) {
-        port = atoi(argv[1]);
+    if (argc > 1) {
+        if (isNum(argv[1])) {
+            port = atoi(argv[1]);
+            StartServer(port);
+        } else {
+            HookDetail hook;
+            int stat = ClientRequest(argv[1], hook);
+            Message("status = %d, message = \n%s", stat, hook.msg.c_str());
+        }
     }
-    StartServer(port);
 
     cout << "Hello HttpAgent." << endl;
     return 0;
