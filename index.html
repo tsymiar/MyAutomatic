@@ -2183,13 +2183,17 @@
                 xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
             }
             if(url!==null)
-            {// send form by key-value
+            {
+                if (url.substr(0, 4) != "http") {
+                    url = "http://" + url;
+                }
                 xmlhttp.open(method, url, true);
                 if (method == "POST" && !isJSON(param) && param.indexOf("=") != -1) {
                     xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded");
                 } else {
                     xmlhttp.setRequestHeader("Content-type", "application/json;charset=utf-8");
                 }
+                // send form by key-value
                 xmlhttp.send(param);
                 xmlhttp.onreadystatechange = function()
                 {
