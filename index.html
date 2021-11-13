@@ -2158,6 +2158,19 @@
                 return;
             $("#base64_rescode").html(Base64.decode(base));
         }
+        function isJSON(val) {
+            if (typeof val == 'string') {
+                try {
+                    JSON.parse(val);
+                    return true;
+                } catch (e) {
+                    console.log(e);
+                }
+            } else {
+                console.log('It is not a string!');
+            }
+            return false;
+        }
         function handle_request(url, element, method, param, callback)
         {
             var xmlhttp;
@@ -2172,7 +2185,11 @@
             if(url!==null)
             {// send form by key-value
                 xmlhttp.open(method, url, true);
-                xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+                if (method == "POST" && !isJSON(param) && param.indexOf("=") != -1) {
+                    xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+                } else {
+                    xmlhttp.setRequestHeader("Content-type", "application/json;charset=utf-8");
+                }
                 xmlhttp.send(param);
                 xmlhttp.onreadystatechange = function()
                 {
@@ -2186,15 +2203,20 @@
                             console.log(element + "\n" + e);
                         }
                     }else if(xmlhttp.readyState>=4){
-                        var errtxt = xmlhttp.responseText;
-                        if(errtxt === null || errtxt === undefined || errtxt === ""){
-                            errtxt = xmlhttp.statusText;
+                        var rsptxt = xmlhttp.responseText;
+                        if(rsptxt === null || rsptxt === undefined || rsptxt === ""){
+                            rsptxt = xmlhttp.statusText;
                         }
-                        if(xmlhttp.status === 0 || errtxt === null){
-                            errtxt = "unknown";
+                        if(xmlhttp.status === 0 || rsptxt === null){
+                            rsptxt = "unknown";
                         }
-                        errtxt = (xmlhttp.status + ": " + errtxt);
-                        document.getElementById(element).innerHTML = errtxt;
+                        var stat = document.getElementById(element + '_stat');
+                        if (rsptxt != null && stat != undefined) {
+                            stat.innerHTML = xmlhttp.status;
+                        } else {
+                            rsptxt = (xmlhttp.status + ": " + rsptxt);
+                        }
+                        document.getElementById(element).innerHTML = rsptxt;
                     }
                 };
             }
@@ -2233,7 +2255,7 @@
                         try{
                             alert(xhr.status + ": " + xhr.statusText + "\n" + xhr.responseJSON.description);
                         }catch(e){
-                            alert(error + "(" + xhr.status + "): " + exception.toString() + "\n" + e);
+                            alert("[" + error.toLocaleUpperCase() + "] (" + xhr.status + "): " + exception.toString() + "\n" + e);
                         }
                     }
                 }
@@ -2263,24 +2285,32 @@
             } 
             return o.toString(); 
         }
-        function simRequest(method){
-            document.getElementById("req_ret").innerHTML = "";
-            handle_request(document.getElementById("req_url").value,"req_ret",method);
+        function resetText(element) {
+            var elem = document.getElementById(element);
+            if (elem != undefined) elem.innerHTML = "";
+            var stat_elem = document.getElementById(element + '_stat');
+            if (stat_elem != undefined) stat_elem.innerHTML = "";
         }
-        function jqRequest(method){
-            document.getElementById("req_ret").innerHTML = "";
-            requestJson("",document.getElementById("req_url").value, method, function(data){
-                if(data){
-                    try{
+        function simRequest(method) {
+            var elem = "rsp_msg";
+            resetText(elem);
+            handle_request(document.getElementById("req_url").value, elem, method, document.getElementById("payload").value);
+        }
+        function jqRequest(method) {
+            var elem = "rsp_msg";
+            resetText(elem);
+            requestJson("", document.getElementById("req_url").value, method, function (data) {
+                if (data) {
+                    try {
                         var text = JSON.parse(data);
-                        text = JSON.stringify(text,null,2);
-                        if(text == undefined)
-                            text = eval("("+data+")");
-                        $("#req_ret").html(text);
-                    }catch(e){
-                        $("#req_ret").html("<font>"+array2String(data)+"</font>");
+                        text = JSON.stringify(text, null, 2);
+                        if (text == undefined)
+                            text = eval("(" + data + ")");
+                        $("#" + elem).html(text);
+                    } catch (e) {
+                        $("#" + elem).html("<font>" + array2String(data) + "</font>");
                     }
-                }else{
+                } else {
                     alert("error: data null.");
                 }
             })
@@ -2313,40 +2343,104 @@
             }
             return val;
         }
-
-        function prePro(data)
+        function hex2uri(data)
         {
             if (data.length % 2) return '';
-            var tmp='';
-            for(i=0;i<data.length;i+=2)
+            var tmp = '';
+            for(i = 0; i < data.length; i += 2)
             {
                 tmp += '%' + data.charAt(i) + data.charAt(i+1);
             }
             return tmp;
         }
-
-        function hexToString(){
+        function uri2ascii(hk)
+        {
+            hk = hk.replaceAll('%0a', '<br>');
+            hk = hk.replaceAll('%0d', '&nbsp;&nbsp;&nbsp;&nbsp;');
+            hk = hk.replaceAll('%20', ' ');
+            hk = hk.replaceAll('%21', '!');
+            hk = hk.replaceAll('%22', '"');
+            hk = hk.replaceAll('%23', '#');
+            hk = hk.replaceAll('%25', '%');
+            hk = hk.replaceAll('%26', '&');
+            hk = hk.replaceAll('%28', '(');
+            hk = hk.replaceAll('%29', ')');
+            hk = hk.replaceAll('%2b', '+');
+            hk = hk.replaceAll('%2c', ',');
+            hk = hk.replaceAll('%2f', '/');
+            hk = hk.replaceAll('%3a', ':');
+            hk = hk.replaceAll('%3b', ';');
+            hk = hk.replaceAll('%3c', '<');
+            hk = hk.replaceAll('%3d', '=');
+            hk = hk.replaceAll('%3e', '>');
+            hk = hk.replaceAll('%3f', '?');
+            hk = hk.replaceAll('%40', '@');
+            hk = hk.replaceAll('%5b', '[');
+            hk = hk.replaceAll('%5c', '\\');
+            hk = hk.replaceAll('%5d', ']');
+            hk = hk.replaceAll('%7c', '|');
+            return hk;
+        }
+        function check0x8x(s)
+        {
+            var l = s.length;
+            var hex = s;
+            if (l) {
+                for (var i = 0; i < l; i++) {
+                    if (s.charAt(i) == '%' && s.charAt(i + 1) > '7' && s.charAt(i + 2) >= '0') {
+                        var _1 = s.substr(i + 1, 1);
+                        var __11 = '';
+                        if (_1 >= '0' && _1 <= '9')
+                            __11 =(_1 - '0' + 30);
+                        var _2 = s.substr(i + 2, 1);
+                        var __22 = '';
+                        if (_2 >= '0' && _2 <= '9')
+                            __22 = (_2 - '0' + 30);
+                        hex = s.substr(0, i).trim()
+                            + '%5b%25' + ('%' + __11) + ('%' + __22) + '%5d'
+                            + s.substr(i + 3, l).trim();
+                        l = i + 3;
+                    }
+                }
+            }
+            return hex;
+        }
+        function autoFitText(elem) {
+            elem.style.height = 'auto';
+            elem.style.width = '100%';
+            elem.scrollTop = 0;
+            elem.style.height = elem.scrollHeight + 'px';
+        }
+        function hexToString() {
             var hi = document.getElementById("str_txt").value;
             hi = hi.replace(/\s+/g,"");
-            var hj = prePro(hi);
-            var hk = "";
+            var hj = hex2uri(hi);
+            var hk = check0x8x(hj);
             try {
-                hk = decodeURI(hj);
+                hk = decodeURI(hk);
+                hk = uri2ascii(hk);
             } catch (e) {
                 hk = e;
             }
-            document.getElementById("hk").innerHTML = hk;
+            var elem = document.getElementById("hk");
+            elem.innerHTML = hk;
+            if (elem.value != "") {
+                autoFitText(elem);
+            }
         }
-
-        function stringToHex(){
+        function stringToHex() {
+            var elem = document.getElementById("hk");
             var hi = document.getElementById("str_txt").value;
-            document.getElementById("hk").innerHTML = convert(hi);
+            elem.innerHTML = convert(hi);
+            if (elem.value != "") {
+                autoFitText(elem);
+            }
         }
         function getLocalTime() {
             var nS = $("#timestamp").val();
             $("#time_date").html(new Date(parseInt(nS) * 1000).toLocaleString().replace(/:\d{1,2}$/,' '));
         }
-        function formSubmit(){
+        function formSubmit() {
             document.getElementById("form_ret").innerHTML = "";
             handle_request(document.getElementById("form_act").value,"form_ret","POST");
         }
@@ -2377,35 +2471,27 @@
             $("#md5_val").html(md5(nS));
         }
     </script>
-<!--
 <div>
-    <input id="form_uri" placeholder="IP" style="width:120px" value="localhost">
-    <input id="form_port" placeholder="PORT" style="width:80px" value="80">
-    <input id="form_act" placeholder="ACTION" style="width:300px" value="/MyAutomatic/trans/service.php?action=register">
-    <br>
-    <form name="form_req" method="post">
-        <div>
-            <input type="text" id="username" name="username" placeholder="username">
-        </div>
-        <div id="item"></div><input type="button" value="+" onclick="addNewItem()">
-        <div>
-            <input type="button" value="submit" onclick="formSubmit()">
-        </div>
-    </form>
-    <div id="div"><pre id="form_ret"></pre><br></div>
-</div>
--->
-<div>
-    <label>HTTP request:</label><br>
+    <label>HTTP Request:</label><br>
     <input type="text" id="req_url" style="width:60%" title="" value="http://localhost:80/MyAutomatic/trans/service.php?action=null"/>
-    <br>
+    <br><textarea id="payload" placeholder="payload"></textarea><br>
     <button onclick="simRequest('GET')">GET</button>
     <button onclick="simRequest('POST')">POST</button>
     <button onclick="jqRequest('PUT')">PUT</button>
     <button onclick="jqRequest('DELETE')">DELETE</button>
     <button onclick="jqRequest('PATCH')">PATCH</button>
 </div>
-<div id="div"><pre id="req_ret"></pre><br></div>
+<div id="div">
+    <table style="table-layout:fixed; font-size: small;" border="1px">
+        <tr>
+            <td style="word-break:break-all" id="rsp_msg_stat"></td>
+        </tr>
+    </table>
+    <div style="border:1px #f0f0f0 solid;">
+        <pre id="rsp_msg"></pre>
+    </div>
+    <br>
+</div>
 <div>
     <label>Upload:</label><br>
     <input type="text" id="upload_url" style="width:60%" title="" value="http://localhost:80/MyAutomatic/trans/service.php?action=file_upload2"/>
@@ -2418,6 +2504,25 @@
 <div id="progressBar">
     <label id="percentage"></label>
     <label id="labeltime"></label>
+</div>
+<div hidden>
+    <input id="form_uri" placeholder="IP" style="width:120px" value="localhost">
+    <input id="form_port" placeholder="PORT" style="width:80px" value="80">
+    <input id="form_act" placeholder="ACTION" style="width:300px"
+        value="/MyAutomatic/trans/service.php?action=register">
+    <br>
+    <form name="form_req" method="post">
+        <div>
+            <input type="text" id="username" name="username" placeholder="username">
+        </div>
+        <div id="item"></div><input type="button" value="+" onclick="addNewItem()">
+        <div>
+            <input type="button" value="submit" onclick="formSubmit()">
+        </div>
+    </form>
+    <div id="div">
+        <pre id="form_ret"></pre><br>
+    </div>
 </div>
 <br>
 <div>
@@ -2439,8 +2544,21 @@
 </div>
 <br>
 <div>
+    <label>RSA:</label><br>
+    <input id="rawVal" placeholder="cipher"><br><textarea id="publicKey" placeholder="publicKey"></textarea><br>
+    <textarea id="privateKey" placeholder="privateKey"></textarea><br>
+    <button onclick="publicKey_encrypt()">PublicKey Encrypt</button>&nbsp;&nbsp;<button onclick="privateKey_decrypt()">PrivateKey Decrypt</button><br>
+    <label id="encryptVal">&nbsp;</label><br>
+    <label id="decryptVal">&nbsp;</label><br>
+    <label>RSA Decrypt:</label><br>
+    <textarea id="rawBase64" placeholder="rawBase64"></textarea><br>
+    <textarea id="prvKey2" placeholder="prvKey2"></textarea><br>
+    <button onclick="decryptByPrivateKey()">PrivateKey Decrypt</button><br>
+    <label id="decVal2">&nbsp;</label><br>
+</div><br>
+<div>
     <label>Base64:</label><br>
-    <input id="base64" placeholder="data"/><br>
+    <textarea id="base64" placeholder="string"></textarea><br>
     <button onclick="base64_encode()">encode</button>
     <button onclick="base64_decode()">decode</button><br>
     <label id="base64_rescode">&nbsp;</label>
@@ -2448,69 +2566,26 @@
 <br>
 <div>
     <label>SHA256:</label><br>
-    <input id="sha_raw" placeholder="string"><br>
+    <textarea id="sha_raw" placeholder="string"></textarea><br>
     <input type="button" value="sha" onclick="getShaVal()">
     <label id="sha_val">&nbsp;</label>
 </div>
 <br>
 <div>
     <label>MD5:</label><br>
-    <input id="md5_raw" placeholder="string"><br>
-    <input type="button" value="MD5" onclick="getMD5Val()">
+    <textarea id="md5_raw" placeholder="string"></textarea><br>
+    <input type="button" value="md5" onclick="getMD5Val()">
     <label id="md5_val">&nbsp;</label>
-</div>
-<br>
-<div>
-    <label>RSA:</label><br>
-    <input id="rawVal" placeholder="cipher"><br><textarea id="publicKey" placeholder="publicKey"></textarea><br>
-    <textarea id="privateKey" placeholder="privateKey"></textarea><br>
-    <button onclick="publicKey_encrypt()">PublicKey Encrypt</button>&nbsp;&nbsp;<button onclick="privateKey_decrypt()">PrivateKey Decrypt</button><br>
-    <label id="encryptVal">&nbsp;</label><br>
-    <label id="decryptVal">&nbsp;</label><br>
-    <label>RSA decrypt:</label><br>
-    <input id="rawBase64" placeholder="rawBase64"><br>
-    <textarea id="prvKey2" placeholder="prvKey2"></textarea><br>
-    <button onclick="decryptByPrivateKey()">PrivateKey Decrypt</button><br>
-    <label id="decVal2">&nbsp;</label><br>
 </div>
 <br>
 <div>
     <label>String ⇋ HEX:</label><br>
     <label for="str_txt"></label><textarea id="str_txt"></textarea><br>
-    <button onclick="hexToString()">Hex2String</button>&nbsp;&nbsp;<button onclick="stringToHex()">String2Hex</button>
+    <button onclick="hexToString()">hex to string</button>&nbsp;&nbsp;<button onclick="stringToHex()">string to hex</button>
     <br>
-    <label id="hk"></label>
+    <textarea id="hk"></textarea>
 </div>
-<br>
-<div>
-<script>
-    async function sleep(ms) {
-        return await new Promise(resolve => setTimeout(resolve, ms));
-    }
-
-    function onSleep() {
-        $("#sleep_elem").html('Taking a break...');
-        let delay = $("#sleep_time").val();
-        sleep(parseInt(delay)).then(() => {
-            $("#sleep_elem").html(delay + ' millseconds later.');
-        });
-    }
-</script>
-<br>
-<div>
-    <label>timestamp:</label><br>
-    <input id="timestamp" placeholder="timestamp"><br>
-    <input type="button" value="LocalTime" onclick="getLocalTime()">
-    <label id="time_date">&nbsp;</label>
-</div>
-<br>
-<input id="sleep_time" title="" value="0">
-<br>
-<button onclick="onSleep()">Sleep</button>
-<br>
-<label id="sleep_elem"></label>
-</div>
-<br>
+<br><br>
 <div>
 <script>
     String.prototype.colorHex = function(){
@@ -2568,7 +2643,7 @@
         throw new Error('bad Hex.');
     }
     function hex2rgb() {
-        let rgb_val = $("#color_hex").val();
+        let rgb_val = $("#color_hex_in").val();
         rgb_val = rgb_val.replace(/^\s+|\s+$/g,"");
         if(rgb_val.indexOf("#") !== -1 && rgb_val.charAt(0) === "#"){
             rgb_val = rgb_val.substring(1);
@@ -2583,7 +2658,9 @@
         }
         rgb_val = "#" + zero + rgb_val;
         try {
-            $("#color_rgb_rslt").html(hexToRgbA(rgb_val));
+            var rgba = hexToRgbA(rgb_val);
+            $("#color_rgb_rslt").html(rgba);
+            $("#rslt_rgb_color").css("background", rgba);
         }catch (e) {
             $("#color_rgb_rslt").html(e);
         }
@@ -2608,7 +2685,7 @@
             let colorHex = colorRgb.colorHex();
             let colorVal = parseInt(colorHex.slice(1), 16);
             $("#color_hex_rslt").html("#" + padding0(colorVal, 6).toString(16));
-            $("#rslt_color").css("background",colorRgb);
+            $("#rslt_hex_color").css("background",colorRgb);
         }
     }
     function setClipboard(clazz, label, callback) {
@@ -2634,19 +2711,45 @@
     <label>RGB ⇋ HEX:</label><br>
     R:<input id="color_r" style="width: 40px"/>&nbsp;G:<input id="color_g" style="width: 40px"/>&nbsp;B:<input id="color_b" style="width: 40px"/>
     <br>
-    <button onclick="rgb2hex()">RGB2Hex</button>
-    <label id="rslt_color">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
-    <br><label id="color_hex_rslt"></label>
+    <button onclick="rgb2hex()">RGB to Hex</button>
+    <label id="rslt_hex_color">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
+    <label id="color_hex_rslt"></label>
     <br><br>
-    <label for="color_hex"></label>#<input id="color_hex" style="width: 80px">
+    <label for="color_hex_in"></label>#<input id="color_hex_in" style="width: 80px">
     <br>
-    &nbsp;&nbsp;<button onclick="hex2rgb()">Hex2RGB</button>
+    &nbsp;&nbsp;<button onclick="hex2rgb()">Hex to RGB</button>
+    <label id="rslt_rgb_color">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
     <br>
     &nbsp;&nbsp;<label id="color_rgb_rslt" class="clip" data-clipboard-target="#color_rgb_rslt" ondblclick="copyRslt()"></label>
     <br>
     &nbsp;&nbsp;<font id="hint" size="2" face="times"></font>
 </div>
+<div>
+<script>
+    async function sleep(ms) {
+        return await new Promise(resolve => setTimeout(resolve, ms));
+    }
+    function onSleep() {
+        $("#sleep_elem").html('Taking a break...');
+        let delay = $("#sleep_time").val();
+        sleep(parseInt(delay)).then(() => {
+            $("#sleep_elem").html(delay + ' millseconds later.');
+        });
+    }
+</script>
+<div>
+    <label>timestamp:</label><br>
+    <input id="timestamp" placeholder="timestamp"><br>
+    <input type="button" value="LocalTime" onclick="getLocalTime()">
+    <label id="time_date">&nbsp;</label>
+</div>
 <br>
+<input id="sleep_time" title="" value="0">
 <br>
+<button onclick="onSleep()">Sleep</button>
+<br>
+<label id="sleep_elem"></label>
+<br><br><br>
+</div>
 </body>
 </html>
