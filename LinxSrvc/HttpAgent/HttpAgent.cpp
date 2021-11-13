@@ -23,7 +23,7 @@ int main(int argc, char** argv)
         } else {
             HookDetail hook;
             int stat = ClientRequest(argv[1], hook);
-            Message("status = %d, message = \n%s", stat, hook.msg.c_str());
+            Message("status = %d, message:\n%s", stat, hook.msg.c_str());
         }
     }
 
