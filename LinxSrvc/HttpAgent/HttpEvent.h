@@ -4,7 +4,7 @@
 #include "event2/http.h"
 
 struct HookDetail {
-    int error = HTTP_NOTIMPLEMENTED;
+    int status = HTTP_NOTIMPLEMENTED;
     evhttp_cmd_type method = EVHTTP_REQ_GET;
     struct event_base* base = nullptr;
     const char* payload = nullptr;
@@ -25,3 +25,4 @@ struct SrvCallbacks {
 int StartServer(short, struct SrvCallbacks* = nullptr);
 int ClientRequest(const char*, HookDetail&);
 void RegisterCallbacks(DEALRES_CALLBACK);
+void SetExtraOption(std::string, std::string);
