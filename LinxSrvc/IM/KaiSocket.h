@@ -37,7 +37,7 @@ public:
     struct Header {
         char rsv;
         int etag;
-        volatile unsigned long long ssid; //ssid = port | socket | ip
+       /*vilatile*/ unsigned long long ssid; //ssid = port | socket | ip
         char topic[32];
         unsigned int size;
     } __attribute__((packed));
