@@ -65,13 +65,13 @@ void RemoteReadCallback(struct evhttp_request* remote_host, void* arg)
     Message("remote_rsp: %s[%d]", remote_host->remote_host, remote_host->remote_port);
     ElegantlyBreak(arg);
 }
-
+#ifdef evhttp_request_error
 void RemoteRequestErrorCallback(enum evhttp_request_error error, void* arg)
 {
     Error("request failed: %d!", error);
     ElegantlyBreak(arg);
 }
-
+#endif
 void RemoteConnectionCloseCallback(struct evhttp_connection* connection, void* arg)
 {
     Warning("remote connection closed!");
@@ -80,7 +80,9 @@ void RemoteConnectionCloseCallback(struct evhttp_connection* connection, void* a
 
 int ReadHeaderDoneCallback(struct evhttp_request* remote_rsp, void*)
 {
+#ifdef evhttp_request_get_response_code_line
     Message("< HTTP/1.1 %d %s", evhttp_request_get_response_code(remote_rsp), evhttp_request_get_response_code_line(remote_rsp));
+#endif
     struct evkeyvalq* headers = evhttp_request_get_input_headers(remote_rsp);
     struct evkeyval* header;
     TAILQ_FOREACH(header, headers, next) {
@@ -337,9 +339,13 @@ int HttpClient(HookDetail& detail)
         evhttp_add_header(output_headers, "Content-Type", conbuf);
     }
 
+#ifdef evhttp_request_set_header_cb
     evhttp_request_set_header_cb(request, ReadHeaderDoneCallback);
+#endif
     evhttp_request_set_chunked_cb(request, ReadChunkCallback);
+#ifdef RemoteRequestErrorCallback
     evhttp_request_set_error_cb(request, RemoteRequestErrorCallback);
+#endif
     evhttp_make_request(connect, request, detail.method, detail.url.c_str());
 
     event_base_dispatch(base);

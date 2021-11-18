@@ -28,8 +28,8 @@ endif
 	[ ! -d "`pwd`/bin" ] && mkdir `pwd`/bin || echo ${GEN}
 	g++ $(FLAG) -o $(GEN)/gSOAPverify $(SYS) $(SOAP) $(MAIN) $(SQL) $(PTHD)
 	$(shell if [ -f $(FILE) ]; then if [ -d $(GEN) ]; then cp $(FILE) $(GEN)/;fi;else @echo "file <$(FILE)> don't exist.";fi;)
-	$(shell if [ -d $(PRJ) ]; then rm -rf $(OBJ);fi;)
-	[ ! -d "$(OBJ)" ] && mkdir -p $(PRJ)
+	$(shell if [ -d $(PRJ) ];then rm -rf $(OBJ);fi;)
+	mkdir -p $(PRJ)
 	mv ./*.o $(PRJ)
 	echo make OK
 all:

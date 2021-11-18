@@ -92,20 +92,29 @@ unsigned int __stdcall SocketThread(void* lp)
                 sockaddr_in cliSock = local;
                 int len = sizeof(cliSock);
                 sockClt = accept(serSock, (sockaddr*)&cliSock, &len);
+                item++;
                 char __data[8];
                 sprintf(__data, "%f", random(1000));
-                char clibuf[32];
+                char clibuf[16];
                 sprintf_s(clibuf, __data, addr_out(cliSock.sin_addr), item);
                 send(sockClt, clibuf, (int)strlen(clibuf) + 1, 0);
                 u_long ul = 0;
                 int iResult = ioctlsocket(sockClt, FIONBIO, (unsigned long*)&ul);
-                cout << "---------------------------------" << endl \
-                    << "(" << item << "," << iResult << ")" << clibuf << endl \
-                    << "---------------------------------" << endl;
+                time_t tmt;
+                ::time(&tmt);
+                struct tm* time = localtime(&tmt);
+                time->tm_year += 1900;
+                time->tm_mon += 1;
+                char timbuf[32];
+                sprintf(timbuf, "%d/%d/%d %d:%d:%d", time->tm_year, time->tm_mon, time->tm_mday,
+                    time->tm_hour, time->tm_min, time->tm_sec);
+                cout << "-----------------------------------------" << endl \
+                    << " (" << item << "," << iResult << ")" << clibuf << " [" << timbuf << "]" << endl \
+                    << "-----------------------------------------" << endl;
                 int lencv = 0;
                 do {
-                    char rcvbuff[1024];
-                    lencv = recv(sockClt, rcvbuff, sizeof(rcvbuff) - 1, 0);
+                    char rcvbuf[1024];
+                    lencv = recv(sockClt, rcvbuf, sizeof(rcvbuf) - 1, 0);
                     if (lencv == SOCKET_ERROR) {
                         cout << "网络异常。" << endl; \
                             continue;
@@ -114,10 +123,19 @@ unsigned int __stdcall SocketThread(void* lp)
                         for (int c = 0; c < lencv; c++) {
                             if (c % 32 == 0)
                                 printf("\n");
-                            printf("%02x ", (unsigned char)rcvbuff[c]);
+                            printf("%02x ", (unsigned char)rcvbuf[c]);
                         }
                         printf("\n");
-                        continue;
+                        for (int c = 0; c < lencv; c++) {
+                            cout << rcvbuf[c];
+                        }
+                        cout << endl;
+                        if (string(rcvbuf).substr(0, 3) == "GET" || string(rcvbuf).substr(0, 4) == "POST") {
+                            closesocket(sockClt);
+                            break;
+                        } else {
+                            continue;
+                        }
                     } else if (lencv < 0) {
                         if (errno == EINTR || errno == EWOULDBLOCK) {
                             cout << "慢系统调用(slow system call)" <<
@@ -129,7 +147,6 @@ unsigned int __stdcall SocketThread(void* lp)
                         cout << "客户端已断开。" << endl;
                     }
                 } while (lencv > 0);
-                item++;
             }
             MAXSOCKFD = (MAXSOCKFD > (int)sockClt ? MAXSOCKFD : sockClt);
         }
@@ -155,6 +172,7 @@ int main(int argc, char* argv[])
     while (true) {
         if (getch() == 27)
             break;
+        Sleep(100);
     }
     return 0;
 }
