@@ -28,10 +28,10 @@ vector<string> headList = {
     "token"
 };
 
-string g_msgRcv = "";
-static map<string, DEALRES_CALLBACK> g_hooks = {};
 const char* HTTPD_SIGNATURE = "HttpEvent";
+string g_msgRcv = "";
 map<string, string> g_extraOpts = {};
+static map<string, DEALRES_CALLBACK> g_hooks = {};
 
 void Response(struct evhttp_request* request, HookDetail detail = {});
 void Release(event_base* base, evhttp_connection* evcon = nullptr);
@@ -102,6 +102,9 @@ void ReadChunkCallback(struct evhttp_request* remote_rsp, void*)
         fwrite(buf, n, 1, stdout);
     }
     g_msgRcv = buf;
+    HookDetail detail;
+    detail.payload = buf;
+    g_hooks["handleResponse"](detail);
     fwrite("\n", 1, 1, stdout);
 }
 
@@ -386,17 +389,22 @@ int StartServer(short port, struct SrvCallbacks* callbacks)
     return 0;
 }
 
-int ClientRequest(const char* url, HookDetail& detail)
+int RequestClient(const char* url, HookDetail& detail, DEALRES_CALLBACK hook)
 {
     int stat = -1;
     thread client([&stat, &detail](const char* url) {
         detail.url = url;
         stat = HttpClient(detail);
         }, url);
-    WaitMsgTask(detail.base);
-    if (client.joinable())
-        client.join();
-    detail.msg = g_msgRcv;
+    if (hook != nullptr) {
+        WaitMsgTask(detail.base);
+        if (client.joinable())
+            client.join();
+        detail.msg = g_msgRcv;
+    } else {
+        g_hooks["handleResponse"] = hook;
+        client.detach();
+    }
     return stat;
 }
 
@@ -483,4 +491,9 @@ void Release(event_base* base, evhttp_connection* evcon)
 void SetExtraOption(std::string key, std::string value)
 {
     g_extraOpts[key] = value;
+}
+
+void RegistCallback(std::string name, DEALRES_CALLBACK hook)
+{
+    g_hooks[name] = hook;
 }

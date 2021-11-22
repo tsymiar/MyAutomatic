@@ -23,6 +23,6 @@ struct SrvCallbacks {
 };
 
 int StartServer(short, struct SrvCallbacks* = nullptr);
-int ClientRequest(const char*, HookDetail&);
-void RegisterCallbacks(DEALRES_CALLBACK);
+int RequestClient(const char*, HookDetail&, DEALRES_CALLBACK = nullptr);
+void RegistCallback(std::string, DEALRES_CALLBACK);
 void SetExtraOption(std::string, std::string);
