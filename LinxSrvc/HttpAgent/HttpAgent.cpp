@@ -22,7 +22,7 @@ int main(int argc, char** argv)
             StartServer(port);
         } else {
             HookDetail hook;
-            int stat = ClientRequest(argv[1], hook);
+            int stat = RequestClient(argv[1], hook);
             Message("status = %d, message:\n%s", stat, hook.msg.c_str());
         }
     }
