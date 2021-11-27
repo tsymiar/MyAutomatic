@@ -262,7 +262,7 @@ ssize_t KaiSocket::recv(uint8_t* buff, size_t size)
     if (strncmp(reinterpret_cast<char*>(&header), "Kai", 3) == 0)
         return 0; // heartbeat ignore
     if (res != len) {
-        std::cout << __FUNCTION__ << ": got len " << res << ", size = " << len << std::endl;
+        std::cout << __FUNCTION__ << ": buffer got [" << res << "], expect size = " << len << std::endl;
     }
     std::mutex mtxLck = {};
     std::lock_guard<std::mutex> lock(mtxLck);
@@ -338,11 +338,9 @@ ssize_t KaiSocket::recv(uint8_t* buff, size_t size)
         else
             strcpy(msg.data.stat, "FAILURE");
         memcpy(buff + HEAD_SIZE, msg.data.stat, sizeof(Message::data.stat));
-    } else { // set running is to delete m_network
-        if (!m_network.run_)
-            m_network.run_ = !m_network.run_;
+    } else { // set running is to delete m_network || consume got 0 byte
         handleNotify(m_network);
-        std::cerr << __FUNCTION__ << ": unsupported role = " << msg.head.etag << std::endl;
+        std::cerr << __FUNCTION__ << ": unsupported tag [" << msg.head.etag << "]" << std::endl;
         delete[] message;
         return -5;
     }
@@ -451,6 +449,20 @@ void KaiSocket::handleNotify(Network& network)
         return;
     }
     std::lock_guard<std::mutex> lock(m_lock);
+    bool exit = false;
+    auto at = m_networks.begin();
+    for (; at != m_networks.end(); ++at) {
+        if (at->socket == network.socket) {
+            exit = true;
+            break;
+        }
+    }
+    if (!network.run_) {
+        network.run_ = !network.run_;
+    }
+    if (!exit) {
+        m_networks.emplace_back(network);
+    }
     for (auto it = m_networks.begin(); it != m_networks.end(); ++it) {
         if (it->socket < 0 || m_network.socket < 0 || m_networks.empty())
             return;
@@ -582,7 +594,7 @@ void KaiSocket::setRequestHandle(void(*func)(uint8_t*, size_t), uint8_t* data, s
 int KaiSocket::produce(const Message& msg)
 {
     if (m_msgQue == nullptr) {
-        std::cerr << __FUNCTION__ << ": msgque struct is null." << std::endl;
+        std::cerr << __FUNCTION__ << ": msgque pool is null." << std::endl;
         return -1;
     }
     std::lock_guard<std::mutex> lock(m_lock);
@@ -597,7 +609,7 @@ int KaiSocket::produce(const Message& msg)
 int KaiSocket::consume(Message& msg)
 {
     if (m_msgQue == nullptr || m_msgQue->empty()) {
-        std::cerr << __FUNCTION__ << ": msgque struct is null/empty." << std::endl;
+        std::cerr << __FUNCTION__ << ": msgque pool is null/empty." << std::endl;
         return -1;
     }
     std::lock_guard<std::mutex> lock(m_lock);
