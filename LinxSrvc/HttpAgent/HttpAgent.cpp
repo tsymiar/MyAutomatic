@@ -21,9 +21,9 @@ int main(int argc, char** argv)
             port = atoi(argv[1]);
             StartServer(port);
         } else {
-            HookDetail hook;
-            int stat = RequestClient(argv[1], hook);
-            Message("status = %d, message:\n%s", stat, hook.msg.c_str());
+            HookDetail message;
+            int stat = RequestClient(argv[1], message);
+            Message("status = %d, message:\n[%s]", stat, message.msg.c_str());
         }
     }
 

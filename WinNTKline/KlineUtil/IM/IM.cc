@@ -668,7 +668,7 @@ type_thread_func monite(void* arg)
                     {
 #if !defined _WIN32
                         char* mesg = NULL;
-                        if (vfork() == 0) {
+                        if (vfork() == 0) { // posix_spawn /* child process first */
 #ifdef RASPI
 #undef GET_IMG_EXE
 #define GET_IMG_EXE "raspistill"
