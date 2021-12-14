@@ -13,13 +13,19 @@ struct HookDetail {
     std::string url = {};
 };
 
-typedef void(*DEALRES_CALLBACK)(const HookDetail&);
 typedef struct HookDetail(*PARSREQ_CALLBACK)(const std::vector<std::string>&, evhttp_cmd_type, char*);
 typedef void(*PACKRSP_CALLBACK)(HookDetail&);
 
 struct SrvCallbacks {
     PARSREQ_CALLBACK ParsReq;
     PACKRSP_CALLBACK PackRsp;
+};
+
+typedef void(*DEALRES_CALLBACK)(const HookDetail&);
+
+struct DealHooks {
+    evhttp_cmd_type method;
+    DEALRES_CALLBACK callback;
 };
 
 int StartServer(short, struct SrvCallbacks* = nullptr);

@@ -31,7 +31,7 @@ vector<string> headList = {
 const char* HTTPD_SIGNATURE = "HttpEvent";
 string g_msgRcv = "";
 map<string, string> g_extraOpts = {};
-static map<string, DEALRES_CALLBACK> g_hooks = {};
+static map<string, DealHooks> g_dealhooks = {};
 
 void Response(struct evhttp_request* request, HookDetail detail = {});
 void Release(event_base* base, evhttp_connection* evcon = nullptr);
@@ -49,11 +49,11 @@ void ElegantlyBreak(void* arg)
     }
 }
 
-DEALRES_CALLBACK GetResHook(string name)
+DEALRES_CALLBACK GetResHook(string uri, evhttp_cmd_type cmd)
 {
-    auto it = g_hooks.find(name);
-    if (it != g_hooks.end()) {
-        return it->second;
+    auto it = g_dealhooks.find(uri);
+    if (it != g_dealhooks.end() && it->second.method == cmd) {
+        return it->second.callback;
     }
     return (DEALRES_CALLBACK)NullFunc;
 }
@@ -95,16 +95,19 @@ int ReadHeaderDoneCallback(struct evhttp_request* remote_rsp, void*)
 void ReadChunkCallback(struct evhttp_request* remote_rsp, void*)
 {
     const int len = 4096;
-    char buf[len];
+    char data[len];
     struct evbuffer* evbuf = evhttp_request_get_input_buffer(remote_rsp);
     int n = 0;
-    while ((n = evbuffer_remove(evbuf, buf, len)) > 0) {
-        fwrite(buf, n, 1, stdout);
+    while ((n = evbuffer_remove(evbuf, data, len)) > 0) {
+        fwrite(data, n, 1, stdout);
     }
-    g_msgRcv = buf;
-    HookDetail detail;
-    detail.payload = buf;
-    g_hooks["handleResponse"](detail);
+    g_msgRcv = data;
+    DEALRES_CALLBACK func = g_dealhooks["handleResponse"].callback;
+    if (func != nullptr) {
+        HookDetail detail;
+        detail.payload = data;
+        func(detail);
+    }
     fwrite("\n", 1, 1, stdout);
 }
 
@@ -122,18 +125,23 @@ void GenericHandler(struct evhttp_request* req_ptr, void* param)
     evhttp_parse_query(dec_uri, &head);
     string url = dec_uri;
     free(dec_uri);
-    evhttp_cmd_type cmd = evhttp_request_get_command(req_ptr);
-    Message("%s request from: %s:%d%s", ParseMethod(cmd), address, port, url.c_str());
+    evhttp_cmd_type method = evhttp_request_get_command(req_ptr);
+    size_t size = EVBUFFER_LENGTH(req_ptr->input_buffer);
+    char* payload = (char*)evbuffer_pullup(req_ptr->input_buffer, size);
+    if (size > 0 && payload[size - 1] != '\0') {
+        payload[size - 1] = '\0';
+    }
+    Message("%s request from: %s:%d%s\n[ %s ]", ParseMethod(method), address, port, url.c_str(), payload);
     vector<string> list = parseUri(url);
     if (param != nullptr) {
         HookDetail message = {};
-        message.method = cmd;
-        SrvCallbacks* callbacks = (SrvCallbacks*)param;
-        char* payload = (char*)EVBUFFER_DATA(req_ptr->input_buffer);
+        message.url = url;
+        message.method = method;
         message.payload = payload;
         if (list.size() > 1) {
-            GetResHook(list[1])(message);
+            GetResHook(list[1], method)(message);
         } else {
+            SrvCallbacks* callbacks = (SrvCallbacks*)param;
             if (callbacks->ParsReq != nullptr)
                 message = callbacks->ParsReq(list, message.method, payload);
             if (callbacks->PackRsp != nullptr)
@@ -198,9 +206,9 @@ void GenericHandler(struct evhttp_request* req_ptr, void* param)
                 Error("failed to read status from filedes[0]");
             }
             HookDetail message = {};
-            message.status = status;
             message.msg = "OK";
-            message.method = cmd;
+            message.method = method;
+            message.status = status;
             Response(req_ptr, message);
             if (pid == childpid) {
                 Message("successfully release child %d", pid);
@@ -382,7 +390,7 @@ int StartServer(short port, struct SrvCallbacks* callbacks)
     evhttp_set_allowed_methods(http, EVHTTP_REQ_GET | EVHTTP_REQ_POST | EVHTTP_REQ_HEAD
         | EVHTTP_REQ_OPTIONS | EVHTTP_REQ_PUT | EVHTTP_REQ_DELETE);
     evhttp_set_gencb(http, GenericHandler, callbacks);
-    Message("Http server start OK!");
+    Message("Http server start over [%d] OK!", port);
 
     event_base_dispatch(base);
     evhttp_free(http);
@@ -402,7 +410,7 @@ int RequestClient(const char* url, HookDetail& detail, DEALRES_CALLBACK hook)
             client.join();
         detail.msg = g_msgRcv;
     } else {
-        g_hooks["handleResponse"] = hook;
+        g_dealhooks["handleResponse"].callback = hook;
         client.detach();
     }
     return stat;
@@ -423,14 +431,14 @@ void Response(struct evhttp_request* request, HookDetail message)
             message.status = HTTP_BADMETHOD;
         } else if (message.status != HTTP_NOTIMPLEMENTED) {
             const char* status = (message.status == HTTP_OK ? "true" : "false");
-            content =
-                "{\n\t\"errno\": " + to_string(message.status) +
-                ",\n\t\"status\": " + string(status) +
-                (message.status != HTTP_OK ? ",\n\t\"errmsg\": \"" + message.msg + "\"" : "") +
-                "\n}";
             if (message.status == 0) {
                 message.status = HTTP_BADMETHOD;
             }
+            content =
+                "{  \"status\": [" + to_string(message.status) +
+                ", " + string(status) + "]" +
+                (message.status != HTTP_OK ? (",  \"message\": \"" + message.msg + "\"") : "") +
+                "}";
         } else {
             content = message.msg;
         }
@@ -493,7 +501,8 @@ void SetExtraOption(std::string key, std::string value)
     g_extraOpts[key] = value;
 }
 
-void RegistCallback(std::string name, DEALRES_CALLBACK hook)
+void RegistCallback(std::string name, evhttp_cmd_type method, DEALRES_CALLBACK hook)
 {
-    g_hooks[name] = hook;
+    g_dealhooks[name].method = method;
+    g_dealhooks[name].callback = hook;
 }

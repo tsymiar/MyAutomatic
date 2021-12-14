@@ -51,7 +51,7 @@ int KaiSocket::Initialize(const char* srvip, unsigned short srvport)
         std::cerr << "WSAStartup failed with error " << WSAGetLastError() << std::endl;
         WSACleanup();
         return -1;
-}
+    }
 #else
     signal(SIGPIPE, signalCatch);
 #endif // _WIN32
@@ -158,14 +158,14 @@ int KaiSocket::start()
             ::send(rcv_sock, (char*)&head, HEAD_SIZE, 0);
             m_networks.emplace_back(m_network);
 
-            std::cout << "socket monitor: " << rcv_sock << "; waiting for massage." << std::endl;
+            std::cout << "socket monitor: " << rcv_sock << "; waitting massage..." << std::endl;
             for (auto& callback : m_callbacks) {
                 if (callback == nullptr)
                     continue;
                 try {
                     std::thread(&KaiSocket::runCallback, this, this, callback).detach();
-                } catch (...) {
-                    std::cerr << __FUNCTION__ << ": catch (...) exception" << std::endl;
+                } catch (const std::exception& e) {
+                    std::cerr << __FUNCTION__ << ": catch (...) exception: " << e.what() << std::endl;
                 }
             }
             wait(WAIT100ms);
@@ -262,7 +262,7 @@ ssize_t KaiSocket::recv(uint8_t* buff, size_t size)
     if (strncmp(reinterpret_cast<char*>(&header), "Kai", 3) == 0)
         return 0; // heartbeat ignore
     if (res != len) {
-        std::cout << __FUNCTION__ << ": buffer got [" << res << "], expect size = " << len << std::endl;
+        std::cout << __FUNCTION__ << ": stream got [" << res << "], expect size = " << len << std::endl;
     }
     std::mutex mtxLck = {};
     std::lock_guard<std::mutex> lock(mtxLck);
@@ -323,7 +323,9 @@ ssize_t KaiSocket::recv(uint8_t* buff, size_t size)
         memcpy(message, &msg, sizeof(Message));
         for (auto& network : m_networks) {
             if (strcmp(network.flag.topic, m_network.flag.topic) == 0
-                && network.flag.ssid == subSsid
+#if !defined MULTISEND
+                && network.flag.ssid == subSsid /* comment to multisend */
+#endif
                 && network.flag.etag == CONSUMER) { // only consume should be sent
                 if ((stat = this->writes(network, message, total)) < 0) {
                     std::cerr << __FUNCTION__ << ": writes [" << network.socket << "], " << total << " failed." << std::endl;
@@ -512,9 +514,9 @@ void KaiSocket::runCallback(KaiSocket* sock, KAISOCKHOOK func)
         if (func == nullptr) {
             continue;
         }
-        int len = func(sock);
-        if (len <= 0) {
-            std::cerr << "callback status = " << len << std::endl;
+        int stat = func(sock);
+        if (stat <= 0) {
+            std::cerr << "callback stat = " << stat << std::endl;
             break;
         }
     }
@@ -540,7 +542,7 @@ uint64_t KaiSocket::setSsid(const Network& network, SOCKET socket)
     if (socket == 0) {
         socket = network.socket;
     }
-    return ((uint64_t)network.PORT << 16 | socket << 8 | ip);
+    return ((uint64_t)network.PORT << 16 | (uint64_t)socket << 8 | ip);
 }
 
 bool KaiSocket::checkSsid(SOCKET key, uint64_t ssid)
