@@ -21,7 +21,7 @@ struct SrvCallbacks {
     PACKRSP_CALLBACK PackRsp;
 };
 
-typedef void(*DEALRES_CALLBACK)(const HookDetail&);
+typedef void(*DEALRES_CALLBACK)(const HookDetail&, size_t);
 
 struct DealHooks {
     evhttp_cmd_type method;

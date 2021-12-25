@@ -7,7 +7,10 @@ using namespace std;
 
 int main(int argc, char** argv)
 {
-    cout << "Usage: " << argv[0] << " port[url], actually:" << endl;
+    if (argc <= 1 || argv == nullptr) {
+        cout << "Usage:\n " << argv[0] << " [port | url]\nactually:" << endl;
+    }
+
     int i = 0;
     while (i < argc) {
         cout << " " << argv[i];
@@ -15,8 +18,8 @@ int main(int argc, char** argv)
     }
     cout << endl;
 
-    short port = 8080;
     if (argc > 1) {
+        short port = 8080;
         if (isNum(argv[1])) {
             port = atoi(argv[1]);
             StartServer(port);
@@ -27,6 +30,6 @@ int main(int argc, char** argv)
         }
     }
 
-    cout << "Hello HttpAgent." << endl;
+    cout << "Goodby HttpAgent." << endl;
     return 0;
 }
