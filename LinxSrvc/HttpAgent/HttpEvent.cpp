@@ -28,14 +28,15 @@ vector<string> headList = {
     "token"
 };
 
+const int g_wait100ms = 100000;
 const char* HTTPD_SIGNATURE = "HttpEvent";
-string g_msgRcv = "";
-map<string, string> g_extraOpts = {};
+static map<void*, string> g_msgRcvs = {};
+static map<string, string> g_extraOpts = {};
 static map<string, DealHooks> g_dealhooks = {};
 
+const char* ParseMethod(int cmd);
 void Response(struct evhttp_request* request, HookDetail detail = {});
 void Release(event_base* base, evhttp_connection* evcon = nullptr);
-const char* ParseMethod(int cmd);
 
 void NullFunc(...)
 {
@@ -92,21 +93,23 @@ int ReadHeaderDoneCallback(struct evhttp_request* remote_rsp, void*)
     return 0;
 }
 
-void ReadChunkCallback(struct evhttp_request* remote_rsp, void*)
+void ReadChunkCallback(struct evhttp_request* resp, void* base)
 {
     const int len = 4096;
     char data[len];
-    struct evbuffer* evbuf = evhttp_request_get_input_buffer(remote_rsp);
+    struct evbuffer* evbuf = evhttp_request_get_input_buffer(resp);
+    size_t size = 0;
     int n = 0;
     while ((n = evbuffer_remove(evbuf, data, len)) > 0) {
         fwrite(data, n, 1, stdout);
+        size += n;
     }
-    g_msgRcv = data;
+    g_msgRcvs[base] = data;
     DEALRES_CALLBACK func = g_dealhooks["handleResponse"].callback;
     if (func != nullptr) {
         HookDetail detail;
         detail.payload = data;
-        func(detail);
+        func(detail, size);
     }
     fwrite("\n", 1, 1, stdout);
 }
@@ -128,10 +131,10 @@ void GenericHandler(struct evhttp_request* req_ptr, void* param)
     evhttp_cmd_type method = evhttp_request_get_command(req_ptr);
     size_t size = EVBUFFER_LENGTH(req_ptr->input_buffer);
     char* payload = (char*)evbuffer_pullup(req_ptr->input_buffer, size);
-    if (size > 0 && payload[size - 1] != '\0') {
-        payload[size - 1] = '\0';
+    if (size > 0 && payload[size] != '\0') {
+        payload[size] = '\0';
     }
-    Message("%s request from: %s:%d%s\n[ %s ]", ParseMethod(method), address, port, url.c_str(), payload);
+    Message("%s %s\trequest from: %s:%d\n[ %s ]", ParseMethod(method), url.c_str(), address, port, payload);
     vector<string> list = parseUri(url);
     if (param != nullptr) {
         HookDetail message = {};
@@ -139,7 +142,7 @@ void GenericHandler(struct evhttp_request* req_ptr, void* param)
         message.method = method;
         message.payload = payload;
         if (list.size() > 1) {
-            GetResHook(list[1], method)(message);
+            GetResHook(list[1], method)(message, size);
         } else {
             SrvCallbacks* callbacks = (SrvCallbacks*)param;
             if (callbacks->ParsReq != nullptr)
@@ -222,10 +225,10 @@ void GenericHandler(struct evhttp_request* req_ptr, void* param)
 void WaitMsgTask(event_base* base)
 {
     unsigned int count = 0;
-    while (base == nullptr || g_msgRcv.empty()) {
-        if (g_msgRcv != "" || count > 3)
+    while (base == nullptr || g_msgRcvs[base].empty()) {
+        if (count > 3)
             break;
-        usleep(1000000);
+        usleep(g_wait100ms);
         Message("dispatch timeout %ds to exit", count);
         count++;
     };
@@ -408,10 +411,15 @@ int RequestClient(const char* url, HookDetail& detail, DEALRES_CALLBACK hook)
         WaitMsgTask(detail.base);
         if (client.joinable())
             client.join();
-        detail.msg = g_msgRcv;
     } else {
         g_dealhooks["handleResponse"].callback = hook;
         client.detach();
+        usleep(g_wait100ms);
+    }
+    for (auto msg : g_msgRcvs) {
+        if (!msg.second.empty()) {
+            detail.msg = msg.second;
+        }
     }
     return stat;
 }

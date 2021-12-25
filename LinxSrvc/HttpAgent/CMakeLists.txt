@@ -1,21 +1,19 @@
-﻿cmake_minimum_required (VERSION 3.8)
-
-project ("HttpAgent")
+﻿cmake_minimum_required (VERSION 3.0)
 
 set(TARGET HttpAgent)
 
-file(GLOB SRC_FILE_LIST "*.cpp")
+project ("${TARGET}")
+add_definitions(-std=c++11)
+set(CXX_STANDARD 11)
 
+file(GLOB SRC_FILE_LIST "*.cpp")
 add_executable (${TARGET} ${SRC_FILE_LIST})
+find_library(EVENT_LIB event ${APPOINT_EVENT}/lib /usr/lib /usr/local/lib NOTFOUND)
 
 include_directories (
     /usr/local/include
     /usr/include
 )
-
-find_library(EVENT_LIB event ${APPOINT_EVENT}/lib /usr/lib /usr/local/lib NOTFOUND)
-
-add_definitions(-std=c++11)
 
 target_link_libraries (${TARGET}
     -fPIC
