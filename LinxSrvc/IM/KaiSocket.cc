@@ -214,7 +214,7 @@ int proxyhook(KaiSocket* kai)
     }
     KaiSocket::Message msg = {};
     const size_t Size = sizeof(KaiSocket::Message);
-    memset(&msg, 0, Size);
+    memset(static_cast<void*>(&msg), 0, Size);
     int len = kai->recv(reinterpret_cast<uint8_t*>(&msg), Size);
     if (len > 0) {
         if (msg.head.etag >= NONE && msg.head.etag <= SUBSCRIBE) {
@@ -665,7 +665,7 @@ ssize_t KaiSocket::Subscriber(const std::string& message, RECVCALLBACK callback)
     const size_t Size = HEAD_SIZE + sizeof(Message::Payload::stat);
     volatile bool flag = false;
     do {
-        memset(&msg, 0, Size);
+        memset(static_cast<void*>(&msg), 0, Size);
         ssize_t len = ::recv(m_network.socket, reinterpret_cast<char*>(&msg), Size, 0);
         if (len < 0) {
             std::cerr << __FUNCTION__ << ": recv head fail, " << strerror(errno) << std::endl;
@@ -754,7 +754,7 @@ ssize_t KaiSocket::Publisher(const std::string& topic, const std::string& payloa
     }
     const int maxLen = 256;
     Message msg = {};
-    memset(&msg, 0, sizeof(Message));
+    memset(static_cast<void*>(&msg), 0, sizeof(Message));
     size = (size > maxLen ? maxLen : size);
     size_t msgLen = sizeof msg + size;
     msg.head.size = static_cast<unsigned int>(msgLen);
