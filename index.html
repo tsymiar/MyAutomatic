@@ -1,6 +1,7 @@
 <html>
 <head>
     <meta charset="utf-8">
+    <title>UTILS</title>
     <script language="JavaScript">
         var CryptoJS=CryptoJS||function(u,p){var d={},l=d.lib={},s=function(){},t=l.Base={extend:function(a){s.prototype=this;var c=new s;a&&c.mixIn(a);c.hasOwnProperty("init")||(c.init=function(){c.$super.init.apply(this,arguments)});c.init.prototype=c;c.$super=this;return c},create:function(){var a=this.extend();a.init.apply(a,arguments);return a},init:function(){},mixIn:function(a){for(var c in a)a.hasOwnProperty(c)&&(this[c]=a[c]);a.hasOwnProperty("toString")&&(this.toString=a.toString)},clone:function(){return this.init.prototype.extend(this)}},
             r=l.WordArray=t.extend({init:function(a,c){a=this.words=a||[];this.sigBytes=c!=p?c:4*a.length},toString:function(a){return(a||v).stringify(this)},concat:function(a){var c=this.words,e=a.words,j=this.sigBytes;a=a.sigBytes;this.clamp();if(j%4)for(var k=0;k<a;k++)c[j+k>>>2]|=(e[k>>>2]>>>24-8*(k%4)&255)<<24-8*((j+k)%4);else if(65535<e.length)for(k=0;k<a;k+=4)c[j+k>>>2]=e[k>>>2];else c.push.apply(c,e);this.sigBytes+=a;return this},clamp:function(){var a=this.words,c=this.sigBytes;a[c>>>2]&=4294967295<<
@@ -2440,10 +2441,6 @@
                 autoFitText(elem);
             }
         }
-        function getLocalTime() {
-            var nS = $("#timestamp").val();
-            $("#time_date").html(new Date(parseInt(nS) * 1000).toLocaleString().replace(/:\d{1,2}$/,' '));
-        }
         function formSubmit() {
             document.getElementById("form_ret").innerHTML = "";
             handle_request(document.getElementById("form_act").value,"form_ret","POST");
@@ -2477,7 +2474,7 @@
     </script>
 <div>
     <label>HTTP Request:</label><br>
-    <input type="text" id="req_url" style="width:60%" title="" value="http://localhost:80/MyAutomatic/trans/service.php?action=null"/>
+    <input type="text" id="req_url" style="width:60%" title="" value="http://localhost:8989"/>
     <br><textarea id="payload" placeholder="payload"></textarea><br>
     <button onclick="simRequest('GET')">GET</button>
     <button onclick="simRequest('POST')">POST</button>
@@ -2498,7 +2495,7 @@
 </div>
 <div>
     <label>Upload:</label><br>
-    <input type="text" id="upload_url" style="width:60%" title="" value="http://localhost:80/MyAutomatic/trans/service.php?action=file_upload2"/>
+    <input type="text" id="upload_url" style="width:60%" title="" value="http://localhost:8989"/>
     <form action="" name="upload" method="post" enctype="multipart/form-data">
         <input id="file" type="file" name="file"/>
         <input type="button" value="Submit" onclick="checkAction()">
@@ -2733,6 +2730,62 @@
     async function sleep(ms) {
         return await new Promise(resolve => setTimeout(resolve, ms));
     }
+    function farmatDate(time, fmt) {
+        var date = new Date(parseInt(time) * 1000);
+        if (/(y+)/.test(fmt)) {
+            fmt = fmt.replace(RegExp.$1, date.getFullYear() + '').substr(4 - RegExp.$1.length);
+        }
+        let o = {
+            'M+': date.getMonth() + 1,
+            'd+': date.getDay(),
+            'h+': date.getHours(),
+            'm+': date.getMinutes(),
+            's+': date.getSeconds()
+        };
+        for (let key in o) {
+            if (RegExp(`(${key})`).test(fmt)) {
+                let val = o[key] + '';
+                fmt = fmt.replace(RegExp.$1, (val.length >= 2 ? val : '0' + val));
+            }
+        }
+        return fmt;
+    }
+    function getLocalTime() {
+        var stamp = $("#time_max10").val();
+        var date = new Date(parseInt(stamp) * 1000);
+        var value = date.toLocaleString().replace(/:\d{1,2}$/, ' ');
+        var time = date.toString();
+        var pos = time.lastIndexOf(':');
+        var ms = time.substr(pos, 3);
+        var gmt = time.substr(pos, time.length - pos);
+        var dayCycle = date.getDay();
+        var dayCycleArray = ["日", "一", "二", "三", "四", "五", "六"];
+        for (var i = 0; i < 7; i++) {
+            if (dayCycle == i) {
+                dayCycle = dayCycleArray[i];
+            }
+        }
+        var week = "周" + dayCycle;
+        gmt = gmt.trim();
+        pos = gmt.lastIndexOf(' ');
+        gmt = gmt.substr(0, pos);
+        pos = gmt.lastIndexOf(' ');
+        gmt = gmt.substr(pos, gmt.length - pos);
+        value = value.trim();
+        if (value != "Invalid Date") {
+            value += (ms + " " + week + " " + gmt);
+        }
+        $("#time_date_1").html(value);
+    }
+    function getLocaleTime() {
+        var fmt = $("#time_format").val();
+        if (fmt == null || fmt == '') {
+            fmt = $("#time_format").attr('placeholder');
+        }
+        var time = $("#time_value").val();
+        var value = farmatDate(time, fmt);
+        $("#time_date_2").html(value);
+    }
     function onSleep() {
         $("#sleep_elem").html('Taking a break...');
         let delay = $("#sleep_time").val();
@@ -2740,12 +2793,22 @@
             $("#sleep_elem").html(delay + ' millseconds later.');
         });
     }
+    function getTimeStamp() {
+        var timestamp = new Date().getTime();
+        $("#timestamp").html(timestamp);
+    }
 </script>
 <div>
-    <label>timestamp:</label><br>
-    <input id="timestamp" placeholder="timestamp"><br>
-    <input type="button" value="LocalTime" onclick="getLocalTime()">
-    <label id="time_date">&nbsp;</label>
+    <label>timestamp:</label>
+    <br><input id="time_max10" placeholder="timestamp">
+        <input type="button" value="LocalTime" onclick="getLocalTime()">
+    <br><label id="time_date_1">&nbsp;</label>
+    <br><input id="time_value" placeholder="timestamp">
+    <br><input id="time_format" placeholder="yyyy-MM-dd hh:mm">
+        <input type="button" value="LocalTime" onclick="getLocaleTime()">
+    <br><label id="time_date_2">&nbsp;</label>
+    <br><input type="button" value="Timestamp" onclick="getTimeStamp()">
+        <label id="timestamp">&nbsp;</label>
 </div>
 <br>
 <input id="sleep_time" title="" value="0">
