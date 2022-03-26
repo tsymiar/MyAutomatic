@@ -11,6 +11,7 @@ set(CMAKE_CXX_FLAGS "-std=c++0x ${CMAKE_CXX_FLAGS} -g -ftest-coverage -fprofile-
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OPTION}")
 
 if (NOT WIN32)
+    add_definitions(-D_USE_FORK_PROCESS_)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated")
 endif()
 
