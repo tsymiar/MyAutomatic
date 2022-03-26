@@ -22,7 +22,7 @@ typedef int socklen_t;
 #define INET_ADDRSTRLEN 16
 #endif
 #define usleep(u) Sleep((u)/1000)
-#define write(a,b,c) ::send(a,(char*)(b),c,0)
+#define write(x,y,z) ::send(x,(char*)(y),z,0)
 #define signal(_1,_2) {}
 #else
 #define WSACleanup()
@@ -184,7 +184,7 @@ int KaiSocket::connect()
     unsigned int tries = 0;
     const char addrreuse = 0;
     setsockopt(m_network.socket, SOL_SOCKET, SO_REUSEADDR, &addrreuse, sizeof(char));
-    std::cout << "------ Client v0.1 " << ipaddr << ":" << m_network.PORT << " ------" << std::endl;
+    std::cout << "------ Client v0.1 connecting to " << ipaddr << ":" << m_network.PORT << " ------" << std::endl;
     while (::connect(m_network.socket, (struct sockaddr*)&srvaddr, sizeof(srvaddr)) == (-1)) {
         if (tries < g_maxTimes) {
             wait(WAIT100ms * (int)pow(2, tries));
@@ -262,7 +262,7 @@ ssize_t KaiSocket::recv(uint8_t* buff, size_t size)
     if (strncmp(reinterpret_cast<char*>(&header), "Kai", 3) == 0)
         return 0; // heartbeat ignore
     if (res != len) {
-        std::cout << __FUNCTION__ << ": stream got [" << res << "], expect size = " << len << std::endl;
+        std::cout << __FUNCTION__ << ": stream caught [" << res << "], expect size = " << len << std::endl;
     }
     std::mutex mtxLck = {};
     std::lock_guard<std::mutex> lock(mtxLck);
@@ -328,7 +328,7 @@ ssize_t KaiSocket::recv(uint8_t* buff, size_t size)
 #endif
                 && network.flag.etag == CONSUMER) { // only consume should be sent
                 if ((stat = this->writes(network, message, total)) < 0) {
-                    std::cerr << __FUNCTION__ << ": writes [" << network.socket << "], " << total << " failed." << std::endl;
+                    std::cerr << __FUNCTION__ << ": writes [" << network.socket << "], " << total << " failed!" << std::endl;
                     continue;
                 }
             }
@@ -378,6 +378,8 @@ ssize_t KaiSocket::writes(Network network, const uint8_t* data, size_t len)
 {
     if (data == nullptr || len == 0)
         return 0;
+    if (errno == EPIPE)
+        return -2;
     int left = (int)len;
     auto* buff = new(std::nothrow) uint8_t[left];
     if (buff == nullptr) {
@@ -516,7 +518,7 @@ void KaiSocket::runCallback(KaiSocket* sock, KAISOCKHOOK func)
         }
         int stat = func(sock);
         if (stat <= 0) {
-            std::cerr << "callback stat = " << stat << std::endl;
+            std::cout << "callback stat = " << stat << std::endl;
             break;
         }
     }
@@ -596,7 +598,7 @@ void KaiSocket::setRequestHandle(void(*func)(uint8_t*, size_t), uint8_t* data, s
 int KaiSocket::produce(const Message& msg)
 {
     if (m_msgQue == nullptr) {
-        std::cerr << __FUNCTION__ << ": msgque pool is null." << std::endl;
+        std::cout << __FUNCTION__ << ": msgque pool is null." << std::endl;
         return -1;
     }
     std::lock_guard<std::mutex> lock(m_lock);
@@ -611,7 +613,7 @@ int KaiSocket::produce(const Message& msg)
 int KaiSocket::consume(Message& msg)
 {
     if (m_msgQue == nullptr || m_msgQue->empty()) {
-        std::cerr << __FUNCTION__ << ": msgque pool is null/empty." << std::endl;
+        std::cout << __FUNCTION__ << ": msgque pool is null/empty." << std::endl;
         return -1;
     }
     std::lock_guard<std::mutex> lock(m_lock);
@@ -675,6 +677,7 @@ ssize_t KaiSocket::Subscriber(const std::string& message, RECVCALLBACK callback)
         char* kai = (char*)(&msg);
         if (kai[0] == 'K' && kai[1] == 'a' && kai[2] == 'i')
             continue;
+        static long count = 0;
         flag = (msg.head.ssid != 0 || len == 0);
         if (msg.head.size == 0) {
             msg.head.size = Size;
@@ -691,7 +694,10 @@ ssize_t KaiSocket::Subscriber(const std::string& message, RECVCALLBACK callback)
                 return -4;
             }
             std::cout << __FUNCTION__ << " run as " << KaiSocket::G_KaiRole[msg.head.etag]
-                << ", MQ topic: '" << msg.head.topic << "'." << std::endl;
+                << ", MQ(" << count << ") topic: '" << msg.head.topic << "'." << std::endl;
+            count++;
+        } else {
+            count = 0;
         }
         if (msg.head.size > Size) {
             size_t remain = msg.head.size - Size;
@@ -710,7 +716,7 @@ ssize_t KaiSocket::Subscriber(const std::string& message, RECVCALLBACK callback)
                 msg.data.stat[0] = 'O';
                 msg.data.stat[1] = 'K';
                 memcpy(msg.data.body, body, len);
-                msg.data.body[len] = '\0';
+                msg.data.stat[2] = msg.data.body[len] = '\0';
                 if (callback != nullptr) {
                     callback(msg);
                 }
@@ -771,11 +777,7 @@ ssize_t KaiSocket::Publisher(const std::string& topic, const std::string& payloa
     }
     memcpy(message, &msg, sizeof(Message));
     memcpy(message + HEAD_SIZE + sizeof(Message::Payload::stat), payload.c_str(), size);
-    this->produce(msg);
-    ssize_t len = this->send(message, msgLen);
-    if (len <= 0) {
-        this->consume(msg);
-    }
+    ssize_t len = this->broadcast(message, msgLen);
     delete[] message;
     finish();
     return len;
