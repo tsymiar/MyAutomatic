@@ -255,7 +255,7 @@ ssize_t KaiSocket::recv(uint8_t* buff, size_t size)
         return -2;
     }
     ssize_t res = ::recv(m_network.socket, reinterpret_cast<char*>(&header), len, 0);
-    if (0 > res) { // fixme only when disconnect to continue
+    if (0 > res || (res == 0 && errno != EINTR)) { // fixme only when disconnect to continue
         handleNotify(m_network);
         return -3;
     }
@@ -321,6 +321,7 @@ ssize_t KaiSocket::recv(uint8_t* buff, size_t size)
         using namespace std;
         msg.head.ssid = setSsid(m_network);
         memcpy(message, &msg, sizeof(Message));
+        bool deal = false;
         for (auto& network : m_networks) {
             if (strcmp(network.flag.topic, m_network.flag.topic) == 0
 #if !defined MULTISEND
@@ -331,11 +332,15 @@ ssize_t KaiSocket::recv(uint8_t* buff, size_t size)
                     std::cerr << __FUNCTION__ << ": writes [" << network.socket << "], " << total << " failed!" << std::endl;
                     continue;
                 }
+                deal = true;
             }
         }
-        if (stat >= 0)
-            strcpy(msg.data.stat, "SUCCESS");
-        else if (stat == -1)
+        if (stat >= 0) {
+            if (deal)
+                strcpy(msg.data.stat, "SUCCESS");
+            else
+                strcpy(msg.data.stat, "NOTDEAL");
+        } else if (stat == -1)
             strcpy(msg.data.stat, "NULLPTR");
         else
             strcpy(msg.data.stat, "FAILURE");
