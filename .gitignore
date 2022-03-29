@@ -54,6 +54,7 @@ build
 */moc_*
 */ui_*
 /.vs*
+!.vsconfig
 *Debug
 *bin
 *obj
