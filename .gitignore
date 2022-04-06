@@ -46,6 +46,7 @@
 *.xcuserstate
 
 # Built files
+CMakeSettings.json
 */GeneratedFiles
 *cmake-build-*
 */build
