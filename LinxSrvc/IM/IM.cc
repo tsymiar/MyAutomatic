@@ -668,7 +668,14 @@ type_thread_func monite(void* arg)
                     {
 #if !defined _WIN32
                         char* mesg = NULL;
+#if (defined __GNUC__ && __APPLE__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
                         if (vfork() == 0) { // posix_spawn /* child process first */
+#if (defined __GNUC__ && __APPLE__)
+#pragma GCC diagnostic pop
+#endif
 #ifdef RASPI
 #undef GET_IMG_EXE
 #define GET_IMG_EXE "raspistill"

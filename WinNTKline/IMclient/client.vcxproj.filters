@@ -7,7 +7,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\KlineUtil\IM\IM.cc">
+    <ClCompile Include="..\..\LinxSrvc\IM\IM.cc">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="imclient.cpp">

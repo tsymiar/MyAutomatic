@@ -16,7 +16,7 @@ LinxSrvc
 *  [IM](https://github.com/tsymiar/MyAutomatic/tree/auto-dev/LinxSrvc/IM)
     could be compiled with `Visual Studio 2017` installed on Windows;
     
-    also, run `g++ IM.cc -std=c++11 -lpthread` to compile if using linux/MacOS. [IM.cc](https://raw.githubusercontent.com/tsymiar/MyAutomatic/auto-dev/WinNTKline/KlineUtil/IM/IM.cc), is the source file.
+    also, run `g++ IM.cc -std=c++11 -lpthread` to compile if using linux/MacOS. [IM.cc](https://raw.githubusercontent.com/tsymiar/MyAutomatic/auto-dev/LinxSrvc/IM/IM.cc), is the source file.
 *  hardware
 
    Some scattered .c files to driver hardwares such as `me909s`, GPIO, etc.

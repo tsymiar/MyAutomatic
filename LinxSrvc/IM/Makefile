@@ -8,7 +8,7 @@ EXP = -Wno-c++11-narrowing -Wno-unused-command-line-argument
 FLAG = -g -std=c++11 -D_DEBUG -DFULLY_COMPILE
 PTHD = -lpthread
 IMLOCAL=../../WinNTKline/KlineUtil/IM
-IMFILE=$(IMLOCAL)/IM.cc
+IMFILE=$(CUR)/IM.cc
 CLIENTLOCAL=../../WinNTKline/IMclient
 CLIENTFILES=$(IMLOCAL)/client.cc $(CLIENTLOCAL)/imclient.cpp
 all: IM client Kai

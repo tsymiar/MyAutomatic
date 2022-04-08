@@ -113,7 +113,7 @@
     <None Include="Makefile" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\WinNTKline\KlineUtil\IM\IM.cc" />
+    <ClCompile Include="IM.cc" />
     <ClCompile Include="fifo.c" />
     <ClCompile Include="KaiTest.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">true</ExcludedFromBuild>
