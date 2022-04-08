@@ -3,11 +3,12 @@
 #ifdef _WIN32
 #include <Ws2tcpip.h>
 #include <Windows.h>
+#include <signal.h>
 #else
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <signal.h>
 #include <unistd.h>
+#include <csignal>
 #endif
 #include <algorithm>
 #include <iostream>
@@ -40,6 +41,8 @@ namespace {
 
 void signalCatch(int signo)
 {
+    if (signo == SIGSEGV)
+        return;
     std::cout << "Caught signal: " << signo << std::endl;
 }
 
@@ -395,7 +398,7 @@ ssize_t KaiSocket::writes(Network network, const uint8_t* data, size_t len)
         return -1;
     }
     memset(buff, 0, left);
-    memmove(buff, data, len);
+    memcpy(buff, data, left);
     while (left > 0) {
         ssize_t wrote = 0;
         if ((wrote = write(network.socket, reinterpret_cast<char*>(buff + wrote), left)) <= 0) {
@@ -626,8 +629,12 @@ int KaiSocket::consume(Message& msg)
     }
     std::lock_guard<std::mutex> lock(m_lock);
     size_t size = m_msgQue->size();
-    const Message* msgQ = m_msgQue->front();
-    memmove(&msg.head, &msgQ->head, HEAD_SIZE);
+    const Message* msgQ = nullptr;
+    msgQ = m_msgQue->front();
+    if (msgQ == nullptr) {
+        return size;
+    }
+    msg.head = msgQ->head; // fixme memmove_avx_unaligned_erms
     memmove(&msg.data, &msgQ->data, sizeof(Message::Payload));
     if (size > 0) {
         m_msgQue->pop_front();
