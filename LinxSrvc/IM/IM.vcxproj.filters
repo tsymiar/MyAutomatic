@@ -4,7 +4,7 @@
     <ClCompile Include="KaiSocket.cc">
       <Filter>Kai</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\WinNTKline\KlineUtil\IM\IM.cc">
+    <ClCompile Include="IM.cc">
       <Filter>IM</Filter>
     </ClCompile>
     <ClCompile Include="KaiTest.cpp">

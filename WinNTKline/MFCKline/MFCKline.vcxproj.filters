@@ -200,6 +200,9 @@
     <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\stdsoap2.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\LinxSrvc\IM\IM.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="..\KlineUtil\elem\CCustomCtl.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -210,9 +213,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\KlineUtil\Font\FontNehe.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\KlineUtil\IM\IM.cc">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\KlineUtil\HOOK\injectDLL.cpp">
