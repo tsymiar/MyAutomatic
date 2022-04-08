@@ -629,9 +629,9 @@ int KaiSocket::consume(Message& msg)
     }
     std::lock_guard<std::mutex> lock(m_lock);
     size_t size = m_msgQue->size();
-    const Message* msgQ = nullptr;
-    msgQ = m_msgQue->front();
-    if (msgQ == nullptr) {
+    static Message* msgQ = nullptr;
+    msgQ = const_cast<Message*>(m_msgQue->front());
+    if (msgQ == nullptr || msgQ->head.etag != CONSUMER) {
         return size;
     }
     msg.head = msgQ->head; // fixme memmove_avx_unaligned_erms
@@ -715,12 +715,12 @@ ssize_t KaiSocket::Subscriber(const std::string& message, RECVCALLBACK callback)
         }
         if (msg.head.size > Size) {
             size_t remain = msg.head.size - Size;
-            auto* body = new(std::nothrow) uint8_t[remain];
+            auto* body = new(std::nothrow) char[remain];
             if (body == nullptr) {
                 std::cerr << __FUNCTION__ << ": body malloc failed!" << std::endl;
                 return -1;
             }
-            len = ::recv(m_network.socket, reinterpret_cast<char*>(body), remain, 0);
+            len = ::recv(m_network.socket, body, remain, 0);
             if (len < 0) {
                 std::cerr << __FUNCTION__ << ": recv body fail, " << strerror(errno) << std::endl;
                 handleNotify(m_network);
@@ -729,12 +729,20 @@ ssize_t KaiSocket::Subscriber(const std::string& message, RECVCALLBACK callback)
             } else {
                 msg.data.stat[0] = 'O';
                 msg.data.stat[1] = 'K';
-                memmove(msg.data.body, body, len);
-                msg.data.stat[2] = msg.data.body[len] = '\0';
-                if (callback != nullptr) {
-                    callback(msg);
+                msg.data.stat[2] = '\0';
+                Message* pMsg = (Message*)new char[sizeof(Message) + len];
+                if (pMsg != nullptr) {
+                    memcpy(pMsg, &msg, sizeof(Message));
+                    if (len > 0) {
+                        memcpy(pMsg->data.body, body, len);
+                        pMsg->data.body[len - 1] = '\0';
+                    }
+                    if (callback != nullptr) {
+                        callback(*pMsg);
+                    }
+                    std::cout << __FUNCTION__ << ": message payload = [" << pMsg->data.stat << "]-[" << pMsg->data.body << "]" << std::endl;
+                    delete pMsg;
                 }
-                std::cout << __FUNCTION__ << ": message payload = [" << msg.data.stat << "]-[" << msg.data.body << "]" << std::endl;
             }
             delete[] body;
         }
