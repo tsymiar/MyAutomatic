@@ -37,8 +37,8 @@ public:
     struct Header {
         char rsv;
         int etag;
-       /*vilatile*/ unsigned long long ssid; //ssid = port | socket | ip
-        char topic[32];
+        /*vilatile*/ unsigned long long ssid; //ssid = port | socket | ip
+        char buffer[32];
         unsigned int size;
     } __attribute__((packed));
 #pragma pack()
@@ -125,5 +125,7 @@ private:
     void runCallback(KaiSocket* sock, KAISOCKHOOK func);
     void setTopic(const std::string& topic, Header& header);
     int produce(const Message& msg);
-    int consume(Message& msg);
+    ssize_t consume(Message& msg);
+public:
+    void rsync(Message& msg);
 };
