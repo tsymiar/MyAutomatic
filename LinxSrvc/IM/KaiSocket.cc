@@ -158,11 +158,11 @@ int KaiSocket::start()
                 m_network.IP.c_str(), m_network.PORT,
                 lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
 
-            Header head{ 0, 0, m_network.flag.ssid = setSsid(m_network, rcv_sock), {0} };
+            Header head{ 0, 0, m_network.flag.ssid = setSsid(m_network), {0} };
             ::send(rcv_sock, (char*)&head, HEAD_SIZE, 0);
             m_networks.emplace_back(m_network);
 
-            std::cout << "socket monitor: " << rcv_sock << "; waitting massage..." << std::endl;
+            std::cout << "socket monitor: " << m_network.socket << "; waitting massage..." << std::endl;
             for (auto& callback : m_callbacks) {
                 if (callback == nullptr)
                     continue;
@@ -210,6 +210,15 @@ int KaiSocket::connect()
     return 0;
 }
 
+void KaiSocket::rsync(Message& msg)
+{
+    while (consume(msg) > 0) {
+        if ((long)*msg.head.buffer == '\eeff') {
+            writes(m_network, (uint8_t*)&msg, msg.head.size);
+        }
+    }
+}
+
 int proxyhook(KaiSocket* kai)
 {
     if (kai == nullptr) {
@@ -224,9 +233,12 @@ int proxyhook(KaiSocket* kai)
         if (msg.head.etag >= NONE && msg.head.etag <= SUBSCRIBE) {
             std::cout
                 << __FUNCTION__ << ": message from " << KaiSocket::G_KaiRole[msg.head.etag]
-                << " [" << msg.data.stat << "], MQ detail: '" << msg.head.topic
+                << " [" << msg.data.stat << "], MQ detail: '" << msg.head.buffer
                 << "', len = " << len
                 << std::endl;
+            if (msg.head.etag == CONSUMER) {
+                kai->rsync(msg);
+            }
         } else {
             std::cout << __FUNCTION__ << ": msg tag = " << msg.head.etag << ": [" << msg.head.size << "]" << std::endl;
         }
@@ -282,13 +294,13 @@ ssize_t KaiSocket::recv(uint8_t* buff, size_t size)
         if (checkSsid(network.socket, ssid)) {
             subSsid = ssid;
             network.flag.etag = header.etag;
-            memmove(network.flag.topic, header.topic, sizeof(Header::topic));
+            memmove(network.flag.buffer, header.buffer, sizeof(Header::buffer));
         }
         wait(1);
     }
     m_network.flag.etag = header.etag;
     m_network.flag.size = header.size;
-    memmove(m_network.flag.topic, header.topic, sizeof(Header::topic));
+    memmove(m_network.flag.buffer, header.buffer, sizeof(Header::buffer));
     memmove(buff, &header, len);
     size_t total = m_network.flag.size;
     if (total < sizeof(Message))
@@ -329,7 +341,7 @@ ssize_t KaiSocket::recv(uint8_t* buff, size_t size)
         memmove(message, &msg, sizeof(Message));
         bool deal = false;
         for (auto& network : m_networks) {
-            if (strcmp(network.flag.topic, m_network.flag.topic) == 0
+            if (strcmp(network.flag.buffer, m_network.flag.buffer) == 0
 #if !defined MULTISEND
                 && network.flag.ssid == subSsid /* comment to multisend */
 #endif
@@ -344,8 +356,12 @@ ssize_t KaiSocket::recv(uint8_t* buff, size_t size)
         if (stat >= 0) {
             if (deal)
                 strcpy(msg.data.stat, "SUCCESS");
-            else
+            else {
+                *((long*)msg.head.buffer) = '\eeff';
                 strcpy(msg.data.stat, "NOTDEAL");
+                msg.head.size = total;
+                stat = produce(msg);
+            }
         } else if (stat == -1)
             strcpy(msg.data.stat, "NULLPTR");
         else
@@ -621,13 +637,14 @@ int KaiSocket::produce(const Message& msg)
     return static_cast<int>(m_msgQue->size() - size);
 }
 
-int KaiSocket::consume(Message& msg)
+ssize_t KaiSocket::consume(Message& msg)
 {
     if (m_msgQue == nullptr || m_msgQue->empty()) {
         std::cout << __FUNCTION__ << ": message pool has no elem(s)." << std::endl;
         return -1;
     }
-    std::lock_guard<std::mutex> lock(m_lock);
+    std::mutex mtxLck = {};
+    std::lock_guard<std::mutex> lock(mtxLck);
     size_t size = m_msgQue->size();
     static Message* msgQ = nullptr;
     msgQ = const_cast<Message*>(m_msgQue->front());
@@ -664,12 +681,12 @@ void KaiSocket::setTopic(const std::string& topic, Header& header)
 {
     std::lock_guard<std::mutex> lock(m_lock);
     size_t size = topic.size();
-    if (size > sizeof(header.topic)) {
+    if (size > sizeof(header.buffer)) {
         std::cerr << __FUNCTION__ << ": topic length " << size << " out of bounds." << std::endl;
-        size = sizeof(header.topic);
+        size = sizeof(header.buffer);
     }
-    memmove(header.topic, topic.c_str(), size);
-    memmove(m_network.flag.topic, header.topic, size);
+    memmove(header.buffer, topic.c_str(), size);
+    memmove(m_network.flag.buffer, header.buffer, size);
     m_network.flag.etag = header.etag;
 }
 
@@ -708,7 +725,7 @@ ssize_t KaiSocket::Subscriber(const std::string& message, RECVCALLBACK callback)
                 return -4;
             }
             std::cout << __FUNCTION__ << " process run as " << KaiSocket::G_KaiRole[msg.head.etag]
-                << ", MQ(" << count << ") topic: '" << msg.head.topic << "'." << std::endl;
+                << ", MQ(" << count << ") topic: '" << msg.head.buffer << "'." << std::endl;
             count++;
         } else {
             count = 0;
@@ -735,7 +752,7 @@ ssize_t KaiSocket::Subscriber(const std::string& message, RECVCALLBACK callback)
                     memcpy(pMsg, &msg, sizeof(Message));
                     if (len > 0) {
                         memcpy(pMsg->data.body, body, len);
-                        pMsg->data.body[len - 1] = '\0';
+                        pMsg->data.body[len] = '\0';
                     }
                     if (callback != nullptr) {
                         callback(*pMsg);
