@@ -480,25 +480,24 @@ void KaiSocket::handleNotify(Network& network)
         return;
     }
     std::lock_guard<std::mutex> lock(m_lock);
-    bool exit = false;
+    bool exist = false;
     auto at = m_networks.begin();
     for (; at != m_networks.end(); ++at) {
         if (at->socket == network.socket) {
-            exit = true;
+            exist = true;
             break;
         }
     }
     if (!network.run_) {
         network.run_ = !network.run_;
     }
-    if (!exit) {
+    if (!exist) {
         m_networks.emplace_back(network);
     }
     for (auto it = m_networks.begin(); it != m_networks.end(); ++it) {
         if (it->socket < 0 || m_network.socket < 0 || m_networks.empty())
-            return;
+            break;
         if (it->socket == network.socket && network.run_) {
-            auto iter = it;
             it->run_ = false;
             std::cerr
                 << "### " << (m_network.client ? "Server" : "Client")
@@ -508,10 +507,14 @@ void KaiSocket::handleNotify(Network& network)
             if (m_networks.size() == 1) {
                 m_networks.clear();
                 break;
+            } else {
+                auto st = it;
+                if (m_networks.erase(st) == m_networks.end())
+                    return;
+                it = m_networks.begin();;
             }
-            if (m_networks.empty() || m_networks.end() == m_networks.erase(iter))
-                return;
-            it = m_networks.begin();
+        } else {
+            //++it;
         }
         wait(1);
     }
