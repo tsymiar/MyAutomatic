@@ -107,7 +107,7 @@ private:
         SOCKET socket;
         std::string IP;
         unsigned short PORT;
-        volatile bool run_ = false;
+        volatile bool run_01 = false;
         bool client = false;
         Header flag;
     } m_network;

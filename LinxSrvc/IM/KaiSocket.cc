@@ -271,7 +271,7 @@ ssize_t KaiSocket::recv(uint8_t* buff, size_t size)
         return -2;
     }
     ssize_t res = ::recv(m_network.socket, reinterpret_cast<char*>(&header), len, 0);
-    if (0 > res || (res == 0 && errno != EINTR)) { // fixme only when disconnect to continue
+    if (0 == res || (res < 0 && errno != EAGAIN)) { // fixme only when disconnect to continue
         handleNotify(m_network);
         return -3;
     }
@@ -288,7 +288,7 @@ ssize_t KaiSocket::recv(uint8_t* buff, size_t size)
     // get ssid set to 'm_network', also repeat to server as a mark for search clients
     unsigned long long ssid = header.ssid;
     for (auto& network : m_networks) {
-        if (!m_network.run_ || m_network.socket == 0)
+        if (!m_network.run_01 || m_network.socket == 0)
             continue;
         // select to set consume network
         if (checkSsid(network.socket, ssid)) {
@@ -380,7 +380,7 @@ ssize_t KaiSocket::recv(uint8_t* buff, size_t size)
 bool KaiSocket::running()
 {
     std::lock_guard<std::mutex> lock(m_lock);
-    return m_network.run_;
+    return m_network.run_01;
 }
 
 #if (defined __GNUC__ && __APPLE__)
@@ -488,8 +488,8 @@ void KaiSocket::handleNotify(Network& network)
             break;
         }
     }
-    if (!network.run_) {
-        network.run_ = !network.run_;
+    if (!network.run_01) {
+        network.run_01 = !network.run_01;
     }
     if (!exist) {
         m_networks.emplace_back(network);
@@ -497,12 +497,16 @@ void KaiSocket::handleNotify(Network& network)
     for (auto it = m_networks.begin(); it != m_networks.end(); ++it) {
         if (it->socket < 0 || m_network.socket < 0 || m_networks.empty())
             break;
-        if (it->socket == network.socket && network.run_) {
-            it->run_ = false;
-            std::cerr
-                << "### " << (m_network.client ? "Server" : "Client")
-                << "(" << it->IP << ":" << it->PORT << ") socket [" << it->socket << "] lost."
-                << std::endl;
+        if (it->socket == network.socket && network.run_01) {
+            it->run_01 = false;
+            static SOCKET socket = 0;
+            if (socket != it->socket) {
+                std::cerr
+                    << "### " << (m_network.client ? "Server" : "Client")
+                    << "(" << it->IP << ":" << it->PORT << ") socket [" << it->socket << "] lost."
+                    << std::endl;
+            }
+            socket = it->socket;
             close(it->socket);
             if (m_networks.size() == 1) {
                 m_networks.clear();
@@ -522,24 +526,26 @@ void KaiSocket::handleNotify(Network& network)
 
 void KaiSocket::runCallback(KaiSocket* sock, KAISOCKHOOK func)
 {
-    if (m_network.flag.etag != PRODUCER) {
-        sock->m_network.run_ = true;
+    if (sock == nullptr)
+        return;
+    if (sock->m_network.flag.etag != PRODUCER) {
+        sock->m_network.run_01 = true; // server
     }
-    if (m_network.client && !g_thrStat) {
-        // heartBeat
-        std::thread(
-            [](Network& network, KaiSocket* kai) {
+    for (auto& network : sock->m_networks) {
+        if (network.client && !g_thrStat) {
+            // heartBeat
+            std::thread([=](Network& work, KaiSocket* kai) {
                 while (kai->running()) {
-                    if (::send(network.socket, "Kai", 3, 0) <= 0) {
-                        std::cerr << "Heartbeat to " << network.IP << ":"
-                            << network.PORT << " arrests." << std::endl;
-                        kai->handleNotify(network);
+                    if (::send(work.socket, "Kai", 3, 0) <= 0) {
+                        std::cerr << "Heartbeat to " << work.IP << ":"
+                            << work.PORT << " arrests." << std::endl;
+                        kai->handleNotify(work);
                         break;
                     }
                     KaiSocket::wait(30000); // frequency 30s
-                }
-            }, std::ref(m_network), sock).detach();
-            g_thrStat = !g_thrStat;
+                } }, std::ref(network), sock).detach();
+                g_thrStat = !g_thrStat;
+        }
     }
     while (sock->running()) {
         wait(WAIT100ms);
@@ -650,12 +656,16 @@ ssize_t KaiSocket::consume(Message& msg)
     std::lock_guard<std::mutex> lock(mtxLck);
     size_t size = m_msgQue->size();
     static Message* msgQ = nullptr;
-    msgQ = const_cast<Message*>(m_msgQue->front());
-    if (msgQ == nullptr || msgQ->head.etag != CONSUMER) {
-        return size;
+    try {
+        msgQ = const_cast<Message*>(m_msgQue->front());
+        if (msgQ == nullptr || msgQ->head.etag != CONSUMER) {
+            return size;
+        }
+        msg.head = msgQ->head; // fixme memmove_avx_unaligned_erms
+        memmove(&msg.data, &msgQ->data, sizeof(Message::Payload));
+    } catch (const std::exception& e) {
+        std::cerr << __FUNCTION__ << ": segmentation fault: " << e.what() << std::endl;
     }
-    msg.head = msgQ->head; // fixme memmove_avx_unaligned_erms
-    memmove(&msg.data, &msgQ->data, sizeof(Message::Payload));
     if (size > 0) {
         m_msgQue->pop_front();
     }
@@ -665,14 +675,25 @@ ssize_t KaiSocket::consume(Message& msg)
 
 void KaiSocket::finish()
 {
-    while (m_network.run_) {
-        m_network.run_ = false;
-        usleep(WAIT100ms);
+    for (auto& network : m_networks) {
+        while (network.run_01) {
+            network.run_01 = false;
+            usleep(WAIT100ms);
+        }
+        close(network.socket);
     }
-    m_callbacks.clear();
-    close(m_network.socket);
-    delete m_msgQue;
-    m_msgQue = nullptr;
+    {
+        m_networks.clear();
+        m_callbacks.clear();
+    }
+    if (m_msgQue != nullptr) {
+        for (auto& msg : *m_msgQue) {
+            if (msg != nullptr)
+                delete msg;
+        }
+        delete m_msgQue;
+        m_msgQue = nullptr;
+    }
 }
 
 ssize_t KaiSocket::send(const uint8_t* data, size_t len)
@@ -796,7 +817,7 @@ ssize_t KaiSocket::Publisher(const std::string& topic, const std::string& payloa
     if (topic.empty() || size == 0) {
         std::cerr << __FUNCTION__ << ": topic/payload was empty!" << std::endl;
     } else {
-        this->m_network.run_ = false;
+        this->m_network.run_01 = false;
         if (!m_callbacks.empty()) m_callbacks.clear();
         g_maxTimes = 0;
     }
