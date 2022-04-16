@@ -12,6 +12,7 @@
 #endif
 #include <algorithm>
 #include <iostream>
+#include <sstream>
 #include <cstdlib>
 #include <thread>
 #include <cmath>
@@ -307,7 +308,7 @@ ssize_t KaiSocket::recv(uint8_t* buff, size_t size)
         total = sizeof(Message);
     auto* message = new(std::nothrow) uint8_t[total];
     if (message == nullptr) {
-        std::cerr << __FUNCTION__ << ": message malloc failed!" << std::endl;
+        std::cerr << __FUNCTION__ << ": message malloc fail, size = " << total << "!" << std::endl;
         return -1;
     }
     ssize_t left = m_network.flag.size - len;
@@ -347,7 +348,7 @@ ssize_t KaiSocket::recv(uint8_t* buff, size_t size)
 #endif
                 && network.flag.etag == CONSUMER) { // only consume should be sent
                 if ((stat = this->writes(network, message, total)) < 0) {
-                    std::cerr << __FUNCTION__ << ": writes [" << network.socket << "], " << total << " failed!" << std::endl;
+                    std::cerr << __FUNCTION__ << ": writes to [" << network.socket << "], failure bytes " << total << "!" << std::endl;
                     continue;
                 }
                 deal = true;
@@ -497,17 +498,19 @@ void KaiSocket::handleNotify(Network& network)
     for (auto it = m_networks.begin(); it != m_networks.end(); ++it) {
         if (it->socket < 0 || m_network.socket < 0 || m_networks.empty())
             break;
-        if (it->socket == network.socket && network.run_01) {
+        std::stringstream hint;
+        hint
+            << "### " << (m_network.client ? "Server" : "Client")
+            << "(" << it->IP << ":" << it->PORT << ") socket ["
+            << it->socket << "] lost.";
+        if (it->socket == network.socket && network.run_01 || errno == EBADF) {
             it->run_01 = false;
+            close(it->socket);
             static SOCKET socket = 0;
             if (socket != it->socket) {
-                std::cerr
-                    << "### " << (m_network.client ? "Server" : "Client")
-                    << "(" << it->IP << ":" << it->PORT << ") socket [" << it->socket << "] lost."
-                    << std::endl;
+                std::cerr << hint.str() << std::endl;
             }
             socket = it->socket;
-            close(it->socket);
             if (m_networks.size() == 1) {
                 m_networks.clear();
                 break;
@@ -554,7 +557,7 @@ void KaiSocket::runCallback(KaiSocket* sock, KAISOCKHOOK func)
         }
         int stat = func(sock);
         if (stat <= 0) {
-            std::cout << "callback stat = " << stat << std::endl;
+            std::cout << "callback stat = [" << stat << "," << errno << "]" << std::endl;
             break;
         }
     }
