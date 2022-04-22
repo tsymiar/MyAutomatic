@@ -52,11 +52,14 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IM(Win32)", "IMclient\clien
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "authorize", "authorize", "{E87A52AC-DBC1-404D-9B81-B10AF13E5A12}"
 	ProjectSection(SolutionItems) = preProject
-		..\LinxSrvc\AuthAgent\AuthAgent.cpp = ..\LinxSrvc\AuthAgent\AuthAgent.cpp
-		..\LinxSrvc\AuthAgent\AuthAgent.h = ..\LinxSrvc\AuthAgent\AuthAgent.h
-		..\LinxSrvc\AuthAgent\CMakeLists.txt = ..\LinxSrvc\AuthAgent\CMakeLists.txt
-		..\LinxSrvc\AuthAgent\HttpEvent.cpp = ..\LinxSrvc\AuthAgent\HttpEvent.cpp
-		..\LinxSrvc\AuthAgent\Logging.h = ..\LinxSrvc\AuthAgent\Logging.h
+		..\LinxSrvc\HttpAgent\CMakeLists.txt = ..\LinxSrvc\HttpAgent\CMakeLists.txt
+		..\LinxSrvc\HttpAgent\HttpAgent.cpp = ..\LinxSrvc\HttpAgent\HttpAgent.cpp
+		..\LinxSrvc\HttpAgent\HttpAgent.h = ..\LinxSrvc\HttpAgent\HttpAgent.h
+		..\LinxSrvc\HttpAgent\HttpEvent.cpp = ..\LinxSrvc\HttpAgent\HttpEvent.cpp
+		..\LinxSrvc\HttpAgent\HttpEvent.h = ..\LinxSrvc\HttpAgent\HttpEvent.h
+		..\LinxSrvc\HttpAgent\Makefile = ..\LinxSrvc\HttpAgent\Makefile
+		..\LinxSrvc\HttpAgent\Utils.cpp = ..\LinxSrvc\HttpAgent\Utils.cpp
+		..\LinxSrvc\HttpAgent\Utils.h = ..\LinxSrvc\HttpAgent\Utils.h
 	EndProjectSection
 EndProject
 Global
