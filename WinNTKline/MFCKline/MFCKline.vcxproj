@@ -307,7 +307,6 @@ cd "..\$(ConfigurationName)"
     <ClInclude Include="..\KlineUtil\netwk\Simulation.h" />
     <ClInclude Include="..\KlineUtil\opencv\CvimgMat.h" />
     <ClInclude Include="..\KlineUtil\opencv\opencv2\opencv_modules.hpp" />
-    <ClInclude Include="..\KlineUtil\pthdpool\pthdpool.h" />
     <ClInclude Include="..\KlineUtil\security\encoding.h" />
     <ClInclude Include="..\KlineUtil\security\MD5.h" />
     <ClInclude Include="..\KlineUtil\security\verify.h" />
@@ -361,7 +360,6 @@ cd "..\$(ConfigurationName)"
     <ClCompile Include="..\KlineUtil\netwk\GEThttp.cpp" />
     <ClCompile Include="..\KlineUtil\netwk\Simulation.cpp" />
     <ClCompile Include="..\KlineUtil\opencv\CvimgMat.cc" />
-    <ClCompile Include="..\KlineUtil\pthdpool\pthdpool.cc" />
     <ClCompile Include="..\KlineUtil\security\AES.cc" />
     <ClCompile Include="..\KlineUtil\security\encoding.cc" />
     <ClCompile Include="..\KlineUtil\security\MD5.cc" />

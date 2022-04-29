@@ -1,5 +1,4 @@
-CUR  = `pwd`
-GEN  = $(CUR)/../bin
+GEN = `pwd`/../bin
 v4l:
 	gcc -g -DV4L2 test.c -o $(GEN)/v4l2.exe
 gpio:

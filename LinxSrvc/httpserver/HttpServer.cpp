@@ -1,4 +1,4 @@
-﻿#include "HttpAgent.h"
+﻿#include "HttpServer.h"
 
 #include "HttpEvent.h"
 #include "Utils.h"
@@ -30,6 +30,6 @@ int main(int argc, char** argv)
         }
     }
 
-    cout << "Goodby HttpAgent." << endl;
+    cout << "Goodby HttpServer." << endl;
     return 0;
 }
