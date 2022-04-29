@@ -123,9 +123,6 @@
     <ClInclude Include="..\KlineUtil\netwk\Simulation.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\KlineUtil\pthdpool\pthdpool.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="..\KlineUtil\opencv\opencv2\opencv_modules.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -264,9 +261,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\KlineUtil\mygl\OGLKview.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\KlineUtil\pthdpool\pthdpool.cc">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\KlineUtil\netwk\Simulation.cpp">

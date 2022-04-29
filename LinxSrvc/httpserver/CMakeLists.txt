@@ -1,6 +1,6 @@
 ﻿cmake_minimum_required (VERSION 3.0)
 
-set(TARGET HttpAgent)
+set(TARGET httpserver)
 
 project ("${TARGET}")
 add_definitions(-std=c++11)

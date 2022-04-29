@@ -25,47 +25,46 @@
 
 #include "pthdpool.h"
 
-static void *pthd_thrd_func(void *argument)
+static void* pthd_thrd_func(void* argument)
 {
     pthd_task_t task_t;
-    pthd_pool_t *pool = (pthd_pool_t *)argument;
-    while (!pool->dispose) {
-        /* Lock must be token to wait on conditional variable */
-        pthread_mutex_lock(&pool->queue_lock);
-        /* Wait on condition variable, check for spurious wakeups.
-           When returning from pthread_cond_wait(), we own the lock. */
-        while ((pool->cur_thrd_no == 0) && (!pool->dispose)) {
-            pthread_cond_wait(&(pool->queue_noti), &(pool->queue_lock));
-        }
-        if (pool->cur_thrd_no == 0)
-        {
-            if (pthread_mutex_trylock(&pool->queue_lock) == EBUSY)
-                pthread_mutex_unlock(&pool->queue_lock);
-            return (void*)-1;//break;
-        }
-        /* Grab our task */
-        if (!pool->queue[pool->prev].func)
-        {
-            pthread_mutex_unlock(&pool->queue_lock);
-            return (void*)-2;//break;
-        }
-        task_t.func = pool->queue[pool->prev].func;
-        task_t.arg = pool->queue[pool->prev].arg;
-        pool->prev += 1;
-        pool->prev = (pool->prev >= pool->queue_size) ? 0 : pool->prev;
-        pool->cur_thrd_no -= 1;
-        /* Unlock */
-        if ((!pool->queue[pool->prev].func) && (pthread_mutex_trylock(&pool->queue_lock) == EBUSY))
-            pthread_mutex_unlock(&pool->queue_lock);
-        /* Get to work */
-        (*(task_t.func))(task_t.arg);
-        pthread_mutex_unlock(&pool->queue_lock);
+    pthd_pool_t* pool = (pthd_pool_t*)argument;
+    if (pool == null) {
+        return (void*)-1;
     }
+    /* Lock must be token to wait on conditional variable */
+    pthread_mutex_lock(&pool->queue_lock);
+    /* Wait on condition variable, check for spurious wakeups.
+       When returning from pthread_cond_wait(), we own the lock. */
+    while ((pool->cur_thrd_no == 0) && (!pool->dispose)) {
+        pthread_cond_wait(&(pool->queue_cond), &(pool->queue_lock));
+    }
+    if (pool->cur_thrd_no == 0) {
+        if (pthread_mutex_trylock(&pool->queue_lock) == EBUSY)
+            pthread_mutex_unlock(&pool->queue_lock);
+        return (void*)-1;//break;
+    }
+    /* Grab our task */
+    if (!pool->queue[pool->prev].func) {
+        pthread_mutex_unlock(&pool->queue_lock);
+        return (void*)-2;//break;
+    }
+    task_t.func = pool->queue[pool->prev].func;
+    task_t.arg = pool->queue[pool->prev].arg;
+    pool->prev += 1;
+    pool->prev = (pool->prev >= pool->queue_size) ? 0 : pool->prev;
+    pool->cur_thrd_no -= 1;
+    /* Unlock */
+    if ((!pool->queue[pool->prev].func) && (pthread_mutex_trylock(&pool->queue_lock) == EBUSY))
+        pthread_mutex_unlock(&pool->queue_lock);
+    /* Get to work */
+    (*(task_t.func))(task_t.arg);
+    pthread_mutex_unlock(&pool->queue_lock);
     pthread_exit(null);
     return 0;
 }
 
-int pthd_pool_free(pthd_pool_t *pool) {
+int pthd_pool_free(pthd_pool_t* pool) {
     if (pool == null || pool->dispose) {
         return -1;
     }
@@ -74,7 +73,7 @@ int pthd_pool_free(pthd_pool_t *pool) {
         free(pool->thrd_id);
         free(pool->queue);
         pthread_mutex_destroy(&(pool->queue_lock));
-        pthread_cond_destroy(&(pool->queue_noti));
+        pthread_cond_destroy(&(pool->queue_cond));
     }
     free(pool);
     return 0;
@@ -83,7 +82,7 @@ int pthd_pool_free(pthd_pool_t *pool) {
 pthd_pool_t* pthd_pool_init(int sz_que, int thrd_num)
 {
     //从动态内存存储区中分配1个pthd_pool_t单位长度连续空间
-    pthd_pool_t *pool = (pthd_pool_t*)calloc(1, sizeof(*pool));
+    pthd_pool_t* pool = (pthd_pool_t*)calloc(1, sizeof(*pool));
     pool->dispose = false;
     if (thrd_num < 1)
         thrd_num = 1;
@@ -93,14 +92,15 @@ pthd_pool_t* pthd_pool_init(int sz_que, int thrd_num)
     //为thrd_id分配thrd_num个pthread_t空间
     int thdlen = sizeof(pthread_t) * thrd_num;
     int quelen = sizeof(pthd_task_t) * sz_que;
-    pool->thrd_id = (pthread_t *)malloc(thdlen);
-    memset(pool->thrd_id, 0, thdlen);
-    pool->queue = (pthd_task_t *)malloc(quelen);
-    memset(pool->queue, 0, quelen);
+    pool->thrd_id = (pthread_t*)malloc(thdlen);
+    if (pool->thrd_id != null)
+        memset(pool->thrd_id, 0, thdlen);
+    pool->queue = (pthd_task_t*)malloc(quelen);
+    if (pool->queue != null)
+        memset(pool->queue, 0, quelen);
     if (pthread_mutex_init(&pool->queue_lock, null) != 0 ||
-        pthread_cond_init(&pool->queue_noti, null) != 0 ||
-        pool->thrd_id == null || pool->queue == null)
-    {
+        pthread_cond_init(&pool->queue_cond, null) != 0 ||
+        pool->thrd_id == null || pool->queue == null) {
         goto error;
     }
     int j;
@@ -109,8 +109,7 @@ pthd_pool_t* pthd_pool_init(int sz_que, int thrd_num)
             pthd_thrd_func, (void*)pool) != 0) {
             pthd_pool_destroy(pool);
             return null;
-        } else
-        {
+        } else {
             threads[j] = i;
             pool->cur_thrd_no += 1;
             j++;
@@ -124,7 +123,7 @@ error:
     return null;
 }
 
-int pthd_pool_add_task(pthd_pool_t *pool, void *(*routine)(void *), void * arg)
+int pthd_pool_add_task(pthd_pool_t* pool, void* (*routine)(void*), void* arg)
 {
     int err = 0;
     if (pool == null || routine == null) {
@@ -152,7 +151,7 @@ int pthd_pool_add_task(pthd_pool_t *pool, void *(*routine)(void *), void * arg)
         pool->tail = next;
         pool->cur_thrd_no += 1;
         /* pthread_cond_broadcast */
-        if (pthread_cond_signal(&(pool->queue_noti)) != 0) {
+        if (pthread_cond_signal(&(pool->queue_cond)) != 0) {
             err = -2;
             break;
         }
@@ -163,7 +162,7 @@ int pthd_pool_add_task(pthd_pool_t *pool, void *(*routine)(void *), void * arg)
     return err;
 }
 
-int pthd_pool_destroy(pthd_pool_t *pool)
+int pthd_pool_destroy(pthd_pool_t* pool)
 {
     int err = 0;
     if (pool == null) {
@@ -179,7 +178,7 @@ int pthd_pool_destroy(pthd_pool_t *pool)
         }
         pool->dispose = true;
         /* Wake up all worker threads */
-        if ((pthread_cond_broadcast(&(pool->queue_noti)) != 0) ||
+        if ((pthread_cond_broadcast(&(pool->queue_cond)) != 0) ||
             (pthread_mutex_unlock(&(pool->queue_lock)) != 0)) {
             err = -2;
             break;

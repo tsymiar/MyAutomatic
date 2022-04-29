@@ -38,7 +38,7 @@ void *pthd_routine3(void *arg)
     return NULL;
 }
 
-int main()
+int main(int argc, char** argv)
 {
     int thrd = 1;
     pthd_pool_t *pool1 = pthd_pool_init(5);
@@ -66,4 +66,5 @@ int main()
     pthd_pool_destroy(pool1);
     pthd_pool_destroy(pool2);
     pthd_pool_destroy(pool3);
+    return 0;
 }
