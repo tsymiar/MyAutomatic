@@ -17,8 +17,10 @@
 #include <sys/time.h>
 #include <sys/mman.h>
 #include <sys/ioctl.h>
-#include <asm/types.h>          /* for videodev2.h */
+#include <asm/types.h>          /* videodev2.h */
 #include <linux/videodev2.h>
+#include <netinet/in.h>         /* socket */
+#include <arpa/inet.h>
 
 #define CLEAR(x) memset (&(x), 0, sizeof (x))
 
@@ -31,14 +33,13 @@ struct buffer {
     size_t length;
 };
 
+typedef void (*Callback)(void*, const void*, int);
+
 static char* dev_name = NULL;
 static io_method io = IO_METHOD_MMAP;
 static int fd = -1;
-struct buffer* buffers = NULL;
+struct buffer* data_buff = NULL;
 static unsigned int n_buffers = 0;
-
-FILE* fp;
-char* filename = "test.yuv\0";
 
 static void errno_exit(const char* s)
 {
@@ -55,19 +56,21 @@ static int xioctl(int fd, int request, void* arg)
     return r;
 }
 
-static void process_image(const void* p, int size)
+static void deal_image(Callback callback, void* flag, const void* _ptr, int size)
 {
-    fwrite(p, size, 1, fp);
+    if (callback != NULL && flag != NULL && size > 0 && _ptr != NULL) {
+        callback(flag, _ptr, size);
+    }
 }
 
-static int read_frame(void)
+static int read_frame(Callback callback, void* flag)
 {
     struct v4l2_buffer buf;
     unsigned int i;
 
     switch (io) {
     case IO_METHOD_READ:
-        if (-1 == read(fd, buffers[0].start, buffers[0].length)) {
+        if (-1 == read(fd, data_buff[0].start, data_buff[0].length)) {
             switch (errno) {
             case EAGAIN:
                 return 0;
@@ -80,7 +83,7 @@ static int read_frame(void)
             }
         }
 
-        process_image(buffers[0].start, buffers[0].length);
+        deal_image(callback, flag, data_buff[0].start, data_buff[0].length);
 
         break;
 
@@ -107,7 +110,7 @@ static int read_frame(void)
 
         assert(buf.index < n_buffers);
 
-        process_image(buffers[buf.index].start, buf.length);
+        deal_image(callback, flag, data_buff[buf.index].start, buf.length);
 
         if (-1 == xioctl(fd, VIDIOC_QBUF, &buf))
             errno_exit("VIDIOC_QBUF");
@@ -136,13 +139,13 @@ static int read_frame(void)
         }
 
         for (i = 0; i < n_buffers; ++i)
-            if (buf.m.userptr == (unsigned long)buffers[i].start
-                && buf.length == buffers[i].length)
+            if (buf.m.userptr == (unsigned long)data_buff[i].start
+                && buf.length == data_buff[i].length)
                 break;
 
         assert(i < n_buffers);
 
-        process_image((void*)buf.m.userptr, buf.length);
+        deal_image(callback, flag, (void*)buf.m.userptr, buf.length);
 
         if (-1 == xioctl(fd, VIDIOC_QBUF, &buf))
             errno_exit("VIDIOC_QBUF");
@@ -153,7 +156,7 @@ static int read_frame(void)
     return 1;
 }
 
-static void mainloop(void)
+static void mainloop(Callback callback, void* flag)
 {
     unsigned int count;
 
@@ -186,7 +189,7 @@ static void mainloop(void)
                 exit(EXIT_FAILURE);
             }
 
-            if (read_frame())
+            if (flag == NULL || read_frame(callback, flag))
                 break;
 
             /* EAGAIN - continue select loop. */
@@ -194,7 +197,7 @@ static void mainloop(void)
     }
 }
 
-static void stop_capturing(void)
+static void end_capturing(void)
 {
     enum v4l2_buf_type type;
 
@@ -254,8 +257,8 @@ static void start_capturing(void)
             buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
             buf.memory = V4L2_MEMORY_USERPTR;
             buf.index = i;
-            buf.m.userptr = (unsigned long)buffers[i].start;
-            buf.length = buffers[i].length;
+            buf.m.userptr = (unsigned long)data_buff[i].start;
+            buf.length = data_buff[i].length;
 
             if (-1 == xioctl(fd, VIDIOC_QBUF, &buf))
                 errno_exit("VIDIOC_QBUF");
@@ -276,37 +279,37 @@ static void uninit_device(void)
 
     switch (io) {
     case IO_METHOD_READ:
-        free(buffers[0].start);
+        free(data_buff[0].start);
         break;
 
     case IO_METHOD_MMAP:
         for (i = 0; i < n_buffers; ++i)
-            if (-1 == munmap(buffers[i].start, buffers[i].length))
+            if (-1 == munmap(data_buff[i].start, data_buff[i].length))
                 errno_exit("munmap");
         break;
 
     case IO_METHOD_USERPTR:
         for (i = 0; i < n_buffers; ++i)
-            free(buffers[i].start);
+            free(data_buff[i].start);
         break;
     }
 
-    free(buffers);
+    free(data_buff);
 }
 
 static void init_read(unsigned int buffer_size)
 {
-    buffers = calloc(1, sizeof(*buffers));
+    data_buff = calloc(1, sizeof(*data_buff));
 
-    if (!buffers) {
+    if (!data_buff) {
         fprintf(stderr, "Out of memory\n");
         exit(EXIT_FAILURE);
     }
 
-    buffers[0].length = buffer_size;
-    buffers[0].start = malloc(buffer_size);
+    data_buff[0].length = buffer_size;
+    data_buff[0].start = malloc(buffer_size);
 
-    if (!buffers[0].start) {
+    if (!data_buff[0].start) {
         fprintf(stderr, "Out of memory\n");
         exit(EXIT_FAILURE);
     }
@@ -337,9 +340,9 @@ static void init_mmap(void)
         exit(EXIT_FAILURE);
     }
 
-    buffers = calloc(req.count, sizeof(*buffers));
+    data_buff = calloc(req.count, sizeof(*data_buff));
 
-    if (!buffers) {
+    if (!data_buff) {
         fprintf(stderr, "Out of memory\n");
         exit(EXIT_FAILURE);
     }
@@ -356,12 +359,12 @@ static void init_mmap(void)
         if (-1 == xioctl(fd, VIDIOC_QUERYBUF, &buf))
             errno_exit("VIDIOC_QUERYBUF");
 
-        buffers[n_buffers].length = buf.length;
-        buffers[n_buffers].start = mmap(NULL /* start anywhere */, buf.length,
+        data_buff[n_buffers].length = buf.length;
+        data_buff[n_buffers].start = mmap(NULL /* start anywhere */, buf.length,
             PROT_READ | PROT_WRITE /* required */,
             MAP_SHARED /* recommended */, fd, buf.m.offset);
 
-        if (MAP_FAILED == buffers[n_buffers].start)
+        if (MAP_FAILED == data_buff[n_buffers].start)
             errno_exit("mmap");
     }
 }
@@ -390,19 +393,19 @@ static void init_userp(unsigned int buffer_size)
         }
     }
 
-    buffers = calloc(4, sizeof(*buffers));
+    data_buff = calloc(4, sizeof(*data_buff));
 
-    if (!buffers) {
+    if (!data_buff) {
         fprintf(stderr, "Out of memory\n");
         exit(EXIT_FAILURE);
     }
 
     for (n_buffers = 0; n_buffers < 4; ++n_buffers) {
-        buffers[n_buffers].length = buffer_size;
-        buffers[n_buffers].start = memalign(/* boundary */page_size,
+        data_buff[n_buffers].length = buffer_size;
+        data_buff[n_buffers].start = memalign(/* boundary */page_size,
             buffer_size);
 
-        if (!buffers[n_buffers].start) {
+        if (!data_buff[n_buffers].start) {
             fprintf(stderr, "Out of memory\n");
             exit(EXIT_FAILURE);
         }
@@ -542,6 +545,38 @@ static void open_device(void)
     }
 }
 
+static void routine(Callback callback, void* flag)
+{
+    dev_name = "/dev/video0";
+
+    open_device();
+    init_device();
+    start_capturing();
+
+    mainloop(callback, flag);
+
+    end_capturing();
+    uninit_device();
+    close_device();
+}
+
+void save_file(void* fp, const void* buf, int size)
+{
+    fwrite(buf, size, 1, fp);
+}
+
+void send_data(void* fp, const void* buf, int size)
+{
+    send(*((int*)fp), buf, size, 0);
+}
+
+void socket_capture(const char* ip, int port)
+{
+    int fd = socket(AF_INET, SOCK_STREAM, 0); // TODO
+    routine(send_data, &fd);
+    close(fd);
+}
+
 static void usage(FILE* fp, int argc, char** argv)
 {
     fprintf(fp, "Usage: %s [options]\n\n"
@@ -561,10 +596,8 @@ static const struct option long_options[] = { { "device", required_argument,
         NULL, 'm' }, { "read", no_argument, NULL, 'r' }, { "userp", no_argument,
         NULL, 'u' }, { 0, 0, 0, 0 } };
 
-int main(int argc, char** argv)
+void local_capture(int argc, char* argv[])
 {
-    dev_name = "/dev/video0";
-
     for (;;) {
         int index;
         int c;
@@ -603,24 +636,11 @@ int main(int argc, char** argv)
             exit(EXIT_FAILURE);
         }
     }
-
-    open_device();
-
-    init_device();
-
-    start_capturing();
-
-    fp = fopen(filename, "wa+");
-    mainloop();
-    fclose(fp);
-
-    stop_capturing();
-
-    uninit_device();
-
-    close_device();
-
+    const char* filename = "./test.yuv";
+    FILE* fp = fopen(filename, "wa+");
+    if (fp != NULL) {
+        routine(save_file, fp);
+        fclose(fp);
+    }
     exit(EXIT_SUCCESS);
-
-    return 0;
 }
