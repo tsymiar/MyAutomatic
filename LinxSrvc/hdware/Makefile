@@ -6,7 +6,7 @@ me909:
 v4l2:
 	gcc -g -DV4L2 test.c -o $(GEN)/v4l2.exe
 routine:
-	gcc -g -DCAPTURE test.c routine.c -o $(GEN)/routine.exe
+	gcc -g -DCAPTURE test.c routine.c -lm -o $(GEN)/routine.exe
 all:
 	make gpio
 	make me909

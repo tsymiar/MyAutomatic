@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <math.h>
 #include <getopt.h>             /* getopt_long() */
 #include <fcntl.h>              /* low-level i/o */
 #include <unistd.h>
@@ -49,11 +50,11 @@ static void errno_exit(const char* s)
 
 static int xioctl(int fd, int request, void* arg)
 {
-    int r;
+    int stat;
     do {
-        r = ioctl(fd, request, arg);
-    } while (-1 == r && EINTR == errno);
-    return r;
+        stat = ioctl(fd, request, arg);
+    } while (-1 == stat && EINTR == errno);
+    return stat;
 }
 
 static void deal_image(Callback callback, void* flag, const void* _ptr, int size)
@@ -166,7 +167,7 @@ static void mainloop(Callback callback, void* flag)
         for (;;) {
             fd_set fds;
             struct timeval tv;
-            int r;
+            int stat;
 
             FD_ZERO(&fds);
             FD_SET(fd, &fds);
@@ -175,16 +176,16 @@ static void mainloop(Callback callback, void* flag)
             tv.tv_sec = 2;
             tv.tv_usec = 0;
 
-            r = select(fd + 1, &fds, NULL, NULL, &tv);
+            stat = select(fd + 1, &fds, NULL, NULL, &tv);
 
-            if (-1 == r) {
+            if (-1 == stat) {
                 if (EINTR == errno)
                     continue;
 
                 errno_exit("select");
             }
 
-            if (0 == r) {
+            if (0 == stat) {
                 fprintf(stderr, "select timeout\n");
                 exit(EXIT_FAILURE);
             }
@@ -517,7 +518,6 @@ static void close_device(void)
 {
     if (-1 == close(fd))
         errno_exit("close");
-
     fd = -1;
 }
 
@@ -570,34 +570,86 @@ void send_data(void* fp, const void* buf, int size)
     send(*((int*)fp), buf, size, 0);
 }
 
-void socket_capture(const char* ip, int port)
+void socket_routine(const char* ip, int port)
 {
-    int fd = socket(AF_INET, SOCK_STREAM, 0); // TODO
-    routine(send_data, &fd);
-    close(fd);
+    const unsigned int maxTimes = 100;
+    struct sockaddr_in srvaddr;
+    float times = 0;
+    const char addrreuse = 0;
+    int sock = socket(AF_INET, SOCK_STREAM, 0);
+    srvaddr.sin_family = AF_INET;
+    srvaddr.sin_port = htons(port);
+    srvaddr.sin_addr.s_addr = inet_addr(ip);
+    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &addrreuse, sizeof(char));
+    while (connect(sock, (struct sockaddr*)&srvaddr, sizeof(srvaddr)) == (-1)) {
+        if (times < maxTimes) {
+            usleep(100 * (int)pow(2.0f, times));
+            times++;
+        } else {
+            fprintf(stderr, "Retrying to connect finish (times=%d, %s).", (int)times, (errno != 0 ? strerror(errno) : "No error"));
+            return;
+        }
+    }
+    routine(send_data, &sock);
+    close(sock);
+}
+
+void local_routine(char* name)
+{
+    const char* filename = name;
+    FILE* fp = fopen(filename, "wa+");
+    if (fp != NULL) {
+        routine(save_file, fp);
+        fclose(fp);
+    }
 }
 
 static void usage(FILE* fp, int argc, char** argv)
 {
-    fprintf(fp, "Usage: %s [options]\n\n"
+    fprintf(fp, "Usage: %s [options]\n"
         "Options:\n"
         "-d | --device name   Video device name [/dev/video]\n"
+        "-f | --file          Save video file to local [filename]\n"
         "-h | --help          Print this message\n"
         "-m | --mmap          Use memory mapped buffers\n"
         "-r | --read          Use read() calls\n"
+        "-s | --socket        Run as socket client send data to server [ip:port]\n"
         "-u | --userp         Use application allocated buffers\n"
         "", argv[0]);
 }
 
-static const char short_options[] = "d:hmru";
+static const char short_options[] = "d:f:hmrs:u";
 
-static const struct option long_options[] = { { "device", required_argument,
-        NULL, 'd' }, { "help", no_argument, NULL, 'h' }, { "mmap", no_argument,
-        NULL, 'm' }, { "read", no_argument, NULL, 'r' }, { "userp", no_argument,
-        NULL, 'u' }, { 0, 0, 0, 0 } };
+static const struct option long_options[] = {
+    { "device", required_argument, NULL, 'd' },
+    { "file", required_argument, NULL, 'f' },
+    { "help", no_argument, NULL, 'h' },
+    { "mmap", no_argument, NULL, 'm' },
+    { "read", no_argument, NULL, 'r' },
+    { "socket", required_argument, NULL, 's' },
+    { "userp", no_argument, NULL, 'u' },
+    { 0, 0, 0, 0 }
+};
 
-void local_capture(int argc, char* argv[])
+int IPv4_verify(char* arg, char* ip, int* port) {
+    if (arg == NULL)
+        return -1;
+    int a, b, c, d, e;
+    if (5 == sscanf(arg, "%d.%d.%d.%d:%d", &a, &b, &c, &d, &e)) {
+        if (0 <= a && a <= 255 && 0 <= b && b <= 255 && 0 <= c && c <= 255 &&
+            0 <= d && d <= 255 && 0 < e && e < 65536) {
+            sprintf(ip, "%d.%d.%d.%d", a, b, c, d);
+            *port = e;
+            return 0;
+        }
+    }
+    return -2;
+}
+
+void main_capture(int argc, char* argv[])
 {
+    char ip[INET_ADDRSTRLEN];
+    int port;
     for (;;) {
         int index;
         int c;
@@ -615,6 +667,10 @@ void local_capture(int argc, char* argv[])
             dev_name = optarg;
             break;
 
+        case 'f':
+            local_routine(optarg);
+            break;
+
         case 'h':
             usage(stdout, argc, argv);
             exit(EXIT_SUCCESS);
@@ -627,6 +683,12 @@ void local_capture(int argc, char* argv[])
             io = IO_METHOD_READ;
             break;
 
+        case 's':
+            if (IPv4_verify(optarg, ip, &port) == 0) {
+                socket_routine(ip, port);
+            }
+            break;
+
         case 'u':
             io = IO_METHOD_USERPTR;
             break;
@@ -635,12 +697,6 @@ void local_capture(int argc, char* argv[])
             usage(stderr, argc, argv);
             exit(EXIT_FAILURE);
         }
-    }
-    const char* filename = "./test.yuv";
-    FILE* fp = fopen(filename, "wa+");
-    if (fp != NULL) {
-        routine(save_file, fp);
-        fclose(fp);
     }
     exit(EXIT_SUCCESS);
 }
