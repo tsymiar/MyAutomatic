@@ -26,7 +26,7 @@ int main(int argc, char** argv)
         v4l2_close_dev(&dev);
     }
 #elif defined(CAPTURE)
-    local_capture(argc, argv);
+    main_capture(argc, argv);
 #endif
     return 0;
 }
