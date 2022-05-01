@@ -41,16 +41,16 @@ void *pthd_routine3(void *arg)
 int main(int argc, char** argv)
 {
     int thrd = 1;
-    pthd_pool_t *pool1 = pthd_pool_init(5);
+    pthd_pool_t *pool1 = pthd_pool_init(5, 3);
     int ret = pthd_pool_add_task(pool1, &pthd_routine1, (void*)&thrd);
     printf("task1 ret = %d\n", ret);
-    pthd_pool_wait(*pool1);
+    pthd_pool_wait(pool1);
     thrd++;
-	pthd_pool_t *pool2 = pthd_pool_init(3);
+	pthd_pool_t *pool2 = pthd_pool_init(3, 3);
     ret = pthd_pool_add_task(pool2, &pthd_routine2, (void*)&thrd);
     printf("task2 ret = %d\n", ret);
     thrd++;
-	pthd_pool_t *pool3 = pthd_pool_init(8);
+	pthd_pool_t *pool3 = pthd_pool_init(8, 3);
     ret = pthd_pool_add_task(pool3, &pthd_routine3, (void*)&thrd);
     printf("task3 ret = %d\n", ret);
     thrd++;
@@ -62,7 +62,7 @@ int main(int argc, char** argv)
     thrd++;
     ret = pthd_pool_add_task(pool3, &pthd_routine3, (void*)&thrd);
     printf("task6 ret = %d\n", ret);
-    pthd_pool_wait(*pool3);
+    pthd_pool_wait(pool3);
     pthd_pool_destroy(pool1);
     pthd_pool_destroy(pool2);
     pthd_pool_destroy(pool3);
