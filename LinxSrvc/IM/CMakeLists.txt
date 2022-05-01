@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 
-project(kaics CXX)
+project(kaics CXX C)
 
 set(CMAKE_CXX_STANDARD 14)
 set(TARGET kaics)
