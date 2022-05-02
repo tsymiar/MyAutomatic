@@ -23,4 +23,4 @@ Kai:
 	$(CXX) -g $(CUR)/KaiSocket.cc $(CUR)/KaiTest.cpp $(FLAG) $(PTHD) -o $(GEN)/kaics.exe $(EXP)
 	mv *.o $(OBJ)/
 clean:
-	rm -rvf $(GEN)/*.exe* $(OBJ) bin build
+	rm -rvf $(GEN)/*.exe* $(OBJ) bin build out
