@@ -1,5 +1,5 @@
-#ifndef _V4L2_H_
-#define _V4L2_H_
+#ifndef _LINUX_VIDEO_H_
+#define _LINUX_VIDEO_H_
 
 #include <stdio.h>
 #include <stdlib.h>      // stdio.h and stdlib.h are needed by perror function
@@ -15,8 +15,7 @@
 #include <sys/ioctl.h>
 #include <linux/videodev2.h>// v4l2 API
 
-typedef struct _v4l2_struct
-{
+typedef struct _v4l2_struct {
     int v4l_fd;
     __u32 width;
     __u32 height;
@@ -26,7 +25,7 @@ typedef struct _v4l2_struct
     struct v4l2_buffer argp;
     struct v4l2_requestbuffers req;
     struct _st_buf {
-        void *start;
+        void* start;
         unsigned int size;
     }*buffer;
 } v4l2_device;
@@ -47,12 +46,11 @@ int v4l2_get_pixel_format(v4l2_device*);
 int v4l2_set_pixel_format(v4l2_device*);
 int v4l2_try_format(v4l2_device*, __u32);
 
-int v4l2_init_dev(v4l2_device *v4l2_obj, char *device)
+int v4l2_init_dev(v4l2_device* v4l2_obj, char* device)
 {
     if (!device || device == NULL)
         device = (char*)DEFAULT_DEVICE;
-    if ((v4l2_obj->v4l_fd = open(device, O_RDWR /*| O_NONBLOCK*//*Resource temporarily unavailable*/)) < 0)
-    {
+    if ((v4l2_obj->v4l_fd = open(device, O_RDWR /*| O_NONBLOCK*//*Resource temporarily unavailable*/)) < 0) {
         perror("v4l2_init_dev open " DEFAULT_DEVICE " fail");
         return -1;
     }
@@ -63,15 +61,14 @@ int v4l2_init_dev(v4l2_device *v4l2_obj, char *device)
     return v4l2_set_pixel_format(v4l2_obj);
 }
 
-int v4l2_close_dev(v4l2_device *v4l2_obj)
+int v4l2_close_dev(v4l2_device* v4l2_obj)
 {
     return close(v4l2_obj->v4l_fd);
 }
 
-int v4l2_get_capability(v4l2_device *v4l2_obj)
+int v4l2_get_capability(v4l2_device* v4l2_obj)
 {
-    if (ioctl(v4l2_obj->v4l_fd, VIDIOC_QUERYCAP, &v4l2_obj->capability) < 0)
-    {
+    if (ioctl(v4l2_obj->v4l_fd, VIDIOC_QUERYCAP, &v4l2_obj->capability) < 0) {
         perror("v4l2_get_capability fail");
         return -1;
     }
@@ -80,15 +77,13 @@ int v4l2_get_capability(v4l2_device *v4l2_obj)
     return 0;
 }
 
-int v4l2_get_pixel_format(v4l2_device *v4l2_obj)
-{    
+int v4l2_get_pixel_format(v4l2_device* v4l2_obj)
+{
     v4l2_obj->fmtdesc.index = 0;
     v4l2_obj->fmtdesc.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-    while (ioctl(v4l2_obj->v4l_fd, VIDIOC_ENUM_FMT, &v4l2_obj->fmtdesc) != -1)
-    {
+    while (ioctl(v4l2_obj->v4l_fd, VIDIOC_ENUM_FMT, &v4l2_obj->fmtdesc) != -1) {
         fprintf(stdout, "\t%d. %s", v4l2_obj->fmtdesc.index + 1, v4l2_obj->fmtdesc.description);
-        if (v4l2_obj->fmtdesc.pixelformat & v4l2_obj->format.fmt.pix.pixelformat)
-        {
+        if (v4l2_obj->fmtdesc.pixelformat & v4l2_obj->format.fmt.pix.pixelformat) {
             fprintf(stdout, " (fourcc&pixfmt).");
         }
         v4l2_obj->fmtdesc.index++;
@@ -97,7 +92,7 @@ int v4l2_get_pixel_format(v4l2_device *v4l2_obj)
     return v4l2_obj->fmtdesc.index + 1;
 }
 
-int v4l2_set_pixel_format(v4l2_device *v4l2_obj) 
+int v4l2_set_pixel_format(v4l2_device* v4l2_obj)
 {
     v4l2_obj->format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     v4l2_obj->format.fmt.pix.width = IMGW;
@@ -112,23 +107,21 @@ int v4l2_set_pixel_format(v4l2_device *v4l2_obj)
     return val;
 }
 
-int v4l2_try_format(v4l2_device *v4l2_obj, __u32 format)
+int v4l2_try_format(v4l2_device* v4l2_obj, __u32 format)
 {
-    if (v4l2_obj->v4l_fd < 0)
-    {
+    if (v4l2_obj->v4l_fd < 0) {
         fprintf(stderr, "Error using device(%d)!\n", v4l2_obj->v4l_fd);
         return -1;
     }
     v4l2_obj->format.fmt.pix.pixelformat = format;
-    if ((ioctl(v4l2_obj->v4l_fd, VIDIOC_TRY_FMT, &v4l2_obj->format) == -1) && (errno == EINVAL))
-    {
+    if ((ioctl(v4l2_obj->v4l_fd, VIDIOC_TRY_FMT, &v4l2_obj->format) == -1) && (errno == EINVAL)) {
         perror("Pixel format not support");
         return -2;
     }
     return 0;
 }
 
-int v4l2_request_buffers(v4l2_device *v4l2_obj, __u32 count)
+int v4l2_request_buffers(v4l2_device* v4l2_obj, __u32 count)
 {
     v4l2_obj->req.count = count;
     v4l2_obj->req.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -141,7 +134,7 @@ int v4l2_request_buffers(v4l2_device *v4l2_obj, __u32 count)
     return v4l2_obj->req.count;
 }
 
-unsigned int v4l2_mapping_buffers(v4l2_device *v4l2_obj, __u32 count)
+unsigned int v4l2_mapping_buffers(v4l2_device* v4l2_obj, __u32 count)
 {
     unsigned int i;
     int req_count = v4l2_request_buffers(v4l2_obj, count);
@@ -157,11 +150,11 @@ unsigned int v4l2_mapping_buffers(v4l2_device *v4l2_obj, __u32 count)
         }
         v4l2_obj->buffer[i].size = v4l2_obj->argp.length;
         // 映射内存  
-        v4l2_obj->buffer[i].start = mmap(NULL, 
-            v4l2_obj->argp.length, 
+        v4l2_obj->buffer[i].start = mmap(NULL,
+            v4l2_obj->argp.length,
             PROT_READ | PROT_WRITE,
             MAP_SHARED,
-            v4l2_obj->v4l_fd, 
+            v4l2_obj->v4l_fd,
             v4l2_obj->argp.m.offset);
         if (MAP_FAILED == v4l2_obj->buffer[i].start)
             exit(-1);
@@ -169,7 +162,7 @@ unsigned int v4l2_mapping_buffers(v4l2_device *v4l2_obj, __u32 count)
     return i;
 }
 
-int v4l2_set_buffer_queue(v4l2_device *v4l2_obj, __u32 count)
+int v4l2_set_buffer_queue(v4l2_device* v4l2_obj, __u32 count)
 {
     int i;
     for (i = 0; i < count; i++) {
@@ -184,7 +177,7 @@ int v4l2_set_buffer_queue(v4l2_device *v4l2_obj, __u32 count)
     return i;
 }
 
-int v4l2_save_image_frame(v4l2_device *v4l2_obj, const char* prefix)
+int v4l2_save_image_frame(v4l2_device* v4l2_obj, const char* prefix)
 {
     enum v4l2_buf_type type;
     v4l2_obj->argp.type = type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -199,8 +192,8 @@ int v4l2_save_image_frame(v4l2_device *v4l2_obj, const char* prefix)
     struct timeval timeout;
     timeout.tv_sec = 0;
     timeout.tv_usec = 100000;
-    select(FD_SETSIZE, (fd_set*)(&v4l2_obj->v4l_fd + 1), &fds, (fd_set *)0, &timeout);
-    v4l2_obj->argp.type = type;   
+    select(FD_SETSIZE, (fd_set*)(&v4l2_obj->v4l_fd + 1), &fds, (fd_set*)0, &timeout);
+    v4l2_obj->argp.type = type;
     v4l2_obj->argp.memory = V4L2_MEMORY_MMAP;
     if (-1 == ioctl(v4l2_obj->v4l_fd, VIDIOC_DQBUF, &v4l2_obj->argp)) {
         perror("Put data back to buffer issue");
@@ -239,4 +232,18 @@ int get_image_file(const char* filename)
     return 0;
 }
 
-#endif
+int v4l2_test(const char* filename)
+{
+    v4l2_device dev;
+    int val = v4l2_init_dev(&dev, NULL);
+    if (val == 0) {
+        if (v4l2_set_buffer_queue(&dev, v4l2_mapping_buffers(&dev, 4)) <= 0)
+            return -1;
+        if (v4l2_save_image_frame(&dev, filename) <= 0)
+            return -2;
+        v4l2_close_dev(&dev);
+    }
+    return 0;
+}
+
+#endif // _LINUX_VIDEO_H_

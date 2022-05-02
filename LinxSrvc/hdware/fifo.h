@@ -9,7 +9,7 @@ struct Fifo {
     int cmd;
     long long flag;
     void* addr;
-    char a[];
+    char a[0];
 };
 
 const char* FIFO_FILE = "/tmp/fifo1";
@@ -61,7 +61,7 @@ struct Fifo read_fifo(long long flag)
     int fdio;
     ssize_t len;
     int fifoSize = sizeof(struct Fifo);
-    struct stat statst;
+    struct stat status;
     struct Fifo fifo = {
         .cmd = -1,
         .flag = -1,
@@ -69,7 +69,7 @@ struct Fifo read_fifo(long long flag)
     };
     if (flag == -1)
         return fifo;
-    if (stat(FIFO_FILE, &statst) < 0) {
+    if (stat(FIFO_FILE, &status) < 0) {
         perror("Stat FIFO fail");
         return fifo;
     }
@@ -112,9 +112,12 @@ unsigned int sIP2i(const char* IP)
     return ip;
 }
 
-int main(int argc, const char* argv[])
+int fifo_main(const char* sip)
 {
-    long long flag = (9001 << 16 | 8080 << 8 | sIP2i("127.0.0.1"));
+    if (sip == NULL) {
+        sip = "127.0.0.1";
+    }
+    long long flag = (9001 << 16 | 8080 << 8 | sIP2i(sip));
     struct Fifo fifo0 = {
         .cmd = -1,
         .flag = flag,

@@ -81,6 +81,8 @@ int pthd_pool_free(pthd_pool_t* pool) {
 
 pthd_pool_t* pthd_pool_init(int sz_que, int thrd_num)
 {
+    void* stack;
+    pthread_attr_t attr;
     //从动态内存存储区中分配1个pthd_pool_t单位长度连续空间
     pthd_pool_t* pool = (pthd_pool_t*)calloc(1, sizeof(*pool));
     pool->dispose = false;
@@ -103,8 +105,14 @@ pthd_pool_t* pthd_pool_init(int sz_que, int thrd_num)
         pool->thrd_id == null || pool->queue == null) {
         goto error;
     }
-    int j;
-    for (int i = j = 0; i < pool->thrd_num; i++) {
+    {
+#define STK_SIZE (10 * 4096)
+        posix_memalign(&stack, 4096, STK_SIZE);
+        pthread_attr_init(&attr);
+        pthread_attr_setstack(&attr, &stack, STK_SIZE);
+    }
+    int i, j;
+    for (i = j = 0; i < pool->thrd_num; i++) {
         if (pthread_create(&(pool->thrd_id[i]), null,
             pthd_thrd_func, (void*)pool) != 0) {
             pthd_pool_destroy(pool);
@@ -184,9 +192,10 @@ int pthd_pool_destroy(pthd_pool_t* pool)
             break;
         }
         /* Join all worker thread */
-        for (int i = 0; i < pool->thrd_num; i++) {
+        int i = 0;
+        for (; i < pool->thrd_num; i++) {
             pthread_t thrd = pool->thrd_id[threads[i]];
-            if (pthread_join(thrd, null) != 0) {
+            if ((int)thrd < 0 || pthread_join(thrd, null) != 0) {
                 err = -3;
             }
         }

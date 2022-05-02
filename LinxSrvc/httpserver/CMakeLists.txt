@@ -8,7 +8,7 @@ set(CXX_STANDARD 11)
 
 file(GLOB SRC_FILE_LIST "*.cpp")
 add_executable (${TARGET} ${SRC_FILE_LIST})
-find_library(EVENT_LIB event ${APPOINT_EVENT}/lib /usr/lib /usr/local/lib NOTFOUND)
+find_library(EVENT_LIB event ${APPOINT_EVENT}/lib /usr/lib /usr/local/lib /usr/lib/arm-linux-gnueabihf NOTFOUND)
 
 include_directories (
     /usr/local/include
