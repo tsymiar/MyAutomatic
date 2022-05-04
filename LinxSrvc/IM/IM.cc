@@ -142,7 +142,7 @@ typedef struct user_mesg {
     private:
         unsigned char rsv[2];
     public:
-        PeerStruct() :msg{ 0 } {};
+        PeerStruct() :msg{ 0 }, rsv{ 0 }{};
         ~PeerStruct() {};
         char msg[16];
         unsigned char cmd[2]{ 0 };
@@ -260,7 +260,7 @@ type_thread_func monite(void* arg)
         rcv_sock = *sock;
     } else {
 #if (!defined THREAD_PER_CONN) && ((!defined _WIN32 ) || (defined SOCK_CONN_TEST))
-        std::cerr << "ERROR: socket contra-valid([" << sock << "]" << *sock << ") " << strerror(errno) << std::endl;
+        std::cerr << "ERROR: socket contra-valid([" << sock << "]" << (sock != nullptr ? *sock : -1) << ") " << strerror(errno) << std::endl;
         exit(-1);
 #else
         struct sockaddr_in sin;
@@ -795,7 +795,7 @@ type_thread_func monite(void* arg)
                                     strcpy((sd_bufs + UsrSet * (c + 4)), zones[valrtn].zone.members[c]);
                                 };
                             };
-                            if (valrtn == -1 || zones[valrtn].zone.members[c][0] == '\0')
+                            if (valrtn == -1 || valrtn >= MAX_ZONES || zones[valrtn].zone.members[c][0] == '\0')
                                 break;
                             sndlen = UsrSet * (c + 4 + 4);
                         };
