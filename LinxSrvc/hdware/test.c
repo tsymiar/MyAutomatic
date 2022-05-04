@@ -4,7 +4,7 @@
 #include "me909s.h"
 #elif defined(FIFO) 
 #include "fifo.h"
-#elif defined(V4L2) || defined(CAPTURE)
+#elif defined(CAPTURE) || defined(SNAP)
 #include "test.h"
 #else
 #error compile command unsupported
@@ -18,10 +18,10 @@ int main(int argc, char** argv)
     mes_main(argc, argv);
 #elif defined(FIFO)
     fifo_main(NULL);
-#elif defined(V4L2)
-    v4l2_test("image");
 #elif defined(CAPTURE)
     main_capture(argc, argv);
+#elif defined(SNAP)
+    snap_image_test("image");
 #endif
     return 0;
 }

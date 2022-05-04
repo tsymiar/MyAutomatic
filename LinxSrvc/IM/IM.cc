@@ -69,7 +69,7 @@ pthread_mutexattr_t attr;
 #define __ "./"
 #define _0_ "_0"
 #define IMAGE_BLOB "image"
-#define GET_IMG_EXE "v4l2.exe"
+#define GET_IMG_EXE "snap.exe"
 
 #ifdef _WIN32
 CRITICAL_SECTION
