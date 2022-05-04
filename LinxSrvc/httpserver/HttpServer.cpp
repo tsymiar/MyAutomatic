@@ -7,8 +7,8 @@ using namespace std;
 
 int main(int argc, char** argv)
 {
-    if (argc <= 1 || argv == nullptr) {
-        cout << "Usage:\n " << argv[0] << " [port | url]\nactually:" << endl;
+    if (argc <= 1) {
+        cout << "Usage:\n " << (argv == nullptr ? "HttpServer" : argv[0]) << " [port | url]\nactually:" << endl;
     }
 
     int i = 0;

@@ -55,7 +55,7 @@ int snap_init_dev(snap_device* snap_dev, image_pixel img_size, char* device)
         perror("snap_device is null!");
         return -1;
     }
-    if (!device || device == NULL)
+    if (device == NULL)
         device = (char*)DEFAULT_DEVICE;
     if ((snap_dev->v4l_fd = open(device, O_RDWR /*| O_NONBLOCK*//*Resource temporarily unavailable*/)) < 0) {
         perror("snap_init_dev open " DEFAULT_DEVICE " fail!");

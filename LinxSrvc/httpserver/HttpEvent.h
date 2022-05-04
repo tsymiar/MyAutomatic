@@ -30,5 +30,5 @@ struct DealHooks {
 
 int StartServer(short, struct SrvCallbacks* = nullptr);
 int RequestClient(const char*, HookDetail&, DEALRES_CALLBACK = nullptr);
-void RegistCallback(std::string, DEALRES_CALLBACK);
-void SetExtraOption(std::string, std::string);
+void RegistCallback(const std::string&, DEALRES_CALLBACK);
+void SetExtraOption(const std::string&, const std::string&);

@@ -182,7 +182,7 @@ void GenericHandler(struct evhttp_request* req_ptr, void* param)
                             status = HTTP_NOTIMPLEMENTED;
                             break;
                         }
-                        Message("server parse = %s:%d", ip.c_str(), port);
+                        Message("server parse = %s:%u", ip.c_str(), port);
                         char* post_data = (char*)EVBUFFER_DATA(req_ptr->input_buffer);
                         Message("request post_data = %s", post_data);
                     }
@@ -229,7 +229,7 @@ void WaitMsgTask(event_base* base)
         if (count > 3)
             break;
         usleep(g_wait100ms);
-        Message("dispatch timeout %ds to exit", count);
+        Message("dispatch timeout %us to exit", count);
         count++;
     };
     if (base != nullptr) {
@@ -504,12 +504,12 @@ void Release(event_base* base, evhttp_connection* evcon)
     }
 }
 
-void SetExtraOption(std::string key, std::string value)
+void SetExtraOption(const std::string& key, const std::string& value)
 {
     g_extraOpts[key] = value;
 }
 
-void RegistCallback(std::string name, evhttp_cmd_type method, DEALRES_CALLBACK hook)
+void RegistCallback(const std::string& name, evhttp_cmd_type method, DEALRES_CALLBACK hook)
 {
     g_dealhooks[name].method = method;
     g_dealhooks[name].callback = hook;

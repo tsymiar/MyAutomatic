@@ -71,6 +71,8 @@ static int read_frame(Callback callback, void* flag)
 
     switch (io) {
     case IO_METHOD_READ:
+        if (data_buff == NULL)
+            break;
         if (-1 == read(fd, data_buff[0].start, data_buff[0].length)) {
             switch (errno) {
             case EAGAIN:
@@ -401,10 +403,9 @@ static void init_userp(unsigned int buffer_size)
         exit(EXIT_FAILURE);
     }
 
-    for (n_buffers = 0; n_buffers < 4; ++n_buffers) {
+    for (n_buffers = 0; n_buffers < req.count/*4*/; ++n_buffers) {
         data_buff[n_buffers].length = buffer_size;
-        data_buff[n_buffers].start = memalign(/* boundary */page_size,
-            buffer_size);
+        data_buff[n_buffers].start = memalign(/* boundary */page_size, buffer_size);
 
         if (!data_buff[n_buffers].start) {
             fprintf(stderr, "Out of memory\n");
