@@ -17,7 +17,7 @@ int main(int argc, char** argv)
 #elif defined(ME9S)
     mes_main(argc, argv);
 #elif defined(FIFO)
-    fifo_main(NULL);
+    fifo_main((long long)argc);
 #elif defined(CAPTURE)
     main_capture(argc, argv);
 #elif defined(SNAP)

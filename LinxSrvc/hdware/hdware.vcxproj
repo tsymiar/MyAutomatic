@@ -76,40 +76,52 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
-    <IntDir>$(ProjectDir)..\obj\$(TargetName)\</IntDir>
+    <IntDir>$(ProjectDir)..\vs\obj\$(TargetName)\</IntDir>
     <TargetExt>.exe</TargetExt>
+    <OutDir>$(ProjectDir)..\vs\bin\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
-    <IntDir>$(ProjectDir)..\obj\$(TargetName)\</IntDir>
+    <IntDir>$(ProjectDir)..\vs\obj\$(TargetName)\</IntDir>
     <TargetExt>.exe</TargetExt>
+    <OutDir>$(ProjectDir)..\vs\bin\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IntDir>$(ProjectDir)..\obj\$(TargetName)\</IntDir>
+    <IntDir>$(ProjectDir)..\vs\obj\$(TargetName)\</IntDir>
     <TargetExt>.exe</TargetExt>
+    <OutDir>$(ProjectDir)..\vs\bin\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IntDir>$(ProjectDir)..\obj\$(TargetName)\</IntDir>
+    <IntDir>$(ProjectDir)..\vs\obj\$(TargetName)\</IntDir>
     <TargetExt>.exe</TargetExt>
+    <OutDir>$(ProjectDir)..\vs\bin\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
-    <IntDir>$(ProjectDir)..\obj\$(TargetName)\</IntDir>
+    <IntDir>$(ProjectDir)..\vs\obj\$(TargetName)\</IntDir>
     <TargetExt>.exe</TargetExt>
+    <OutDir>$(ProjectDir)..\vs\bin\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|MIPS'">
     <TargetExt>.exe</TargetExt>
+    <OutDir>$(ProjectDir)..\vs\bin\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)..\vs\obj\$(TargetName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
-    <IntDir>$(ProjectDir)..\obj\$(TargetName)\</IntDir>
+    <IntDir>$(ProjectDir)..\vs\obj\$(TargetName)\</IntDir>
     <TargetExt>.exe</TargetExt>
+    <OutDir>$(ProjectDir)..\vs\bin\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|MIPS'">
     <TargetExt>.exe</TargetExt>
+    <OutDir>$(ProjectDir)..\vs\bin\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)..\vs\obj\$(TargetName)\</IntDir>
   </PropertyGroup>
   <ItemGroup>
-    <ClInclude Include="v4l2.h" />
+    <ClInclude Include="fifo.h" />
+    <ClInclude Include="test.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gpio.h" />
+    <ClCompile Include="linuxsnap.c" />
     <ClCompile Include="me909s.h" />
     <ClCompile Include="routine.c" />
     <ClCompile Include="test.c" />
@@ -117,7 +129,26 @@
   <ItemGroup>
     <None Include="Makefile" />
   </ItemGroup>
-  <ItemDefinitionGroup />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+    <ClCompile>
+      <PreprocessorDefinitions>GPIO</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|MIPS'">
+    <ClCompile>
+      <PreprocessorDefinitions>GPIO</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PreprocessorDefinitions>GPIO</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+    <ClCompile>
+      <PreprocessorDefinitions>GPIO</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
 </Project>

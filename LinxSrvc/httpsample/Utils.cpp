@@ -17,6 +17,25 @@ bool isNum(const std::string& str)
     return true;
 }
 
+unsigned int sIP2i(const char* IP)
+{
+    unsigned int ip = 0;
+    const char* s = IP;
+    unsigned char t = 0;
+    while (1) {
+        if (*s != '\0' && *s != '.') {
+            t = (unsigned char)(t * 10 + *s - '0');
+        } else {
+            ip = (ip << 8) + t;
+            if (*s == '\0')
+                break;
+            t = 0;
+        }
+        s++;
+    };
+    return ip;
+}
+
 std::vector<std::string> parseUri(const std::string& uri)
 {
     std::vector<std::string> vec{};

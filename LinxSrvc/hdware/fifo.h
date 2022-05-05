@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <errno.h>
-//#include <thread>
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -25,7 +24,6 @@ int write_fifo(const struct Fifo* fifo)
         perror("Param fifo is NULL");
         return -1;
     }
-    printf("FIFO write: Process flag = %lld, command = %d, address = %p.\n", fifo->flag, fifo->cmd, fifo->addr);
     if (stat(FIFO_FILE, &statst) < 0 || access(FIFO_FILE, F_OK) != 0) {
         fprintf(stderr, "Fifo file does not exist.\n");
     } else {
@@ -53,6 +51,7 @@ int write_fifo(const struct Fifo* fifo)
     if (fileSize > 0)
         lseek(fdio, 0, SEEK_SET);
     close(fdio);
+    printf("FIFO wrote: { %d, %lld, %p }.\n", fifo->cmd, fifo->flag, fifo->addr);
     return 0;
 }
 
@@ -82,7 +81,7 @@ struct Fifo read_fifo(long long flag)
         if (fifo.flag == flag) {
             break;
         } else {
-            printf("FIFO matching: Process flag = %lld, command = %d, address = %p.\n", fifo.flag, fifo.cmd, fifo.addr);
+            printf("FIFO match: { %d, %lld, %p }.\n", fifo.cmd, fifo.flag, fifo.addr);
             fifo.flag = -1;
             write(fdio, (void*)'\0', 1);
             fdio = open(FIFO_FILE, O_RDONLY);
@@ -90,43 +89,17 @@ struct Fifo read_fifo(long long flag)
         }
     }
     close(fdio);
+    printf("FIFO read: { %d, %lld, %p }.\n", fifo.cmd, fifo.flag, fifo.addr);
     return fifo;
 }
 
-unsigned int sIP2i(const char* IP)
+int fifo_main(long long flag)
 {
-    unsigned int ip = 0;
-    const char* s = IP;
-    unsigned char t = 0;
-    while (1) {
-        if (*s != '\0' && *s != '.') {
-            t = (unsigned char)(t * 10 + *s - '0');
-        } else {
-            ip = (ip << 8) + t;
-            if (*s == '\0')
-                break;
-            t = 0;
-        }
-        s++;
-    };
-    return ip;
-}
-
-int fifo_main(const char* sip)
-{
-    if (sip == NULL) {
-        sip = "127.0.0.1";
-    }
-    long long flag = (9001 << 16 | 8080 << 8 | sIP2i(sip));
     struct Fifo fifo0 = {
         .cmd = -1,
         .flag = flag,
         .addr = NULL };
-    //std::thread th([](long long flag) {
     struct Fifo fifo = read_fifo(flag);
-    printf("FIFO read: Process flag = %lld, command = %d, address = %p.\n", fifo.flag, fifo.cmd, fifo.addr);
-    //    }, flag);
-    //th.detach();
     write_fifo(&fifo0);
     usleep(1000);
     return 0;

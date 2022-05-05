@@ -1,5 +1,5 @@
 CUR = `pwd`
-GEN = $(CUR)/bin
+GEN = $(CUR)/../bin
 OBJ = $(CUR)/../obj
 PRJ = $(OBJ)/gSOAPverify
 FILE= ./soap/myweb.wsdl
