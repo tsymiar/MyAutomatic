@@ -19,6 +19,8 @@
 #include <sys/mman.h>
 #include <sys/ioctl.h>
 #include <asm/types.h>          /* videodev2.h */
+#include <bits/types/struct_timespec.h>
+#include <bits/types/struct_timeval.h>
 #include <linux/videodev2.h>
 #include <netinet/in.h>         /* socket */
 #include <arpa/inet.h>

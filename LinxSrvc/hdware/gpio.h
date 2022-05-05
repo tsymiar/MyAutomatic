@@ -34,7 +34,7 @@ int gpio_request(unsigned int gpio, char* label)
 {
     int file;
     char value[64];
-    snprintf(value, sizeof(value), GPIO_FILES "/gpio%u/value", gpio);
+    snprintf(value, sizeof(value), GPIO_FILES "gpio%u/value", gpio);
     file = open(value, O_RDONLY | O_NONBLOCK);
     if (file < 0) {
         perror(label);
@@ -123,7 +123,7 @@ int gpio_get_value(unsigned gpio)
     char ch;
     int value;
     ssize_t len;
-    snprintf(val, sizeof(val), GPIO_FILES "/gpio%u/value", gpio);
+    snprintf(val, sizeof(val), GPIO_FILES "gpio%u/value", gpio);
     file = open(val, O_RDONLY);
     if (file < 0) {
         perror("gpio_get_value");

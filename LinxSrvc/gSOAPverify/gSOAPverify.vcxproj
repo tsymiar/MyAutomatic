@@ -54,9 +54,7 @@
     <ClInclude Include="util\String_-inl.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="file\gitbase.sh" />
     <None Include="file\mysql.sh" />
-    <None Include="file\shadowsocks.sh" />
     <None Include="Makefile" />
     <None Include="soap\make.sh" />
     <None Include="soap\myweb.nsmap" />
@@ -106,49 +104,54 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IntDir>$(ProjectDir)..\obj\$(TargetName)\</IntDir>
+    <IntDir>$(ProjectDir)..\vs\obj\$(TargetName)\</IntDir>
     <AdditionalSourcesToCopyMapping>$(MSBuildProjectDirectory)\Makefile;$(MSBuildProjectDirectory)\mysql\fixmysql;$(MSBuildProjectDirectory)\soap\myweb.wsdl;$(AdditionalSourcesToCopyMapping)</AdditionalSourcesToCopyMapping>
     <TargetExt>.exe</TargetExt>
-    <OutDir>$(ProjectDir)bin\$(Configuration)\</OutDir>
+    <OutDir>$(ProjectDir)..\vs\bin\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
-    <IntDir>$(ProjectDir)..\obj\$(TargetName)\</IntDir>
+    <IntDir>$(ProjectDir)..\vs\obj\$(TargetName)\</IntDir>
     <AdditionalSourcesToCopyMapping>$(MSBuildProjectDirectory)\Makefile;$(AdditionalSourcesToCopyMapping)</AdditionalSourcesToCopyMapping>
-    <TargetExt>.a</TargetExt>
-    <OutDir>$(ProjectDir)bin\$(Configuration)\</OutDir>
+    <TargetExt>.exe</TargetExt>
+    <OutDir>$(ProjectDir)..\vs\bin\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
-    <IntDir>$(ProjectDir)..\obj\$(TargetName)\</IntDir>
+    <IntDir>$(ProjectDir)..\vs\obj\$(TargetName)\</IntDir>
     <AdditionalSourcesToCopyMapping>$(ProjectDir)..\Makefile</AdditionalSourcesToCopyMapping>
     <TargetExt />
-    <OutDir>$(ProjectDir)bin\$(Configuration)\</OutDir>
+    <OutDir>$(ProjectDir)..\vs\bin\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|MIPS'">
     <AdditionalSourcesToCopyMapping>$(ProjectDir)..\Makefile</AdditionalSourcesToCopyMapping>
     <TargetExt />
+    <OutDir>$(ProjectDir)..\vs\bin\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)..\vs\obj\$(TargetName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
-    <IntDir>$(ProjectDir)..\obj\$(TargetName)\</IntDir>
+    <IntDir>$(ProjectDir)..\vs\obj\$(TargetName)\</IntDir>
     <TargetExt />
-    <OutDir>$(ProjectDir)bin\$(Configuration)\</OutDir>
+    <OutDir>$(ProjectDir)..\vs\bin\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IntDir>$(ProjectDir)..\obj\$(TargetName)\</IntDir>
+    <IntDir>$(ProjectDir)..\vs\obj\$(TargetName)\</IntDir>
     <TargetExt>.exe</TargetExt>
-    <OutDir>$(ProjectDir)bin\$(Configuration)\</OutDir>
+    <OutDir>$(ProjectDir)..\vs\bin\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
-    <IntDir>$(ProjectDir)..\obj\$(TargetName)\</IntDir>
+    <IntDir>$(ProjectDir)..\vs\obj\$(TargetName)\</IntDir>
     <TargetExt />
-    <OutDir>$(ProjectDir)bin\$(Configuration)\</OutDir>
+    <OutDir>$(ProjectDir)..\vs\bin\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|MIPS'">
     <TargetExt />
+    <OutDir>$(ProjectDir)..\vs\bin\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)..\vs\obj\$(TargetName)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Link>
       <ShowProgress>true</ShowProgress>
       <LibraryDependencies>pthread;mysqlclient;%(LibraryDependencies)</LibraryDependencies>
+      <AdditionalOptions>-lpthread -lmysqlclient %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PreBuildEvent>
       <Command>
@@ -171,6 +174,7 @@
     <ClCompile />
     <Link>
       <LibraryDependencies>/usr/lib/mysql;mysqlclient;pthread;%(LibraryDependencies)</LibraryDependencies>
+      <AdditionalOptions>-lpthread -lmysqlclient %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ClCompile>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
@@ -180,6 +184,7 @@
     <ClCompile />
     <Link>
       <LibraryDependencies>/usr/lib/mysql;mysqlclient;pthread;%(LibraryDependencies)</LibraryDependencies>
+      <AdditionalOptions>-lpthread -lmysqlclient %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ClCompile>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
@@ -187,6 +192,15 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile />
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+    <ClCompile>
+      <PreprocessorDefinitions>
+      </PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <AdditionalOptions>-lpthread -lmysqlclient %(AdditionalOptions)</AdditionalOptions>
+    </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

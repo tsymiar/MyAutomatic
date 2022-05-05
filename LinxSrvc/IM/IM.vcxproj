@@ -77,44 +77,61 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
-    <IntDir>$(ProjectDir)..\obj\$(Platform)\</IntDir>
+    <IntDir>$(ProjectDir)..\vs\obj\$(TargetName)\</IntDir>
     <TargetExt>.exe</TargetExt>
     <RemoteDeployDir>$(RemoteRootDir)/$(ProjectName)/bin/$(Platform)/$(Configuration)</RemoteDeployDir>
+    <OutDir>$(ProjectDir)..\vs\bin\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|MIPS'">
     <TargetExt>.exe</TargetExt>
+    <OutDir>$(ProjectDir)..\vs\bin\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)..\vs\obj\$(TargetName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <TargetExt>.exe</TargetExt>
-    <IntDir>$(ProjectDir)..\obj\$(TargetName)\</IntDir>
+    <IntDir>$(ProjectDir)..\vs\obj\$(TargetName)\</IntDir>
+    <OutDir>$(ProjectDir)..\vs\bin\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
     <TargetExt>.exe</TargetExt>
-    <IntDir>$(ProjectDir)..\obj\$(TargetName)\</IntDir>
+    <IntDir>$(ProjectDir)..\vs\obj\$(TargetName)\</IntDir>
+    <OutDir>$(ProjectDir)..\vs\bin\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
     <TargetExt>.exe</TargetExt>
-    <IntDir>$(ProjectDir)..\obj\$(TargetName)\</IntDir>
+    <IntDir>$(ProjectDir)..\vs\obj\$(TargetName)\</IntDir>
+    <OutDir>$(ProjectDir)..\vs\bin\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|MIPS'">
     <TargetExt>.exe</TargetExt>
-    <IntDir>$(ProjectDir)..\obj\$(TargetName)\</IntDir>
+    <IntDir>$(ProjectDir)..\vs\obj\$(TargetName)\</IntDir>
+    <OutDir>$(ProjectDir)..\vs\bin\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <TargetExt>.exe</TargetExt>
-    <IntDir>$(ProjectDir)..\obj\$(TargetName)\</IntDir>
+    <IntDir>$(ProjectDir)..\vs\obj\$(TargetName)\</IntDir>
+    <OutDir>$(ProjectDir)..\vs\bin\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <TargetExt>.exe</TargetExt>
-    <IntDir>$(ProjectDir)..\obj\$(Platform)\</IntDir>
+    <IntDir>$(ProjectDir)..\vs\obj\$(TargetName)\</IntDir>
+    <OutDir>$(ProjectDir)..\vs\bin\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemGroup>
     <None Include="readme.md" />
     <None Include="Makefile" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="IM.cc" />
-    <ClCompile Include="fifo.c" />
+    <ClCompile Include="IM.cc">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|MIPS'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|MIPS'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x86'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="KaiTest.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">true</ExcludedFromBuild>
     </ClCompile>
@@ -129,7 +146,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <Link>
       <LibraryDependencies>pthread;%(LibraryDependencies)</LibraryDependencies>
-      <AdditionalOptions>-DTHREAD_PER_CONNN %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-DTHREAD_PER_CONNN -lpthread %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ClCompile>
       <PreprocessorDefinitions>_IM_;_DEBUG;THREAD_PER_CONN;</PreprocessorDefinitions>
@@ -142,7 +159,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|MIPS'">
     <Link>
       <LibraryDependencies>pthread;%(LibraryDependencies)</LibraryDependencies>
-      <AdditionalOptions>-DTHREAD_PER_CONNN %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-DTHREAD_PER_CONNN -lpthread %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ClCompile>
       <PreprocessorDefinitions>_DEBUG</PreprocessorDefinitions>
@@ -157,6 +174,32 @@
     <Link>
       <LibraryDependencies>pthread;%(LibraryDependencies)</LibraryDependencies>
       <ForceUndefineSymbolReferences>-Wsign-conversion;%(ForceUndefineSymbolReferences)</ForceUndefineSymbolReferences>
+      <AdditionalOptions>-DTHREAD_PER_CONNN -lpthread %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+    <Link>
+      <AdditionalOptions>-DTHREAD_PER_CONNN -lpthread %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+    <Link>
+      <AdditionalOptions>-DTHREAD_PER_CONNN -lpthread %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|MIPS'">
+    <Link>
+      <AdditionalOptions>-DTHREAD_PER_CONNN -lpthread %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Link>
+      <AdditionalOptions>-DTHREAD_PER_CONNN -lpthread %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
+    <Link>
+      <AdditionalOptions>-DTHREAD_PER_CONNN -lpthread %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

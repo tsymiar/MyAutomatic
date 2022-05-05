@@ -10,9 +10,6 @@
     <ClCompile Include="KaiTest.cpp">
       <Filter>Kai</Filter>
     </ClCompile>
-    <ClCompile Include="fifo.c">
-      <Filter>IM</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Makefile" />

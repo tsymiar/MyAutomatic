@@ -1,6 +1,6 @@
 ﻿cmake_minimum_required (VERSION 3.0)
 
-set(TARGET httpserver)
+set(TARGET httpsample)
 
 project ("${TARGET}")
 add_definitions(-std=c++11)

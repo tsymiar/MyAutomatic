@@ -56,6 +56,7 @@ build
 */ui_*
 /.vs*
 !.vsconfig
+*.user
 *Debug
 *bin
 *obj
