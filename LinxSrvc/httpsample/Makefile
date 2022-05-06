@@ -1,6 +1,6 @@
 PROJECT_BASE=$(abspath $(dir $(lastword $(MAKEFILE_LIST))))
-BUILD_PATH:=$(PROJECT_BASE)/build
-MAKEFILE_DIR_PATSUBST:=$(patsubst %/,%,$(dir $(BUILD_PATH)))
+BUILD_PATH:=$(PROJECT_BASE)/../build
+MAKEFILE_DIR_PATSUBST:=$(patsubst %/,%,$(patsubst %..,%,$(patsubst %/,%,$(dir $(BUILD_PATH)))))
 
 TARGET:=$(notdir $(MAKEFILE_DIR_PATSUBST))
 EXECUTALBE:=$(PROJECT_BASE)/../bin/$(TARGET)
@@ -18,7 +18,7 @@ build:$(EXECUTALBE)
 
 .PHONY: clean
 clean:
-	@rm -rvf $(PROJECT_BASE)/build
+	@rm -rvf $(BUILD_PATH)
 cleanAll:
-	@rm -rvf $(PROJECT_BASE)/build
+	@rm -rvf $(BUILD_PATH)
 	@rm -rvf $(EXECUTALBE)

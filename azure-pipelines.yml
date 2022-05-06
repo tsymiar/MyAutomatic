@@ -11,5 +11,6 @@ pool:
 
 steps:
 - script: |
-    ./build.sh all
+    ./build.sh all -j
+    ./build.sh clean
   displayName: 'make'
