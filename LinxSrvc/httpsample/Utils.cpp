@@ -2,13 +2,15 @@
 
 #include <algorithm>
 #include <sstream>
+#include <fstream>
+#include <streambuf>
 
-bool isNum(const std::string& str)
+bool isNum(const std::string& in)
 {
-    std::stringstream sin(str);
-    double d;
+    std::stringstream sin(in);
+    long long l;
     char c;
-    if (!(sin >> d)) {
+    if (!(sin >> l)) {
         return false;
     }
     if (sin >> c) {
@@ -17,7 +19,7 @@ bool isNum(const std::string& str)
     return true;
 }
 
-unsigned int sIP2i(const char* IP)
+unsigned int sIP2ui(const char* IP)
 {
     unsigned int ip = 0;
     const char* s = IP;
@@ -74,4 +76,15 @@ std::string getVariable(const std::string& url, const std::string& key)
         }
     }
     return val;
+}
+
+std::string getFile2string(const std::string& filename)
+{
+    std::string content{};
+    std::ifstream file(filename);
+    if (file.is_open()) {
+        content.assign(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
+    }
+    file.close();
+    return content;
 }

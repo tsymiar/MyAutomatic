@@ -6,8 +6,8 @@
 #include <sys/queue.h>
 #include <stdio.h>
 #include <string.h>
+#include <unordered_map>
 #include <thread>
-#include <map>
 
 #include "event2/http_struct.h"
 #include "event2/event.h"
@@ -28,13 +28,14 @@ vector<string> headList = {
     "token"
 };
 
-const int g_wait100ms = 100000;
-const char* HTTPD_SIGNATURE = "HttpEvent";
-static map<void*, string> g_msgRcvs = {};
-static map<string, string> g_extraOpts = {};
-static map<string, DealHooks> g_dealhooks = {};
+namespace {
+    const int g_wait100ms = 100000;
+    const char* HTTPD_SIGNATURE = "HttpEvent";
+    static unordered_map<void*, string> g_msgRcvs = {};
+    static unordered_map<string, string> g_extraOpts = {};
+    static unordered_map<string, DealHooks> g_dealhooks = {};
+}
 
-const char* ParseMethod(int cmd);
 void Response(struct evhttp_request* request, HookDetail detail = {});
 void Release(event_base* base, evhttp_connection* evcon = nullptr);
 
@@ -134,7 +135,7 @@ void GenericHandler(struct evhttp_request* req_ptr, void* param)
     if (size > 0 && payload[size] != '\0') {
         payload[size] = '\0';
     }
-    Message("%s %s\trequest from: %s:%d\n[ %s ]", ParseMethod(method), url.c_str(), address, port, payload);
+    Message("%s %s\trequest from: %s:%d\n[ %s ]", GetMethodName(method), url.c_str(), address, port, payload);
     vector<string> list = parseUri(url);
     if (param != nullptr) {
         HookDetail message = {};
@@ -474,22 +475,22 @@ void Response(struct evhttp_request* request, HookDetail message)
     Message("[%d]\n%s", message.status, content.c_str());
 }
 
-const char* ParseMethod(int cmd)
+const char* GetMethodName(int method)
 {
-    const char* method;
-    switch (cmd) {
-    case EVHTTP_REQ_GET: method = "GET"; break;
-    case EVHTTP_REQ_POST: method = "POST"; break;
-    case EVHTTP_REQ_HEAD: method = "HEAD"; break;
-    case EVHTTP_REQ_PUT: method = "PUT"; break;
-    case EVHTTP_REQ_DELETE: method = "DELETE"; break;
-    case EVHTTP_REQ_OPTIONS: method = "OPTIONS"; break;
-    case EVHTTP_REQ_TRACE: method = "TRACE"; break;
-    case EVHTTP_REQ_CONNECT: method = "CONNECT"; break;
-    case EVHTTP_REQ_PATCH: method = "PATCH"; break;
-    default: method = "unknown"; break;
+    const char* name = "null";
+    switch (method) {
+    case EVHTTP_REQ_GET: name = "GET"; break;
+    case EVHTTP_REQ_POST: name = "POST"; break;
+    case EVHTTP_REQ_HEAD: name = "HEAD"; break;
+    case EVHTTP_REQ_PUT: name = "PUT"; break;
+    case EVHTTP_REQ_DELETE: name = "DELETE"; break;
+    case EVHTTP_REQ_OPTIONS: name = "OPTIONS"; break;
+    case EVHTTP_REQ_TRACE: name = "TRACE"; break;
+    case EVHTTP_REQ_CONNECT: name = "CONNECT"; break;
+    case EVHTTP_REQ_PATCH: name = "PATCH"; break;
+    default: name = "unknown"; break;
     }
-    return method;
+    return name;
 }
 
 void Release(event_base* base, evhttp_connection* evcon)

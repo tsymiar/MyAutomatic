@@ -15,13 +15,17 @@ include_directories (
     /usr/include
 )
 
-target_link_libraries (${TARGET}
-    -fPIC
-    -Wall
-    -ggdb
-    -pthread
-    ${EVENT_LIB}
-)
+if (${LEVELDB_LIB} MATCHES "*-NOTFOUND")
+    message(search library results ${LEVELDB_LIB}, process may not execute normaly)
+else()
+    target_link_libraries (${TARGET}
+        -fPIC
+        -Wall
+        -ggdb
+        -pthread
+        ${EVENT_LIB}
+    )
+endif()
 
 if (DEFINED ENV{WITH_LEVELDB})
     include_directories (${WITH_LEVELDB}/include)

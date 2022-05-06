@@ -4,7 +4,7 @@
 #include "me909s.h"
 #elif defined(FIFO) 
 #include "fifo.h"
-#elif defined(CAPTURE) || defined(SNAP)
+#elif defined(VIDEO) || defined(SNAP)
 #include "test.h"
 #else
 #error compile command unsupported
@@ -18,7 +18,7 @@ int main(int argc, char** argv)
     mes_main(argc, argv);
 #elif defined(FIFO)
     fifo_main((long long)argc);
-#elif defined(CAPTURE)
+#elif defined(VIDEO)
     main_capture(argc, argv);
 #elif defined(SNAP)
     snap_image_test("image");
