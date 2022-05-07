@@ -9,7 +9,8 @@
 #define Error(fmt, ...) fprintf(stdout, "\r[ERROR](%s:%d)[%s]: " fmt "\n", basename((char*)__FILE__),__LINE__,__FUNCTION__,##__VA_ARGS__)
 
 bool isNum(const std::string& in);
-unsigned int sIP2ui(const char* IP);
+bool ipIsValid(const char* ip);
+long sIP2long(const char* ip);
 std::string getFile2string(const std::string& filename);
 std::vector<std::string> parseUri(const std::string& uri);
 std::string getVariable(const std::string& url, const std::string& key);

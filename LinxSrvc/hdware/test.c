@@ -2,7 +2,8 @@
 #include "gpio.h"
 #elif defined(ME9S)
 #include "me909s.h"
-#elif defined(FIFO) 
+#elif defined(FIFO)
+#include <stdlib.h>
 #include "fifo.h"
 #elif defined(VIDEO) || defined(SNAP)
 #include "test.h"
@@ -13,13 +14,19 @@
 int main(int argc, char** argv)
 {
 #ifdef GPIO
-    //
+    if (argc > 3) {
+        set_gpio_by_direction(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]));
+    } else if (argc == 2) {
+        get_gpio_value(atoi(argv[1]));
+    }
 #elif defined(ME9S)
-    mes_main(argc, argv);
+    meat_main();
 #elif defined(FIFO)
-    fifo_main((long long)argc);
+    if (argc == 2) {
+        fifo_test((long long)atoi(argv[1]));
+    }
 #elif defined(VIDEO)
-    main_capture(argc, argv);
+    video_capture(argc, argv);
 #elif defined(SNAP)
     snap_image_test("image");
 #endif

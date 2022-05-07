@@ -649,7 +649,7 @@ int IPv4_verify(char* arg, char* ip, int* port) {
     return -2;
 }
 
-void main_capture(int argc, char* argv[])
+void video_capture(int argc, char* argv[])
 {
     char ip[INET_ADDRSTRLEN];
     int port;

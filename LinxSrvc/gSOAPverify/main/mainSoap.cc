@@ -7,7 +7,7 @@
 #include"mainSoap.h"
 
 pthread_mutex_t queue_lock;      // 队列锁
-pthread_cond_t  queue_noti;      // 条件变量
+pthread_cond_t  queue_cond;      // 条件变量
 SOAP_SOCKET     queue[MAX_QUEUE];// 数组队列
 int head = 0, tail = 0;          // 队列头队列尾初始化
 void* process_queue(void*);      // 线程入口函数
@@ -21,21 +21,21 @@ void* process_queue(void* soap)
 {
     if (soap == nullptr)
         return nullptr;
-    struct soap* tsoap = (struct soap*)soap;
+    struct soap* serv = (struct soap*)soap;
     for (;;)
     {
-        tsoap->socket = dequeue();
-        tsoap->ip = dequeue_ip();
-        if (!soap_valid_socket(tsoap->socket))
+        serv->socket = dequeue();
+        serv->ip = dequeue_ip();
+        if (!soap_valid_socket(serv->socket))
         {
 #ifdef DEBUG
-            fprintf(stderr, "Thread %d terminating\n", (int)(long)tsoap->user);
+            fprintf(stderr, "Thread %d terminating\n", (int)(long)serv->user);
 #endif
             break;
         }
-        soap_serve(tsoap);
-        soap_destroy(tsoap);
-        soap_end(tsoap);
+        soap_serve(serv);
+        soap_destroy(serv);
+        soap_end(serv);
     }
     return NULL;
 }
@@ -56,7 +56,7 @@ int enqueue(SOAP_SOCKET sock, unsigned long ip)
         queue[tail] = sock;
         ips[tail] = ip;
         tail = next;
-        pthread_cond_signal(&queue_noti);
+        pthread_cond_signal(&queue_cond);
     }
     pthread_mutex_unlock(&queue_lock);
     return status;
@@ -68,7 +68,7 @@ SOAP_SOCKET dequeue()
     pthread_mutex_lock(&queue_lock);
     while (head == tail)
     {
-        pthread_cond_wait(&queue_noti, &queue_lock);
+        pthread_cond_wait(&queue_cond, &queue_lock);
     }
     sock = queue[head++];
     if (head >= MAX_QUEUE)
@@ -106,9 +106,9 @@ int http_post(struct soap* soap, const char* endpoint, const char* host, int por
 #ifdef NS_HTTPPOST
     // 请求WSDL时，传送相应文件
     // 获取请求的wsdl文件
-    std::string fielPath(soap->path);
-    size_t pos = fielPath.rfind("/");
-    std::string fileName(fielPath, pos + 1);
+    std::string filePath(soap->path);
+    size_t pos = filePath.rfind("/");
+    std::string fileName(filePath, pos + 1);
     // 将?替换为.
     size_t dotPos = fileName.rfind("?");
     if ((int)dotPos == -1)
@@ -158,7 +158,7 @@ int main_server(int argc, char** argv)
 #endif // NS_DEBUG
     if (argv[1] == nullptr)
     {
-        std::cout << "请输入端口参数 例如：“\033[45m./gSOAPverify 8080\033[0m”\n" << argv[1] << std::endl;
+        std::cout << "Input an argument as port eg. '\033[45m./gSOAPverify 8080\033[0m'\n" << argv[1] << std::endl;
         kill(getppid(), SIGALRM);
         return -1;
     }
@@ -188,23 +188,22 @@ int main_server(int argc, char** argv)
         int i, port = atoi(argv[1]);
         // 锁和条件变量初始化
         pthread_mutex_init(&queue_lock, NULL);
-        pthread_cond_init(&queue_noti, NULL);
+        pthread_cond_init(&queue_cond, NULL);
         // 绑定服务端口
         SOAP_SOCKET m = soap_bind(&Soap, NULL, port, BACKLOG);
-        int vilid = 0;
+        int vilaid = 0;
         // 循环绑定直至服务套接字合法
         while (!soap_valid_socket(m))
         {
-            if (vilid == 0)
+            if (vilaid == 0)
             {
                 fprintf(stderr, "Bind PORT(%d) \033[31merror\033[0m! \n", port);
                 exit(1);
             }
             m = soap_bind(&Soap, NULL, port, BACKLOG);
-            vilid++;
+            vilaid++;
         }
-        fprintf(stderr, "======== Socket端口: %s ========\n", argv[1]);
-
+        fprintf(stderr, "======== Socket Server Port: %s ========\n", argv[1]);
         // 生成服务线程
         for (i = 0; i < MAX_THR; i++)
         {
@@ -259,7 +258,7 @@ int main_server(int argc, char** argv)
             free(soap_thr[i]);
         }
         pthread_mutex_destroy(&queue_lock);
-        pthread_cond_destroy(&queue_noti);
+        pthread_cond_destroy(&queue_cond);
     }
     // 分离运行时环境
     soap_done(&Soap);
@@ -277,16 +276,16 @@ int api__trans(struct soap* soap, char* msg, char* rtn[])
     char* curstr[4] = { NULL };
     struct PARAM params[8];
     char* text[8] = { msg };
-    int noeq = str.charcount_(*text, '=');
+    int neq = str.charcount_(*text, '=');
+    if (neq < 0 || msg == NULL) {
+        memcpy(text[0], "request uri error!", 19);
+        return -1;
+    }
     char* token = strtok(msg, "@&");
-    printf("GET:[%s][%d]\n", msg, noeq);
+    printf("GET:[%s][%d]\n", msg, neq);
     for (int i = 0; i < 8; i++) {
         text[i] = (char*)malloc(64);
         memset(text[0], 0, 64);
-    }
-    if (noeq < 0 || msg == NULL) {
-        memcpy(text[0], "request uri error!", 19);
-        return -1;
     }
     if (token != NULL && (memcmp(token, "trans", 6) != 0 || strlen(token) > strlen("trans")))
     {
@@ -310,18 +309,19 @@ int api__trans(struct soap* soap, char* msg, char* rtn[])
     }
     j = 0;
     token = NULL;
-    rtn = text;
+    *rtn = *text;
     return 0;
 }
 
 int api__get_server_status(struct soap* soap, xsd_string req, xsd_string& rsp)
 {
-    st_sys ss = { 0 };
-    char gt[8];
-    if (req != NULL && strlen(req) >= 4 && memcmp(req, "1000", 5) == 0)
+    if (req != NULL && strlen(req) >= 4 && memcmp(req, "1000", 5) == 0) {
+        st_sys ss = { 0 };
+        char gt[8];
         get_mem_stat((char*)"localhost", &ss);
-    rsp = gcvt(100.f * ss.mem_free / ss.mem_all, 5, gt);
-    cout << req << ": " << rsp << endl;
+        rsp = gcvt(100.f * ss.mem_free / ss.mem_all, 5, gt);
+        cout << req << ": " << rsp << endl;
+    }
     return 0;
 }
 
@@ -352,7 +352,8 @@ int api__login_by_key(struct soap*, char* usr, char* psw, struct api__ArrayOfEmp
 
 int main(int argc, char* argv[])
 {
-    if (fork() == 0)
+    if (fork() == 0) {
         main_server(argc, argv);
+    }
     return 0;
 }

@@ -1,3 +1,4 @@
+#!/bin/bash
 soapcpp2 -C rpcapi.h
 soapcpp2 -i rpcapi.h
 soapcpp2 -S rpcapi.h
