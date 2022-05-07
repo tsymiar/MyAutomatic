@@ -1,5 +1,5 @@
 #!/bin/bash
-PWD=`pwd`
-cd ${PWD}/LinxSrvc
-make $1
+PWD=$(pwd)
+cd "${PWD}/LinxSrvc"
+make "$1"
 cd -

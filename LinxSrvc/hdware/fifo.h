@@ -16,19 +16,19 @@ const char* FIFO_FILE = "/tmp/fifo1";
 int write_fifo(const struct Fifo* fifo)
 {
     int fdio;
-    int fifoSize = sizeof(struct Fifo);
+    int size = sizeof(struct Fifo);
     unsigned long fileSize = -1;
-    struct stat statst;
+    struct stat status;
 
     if (fifo == NULL) {
         perror("Param fifo is NULL");
         return -1;
     }
-    if (stat(FIFO_FILE, &statst) < 0 || access(FIFO_FILE, F_OK) != 0) {
+    if (stat(FIFO_FILE, &status) < 0 || access(FIFO_FILE, F_OK) != 0) {
         fprintf(stderr, "Fifo file does not exist.\n");
     } else {
-        fileSize = statst.st_size;
-        if (fileSize % fifoSize != 0) {
+        fileSize = status.st_size;
+        if (fileSize % size != 0) {
             fprintf(stdout, "File format may invalid.\n");
         }
     }
@@ -43,7 +43,7 @@ int write_fifo(const struct Fifo* fifo)
     }
     if (fileSize > 0)
         lseek(fdio, 0, SEEK_END);
-    if (write(fdio, (void*)fifo, fifoSize) < 0) {
+    if (write(fdio, (void*)fifo, size) < 0) {
         perror("Write FIFO fail");
         close(fdio);
         return -5;
@@ -59,7 +59,7 @@ struct Fifo read_fifo(long long flag)
 {
     int fdio;
     ssize_t len;
-    int fifoSize = sizeof(struct Fifo);
+    int size = sizeof(struct Fifo);
     struct stat status;
     struct Fifo fifo = {
         .cmd = -1,
@@ -77,7 +77,7 @@ struct Fifo read_fifo(long long flag)
         perror("Open FIFO RDONLY fail");
         return fifo;
     }
-    while ((len = read(fdio, &fifo, fifoSize)) > 0) {
+    while ((len = read(fdio, &fifo, size)) > 0) {
         if (fifo.flag == flag) {
             break;
         } else {
@@ -89,18 +89,18 @@ struct Fifo read_fifo(long long flag)
         }
     }
     close(fdio);
-    printf("FIFO read: { %d, %lld, %p }.\n", fifo.cmd, fifo.flag, fifo.addr);
     return fifo;
 }
 
-int fifo_main(long long flag)
+int fifo_test(long long flag)
 {
-    struct Fifo fifo0 = {
+    struct Fifo fi0 = {
         .cmd = -1,
         .flag = flag,
         .addr = NULL };
     struct Fifo fifo = read_fifo(flag);
-    write_fifo(&fifo0);
+    printf("FIFO read: { %d, %lld, %p }.\n", fifo.cmd, fifo.flag, fifo.addr);
+    write_fifo(&fi0);
     usleep(1000);
     return 0;
 }

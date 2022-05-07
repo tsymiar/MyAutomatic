@@ -50,8 +50,8 @@ void gpio_free(int file)
 int gpio_set_export(unsigned gpio, int direction_may_change)
 {
     int file;
-    char pin[64];
     int len = 0;
+    char pin[64];
     ssize_t ret = 0;
     if (direction_may_change == 1) {
         file = open(GPIO_FILES "export", O_WRONLY);
@@ -78,11 +78,11 @@ int gpio_unexport(unsigned gpio)
     return gpio_set_export(gpio, 0);
 }
 
-int gpio_set_direct(unsigned gpio, int direct)
+int set_gpio_direct(unsigned gpio, int direct)
 {
-    char dir[64];
     int file;
     int ret = 0;
+    char dir[64];
     sprintf(dir, "%sgpio%u/direction", GPIO_FILES, gpio);
     file = open(dir, O_WRONLY);
     if (direct == 0) {
@@ -98,7 +98,7 @@ int gpio_set_direct(unsigned gpio, int direct)
     return 0;
 }
 
-int gpio_set_value(unsigned int gpio, int value)
+int set_gpio_value(unsigned int gpio, int value)
 {
     int file;
     char val[64];
@@ -116,13 +116,13 @@ int gpio_set_value(unsigned int gpio, int value)
     return 0;
 }
 
-int gpio_get_value(unsigned gpio)
+int get_gpio_value(unsigned gpio)
 {
     int file;
-    char val[64];
     char ch;
     int value;
     ssize_t len;
+    char val[64];
     snprintf(val, sizeof(val), GPIO_FILES "gpio%u/value", gpio);
     file = open(val, O_RDONLY);
     if (file < 0) {
@@ -143,16 +143,10 @@ int gpio_get_value(unsigned gpio)
     return value;
 }
 
-int gpio_direction_input(unsigned gpio, int value)
+int set_gpio_by_direction(unsigned gpio, int value, int direct)
 {
-    int ret = gpio_set_direct(gpio, 0);
-    ret += gpio_set_value(gpio, value);
-    return ret;
-}
-
-int gpio_direction_output(unsigned gpio, int value)
-{
-    int ret = gpio_set_direct(gpio, 1);
-    ret += gpio_set_value(gpio, value);
-    return ret;
+    if (set_gpio_direct(gpio, direct) != 0) {
+        perror("write gpio fail!");
+    }
+    return set_gpio_value(gpio, value);;
 }

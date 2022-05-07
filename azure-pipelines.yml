@@ -13,4 +13,4 @@ steps:
 - script: |
     ./build.sh all -j
     ./build.sh clean
-  displayName: 'make'
+  displayName: 'make LinxSrvc'

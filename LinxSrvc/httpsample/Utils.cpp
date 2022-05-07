@@ -8,9 +8,9 @@
 bool isNum(const std::string& in)
 {
     std::stringstream sin(in);
-    long long l;
+    double d;
     char c;
-    if (!(sin >> l)) {
+    if (!(sin >> d)) {
         return false;
     }
     if (sin >> c) {
@@ -19,23 +19,54 @@ bool isNum(const std::string& in)
     return true;
 }
 
-unsigned int sIP2ui(const char* IP)
+bool ipIsValid(const char* ip)
 {
-    unsigned int ip = 0;
-    const char* s = IP;
-    unsigned char t = 0;
-    while (1) {
-        if (*s != '\0' && *s != '.') {
-            t = (unsigned char)(t * 10 + *s - '0');
+    int value = 0;
+    int dot = 0;
+    char last = '.';
+
+    while (*ip) {
+        if (*ip == '.') {
+            dot++;
+            if (dot > 3) {
+                return false;
+            }
+            if (value >= 0 && value <= 255) {
+                value = 0;
+            } else {
+                return false;
+            }
+        } else if (*ip >= '0' && *ip <= '9') {
+            value = value * 10 + *ip - '0';
+            if (last == '.' && *ip == '0') {
+                return false;
+            }
         } else {
-            ip = (ip << 8) + t;
-            if (*s == '\0')
-                break;
-            t = 0;
+            return false;
         }
-        s++;
-    };
-    return ip;
+        last = *ip;
+        ip++;
+    }
+
+    if (value >= 0 && value <= 255) {
+        if (3 == dot) {
+            return true;
+        }
+    }
+    return false;
+}
+
+long sIP2long(const char* ip)
+{
+    if (ip == nullptr) {
+        return 0;
+    }
+    long lip = 0;
+    long ip1, ip2, ip3, ip4;
+    if (sscanf(ip, "%ld.%ld.%ld.%ld", &ip1, &ip2, &ip3, &ip4) == 4) {
+        lip = (ip1 << 24) + (ip2 << 16) + (ip3 << 8) + ip4;
+    }
+    return lip;
 }
 
 std::vector<std::string> parseUri(const std::string& uri)

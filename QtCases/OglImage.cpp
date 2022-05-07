@@ -88,7 +88,7 @@ int OglImage::setPixels(const char* filename)
 GLuint OglImage::CreateTextureFromPng(const char* filename)
 {
     unsigned char header[8];
-    int k;   // 循环计数器
+    int k; // 循环计数器
     GLuint textureID; // 贴图ID
     int width, height; // 记录图片宽、高
     png_byte color_type; // 图片到类型（用于是否是开启来通道）
@@ -97,8 +97,8 @@ GLuint OglImage::CreateTextureFromPng(const char* filename)
     png_structp png_ptr; // 图片
     png_infop info_ptr; // 图片信息
     int number_of_passes; // 隔行扫描
-    png_bytep * row_pointers;// 图片数据内容
-    int row, col, pos;  // 图片像素排列
+    png_bytep * row_pointers; // 图片数据内容
+    int row, col, pos; // 图片像素排列
     GLubyte *rgba;
 
     FILE *fp = fopen(filename, "rb"); // 以只读形式打开文件
@@ -148,13 +148,13 @@ GLuint OglImage::CreateTextureFromPng(const char* filename)
     height = png_get_image_height(png_ptr, info_ptr);
     color_type = png_get_color_type(png_ptr, info_ptr);
     // 如果图片带有alpha通道调用以下语句
-    /*
-    if (color_type == PNG_COLOR_TYPE_RGB_ALPHA)
+    if (color_type == PNG_COLOR_TYPE_RGB_ALPHA) {
         png_set_swap_alpha(png_ptr);
-    */
+    }
     bit_depth = png_get_bit_depth(png_ptr, info_ptr);
     // 隔行扫描图片
     number_of_passes = png_set_interlace_handling(png_ptr);
+    qDebug() << "bit depth = " << bit_depth << ", passes number = " << number_of_passes << ".";
     // 将读取到的信息更新到info_ptr
     png_read_update_info(png_ptr, info_ptr);
     // 读文件  
@@ -211,18 +211,19 @@ void OglImage::loadGLTextures(const char* filename)
     if (filename == NULL)
         return;
 #ifdef QT_GUI_LIB
-    QImage tex, buf;
-    if (!buf.load(filename))
+    QImage tex, img;
+    if (!img.load(filename))
     {
         qWarning("Could not read image file, using single-color instead.");
         QImage dummy(128, 128, QImage::Format_RGB32);
 #ifdef QCOLOR_H
         dummy.fill(QColor("darkCyan").rgb());
 #endif
-        buf = dummy;
+        img = dummy;
+        qDebug() << "image size = " << img.size();
     }
 #ifdef QGL_H
-    tex = QGLWidget::convertToGLFormat(buf);
+    tex = QGLWidget::convertToGLFormat(img);
 #endif
     glGenTextures(3, &texture[0]);
     glBindTexture(GL_TEXTURE_2D, texture[0]);

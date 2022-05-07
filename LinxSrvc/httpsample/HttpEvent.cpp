@@ -145,7 +145,7 @@ void GenericHandler(struct evhttp_request* req_ptr, void* param)
         if (list.size() > 1) {
             GetResHook(list[1], method)(message, size);
         } else {
-            SrvCallbacks* callbacks = (SrvCallbacks*)param;
+            SrvCallbacks* callbacks = reinterpret_cast<SrvCallbacks*>(param);
             if (callbacks->ParsReq != nullptr)
                 message = callbacks->ParsReq(list, message.method, payload);
             if (callbacks->PackRsp != nullptr)
@@ -497,11 +497,9 @@ void Release(event_base* base, evhttp_connection* evcon)
 {
     if (evcon != nullptr) {
         evhttp_connection_free(evcon);
-        evcon = nullptr;
     }
     if (base != nullptr) {
         event_base_free(base);
-        base = nullptr;
     }
 }
 

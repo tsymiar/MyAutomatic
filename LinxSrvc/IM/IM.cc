@@ -32,7 +32,7 @@
 #define MAX_ACTIVE 30
 #define MAX_USERS 99
 #define MAX_ZONES 9
-#define MAX_MENBERS_PER_GROUP 11
+#define MAX_MEMBERS_PER_GROUP 11
 //using namespace std;
 //'C++11 std' bind func conflicts with in 'socket.h'
 #ifdef _WIN32
@@ -108,7 +108,7 @@ struct user_clazz {
 }users[MAX_USERS];
 
 struct member {
-    user_clazz user[MAX_MENBERS_PER_GROUP];
+    user_clazz user[MAX_MEMBERS_PER_GROUP];
 
     member()
     {
@@ -154,7 +154,7 @@ typedef struct user_mesg {
 struct zone_clazz {
     char name[FiledSize];
     char cert[FiledSize];
-    char members[MAX_MENBERS_PER_GROUP][FiledSize];
+    char members[MAX_MEMBERS_PER_GROUP][FiledSize];
     unsigned int usrCnt;
     char chief[FiledSize];
     char brief[FiledSize];
@@ -790,12 +790,13 @@ type_thread_func monite(void* arg)
                         } else {
                             memset(sd_bufs + 2, 0, 2);
                             strcpy((sd_bufs + UsrSet), "Member(s) of the zone:\n");
-                            for (c = 0; c < MAX_MENBERS_PER_GROUP; c++) {
+                            for (c = 0; c < MAX_MEMBERS_PER_GROUP; c++) {
                                 if (strlen(zones[valrtn].zone.members[c]) >> 0) {
                                     strcpy((sd_bufs + UsrSet * (c + 4)), zones[valrtn].zone.members[c]);
                                 };
                             };
-                            if (valrtn == -1 || valrtn >= MAX_ZONES || zones[valrtn].zone.members[c][0] == '\0')
+                            if (valrtn == -1 || valrtn >= MAX_ZONES || c >= MAX_MEMBERS_PER_GROUP ||
+                                zones[valrtn].zone.members[c][0] == '\0')
                                 break;
                             sndlen = UsrSet * (c + 4 + 4);
                         };
@@ -868,7 +869,7 @@ type_thread_func monite(void* arg)
                                 send(rcv_sock, sd_bufs, 48, 0);
                             };
                         } else {
-                            for (c = 0; c < MAX_MENBERS_PER_GROUP; c++) {
+                            for (c = 0; c < MAX_MEMBERS_PER_GROUP; c++) {
                                 if (strlen(zones[valrtn].zone.members[c]) != 0) {
                                     sprintf(sd_bufs + 3, "%x", -3);
                                     int uil = user_is_line(zones[valrtn].zone.members[c]);
@@ -1382,7 +1383,7 @@ int find_zone(unsigned char basis[FiledSize])
     for (int i = 0; i < MAX_ZONES; i++) {
         if (strcmp(zones[i].zone.name, x) == 0)
             return i;
-        for (int j = 0; j < MAX_MENBERS_PER_GROUP; j++) {
+        for (int j = 0; j < MAX_MEMBERS_PER_GROUP; j++) {
             if (strcmp(zones[i].zone.members[j], x) == 0)
                 return i;
         }
@@ -1415,13 +1416,13 @@ int join_zone(int at, char usr[FiledSize], char zone[FiledSize], char* cert)
     char* m = usr, * z = zone;
     if (at < 0)
         return -1;
-    if (zones[at].zone.members[MAX_MENBERS_PER_GROUP - 1][0] != '\0')
+    if (zones[at].zone.members[MAX_MEMBERS_PER_GROUP - 1][0] != '\0')
         return -2;
-    for (i = 0; i < MAX_MENBERS_PER_GROUP; i++) {
+    for (i = 0; i < MAX_MEMBERS_PER_GROUP; i++) {
         if (strcmp(zones[at].zone.members[i], m) == 0)
             return -3;
     };
-    for (i = 0; i < MAX_MENBERS_PER_GROUP; i++) {
+    for (i = 0; i < MAX_MEMBERS_PER_GROUP; i++) {
         if (strlen(zones[at].zone.members[i]) == 0) {
             if (strcmp(zones[at].zone.name, z) == 0) {
                 strcpy(zones[at].zone.members[i], m);
@@ -1438,7 +1439,7 @@ int exit_zone(int at, char usr[FiledSize])
     char* m = usr;
     if (at < 0)
         return -1;
-    for (int i = 0; i < MAX_MENBERS_PER_GROUP; i++) {
+    for (int i = 0; i < MAX_MEMBERS_PER_GROUP; i++) {
         if (strcmp(zones[at].zone.members[i], m) == 0) {
             memset(zones[at].zone.members[i], 0, FiledSize);
             return i;

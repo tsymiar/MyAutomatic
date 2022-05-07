@@ -66,7 +66,7 @@ int mem_usb_check()
     return -2;
 }
 
-int mes_main(int argc, char** argv)
+int meat_main(void)
 {
     fd_set rdfds;
     FD_ZERO(&rdfds);
@@ -76,7 +76,6 @@ int mes_main(int argc, char** argv)
     char buff[256], rply[MAX_BUF_LEN];
     struct termios options;
     int me_fd;
-    ssize_t rd_stdin;
     int tries = 0;
     int flag = 0;
     int cmmat = 0;
@@ -155,6 +154,7 @@ int mes_main(int argc, char** argv)
         if (flag) {
             flag = 0;
         } else {
+            ssize_t rd_stdin;
             memset(rply, 0, sizeof(rply));
             if ((rd_stdin = read(me_fd, rply, sizeof(rply))) > 0) {
                 if (strstr(rply, ">")) {
@@ -174,7 +174,7 @@ int mes_main(int argc, char** argv)
                 }
             }
             if (strstr(rply, "CONNECT")) {
-                printf("--> Don't know what to do!  Starting pppd and hoping for the best.\n");
+                printf("--> Don't know what to do! Starting pppd and hoping for the best.\n");
                 start_pppd();
                 break;
             }
@@ -187,7 +187,7 @@ int mes_main(int argc, char** argv)
         } else {
             printf("New serial command('q' to quit): ");
             if (scanf("%64s", rply) == -1) {
-                printf("Bytes beyound limit(1~64)!\n");
+                printf("Bytes beyond limit(1~64)!\n");
                 break;
             }
             if (memcmp("q", rply, 2) == 0)
