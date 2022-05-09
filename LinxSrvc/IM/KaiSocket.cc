@@ -380,7 +380,6 @@ ssize_t KaiSocket::recv(uint8_t* buff, size_t size)
 
 bool KaiSocket::running()
 {
-    std::lock_guard<std::mutex> lock(m_lock);
     return m_network.run_01;
 }
 

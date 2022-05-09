@@ -23,8 +23,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-        B848A99F24EFFB770059ACCA /* IM */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = IM; sourceTree = BUILT_PRODUCTS_DIR; };
-		B848A9AA24EFFBCF0059ACCA /* IM.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = IM.cc; path = ../../WinNTKline/KlineUtil/IM/IM.cc; sourceTree = "<group>"; };
+		B848A99F24EFFB770059ACCA /* IM */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = IM; sourceTree = BUILT_PRODUCTS_DIR; };
+		B848A9AA24EFFBCF0059ACCA /* IM.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = IM.cc; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
