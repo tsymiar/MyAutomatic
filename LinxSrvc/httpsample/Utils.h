@@ -11,6 +11,6 @@
 bool isNum(const std::string& in);
 bool ipIsValid(const char* ip);
 long sIP2long(const char* ip);
-std::string getFile2string(const std::string& filename);
+std::string getFileAsstring(const std::string& filename);
 std::vector<std::string> parseUri(const std::string& uri);
 std::string getVariable(const std::string& url, const std::string& key);
