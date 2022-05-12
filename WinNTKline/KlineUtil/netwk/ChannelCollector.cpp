@@ -107,7 +107,6 @@ void MarketDataCollector::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField * 
     strcpy(TradingDay, pDepthMarketData->TradingDay);
 
     InstrumentID_name = names;
-    string str0 = names;
     string str1 = times;
     string str2 = times;
     string str3 = times;
@@ -333,7 +332,7 @@ int MarketDataCollector::CtpMarketLogout(CThostFtdcUserLogoutField *req, int iRe
 
 #endif
 
-TradeChannel::TradeChannel(CThostFtdcTraderApi * api)
+TradeChannel::TradeChannel(CThostFtdcTraderApi* api) : lOrderTime(0), lOrderOkTime(0)
 {
 }
 

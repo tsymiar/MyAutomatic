@@ -4,7 +4,7 @@
 #include "me909s.h"
 #elif defined(FIFO)
 #include <stdlib.h>
-#include "fifo.h"
+#include "tmpfifo.h"
 #elif defined(VIDEO) || defined(SNAP)
 #include "test.h"
 #else

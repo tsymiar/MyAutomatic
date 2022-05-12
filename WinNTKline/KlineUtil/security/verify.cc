@@ -127,10 +127,10 @@ unsigned long cal_CRC(unsigned long dwPolynomial, unsigned long *ptr, int len)
 {
     unsigned long    xbit;
     unsigned long    CRC = 0xFFFFFFFF;
-    int bits = 0;
     while (len--) {
         xbit = 1 << 31;
 
+        int bits = 0;
         unsigned long val = *ptr++;
         for (bits = 0; bits < 32; bits++) {
             if (CRC & 0x80000000) {
@@ -212,7 +212,6 @@ void RSA_check()
     fclose(stream);
 }
 
-int i = 0;
 char cc[2];
 char BCD20[20] = { 0 };
 char Hex20[20];
@@ -226,6 +225,7 @@ unsigned char ASC10[10] = { 0 };
 
 void Verify(char out[])
 {
+    int i = 0;
     char code[] = { 0x05,0x05,0x06,0x01,0x04,0x0F,0x0D,0x0F,0x04,0x03,0x02,0x0B,0x0C,0x06,0x0B,0x06,0x09,0x0F,0x02,0x03 };
     printf("32字节:\t%s\n16字节:\t\t%s\n", out, get_Hash(out, 32, hash));
     printf("Hash前8位:\t");

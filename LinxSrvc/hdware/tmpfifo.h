@@ -15,7 +15,7 @@ const char* FIFO_FILE = "/tmp/fifo1";
 
 int write_fifo(const struct Fifo* fifo)
 {
-    int fdio;
+    int fio;
     int size = sizeof(struct Fifo);
     unsigned long fileSize = -1;
     struct stat status;
@@ -36,28 +36,28 @@ int write_fifo(const struct Fifo* fifo)
         fprintf(stderr, "Get '%s' size failed.\n", FIFO_FILE);
         return -3;
     }
-    if ((fdio = open(FIFO_FILE, O_WRONLY | O_NONBLOCK)) < 0
-        && fdio != -1 && errno != ENXIO) {
+    if ((fio = open(FIFO_FILE, O_WRONLY | O_NONBLOCK)) < 0
+        && fio != -1 && errno != ENXIO) {
         perror("Open FIFO O_WRONLY fail");
         return -4;
     }
     if (fileSize > 0)
-        lseek(fdio, 0, SEEK_END);
-    if (write(fdio, (void*)fifo, size) < 0) {
+        lseek(fio, 0, SEEK_END);
+    if (write(fio, (void*)fifo, size) < 0) {
         perror("Write FIFO fail");
-        close(fdio);
+        close(fio);
         return -5;
     }
     if (fileSize > 0)
-        lseek(fdio, 0, SEEK_SET);
-    close(fdio);
+        lseek(fio, 0, SEEK_SET);
+    close(fio);
     printf("FIFO wrote: { %d, %lld, %p }.\n", fifo->cmd, fifo->flag, fifo->addr);
     return 0;
 }
 
 struct Fifo read_fifo(long long flag)
 {
-    int fdio;
+    int fio;
     ssize_t len;
     int size = sizeof(struct Fifo);
     struct stat status;
@@ -72,23 +72,23 @@ struct Fifo read_fifo(long long flag)
         perror("Stat FIFO fail");
         return fifo;
     }
-    if ((fdio = open(FIFO_FILE, O_RDONLY)) < 0
-        && fdio != -1 && errno != ENXIO) {
+    if ((fio = open(FIFO_FILE, O_RDONLY)) < 0
+        && fio != -1 && errno != ENXIO) {
         perror("Open FIFO RDONLY fail");
         return fifo;
     }
-    while ((len = read(fdio, &fifo, size)) > 0) {
+    while ((len = read(fio, &fifo, size)) > 0) {
         if (fifo.flag == flag) {
             break;
         } else {
             printf("FIFO match: { %d, %lld, %p }.\n", fifo.cmd, fifo.flag, fifo.addr);
             fifo.flag = -1;
-            write(fdio, (void*)'\0', 1);
-            fdio = open(FIFO_FILE, O_RDONLY);
+            write(fio, (void*)'\0', 1);
+            fio = open(FIFO_FILE, O_RDONLY);
             continue;
         }
     }
-    close(fdio);
+    close(fio);
     return fifo;
 }
 
