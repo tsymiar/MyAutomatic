@@ -6,18 +6,16 @@ project ("${TARGET}")
 add_definitions(-std=c++11)
 set(CXX_STANDARD 11)
 
-file(GLOB SRC_FILE_LIST "*.cpp")
-add_executable (${TARGET} ${SRC_FILE_LIST})
-find_library(EVENT_LIB event ${APPOINT_EVENT}/lib /usr/lib /usr/local/lib /usr/lib/arm-linux-gnueabihf NOTFOUND)
-
 include_directories (
     /usr/local/include
     /usr/include
 )
 
-if (${LEVELDB_LIB} MATCHES "*-NOTFOUND")
-    message(search library results ${LEVELDB_LIB}, process may not execute normaly)
-else()
+find_library(EVENT_LIB event ${APPOINT_EVENT}/lib /usr/lib /usr/local/lib /usr/lib/arm-linux-gnueabihf NOTFOUND)
+
+if (NOT ${EVENT_LIB} MATCHES "NOTFOUND")
+    file(GLOB SRC_FILE_LIST "*.cpp")
+    add_executable (${TARGET} ${SRC_FILE_LIST})
     target_link_libraries (${TARGET}
         -fPIC
         -Wall
@@ -25,6 +23,8 @@ else()
         -pthread
         ${EVENT_LIB}
     )
+else()
+    message(--\tseek\tlibrary\tvalues\t'${EVENT_LIB}',\tprocess\tmay\tnot\texecute\tnormaly.)
 endif()
 
 if (DEFINED ENV{WITH_LEVELDB})

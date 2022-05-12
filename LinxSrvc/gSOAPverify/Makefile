@@ -12,26 +12,24 @@ SQL = -std=c++11 -L/usr/lib$(BIT)/mysql -lmysqlclient
 PTHD= -std=c++11 -lpthread #-lgsoap++#-L/usr/local/gSOAP/lib/libsoap++
 FLAG += -DNS_DEBUG
 gSOAPverify:$(OUT)
-ifeq ($(shell uname), Darwin)
-	@echo MacOS not suported!
-	exit 1;
-endif
 	g++ $(FLAG) -c ./soap/soapC.cpp
 	g++ -g -c ./soap/stdsoap2.cpp
 	g++ $(FLAG) -c ./soap/soapServer.cpp
 	g++ $(FLAG) -c ./sys/status.cc -std=c++11
 #	bash -c '`command -v apt >/dev/null 2>&1 || { echo >&2 "-";}` == "-"'
 #	if [ ! -d "/usr/include/mysql" ]; then if [ `command -v apt` == "" ]; then sudo yum install mariadb-devel -y; else sudo apt-get install libmysql++-dev -y; fi; fi;
-	echo -e "REHL: 'sudo yum install mariadb-devel -y';\nDebain: 'sudo apt install libmysql++-dev -y';"
+	@echo "REHL: 'sudo yum install mariadb-devel -y';\nDebain: 'sudo apt install libmysql++-dev -y';"
+	[ ! -d "`pwd`/bin" ] && mkdir `pwd`/bin || echo ${GEN}
+ifneq ($(shell if [ ! -d /usr/lib/mysql ] || [ `ls /usr/lib/libmysql* | wc -l` -le 0 ]; then echo false; fi;), false)
 	g++ $(FLAG) -c ./sql/sqlDbReq.cc $(SQL)
 	g++ $(FLAG) -c ./main/mainSoap.cc $(PTHD)
-	[ ! -d "`pwd`/bin" ] && mkdir `pwd`/bin || echo ${GEN}
 	g++ $(FLAG) -o $(GEN)/gSOAPverify $(SYS) $(SOAP) $(MAIN) $(SQL) $(PTHD)
+endif
 	$(shell if [ -f $(FILE) ]; then if [ -d $(GEN) ]; then cp $(FILE) $(GEN)/;fi;else @echo "file <$(FILE)> don't exist.";fi;)
 	$(shell if [ -d $(PRJ) ];then rm -rf $(OBJ);fi;)
 	mkdir -p $(PRJ)
 	mv ./*.o $(PRJ)
-	echo make OK
+	@echo make OK
 all:
 	if [ `ps -fe| grep gSOAPverify | grep -v grep` -eq 0 ]; then killall -9 gSOAPverify;else echo "making gSOAPverify.";fi;
 	make clear
