@@ -11,7 +11,7 @@ $(BUILD_PATH)/Makefile:
 
 $(EXECUTALBE):$(BUILD_PATH)/Makefile
 	$(MAKE_COMMAND) -C $(BUILD_PATH)
-	cp $(BUILD_PATH)/$(TARGET) $(EXECUTALBE)
+	if [ -f $(EXECUTALBE) ]; then cp $(BUILD_PATH)/$(TARGET) $(EXECUTALBE); fi;
 
 .PHONY: build
 build:$(EXECUTALBE)
