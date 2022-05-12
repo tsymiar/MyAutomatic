@@ -86,7 +86,7 @@ static void onROIxyTrackBar(int fix, void* usrdata)
 
 static void onBilateralTrackBar(int d, void* usrdata)
 {
-    MatImgSet* src = (MatImgSet*)(usrdata);
+    MatImgSet* src = reinterpret_cast<MatImgSet*>(usrdata);
     if (src->image.flags < 0) {
         src->image = g_imageMat;
     }
@@ -97,7 +97,7 @@ static void onBilateralTrackBar(int d, void* usrdata)
 
 static void onMedianFilterTrackBar(int ksize, void* usrdata)
 {
-    MatImgSet* src = (MatImgSet*)(usrdata);
+    MatImgSet* src = reinterpret_cast<MatImgSet*>(usrdata);
     if (ksize == 3 || ksize == 5) {
         src->image = imread(g_jpgFile, CV_8U | CV_16U | CV_32F);
     }
@@ -176,7 +176,7 @@ MatImgSet* CvimgMat::getImageSet(const String& img, const String& name)
 {
     MatImgSet* image = NULL;
     int len = sizeof(String) + sizeof(Mat);
-    image = (MatImgSet*)malloc(len);
+    image = reinterpret_cast<MatImgSet*>(malloc(len));
     if (image == NULL)
         return NULL;
     memset(image, 0, len);
@@ -273,7 +273,7 @@ int CvimgMat::bilateralImage(const String& src)
 {
     String name = "Bilateral";
     int len = sizeof(String) + sizeof(Mat);
-    MatImgSet* image = (MatImgSet*)malloc(len);
+    MatImgSet* image = reinterpret_cast<MatImgSet*>(malloc(len));
     if (image == NULL)
         return -1;
     memset(image, 0, len);

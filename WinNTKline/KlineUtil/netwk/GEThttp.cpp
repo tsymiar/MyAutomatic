@@ -12,7 +12,6 @@ CString HttpGet(string& sRequest, string sPort)
     string sResponse = "";
     string sLog;
     int nRet = -1;
-    int nLen = 0;
     int nCount = 0;
     char szRet[512];
     char szBuf[8192];
@@ -59,14 +58,11 @@ CString HttpGet(string& sRequest, string sPort)
     {
         goto LERROR;
     }
-    if (nLen == 0)
-    {
-        nLen = sRequest.length();
-    }
-    int nErrorCount = 0;
     //发送请求
+    int nLen = sRequest.length();
     nRet = ::HttpSendRequest(hRequest, NULL, -1, (void*)sRequest.c_str(), nLen);
 
+    int nErrorCount = 0;
     while (0 == nRet && nErrorCount < 3)
     {
         nErrorCount++;

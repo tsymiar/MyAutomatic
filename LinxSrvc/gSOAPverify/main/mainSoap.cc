@@ -22,12 +22,10 @@ void* process_queue(void* soap)
     if (soap == nullptr)
         return nullptr;
     struct soap* serv = (struct soap*)soap;
-    for (;;)
-    {
+    for (;;) {
         serv->socket = dequeue();
         serv->ip = dequeue_ip();
-        if (!soap_valid_socket(serv->socket))
-        {
+        if (!soap_valid_socket(serv->socket)) {
 #ifdef DEBUG
             fprintf(stderr, "Thread %d terminating\n", (int)(long)serv->user);
 #endif
@@ -51,8 +49,7 @@ int enqueue(SOAP_SOCKET sock, unsigned long ip)
     // 队列满
     if (next == head)
         status = SOAP_EOM;
-    else
-    {
+    else {
         queue[tail] = sock;
         ips[tail] = ip;
         tail = next;
@@ -66,13 +63,11 @@ SOAP_SOCKET dequeue()
 {
     SOAP_SOCKET sock;
     pthread_mutex_lock(&queue_lock);
-    while (head == tail)
-    {
+    while (head == tail) {
         pthread_cond_wait(&queue_cond, &queue_lock);
     }
     sock = queue[head++];
-    if (head >= MAX_QUEUE)
-    {
+    if (head >= MAX_QUEUE) {
         head = 0;
     }
     pthread_mutex_unlock(&queue_lock);
@@ -122,21 +117,18 @@ int http_post(struct soap* soap, const char* endpoint, const char* host, int por
         return SOAP_GET_METHOD;
     stream = fopen("myweb.wsdl", "rb");
 #endif // NS_HTTPPOST
-    if (!stream)
-    {
+    if (!stream) {
         // HTTP not found error
         return 404;
     }
     // HTTP header with text/xml content
     soap->http_content = "text/xml";
     soap_response(soap, SOAP_FILE);
-    for (;;)
-    {
+    for (;;) {
         // 从stream中读取数据
         size_t r = fread(soap->tmpbuf, 1, sizeof(soap->tmpbuf), stream);
         if (!r)break;
-        if (soap_send_raw(soap, soap->tmpbuf, r))
-        {
+        if (soap_send_raw(soap, soap->tmpbuf, r)) {
             fprintf(stderr, "can't send raw data of tmpbuf.\n");
             break;
         }
@@ -156,8 +148,7 @@ int main_server(int argc, char** argv)
 #ifdef NS_DEBUG
     argc = 3; argv[1] = (char*)"8080";
 #endif // NS_DEBUG
-    if (argv[1] == nullptr)
-    {
+    if (argv[1] == nullptr) {
         std::cout << "Input an argument as port eg. '\033[45m./gSOAPverify 8080\033[0m'\n" << argv[1] << std::endl;
         kill(getppid(), SIGALRM);
         return -1;
@@ -174,8 +165,7 @@ int main_server(int argc, char** argv)
     soap_set_mode(&Soap, SOAP_C_UTFSTRING);
     soap_set_namespaces(&Soap, namespaces);
     // 如果没有参数，当作CGI程序处理
-    if (argc <= 1)
-    {
+    if (argc <= 1) {
         // CGI 风格服务请求，单线程
         soap_serve(&Soap);
         // 清除序列化类实例
@@ -193,10 +183,8 @@ int main_server(int argc, char** argv)
         SOAP_SOCKET m = soap_bind(&Soap, NULL, port, BACKLOG);
         int vilaid = 0;
         // 循环绑定直至服务套接字合法
-        while (!soap_valid_socket(m))
-        {
-            if (vilaid == 0)
-            {
+        while (!soap_valid_socket(m)) {
+            if (vilaid == 0) {
                 fprintf(stderr, "Bind PORT(%d) \033[31merror\033[0m! \n", port);
                 exit(1);
             }
@@ -205,26 +193,21 @@ int main_server(int argc, char** argv)
         }
         fprintf(stderr, "======== Socket Server Port: %s ========\n", argv[1]);
         // 生成服务线程
-        for (i = 0; i < MAX_THR; i++)
-        {
+        for (i = 0; i < MAX_THR; i++) {
             soap_thr[i] = soap_copy(&Soap);
             fprintf(stderr, " ++++\tthread %d.\n", i);
             pthread_create(&tid[i], NULL, (void* (*)(void*))process_queue, (void*)soap_thr[i]);
             usleep(50);
         }
         int j = 0;
-        for (;;)
-        {
+        for (;;) {
             // 接受客户端连接
             SOAP_SOCKET sock = soap_accept(&Soap);
-            if (!soap_valid_socket(sock))
-            {
-                if (Soap.errnum)
-                {
+            if (!soap_valid_socket(sock)) {
+                if (Soap.errnum) {
                     soap_print_fault(&Soap, stderr);
                     continue;
-                } else
-                {
+                } else {
                     fprintf(stderr, "Server timed out \n");
                     break;
                 }
@@ -242,15 +225,12 @@ int main_server(int argc, char** argv)
                 j = 0;
         }
         // 清理服务
-        for (i = 0; i < MAX_THR; i++)
-        {
-            while (enqueue(SOAP_INVALID_SOCKET, ips[i]) == SOAP_EOM)
-            {
+        for (i = 0; i < MAX_THR; i++) {
+            while (enqueue(SOAP_INVALID_SOCKET, ips[i]) == SOAP_EOM) {
                 usleep(1000);
             }
         }
-        for (i = 0; i < MAX_THR; i++)
-        {
+        for (i = 0; i < MAX_THR; i++) {
             fprintf(stderr, "Waiting for thread %d to terminate ..\n", i);
             pthread_join((pthread_t)tid[i], NULL);
             fprintf(stderr, "terminated \n");
@@ -287,23 +267,19 @@ int api__trans(struct soap* soap, char* msg, char* rtn[])
         text[i] = (char*)malloc(64);
         memset(text[0], 0, 64);
     }
-    if (token != NULL && (memcmp(token, "trans", 6) != 0 || strlen(token) > strlen("trans")))
-    {
+    if (token != NULL && (memcmp(token, "trans", 6) != 0 || strlen(token) > strlen("trans"))) {
         memcpy(text[0], "illegal command!", 17);
         return -2;
     }
-    while (token != NULL)
-    {
+    while (token != NULL) {
         curstr[j] = token;
-        if (strstr(curstr[j], "=") != NULL)
-        {
+        if (strstr(curstr[j], "=") != NULL) {
             str.strcut_((unsigned char*)curstr[j], '=', params[j].key, params[j].value);
             j++;
         }
         token = strtok(NULL, "&");
     }
-    for (int k = 0; k < j; k++)
-    {
+    for (int k = 0; k < j; k++) {
         sprintf(text[k], "Param(%d): %s[%s]", k, params[k].key, params[k].value);
         cout << text[k] << endl;
     }
@@ -329,15 +305,13 @@ int api__login_by_key(struct soap*, char* usr, char* psw, struct api__ArrayOfEmp
 {
     struct queryInfo info;
     ccc.rslt.flag = -3;
-    if (!(usr == nullptr || psw == nullptr))
-    {
+    if (!(usr == nullptr || psw == nullptr)) {
         if (sqlQuery(0, usr, psw, &info) != 0) {
             info.flg = false;
             ccc.rslt.flag = -2;
             printf("[OUT]:\tqueryInfo.rslt is null.\n");
         }
-        if (info.flg)
-        {
+        if (info.flg) {
             ccc.rslt.email = info.msg->email;
             ccc.rslt.tell = info.msg->tell;
             printf("[OUT]:\temail:%s\t", ccc.rslt.email);

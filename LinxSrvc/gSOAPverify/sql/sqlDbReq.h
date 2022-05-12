@@ -11,12 +11,11 @@
 #include <vector>
 #include <cstdio>
 #define get_var(v)  (#v)
-//#pragma comment (lib,"ws2_32.lib")
+//#pragma comment(lib,"ws2_32.lib")
 //#pragma comment(lib,"mysql/libmysql.lib")
 #define FIX
 
-typedef struct st_usr_msg
-{
+typedef struct st_usr_msg {
 	int age;
 	char sex[3];
 	char tell[14];
@@ -25,8 +24,7 @@ typedef struct st_usr_msg
 	void* P;
 } USR_MSG;
 
-typedef struct st_raw
-{
+typedef struct st_raw {
 	int type;
 	char* acc;
 	char* psw;

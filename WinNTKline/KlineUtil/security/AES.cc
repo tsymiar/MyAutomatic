@@ -135,10 +135,12 @@ unsigned char charMult(unsigned char a, unsigned char b) {
 
 vector<unsigned char> shiftColumns(vector<unsigned char> input) {
     vector<unsigned char> mixedColumns(4, 0);
+    /*
     unsigned char aMatrix[4][4] = { {0x02, 0x01, 0x01, 0x03},
                                     {0x03, 0x02, 0x01, 0x01},
                                     {0x01, 0x03, 0x02, 0x01},
                                     {0x01, 0x01, 0x03, 0x02} };
+    */
     //// for every Produce of 2, we have to shift left by 1 and xor with 0x1b if the left most bit is before shifted is 1
     //
     //for(int col = 0; col<4;col++){
@@ -173,7 +175,6 @@ vector<unsigned char> g(vector<unsigned char> &test, int round) {
 vector<vector<unsigned char> > expandKey(vector<vector<unsigned char> > key, int keyLength, int round) {
     vector<vector<unsigned char> > expandedKey(4 * (round + 1), vector<unsigned char>(4, 0));
     vector<unsigned char> word(4, 0);
-    vector<unsigned char> temp(4, 0);
     int nK;
     if (keyLength == 192)
         nK = 6;
@@ -191,18 +192,18 @@ vector<vector<unsigned char> > expandKey(vector<vector<unsigned char> > key, int
     }
     //Start expanding key
     while (currentRound < 4 * (round + 1)) {
-        temp[0] = expandedKey[currentRound - 1][0];
-        temp[1] = expandedKey[currentRound - 1][1];
-        temp[2] = expandedKey[currentRound - 1][2];
-        temp[3] = expandedKey[currentRound - 1][3];
+        word[0] = expandedKey[currentRound - 1][0];
+        word[1] = expandedKey[currentRound - 1][1];
+        word[2] = expandedKey[currentRound - 1][2];
+        word[3] = expandedKey[currentRound - 1][3];
         if (currentRound %nK == 0) {
-            temp = g(temp, currentRound);
+            word = g(word, currentRound);
         } else if (nK > 6 && currentRound%nK == 4)
-            temp = subBytes(temp);
-        expandedKey[currentRound][0] = expandedKey[currentRound - nK][0] ^ temp[0];
-        expandedKey[currentRound][1] = expandedKey[currentRound - nK][1] ^ temp[1];
-        expandedKey[currentRound][2] = expandedKey[currentRound - nK][2] ^ temp[2];
-        expandedKey[currentRound][3] = expandedKey[currentRound - nK][3] ^ temp[3];
+            word = subBytes(word);
+        expandedKey[currentRound][0] = expandedKey[currentRound - nK][0] ^ word[0];
+        expandedKey[currentRound][1] = expandedKey[currentRound - nK][1] ^ word[1];
+        expandedKey[currentRound][2] = expandedKey[currentRound - nK][2] ^ word[2];
+        expandedKey[currentRound][3] = expandedKey[currentRound - nK][3] ^ word[3];
         currentRound++;
     }
     return expandedKey;
@@ -269,7 +270,7 @@ vector<vector<unsigned char> > encypt(vector<vector<unsigned char> > roundKey, v
 }
 
 int aes_test() {
-    int choice = 0, keyLength = 128, numRounds = 10, countBytes = 0, counter = 0, numCoversion = 0;
+    int choice = 0, keyLength = 128, numRounds = 10, countBytes = 0, numCoversion = 0;
     string randomString = "abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     string defaultKey = "YxK69Rr7Y4TYifBA", stringInput = "";
     bool defString = false;
@@ -374,13 +375,12 @@ int aes_test() {
 
     cout << "Encrypted data is stored in file 'Encrypted.txt'" << endl;
     ofstream myfile("Encrypted.txt");
-    int stringCount = 0;
     if (myfile.is_open())
         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < 4; j++) {
                 sprintf(buffer, "%02x", (unsigned int)encryptedBox[i][j]);
                 myfile << buffer;
-                outputArray[stringCount] = buffer;
+                outputArray[0] = buffer;
                 printf("%s", buffer);
             }
         } else cout << "Unable to open file";

@@ -97,12 +97,13 @@ class FileType {
         return stringBuilder.toString();
     }
 
-    private static String getFileType(File file) {
+    public static String getFileType(File file) {
         String type = null;
         byte[] b = new byte[50];
         try {
             InputStream is = new FileInputStream(file);
-            int i = is.read(b);
+            int len = is.read(b);
+            System.out.println("getFileType len = " + len);
             type = getFileTypeByStream(b);
             is.close();
         } catch (IOException e) {

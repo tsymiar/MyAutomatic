@@ -334,7 +334,7 @@ unsigned char 	*House::OpenTexImage(INT2U TexIndex, INT2U *rslx, INT2U *rsly)
         }
     }
     free(image);
-    printf("%s : %ld=%ld\n", ImageName, srcx*srcy * 3, (long)(i*j * 3));
+    printf("%s : %d=%d\n", ImageName, srcx*srcy * 3, (i*j * 3));
     return(SImageData);
 }
 

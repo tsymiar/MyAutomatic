@@ -3,31 +3,32 @@
 
 #define EXCEPTION_MESSAGE_MAXLEN 256
 
-template <class clazz>
+template <class TestClass>
 class TestCase
 {
 public:
-    TestCase<clazz>() { klas = new clazz(); };
-    TestCase<clazz> getInstance();
-    virtual ~TestCase<clazz>();
+    TestCase<TestClass>() { testClass = new TestClass(); };
+    TestCase<TestClass> getInstance();
+    virtual ~TestCase<TestClass>();
 private:
-    TestCase<clazz> instance;
-    clazz* klas;
+    TestCase<TestClass> instance;
+    TestClass* testClass;
 };
 
-template <class clazz>
-TestCase<clazz>
-TestCase<clazz>::getInstance()
+template <class TestClass>
+TestCase<TestClass>
+TestCase<TestClass>::getInstance()
 {
     if (instance == nullptr)
-        instance = new TestCase<clazz>();
+        instance = new TestCase<TestClass>();
     return instance;
 }
 
-template <class clazz>
-TestCase<clazz>::~TestCase()
+template <class TestClass>
+TestCase<TestClass>::~TestCase()
 {
-    delete[] klas, instance;
+    delete testClass;
+    delete instance;
 }
 
 class Exception
