@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 // CMarketView 窗体视图
 
@@ -13,6 +13,8 @@ protected:
 public:
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_FORMVIEW };
+#else
+#define IDD_FORMVIEW "CMarketView"
 #endif
 #ifdef _DEBUG
 	virtual void AssertValid() const;
@@ -25,6 +27,5 @@ protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
 	virtual void OnInitialUpdate();
 	DECLARE_MESSAGE_MAP()
+	BOOL CreateChildrenWindow();
 };
-
-

@@ -107,7 +107,7 @@ unsigned int _stdcall call_soap_thrd(void* lr)
     memset(elem, 0, sz_t);
     elem->rslt = api__ArrayOfEmp2();
     elem->sock = st_sock();
-    memcpy(&elem->msg, "Failed to call remote method！", 32);
+    memset(&elem->msg, 0, 32);
     memcpy(&elem->sock, lr, sizeof(st_sock));
     if (elem->sock.addr[0] == NULL) {
         AfxMessageBox("获取请求链接错误！");
