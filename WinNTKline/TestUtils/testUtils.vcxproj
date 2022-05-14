@@ -122,6 +122,15 @@
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
+    <PostBuildEvent>
+      <Command>copy "$(ProjectDir)..\KlineUtil\script\call.bat" "$(TargetDir)"
+set TARGET='$(TargetDir)'
+echo '%TARGET:~0,3%'
+cmd @echo off
+echo '%~dp0'
+cd "..\$(ConfigurationName)"
+.\call.bat</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -240,6 +249,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\KlineUtil\elem\Screen-Sharing.cpp" />
+    <ClCompile Include="..\KlineUtil\frame\CMarketView.cpp" />
     <ClCompile Include="..\KlineUtil\html\cefWebKit.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>

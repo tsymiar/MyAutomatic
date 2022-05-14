@@ -193,7 +193,7 @@ int SetClientDlg(void* Wnd)
     }
 };
 #endif
-int SendChatMesg(st_trans* msg)
+int SendClientMessage(st_trans* msg)
 {
     if (client.flag < 0) {
         MessageBox(0, const_cast<char*>("Connection status error, will exit!"), const_cast<char*>("Quit"), MB_OK);
@@ -241,10 +241,10 @@ RecvThreadProc(void* PrimaryUDP)
         );
         if (ret <= 0) {
             if (client.count < 3) {
-                fprintf(stdout, "Recieve No Message: %s!\n", strerror(ret));
+                fprintf(stdout, "Receive No Message: %s!\n", strerror(ret));
             } else {
                 if (client.count > 30) {
-                    fprintf(stdout, "Recieve error too many times!\n");
+                    fprintf(stdout, "Receive failed too many times!\n");
                     break;
                 }
             }
@@ -310,7 +310,7 @@ int p2pMessage(unsigned char* userName, int UserIP, unsigned int UserPort, char 
         memcpy(MessageHost.username, trans.username, 24);
         memcpy(MessageHost.peer_name, userName, 24);
         //请求服务器“打洞”
-        SendChatMesg(&MessageHost);
+        SendClientMessage(&MessageHost);
     }
     for (int trytime = 0; trytime < MAXRETRY; trytime++) {
         sockaddr_in remote;
@@ -369,10 +369,10 @@ void SetChatActive(int flag)
 
 int GetRecvState()
 {
-    return client.rcvndt;
+    return client.rcvstat;
 }
 
 void SetRecvState(int state)
 {
-    client.rcvndt = state;
+    client.rcvstat = state;
 }

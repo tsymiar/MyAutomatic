@@ -61,12 +61,12 @@ parseRcvMsg(void* lprcv)
             SetRecvState(RCV_ERR);
             if (g_printed >= 0) {
 #ifdef _WIN32
-                fprintf(stdout, "\rRecieving...");
+                fprintf(stdout, "\rReceiving...");
 #else
                 fprintf(stdout, "\r...");
 #endif
             } else {
-                fprintf(stdout, "\r%*c\rRecieving...\n%s", 64, ' ', youSaid);
+                fprintf(stdout, "\r%*c\rReceiving...\n%s", 64, ' ', youSaid);
             }
         }
 #endif
@@ -91,7 +91,7 @@ parseRcvMsg(void* lprcv)
         }
         if (ui_val == NETNDT) {
             if (atoi((const char*)mesg->recv_mesg.status) == 200) {
-                fprintf(stdout, "\r%*c\rRecieved: %s\n", 64, ' ', mesg->recv_mesg.message);
+                fprintf(stdout, "\r%*c\rReceived: %s\n", 64, ' ', mesg->recv_mesg.message);
                 SetRecvState(RCV_NDT);
                 if (g_printed > 0) {
                     fprintf(stdout, youSaid);
@@ -278,7 +278,7 @@ int main(int argc, char* argv[])
         }
         st_trans msg;
         memset(&msg, 0, sizeof(st_trans));
-        volatile int recieved = GetRecvState();
+        volatile int received = GetRecvState();
         g_printed = 0;
 #ifdef USR_TEST
         memcpy(msg.username, "AAAAA", 6);
@@ -293,7 +293,7 @@ int main(int argc, char* argv[])
         comm++;
 #else
         int comm = 0;
-        if (recieved >= RCV_SCC) {
+        if (received >= RCV_SCC) {
             fprintf(stdout, "Input command [1-13]: ");
             if (scanf("%3d", &comm) <= 0) {
                 fprintf(stdout, "Command format to integer error .\n");
@@ -306,13 +306,12 @@ int main(int argc, char* argv[])
         }
         msg.uiCmdMsg = comm;
 #endif // NDT_ONLY
-        if (recieved == RCV_NDT) {
+        if (received == RCV_NDT) {
             msg.more_mesg.cmd[0] = msg.uiCmdMsg = NETNDT;
         }
-        if (recieved > RCV_ERR) {
+        if (received > RCV_ERR) {
             SetRecvState(RCV_ERR);
-            int ret = SendChatMesg(ParseChatMesg(msg));
-            if (ret < 0) {
+            if (SendClientMessage(ParseChatMesg(msg)) < 0) {
                 fprintf(stdout, "Error while set chatting message.\n");
                 return -1;
             }

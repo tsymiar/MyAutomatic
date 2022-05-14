@@ -520,7 +520,7 @@ void callbackPasswdSet(char* psw)
         strcpy((char*)transMsg.username, g_logDlg->getUsername());
         strcpy((char*)transMsg.user_newpass, psw);
         if (*psw != NULL && transMsg.password[0] != psw[0]) {
-            SendChatMesg(&transMsg);
+            SendClientMessage(&transMsg);
         }
     }
 }
@@ -529,7 +529,7 @@ void callbackPasswdSet(char* psw)
 void callbackGroupSet(char* name)
 {
     memcpy(transMsg.group_host, name, 24);
-    SendChatMesg(&transMsg);
+    SendClientMessage(&transMsg);
 }
 
 BOOL CIMhideWndDlg::DestroyWindow()
@@ -612,7 +612,7 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
         if (m_logDlg != NULL) {
             m_logDlg->OnBnClickedCancel();
         }
-        if (SendChatMesg(&transMsg) == 0) {
+        if (SendClientMessage(&transMsg) == 0) {
             MessageBox("已发起请求。", MB_OK);
         }
         break;
@@ -634,10 +634,10 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
         m_frndList.InsertItem(0, item);
         sprintf(item, "%03X", (ifsh + 11) * 13 - 19);
         m_frndList.InsertItem(1, item);
-        SendChatMesg(&transMsg);
+        SendClientMessage(&transMsg);
         ifsh++;
         break;
-    case ONLINE:        
+    case ONLINE:
         if (m_logDlg != NULL) {
             m_logDlg->OnBnClickedCancel();
         }
@@ -645,7 +645,7 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
         lvcol.pszText = _T("好友");
         m_frndList.SetColumn(0, &lvcol);
         m_frndList.ShowWindow(SW_SHOW);
-        SendChatMesg(&transMsg);
+        SendClientMessage(&transMsg);
         break;
     case VIEWGROUP:
         if (m_logDlg != NULL) {
@@ -655,7 +655,7 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
         lvcol.pszText = _T("群列表");
         m_frndList.SetColumn(0, &lvcol);
         m_frndList.ShowWindow(SW_SHOW);
-        SendChatMesg(&transMsg);
+        SendClientMessage(&transMsg);
         break;
     case USERGROUP:
         if (m_logDlg != NULL) {
@@ -685,7 +685,7 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
         g_setDlg->SetTitle("参加群组");
         break;
     case EXITGROUP:
-        SendChatMesg(&transMsg);
+        SendClientMessage(&transMsg);
         break;
     default:
         break;

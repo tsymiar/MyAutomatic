@@ -164,6 +164,9 @@
     <ClCompile Include="..\KlineUtil\IM\client.cc">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\KlineUtil\frame\CMarketView.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\MFCKline\MFCKline.rc">

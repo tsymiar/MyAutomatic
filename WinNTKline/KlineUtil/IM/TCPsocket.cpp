@@ -161,13 +161,13 @@ unsigned int __stdcall SocketThread(void* lp)
 int main(int argc, char* argv[])
 {
     //按下ESC键退出
-    cout << "Press ESCAPE to teminate program\r\n";
-    int argi = 0;
+    cout << "Press ESCAPE to exit program\r\n";
+    int argp = 0;
     if (argc > 1) {
-        argi = atoi(argv[1]);
+        argp = atoi(argv[1]);
     }
     //创建处理线程
-    _beginthreadex(NULL, 0, (unsigned int(__stdcall*)(void*))SocketThread, &argi, 0, NULL);
+    _beginthreadex(NULL, 0, (unsigned int(__stdcall*)(void*))SocketThread, &argp, 0, NULL);
     //阻塞主线程
     while (true) {
         if (getch() == 27)

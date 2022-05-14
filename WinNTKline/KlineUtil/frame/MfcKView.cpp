@@ -7,7 +7,6 @@
 #include "../MarketClient.h"
 #include "MfcKView.h"
 
-
 // CMfcKView
 
 IMPLEMENT_DYNCREATE(CMfcKView, CFormView)
@@ -50,8 +49,6 @@ void CMfcKView::Dump(CDumpContext& dc) const
 #endif
 #endif //_DEBUG
 
-
-
 void CMfcKView::OnInitialUpdate()
 {
 	// Initial
@@ -61,8 +58,6 @@ void CMfcKView::OnInitialUpdate()
 	ogl->ShowWindow(SW_SHOWNORMAL);
 	*/
 }
-
-
 
 void CMfcKView::OnBnClickedButton1()
 {

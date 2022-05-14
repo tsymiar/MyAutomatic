@@ -132,7 +132,7 @@ typedef struct CLIENT {
     CRITICAL_SECTION wrcon;
     char url[64];
     int flag = 0;
-    volatile int rcvndt = 0;
+    volatile int rcvstat = 0;
     void* Dlg;
     void(*fp2p)(void*);
     int count = 0;
@@ -273,7 +273,7 @@ int StartChat(int erno,
 #endif
     (*func)(void*)
 );
-int SendChatMesg(st_trans* msg = NULL);
+int SendClientMessage(st_trans* msg = NULL);
 int callbackLog(char* usr, char* psw);
 int CloseChat();
 int p2pMessage(unsigned char* userName, int UserIP, unsigned int UserPort, char const* Message);
