@@ -102,6 +102,7 @@ int snap_get_pixel_format(snap_device* snap_dev)
         }
         snap_dev->fmtdesc.index++;
         fprintf(stdout, "\n");
+        usleep(1000);
     }
     return snap_dev->fmtdesc.index + 1;
 }

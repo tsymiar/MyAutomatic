@@ -654,15 +654,10 @@ void video_capture(int argc, char* argv[])
     char ip[INET_ADDRSTRLEN];
     int port;
     for (;;) {
-        int index;
-        int c;
+        int long_index;
+        int opt_cmd = getopt_long(argc, argv, short_options, long_options, &long_index);
 
-        c = getopt_long(argc, argv, short_options, long_options, &index);
-
-        if (-1 == c)
-            break;
-
-        switch (c) {
+        switch (opt_cmd) {
         case 0: /* getopt_long() flag */
             break;
 
@@ -674,6 +669,7 @@ void video_capture(int argc, char* argv[])
             local_routine(optarg);
             break;
 
+        case -1:
         case 'h':
             usage(stdout, argc, argv);
             exit(EXIT_SUCCESS);
