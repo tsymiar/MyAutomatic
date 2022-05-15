@@ -51,7 +51,6 @@ int write_fifo(const struct Fifo* fifo)
     if (fileSize > 0)
         lseek(fio, 0, SEEK_SET);
     close(fio);
-    printf("FIFO wrote: { %d, %lld, %p }.\n", fifo->cmd, fifo->flag, fifo->addr);
     return 0;
 }
 
@@ -66,8 +65,7 @@ struct Fifo read_fifo(long long flag)
         .flag = -1,
         .addr = NULL
     };
-    if (flag == -1)
-        return fifo;
+    if (flag == -1) return fifo;
     if (stat(FIFO_FILE, &status) < 0) {
         perror("Stat FIFO fail");
         return fifo;
@@ -81,12 +79,13 @@ struct Fifo read_fifo(long long flag)
         if (fifo.flag == flag) {
             break;
         } else {
-            printf("FIFO match: { %d, %lld, %p }.\n", fifo.cmd, fifo.flag, fifo.addr);
+            printf("FIFO message: { %d, %lld, %p }.\n", fifo.cmd, fifo.flag, fifo.addr);
             fifo.flag = -1;
             write(fio, (void*)'\0', 1);
             fio = open(FIFO_FILE, O_RDONLY);
             continue;
         }
+        usleep(1000);
     }
     close(fio);
     return fifo;
@@ -94,13 +93,24 @@ struct Fifo read_fifo(long long flag)
 
 int fifo_test(long long flag)
 {
+    const char* hint = "Usage:\n./tmpfifo [1(w)/0(r)]";
+    if (flag < 0) {
+        printf("%s\n", hint);
+        return 0;
+    }
     struct Fifo fi0 = {
         .cmd = -1,
         .flag = flag,
         .addr = NULL };
-    struct Fifo fifo = read_fifo(flag);
-    printf("FIFO read: { %d, %lld, %p }.\n", fifo.cmd, fifo.flag, fifo.addr);
-    write_fifo(&fi0);
-    usleep(1000);
+    struct Fifo fifo;
+    if (flag == 0) {
+        fifo = read_fifo(flag);
+    } else if (flag == 1) {
+        write_fifo(&fi0);
+        printf("FIFO wrote: { %d, %lld, %p }.\n", fifo.cmd, fifo.flag, fifo.addr);
+    } else {
+        printf("%s\n", hint);
+        return 0;
+    }
     return 0;
 }

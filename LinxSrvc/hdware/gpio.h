@@ -105,7 +105,7 @@ int set_gpio_value(unsigned int gpio, int value)
     snprintf(val, sizeof(val), GPIO_FILES "gpio%u/value", gpio);
     file = open(val, O_WRONLY);
     if (file < 0) {
-        perror("gpio_set_value");
+        perror("set_gpio_value");
         return file;
     }
     if (value == LOW)
@@ -126,7 +126,7 @@ int get_gpio_value(unsigned gpio)
     snprintf(val, sizeof(val), GPIO_FILES "gpio%u/value", gpio);
     file = open(val, O_RDONLY);
     if (file < 0) {
-        perror("gpio_get_value");
+        perror(__FUNCTION__);
         return -1;
     }
     len = read(file, &ch, 1);
@@ -146,7 +146,19 @@ int get_gpio_value(unsigned gpio)
 int set_gpio_by_direction(unsigned gpio, int value, int direct)
 {
     if (set_gpio_direct(gpio, direct) != 0) {
-        perror("write gpio fail!");
+        perror("write gpio fail");
     }
     return set_gpio_value(gpio, value);;
+}
+
+void gpio_hint(int val)
+{
+    if (val >= 0) {
+        printf("gpio status [%d]\n", val);
+        return;
+    }
+    fprintf(stdout, "Usage:\n./gpio [(get) id] [(set) [value] [direct]]."
+        "\n-- id: \tset/get gpio pin index"
+        "\n-- value: \tstatus set to the pin"
+        "\n-- direct: \tset gpio direction as in/out\n");
 }

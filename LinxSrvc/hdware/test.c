@@ -17,13 +17,17 @@ int main(int argc, char** argv)
     if (argc > 3) {
         set_gpio_by_direction(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]));
     } else if (argc == 2) {
-        get_gpio_value(atoi(argv[1]));
+        gpio_hint(get_gpio_value(atoi(argv[1])));
+    } else {
+        gpio_hint(-1);
     }
 #elif defined(ME9S)
     meat_main();
 #elif defined(FIFO)
     if (argc == 2) {
         fifo_test((long long)atoi(argv[1]));
+    } else {
+        fifo_test(-1);
     }
 #elif defined(VIDEO)
     video_capture(argc, argv);
