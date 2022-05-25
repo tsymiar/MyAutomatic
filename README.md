@@ -6,15 +6,15 @@
 
 LinxSrvc
 -------
-* Generats by executing `./build.sh -j` command.
+* Generats by executing `./build.sh all -j` command.
 
-    Once when build SUCCESS, some binary files will shown in `bin` directory, such as:
+    Once when build SUCCESS, some binary files will shown in the `bin` directory, such as:
     ```c
     gpio
     mes909
-    tmpfifo
+    pipefifo
     VideoCapture
-    snap
+    imgsnap
     IM.exe
     Client.exe
     kaics.exe
@@ -23,16 +23,16 @@ LinxSrvc
     gSOAPverify
     myweb.wsdl
      ```
-    *  | gpio | mes909 | tmpfifo |
-       | :---:| :----: | :-----: |
+    *  | gpio | mes909 | pipefifo |
+       | :---:| :----: | :------: |
 
-       Some scattered .c files is driver of **hardware**s such as `GPIO`, `ME909S-821`(*a Huawei LTE 4G network module*), `fifo` etc..
+       Some scattered *.c files is driver of **hardware**s such as `GPIO`, `ME909S-821`(*a Huawei LTE 4G network module*), `pipe`/`fifo` etc..
 
-  * VideoCapture | snap
+  * VideoCapture | imgsnap
 
       `VideoCapture` is a video capture program based on **v4l2** which should only able running on linux.
 
-      `snap` is a photo take*r*, runs on linux only.
+      `imgsnap` is a photo take*r*, runs on linux only.
 
   * IM.exe | Client.exe
 

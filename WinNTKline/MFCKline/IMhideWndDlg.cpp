@@ -116,8 +116,8 @@ void* parseMessage(void* msg)
                 MessageBox(NULL, title, "---Message---", MB_OK);
                 continue;
             }
-            char user[25];
             for (int c = 0; c < 30; c++) {
+                char user[25];
                 memcpy(user, rslt + 32 + 8 * c, 8);
                 len = strlen(user);
                 if (len <= 0)
@@ -127,8 +127,8 @@ void* parseMessage(void* msg)
                 ((CIMhideWndDlg*)client.Dlg)->m_frndList.InsertItem(c, user);
             }
         } else if (rslt[1] == USERGROUP && rslt[3] == 0) {
-            char user[25];
             for (int c = 0; c < 30; c++) {
+                char user[25];
                 memcpy(user, rslt + 32 + 8 * c, 8);
                 len = strlen(user);
                 if (len <= 0)

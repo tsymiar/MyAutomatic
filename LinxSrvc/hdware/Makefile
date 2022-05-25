@@ -9,8 +9,8 @@ pipefifo:
 	gcc -g -DPIPE_FIFO test.c -o $(GEN)/pipefifo
 video:
 	gcc -g -DVIDEO test.c routine.c -lm -o $(GEN)/VideoCapture
-snap:
-	gcc -g -DSNAP test.c linuxsnap.c -o $(GEN)/snap
+imgsnap:
+	gcc -g -DSNAP test.c linuxsnap.c -o $(GEN)/imgsnap
 all:
 	make gpio
 	make mes909
@@ -18,8 +18,8 @@ all:
 	make pipefifo
 ifeq ($(shell uname), Linux)
 	make video
-	make snap
+	make imgsnap
 endif
 clean:
-	rm -rvf $(GEN)/gpio* $(GEN)/me909* $(GEN)/hack* $(GEN)/pipefifo*
-	rm -rvf  $(GEN)/VideoCapture* $(GEN)/snap*
+	rm -rvf $(GEN)/gpio* $(GEN)/mes909* $(GEN)/hack* $(GEN)/pipefifo*
+	rm -rvf  $(GEN)/VideoCapture* $(GEN)/imgsnap*
