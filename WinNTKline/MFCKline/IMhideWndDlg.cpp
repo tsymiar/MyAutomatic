@@ -112,6 +112,10 @@ void* parseMessage(void* msg)
         if (rslt[1] == LOGIN && rslt[3] == 'e') {
             continue;
         } else if (rslt[1] == ONLINE) {
+            if (*(rslt + 2) != '0') {
+                MessageBox(NULL, title, "---Message---", MB_OK);
+                continue;
+            }
             char user[25];
             for (int c = 0; c < 30; c++) {
                 memcpy(user, rslt + 32 + 8 * c, 8);
@@ -132,6 +136,10 @@ void* parseMessage(void* msg)
                 ((CIMhideWndDlg*)client.Dlg)->m_frndList.InsertItem(c, user);
             }
         } else if (rslt[1] == VIEWGROUP) {
+            if (*(rslt + 2) != '0') {
+                MessageBox(NULL, title, "---Message---", MB_OK);
+                continue;
+            }
             char group[25];
             for (int c = 0; c < 30; c++) {
                 memcpy(group, rslt + 32 + 8 * c, 8);
@@ -562,8 +570,8 @@ UINT _NoMessageBox(LPVOID lparam)
                          \n[群列表]\n----查看群列表\
                          \n[群成员]\n----查看成员信息\
                          \n[创建群]\n----作为群主创建群\
-                         \n[参加群]\n----加入某个聊天室\
-                         \n[退出群]\n----退出聊天室", 
+                         \n[进群]\n----加入某个聊天室\
+                         \n[退群]\n----退出聊天室", 
                         "HELP", MB_OK);
 }
 

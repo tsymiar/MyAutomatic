@@ -340,15 +340,6 @@ cd "..\$(ConfigurationName)"
     <ClCompile Include="..\KlineUtil\html\MfcHtmlView.cpp" />
     <ClCompile Include="..\KlineUtil\http\soapClient.cpp" />
     <ClCompile Include="..\KlineUtil\IM\client.cc" />
-    <ClCompile Include="..\..\LinxSrvc\IM\IM.cc">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\KlineUtil\IM\TCPsocket.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="..\KlineUtil\mygl\bitmap.c" />
     <ClCompile Include="..\KlineUtil\mygl\GlF16.cc" />
     <ClCompile Include="..\KlineUtil\mygl\GlModel.cc" />

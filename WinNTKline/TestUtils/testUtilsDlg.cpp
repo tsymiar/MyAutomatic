@@ -164,7 +164,14 @@ void CtestUtilsDlg::OnBnClickedImser()
     sInfo.cb = sizeof(sInfo);
     sInfo.dwFlags = STARTF_USESHOWWINDOW;
     sInfo.wShowWindow = SW_SHOWNORMAL;
-    ::CreateProcess(_T("..\\Debug\\IM(Win32).exe"), _T("1"), NULL, NULL, false, 0, NULL, NULL, &sInfo, &prInfo);
+    CString filename = _T("..\\Debug\\IM(Win32).exe");
+    WIN32_FIND_DATA findFileData;
+    if (FindFirstFile(filename, &findFileData) == INVALID_HANDLE_VALUE) {
+        MessageBox(filename + "\nProcess not found!");
+        return;
+
+    }
+    ::CreateProcess(filename, _T("1"), NULL, NULL, false, 0, NULL, NULL, &sInfo, &prInfo);
 }
 
 void CtestUtilsDlg::OnBnClickedOk()

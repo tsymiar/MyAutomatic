@@ -29,7 +29,6 @@ public:
 protected:
     virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV 支持
 
-
 // 实现
 protected:
     HICON m_hIcon;
@@ -44,8 +43,8 @@ public:
     afx_msg void OnNMDblclkList(NMHDR *pNMHDR, LRESULT *pResult);
     afx_msg LRESULT OnItemMsg(WPARAM wParam, LPARAM lParam);
 private:
-    void SetList();
-    void InitMap();
+    void SetMenuList();
+    void InitStockMap();
     void SetBottom();
     bool OpenGL(int item);
     void OpenWPF();
@@ -58,7 +57,6 @@ private:
     HWND m_hBottom;
     CLoginDlg logdlg;
     CListCtrl m_list;
-    MyOglDrawDlg m_Mod;
     OGLKview m_Ogl;
     MyOglDrawDlg* m_GlDlg = NULL;
 public:

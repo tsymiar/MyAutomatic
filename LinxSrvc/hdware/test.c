@@ -2,9 +2,9 @@
 #include "gpio.h"
 #elif defined(ME9S)
 #include "me909s.h"
-#elif defined(FIFO)
+#elif defined(PIPE_FIFO)
 #include <stdlib.h>
-#include "tmpfifo.h"
+#include "pipefifo.h"
 #elif defined(VIDEO) || defined(SNAP)
 #include "test.h"
 #else

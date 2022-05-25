@@ -197,9 +197,6 @@
     <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\stdsoap2.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\LinxSrvc\IM\IM.cc">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="..\KlineUtil\elem\CCustomCtl.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -264,9 +261,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\KlineUtil\netwk\Simulation.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\KlineUtil\IM\TCPsocket.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\KlineUtil\test\Testcase.cpp">

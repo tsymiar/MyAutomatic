@@ -1,5 +1,8 @@
 #include <stdio.h>
 #include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 #include <fcntl.h>
 #include <pthread.h>
 #include <string.h>
@@ -23,6 +26,7 @@ void *madviseThread(void *arg)
 		c += madvise(map, 100, MADV_DONTNEED);
 	}
 	printf("madvise %d, %s\n\n", c, str);
+	return NULL;
 }
 
 void *procselfmemThread(void *arg)
@@ -45,6 +49,7 @@ void *procselfmemThread(void *arg)
 		c += write(f, str, strlen(str));
 	}
 	printf("procselfmem %d\n\n", c);
+	return NULL;
 }
 
 int main(int argc, char *argv[])
