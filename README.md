@@ -8,10 +8,10 @@ LinxSrvc
 -------
 * Generats by executing `./build.sh -j` command.
 
-    Once When build SUCCESS, some binary files will shown in `bin` directory, such as:
+    Once when build SUCCESS, some binary files will shown in `bin` directory, such as:
     ```c
     gpio
-    me909
+    mes909
     tmpfifo
     VideoCapture
     snap
@@ -23,17 +23,18 @@ LinxSrvc
     gSOAPverify
     myweb.wsdl
      ```
-    * gpio me909 tmpfifo
+    *  | gpio | mes909 | tmpfifo |
+       | :---:| :----: | :-----: |
 
-      Some scattered .c files is driver of **hardware**s such as `GPIO`, `me909s`(*a 4G network module*), `fifo`.
+       Some scattered .c files is driver of **hardware**s such as `GPIO`, `ME909S-821`(*a Huawei LTE 4G network module*), `fifo` etc..
 
-    * VideoCapture snap
-       
-      `VideoCapture` is a video capture program based on **v4l2** which should only running on linux.
+  * VideoCapture | snap
 
-      `snap` is a photo take*r*, only runs on linux.
+      `VideoCapture` is a video capture program based on **v4l2** which should only able running on linux.
 
-  * IM.exe Client.exe
+      `snap` is a photo take*r*, runs on linux only.
+
+  * IM.exe | Client.exe
 
       [`IM.exe`](https://raw.githubusercontent.com/tsymiar/MyAutomatic/auto-dev/LinxSrvc/IM/IM.cc) is a simple `instant-messaging` chat room, use it by register, login, send command and *a small amount of quantity* messages.
 
@@ -85,6 +86,6 @@ A K-line application using C#.
 
 -------
 
-#### impact of the `Market`:
+#### impact of the exe in `Market`:
 
-<img src="WinNTKline/impact.png" title="impact" height="50%" width="50%">
+<img src="WinNTKline/impact.png" title="impact" height="50%" width="50%" align="middle"/>
