@@ -165,7 +165,7 @@ int main_server(int argc, char** argv)
     soap_set_mode(&Soap, SOAP_C_UTFSTRING);
     soap_set_namespaces(&Soap, namespaces);
     // 如果没有参数，当作CGI程序处理
-    if (argc <= 1) {
+    if (argc == 1) {
         // CGI 风格服务请求，单线程
         soap_serve(&Soap);
         // 清除序列化类实例

@@ -4,7 +4,7 @@ gpio:
 mes909:
 	gcc -std=gnu99 -g -DME9S test.c -o $(GEN)/mes909
 hack:
-	gcc -g dirtyc0w.c -o $(GEN)/hack -Wno-int-conversion -Wno-void-pointer-to-int-cast
+	gcc -g -pthread dirtyc0w.c -o $(GEN)/hack -Wno-int-conversion -Wno-void-pointer-to-int-cast
 pipefifo:
 	gcc -g -DPIPE_FIFO test.c -o $(GEN)/pipefifo
 video:

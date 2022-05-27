@@ -3,7 +3,7 @@
 
 #include <io.h>
 #include <fcntl.h>
-#include <windows.h>
+#include <afx.h>
 #include <tchar.h>
 #include <conio.h>
 #include <cstdio>
