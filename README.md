@@ -23,22 +23,23 @@ LinxSrvc
     gSOAPverify
     myweb.wsdl
      ```
-    *  | gpio | mes909 | pipefifo |
+    * 
+       | gpio | mes909 | pipefifo |
        | :---:| :----: | :------: |
 
        Some scattered *.c files is driver of **hardware**s such as `GPIO`, `ME909S-821`(*a Huawei LTE 4G network module*), `pipe`/`fifo` etc..
 
   * VideoCapture | imgsnap
 
-      `VideoCapture` is a video capture program based on **v4l2** which should only able running on linux.
+      `VideoCapture` is a video capture program based on **v4l2** which should only able to run on linux.
 
-      `imgsnap` is a photo take*r*, runs on linux only.
+      `imgsnap` is a photo take*r*, could running on linux only.
 
   * IM.exe | Client.exe
 
       [`IM.exe`](https://raw.githubusercontent.com/tsymiar/MyAutomatic/auto-dev/LinxSrvc/IM/IM.cc) is a simple `instant-messaging` chat room, use it by register, login, send command and *a small amount of quantity* messages.
 
-      `Client.exe` is a client peer of the chat room.
+      `Client.exe` is a client peer implement of the im chat room. ![IMClientDialog](WinNTKline/image/client.jpg)
 
   * kaics.exe
 
@@ -88,4 +89,4 @@ A K-line application using C#.
 
 #### impact of the exe in `Market`:
 
-<img src="WinNTKline/impact.png" title="impact" height="50%" width="50%" align="middle"/>
+<img src="WinNTKline/image/impact.png" title="impact" height="50%" width="50%" align="middle"/>
