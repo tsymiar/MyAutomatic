@@ -41,7 +41,7 @@ runtime(void* param)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-value"
 #endif
-            "...";
+            // "...";
 #ifdef __GNUC__
 #pragma GCC diagnostic pop
 #endif

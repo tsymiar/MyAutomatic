@@ -7,7 +7,7 @@ template <class TestClass>
 class TestCase
 {
 public:
-    TestCase<TestClass>() { testClass = new TestClass(); };
+    TestCase<TestClass>() { };
     TestCase<TestClass> getInstance();
     virtual ~TestCase<TestClass>();
 private:
@@ -15,6 +15,7 @@ private:
     TestClass* testClass;
 };
 
+TestClass::testClass = new TestClass();
 template <class TestClass>
 TestCase<TestClass>
 TestCase<TestClass>::getInstance()
@@ -36,7 +37,7 @@ class Exception
 private:
     char m_ExceptionMessage[EXCEPTION_MESSAGE_MAXLEN];
 public:
-    Exception(char *msg)
+    Exception(const char *msg)
     {
         strncpy_s(m_ExceptionMessage, msg, EXCEPTION_MESSAGE_MAXLEN);
     }

@@ -4,7 +4,8 @@ extern	TEXTURE_2D	**TextureList;
 
 House::House()
 {
-    texnum = 0;
+    texNum = 0;
+    Width = Height = 0;
 }
 
 // Create an OpenGL rendering context
@@ -115,10 +116,10 @@ void  House::ReadData()
     fscanf_s(fp, "%s", stemp, sizeof(stemp));
 
     while (strcmp(stemp, "texnum") != 0)  fscanf_s(fp, "%s", stemp, sizeof(stemp));
-    fscanf_s(fp, "%d", &texnum);
+    fscanf_s(fp, "%d", &texNum);
 
-    TextureList = (TEXTURE_2D **)malloc(sizeof(TEXTURE_2D)*(texnum + 1));
-    for (i = 1; i <= texnum; i++)
+    TextureList = (TEXTURE_2D **)malloc(sizeof(TEXTURE_2D)*(texNum + 1));
+    for (i = 1; i <= texNum; i++)
     {
         TextureList[i] = (TEXTURE_2D *)malloc(sizeof(TEXTURE_2D));
         fscanf_s(fp, "%s%s", TextureList[i]->fname, sizeof(TextureList[i]->fname), stemp, sizeof(stemp));
@@ -294,7 +295,7 @@ void House::CleanList()
         free(ObjectList[i].surflist);
     }
     free(ObjectList);
-    for (i = 1; i <= texnum; i++)
+    for (i = 1; i <= texNum; i++)
         free(TextureList[i]);
     free(TextureList);
 }
@@ -334,7 +335,7 @@ unsigned char 	*House::OpenTexImage(INT2U TexIndex, INT2U *rslx, INT2U *rsly)
         }
     }
     free(image);
-    printf("%s : %d=%d\n", ImageName, srcx*srcy * 3, (i*j * 3));
+    printf("%s : %d=%ul\n", ImageName, srcx*srcy * 3, (unsigned int)(i*j * 3));
     return(SImageData);
 }
 
@@ -391,13 +392,13 @@ void House::LoadAllTexture()
 {
     int i;
 
-    for (i = 0; i < texnum; i++)
+    for (i = 0; i < texNum; i++)
         ImageDatas[i] = OpenTexImage(i + 1, &rslxs[i], &rslys[i]);
 }
 
 void House::CleanAllTexture()
 {
-    for (int i = 0; i < texnum; i++)
+    for (int i = 0; i < texNum; i++)
         free(ImageDatas[i]);
 }
 
