@@ -112,8 +112,8 @@ class House
 {
 public:
     // This is the holding space for the landscape colours.
-    int Width = 0;
-    int Height = 0;
+    int Width;
+    int Height;
     HGLRC m_hGLContext;
     int m_GLPixelIndex;
     // Mouse position and button.
@@ -142,7 +142,7 @@ protected:
 
     unsigned char  *ImageDatas[MAX_TEX];
     INT2U rslxs[MAX_TEX], rslys[MAX_TEX];
-    int   texnum = 0;
+    int   texNum = 0;
 public:
     House();
     // OpenGL specific

@@ -46,7 +46,7 @@ typedef struct WSADATA {
 #define TRUE true
 #define SLEEP(t) usleep((int)1010.10f*(t));
 #ifndef scanf_s
-#define scanf_s scanf
+#define scanf_s(x, y, z) scanf((x), (y))
 #ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wformat"
 #pragma GCC diagnostic ignored "-Wformat-extra-args"

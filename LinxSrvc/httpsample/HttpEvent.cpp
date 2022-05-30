@@ -31,9 +31,9 @@ vector<string> headList = {
 namespace {
     const int g_wait100ms = 100000;
     const char* HTTPD_SIGNATURE = "HttpEvent";
-    static unordered_map<void*, string> g_msgRcvs = {};
+    static unordered_map<void*, string> g_msgRecv = {};
     static unordered_map<string, string> g_extraOpts = {};
-    static unordered_map<string, DealHooks> g_dealhooks = {};
+    static unordered_map<string, DealHooks> g_dealHooks = {};
 }
 
 void Response(struct evhttp_request* request, HookDetail detail = {});
@@ -53,8 +53,8 @@ void ElegantlyBreak(void* arg)
 
 DEALRES_CALLBACK GetResHook(string uri, evhttp_cmd_type cmd)
 {
-    auto it = g_dealhooks.find(uri);
-    if (it != g_dealhooks.end() && it->second.method == cmd) {
+    auto it = g_dealHooks.find(uri);
+    if (it != g_dealHooks.end() && it->second.method == cmd) {
         return it->second.callback;
     }
     return (DEALRES_CALLBACK)NullFunc;
@@ -105,8 +105,8 @@ void ReadChunkCallback(struct evhttp_request* resp, void* base)
         fwrite(data, n, 1, stdout);
         size += n;
     }
-    g_msgRcvs[base] = data;
-    DEALRES_CALLBACK func = g_dealhooks["handleResponse"].callback;
+    g_msgRecv[base] = data;
+    DEALRES_CALLBACK func = g_dealHooks["handleResponse"].callback;
     if (func != nullptr) {
         HookDetail detail;
         detail.payload = data;
@@ -159,8 +159,8 @@ void GenericHandler(struct evhttp_request* req_ptr, void* param)
             return;
         }
         int status = 0;
-        pid_t childpid = fork();
-        if (childpid == 0) {
+        pid_t child = fork();
+        if (child == 0) {
             if (list.size() > 0 && list[0] == "log") {
                 status = HTTP_OK;
                 for (auto it = headList.begin(); it != headList.end(); ++it) {
@@ -174,9 +174,9 @@ void GenericHandler(struct evhttp_request* req_ptr, void* param)
                         uint32_t port = 0;
                         ssize_t pos = (server.empty() ? 0 : server.find(":"));
                         string ip = server.substr(0, pos);
-                        string subport = server.substr(pos + 1, server.size() - 1);
-                        if (isNum(subport)) {
-                            port = atoi(subport.c_str());
+                        string sub_port = server.substr(pos + 1, server.size() - 1);
+                        if (isNum(sub_port)) {
+                            port = atoi(sub_port.c_str());
                         }
                         if (pos <= 0) {
                             Error("can't find ':' in '%s'!", server.c_str());
@@ -200,10 +200,10 @@ void GenericHandler(struct evhttp_request* req_ptr, void* param)
             close(filedes[0]);
             write(filedes[1], &status, sizeof(int));
             exit(0);
-        } else if (childpid > 0) {
+        } else if (child > 0) {
             pid_t pid = 0;
             do {
-                pid = waitpid(childpid, nullptr, WNOHANG);
+                pid = waitpid(child, nullptr, WNOHANG);
             } while (pid == 0);
             close(filedes[1]);
             if (read(filedes[0], &status, sizeof(int)) < 0) {
@@ -214,7 +214,7 @@ void GenericHandler(struct evhttp_request* req_ptr, void* param)
             message.method = method;
             message.status = status;
             Response(req_ptr, message);
-            if (pid == childpid) {
+            if (pid == child) {
                 Message("successfully release child %d", pid);
             } else {
                 Error("some error ocurred");
@@ -226,7 +226,7 @@ void GenericHandler(struct evhttp_request* req_ptr, void* param)
 void WaitMsgTask(event_base* base)
 {
     unsigned int count = 0;
-    while (base == nullptr || g_msgRcvs[base].empty()) {
+    while (base == nullptr || g_msgRecv[base].empty()) {
         if (count > 3)
             break;
         usleep(g_wait100ms);
@@ -413,11 +413,11 @@ int RequestClient(const char* url, HookDetail& detail, DEALRES_CALLBACK hook)
         if (client.joinable())
             client.join();
     } else {
-        g_dealhooks["handleResponse"].callback = hook;
+        g_dealHooks["handleResponse"].callback = hook;
         client.detach();
         usleep(g_wait100ms);
     }
-    for (auto msg : g_msgRcvs) {
+    for (auto msg : g_msgRecv) {
         if (!msg.second.empty()) {
             detail.msg = msg.second;
         }
@@ -453,7 +453,7 @@ void Response(struct evhttp_request* request, HookDetail message)
         }
     }
     if (request == NULL) {
-        Error("client request disaliable!");
+        Error("client request invalid!");
         return;
     }
     evhttp_add_header(request->output_headers, "Server", HTTPD_SIGNATURE);
@@ -508,8 +508,8 @@ void SetExtraOption(const std::string& key, const std::string& value)
     g_extraOpts[key] = value;
 }
 
-void RegistCallback(const std::string& name, evhttp_cmd_type method, DEALRES_CALLBACK hook)
+void RegisterCallback(const std::string& name, evhttp_cmd_type method, DEALRES_CALLBACK hook)
 {
-    g_dealhooks[name].method = method;
-    g_dealhooks[name].callback = hook;
+    g_dealHooks[name].method = method;
+    g_dealHooks[name].callback = hook;
 }

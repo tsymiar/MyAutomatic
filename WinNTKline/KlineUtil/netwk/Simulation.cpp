@@ -1068,12 +1068,11 @@ bool ReadTradeConfiguration()
     double temp1 = 0;
 
     ifstream fin("./AutoTrader.cfg", std::ios::in);
-    int i = 0;
     int it = 0;
 
     while (fin.getline(line, sizeof(line)))
     {
-        i = int(it % 20);
+        int i = int(it % 20);
         std::stringstream word(line);
 
         for (int j = 0; j < 9; j++)
