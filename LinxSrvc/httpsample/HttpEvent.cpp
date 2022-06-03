@@ -21,7 +21,7 @@
 
 using namespace std;
 
-vector<string> headList = {
+vector<string> g_headList = {
     "server",
     "flag",
     "username",
@@ -163,7 +163,7 @@ void GenericHandler(struct evhttp_request* req_ptr, void* param)
         if (child == 0) {
             if (list.size() > 0 && list[0] == "log") {
                 status = HTTP_OK;
-                for (auto it = headList.begin(); it != headList.end(); ++it) {
+                for (auto it = g_headList.begin(); it != g_headList.end(); ++it) {
                     const char* ptr = evhttp_find_header(&head, it->c_str());
                     if (ptr == nullptr) continue;
                     string val(ptr);
@@ -503,13 +503,18 @@ void Release(event_base* base, evhttp_connection* evcon)
     }
 }
 
-void SetExtraOption(const std::string& key, const std::string& value)
+void SetExtraOption(const string& key, const string& value)
 {
     g_extraOpts[key] = value;
 }
 
-void RegisterCallback(const std::string& name, evhttp_cmd_type method, DEALRES_CALLBACK hook)
+void RegisterCallback(const string& name, evhttp_cmd_type method, DEALRES_CALLBACK hook)
 {
     g_dealHooks[name].method = method;
     g_dealHooks[name].callback = hook;
+}
+
+void SetHeadsList(const vector<string>& heads)
+{
+    g_headList = heads;
 }
