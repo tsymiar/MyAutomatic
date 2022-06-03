@@ -33,4 +33,5 @@ void RegisterCallback(const std::string&, DEALRES_CALLBACK);
 int RequestClient(const char*, HookDetail&, DEALRES_CALLBACK = nullptr);
 
 void SetExtraOption(const std::string&, const std::string&);
+void SetHeadsList(const std::vector<std::string>&);
 const char* GetMethodName(int);

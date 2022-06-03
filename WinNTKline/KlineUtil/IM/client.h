@@ -38,7 +38,7 @@ typedef struct WSADATA {
     char w;
 } WsaData;
 #define MAX_PATH          260
-#define MB_OK                       0x00000000L
+#define MB_OK             0x00000000L
 #define INVALID_SOCKET  (SOCKET)(~0)
 #define SOCKET_ERROR            (-1)
 #define fprintf_s fprintf
@@ -46,7 +46,7 @@ typedef struct WSADATA {
 #define TRUE true
 #define SLEEP(t) usleep((int)1010.10f*(t));
 #ifndef scanf_s
-#define scanf_s(x, y, z) scanf((x), (y))
+#define scanf_s(x, y, ...) scanf((x), (y))
 #ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wformat"
 #pragma GCC diagnostic ignored "-Wformat-extra-args"

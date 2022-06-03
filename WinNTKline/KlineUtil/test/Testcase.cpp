@@ -7,7 +7,7 @@ template <class TestClass>
 class TestCase
 {
 public:
-    TestCase<TestClass>() { };
+    TestCase<TestClass>() { testClass = nullptr; };
     TestCase<TestClass> getInstance();
     virtual ~TestCase<TestClass>();
 private:
@@ -37,9 +37,11 @@ class Exception
 private:
     char m_ExceptionMessage[EXCEPTION_MESSAGE_MAXLEN];
 public:
-    Exception(const char *msg)
+    Exception(const char* msg = nullptr) : m_ExceptionMessage{ nullptr }
     {
-        strncpy_s(m_ExceptionMessage, msg, EXCEPTION_MESSAGE_MAXLEN);
+        if (msg != nullptr) {
+            strncpy_s(m_ExceptionMessage, msg, EXCEPTION_MESSAGE_MAXLEN);
+        }
     }
     inline char *GetMessage()
     {

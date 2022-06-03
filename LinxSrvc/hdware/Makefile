@@ -21,5 +21,5 @@ ifeq ($(shell uname), Linux)
 	make imgsnap
 endif
 clean:
-	rm -rvf $(GEN)/gpio* $(GEN)/mes909* $(GEN)/hack* $(GEN)/pipefifo*
-	rm -rvf  $(GEN)/VideoCapture* $(GEN)/imgsnap*
+	@rm -rvf $(GEN)/gpio* $(GEN)/mes909* $(GEN)/hack* $(GEN)/pipefifo*
+	@rm -rvf  $(GEN)/VideoCapture* $(GEN)/imgsnap*
