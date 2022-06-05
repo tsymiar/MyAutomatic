@@ -8,6 +8,7 @@
 #include <functional>
 
 enum KaiRoles {
+    USAGE = -1,
     NONE = 0,
     PRODUCER,
     CONSUMER,
@@ -15,7 +16,8 @@ enum KaiRoles {
     BROKER,
     CLIENT,
     PUBLISH,
-    SUBSCRIBE
+    SUBSCRIBE,
+    FILE_CONTENT
 };
 
 #ifdef _WIN32
@@ -57,7 +59,7 @@ public:
 #pragma pack()
     typedef int(*KAISOCKHOOK)(KaiSocket*);
     typedef void(*RECVCALLBACK)(const Message&);
-    static char G_KaiRole[][0xa];
+    static char G_KaiRole[][0xe];
     KaiSocket() = default;
     virtual ~KaiSocket() = default;
 public:
@@ -84,6 +86,9 @@ public:
     // callback
     void registerCallback(KAISOCKHOOK func);
     void appendCallback(KAISOCKHOOK func);
+    //
+    static bool isLittleEndian();
+    std::string getFile2string(const std::string&);
 #ifdef FULLY_COMPILE
     void appendCallback(const std::function<int(KaiSocket*)>&);
     void setResponseHandle(void(*func)(uint8_t*, size_t), uint8_t*, size_t&);
