@@ -34,7 +34,7 @@ static bool g_thrStat = false;
 static unsigned int g_maxTimes = 100;
 volatile unsigned int g_thrNo_ = 0;
 std::deque<const KaiSocket::Message*>* KaiSocket::m_msgQue = new(std::nothrow)std::deque<const KaiSocket::Message*>();
-char KaiSocket::G_KaiRole[][0xa] = { "NONE", "PRODUCER", "CONSUMER", "SERVER", "BROKER", "CLIENT", "PUBLISH", "SUBSCRIBE" };
+char KaiSocket::G_KaiRole[][0xe] = { "NONE", "PRODUCER", "CONSUMER", "SERVER", "BROKER", "CLIENT", "PUBLISH", "SUBSCRIBE", "FILE_CONTENT" };
 namespace {
     const unsigned int WAIT100ms = 100;
     const size_t HEAD_SIZE = sizeof(KaiSocket::Header);
@@ -45,6 +45,13 @@ void signalCatch(int signo)
     if (signo == SIGSEGV)
         return;
     std::cout << "Caught signal: " << signo << std::endl;
+}
+
+bool KaiSocket::isLittleEndian()
+{
+    int a = 1;
+    char* c = (char*)&a;
+    return (*c == 1);
 }
 
 int KaiSocket::Initialize(const char* srvip, unsigned short srvport)
@@ -783,7 +790,7 @@ ssize_t KaiSocket::Subscriber(const std::string& message, RECVCALLBACK callback)
                     if (callback != nullptr) {
                         callback(*pMsg);
                     }
-                    std::cout << __FUNCTION__ << ": message payload = [" << pMsg->data.stat << "]-[" << pMsg->data.body << "]" << std::endl;
+                    std::cout << __FUNCTION__ << ": message payload(" << len + Size << ") = [" << pMsg->data.stat << "]-[" << pMsg->data.body << "]" << std::endl;
                     delete pMsg;
                 }
             }
@@ -818,12 +825,13 @@ ssize_t KaiSocket::Publisher(const std::string& topic, const std::string& payloa
     size_t size = payload.size();
     if (topic.empty() || size == 0) {
         std::cerr << __FUNCTION__ << ": topic/payload was empty!" << std::endl;
+        return -3;
     } else {
         this->m_network.run_01 = false;
         if (!m_callbacks.empty()) m_callbacks.clear();
         g_maxTimes = 0;
     }
-    const int maxLen = 256;
+    const int maxLen = payload.max_size();
     Message msg = {};
     memset(static_cast<void*>(&msg), 0, sizeof(Message));
     size = (size > maxLen ? maxLen : size);
@@ -846,4 +854,21 @@ ssize_t KaiSocket::Publisher(const std::string& topic, const std::string& payloa
     delete[] message;
     finish();
     return len;
+}
+
+std::string KaiSocket::getFile2string(const std::string& filename)
+{
+    std::string s{};
+    FILE* fp = fopen(filename.c_str(), "rb");
+    if (fp) {
+        fseek(fp, 0, SEEK_END);
+        int len = ftell(fp);
+        fseek(fp, 0, SEEK_SET);
+        s.resize(len);
+        fread((void*)s.data(), 1, len, fp);
+        fclose(fp);
+    } else {
+        std::cerr << __FUNCTION__ << ": file[" << filename << "] open fail: " << strerror(errno) << std::endl;
+    }
+    return s;
 }

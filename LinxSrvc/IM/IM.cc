@@ -1092,7 +1092,7 @@ int inst_mesg(int argc, char* argv[])
         SLEEP(9);
 #endif
     return 0;
-}
+};
 template<typename T> int set_n_get_mem(T * shmem, int ndx, int rw)
 {
     int shmids = -1;
@@ -1207,15 +1207,15 @@ type_thread_func commands(void* arg)
 #endif
                 closesocket(active[rtn].netwk.socket);
                 fprintf(stdout, "User %s kicked out!\n", name);
-            };
-        };
+            }
+        }
         if (strcmp(optionstr, "cls") == 0) {
             system("CLS");
-        };
+        }
         SLEEP(99);
     } while (!(aim2exit));
     return NULL;
-};
+}
 //save accounts to local file.
 int save_acnt()
 {
@@ -1229,7 +1229,7 @@ int save_acnt()
         return -2;
     flush_all();
     return 0;
-};
+}
 //load accounts from file system.
 int load_acnt()
 {
@@ -1242,9 +1242,9 @@ int load_acnt()
         fread(zones, sizeof(zone_clazz), MAX_ZONES, dump);
         fclose(dump);
         return 0;
-    };
+    }
     flush_all();
-};
+}
 int user_auth(char usr[FiledSize], char psw[FiledSize])
 {
     char* n = usr, * p = psw;
@@ -1258,10 +1258,10 @@ int user_auth(char usr[FiledSize], char psw[FiledSize])
                 return 0; //pass
         } else
             continue;
-    };
+    }
     //wrong param
     return -2;
-};
+}
 int new_user(char usr[FiledSize], char psw[FiledSize])
 {
     if (usr[0] == '\0')
@@ -1284,7 +1284,7 @@ int new_user(char usr[FiledSize], char psw[FiledSize])
         }
     }
     return -2;
-};
+}
 int user_is_line(char user[FiledSize])
 {
     char* tomatch = user;
@@ -1298,7 +1298,7 @@ int user_is_line(char user[FiledSize])
             return i;
     }
     return -1;
-};
+}
 int set_user_line(char user[FiledSize], Network & netwk)
 {
 #if !defined _WIN32
@@ -1317,7 +1317,7 @@ int set_user_line(char user[FiledSize], Network & netwk)
         }
     }
     return 0;
-};
+}
 int set_user_quit(char user[FiledSize])
 {
     char* u = user;
@@ -1372,9 +1372,9 @@ int get_user_seq(char user[FiledSize])
     for (int i = 0; i < MAX_USERS; i++) {
         if (strcmp(u, users[i].usr) == 0)
             return i;
-    };
+    }
     return -2;
-};
+}
 int find_zone(unsigned char basis[FiledSize])
 {
     char* x = (char*)basis;
@@ -1387,10 +1387,9 @@ int find_zone(unsigned char basis[FiledSize])
             if (strcmp(zones[i].zone.members[j], x) == 0)
                 return i;
         }
-    };
-
+    }
     return -2;
-};
+}
 int host_zone(USER & user)
 {
     char* host = (char*)user.host;
@@ -1406,10 +1405,10 @@ int host_zone(USER & user)
             strcpy(zones[i].zone.chief, chief);
             strcpy(zones[i].zone.members[0], chief);
             return i;
-        };
-    };
+        }
+    }
     return -2;
-};
+}
 int join_zone(int at, char usr[FiledSize], char zone[FiledSize], char* cert)
 {
     int i;
@@ -1430,10 +1429,10 @@ int join_zone(int at, char usr[FiledSize], char zone[FiledSize], char* cert)
             } else {
                 continue;
             }
-        };
-    };
+        }
+    }
     return -4;
-};
+}
 int exit_zone(int at, char usr[FiledSize])
 {
     char* m = usr;
@@ -1443,10 +1442,10 @@ int exit_zone(int at, char usr[FiledSize])
         if (strcmp(zones[at].zone.members[i], m) == 0) {
             memset(zones[at].zone.members[i], 0, FiledSize);
             return i;
-        };
-    };
+        }
+    }
     return -2;
-};
+}
 int free_zone(int at, char host[FiledSize])
 {
     if (at < 0)
@@ -1457,4 +1456,4 @@ int free_zone(int at, char host[FiledSize])
         memset(zo, 0, sizeof(zone_clazz));
         return 0;
     } else return -2;
-};
+}

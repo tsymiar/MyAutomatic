@@ -11,13 +11,14 @@ int hook0(KaiSocket*);
 int hook1(KaiSocket*);
 
 int main(int argc, char* argv[]) {
-    KaiRoles role = SERVER;
+    KaiRoles usage = USAGE;
     if (argc > 1) {
         string argv1 = string(argv[1]);
-        role = (argv1 == "-C" ? CLIENT :
+        usage = (argv1 == "-C" ? CLIENT :
             (argv1 == "-S" ? SUBSCRIBE :
                 (argv1 == "-P" ? PUBLISH :
-                    (argv1 == "-B" ? BROKER : SERVER))));
+                    (argv1 == "-PF" ? FILE_CONTENT :
+                        (argv1 == "-B" ? BROKER : SERVER)))));
     }
 #ifdef _USE_FORK_PROCESS_
     pid_t child = fork();
@@ -26,22 +27,35 @@ int main(int argc, char* argv[]) {
         KaiSocket kai;
         const int PORT = 9999;
         const char* IP = "127.0.0.1";
-        if (role >= CLIENT) {
+        if (usage >= CLIENT) {
             kai.Initialize(IP, PORT);
         } else {
             kai.Initialize(nullptr, PORT);
         }
-        if (role == CLIENT || role == SERVER) {
+        if (usage == CLIENT || usage == SERVER) {
             kai.registerCallback(hook0);
             kai.appendCallback(hook1);
         }
-        cout << argv[0] << ": run as [" << role << "](" << KaiSocket::G_KaiRole[role] << ")" << endl;
+        cout << argv[0] << ": Run as [" << usage << "](" << KaiSocket::G_KaiRole[usage] << ")" << endl;
         string topic = "topic";
+        string param = "a123+/";
         if (argc > 2) {
             topic = string(argv[2]);
         }
-        string payload = "a123+/";
-        switch (role) {
+        if (argc > 3) {
+            param = string(argv[3]);
+        }
+        switch (usage) {
+        case USAGE:
+            cout << "Usage:" << endl
+                << "-A -- run as server" << endl
+                << "-B -- run as broker" << endl
+                << "-C -- run as client" << endl
+                << "<none> -- print this message" << endl
+                << "-S  [topic] -- run as subscriber, default topic is 'topic'" << endl
+                << "-P  [topic] [payload] -- run as publisher messaging to broker" << endl
+                << "-PF [topic] [filename] -- run as publisher trans file content" << endl;
+            break;
         case CLIENT:
             kai.connect();
             break;
@@ -55,10 +69,14 @@ int main(int argc, char* argv[]) {
             kai.Subscriber(topic);
             break;
         case PUBLISH:
-            if (argc > 3) {
-                payload = string(argv[3]);
+            kai.Publisher(topic, param);
+            break;
+        case FILE_CONTENT:
+            param = kai.getFile2string(param);
+            if (!param.empty()) {
+                kai.Publisher(topic, param);
             }
-            kai.Publisher(topic, payload);
+            break;
         default:
             break;
         }
