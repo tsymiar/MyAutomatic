@@ -17,7 +17,7 @@ int main(int argc, char* argv[]) {
         usage = (argv1 == "-C" ? CLIENT :
             (argv1 == "-S" ? SUBSCRIBE :
                 (argv1 == "-P" ? PUBLISH :
-                    (argv1 == "-PF" ? FILE_CONTENT :
+                    (argv1 == "-TF" ? FILE_CONTENT :
                         (argv1 == "-B" ? BROKER : SERVER)))));
     }
 #ifdef _USE_FORK_PROCESS_
@@ -54,7 +54,7 @@ int main(int argc, char* argv[]) {
                 << "<none> -- print this message" << endl
                 << "-S  [topic] -- run as subscriber, default topic is 'topic'" << endl
                 << "-P  [topic] [payload] -- run as publisher messaging to broker" << endl
-                << "-PF [topic] [filename] -- run as publisher trans file content" << endl;
+                << "-TF [topic] [filename] -- run as publisher trans file content" << endl;
             break;
         case CLIENT:
             kai.connect();
