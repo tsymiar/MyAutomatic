@@ -21,7 +21,8 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */ // Modified by tsymiar
+ */
+ // Modified by tsymiar
 
 #include "pthdpool.h"
 
@@ -37,7 +38,7 @@ static void* pthd_thrd_func(void* argument)
     /* Wait on condition variable, check for spurious wakeups.
        When returning from pthread_cond_wait(), we own the lock. */
     while ((pool->cur_thrd_no == 0) && (!pool->dispose)) {
-        pthread_cond_wait(&(pool->queue_cond), &(pool->queue_lock));
+        pthread_cond_wait(&pool->queue_cond, &pool->queue_lock);
     }
     if (pool->cur_thrd_no == 0) {
         if (pthread_mutex_trylock(&pool->queue_lock) == EBUSY)
@@ -69,11 +70,15 @@ int pthd_pool_free(pthd_pool_t* pool) {
         return -1;
     }
     /* 释放线程 任务队列 互斥锁 条件变量 线程池所占内存资源 */
+    if (pool->stack) {
+        pthread_attr_destroy(&pool->attr);
+        free(pool->stack);
+    }
     if (pool->thrd_id) {
+        pthread_mutex_destroy(&pool->queue_lock);
+        pthread_cond_destroy(&pool->queue_cond);
         free(pool->thrd_id);
         free(pool->queue);
-        pthread_mutex_destroy(&(pool->queue_lock));
-        pthread_cond_destroy(&(pool->queue_cond));
     }
     free(pool);
     return 0;
@@ -81,10 +86,8 @@ int pthd_pool_free(pthd_pool_t* pool) {
 
 pthd_pool_t* pthd_pool_init(int sz_que, int thrd_num)
 {
-    void* stack;
-    pthread_attr_t attr;
     //从动态内存存储区中分配1个pthd_pool_t单位长度连续空间
-    pthd_pool_t* pool = (pthd_pool_t*)calloc(1, sizeof(*pool));
+    pthd_pool_t* pool = (pthd_pool_t*)calloc(1, sizeof(pthd_pool_t));
     pool->dispose = false;
     if (thrd_num < 1)
         thrd_num = 1;
@@ -92,31 +95,30 @@ pthd_pool_t* pthd_pool_init(int sz_que, int thrd_num)
     pool->queue_size = sz_que;
     pool->cur_thrd_no = 0;
     //为thrd_id分配thrd_num个pthread_t空间
-    int thdlen = sizeof(pthread_t) * thrd_num;
-    int quelen = sizeof(pthd_task_t) * sz_que;
-    pool->thrd_id = (pthread_t*)malloc(thdlen);
+    int thd_len = sizeof(pthread_t) * thrd_num;
+    int que_len = sizeof(pthd_task_t) * sz_que;
+    pool->thrd_id = (pthread_t*)malloc(thd_len);
     if (pool->thrd_id != null)
-        memset(pool->thrd_id, 0, thdlen);
-    pool->queue = (pthd_task_t*)malloc(quelen);
+        memset(pool->thrd_id, 0, thd_len);
+    pool->queue = (pthd_task_t*)malloc(que_len);
     if (pool->queue != null)
-        memset(pool->queue, 0, quelen);
+        memset(pool->queue, 0, que_len);
     if (pthread_mutex_init(&pool->queue_lock, null) != 0 ||
         pthread_cond_init(&pool->queue_cond, null) != 0 ||
         pool->thrd_id == null || pool->queue == null) {
-        goto error;
+        goto failure;
     }
     {
 #define STK_SIZE (10 * 4096)
-        posix_memalign(&stack, 4096, STK_SIZE);
-        pthread_attr_init(&attr);
-        pthread_attr_setstack(&attr, &stack, STK_SIZE);
+        posix_memalign(&pool->stack, 4096, STK_SIZE);
+        pthread_attr_init(&pool->attr);
+        pthread_attr_setstack(&pool->attr, &pool->stack, STK_SIZE);
     }
     int i, j;
     for (i = j = 0; i < pool->thrd_num; i++) {
         if (pthread_create(&(pool->thrd_id[i]), null,
             pthd_thrd_func, (void*)pool) != 0) {
-            pthd_pool_destroy(pool);
-            return null;
+            goto failure;
         } else {
             threads[j] = i;
             pool->cur_thrd_no += 1;
@@ -124,20 +126,18 @@ pthd_pool_t* pthd_pool_init(int sz_que, int thrd_num)
         }
     }
     return pool;
-error:
-    if (pool) {
-        pthd_pool_free(pool);
-    }
+failure:
+    pthd_pool_free(pool);
     return null;
 }
 
-int pthd_pool_add_task(pthd_pool_t* pool, void* (*routine)(void*), void* arg)
+int pthd_pool_add_task(pthd_pool_t* pool, pthd_func_t func, void* args)
 {
     int err = 0;
-    if (pool == null || routine == null) {
+    if (pool == null || func == null) {
         return -1;
     }
-    if (pthread_mutex_lock(&(pool->queue_lock)) != 0) {
+    if (pthread_mutex_lock(&pool->queue_lock) != 0) {
         return -2;
     }
     int next = pool->tail + 1;
@@ -154,8 +154,8 @@ int pthd_pool_add_task(pthd_pool_t* pool, void* (*routine)(void*), void* arg)
             break;
         }
         /* Add task to queue */
-        pool->queue[pool->tail].func = routine;
-        pool->queue[pool->tail].arg = arg;
+        pool->queue[pool->tail].func = func;
+        pool->queue[pool->tail].arg = args;
         pool->tail = next;
         pool->cur_thrd_no += 1;
         /* pthread_cond_broadcast */
@@ -176,7 +176,7 @@ int pthd_pool_destroy(pthd_pool_t* pool)
     if (pool == null) {
         return -1;
     }
-    if (pthread_mutex_lock(&(pool->queue_lock)) != 0) {
+    if (pthread_mutex_lock(&pool->queue_lock) != 0) {
         return -2;
     }
     do {
@@ -184,10 +184,9 @@ int pthd_pool_destroy(pthd_pool_t* pool)
             err = -4;
             break;
         }
-        pool->dispose = true;
         /* Wake up all worker threads */
-        if ((pthread_cond_broadcast(&(pool->queue_cond)) != 0) ||
-            (pthread_mutex_unlock(&(pool->queue_lock)) != 0)) {
+        if ((pthread_cond_broadcast(&pool->queue_cond) != 0) ||
+            (pthread_mutex_unlock(&pool->queue_lock) != 0)) {
             err = -2;
             break;
         }
@@ -199,18 +198,23 @@ int pthd_pool_destroy(pthd_pool_t* pool)
                 err = -3;
             }
         }
+        if (err == 0) {
+            pool->dispose = true;
+        }
         /* do{...} while(0) */
     } while (0);
     /* Only if everything went well do we deallocate the pool */
-    if (!err) {
-        pthd_pool_free(pool);
-    }
+    if (pthd_pool_free(pool) != 0)
+        err = -5;
     return err;
 }
 
 int pthd_pool_wait(pthd_pool_t* pool)
 {
-    if (pool == NULL)
+    if (pool == null)
         return -1;
-    return (pthread_join(*pool->thrd_id, null) != 0) ? -3 : 0;
+    int err = 0;
+    if (pool->thrd_id == null || pthread_join(*pool->thrd_id, null) != 0)
+        err = -3;
+    return err;
 }

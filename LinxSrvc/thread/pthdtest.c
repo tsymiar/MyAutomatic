@@ -59,9 +59,13 @@ int main(int argc, char** argv)
     thrd++;
     stat = pthd_pool_add_task(pool3, &pthd_test3, (void*)&thrd);
     printf("task6: %d\n", stat);
-    pthd_pool_wait(pool3);
-    pthd_pool_destroy(pool1);
-    pthd_pool_destroy(pool2);
-    pthd_pool_destroy(pool3);
+    stat = pthd_pool_wait(pool3);
+    printf("wait3: %d\n", stat);
+    stat = pthd_pool_destroy(pool1);
+    printf("pool1: %d\n", stat);
+    stat = pthd_pool_destroy(pool2);
+    printf("pool2: %d\n", stat);
+    stat = pthd_pool_destroy(pool3);
+    printf("pool3: %d\n", stat);
     return 0;
 }
