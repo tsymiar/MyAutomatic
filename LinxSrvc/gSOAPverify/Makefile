@@ -19,8 +19,8 @@ gSOAPverify:$(OUT)
 #	bash -c '`command -v apt >/dev/null 2>&1 || { echo >&2 "-";}` == "-"'
 #	if [ ! -d "/usr/include/mysql" ]; then if [ `command -v apt` == "" ]; then sudo yum install mariadb-devel -y; else sudo apt-get install libmysql++-dev -y; fi; fi;
 	@echo "REHL: 'sudo yum install mariadb-devel -y';\nDebain: 'sudo apt install libmysql++-dev -y';"
-	[ ! -d "`pwd`/bin" ] && mkdir `pwd`/bin || echo ${GEN}
-ifneq ($(shell if [ ! -d /usr/lib/mysql ] || [ `ls /usr/lib/libmysql* | wc -l` -le 0 ]; then echo false; fi;), false)
+	[ ! -d ${GEN} ] && mkdir ${GEN} || echo ${GEN}
+ifneq ($(shell if [ ! -d /usr/lib/mysql ] && [ `ls /usr/lib/libmysql* | wc -l` -le 0 ]; then echo false; fi;), false)
 	g++ $(FLAG) -c ./sql/sqlDbReq.cc $(SQL)
 	g++ $(FLAG) -c ./main/mainSoap.cc $(PTHD)
 	g++ $(FLAG) -o $(GEN)/gSOAPverify $(SYS) $(SOAP) $(MAIN) $(SQL) $(PTHD)

@@ -6,12 +6,12 @@ TARGET:=$(notdir $(MAKEFILE_DIR_PATSUBST))
 EXECUTALBE:=$(PROJECT_BASE)/../bin/$(TARGET)
 
 $(BUILD_PATH)/Makefile:
-	mkdir -p $(BUILD_PATH) && cd $(BUILD_PATH) \
-	&& cmake $(PROJECT_BASE) -DAPPOINT_EVENT=/usr/local
+	@ if [ ! -d $(BUILD_PATH) ]; then mkdir -p $(BUILD_PATH); fi;
+	@ cd $(BUILD_PATH) && cmake $(PROJECT_BASE) -DAPPOINT_EVENT=/usr/local && cd -
 
 $(EXECUTALBE):$(BUILD_PATH)/Makefile
-	$(MAKE_COMMAND) -C $(BUILD_PATH)
-	if [ -f $(EXECUTALBE) ]; then cp $(BUILD_PATH)/$(TARGET) $(EXECUTALBE); fi;
+	@$(MAKE_COMMAND) -C $(BUILD_PATH) && \
+	if [ -f $(BUILD_PATH)/$(TARGET) ] && [ -d $(PROJECT_BASE)/../bin ]; then cp $(BUILD_PATH)/$(TARGET) $(EXECUTALBE); fi;
 
 .PHONY: build
 build:$(EXECUTALBE)
