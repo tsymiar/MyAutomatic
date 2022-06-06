@@ -31,6 +31,9 @@ typedef int ssize_t;
 #include <WinSock2.h>
 #else
 using SOCKET = int;
+#ifdef __linux__
+#define USE_EPOLL
+#endif
 #endif
 
 class KaiSocket {
@@ -39,7 +42,7 @@ public:
     struct Header {
         char rsv;
         int etag;
-        /*vilatile*/ unsigned long long ssid; //ssid = port | socket | ip
+        /*volatile*/ unsigned long long ssid; // ssid = port | socket | ip
         char buffer[32];
         unsigned int size;
     } __attribute__((packed));
@@ -64,12 +67,12 @@ public:
     virtual ~KaiSocket() = default;
 public:
 #ifdef FULLY_COMPILE
-    explicit KaiSocket(unsigned short lstnprt);
-    KaiSocket(const char* srvip, unsigned short srvport);
+    explicit KaiSocket(unsigned short lsn_prt);
+    KaiSocket(const char* ip, unsigned short port);
 #else
-    int Initialize(unsigned short lstnprt);
+    int Initialize(unsigned short lsn_prt);
 #endif
-    int Initialize(const char* srvip, unsigned short srvport);
+    int Initialize(const char* ip, unsigned short port);
     static KaiSocket& GetInstance();
     // workflow
     int start();
