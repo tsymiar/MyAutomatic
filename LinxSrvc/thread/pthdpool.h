@@ -21,12 +21,12 @@ extern "C" {
 #define false 0
 #endif
 //线程任务属性
-typedef struct PthdTask {
+typedef struct Task {
   void* (*func)(void*); /* 任务回调函数指针 */
   void* arg;            /* 传入任务函数的参数 */
 } pthd_task_t;
 //线程池属性
-typedef struct PthdPool {
+typedef struct Pool {
   bool               dispose;        /* 标志线程池是否销毁 */
   int                thrd_num;       /* 最大线程数 */
   int                queue_size;     /* 线程队列长度 */
@@ -45,13 +45,18 @@ typedef struct PthdPool {
     = PTHREAD_COND_INITIALIZER
 #endif
     ;
+  void* stack;
+  pthread_attr_t attr;
 } pthd_pool_t;
+
+typedef void* (*pthd_func_t)(void*);
 //线程数组索引
 static int threads[MAX_THRD_NUM];
 /**
   * @brief     初始化线程池
-  * @param     thrd_num: 最大线程数, sz_que: 队列长度
-  * @retval    sucess: thread point; NULL, error;
+  * @param     sz_que: 队列长度
+  * @param     thrd_num: 最大线程数
+  * @retval    thread point, success; NULL, error
   */
 pthd_pool_t* pthd_pool_init(int sz_que, int thrd_num
 #ifdef __cplusplus
@@ -60,18 +65,22 @@ pthd_pool_t* pthd_pool_init(int sz_que, int thrd_num
 );
 /**
   * @brief     向线程池添加任务
-  * @param     pool: 添加任务的线程池; routine: 任务函数指针; arg: 传递给routine的参数
-  * @retval    0, sucess; -1, param null; -2, mutex error; -3, queue full; -4, dispose;
+  * @param     pool: 添加任务的线程池
+  * @param     func: 任务函数指针
+  * @param     args: 传递给routine的参数
+  * @retval    0, success; -1, param null; -2, mutex error; -3, queue full; -4, dispose
   */
-int pthd_pool_add_task(pthd_pool_t* pool, void* (*routine)(void*), void* arg);
+int pthd_pool_add_task(pthd_pool_t* pool, pthd_func_t func, void* args);
 /**
   * @brief     销毁线程池
-  * @retval    0, sucess; -1, pool null; -2, mutex error; -3, pthread join error; -4, dispose;
+  * @param     pool: 操作对象
+  * @retval    0, success; -1, pool null; -2, mutex error; -3, pthread join error; -4, dispose;
   */
 int pthd_pool_destroy(pthd_pool_t* pool);
 /**
   * @brief     等待线程池执行
-  * @retval    0, sucess; -3, pthread join error;
+  * @param     pool: 操作对象
+  * @retval    0, success; -3, pthread join error;
   */
 int pthd_pool_wait(pthd_pool_t* pool);
 
