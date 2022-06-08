@@ -8,4 +8,4 @@
 
 * usage
   * [*this repo*](https://github.com/tsymiar/scadup) is a library pick up base on _KaiSocket_, here is beta of it.
-  * [*here*](https://github.com/tsymiar/MyAutomatic/blob/auto-dev/LinxSrvc/IM/KaiTest.cpp) is a example case.
+  * [*here*](https://github.com/tsymiar/MyAutomatic/blob/auto-dev/LinxSrvc/IM/KaiTest.cpp) is an example case.

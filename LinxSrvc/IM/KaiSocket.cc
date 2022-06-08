@@ -65,7 +65,7 @@ int KaiSocket::Initialize(const char* ip, unsigned short port)
 #ifdef _WIN32
     WSADATA wsaData;
     if (WSAStartup(port, &wsaData) == SOCKET_ERROR) {
-        std::cerr << "WSAStartup failed with error " << WSAGetLastError() << std::endl;
+        std::cerr << "WSAStartup fails with error " << WSAGetLastError() << std::endl;
         WSACleanup();
         return -1;
 }
@@ -169,7 +169,7 @@ int KaiSocket::start()
     m_network.client = false;
     while (true) {
 #ifdef USE_EPOLL
-        int actives = epoll_wait(poll_desc, events, g_epollMax, 10000000);
+        int actives = epoll_wait(poll_desc, events, g_epollMax, -1);
         if (actives == -1) {
             perror("epoll_wait");
         }
@@ -238,6 +238,9 @@ int KaiSocket::start()
                 }
                 wait(WAIT100ms);
             }
+#ifdef USE_EPOLL
+            }
+#endif
         }
     } // while
 }
@@ -815,7 +818,7 @@ ssize_t KaiSocket::Subscriber(const std::string& message, RECVCALLBACK callback)
                 return -4;
             }
             std::cout << __FUNCTION__ << " process run as " << KaiSocket::G_KaiRole[msg.head.etag]
-                << ", MQ(" << count << ") topic: '" << msg.head.buffer << "'." << std::endl;
+                << ", MQ(" << count << ") topic is '" << msg.head.buffer << "'." << std::endl;
             count++;
         } else {
             count = 0;
@@ -847,7 +850,7 @@ ssize_t KaiSocket::Subscriber(const std::string& message, RECVCALLBACK callback)
                     if (callback != nullptr) {
                         callback(*pMsg);
                     }
-                    std::cout << __FUNCTION__ << ": message payload(" << len + Size << ") = [" << pMsg->data.stat << "]-[" << pMsg->data.body << "]" << std::endl;
+                    std::cout << __FUNCTION__ << ": message payload(" << (len + Size) << ") = [" << pMsg->data.stat << "]-[" << pMsg->data.body << "]" << std::endl;
                     delete pMsg;
                 }
             }
@@ -897,7 +900,7 @@ ssize_t KaiSocket::Publisher(const std::string& topic, const std::string& payloa
     msg.head.etag = PRODUCER;
     setTopic(topic, msg.head);
     if (this->connect() != 0) {
-        std::cerr << __FUNCTION__ << ": connect failed!" << std::endl;
+        std::cerr << __FUNCTION__ << ": unable to connect!" << std::endl;
         return -2;
     }
     auto* message = new(std::nothrow) uint8_t[msgLen];

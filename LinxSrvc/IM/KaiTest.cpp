@@ -36,7 +36,9 @@ int main(int argc, char* argv[]) {
             kai.registerCallback(hook0);
             kai.appendCallback(hook1);
         }
-        cout << argv[0] << ": Run as [" << usage << "](" << KaiSocket::G_KaiRole[usage] << ")" << endl;
+        if (usage < 0xf) {
+            cout << argv[0] << ": Run as [" << usage << "](" << KaiSocket::G_KaiRole[usage] << ")" << endl;
+        }
         string topic = "topic";
         string param = "a123+/";
         if (argc > 2) {

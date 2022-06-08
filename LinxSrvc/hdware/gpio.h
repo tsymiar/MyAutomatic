@@ -53,7 +53,7 @@ int set_gpio_export(unsigned gpio, int direction_may_change)
     int len = 0;
     char pin[64];
     ssize_t ret = 0;
-    fprintf(stdout, "%sing GPIO %d.\n", direction_may_change == 1 ? "export" : "unexport", gpio);
+    fprintf(stdout, "%sing GPIO %u.\n", direction_may_change == 1 ? "export" : "unexport", gpio);
     if (direction_may_change == 1) {
         file = open(GPIO_FILES "export", O_WRONLY);
     } else {
@@ -140,7 +140,7 @@ int get_gpio_value(unsigned gpio)
 
 int set_gpio_by_direction(unsigned gpio, int value, int direct)
 {
-    fprintf(stdout, "setting GPIO %d value to %s as %s pin.\n", gpio, value == 0 ? "LOW" : "HEIGH", direct == 0 ? "in" : "out");
+    fprintf(stdout, "setting GPIO %u value to %s as %s pin.\n", gpio, value == 0 ? "LOW" : "HEIGH", direct == 0 ? "in" : "out");
     if (set_gpio_direct(gpio, direct) != 0) {
         perror("write GPIO fail");
     }
