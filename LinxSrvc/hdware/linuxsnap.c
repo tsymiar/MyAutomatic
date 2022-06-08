@@ -266,12 +266,12 @@ int snap_close_dev(snap_device* snap_dev)
     return close(snap_dev->v4l_fd);
 }
 
-int snap_image_test(const char* filename)
+int snap_image_test(const char* filename, unsigned int width, unsigned int height)
 {
     snap_device snap_dev;
     image_pixel img_size = {
-        .img_w = 640,
-        .img_h = 480
+        .img_w = width,
+        .img_h = height
     };
     int val = snap_init_dev(&snap_dev, img_size, NULL);
     if (val == 0) {

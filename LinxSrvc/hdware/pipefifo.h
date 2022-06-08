@@ -124,7 +124,7 @@ struct PipeFifo read_fifo(long long flag)
 
 int pipe_fifo_test(long long flag, int value)
 {
-    const char* hint = "Usage:\n./pipefifo [cmd] [val]\n cmds:\n -- pipe: 0\n -- fifo: 1(r)/2(w)\n";
+    const char* hint = "Usage:\n./pipefifo [cmd] [val]\n cmds:\n -- pipe: 0\n -- fifo: 1(r)/2(w)";
     if (flag < 0) {
         printf("%s\n", hint);
         return -1;

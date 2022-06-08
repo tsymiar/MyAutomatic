@@ -47,16 +47,21 @@ void gpio_free(int file)
     close(file);
 }
 
-int gpio_set_export(unsigned gpio, int direction_may_change)
+int set_gpio_export(unsigned gpio, int direction_may_change)
 {
     int file;
     int len = 0;
     char pin[64];
     ssize_t ret = 0;
+    fprintf(stdout, "%sing GPIO %d.\n", direction_may_change == 1 ? "export" : "unexport", gpio);
     if (direction_may_change == 1) {
         file = open(GPIO_FILES "export", O_WRONLY);
     } else {
         file = open(GPIO_FILES "unexport", O_WRONLY);
+    }
+    if (file < 0) {
+        perror(__FUNCTION__);
+        return file;
     }
     len = snprintf(pin, sizeof(pin), "%u", gpio);
     ret = write(file, pin, len);
@@ -66,16 +71,6 @@ int gpio_set_export(unsigned gpio, int direction_may_change)
     }
     close(file);
     return 0;
-}
-
-int gpio_export(unsigned gpio)
-{
-    return gpio_set_export(gpio, 1);
-}
-
-int gpio_unexport(unsigned gpio)
-{
-    return gpio_set_export(gpio, 0);
 }
 
 int set_gpio_direct(unsigned gpio, int direct)
@@ -145,8 +140,9 @@ int get_gpio_value(unsigned gpio)
 
 int set_gpio_by_direction(unsigned gpio, int value, int direct)
 {
+    fprintf(stdout, "setting GPIO %d value to %s as %s pin.\n", gpio, value == 0 ? "LOW" : "HEIGH", direct == 0 ? "in" : "out");
     if (set_gpio_direct(gpio, direct) != 0) {
-        perror("write gpio fail");
+        perror("write GPIO fail");
     }
     return set_gpio_value(gpio, value);;
 }
@@ -154,11 +150,13 @@ int set_gpio_by_direction(unsigned gpio, int value, int direct)
 void gpio_hint(int val)
 {
     if (val >= 0) {
-        printf("gpio status [%d]\n", val);
+        printf("GPIO status [%d]\n", val);
         return;
     }
-    fprintf(stdout, "Usage:\n./gpio [(get) id] [(set) [value] [direct]]."
-        "\n-- id: \tset/get gpio pin index"
-        "\n-- value: \tstatus set to the pin"
-        "\n-- direct: \tset gpio direction as in/out\n");
+    fprintf(stdout, "Usage:\n./gpio [id] [value/(un)export] [direct]."
+        "\n++ put 1 parameter to get, 2 to export, 3 to set."
+        "\n-- id: \tset/get/export GPIO pin index"
+        "\n-- value: \tvalue set to the pin, LOW=0/HEIGH=1"
+        "\n-- export: \texport(1) a pin or not(0)"
+        "\n-- direct: \tset GPIO direction as in-0/out-1\n");
 }

@@ -16,6 +16,8 @@ int main(int argc, char** argv)
 #ifdef GPIO
     if (argc > 3) {
         set_gpio_by_direction(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]));
+    } else if (argc == 3) {
+        set_gpio_export(atoi(argv[1]), atoi(argv[2]));
     } else if (argc == 2) {
         gpio_hint(get_gpio_value(atoi(argv[1])));
     } else {
