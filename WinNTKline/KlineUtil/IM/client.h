@@ -18,7 +18,6 @@
 #include <process.h>
 #include <conio.h>
 typedef unsigned int Pthreadt;
-#define SLEEP(t) Sleep(t);
 #else
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -29,6 +28,8 @@ typedef unsigned int Pthreadt;
 #include <cerrno>
 #include <arpa/inet.h>
 #include <signal.h>
+#include <chrono>
+#include <thread>
 typedef int SOCKET;
 typedef pthread_mutex_t CRITICAL_SECTION;
 typedef int                 BOOL;
@@ -44,7 +45,6 @@ typedef struct WSADATA {
 #define fprintf_s fprintf
 #define gets_s(c,v) fgets(c,v,stdin)
 #define TRUE true
-#define SLEEP(t) usleep((int)1010.10f*(t));
 #ifndef scanf_s
 #define scanf_s(x, y, ...) scanf((x), (y))
 #ifdef __GNUC__
@@ -66,9 +66,9 @@ inline int closesocket(SOCKET socket)
 {
     return close(socket);
 }
-inline int Sleep(unsigned long t)
+inline void Sleep(unsigned long ms)
 {
-    return usleep((int)1010.10f * (t));
+    std::this_thread::sleep_for(std::chrono::microseconds(ms));
 }
 inline char* strcpy_s(char(strDestination)[], char const* src)
 {

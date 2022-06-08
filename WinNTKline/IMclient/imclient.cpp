@@ -24,7 +24,7 @@ parseRcvMsg(void* lprcv)
         memset(rcv_buf, 0, 256);
         int rcvlen = recv(client->sock, rcv_buf, 256, 0);
         if (rcvlen == 2 && (rcv_buf[1] == '\0')) {
-            SLEEP(1);
+            Sleep(1);
             continue;
         }
         EnterCriticalSection(&wrcon);
@@ -316,7 +316,7 @@ int main(int argc, char* argv[])
                 return -1;
             }
         }
-        SLEEP(100);
+        Sleep(100);
     }
     return 0;
 }

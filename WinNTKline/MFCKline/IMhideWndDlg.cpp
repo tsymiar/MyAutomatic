@@ -118,6 +118,7 @@ void* parseMessage(void* msg)
             }
             for (int c = 0; c < 30; c++) {
                 char user[25];
+                user[24] = '\0';
                 memcpy(user, rslt + 32 + 8 * c, 8);
                 len = strlen(user);
                 if (len <= 0)

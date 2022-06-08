@@ -19,6 +19,7 @@
 #include <iostream>
 #include <sstream>
 #include <cstdlib>
+#include <chrono>
 #include <thread>
 #include <cmath>
 
@@ -28,7 +29,7 @@ typedef int socklen_t;
 #ifndef INET_ADDRSTRLEN
 #define INET_ADDRSTRLEN 16
 #endif
-#define usleep(u) Sleep((u)/1000)
+// #define usleep(u) Sleep((u)/1000)
 #define write(x,y,z) ::send(x,(char*)(y),z,0)
 #define signal(_1,_2) {}
 #else
@@ -194,7 +195,6 @@ int KaiSocket::start()
                 ev_pll.events = EPOLLIN | EPOLLET;
                 ev_pll.data.fd = conn_sock;
                 char* str = inet_ntoa(client.sin_addr);
-                cout << "connect from " << str << "conn_sock=" << conn_sock << endl;
                 if (epoll_ctl(poll_desc, EPOLL_CTL_ADD, conn_sock, &ev_pll) < 0) {
                     std::cerr
                         << "Failed to add socket (" << conn_sock << ") to epoll: " << strerror(errno)
@@ -464,7 +464,7 @@ void KaiSocket::wait(unsigned int tms)
     };
     select(0, NULL, NULL, NULL, &delay);
 #else
-    usleep(1000 * tms);
+    std::this_thread::sleep_for(std::chrono::microseconds(tms));
 #endif
 }
 
@@ -747,7 +747,7 @@ void KaiSocket::finish()
     for (auto& network : m_networks) {
         while (network.run_01) {
             network.run_01 = false;
-            usleep(WAIT100ms);
+            wait(WAIT100ms);
         }
         close(network.socket);
     }

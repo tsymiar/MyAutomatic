@@ -2,10 +2,9 @@
 
 extern	TEXTURE_2D	**TextureList;
 
-House::House()
+House::House() : Width(0), Height(0)
 {
     texNum = 0;
-    Width = Height = 0;
 }
 
 // Create an OpenGL rendering context
