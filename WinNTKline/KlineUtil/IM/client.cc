@@ -66,7 +66,7 @@ int InitChat(st_sock* sock)
     memset(ipaddr, 0, 16);
     if (sock == NULL || sock->IP[0] == '\0' || sock->IP[0] < 0) {
         fprintf_s(stdout, "Current OS is %d bit.\nNow enter server address: ", (int)(sizeof(void*) * 8));
-        scanf_s("%s", (char*)&ipaddr, 16);
+        scanf_s("%16s", (char*)&ipaddr, 16);
         if (*ipaddr != 0) {
             memcpy(socks.IP, &ipaddr, 16);
         }

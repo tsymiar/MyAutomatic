@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unordered_map>
+#include <chrono>
 #include <thread>
 
 #include "event2/http_struct.h"
@@ -229,7 +230,7 @@ void WaitMsgTask(event_base* base)
     while (base == nullptr || g_msgRecv[base].empty()) {
         if (count > 3)
             break;
-        usleep(g_wait100ms);
+        this_thread::sleep_for(chrono::microseconds(g_wait100ms));
         Message("dispatch timeout %us to exit", count);
         count++;
     };
@@ -415,7 +416,7 @@ int RequestClient(const char* url, HookDetail& detail, DEALRES_CALLBACK hook)
     } else {
         g_dealHooks["handleResponse"].callback = hook;
         client.detach();
-        usleep(g_wait100ms);
+        this_thread::sleep_for(chrono::microseconds(g_wait100ms));
     }
     for (auto msg : g_msgRecv) {
         if (!msg.second.empty()) {
