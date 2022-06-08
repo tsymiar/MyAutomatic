@@ -11,6 +11,7 @@
 #include "http/myweb.h"
 #include "myweb.nsmap"
 #include "security\MD5.h"
+#include "security/encoding.h"
 
 #include "opencv/CvimgMat.h"
 
@@ -144,8 +145,8 @@ void CLoginDlg::OnBnClickedLogin()
         AfxMessageBox("请输入端口号！");
         return;
     }
-    md5_str(m_pswd, hexmd5);
-    hex_to_str((unsigned char*)hexmd5, out);
+    md5_to_hex(m_pswd, hexmd5);
+    hex_to_ascii((unsigned char*)hexmd5, out);
     memcpy(elem.user.password, get_Hash(out, 16, out), 16);
     sprintf_s(form, "Login@acc=%s&psw=%s", m_acnt, elem.user.password);
     if (m_IP[0] == '\0' || m_IP[0] == '\x30')

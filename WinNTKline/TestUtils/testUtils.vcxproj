@@ -100,7 +100,7 @@
       <Optimization>MaxSpeed</Optimization>
       <PreprocessorDefinitions>_WINSOCK_DEPRECATED_NO_WARNINGS;_UTILAPIS_;_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(libPNG);$(CEFDIR);$(OPENCV)\include;$(SolutionDir)KlineUtil;$(SolutionDir)KlineUtil\CTP;$(SolutionDir)KlineUtil\font;$(SolutionDir)MFCKline;$(SolutionDir)..\LinxSrvc\gSOAPverify\soap</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(libPNG);$(CEFDIR);$(OPENCV)\include;$(OPENSSL)\include;$(SolutionDir)KlineUtil;$(SolutionDir)KlineUtil\CTP;$(SolutionDir)KlineUtil\font;$(SolutionDir)MFCKline;$(SolutionDir)..\LinxSrvc\gSOAPverify\soap</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>
       </DisableSpecificWarnings>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
@@ -109,8 +109,8 @@
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalLibraryDirectories>$(CEFDIR)\$(Configuration);$(libPNG)\lib\$(Configuration);$(OPENCV)\lib\$(Configuration);$(SolutionDir)KlineUtil\CTP;$(SolutionDir)KlineUtil\GL\lib;$(SolutionDir)KlineUtil\font\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glu32.lib;opengl32.lib;libpng16.lib;zlib.lib;thosttraderapi.lib;thostmduserapi.lib;libcef.lib;libcef_dll_wrapper.lib;opencv_calib3d330d.lib;opencv_highgui330d.lib;opencv_photo330d.lib;opencv_video330d.lib;opencv_core330d.lib;opencv_imgcodecs330d.lib;opencv_shape330d.lib;opencv_videoio330d.lib;opencv_dnn330d.lib;opencv_imgproc330d.lib;opencv_stitching330d.lib;opencv_videostab330d.lib;opencv_features2d330d.lib;opencv_ml330d.lib;opencv_superres330d.lib;opencv_flann330d.lib;opencv_objdetect330d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(CEFDIR)\$(Configuration);$(libPNG)\lib\$(Configuration);$(OPENCV)\lib\$(Configuration);$(OPENSSL)\lib;$(SolutionDir)KlineUtil\CTP;$(SolutionDir)KlineUtil\GL\lib;$(SolutionDir)KlineUtil\font\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glu32.lib;opengl32.lib;libpng16.lib;zlib.lib;thosttraderapi.lib;thostmduserapi.lib;libcef.lib;libcef_dll_wrapper.lib;opencv_calib3d330d.lib;opencv_highgui330d.lib;opencv_photo330d.lib;opencv_video330d.lib;opencv_core330d.lib;opencv_imgcodecs330d.lib;opencv_shape330d.lib;opencv_videoio330d.lib;opencv_dnn330d.lib;opencv_imgproc330d.lib;opencv_stitching330d.lib;opencv_videostab330d.lib;opencv_features2d330d.lib;opencv_ml330d.lib;opencv_superres330d.lib;opencv_flann330d.lib;opencv_objdetect330d.lib;libcrypto.lib;libssl.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -271,12 +271,14 @@ cd "..\$(ConfigurationName)"
     <ClCompile Include="..\KlineUtil\opencv\CvimgMat.cc">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="..\KlineUtil\security\AES.cc" />
     <ClCompile Include="..\KlineUtil\security\encoding.cc">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\KlineUtil\security\MD5.cc">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="..\KlineUtil\security\verify.cc" />
     <ClCompile Include="..\MFCKline\IMhideWndDlg.cpp" />
     <ClCompile Include="..\MFCKline\IMlogDlg.cpp" />
     <ClCompile Include="..\MFCKline\LoginDlg.cpp" />

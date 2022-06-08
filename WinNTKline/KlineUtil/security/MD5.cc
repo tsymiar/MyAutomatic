@@ -1,5 +1,8 @@
 ﻿#include "MD5.h"
 
+#include <stdlib.h>
+#include <string.h>
+
 typedef unsigned char *POINTER;
 typedef unsigned short int uint2_t;
 typedef unsigned long int uint4_t;
@@ -279,7 +282,7 @@ void md5_f_set(unsigned int x[])
     D += d;
 }
 
-void md5_file(FILE *fp, char dst[])
+void open_md5_file(FILE* fp, char dst[])
 {
     unsigned i, len, flen[2], x[16];
     fseek(fp, 0, SEEK_END);  //文件指针转到文件末尾
@@ -308,7 +311,7 @@ void md5_file(FILE *fp, char dst[])
     printf("MD5Code: %s\n", dst);
 }
 
-void md5_str(char *input, char *output)
+void md5_to_hex(char *input, char *output)
 {
     MD5_CTX context;
     unsigned int len = strlen(input);
@@ -331,24 +334,76 @@ char* get_Hash(char *md5, int len, char *dst)
     return dst;
 }
 
+void hex_to_ascii(unsigned char* hex, char* ascii)
+{
+    if (hex == NULL)
+        return;
+    int len = sizeof(hex) * 4;
+    for (int i = 0; i < len; i++) {
+        char ddl, ddh;
+        ddh = 48 + hex[i] / 16;
+        ddl = 48 + hex[i] % 16;
+        if (ddh > 57) ddh = ddh + 7 + 32;
+        if (ddl > 57) ddl = ddl + 7 + 32;
+        ascii[i * 2] = ddh;
+        ascii[i * 2 + 1] = ddl;
+    }
+    ascii[len * 2] = '\0';
+}
+
+int ascii_to_hex(char* ascii, char* hex)
+{
+    int len = strlen(ascii);
+    int idx, ii = 0;
+    for (idx = 0; idx < len; idx += 2) {
+        unsigned char high = ascii[idx];
+        unsigned char low = ascii[idx + 1];
+
+        if (high >= '0' && high <= '9')
+            high = high - '0';
+        else if (high >= 'A' && high <= 'F')
+            high = high - 'A' + 10;
+        else if (high >= 'a' && high <= 'f')
+            high = high - 'a' + 10;
+        else
+            return -1;
+        if (low >= '0' && low <= '9')
+            low = low - '0';
+        else if (low >= 'A' && low <= 'F')
+            low = low - 'A' + 10;
+        else if (low >= 'a' && low <= 'f')
+            low = low - 'a' + 10;
+        else
+            return -1;
+        hex[ii++] = high << 4 | low;
+    }
+    return 0;
+}
+
+char* get_md5_hex()
+{
+    char encrypt[256];
+    printf("请输入要计算MD5值的字符串: ");
+    gets_s(encrypt);
+    encrypt[255] = '\0';
+    size_t len = strlen(encrypt);
+    if (encrypt[len - 1] == '\n')
+        encrypt[len - 1] = '\0';
+    printf("计算值: ");
+    static char digest[16];
+    md5_to_hex(encrypt, digest);
+    for (int i = 0; i < 16; i++) //16位无符号整数
+        printf("%02X", (unsigned char)digest[i]);
+    printf("\n");
+    return digest;
+}
+
 void test_s_md5()
 {
-    int i;
-    char out[64];
-    char digest[16];
-    char encrypt[256];
-    while (1)
-    {
-        printf("请输入要计算MD5值的字符串: ");
-        gets_s(encrypt);
-        if (encrypt[strlen(encrypt) - 1] == '\n')
-            encrypt[strlen(encrypt) - 1] = '\0';
-        printf("计算值: ");
-        md5_str(encrypt, digest);
-        for (i = 0; i < 16; i++) //16位无符号整数
-            printf("%02X", (unsigned char)digest[i]);
-        printf("\n");
-        hex_to_str((unsigned char*)digest, out);
+    while (1) {
+        char out[64];
+        char* digest = get_md5_hex();
+        hex_to_ascii((unsigned char*)digest, out);
         printf("32字节: %s\n", out);
         printf("16字节: \t%s\n", get_Hash(out, 16, out));
         //getchar();
@@ -364,10 +419,12 @@ void test_f_md5()
         printf("Input file: ");
         gets_s(filename);  //用get函数,避免scanf以空格分割数据
                            //支持文件拖曳,但会多出双引号,该句处理多余的双引号
+        filename[215] = '\0';
+        size_t len = strlen(filename);
         if (filename[0] == 34)
-            filename[strlen(filename) - 1] = 0, strcpy_s(filename, filename + 1);
-        if (filename[strlen(filename) - 1] == 0xA)
-            filename[strlen(filename) - 1] = '\0';
+            filename[len - 1] = 0, strcpy_s(filename, filename + 1);
+        if (filename[len - 1] == 0xA)
+            filename[len - 1] = '\0';
         if (!strcmp(filename, "exit")) exit(0); //输入exit退出
 #ifdef _MSC_VER
         if (fopen_s(&fp, filename, "rb") != 0)
@@ -379,6 +436,6 @@ void test_f_md5()
             continue;
         } else
             //以二进制打开文件
-            md5_file(fp, md5);
+            open_md5_file(fp, md5);
     }
 }

@@ -14,6 +14,7 @@ copy ..\KlineUtil\data .\data
 copy ..\KlineUtil\CTP\*.dll .\
 copy ..\KlineUtil\WPF\*.dll .\
 copy ..\KlineUtil\font\lib\*.dll .\
+copy %OPENSSL%\bin\*.dll .\
 copy %OPENCV%\bin\Debug\*.dll .\
 copy %CEFDIR%\Debug\libcef.dll .\
 copy %CEFDIR%\Debug\chrome_elf.dll .\
