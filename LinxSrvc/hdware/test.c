@@ -34,7 +34,7 @@ int main(int argc, char** argv)
 #elif defined(VIDEO)
     video_capture(argc, argv);
 #elif defined(SNAP)
-    snap_image_test("image");
+    snap_image_test("image", 640, 480);
 #endif
     return 0;
 }
