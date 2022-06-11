@@ -810,9 +810,17 @@ type_thread_func monite(void* arg)
                             strncpy((sd_bufs + UsrSet), "Host zone rejected.", 21);
                             sndlen = 32;
                         } else if (valrtn < -2 && valrtn > -MAX_ZONES - 3) {
-                            join_zone(((valrtn + 3 + MAX_ZONES)), user.usr, reinterpret_cast<char*>(user.join));
-                            sprintf((sd_bufs + UsrSet), "%s exist, %s joins the zone.", user.host, user.usr);
-                            sndlen = 88;
+                            int stat = join_zone(((valrtn + 3 + MAX_ZONES)), user.usr, reinterpret_cast<char*>(user.join));
+                            if (stat >= 0 && user.host[0] != '\0' && user.usr[0] != '\0') {
+                                sprintf((sd_bufs + UsrSet), "'%s' exist, %s joins the group.", user.host, user.usr);
+                                sndlen = 88;
+                            } else if (stat == -3) {
+                                sprintf((sd_bufs + UsrSet), "Already in the group!");
+                                sndlen = 31;
+                            } else {
+                                sprintf((sd_bufs + UsrSet), "Group name invalid!");
+                                sndlen = 29;
+                            }
                         } else {
                             sprintf((sd_bufs + UsrSet), "Create zone '%s' as host.", user.host);
                             sndlen = 64;
@@ -1414,14 +1422,14 @@ int join_zone(int at, char usr[FiledSize], char zone[FiledSize], char* cert)
 {
     int i;
     char* m = usr, * z = zone;
-    if (at < 0)
+    if (at < 0 || m == nullptr)
         return -1;
     if (zones[at].zone.members[MAX_MEMBERS_PER_GROUP - 1][0] != '\0')
         return -2;
     for (i = 0; i < MAX_MEMBERS_PER_GROUP; i++) {
         if (strcmp(zones[at].zone.members[i], m) == 0)
             return -3;
-    };
+    }
     for (i = 0; i < MAX_MEMBERS_PER_GROUP; i++) {
         if (strlen(zones[at].zone.members[i]) == 0) {
             if (strcmp(zones[at].zone.name, z) == 0) {

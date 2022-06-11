@@ -34,11 +34,13 @@ typedef int socklen_t;
 #define signal(_1,_2) {}
 #else
 #define WSACleanup()
+#ifdef USE_EPOLL
+const int g_epollMax = 1024;
+#endif
 #endif
 
 static bool g_thrStat = false;
 static unsigned int g_maxTimes = 100;
-const int g_epollMax = 1024;
 volatile unsigned int g_thrNo_ = 0;
 std::deque<const KaiSocket::Message*>* KaiSocket::m_msgQue = new(std::nothrow)std::deque<const KaiSocket::Message*>();
 char KaiSocket::G_KaiRole[][0xe] = { "NONE", "PRODUCER", "CONSUMER", "SERVER", "BROKER", "CLIENT", "PUBLISH", "SUBSCRIBE", "FILE_CONTENT" };
@@ -127,9 +129,9 @@ int KaiSocket::start()
     local.sin_port = htons(port);
     local.sin_family = AF_INET;
     local.sin_addr.s_addr = INADDR_ANY;
-    const char reuse = 0;
     SOCKET listen_socket = m_network.socket;
 #ifdef USE_EPOLL
+    const char reuse = 0;
     setsockopt(listen_socket, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(char));
     if (fcntl(listen_socket, F_SETFL, fcntl(listen_socket, F_GETFD, 0) | O_NONBLOCK) == -1) {
         return -6;
@@ -569,7 +571,7 @@ void KaiSocket::handleNotify(Network& network)
             << "### " << (m_network.client ? "Server" : "Client")
             << "(" << it->IP << ":" << it->PORT << ") socket ["
             << it->socket << "] lost.";
-        if (it->socket == network.socket && network.run_01 || errno == EBADF) {
+        if ((it->socket == network.socket && network.run_01) || errno == EBADF) {
             it->run_01 = false;
             close(it->socket);
             static SOCKET socket = 0;
