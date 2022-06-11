@@ -13,14 +13,14 @@ CLIENTLOCAL=../../WinNTKline/IMclient
 CLIENTFILES=$(IMLOCAL)/client.cc $(CLIENTLOCAL)/imclient.cpp
 all: IM client Kai
 IM:
-	if [ ! -d "$(GEN)" ]; then mkdir $(GEN); fi;
+	@if [ ! -d "$(GEN)" ]; then mkdir $(GEN); fi;
 	$(CXX) $(FLAG) $(IMFILE) -o $(GEN)/IM.exe $(PTHD)
 client:
 	$(CXX) $(FLAG) -I$(IMLOCAL) $(CLIENTFILES) -o $(GEN)/Client.exe $(PTHD)
 Kai:
-	if [ ! -d "$(OBJ)" ]; then mkdir $(OBJ); fi;
+	@if [ ! -d "$(OBJ)" ]; then mkdir $(OBJ); fi;
 	$(CXX) -c $(CUR)/KaiSocket.cc  $(FLAG) $(PTHD) $(EXP)
 	$(CXX) -g $(CUR)/KaiSocket.cc $(CUR)/KaiTest.cpp $(FLAG) $(PTHD) -o $(GEN)/kaics.exe $(EXP)
-	mv *.o $(OBJ)/
+	@mv *.o $(OBJ)/
 clean:
-	rm -rvf $(GEN)/*.exe* $(OBJ) bin build out
+	@rm -rvf $(GEN)/*.exe* $(OBJ) bin build out
