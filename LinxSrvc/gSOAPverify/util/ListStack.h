@@ -1,21 +1,30 @@
 #pragma once
 
-#include <malloc.h>
+#include <cstdlib>
 
 struct List {
-    List* prev;
+    char check;
     void* addr;
+    List* prev;
     List* next;
-    List(void* elem) : prev(0), next(0), addr(0) {
-        addr = (List*)malloc(sizeof(List));
-        if (addr != NULL) {
-            prev = next = this;
-            addr = elem;
-        }
-    };
+    List() : prev(NULL),
+        next(NULL),
+        addr(NULL), check(0) {
+        addr = malloc(sizeof(List));
+    }
     ~List() {
-        if (addr != NULL)
+        if (addr != NULL && !check) {
             free(addr);
+            addr = NULL;
+        }
+    }
+    List(void* elem) : check(1) {
+        prev = next = NULL;
+        if (elem != NULL) {
+            addr = elem;
+        } else {
+            addr = NULL;
+        }
     }
 };
 
@@ -51,15 +60,16 @@ public:
     }
     PosPtr find(Element elem);
     PosPtr find_previous(Element elem);
-    List* insert(Element elem, PosPtr ppos);
+    List* insert(Element elem, PosPtr posp);
     List* insert(int index, Element element);
+    List* add(List* node, PosPtr posp);
     List* add(Element elem);
     List* get(int num);
     int size();
     void remove(Element elem);
     bool contains(Element elem);
-    PosPtr advance(PosPtr ppos, int step);
-    Element retrieve(PosPtr ppos);
+    PosPtr advance(PosPtr posp, int step);
+    Element retrieve(PosPtr posp);
     List* first();
     List* last();
     List* makeEmpty();
@@ -94,58 +104,58 @@ public:
     BinaryTree(Tree T) {
         tree = &T;
     };
-    Tree* make_empty();
-    PosPtr find(Element elem);
-    PosPtr min();
-    PosPtr max();
-    Tree* insert(Element x);
-    Tree* Delete(Element x);
-    Element retrieve(PosPtr ppos);
+    void MakeEmpty(PosPtr posp);
+    Tree* Find(Element elem, PosPtr posp);
+    Tree* Min(PosPtr posp);
+    Tree* Max(PosPtr posp);
+    Tree* Insert(Element elem, PosPtr posp);
+    Tree* Delete(Element elem, PosPtr posp);
+    Element Retrieve(PosPtr posp);
 };
 
 template<typename Element>
 inline List* LinkedList<Element>::find(Element elem)
 {
-    PosPtr ppos = list;
+    PosPtr posp = list;
     int i = 0;
-    while (ppos != nullptr && ppos->addr != elem) {
+    while (posp != nullptr && posp->addr != elem) {
         if (++i > count) {
-            ppos = nullptr;
+            posp = nullptr;
             break;
         }
-        ppos = ppos->prev;
+        posp = posp->prev;
     }
-    if (ppos == nullptr) {
+    if (posp == nullptr) {
         i = 0;
-        ppos = list;
-        while (ppos != nullptr && ppos->addr != elem) {
+        posp = list;
+        while (posp != nullptr && posp->addr != elem) {
             if (++i > count) {
-                ppos = nullptr;
+                posp = nullptr;
                 break;
             }
-            ppos = ppos->next;
+            posp = posp->next;
         }
     }
-    return ppos;
+    return posp;
 }
 
 template<typename Element>
 inline List* LinkedList<Element>::find_previous(Element elem)
 {
-    List* ppos = find(elem);
-    if (ppos == nullptr)
+    List* posp = this->find(elem);
+    if (posp == nullptr)
         return nullptr;
-    return ppos->prev;
+    return posp->prev;
 }
 
 template<typename Element>
-inline List* LinkedList<Element>::insert(Element elem, PosPtr ppos)
+inline List* LinkedList<Element>::insert(Element elem, PosPtr posp)
 {
-    List* temp = new List(0);
+    List* temp = new List();
     temp->prev = list;
-    if (ppos != nullptr && nullptr != find((Element)ppos->addr) && list->addr != ppos->addr) {
+    if (posp != nullptr && nullptr != find((Element)posp->addr) && list->addr != posp->addr) {
         temp->next = temp->prev;
-        temp->prev = ppos;
+        temp->prev = posp;
     }
     if (temp->addr != nullptr) {
         temp->next->addr = (void*)elem;
@@ -168,29 +178,38 @@ inline List* LinkedList<Element>::insert(int index, Element element)
     int it = 0;
     while (buff != nullptr) {
         if (++it == index) {
-            elem->prev = buff;
-            elem->next = buff->next;
-            buff->next->prev = elem;
-            buff->next = elem;
+            buff = this->add(elem, buff);
             break;
         }
         buff = buff->next;
     }
-    count++;
     return list;
+}
+
+template<typename Element>
+inline List* LinkedList<Element>::add(List* node, PosPtr posp)
+{
+    if (posp->next == nullptr) {
+        node->prev = posp;
+        posp->next = node;
+    } else if (posp->prev == nullptr) {
+        node->next = posp;
+        posp->prev = node;
+    } else {
+        node->prev = posp;
+        node->next = posp->next;
+        posp->next->prev = node;
+        posp->next = node;
+    }
+    count++;
+    return posp;
 }
 
 template<typename Element>
 inline List* LinkedList<Element>::add(Element elem)
 {
-    List* tmp1 = new List((void*)elem);
-    List* tmp2 = list->prev;
-    tmp1->prev = tmp2;
-    tmp1->next = tmp2->next;
-    tmp2->next->prev = tmp1;
-    tmp2->next = tmp1;
-    count++;
-    return list;
+    List* node = new List((void*)elem);
+    return this->add(node, list);
 }
 
 template<typename Element>
@@ -199,16 +218,16 @@ inline List* LinkedList<Element>::get(int num)
     if (num < 0 || num >= count)
         return nullptr;
     int i = 0;
-    List* ppos = list;
-    while (ppos->next != nullptr) {
+    List* posp = list;
+    while (posp->next != nullptr) {
         if (num == 0)
-            return ppos;
+            return posp;
         if (i == num)
             break;
-        ppos = ppos->next;
+        posp = posp->next;
         i++;
     }
-    return ppos;
+    return posp;
 }
 
 template<typename Element>
@@ -220,11 +239,11 @@ inline int LinkedList<Element>::size()
 template<typename Element>
 inline void LinkedList<Element>::remove(Element elem)
 {
-    List* ppos = find(elem);
-    if (ppos != nullptr) {
-        ppos->prev->next = ppos->next;
-        ppos->next->prev = ppos->prev;
-        delete ppos;
+    List* posp = find(elem);
+    if (posp != nullptr) {
+        posp->prev->next = posp->next;
+        posp->next->prev = posp->prev;
+        delete posp;
         count--;
     }
 }
@@ -236,46 +255,43 @@ inline bool LinkedList<Element>::contains(Element elem)
 }
 
 template<typename Element>
-inline List* LinkedList<Element>::advance(PosPtr ppos, int step)
+inline List* LinkedList<Element>::advance(PosPtr posp, int step)
 {
     if (step < 0)
         return nullptr;
     for (int i = 0; i < step; i++)
-        ppos = ppos->next;
-    return ppos;
+        posp = posp->next;
+    return posp;
 }
 
 template<typename Element>
-inline Element LinkedList<Element>::retrieve(PosPtr ppos)
+inline Element LinkedList<Element>::retrieve(PosPtr posp)
 {
-    return ppos->addr;
+    return posp->addr;
 }
 
 template<typename Element>
 inline List* LinkedList<Element>::first()
 {
     int i = count;
-    List* ppos = list;
-    while (ppos->prev != nullptr) {
+    List* posp = list;
+    while (posp->prev != nullptr) {
         if (--i < 0)
             break;
-        ppos = ppos->prev;
+        posp = posp->prev;
     }
-    return ppos;
+    return posp;
 }
 
 template<typename Element>
 inline List* LinkedList<Element>::last()
 {
-    return get(count - 1);
+    return this->get(count - 1);
 }
 
 template<typename Element>
 inline List* LinkedList<Element>::makeEmpty()
 {
-    if (list->addr != nullptr) {
-        list->addr = nullptr;
-    }
     if (list->prev != nullptr) {
         delete list->prev;
         list->prev = nullptr;
@@ -284,6 +300,9 @@ inline List* LinkedList<Element>::makeEmpty()
         delete list->next;
         list->next = nullptr;
     }
+    if (list->addr != nullptr) {
+        list->addr = nullptr;
+    }
     count = 0;
     return list;
 }
@@ -291,11 +310,11 @@ inline List* LinkedList<Element>::makeEmpty()
 template<typename Element>
 inline int LinkedList<Element>::indexOf(Element elem)
 {
-    List* ppos = list;
+    List* posp = list;
     for (int i = 0; i < count; i++) {
-        if (ppos->addr == elem)
+        if (posp->addr == elem)
             return i;
-        ppos = ppos->next;
+        posp = posp->next;
     }
     return -1;
 }
@@ -309,7 +328,7 @@ inline bool LinkedList<Element>::isEmpty()
 template<typename Element>
 inline void LinkedList<Element>::Delete(Element elem)
 {
-    remove(elem);
+    this->remove(elem);
 }
 
 template<typename Element>
@@ -333,16 +352,16 @@ template<typename Element>
 inline void ListStack<Element>::make_empty()
 {
     while (!is_empty()) {
-        pop();
+        this->pop();
     }
 }
 
 template<typename Element>
 inline Stack* ListStack<Element>::push(Element elem)
 {
-    Stack* ppos = new Stack((void*)elem);
-    ppos->next = stack;
-    stack = ppos;
+    Stack* posp = new Stack((void*)elem);
+    posp->next = stack;
+    stack = posp;
     return stack;
 }
 
@@ -355,7 +374,106 @@ inline Element ListStack<Element>::top()
 template<typename Element>
 inline void ListStack<Element>::pop()
 {
-    Stack* ppos = stack->next;
+    Stack* posp = stack->next;
     delete stack;
-    stack = ppos;
+    stack = posp;
+}
+
+template<typename Element>
+inline void BinaryTree<Element>::MakeEmpty(PosPtr posp)
+{
+    if (posp != nullptr) {
+        this->make_empty(posp->left);
+        this->make_empty(posp->right);
+        delete posp;
+    }
+}
+
+template<typename Element>
+inline Tree* BinaryTree<Element>::Find(Element elem, PosPtr posp)
+{
+    if (posp == nullptr) {
+        return nullptr;
+    }
+    if (elem < posp->addr) {
+        return this->find(elem, posp->left);
+    } else if (elem > posp->addr) {
+        return this->find(elem, posp->right);
+    } else {
+        return posp;
+    }
+}
+
+template<typename Element>
+inline Tree* BinaryTree<Element>::Min(PosPtr posp)
+{
+    if (posp == nullptr) {
+        return nullptr;
+    } else if (posp->left == nullptr) {
+        return posp;
+    } else {
+        return min(posp->left);
+    }
+}
+
+template<typename Element>
+inline Tree* BinaryTree<Element>::Max(PosPtr posp)
+{
+    if (posp != nullptr) {
+        while (posp->right != nullptr) {
+            posp = posp->right;
+        }
+    }
+    return posp;
+}
+
+template<typename Element>
+inline Tree* BinaryTree<Element>::Insert(Element elem, PosPtr posp)
+{
+    if (posp == nullptr) {
+        posp = new Tree();
+        if (posp != nullptr) {
+            posp->addr = elem;
+            posp->left = posp->right = nullptr;
+        }
+    } else if (elem < posp->addr) {
+        posp->left = Insert(elem, posp->left);
+    } else if (elem > posp->addr) {
+        posp->right = Insert(elem, posp->right);
+    }
+    return posp;
+}
+
+template<typename Element>
+inline Tree* BinaryTree<Element>::Delete(Element elem, PosPtr posp)
+{
+    PosPtr cell;
+    if (posp != nullptr) {
+        if (elem < posp->addr) {
+            posp->left = Delete(elem, posp->left);
+        }
+        if (elem > posp->addr) {
+            posp->right = Delete(elem, posp->left);
+        }
+        if (posp->left && posp->right) {
+            cell = Min(posp->right);
+            posp->addr = cell->addr;
+            posp->right = Delete(posp->addr, posp->right);
+        } else {
+            cell = posp;
+            if (posp->left == nullptr) {
+                posp = posp->right;
+            } else if (posp->right == nullptr) {
+                posp = posp->left;
+            }
+            delete cell;
+        }
+    }
+    return posp;
+}
+
+template<typename Element>
+inline Element BinaryTree<Element>::Retrieve(PosPtr posp)
+{
+    return posp->addr;
 }
