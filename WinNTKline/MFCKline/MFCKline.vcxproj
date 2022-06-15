@@ -275,7 +275,7 @@ cd "..\$(ConfigurationName)"
     <Text Include="..\KlineUtil\ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\LinxSrvc\gSOAPverify\util\String_-inl.h" />
+    <ClInclude Include="..\..\LinxSrvc\include\String_-inl.h" />
     <ClInclude Include="..\KlineUtil\boost\boostest.h" />
     <ClInclude Include="..\KlineUtil\deep\Level2View.h" />
     <ClInclude Include="..\KlineUtil\Def\MacroDef.h" />

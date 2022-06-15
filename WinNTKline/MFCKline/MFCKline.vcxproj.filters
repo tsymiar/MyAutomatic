@@ -51,7 +51,7 @@
     <ClInclude Include="SetMarkDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\LinxSrvc\gSOAPverify\util\String_-inl.h">
+    <ClInclude Include="..\..\LinxSrvc\include\String_-inl.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\KlineUtil\com\Initialise-inl.h">

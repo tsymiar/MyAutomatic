@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #if (defined __linux ) || (defined sprintf_s)
 #undef sprintf_s
@@ -19,7 +19,7 @@ typedef std::string String_;
 #define equals_ equals
 #define replace_ replace
 
-inline unsigned char* fix_strerr(unsigned char* str)
+inline unsigned char* avoid_str_err(unsigned char* str)
 {
     for (int i = 0; i < (int)strlen((const char*)str); i++)
         switch (str[i])
@@ -90,11 +90,11 @@ public:
     static int strcut_(unsigned char* str, char ch, char* str1, char* str2);
     static unsigned char* strsub_(unsigned char* ch, int pos, int len);
     static char* reverse_(char* src, char* cst);
-    static int charcount_(char* arr, char ch);
-    static int charcount2_(char** arr, char ch, int m = 1/*1st dim of arr*/);
-    static char* charstrmove_(char* w, char ch, int d, bool fore = false/*默认向后*/);
-    static char* charposmove_(char* w, int m, int d, bool fore = false);
-    static char* strmove_(char* w, int m, bool fore = false);
+    static int char_count_(char* arr, char ch);
+    static int char_count_array_(char** arr, char ch, int m = 1/*1st dim of arr*/);
+    static char* str_ch_move_(char* w, char ch, int d, bool fore = false/*默认向后*/);
+    static char* str_pos_move_(char* w, int m, int d, bool fore = false);
+    static char* str_roll_move_(char* w, int m, bool fore = false);
 private:
     char* m_data;
 };
@@ -138,18 +138,18 @@ inline String_& String_::operator=(const String_& other)
 
 inline String_ /*&*/ String_::operator+(const String_& other)
 {
-    String_ newstring;
+    String_ new_string;
     if (!other.m_data)
-        newstring = *this;
+        new_string = *this;
     else if (!m_data)
-        newstring = other;
+        new_string = other;
     else
     {
-        newstring.m_data = new char[strlen_(m_data) + strlen_(other.m_data) + 1];
-        newstring.strcpy_(newstring.m_data, m_data);
-        newstring.strcat_(newstring.m_data, other.m_data);
+        new_string.m_data = new char[strlen_(m_data) + strlen_(other.m_data) + 1];
+        new_string.strcpy_(new_string.m_data, m_data);
+        new_string.strcat_(new_string.m_data, other.m_data);
     }//内联函数不该返回局部变量的引用
-    return newstring;
+    return new_string;
 }
 
 inline String_ String_::operator+=(const String_& other)
@@ -232,14 +232,14 @@ inline int String_::indexOf_(String_ str)
     return -1;
 }
 
-inline String_ String_::replace_(char old, char rplc)
+inline String_ String_::replace_(char old, char dst)
 {
     size_t len = strlen_(m_data);
     char* str = new char[len];
     strcpy_(str, m_data, len);
     for (unsigned int i = 0; i < len; i++) {
         if (m_data[i] == old) {
-            str[i] = rplc;
+            str[i] = dst;
         }
     }
     str[len] = '\0';
@@ -399,19 +399,19 @@ inline unsigned char* String_::strsub_(unsigned char* ch, int pos, int len)
     //定义一个字符指针，指向传递进来的ch地址
     unsigned char* pch = ch;
     //通过calloc来分配一个len长度的字符数组，返回的是字符指针
-    unsigned char* subch = (unsigned char*)calloc(sizeof(unsigned char), (size_t)(len + 1));
+    unsigned char* sub = (unsigned char*)calloc(sizeof(unsigned char), (size_t)(len + 1));
     int i;
     //只有在C99下for循环中才可以声明变量，这里写在外面，提高兼容性
     pch = pch + pos;
     //是pch指针指向pos位置
     for (i = 0; i < len; i++)
     {//循环遍历赋值数组
-        subch[i] = *(pch++);
+        sub[i] = *(pch++);
     }
     //加上字符串结束符
-    subch[len] = '\0';
+    sub[len] = '\0';
     //返回分配的字符数组地址
-    return subch;
+    return sub;
     //该地址指向的内存必须在函数外释放(free)
 }
 // 字符串逆序输出
@@ -430,7 +430,7 @@ inline char* String_::reverse_(char* src, char* cst)
     return cst;
 }
 
-inline int String_::charcount_(char* arr, char ch)
+inline int String_::char_count_(char* arr, char ch)
 {
     int i = 0;
     char* str = arr;
@@ -454,9 +454,9 @@ inline int String_::charcount_(char* arr, char ch)
     char *a[16] = { NULL };
     for(int i = 0; i < m; i++)
         a[i] = l[i]; // (char*)[const char* point]
-    int s = charcount2_(a, 'c', m);
+    int s = char_array_count_(a, 'c', m);
 */
-inline int String_::charcount2_(char** arr, char ch, int m)
+inline int String_::char_count_array_(char** arr, char ch, int m)
 {
     int i = 0;
     int num = 0;
@@ -485,7 +485,7 @@ inline int String_::charcount2_(char** arr, char ch, int m)
   * b, 移动的位数
   * fore, 移动的方向(默认后移)
   **/
-inline char* String_::charstrmove_(char* w, char ch, int d, bool fore)
+inline char* String_::str_ch_move_(char* w, char ch, int d, bool fore)
 {
     int i = 0;
     char* t = w;
@@ -519,7 +519,7 @@ inline char* String_::charstrmove_(char* w, char ch, int d, bool fore)
 // m: 字符位置
 // d: 位数
 // fore: 默认后移
-inline char* String_::charposmove_(char* w, int m, int d, bool fore)
+inline char* String_::str_pos_move_(char* w, int m, int d, bool fore)
 {
     int i = 0;
     m -= 1;
@@ -542,7 +542,7 @@ inline char* String_::charposmove_(char* w, int m, int d, bool fore)
     return w;
 }
 //字符串整体环状移动
-inline char* String_::strmove_(char* w, int m, bool fore)
+inline char* String_::str_roll_move_(char* w, int m, bool fore)
 {
     int i = 0;
     size_t len = strlen_(w);
