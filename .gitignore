@@ -54,8 +54,7 @@ build
 *.idea
 */moc_*
 */ui_*
-*/test
-/.vs*
+**/.vs*
 !.vsconfig
 *.user
 *Debug
