@@ -13,4 +13,13 @@ steps:
 - script: |
     ./build.sh all -j
     ./build.sh clean
-  displayName: 'make LinxSrvc'
+  displayName: 'make main'
+- script: |
+    cd LinxSrvc/test
+    git clone https://github.com/google/googletest.git
+    git pull
+    if [ ! -d "build" ]; then mkdir build && cd build; fi;
+    cmake ..
+    make -j
+    ./test
+  displayName: 'make test'
