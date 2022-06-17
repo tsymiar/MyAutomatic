@@ -1,10 +1,12 @@
 #pragma once
 
-#include <cstdlib>
+#include <stdlib.h>
 
+#ifndef WIN32
 #ifndef nullptr
 #define nullptr NULL
 #endif
+#endif // !WIN32
 
 struct List {
     bool check;
@@ -86,8 +88,8 @@ template <typename Element> class ListStack {
 private:
     Stack* m_stack;
 public:
-    ListStack(Element S) : m_stack(nullptr) {
-        m_stack->addr = (void*)S;
+    ListStack(Element S) {
+        m_stack = new Stack(S);
     }
     ListStack() {
         m_stack = new Stack(nullptr);

@@ -1,0 +1,3 @@
+[submodule "LinxSrvc/test/googletest"]
+	path = LinxSrvc/test/googletest
+	url = https://github.com/google/googletest.git
