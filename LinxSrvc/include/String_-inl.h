@@ -57,16 +57,16 @@ class String_ {
 public:
     String_(const char* str = nullptr);//赋值兼默认构造函数（char）
     String_(const String_& other);     //赋值构造函数（String_）
-    ~String_(void) { delete[] m_data; }
+    ~String_(void) { if (m_data) delete[] m_data; }
     String_& operator=(const String_& other);
     String_/*&*/ operator+(const String_& other);
     String_ operator+=(const String_& other);
     bool operator==(const String_&);
     char& operator[](unsigned int) const;
-    char* c_str_() const {
-        return m_data;
-    };
+    char* c_str_() const { return m_data; }
     size_t size_() {
+        if (!m_data)
+            return 0;
         int len;
         for (len = 0; m_data[len] != '\0'; len++) { ; }
         if (len == (sizeof(m_data) / sizeof(char*) + 1))
@@ -186,10 +186,10 @@ inline ostream& operator<<(ostream& os, const String_& str)
 
 inline istream& operator >> (istream& input, String_& s)
 {
-    char temp[255];//存储输入流
-    input >> setw(255) >> temp;
-    s = temp;//赋值
-    return input;//支持连续使用>>运算符
+    char buf[255]; // 存储输入流
+    input >> setw(255) >> buf;
+    s = buf; // 赋值
+    return input; // 支持连续使用>>运算符
 }
 
 inline String_ String_::trim_()

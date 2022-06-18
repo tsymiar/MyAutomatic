@@ -128,7 +128,7 @@ public:
     Tree* Min(PosPtr posp);
     Tree* Max(PosPtr posp);
     Tree* Insert(Element elem, PosPtr& posp);
-    void Delete(Element elem, PosPtr posp);
+    Tree* Delete(Element elem, PosPtr& posp);
     Element Retrieve(PosPtr posp);
 };
 
@@ -466,7 +466,7 @@ inline Tree* BinaryTree<Element>::Insert(Element elem, PosPtr& posp)
 }
 
 template<typename Element>
-inline void BinaryTree<Element>::Delete(Element elem, PosPtr posp)
+inline Tree* BinaryTree<Element>::Delete(Element elem, PosPtr& posp)
 {
     PosPtr cell;
     if (posp != nullptr) {
@@ -479,7 +479,7 @@ inline void BinaryTree<Element>::Delete(Element elem, PosPtr posp)
         if (posp->left && posp->right) {
             cell = Min(posp->right);
             posp->addr = cell->addr;
-            posp->right = Delete(posp->addr, posp->right);
+            posp->right = Delete((Element)posp->addr, posp->right);
         } else {
             cell = posp;
             if (posp->left == nullptr) {
@@ -490,6 +490,7 @@ inline void BinaryTree<Element>::Delete(Element elem, PosPtr posp)
             delete cell;
         }
     }
+    return posp;
 }
 
 template<typename Element>
