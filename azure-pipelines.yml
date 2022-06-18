@@ -16,10 +16,11 @@ steps:
   displayName: 'make main'
 - script: |
     cd LinxSrvc/test
+    git clone https://github.com/linux-test-project/lcov.git
+    git pull
+    cd lcov && make install
+    cd - && rm -rvf lcov
     git clone https://github.com/google/googletest.git
     git pull
-    if [ ! -d "build" ]; then mkdir build && cd build; fi;
-    cmake ..
-    make -j
-    ./test
-  displayName: 'make test'
+    ./test.sh
+  displayName: 'make test-cov'

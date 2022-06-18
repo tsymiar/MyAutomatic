@@ -4,8 +4,8 @@ set(TARGET test)
 
 project ("${TARGET}")
 set(CXX_STANDARD 11)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -ggdb -g -fprofile-arcs -ftest-coverage")
 
-add_definitions(-std=c++11)
 add_subdirectory(googletest)
 
 include_directories (
@@ -22,7 +22,5 @@ target_link_libraries (${TARGET}
     gmock
     gtest_main
     gtest
-    -Wall
-    -ggdb
     -lc++
 )
