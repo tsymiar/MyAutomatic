@@ -1,9 +1,6 @@
 #include "test.h"
 #include "Structures.h"
 
-#include <iostream>
-using namespace std;
-
 class TestCase {
 public:
     int value;
@@ -12,7 +9,7 @@ public:
 TEST(Structures, LinkedList)
 {
     TestCase test0;
-    LinkedList<TestCase *> link(&test0);
+    LinkedList<TestCase*> link(&test0);
     EXPECT_EQ(1, link.size());
     TestCase test1;
     test1.value = 1;
@@ -32,7 +29,8 @@ TEST(Structures, LinkedList)
     link.remove(&test1);
     EXPECT_EQ(false, link.contains(&test1));
     EXPECT_EQ(-1, link.indexOf(&test1));
-    EXPECT_EQ(2, link.size());
+    link.add(&test1);
+    EXPECT_EQ(3, link.size());
 }
 
 TEST(Structures, ListStack)
@@ -68,12 +66,18 @@ TEST(Structures, ListStack)
 TEST(Structures, BinaryTree)
 {
     TestCase test0;
-    BinaryTree<TestCase*> tree(&test0);
+    BinaryTree<TestCase*> btree(&test0);
     BinaryTree<TestCase*>::PosPtr posp = new Tree();
     TestCase test1;
     test1.value = 1;
-    EXPECT_NE(nullptr, (long)tree.Insert(&test1, posp));
+    Tree* tree = btree.Insert(&test1, posp);
+    EXPECT_NE(nullptr, (long)tree);
     TestCase test2;
     test2.value = 2;
+    EXPECT_EQ(btree.Insert(&test2, tree), tree);
+    EXPECT_NE(btree.Find(&test1, tree), tree);
+    EXPECT_EQ(btree.Max(tree)->addr, &test1);
+    EXPECT_EQ((long)btree.Min(tree)->addr, nullptr);
+    // EXPECT_EQ((long)btree.MakeEmpty(tree), nullptr);
     delete posp;
 }
