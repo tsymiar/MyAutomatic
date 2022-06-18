@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#if (defined __linux ) || (defined sprintf_s)
+#if (defined __linux ) || (defined sprintf_s) || (!defined _WIN32)
 #undef sprintf_s
 #define sprintf_s sprintf
 #endif // __linux
@@ -172,6 +172,10 @@ inline char& String_::operator[](unsigned int e) const
 {
     if (e <= strlen_(m_data))
         return m_data[e];
+    else {
+        static char s = '\0';
+        return s;
+    }
 }
 
 inline ostream& operator<<(ostream& os, const String_& str)
