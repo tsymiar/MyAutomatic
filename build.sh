@@ -1,7 +1,21 @@
 #!/bin/bash
 PWD=$(pwd)
-cd "${PWD}/LinxSrvc" && make "$@" && cd -
-if [ -d "build" ] && [ "$1" == "clean" ];
+if [ "$1" == "test" ];
 then
-    rm -rvf build;
+    cd LinxSrvc/test
+    ./test.sh clean
+    ./test.sh
+    cd -
+    exit 0;
+fi;
+cd "${PWD}/LinxSrvc" && make "$@" && cd -
+if [ "$1" == "clean" ];
+then
+    if [ -d "build" ]; then rm -rvf lib build; fi;
+    if [ -d "${PWD}/LinxSrvc/test/build" ];
+    then
+        cd ${PWD}/LinxSrvc/test
+        ./test.sh clean
+        cd -
+    fi
 fi;

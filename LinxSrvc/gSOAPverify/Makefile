@@ -22,7 +22,7 @@ gSOAPverify:$(OUT)
 	@[ ! -d ${GEN} ] && mkdir ${GEN} || echo ${GEN}
 ifneq ($(shell if [ ! -d /usr/lib/mysql ] && [ `ls /usr/lib/libmysql* | wc -l` -le 0 ]; then echo false; fi;), false)
 	g++ $(FLAG) -c ./sql/sqlDbReq.cc $(SQL)
-	g++ $(FLAG) -c ./main/mainSoap.cc $(PTHD)
+	g++ $(FLAG) -I.. -c ./main/mainSoap.cc $(PTHD)
 	g++ $(FLAG) -o $(GEN)/gSOAPverify $(SYS) $(SOAP) $(MAIN) $(SQL) $(PTHD)
 else
 	@echo Built gSOAPverify without linking mysql library

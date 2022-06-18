@@ -1,10 +1,10 @@
 //
-#include"../util/String_-inl.h"
+#include"mainSoap.h"
+#include"include/String_-inl.h"
 #include"../sql/sqlDbReq.h"
 #include"../sys/status.h"
 #include"../soap/soapStub.h"
 #include"../soap/myweb.nsmap"
-#include"mainSoap.h"
 
 pthread_mutex_t queue_lock;      // 队列锁
 pthread_cond_t  queue_cond;      // 条件变量
@@ -256,7 +256,7 @@ int api__trans(struct soap* soap, char* msg, char* rtn[])
     char* curstr[4] = { NULL };
     struct PARAM params[8];
     char* text[8] = { msg };
-    int neq = str.charcount_(*text, '=');
+    int neq = str.char_count_(*text, '=');
     if (neq < 0 || msg == NULL) {
         memcpy(text[0], "request uri error!", 19);
         return -1;
