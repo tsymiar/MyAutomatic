@@ -7,7 +7,7 @@ then
     then
         if [ $(ls lcov/* | wc -l) -le 0 ]
         then
-            git clone https://github.com/linux-test-project/lcov.git
+            git submodule update --init --recursive
             git pull
         fi
         cd lcov && make install

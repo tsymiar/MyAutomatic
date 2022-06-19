@@ -1,17 +1,16 @@
 #ifndef mainSoap_H
 #define mainSoap_H
 
-#include <sys/ioctl.h>  
+#include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <linux/errno.h>
+#include <unistd.h>
+#include <fcntl.h>
 #include <signal.h>
-#include <fcntl.h> 
-#include <unistd.h>  
-#include <cerrno> 
-#include <cstdlib> 
-#include <cstdio>
 #include <pthread.h>
+#include <cstdio>
+#include <cstdlib>
 
 #define HAVE_STRUCT_TIMESPEC
 
