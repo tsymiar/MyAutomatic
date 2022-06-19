@@ -1,15 +1,31 @@
 #!/bin/bash
 PWD=$(pwd)
-if [ "$1" == "test" ];
+if [ "$1" == "test" ]
 then
     cd LinxSrvc/test
+    if [ ! $(whereis lcov | awk '{print $2}') ]
+    then
+        if [ $(ls lcov/* | wc -l) -le 0 ]
+        then
+            git clone https://github.com/linux-test-project/lcov.git
+            git pull
+        fi
+        cd lcov && make install
+        cd - && rm -rvf lcov
+    fi
+    if [ $(ls googletest/* | wc -l) -le 0 ]
+    then
+        git clone https://github.com/google/googletest.git
+        git pull
+    fi
     ./test.sh clean
     ./test.sh
-    cd -
+    cd ${PWD}
     exit 0;
-fi;
-cd "${PWD}/LinxSrvc" && make "$@" && cd -
-if [ "$1" == "clean" ];
+else
+    cd "${PWD}/LinxSrvc" && make "$@" && cd -
+fi
+if [ "$1" == "clean" ]
 then
     if [ -d "build" ]; then rm -rvf lib build; fi;
     if [ -d "${PWD}/LinxSrvc/test/build" ];
@@ -18,4 +34,4 @@ then
         ./test.sh clean
         cd -
     fi
-fi;
+fi
