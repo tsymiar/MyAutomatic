@@ -58,7 +58,7 @@ TEST(Structures, ListStack)
     test = stacks.top();
     EXPECT_EQ(test->value, 3);
     while (stack != nullptr && stack->next != nullptr) {
-        EXPECT_EQ(((TestCase*)stack->addr)->value, value--);
+        EXPECT_EQ((reinterpret_cast<TestCase*>(stack->addr))->value, value--);
         stack = stack->next;
     }
 }

@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
             kai.registerCallback(hook0);
             kai.appendCallback(hook1);
         }
-        if (usage < 0xe) {
+        if (usage < 0xe && usage >= 0) {
             cout << argv[0] << ": Run as [" << usage << "](" << KaiSocket::G_KaiRole[usage] << ")" << endl;
         }
         string topic = "topic";

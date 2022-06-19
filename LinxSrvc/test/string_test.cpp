@@ -15,9 +15,10 @@ TEST(String_, operator)
     EXPECT_EQ(s1[100], '\0');
     String_ s2 = "aaa";
     std::filebuf fbuf;
-    fbuf.open("test.txt", std::ios::out);
-    std::ostream os(&fbuf);
-    os << s2;
+    if (fbuf.open("test.txt", std::ios::out) != nullptr) {
+        std::ostream os(&fbuf);
+        os << s2;
+    }
     fbuf.close();
     if (fbuf.open("test.txt", std::ios_base::in) != nullptr) {
         std::istream is(&fbuf);
