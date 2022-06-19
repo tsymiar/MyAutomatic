@@ -22,8 +22,7 @@ typedef std::string String_;
 inline unsigned char* avoid_str_err(unsigned char* str)
 {
     for (int i = 0; i < (int)strlen((const char*)str); i++)
-        switch (str[i])
-        {
+        switch (str[i]) {
         case 0xcc:/*烫 未初始化*/
         case 0xCD:/*heapk(new)*/
         case 0xDD://已收回的堆(delete)
@@ -88,7 +87,7 @@ public:
     static size_t strlen_(const char* str);
     static char* /*__cdecl*/strcat_(char* destination, const char* source);
     static int strcut_(unsigned char* str, char ch, char* str1, char* str2);
-    static unsigned char* strsub_(unsigned char* ch, int pos, int len);
+    static unsigned char* strsub_(unsigned char* src, int pos, int len);
     static char* reverse_(char* src, char* cst);
     static int char_count_(char* arr, char ch);
     static int char_count_array_(char** arr, char ch, int m = 1/*1st dim of arr*/);
@@ -113,8 +112,7 @@ inline String_::String_(const String_& other)
 {//类的成员函数内可以访问同种对象的私有成员（同种类为友元关系的类）
     if (!other.m_data)
         m_data = 0;
-    else
-    {
+    else {
         m_data = new char[strlen_(other.m_data) + 1];
         strcpy_(m_data, other.m_data);
     }
@@ -122,13 +120,11 @@ inline String_::String_(const String_& other)
 
 inline String_& String_::operator=(const String_& other)
 {
-    if (this != &other)
-    {
+    if (this != &other) {
         delete[] m_data;
         if (!other.m_data)
             m_data = 0;
-        else
-        {
+        else {
             m_data = new char[strlen_(other.m_data) + 1];
             strcpy_(m_data, other.m_data);
         }
@@ -143,8 +139,7 @@ inline String_ /*&*/ String_::operator+(const String_& other)
         new_string = *this;
     else if (!m_data)
         new_string = other;
-    else
-    {
+    else {
         new_string.m_data = new char[strlen_(m_data) + strlen_(other.m_data) + 1];
         new_string.strcpy_(new_string.m_data, m_data);
         new_string.strcat_(new_string.m_data, other.m_data);
@@ -264,13 +259,28 @@ inline String_ String_::reverse_()
     size_t len = strlen_(m_data);
     char* str = new char[len + 1];
     strcpy_(str, m_data, len);
-    for (unsigned int i = 0; i < len / 2; i++)
-    {
+    for (unsigned int i = 0; i < len / 2; i++) {
         char t = str[i];
         str[i] = str[len - i - 1]; str[len - i - 1] = t;
     }
     str[len] = '\0';
     return str;
+}
+
+// 字符串逆序输出
+inline char* String_::reverse_(char* src, char* cst)
+{
+    size_t len = strlen_(src);
+    char* dest = (char*)malloc(len + 1);//为\0分配一个空间
+    char* d = dest;
+    char* s = &src[len - 1];//指向最后一个字符
+    while (len-- != 0)
+        *d++ = *s--;
+    *d = 0;//尾部加\0
+    strcpy_(cst, dest);
+    assert(dest);
+    free(dest);//释放空间
+    return cst;
 }
 
 inline String_ String_::toLowerCase_()
@@ -305,8 +315,7 @@ inline String_ String_::toUpperCase_()
 
 inline char* String_::itoa_(int num, char* str, int radix)
 {
-    if (num == 0)
-    {
+    if (num == 0) {
         str[0] = '0'; str[1] = '\0';
         return str;
     }
@@ -315,25 +324,21 @@ inline char* String_::itoa_(int num, char* str, int radix)
     int i; int j;
     int value = num;
     if (num < 0) num = -num;
-    while (num >= radix)
-    {
+    while (num >= radix) {
         *ptr++ = string[num % radix];
         num /= radix;
     }
-    if (num)
-    {
+    if (num) {
         *ptr++ = string[num];
         *ptr = '\0';
     }
     int n = j = int(ptr - str - 1);
-    for (i = 0; i < (ptr - str) / 2; i++)
-    {
+    for (i = 0; i < (ptr - str) / 2; i++) {
         int temp = str[i];
         str[i] = str[j];
         str[j--] = (char)temp;
     }
-    if (value < 0)
-    {
+    if (value < 0) {
         for (j = n; j >= 0; --j) str[j + 1] = str[j];
         str[0] = '-';
     }
@@ -345,8 +350,7 @@ inline int String_::memcmp_(const void* ptr1, const void* ptr2, int size)
 {
     if (!size)
         return(0);
-    while (--size && *(char*)ptr1 == *(char*)ptr2)
-    {
+    while (--size && *(char*)ptr1 == *(char*)ptr2) {
         ptr1 = (char*)ptr1 + 1;
         ptr2 = (char*)ptr2 + 1;
     }
@@ -382,34 +386,41 @@ inline char* /*__cdecl*/ String_::strcat_(char* destination, const char* source)
     while (bool((*cp++ = *source++) != '\0')); /* Copy source to tail of destination */
     return(destination);
 }
-//截取字符串str内字符ch左右两边的子串，ch不保留。
-inline int String_::strcut_(unsigned char* str, char ch, char* str1, char* str2)
+//截取字符串src内字符ch左右两边的子串，ch不保留。
+inline int String_::strcut_(unsigned char* src, char ch, char* str1, char* str2)
 {
     char s1[16];
     char s2[16];
     unsigned int i = 0;
-    for (i = 0; i < (unsigned int)strlen_((char*)str); i++)
-        if (str[i] == ch)
+    bool exist = false;
+    for (i = 0; i < (unsigned int)strlen_((char*)src); i++)
+        if (src[i] == ch) {
+            exist = true;
             break;
-    sprintf_s(s1, "%s", (char*)strsub_(str, 0, i));
+        }
+    if (!exist) {
+        strcpy_(str1, (const char*)src, (int)strlen_((const char*)src) + 1);
+        str2[0] = '\0';
+        return -1;
+    }
+    sprintf_s(s1, "%s", (char*)strsub_(src, 0, i));
     strcpy_(str1, s1, (int)strlen_(s1) + 1);
-    sprintf_s(s2, "%s", (char*)strsub_(str, i + 1, (int)strlen_((char*)str) + 1 - i));
+    sprintf_s(s2, "%s", (char*)strsub_(src, i + 1, (int)strlen_((char*)src) + 1 - i));
     strcpy_(str2, s2, (int)strlen_(s2) + 1);
     return i;
 }
-//从第pos位开始截取ch的len个字符。
-inline unsigned char* String_::strsub_(unsigned char* ch, int pos, int len)
+//从第pos位开始截取src的len个字符。
+inline unsigned char* String_::strsub_(unsigned char* src, int pos, int len)
 {
     //定义一个字符指针，指向传递进来的ch地址
-    unsigned char* pch = ch;
+    unsigned char* pch = src;
     //通过calloc来分配一个len长度的字符数组，返回的是字符指针
     unsigned char* sub = (unsigned char*)calloc(sizeof(unsigned char), (size_t)(len + 1));
     int i;
     //只有在C99下for循环中才可以声明变量，这里写在外面，提高兼容性
     pch = pch + pos;
     //是pch指针指向pos位置
-    for (i = 0; i < len; i++)
-    {//循环遍历赋值数组
+    for (i = 0; i < len; i++) {//循环遍历赋值数组
         sub[i] = *(pch++);
     }
     //加上字符串结束符
@@ -418,29 +429,12 @@ inline unsigned char* String_::strsub_(unsigned char* ch, int pos, int len)
     return sub;
     //该地址指向的内存必须在函数外释放(free)
 }
-// 字符串逆序输出
-inline char* String_::reverse_(char* src, char* cst)
-{
-    size_t len = strlen_(src);
-    char* dest = (char*)malloc(len + 1);//为\0分配一个空间
-    char* d = dest;
-    char* s = &src[len - 1];//指向最后一个字符
-    while (len-- != 0)
-        *d++ = *s--;
-    *d = 0;//尾部加\0
-    strcpy_(cst, dest);
-    assert(dest);
-    free(dest);//释放空间
-    return cst;
-}
 
 inline int String_::char_count_(char* arr, char ch)
 {
+    if (arr == NULL) return -1;
     int i = 0;
     char* str = arr;
-    if (arr == NULL) {
-        return -1;
-    }
     while (*(str = arr++) != '\0') {
         if (*str == '\0') {
             break;
@@ -458,23 +452,19 @@ inline int String_::char_count_(char* arr, char ch)
     char *a[16] = { NULL };
     for(int i = 0; i < m; i++)
         a[i] = l[i]; // (char*)[const char* point]
-    int s = char_array_count_(a, 'c', m);
+    int s = char_count_array_(a, 'c', m);
 */
 inline int String_::char_count_array_(char** arr, char ch, int m)
 {
+    if (arr == NULL) return -1;
     int i = 0;
     int num = 0;
     char* str = NULL;
-    if (arr == NULL)
-        return -1;
-    while ((str = *arr++) != NULL)
-    {
+    while ((str = *arr++) != NULL) {
         if (i >= m)
             break;
-        while (*str != '\0')
-        {
-            if (*str++ == ch)
-            {
+        while (*str != '\0') {
+            if (*str++ == ch) {
                 num++;
             }
         }
@@ -494,8 +484,7 @@ inline char* String_::str_ch_move_(char* w, char ch, int d, bool fore)
     int i = 0;
     char* t = w;
     size_t len = strlen_(w);
-    while (*t)
-    {
+    while (*t) {
         if (*t == ch)
             break;
         ++t;
@@ -504,14 +493,12 @@ inline char* String_::str_ch_move_(char* w, char ch, int d, bool fore)
     int m = i;
     char* r = new char[len + 1];
     strcpy_(r, w);
-    if (fore)
-    {
+    if (fore) {
         (d > int(len) - m) ? (d = len - m) : 0;
         for (i = 0; i < d; i++)
             w[m + i] = *(r + m + (i + 1));
         w[m + d] = *(r + m);
-    } else
-    {
+    } else {
         (d > m) ? (d = m) : 0;
         for (i = 0; i < d; i++)
             w[m - i] = *(r + m - (i + 1));
@@ -530,14 +517,12 @@ inline char* String_::str_pos_move_(char* w, int m, int d, bool fore)
     size_t len = strlen_(w);
     char* s = new char[len + 1];
     strcpy_(s, w);
-    if (fore)
-    {
+    if (fore) {
         (d > int(len) - m) ? (d = len - m) : 0;
         for (i = 0; i < d; i++)
             w[m + i] = s[m + (i + 1)];
         w[m + d] = s[m];
-    } else
-    {
+    } else {
         (d > m) ? (d = m) : 0;
         for (i = 0; i < d; i++)
             w[m - i] = s[m - (i + 1)];
@@ -554,24 +539,18 @@ inline char* String_::str_roll_move_(char* w, int m, bool fore)
     strcpy_(s, w);
     if (m > int(len))
         m = len;
-    if (!fore)
-    {
-        while (w[m++] != '\0')
-        {
+    if (!fore) {
+        while (w[m++] != '\0') {
             w[i++] = w[m - 1];
         }
-        for (; i <= m; i++)
-        {
+        for (; i <= m; i++) {
             w[i] = *(s++);
         }
-    } else
-    {
-        for (unsigned int t = 0; t < len - m; t++)
-        {
+    } else {
+        for (unsigned int t = 0; t < len - m; t++) {
             w[t + m] = *(s + t);
         }
-        while (w[len - m + (i++)] != '\0')
-        {
+        while (w[len - m + (i++)] != '\0') {
             w[i - 1] = *(s + len - m + i - 1);
         }
     }

@@ -78,6 +78,6 @@ TEST(Structures, BinaryTree)
     EXPECT_NE(btree.Find(&test1, tree), tree);
     EXPECT_EQ(btree.Max(tree)->addr, &test1);
     EXPECT_EQ((long)btree.Min(tree)->addr, nullptr);
-    // EXPECT_EQ((long)btree.MakeEmpty(tree), nullptr);
-    delete posp;
+    EXPECT_EQ((long)btree.MakeEmpty(tree), nullptr);
+    if (posp != nullptr) delete posp;
 }

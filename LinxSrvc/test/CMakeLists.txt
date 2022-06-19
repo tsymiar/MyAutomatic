@@ -22,5 +22,4 @@ target_link_libraries (${TARGET}
     gmock
     gtest_main
     gtest
-    -lc++
 )
