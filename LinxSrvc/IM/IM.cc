@@ -54,7 +54,7 @@ typedef long ssize_t;
 typedef int type_socket;
 typedef socklen_t type_len;
 typedef void* type_thread_func;
-#define flush_all() fflush(stdin)
+#define flush_all() ;
 #define closesocket(socket) close(socket)
 #define SLEEP(t) wait(t < 0.1f ? 1 : (int)(1.0f*(t)));
 pthread_mutexattr_t attr;
@@ -542,7 +542,7 @@ type_thread_func monite(void* arg)
                                 sprintf(sd_bufs + 2, "%x", c);
                                 strncpy((sd_bufs + UsrSet * (c + 4)), active[c].user, 24);
                                 void *const psr = (sd_bufs + UsrSet * (c + 4) + FiledSize);
-                                if (psr == (char *)'\0') {
+                                if ((*(char*)psr) == '\0') {
                                     memset(psr, '\t', 1);
                                 }
                             } else if (active[c].user[0] == '\0')

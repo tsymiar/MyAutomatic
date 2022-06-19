@@ -115,9 +115,9 @@ public:
     int Width;
     int Height;
     HGLRC m_hGLContext;
-    int m_GLPixelIndex;
+    int m_GLPixelIndex = 0;
     // Mouse position and button.
-    int oldmx = 0, oldmy = 0, mb;
+    int oldmx = 0, oldmy = 0, mb = 0;
     typedef Initialise::GLPoint Point;
     typedef Initialise::GLColor Color3f;
 protected:

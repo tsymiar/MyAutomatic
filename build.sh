@@ -20,7 +20,7 @@ then
     fi
     ./test.sh clean
     ./test.sh
-    cd ${PWD}
+    cd "${PWD}"
     exit 0;
 else
     cd "${PWD}/LinxSrvc" && make "$@" && cd -
@@ -30,7 +30,7 @@ then
     if [ -d "build" ]; then rm -rvf lib build; fi;
     if [ -d "${PWD}/LinxSrvc/test/build" ];
     then
-        cd ${PWD}/LinxSrvc/test
+        cd "${PWD}/LinxSrvc/test"
         ./test.sh clean
         cd -
     fi
