@@ -6,6 +6,12 @@ public:
     int value;
 };
 
+TEST(Structures, List)
+{
+    List list;
+    List list1(0);
+}
+
 TEST(Structures, LinkedList)
 {
     TestCase test0;
@@ -31,6 +37,35 @@ TEST(Structures, LinkedList)
     EXPECT_EQ(-1, link.indexOf(&test1));
     link.add(&test1);
     EXPECT_EQ(3, link.size());
+
+    list = link.find_previous(&test2);
+    ASSERT_NE(nullptr, (long)list);
+    EXPECT_EQ(list->addr, &test0);
+
+    TestCase test3;
+    test3.value = 2;
+    list = link.insert(&test3, list);
+    EXPECT_EQ(list->next->addr, &test3);
+    EXPECT_NE((long)link.add(&test1), nullptr);
+
+    int step = 0;
+    list = link.first();
+    list = link.advance(list, ++step);
+    if (list != nullptr) {
+        EXPECT_EQ(link.retrieve(list), &test0);
+    }
+    list = link.advance(list, ++step);
+    if (list != nullptr) {
+        EXPECT_EQ(link.retrieve(list), &test2);
+        EXPECT_EQ(link.isEmpty(), false);
+    }
+    list = link.advance(list, ++step);
+    if (list != nullptr) {
+        EXPECT_EQ(link.retrieve(list), &test1);
+        EXPECT_EQ(link.isEmpty(), true);
+    }
+
+    link.Delete(&test1);
 }
 
 TEST(Structures, ListStack)
@@ -42,6 +77,9 @@ TEST(Structures, ListStack)
     value++;
     TestCase test1;
     test1.value = 1;
+    stacks.push(&test1);
+    stacks.dispose();
+    stacks.push(&test0);
     stacks.push(&test1);
     TestCase* test = stacks.top();
     EXPECT_EQ(test->value, value);
@@ -61,10 +99,12 @@ TEST(Structures, ListStack)
         EXPECT_EQ((reinterpret_cast<TestCase*>(stack->addr))->value, value--);
         stack = stack->next;
     }
+    stacks.make_empty();
 }
 
 TEST(Structures, BinaryTree)
 {
+    BinaryTree<TestCase*> bt_case;
     TestCase test0;
     BinaryTree<TestCase*> btree(&test0);
     BinaryTree<TestCase*>::PosPtr posp = new Tree();
@@ -76,8 +116,11 @@ TEST(Structures, BinaryTree)
     test2.value = 2;
     EXPECT_EQ(btree.Insert(&test2, tree), tree);
     EXPECT_NE(btree.Find(&test1, tree), tree);
-    EXPECT_EQ(btree.Max(tree)->addr, &test1);
-    EXPECT_EQ((long)btree.Min(tree)->addr, nullptr);
+    EXPECT_EQ(btree.Retrieve(btree.Max(tree)), &test1);
+    EXPECT_EQ((long)btree.Retrieve(btree.Min(tree)), nullptr);
+    TestCase test3;
+    test3.value = 2;
+    EXPECT_EQ(btree.Insert(&test3, tree), tree);
+    EXPECT_EQ(btree.Delete(&test1, tree), tree);
     EXPECT_EQ((long)btree.MakeEmpty(tree), nullptr);
-    if (posp != nullptr) delete posp;
 }
