@@ -177,7 +177,11 @@ inline List* LinkedList<Element>::insert(Element elem, PosPtr posp)
         list->prev = posp;
     }
     if (list->addr != nullptr) {
-        list->next->addr = (void*)elem;
+        if (list->next == nullptr) {
+            list->next = new List((void*)elem);
+        } else {
+            list->next->addr = (void*)elem;
+        }
     } else {
         list->addr = (void*)elem;
     }
@@ -260,7 +264,8 @@ inline void LinkedList<Element>::remove(Element elem)
 {
     List* posp = find(elem);
     if (posp != nullptr) {
-        posp->prev->next = posp->next;
+        if (posp->prev != nullptr)
+            posp->prev->next = posp->next;
         posp->next->prev = posp->prev;
         delete posp;
         m_count--;
@@ -279,14 +284,17 @@ inline List* LinkedList<Element>::advance(PosPtr posp, int step)
     if (step < 0)
         return nullptr;
     for (int i = 0; i < step; i++)
-        posp = posp->next;
+        if (posp != nullptr)
+            posp = posp->next;
+        else
+            break;
     return posp;
 }
 
 template<typename Element>
 inline Element LinkedList<Element>::retrieve(PosPtr posp)
 {
-    return posp->addr;
+    return static_cast<Element>(posp->addr);
 }
 
 template<typename Element>
@@ -496,5 +504,5 @@ inline Tree* BinaryTree<Element>::Delete(Element elem, PosPtr& posp)
 template<typename Element>
 inline Element BinaryTree<Element>::Retrieve(PosPtr posp)
 {
-    return reinterpret_cast<Element>(posp->addr);
+    return static_cast<Element>(posp->addr);
 }
