@@ -53,15 +53,11 @@ TEST(Structures, LinkedList)
     list = link.advance(list, ++step);
     if (list != nullptr) {
         EXPECT_EQ(link.retrieve(list), &test0);
-    }
-    list = link.advance(list, ++step);
-    if (list != nullptr) {
-        EXPECT_EQ(link.retrieve(list), &test2);
         EXPECT_EQ(link.isEmpty(), false);
     }
     list = link.advance(list, ++step);
     if (list != nullptr) {
-        EXPECT_EQ(link.retrieve(list), &test1);
+        EXPECT_EQ(link.retrieve(list), &test2);
         EXPECT_EQ(link.isEmpty(), true);
     }
 
@@ -104,7 +100,6 @@ TEST(Structures, ListStack)
 
 TEST(Structures, BinaryTree)
 {
-    BinaryTree<TestCase*> bt_case;
     TestCase test0;
     BinaryTree<TestCase*> btree(&test0);
     BinaryTree<TestCase*>::PosPtr posp = new Tree();
@@ -123,4 +118,18 @@ TEST(Structures, BinaryTree)
     EXPECT_EQ(btree.Insert(&test3, tree), tree);
     EXPECT_EQ(btree.Delete(&test1, tree), tree);
     EXPECT_EQ((long)btree.MakeEmpty(tree), nullptr);
+}
+
+TEST(Structures, AVLBinTree)
+{
+    TestCase test0;
+    AVLBinTree<TestCase*> avl_tree(&test0);
+    TestCase test1;
+    test1.value = 1;
+    typename AVLBinTree<TestCase*>::AvlTree tree = new Tree();
+    tree = avl_tree.Insert(&test1, tree);
+    TestCase test2;
+    test2.value = 2;
+    tree = avl_tree.Insert(&test2, tree);
+    EXPECT_EQ((long)avl_tree.MakeEmpty(tree), nullptr);
 }

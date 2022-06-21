@@ -43,8 +43,13 @@ struct Tree {
     void* addr;
     Tree* right;
     Tree* left;
-    Tree(void* elem) : addr(elem), right(0), left(0) { };
-    Tree() : addr(0), right(0), left(0) {};
+    int height;
+    Tree(void* elem) : addr(elem), right(0), left(0) {
+        height = 0;
+    };
+    Tree() : addr(0), right(0), left(0) {
+        height = 0;
+    };
 };
 
 template <typename Element> class LinkedList {
@@ -117,19 +122,55 @@ public:
     BinaryTree(Element T) : m_check(0) {
         m_btree = new Tree(T);
     }
-    ~BinaryTree() {
+    virtual ~BinaryTree() {
         if (MakeEmpty(m_btree) != nullptr && m_check) {
             delete m_btree;
             m_btree = nullptr;
         }
     }
-    Tree* MakeEmpty(PosPtr posp);
-    Tree* Find(Element elem, PosPtr posp);
-    Tree* Min(PosPtr posp);
-    Tree* Max(PosPtr posp);
-    Tree* Insert(Element elem, PosPtr& posp);
-    Tree* Delete(Element elem, PosPtr& posp);
+public:
+    PosPtr MakeEmpty(PosPtr posp);
+    PosPtr Find(Element elem, PosPtr posp);
+    PosPtr Min(PosPtr posp);
+    PosPtr Max(PosPtr posp);
+    virtual PosPtr Insert(Element elem, PosPtr& posp);
+    PosPtr Delete(Element elem, PosPtr& posp);
     Element Retrieve(PosPtr posp);
+};
+
+template <typename Element> class AVLBinTree : public BinaryTree<Element> {
+public:
+    AVLBinTree(Element T) : BinaryTree<Element>(T) { }
+    using AvlTree = Tree*;
+    static int max(int x, int y) {
+        return x > y ? x : y;
+    }
+    static int Height(AvlTree posp) {
+        if (posp == nullptr)
+            return -1;
+        else
+            return posp->height;
+    }
+    static AvlTree SingleRotateWithLeft(AvlTree k2)
+    {
+        AvlTree k1;
+        k1 = k2->left;
+        if (k2->left != nullptr)
+            k2->left = k1->right;
+        if (k1 != nullptr && k1->right != nullptr)
+            k1->right = k2;
+        k2->height = max(Height(k2->left), Height(k2->right)) + 1;
+        if (k1 != nullptr && k2 != nullptr)
+            k1->height = max(Height(k1->left), k2->height) + 1;
+        return k1;
+    }
+    static AvlTree DoubleRotateWithLeft(AvlTree k3)
+    {
+        if (k3 != nullptr && k3->left != nullptr)
+            k3->left = SingleRotateWithLeft(k3->left);
+        return SingleRotateWithLeft(k3);
+    }
+    AvlTree Insert(Element elem, AvlTree& posp) override;
 };
 
 template<typename Element>
@@ -172,7 +213,8 @@ inline List* LinkedList<Element>::insert(Element elem, PosPtr posp)
 {
     List* list = new List();
     list->prev = m_list;
-    if (posp != nullptr && nullptr != find((Element)posp->addr) && m_list->addr != posp->addr) {
+    if (posp != nullptr && nullptr != find((Element)posp->addr) &&
+        m_list->addr != posp->addr) {
         list->next = list->prev;
         list->prev = posp;
     }
@@ -460,13 +502,14 @@ template<typename Element>
 inline Tree* BinaryTree<Element>::Insert(Element elem, PosPtr& posp)
 {
     if (posp == nullptr) {
-        posp = new Tree(elem);
+        posp = new Tree();
         posp->addr = elem;
         posp->left = posp->right = nullptr;
     } else {
         if (elem < posp->addr) {
             posp->left = Insert(elem, posp->left);
-        } else if (elem > posp->addr) {
+        }
+        if (elem > posp->addr) {
             posp->right = Insert(elem, posp->right);
         }
     }
@@ -505,4 +548,38 @@ template<typename Element>
 inline Element BinaryTree<Element>::Retrieve(PosPtr posp)
 {
     return static_cast<Element>(posp->addr);
+}
+
+template<typename Element>
+inline /*auto*/typename AVLBinTree<Element>::AvlTree
+AVLBinTree<Element>::Insert(Element elem, typename AVLBinTree<Element>::AvlTree& posp)
+// -> decltype(AVLBinTree<Element>::AvlTree)
+{
+    if (posp == nullptr) {
+        posp = new Tree(elem);
+        posp->height = 0;
+        posp->left = posp->right = nullptr;
+    } else {
+        if (elem < posp->addr) {
+            posp->left = Insert(elem, posp->left);
+            if (Height(posp->left) - Height(posp->right) == 2) {
+                if (elem < posp->left->addr)
+                    posp = SingleRotateWithLeft(posp);
+                else
+                    posp = DoubleRotateWithLeft(posp);
+            }
+        }
+        if (elem > posp->addr) {
+            posp->right = Insert(elem, posp->right);
+            if (Height(posp->right) - Height(posp->left) == 2) {
+                if (elem < posp->right->addr)
+                    posp = SingleRotateWithLeft(posp);
+                else
+                    posp = DoubleRotateWithLeft(posp);
+            }
+        }
+    }
+    if (posp != nullptr)
+        posp->height = max(Height(posp->left), Height(posp->right)) + 1;
+    return posp;
 }
