@@ -61,6 +61,9 @@ TEST(Structures, LinkedList)
         EXPECT_EQ(link.isEmpty(), true);
     }
 
+    link.insert(0, nullptr);
+    link.get(-1);
+    link.advance(nullptr, -1);
     link.Delete(&test1);
 }
 
@@ -101,23 +104,24 @@ TEST(Structures, ListStack)
 TEST(Structures, BinaryTree)
 {
     TestCase test0;
-    BinaryTree<TestCase*> btree(&test0);
+    BinaryTree<TestCase*> bin_tree(&test0);
     BinaryTree<TestCase*>::PosPtr posp = new Tree();
     TestCase test1;
     test1.value = 1;
-    Tree* tree = btree.Insert(&test1, posp);
+    Tree* tree = bin_tree.Insert(&test1, posp);
     EXPECT_NE(nullptr, (long)tree);
     TestCase test2;
     test2.value = 2;
-    EXPECT_EQ(btree.Insert(&test2, tree), tree);
-    EXPECT_NE(btree.Find(&test1, tree), tree);
-    EXPECT_EQ(btree.Retrieve(btree.Max(tree)), &test1);
-    EXPECT_EQ((long)btree.Retrieve(btree.Min(tree)), nullptr);
+    EXPECT_EQ(bin_tree.Insert(&test2, tree), tree);
+    EXPECT_NE(bin_tree.Find(&test1, tree), tree);
+    EXPECT_EQ(bin_tree.Retrieve(bin_tree.Max(tree)), &test1);
+    EXPECT_EQ((long)bin_tree.Retrieve(bin_tree.Min(tree)), nullptr);
     TestCase test3;
     test3.value = 2;
-    EXPECT_EQ(btree.Insert(&test3, tree), tree);
-    EXPECT_EQ(btree.Delete(&test1, tree), tree);
-    EXPECT_EQ((long)btree.MakeEmpty(tree), nullptr);
+    EXPECT_EQ(bin_tree.Insert(&test3, tree), tree);
+    bin_tree.PrintTree(tree);
+    EXPECT_EQ(bin_tree.Delete(&test1, tree), tree);
+    EXPECT_EQ((long)bin_tree.MakeEmpty(tree), nullptr);
 }
 
 TEST(Structures, AVLBinTree)
@@ -131,5 +135,7 @@ TEST(Structures, AVLBinTree)
     TestCase test2;
     test2.value = 2;
     tree = avl_tree.Insert(&test2, tree);
+    avl_tree.PrintTree(tree);
     EXPECT_EQ((long)avl_tree.MakeEmpty(tree), nullptr);
+    AVLBinTree<TestCase*>::DoubleRotateWithLeft(tree);
 }
