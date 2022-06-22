@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdlib.h>
+#include <stdio.h>
 
 #ifndef WIN32
 #ifndef nullptr
@@ -52,6 +53,11 @@ struct Tree {
     };
 };
 
+struct Hash {
+    int size;
+    List* lists;
+};
+
 template <typename Element> class LinkedList {
 private:
     List* m_list;
@@ -63,7 +69,7 @@ public:
         m_count++;
     }
     ~LinkedList() {
-        if (makeEmpty() != nullptr)
+        if (this->MakeEmpty() != nullptr)
             delete m_list;
     }
     List* get() {
@@ -83,7 +89,7 @@ public:
     Element retrieve(PosPtr posp);
     List* first();
     List* last();
-    List* makeEmpty();
+    List* MakeEmpty();
     int indexOf(Element elem);
     bool isEmpty();
     void Delete(Element elem);
@@ -95,9 +101,6 @@ private:
 public:
     ListStack(Element S) {
         m_stack = new Stack(S);
-    }
-    ListStack() {
-        m_stack = new Stack(nullptr);
     }
     ~ListStack() {
         dispose();
@@ -113,17 +116,13 @@ public:
 template <typename Element> class BinaryTree {
 private:
     Tree* m_btree;
-    bool m_check;
 public:
     typedef Tree* PosPtr;
-    BinaryTree() : m_check(1) {
-        m_btree = new Tree();
-    }
-    BinaryTree(Element T) : m_check(0) {
+    BinaryTree(Element T) {
         m_btree = new Tree(T);
     }
     virtual ~BinaryTree() {
-        if (MakeEmpty(m_btree) != nullptr && m_check) {
+        if (this->MakeEmpty(m_btree) != nullptr) {
             delete m_btree;
             m_btree = nullptr;
         }
@@ -136,6 +135,7 @@ public:
     virtual PosPtr Insert(Element elem, PosPtr& posp);
     PosPtr Delete(Element elem, PosPtr& posp);
     Element Retrieve(PosPtr posp);
+    void PrintTree(PosPtr posp);
 };
 
 template <typename Element> class AVLBinTree : public BinaryTree<Element> {
@@ -153,13 +153,15 @@ public:
     }
     static AvlTree SingleRotateWithLeft(AvlTree k2)
     {
-        AvlTree k1;
-        k1 = k2->left;
-        if (k2->left != nullptr)
+        AvlTree k1 = nullptr;
+        if (k2 != nullptr)
+            k1 = k2->left;
+        if (k1 != nullptr && k2 != nullptr)
             k2->left = k1->right;
-        if (k1 != nullptr && k1->right != nullptr)
+        if (k1 != nullptr)
             k1->right = k2;
-        k2->height = max(Height(k2->left), Height(k2->right)) + 1;
+        if (k2 != nullptr)
+            k2->height = max(Height(k2->left), Height(k2->right)) + 1;
         if (k1 != nullptr && k2 != nullptr)
             k1->height = max(Height(k1->left), k2->height) + 1;
         return k1;
@@ -171,6 +173,26 @@ public:
         return SingleRotateWithLeft(k3);
     }
     AvlTree Insert(Element elem, AvlTree& posp) override;
+    int HeightBt(AvlTree posp) {
+        if (posp == nullptr)
+            return -1;
+        else
+            return (1 + max(HeightBt(posp->left), HeightBt(posp->right)));
+    }
+};
+
+template <typename Element> class HashTable {
+private:
+    int m_minSize = 1;
+public:
+    typedef unsigned int Index;
+    using HashTbl = Hash*;
+    Index MakeHash(const char* key, int size);
+    HashTbl Initialize(int size);
+    void Destroy(HashTbl tbl);
+    HashTbl Find(Element elem, HashTbl tbl);
+    HashTbl Insert(Element elem, HashTbl tbl);
+    Element Retrieve(HashTbl tbl);
 };
 
 template<typename Element>
@@ -359,7 +381,7 @@ inline List* LinkedList<Element>::last()
 }
 
 template<typename Element>
-inline List* LinkedList<Element>::makeEmpty()
+inline List* LinkedList<Element>::MakeEmpty()
 {
     if (m_list->prev != nullptr) {
         delete m_list->prev;
@@ -550,6 +572,15 @@ inline Element BinaryTree<Element>::Retrieve(PosPtr posp)
     return static_cast<Element>(posp->addr);
 }
 
+template<typename Element> void BinaryTree<Element>::PrintTree(PosPtr posp)
+{
+    if (posp != nullptr) {
+        PrintTree(posp->left);
+        printf("posp.addr: [%p]\n", posp->addr);
+        PrintTree(posp->right);
+    }
+}
+
 template<typename Element>
 inline /*auto*/typename AVLBinTree<Element>::AvlTree
 AVLBinTree<Element>::Insert(Element elem, typename AVLBinTree<Element>::AvlTree& posp)
@@ -582,4 +613,32 @@ AVLBinTree<Element>::Insert(Element elem, typename AVLBinTree<Element>::AvlTree&
     if (posp != nullptr)
         posp->height = max(Height(posp->left), Height(posp->right)) + 1;
     return posp;
+}
+
+template<typename Element>
+typename HashTable<Element>::Index HashTable<Element>::MakeHash(const char* key, int size)
+{
+    unsigned int value = 0;
+    while (*key != '\0') {
+        value = (value >> 5) + *key++;
+    }
+    return value % size;
+}
+
+template<typename Element>
+typename HashTable<Element>::HashTbl HashTable<Element>::Initialize(int size)
+{
+    if (size < m_minSize) {
+        return nullptr;
+    }
+    HashTbl h = new Hash();
+    // h->size = NextPrime
+    h->lists = (List*)malloc(sizeof(List) * h->size);
+    if (h->lists != nullptr) {
+        for (int i = 0; i < h->size; i++) {
+            h->lists[i] = new List();
+            h->lists[i].next = nullptr;
+        }
+    }
+    return h;
 }
