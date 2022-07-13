@@ -7,6 +7,10 @@
 #include "pipefifo.h"
 #elif defined(VIDEO) || defined(SNAP)
 #include "test.h"
+#elif defined(DRIVER)
+#include "stdio.h"
+#include "fcntl.h"
+#include "unistd.h"
 #else
 #error compile command unsupported
 #endif
@@ -35,6 +39,14 @@ int main(int argc, char** argv)
     video_capture(argc, argv);
 #elif defined(SNAP)
     snap_image_test("image", 640, 480);
+#elif defined(DRIVER)
+#define DEV_NODE "/dev/ch_dev_node"
+    int fd = open(DEV_NODE, O_RDWR);
+    if (fd < 0) {
+        perror("open ["DEV_NODE"] fail");
+    } else {
+        close(fd);
+    }
 #endif
     return 0;
 }
