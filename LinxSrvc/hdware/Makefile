@@ -1,10 +1,17 @@
-GEN = `pwd`/../bin
+PWD?=$(shell pwd)
+GEN = $(PWD)/../bin
+obj-m += cdev.o
+KDIR:=${KDIR}
 gpio:
 	gcc -g -DGPIO test.c -o $(GEN)/gpio
 mes909:
 	gcc -std=gnu99 -g -DME9S test.c -o $(GEN)/mes909
 hack:
 	gcc -g -pthread dirtyc0w.c -o $(GEN)/hack -Wno-int-conversion -Wno-void-pointer-to-int-cast
+cdev:
+	make -C $(KDIR) M=$(PWD) modules # insmod cdev.ko
+dritest:
+	gcc -g -DDRIVER test.c -o $(GEN)/dritest
 pipefifo:
 	gcc -g -DPIPE_FIFO test.c -o $(GEN)/pipefifo
 video:
@@ -17,9 +24,11 @@ all:
 	make hack
 	make pipefifo
 ifeq ($(shell uname), Linux)
+	make cdev
 	make video
 	make imgsnap
 endif
+	make dritest
 clean:
 	@rm -rvf $(GEN)/gpio* $(GEN)/mes909* $(GEN)/hack* $(GEN)/pipefifo*
 	@rm -rvf  $(GEN)/VideoCapture* $(GEN)/imgsnap*
