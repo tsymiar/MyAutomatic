@@ -1,0 +1,5 @@
+config CHSDEV
+tristate "chsdev"
+help
+    a test driver
+default y

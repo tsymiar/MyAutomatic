@@ -1,34 +1,31 @@
-PWD?=$(shell pwd)
+PWD = $(shell pwd)
 GEN = $(PWD)/../bin
-obj-m += cdev.o
-KDIR:=${KDIR}
 gpio:
 	gcc -g -DGPIO test.c -o $(GEN)/gpio
 mes909:
 	gcc -std=gnu99 -g -DME9S test.c -o $(GEN)/mes909
-hack:
-	gcc -g -pthread dirtyc0w.c -o $(GEN)/hack -Wno-int-conversion -Wno-void-pointer-to-int-cast
-cdev:
-	make -C $(KDIR) M=$(PWD) modules # insmod cdev.ko
-dritest:
-	gcc -g -DDRIVER test.c -o $(GEN)/dritest
+dirty:
+	gcc -g -pthread dirtyc0w.c -o $(GEN)/dirtyhack -Wno-int-conversion -Wno-pointer-to-int-cast
+chsdev:
+	make -C chsdev KNLDIR=$(PWD)/../../../kernel/linux
+chstest:
+	gcc -g -DDRIVER test.c -o $(GEN)/chstest
 pipefifo:
 	gcc -g -DPIPE_FIFO test.c -o $(GEN)/pipefifo
 video:
 	gcc -g -DVIDEO test.c routine.c -lm -o $(GEN)/VideoCapture
-imgsnap:
-	gcc -g -DSNAP test.c linuxsnap.c -o $(GEN)/imgsnap
+image:
+	gcc -g -DSNAP test.c linuxsnap.c -o $(GEN)/imagesnap
 all:
 	make gpio
 	make mes909
-	make hack
+	make dirty
+	make chstest
 	make pipefifo
 ifeq ($(shell uname), Linux)
-	make cdev
 	make video
-	make imgsnap
+	make image
 endif
-	make dritest
 clean:
-	@rm -rvf $(GEN)/gpio* $(GEN)/mes909* $(GEN)/hack* $(GEN)/pipefifo*
-	@rm -rvf  $(GEN)/VideoCapture* $(GEN)/imgsnap*
+	@rm -rvf $(GEN)/gpio* $(GEN)/mes909* $(GEN)/dirty* $(GEN)/chstest*
+	@rm -rvf $(GEN)/pipefifo* $(GEN)/VideoCapture* $(GEN)/imagesnap*
