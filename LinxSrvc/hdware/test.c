@@ -40,11 +40,19 @@ int main(int argc, char** argv)
 #elif defined(SNAP)
     snap_image_test("image", 640, 480);
 #elif defined(DRIVER)
-#define DEV_NODE "/dev/ch_dev_node"
-    int fd = open(DEV_NODE, O_RDWR);
+#define DEV_NODE "/dev/chars-node"
+    int fd = open(DEV_NODE, O_RDWR, S_IRUSR | S_IWUSR);
     if (fd < 0) {
         perror("open ["DEV_NODE"] fail");
     } else {
+        char buf[1024];
+        read(fd, buf, sizeof(buf));
+        printf("Default chars is [%s].\n", buf);
+        printf("Please input a string written to chars device: ");
+        scanf("%s", buf);
+        write(fd, buf, sizeof(buf));
+        read(fd, buf, sizeof(buf));
+        printf("Chars [%s] written to '%s'.\n", buf, DEV_NODE);
         close(fd);
     }
 #endif

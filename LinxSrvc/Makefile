@@ -3,7 +3,8 @@ all:
 	make -C hdware all
 	make -C thread all
 	make -C httpsample build
-	make -C gSOAPverify || true
+	@echo Making gSOAPverify
+	@make -C gSOAPverify || true
 clean:
 	make -C httpsample cleanAll
 	make -C gSOAPverify clean
