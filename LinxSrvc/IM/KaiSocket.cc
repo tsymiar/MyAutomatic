@@ -744,11 +744,16 @@ ssize_t KaiSocket::consume(Message& msg)
     return static_cast<int>(size - m_msgQue->size());
 }
 
+ssize_t KaiSocket::send(const uint8_t* data, size_t len)
+{
+    return broadcast(data, len);
+}
+
 void KaiSocket::finish()
 {
     for (auto& network : m_networks) {
+        network.run_01 = false;
         while (network.run_01) {
-            network.run_01 = false;
             wait(WAIT100ms);
         }
         close(network.socket);
@@ -767,9 +772,21 @@ void KaiSocket::finish()
     }
 }
 
-ssize_t KaiSocket::send(const uint8_t* data, size_t len)
+std::string KaiSocket::getFile2string(const std::string& filename)
 {
-    return broadcast(data, len);
+    std::string s{};
+    FILE* fp = fopen(filename.c_str(), "rb");
+    if (fp) {
+        fseek(fp, 0, SEEK_END);
+        int len = ftell(fp);
+        fseek(fp, 0, SEEK_SET);
+        s.resize(len);
+        fread((void*)s.data(), 1, len, fp);
+        fclose(fp);
+    } else {
+        std::cerr << __FUNCTION__ << ": file[" << filename << "] open fail: " << strerror(errno) << std::endl;
+    }
+    return s;
 }
 
 void KaiSocket::setTopic(const std::string& topic, Header& header)
@@ -916,21 +933,4 @@ ssize_t KaiSocket::Publisher(const std::string& topic, const std::string& payloa
     delete[] message;
     finish();
     return len;
-}
-
-std::string KaiSocket::getFile2string(const std::string& filename)
-{
-    std::string s{};
-    FILE* fp = fopen(filename.c_str(), "rb");
-    if (fp) {
-        fseek(fp, 0, SEEK_END);
-        int len = ftell(fp);
-        fseek(fp, 0, SEEK_SET);
-        s.resize(len);
-        fread((void*)s.data(), 1, len, fp);
-        fclose(fp);
-    } else {
-        std::cerr << __FUNCTION__ << ": file[" << filename << "] open fail: " << strerror(errno) << std::endl;
-    }
-    return s;
 }
