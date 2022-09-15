@@ -1,4 +1,5 @@
-#include "GEThttp.h"
+#include "GetHttp.h"
+#include <wininet.h>
 
 using namespace std;
 
