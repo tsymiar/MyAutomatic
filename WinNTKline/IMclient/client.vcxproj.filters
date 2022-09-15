@@ -16,7 +16,7 @@
     <ClCompile Include="..\KlineUtil\IM\client.cc">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\KlineUtil\IM\TCPsocket.cpp">
+    <ClCompile Include="..\KlineUtil\IM\TCPsocket_win.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

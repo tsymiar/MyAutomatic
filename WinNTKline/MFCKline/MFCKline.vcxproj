@@ -303,7 +303,6 @@ cd "..\$(ConfigurationName)"
     <ClInclude Include="..\KlineUtil\mygl\texture.h" />
     <ClInclude Include="..\KlineUtil\netwk\ChannelCollector.h" />
     <ClInclude Include="..\KlineUtil\netwk\CTPclient.h" />
-    <ClInclude Include="..\KlineUtil\netwk\GEThttp.h" />
     <ClInclude Include="..\KlineUtil\netwk\Simulation.h" />
     <ClInclude Include="..\KlineUtil\opencv\CvimgMat.h" />
     <ClInclude Include="..\KlineUtil\opencv\opencv2\opencv_modules.hpp" />
@@ -312,6 +311,7 @@ cd "..\$(ConfigurationName)"
     <ClInclude Include="..\KlineUtil\security\verify.h" />
     <ClInclude Include="..\KlineUtil\Stock\Stock.h" />
     <ClInclude Include="..\KlineUtil\http\myweb.h" />
+    <ClInclude Include="..\KlineUtil\http\GetHttp.h" />
     <ClInclude Include="..\KlineUtil\WPF\WPFhost.h" />
     <ClInclude Include="LoginDlg.h" />
     <ClInclude Include="IMlogDlg.h" />
@@ -348,13 +348,13 @@ cd "..\$(ConfigurationName)"
     <ClCompile Include="..\KlineUtil\mygl\texture.c" />
     <ClCompile Include="..\KlineUtil\netwk\ChannelCollector.cpp" />
     <ClCompile Include="..\KlineUtil\netwk\CTPclient.cpp" />
-    <ClCompile Include="..\KlineUtil\netwk\GEThttp.cpp" />
     <ClCompile Include="..\KlineUtil\netwk\Simulation.cpp" />
     <ClCompile Include="..\KlineUtil\opencv\CvimgMat.cc" />
     <ClCompile Include="..\KlineUtil\security\AES.cc" />
     <ClCompile Include="..\KlineUtil\security\encoding.cc" />
     <ClCompile Include="..\KlineUtil\security\MD5.cc" />
     <ClCompile Include="..\KlineUtil\security\verify.cc" />
+    <ClCompile Include="..\KlineUtil\http\GetHttp.cpp" />
     <ClCompile Include="..\KlineUtil\test\Testcase.cpp" />
     <ClCompile Include="LoginDlg.cpp" />
     <ClCompile Include="MFCKline.cpp" />

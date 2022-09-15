@@ -147,9 +147,6 @@
     <ClInclude Include="..\KlineUtil\mygl\GlF16.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\KlineUtil\netwk\GEThttp.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="..\KlineUtil\security\encoding.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -163,6 +160,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\KlineUtil\mygl\bitmap.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KlineUtil\http\GetHttp.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -242,9 +242,6 @@
     <ClCompile Include="..\KlineUtil\security\encoding.cc">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\KlineUtil\netwk\GEThttp.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="..\KlineUtil\mygl\GlF16.cc">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -273,6 +270,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\KlineUtil\http\soapClient.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KlineUtil\http\GetHttp.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\IMclient\imclient.cpp">
