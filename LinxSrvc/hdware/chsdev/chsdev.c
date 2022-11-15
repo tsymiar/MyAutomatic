@@ -52,12 +52,26 @@ static int chs_dev_close(struct inode* inode, struct file* file)
     return 0;
 }
 
+long chs_dev_ioctl(struct file* flip, unsigned int cmd, unsigned long arg)
+{
+    printk("chs_dev_ioctl cmd is %u, arg = %lu!\n", cmd, arg);
+    switch (cmd) {
+    case 0:
+    case 1:
+        break;
+    default:
+        return 0;
+    }
+    return 0;
+}
+
 struct file_operations chs_dev_ops = {
     .owner = THIS_MODULE,
     .read = chs_dev_read,
     .write = chs_dev_write,
     .open = chs_dev_open,
     .release = chs_dev_close,
+    .unlocked_ioctl = chs_dev_ioctl,
 };
 
 static int device_init(void)
@@ -65,8 +79,7 @@ static int device_init(void)
     int stat;
     if (majNo)  //传入了主设备号用静态的方法
     {
-        printk("majNo = %d\n", majNo);  //主设备号
-        printk("minNo = %d\n", minNo);  //次设备号
+        printk("devNo %d:%d\n", majNo, minNo);  //主、次设备号
         devNo = MKDEV(majNo, minNo);   //主次设备号合成一个dev_t类型
         stat = register_chrdev_region(devNo, DEVICE_NUMBER, DEVICE_SNAME); //静态分配
         if (stat < 0) {
@@ -82,8 +95,8 @@ static int device_init(void)
         printk("alloc_chs_dev_region ok!\n");
         majNo = MAJOR(devNo); //从dev_t中分离出主设备号
         minNo = MINOR(devNo); //从dev_t中分离出次设备号
-        printk("majNo = %d\n", majNo);
-        printk("minNo = %d\n", minNo);
+        printk("devNo = (%d", majNo);
+        printk(", %d)\n", minNo);
     }
     cdev.owner = THIS_MODULE;
     cdev_init(&cdev, &chs_dev_ops); //初始化cdev
