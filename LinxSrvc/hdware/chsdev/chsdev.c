@@ -4,13 +4,14 @@
 #include <linux/kdev_t.h>
 #include <linux/cdev.h>
 #include <linux/device.h>
+#include <linux/uaccess.h>
 
 #define DEVICE_NUMBER 1 //设备数量
 #define DEVICE_SNAME "stachardevice" //静态名称
 #define DEVICE_DNAME "dynchardevice" //动态名称
 #define DEVICE_MINOR_NUMBER 0 //动态请求的第一个次设备号
 #define DEVICE_CLASS_NAME "chs_dev_class" //创建的类名称
-#define DEVICE_NODE_NAME "chars-node"      //创建的节点名称
+#define DEVICE_NODE_NAME "chars-node"     //创建的节点名称
 
 struct cdev cdev;
 struct class* class;
