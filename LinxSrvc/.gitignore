@@ -1,0 +1,7 @@
+#chsdev
+**/chsdev/*.ko
+**/chsdev/.*
+**/chsdev/[Mm]odule*
+**/chsdev/*.mod.*
+#test
+*.xxx
