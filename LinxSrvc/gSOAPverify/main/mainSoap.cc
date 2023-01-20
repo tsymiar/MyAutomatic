@@ -15,7 +15,6 @@ int enqueue(SOAP_SOCKET, unsigned long ip); // 入队列函数
 SOAP_SOCKET dequeue(void);       // 出队列函数
 unsigned long dequeue_ip();
 static unsigned long ips[MAX_QUEUE];
-int logcnt = 0;
 
 void* process_queue(void* soap)
 {
@@ -146,7 +145,7 @@ int http_post(struct soap* soap, const char* endpoint, const char* host, int por
 int main_server(int argc, char** argv)
 {
 #ifdef NS_DEBUG
-    argc = 3; argv[1] = (char*)"8080";
+    argv[1] = (char*)"8080";
 #endif // NS_DEBUG
     if (argv[1] == nullptr) {
         std::cout << "Input an argument as port eg. '\033[45m./gSOAPverify 8080\033[0m'\n" << argv[1] << std::endl;
@@ -164,8 +163,8 @@ int main_server(int argc, char** argv)
     // 设置UTF-8编码
     soap_set_mode(&Soap, SOAP_C_UTFSTRING);
     soap_set_namespaces(&Soap, namespaces);
-    // 如果没有参数，当作CGI程序处理
-    if (argc == 1) {
+    // 没有参数，作为CGI程序处理
+    if (argc < 2) {
         // CGI 风格服务请求，单线程
         soap_serve(&Soap);
         // 清除序列化类实例
@@ -181,15 +180,15 @@ int main_server(int argc, char** argv)
         pthread_cond_init(&queue_cond, NULL);
         // 绑定服务端口
         SOAP_SOCKET m = soap_bind(&Soap, NULL, port, BACKLOG);
-        int vilaid = 0;
+        int valid = 0;
         // 循环绑定直至服务套接字合法
         while (!soap_valid_socket(m)) {
-            if (vilaid == 0) {
+            if (valid == 0) {
                 fprintf(stderr, "Bind PORT(%d) \033[31merror\033[0m! \n", port);
                 exit(1);
             }
             m = soap_bind(&Soap, NULL, port, BACKLOG);
-            vilaid++;
+            valid++;
         }
         fprintf(stderr, "======== Socket Server Port: %s ========\n", argv[1]);
         // 生成服务线程
@@ -200,6 +199,7 @@ int main_server(int argc, char** argv)
             usleep(50);
         }
         int j = 0;
+        static int cnt = 0;
         for (;;) {
             // 接受客户端连接
             SOAP_SOCKET sock = soap_accept(&Soap);
@@ -212,11 +212,11 @@ int main_server(int argc, char** argv)
                     break;
                 }
             }
-            logcnt++;
+            cnt++;
             // 客户端IP地址
             fprintf(stderr, "\033[32mAccepted\033[0m \033[1mREMOTE\033[0m connection. IP = \033[33m%d.%d.%d.%d\033[0m, socket = %d, log(%d) \n", \
                 (int)(((Soap.ip) >> 24) & 0xFF), (int)(((Soap.ip) >> 16) & 0xFF), (int)(((Soap.ip) >> 8) & 0xFF), \
-                (int)((Soap.ip) & 0xFF), (int)(Soap.socket), logcnt);
+                (int)((Soap.ip) & 0xFF), (int)(Soap.socket), cnt);
             // 套接字入队，如果队列已满则循环等待
             while (enqueue(sock, ips[j]) == SOAP_EOM)
                 usleep(1000);
@@ -253,7 +253,6 @@ int api__trans(struct soap* soap, char* msg, char* rtn[])
         char value[16];
     };
     static int j = 0;
-    char* curstr[4] = { NULL };
     struct PARAM params[8];
     char* text[8] = { msg };
     int neq = str.char_count_(*text, '=');
@@ -271,10 +270,11 @@ int api__trans(struct soap* soap, char* msg, char* rtn[])
         memcpy(text[0], "illegal command!", 17);
         return -2;
     }
+    char* tmp[4] = { NULL };
     while (token != NULL) {
-        curstr[j] = token;
-        if (strstr(curstr[j], "=") != NULL) {
-            str.strcut_((unsigned char*)curstr[j], '=', params[j].key, params[j].value);
+        tmp[j] = token;
+        if (strstr(tmp[j], "=") != NULL) {
+            str.strcut_((unsigned char*)tmp[j], '=', params[j].key, params[j].value);
             j++;
         }
         token = strtok(NULL, "&");

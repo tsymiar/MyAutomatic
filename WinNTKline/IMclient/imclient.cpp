@@ -138,9 +138,9 @@ parseRcvMsg(void* lprcv)
         }
         LeaveCriticalSection(&wrcon);
         if (rcvlen <= 0 || (mesg->value[0] == 'e' && mesg->value[1] == '8')) {
-            sprintf(srv_net, "Connection lost!\n%s:%d", inet_ntoa(client->srvaddr.sin_addr), client->srvaddr.sin_port);
+            snprintf(srv_net, 32, "Connection lost!\n%s:%d", inet_ntoa(client->srvaddr.sin_addr), client->srvaddr.sin_port);
             char title[32];
-            sprintf(title, "socket: %s", _itoa((int)client->sock, (char*)mesg, 10));
+            snprintf(title, 32, "socket: %s", _itoa((int)client->sock, (char*)mesg, 10));
             MessageBox(0, srv_net, title, MB_OK);
             SetChatActive(rcvlen);
             closesocket(client->sock);
@@ -160,8 +160,8 @@ st_trans* ParseChatMesg(st_trans& trans)
     case LOGIN:
     {
         if (trans.username[0] != '\0') {
-            static char title[64];
-            sprintf(title, "Welcome %s", (char*)trans.username);
+            static char title[36];
+            snprintf(title, 36, "Welcome %s", (char*)trans.username);
             SetConsoleTitle(title);
         } else {
             fprintf(stdout, "Input username AND password to login, divide with BLANK(' ').\n");

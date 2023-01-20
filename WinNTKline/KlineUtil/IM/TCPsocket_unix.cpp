@@ -145,7 +145,7 @@ int start(Sockets socks, CALLBACK callback)
 
 void finish(Sockets socks)
 {
-    socks.runs = false;
+    this->socks.runs = false;
     close(socks.sock);
 }
 
