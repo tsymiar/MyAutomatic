@@ -133,7 +133,7 @@ void __sphere(GLfloat xx, GLfloat yy, GLfloat zz, GLfloat radius, GLfloat M, GLf
     float step_xy = 2 * float(_PI_) / N;
     double x[4], y[4], z[4];
 
-    float angle_xy = 0.0;
+    // float angle_xy = 0.0;
     glBegin(GL_QUADS);
     for (int i = 0; i < M; i++)
     {

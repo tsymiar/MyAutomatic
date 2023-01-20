@@ -80,7 +80,10 @@ inline int _countof(unsigned char* _Array)
 }
 inline char* _itoa(int val, char* str, int rdx)
 {
-    sprintf(str, "%d", val);
+    if (rdx == 16)
+        snprintf(str, 16, "%x", val);
+    else if (rdx == 10)
+        snprintf(str, 16, "%d", val);
     return str;
 }
 inline int InitializeCriticalSection(CRITICAL_SECTION* mutex)

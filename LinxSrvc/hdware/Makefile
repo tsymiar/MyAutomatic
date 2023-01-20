@@ -29,4 +29,6 @@ endif
 clean:
 	@rm -rvf $(GEN)/gpio* $(GEN)/mes909* $(GEN)/dirty* $(GEN)/chstest*
 	@rm -rvf $(GEN)/pipefifo* $(GEN)/VideoCapture* $(GEN)/imagesnap*
+ifeq ($(shell uname), Linux)
 	@make -C chsdev clean
+endif

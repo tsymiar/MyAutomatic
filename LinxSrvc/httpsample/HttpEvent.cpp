@@ -309,25 +309,25 @@ int HttpClient(HookDetail& detail)
     }
 
     if (detail.filename != nullptr) {
-        char conbuf[256] = { 0 };
-        sprintf(conbuf, "http://%s", host);
-        evhttp_add_header(output_headers, "Origin", conbuf);
-        sprintf(conbuf, "application/x-www-form-urlencoded;charset=utf-8");
+        char conBuf[256] = { 0 };
+        snprintf(conBuf, 256, "http://%s", host);
+        evhttp_add_header(output_headers, "Origin", conBuf);
+        snprintf(conBuf, 48, "application/x-www-form-urlencoded;charset=utf-8");
         Message("setting '%s' form-data", detail.filename);
 
         evbuffer* output_buffer = evhttp_request_get_output_buffer(request);
         const char* boundary = "------WebKitFormBoundaryAu886z32WLCM1Fl0\r\n";
-        int bndlen = strlen(boundary);
-        evbuffer_add(output_buffer, boundary, bndlen);
+        int bndLen = strlen(boundary);
+        evbuffer_add(output_buffer, boundary, bndLen);
 
-        char bndbuf[256];
-        sprintf(bndbuf, "Content-Disposition: form-data; name=\"file\"; filename=\"%s\"\r\n", detail.filename);
-        bndlen += strlen(bndbuf);
-        evbuffer_add(output_buffer, bndbuf, strlen(bndbuf));
+        char bndBuf[256];
+        snprintf(bndBuf, 256, "Content-Disposition: form-data; name=\"file\"; filename=\"%s\"\r\n", detail.filename);
+        bndLen += strlen(bndBuf);
+        evbuffer_add(output_buffer, bndBuf, strlen(bndBuf));
 
-        sprintf(bndbuf, "Content-Type: application/octet-stream\r\n\r\n");
-        bndlen += strlen(bndbuf);
-        evbuffer_add(output_buffer, bndbuf, strlen(bndbuf));
+        snprintf(bndBuf, 48, "Content-Type: application/octet-stream\r\n\r\n");
+        bndLen += strlen(bndBuf);
+        evbuffer_add(output_buffer, bndBuf, strlen(bndBuf));
 
         FILE* fd = fopen(detail.filename, "rb");
         char buf[1024];
@@ -344,15 +344,15 @@ int HttpClient(HookDetail& detail)
             bts += s;
         }
 
-        sprintf(bndbuf, "\r\n------WebKitFormBoundaryAu886z32WLCM1Fl0--\r\n");
-        bndlen += strlen(bndbuf);
-        evbuffer_add(output_buffer, bndbuf, strlen(bndbuf));
+        snprintf(bndBuf, 48, "\r\n------WebKitFormBoundaryAu886z32WLCM1Fl0--\r\n");
+        bndLen += strlen(bndBuf);
+        evbuffer_add(output_buffer, bndBuf, strlen(bndBuf));
 
         fclose(fd);
-        evutil_snprintf(buf, sizeof(buf) - 1, "%lu", (unsigned long)bts + bndlen);
+        evutil_snprintf(buf, sizeof(buf) - 1, "%lu", (unsigned long)bts + bndLen);
         evhttp_add_header(output_headers, "Content-Length", buf);
-        sprintf(conbuf, "multipart/form-data;boundary=%s", boundary);
-        evhttp_add_header(output_headers, "Content-Type", conbuf);
+        snprintf(conBuf, 256, "multipart/form-data;boundary=%s", boundary);
+        evhttp_add_header(output_headers, "Content-Type", conBuf);
     }
 
 #ifdef evhttp_request_set_header_cb

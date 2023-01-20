@@ -28,9 +28,9 @@ runtime(void* param)
         fprintf(stdout, "\n");
         LeaveCriticalSection(&wrcon);
         if (rcvlen <= 0) {
-            sprintf(srv_net, "Connection lost!\n%s:%d", inet_ntoa(client->srvaddr.sin_addr), client->srvaddr.sin_port);
+            snprintf(srv_net, 32, "Connection lost!\n%s:%d", inet_ntoa(client->srvaddr.sin_addr), client->srvaddr.sin_port);
             char title[32];
-            sprintf(title, "socket: %s", _itoa((int)client->sock, rcv_buf, 10));
+            snprintf(title, 32, "socket: %s", _itoa((int)client->sock, rcv_buf, 10));
             MessageBox(0, srv_net, title, MB_OK);
             if (rcvlen == -1) {
                 client->flag = -1;
@@ -87,7 +87,7 @@ int InitChat(st_sock* sock)
 #endif
     client.srvaddr.sin_port = htons(socks.PORT);
     char title[32];
-    sprintf(title, "client: %s", ipaddr);
+    snprintf(title, 27, "client: %s", ipaddr);
     SetConsoleTitle(title);
     client.sock = socket(AF_INET, SOCK_STREAM, 0);
     BOOL bReuseaddr = TRUE;
