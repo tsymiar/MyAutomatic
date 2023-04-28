@@ -1,8 +1,8 @@
 ﻿#include "client.h"
 
-static st_sock socks = {};
-static st_trans trans = {};
-static st_client client = {};
+static StSock g_socks = {};
+static StMsgContent g_content = {};
+static StClient g_client = {};
 
 // 参考该函数编写报文处理函数
 #ifdef _WIN32
@@ -16,25 +16,25 @@ runtime(void* param)
     static char rcv_buf[256];
     CRITICAL_SECTION wrcon;
     InitializeCriticalSection(&wrcon);
-    st_client* client = reinterpret_cast<st_client*>(param);
+    StClient* g_client = reinterpret_cast<StClient*>(param);
     while (1) {
-        if (client->flag == 0)
+        if (g_client->flag == 0)
             continue;
         memset(rcv_buf, 0, 256);
-        int rcvlen = recv(client->sock, rcv_buf, 256, 0);
+        int rcvlen = recv(g_client->sock, rcv_buf, 256, 0);
         EnterCriticalSection(&wrcon);
         for (int c = 0; c < rcvlen; c++)
             fprintf(stdout, "%c", (unsigned char)rcv_buf[c]);
         fprintf(stdout, "\n");
         LeaveCriticalSection(&wrcon);
         if (rcvlen <= 0) {
-            snprintf(srv_net, 32, "Connection lost!\n%s:%d", inet_ntoa(client->srvaddr.sin_addr), client->srvaddr.sin_port);
+            snprintf(srv_net, 32, "Connection lost!\n%s:%d", inet_ntoa(g_client->srvaddr.sin_addr), g_client->srvaddr.sin_port);
             char title[32];
-            snprintf(title, 32, "socket: %s", _itoa((int)client->sock, rcv_buf, 10));
+            snprintf(title, 32, "socket: %s", _itoa((int)g_client->sock, rcv_buf, 10));
             MessageBox(0, srv_net, title, MB_OK);
             if (rcvlen == -1) {
-                client->flag = -1;
-                closesocket(client->sock);
+                g_client->flag = -1;
+                closesocket(g_client->sock);
                 exit(0);
             }
 #ifdef __GNUC__
@@ -51,52 +51,51 @@ runtime(void* param)
     };
 };
 
-int InitChat(st_sock* sock)
+int InitChat(StSock* sock)
 {
-    SetConsoleTitle("client v0.1");
+    SetConsoleTitle("g_client v0.1");
     WSADATA wsaData;
-    int erno = WSAStartup(0x202, &wsaData);
-    if (erno == SOCKET_ERROR) {
+    if (WSAStartup(0x202, &wsaData) == SOCKET_ERROR) {
         std::cerr << "WSAStartup failed with error " << WSAGetLastError() << std::endl;
         WSACleanup();
         exit(0);
     }
-    InitializeCriticalSection(&client.wrcon);
+    InitializeCriticalSection(&g_client.wrcon);
     static char ipaddr[16];
     memset(ipaddr, 0, 16);
     if (sock == NULL || sock->IP[0] == '\0' || sock->IP[0] < 0) {
         fprintf_s(stdout, "Current OS is %d bit.\nNow enter server address: ", (int)(sizeof(void*) * 8));
-        scanf_s("%16s", (char*)&ipaddr, 16);
+        scanf_s("%15s", (char*)&ipaddr, 16);
         if (*ipaddr != 0) {
-            memcpy(socks.IP, &ipaddr, 16);
+            memcpy(g_socks.IP, &ipaddr, 16);
         }
     } else {
         memcpy(&ipaddr, sock->IP, 16);
-        memcpy(&socks, sock, sizeof(st_sock));
+        memcpy(&g_socks, sock, sizeof(StSock));
     }
     if (sock != NULL && sock->PORT != 0) {
-        socks.PORT = sock->PORT;
+        g_socks.PORT = sock->PORT;
     } else {
-        socks.PORT = DEFAULT_PORT;
+        g_socks.PORT = DEFAULT_PORT;
     }
-    client.srvaddr.sin_family = AF_INET;
+    g_client.srvaddr.sin_family = AF_INET;
 #ifdef _UTILAPIS_
-    inet_pton(AF_INET, ipaddr, (PVOID*)&client.srvaddr.sin_addr.s_addr);
+    inet_pton(AF_INET, ipaddr, (PVOID*)&g_client.srvaddr.sin_addr.s_addr);
 #else
-    client.srvaddr.sin_addr.s_addr = inet_addr(ipaddr);
+    g_client.srvaddr.sin_addr.s_addr = inet_addr(ipaddr);
 #endif
-    client.srvaddr.sin_port = htons(socks.PORT);
+    g_client.srvaddr.sin_port = htons(g_socks.PORT);
     char title[32];
-    snprintf(title, 27, "client: %s", ipaddr);
+    snprintf(title, 27, "g_client: %s", ipaddr);
     SetConsoleTitle(title);
-    client.sock = socket(AF_INET, SOCK_STREAM, 0);
+    g_client.sock = socket(AF_INET, SOCK_STREAM, 0);
     BOOL bReuseaddr = TRUE;
-    if (client.sock == INVALID_SOCKET) {
+    if (g_client.sock == INVALID_SOCKET) {
         std::cerr << "socket() invalid with error " << WSAGetLastError() << std::endl;
         WSACleanup();
         exit(0);
     }
-    setsockopt(client.sock, SOL_SOCKET, SO_REUSEADDR, (const char*)&bReuseaddr, sizeof(BOOL));
+    setsockopt(g_client.sock, SOL_SOCKET, SO_REUSEADDR, (const char*)&bReuseaddr, sizeof(BOOL));
     SetRecvState(RCV_TCP);
     return 0;
 }
@@ -125,7 +124,7 @@ Chat_Msg(void(*func)(void*))
 void* Chat_Msg(void* func)
 #endif
 {
-    if (connect(client.sock, (struct sockaddr*)&client.srvaddr, sizeof(client.srvaddr)) == SOCKET_ERROR) {
+    if (connect(g_client.sock, (struct sockaddr*)&g_client.srvaddr, sizeof(g_client.srvaddr)) == SOCKET_ERROR) {
         std::cerr << "connect() error " << "[" <<
             GetLastErrorToString(WSAGetLastError()).c_str()
             << "] " << std::endl;
@@ -133,12 +132,12 @@ void* Chat_Msg(void* func)
         exit(0);
     }
     Pthreadt threads;
-    client.flag = 1;
-    _beginthreadex(NULL, 0, (_beginthreadex_proc_type)func, &client, 0, &threads);
+    g_client.flag = 1;
+    _beginthreadex(NULL, 0, (_beginthreadex_proc_type)func, &g_client, 0, &threads);
     return 0;
 }
 
-int StartChat(int erno,
+int StartChat(int error,
     void
 #ifndef _WIN32
     *
@@ -146,12 +145,12 @@ int StartChat(int erno,
     (*func)(void*)
 )
 {
-    client.erno = erno;
-    if (erno != 0)
-        return erno;
+    g_client.error = error;
+    if (error != 0)
+        return error;
     else {
         if (func == NULL) {
-            client.erno = -1;
+            g_client.error = -1;
             func = [](void*) {
                 fprintf_s(stdout, "Lambda null func.\n");
 #ifndef _WIN32
@@ -166,21 +165,21 @@ int StartChat(int erno,
 
 int CloseChat()
 {
-    client.erno = -1;
-    if (!closesocket(client.sock))
-        DeleteCriticalSection(&client.wrcon);
+    g_client.error = -1;
+    if (!closesocket(g_client.sock))
+        DeleteCriticalSection(&g_client.wrcon);
     return WSACleanup();
 }
 
 int callbackLog(char* usr, char* psw)
 {
-    trans.uiCmdMsg = 0x1;
-    memset(trans.username, 0, 24);
-    memcpy(trans.username, usr, strlen(usr) + 1);
-    memset(trans.password, 0, 24);
-    memcpy(trans.password, psw, strlen(psw) + 1);
-    send(client.sock, (char*)&trans, sizeof(st_trans), 0);
-    return trans.uiCmdMsg;
+    g_content.uiCmdMsg = 0x1;
+    memset(g_content.username, 0, 24);
+    memcpy(g_content.username, usr, strlen(usr) + 1);
+    memset(g_content.password, 0, 24);
+    memcpy(g_content.password, psw, strlen(psw) + 1);
+    send(g_client.sock, (char*)&g_content, sizeof(StMsgContent), 0);
+    return g_content.uiCmdMsg;
 }
 #ifdef _WIN32
 int SetClientDlg(void* Wnd)
@@ -188,32 +187,32 @@ int SetClientDlg(void* Wnd)
     if (Wnd == NULL) {
         return -1;
     } else {
-        client.Dlg = Wnd;
+        g_client.Dlg = Wnd;
         return 0;
     }
 };
 #endif
-int SendClientMessage(st_trans* msg)
+int SendClientMessage(StMsgContent* msg)
 {
-    if (client.flag < 0) {
+    if (g_client.flag < 0) {
         MessageBox(0, const_cast<char*>("Connection status error, will exit!"), const_cast<char*>("Quit"), MB_OK);
-        return (client.erno = -1);
+        return (g_client.error = -1);
     }
-    int len = sizeof(trans);
-    trans = { '\0', (unsigned char)(trans.uiCmdMsg & 0xff) };
+    int len = sizeof(g_content);
+    g_content = { '\0', (unsigned char)(g_content.uiCmdMsg & 0xff) };
     if (msg != NULL) {
         if ((int)msg->uiCmdMsg < 0)
             return -2;
-        memcpy(&trans, msg, sizeof(st_trans));
+        memcpy(&g_content, msg, sizeof(StMsgContent));
     } else {
-        send(client.sock, (char*)&trans, len, 0);
+        send(g_client.sock, (char*)&g_content, len, 0);
         return -1;
     }
-    if (client.last.lastuser[0] != 0 && client.last.lastgrop[0] != 0) {
-        memcpy(trans.username, client.last.lastuser, 24);
-        memcpy(trans.group_name, client.last.lastgrop, 24);
+    if (g_client.last.lastuser[0] != 0 && g_client.last.lastgrop[0] != 0) {
+        memcpy(g_content.username, g_client.last.lastuser, 24);
+        memcpy(g_content.group_name, g_client.last.lastgrop, 24);
     }
-    return send(client.sock, (char*)&trans, len, 0);
+    return send(g_client.sock, (char*)&g_content, len, 0);
 }
 
 /*P2P接收消息线程*/
@@ -228,7 +227,7 @@ RecvThreadProc(void* PrimaryUDP)
     P2P_NETWORK* P2Psock = reinterpret_cast<P2P_NETWORK*>(PrimaryUDP);
     int len = sizeof(P2Psock->addr);
     for (;;) {
-        if (client.flag == 0 || P2Psock->socket == 0)
+        if (g_client.flag == 0 || P2Psock->socket == 0)
             continue;
         char recvbuf[256];
         memset(recvbuf, 0, 256);
@@ -240,17 +239,17 @@ RecvThreadProc(void* PrimaryUDP)
 #endif
         );
         if (ret <= 0) {
-            if (client.count < 3) {
+            if (g_client.count < 3) {
                 fprintf(stdout, "Receive No Message: %s!\n", strerror(ret));
             } else {
-                if (client.count > 30) {
+                if (g_client.count > 30) {
                     fprintf(stdout, "Receive failed too many times!\n");
                     break;
                 }
             }
             continue;
         } else {
-            client.flag = 2;
+            g_client.flag = 2;
             in_addr peer;
 #ifdef _WIN32
             peer.S_un.S_addr = P2Psock->addr.sin_addr.S_un.S_addr;
@@ -287,7 +286,7 @@ int p2pMessage(unsigned char* userName, int UserIP, unsigned int UserPort, char 
     }
     sockaddr_in addr;
     addr.sin_family = AF_INET;
-    addr.sin_port = htons(socks.PORT);
+    addr.sin_port = htons(g_socks.PORT);
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
     int bOptval = 1; // 端口复用
     int retSetsockopt = setsockopt(PrimaryUDP, SOL_SOCKET, SO_REUSEADDR, (char*)&bOptval, sizeof(bOptval));
@@ -300,14 +299,14 @@ int p2pMessage(unsigned char* userName, int UserIP, unsigned int UserPort, char 
         std::cout << "socket binding failure!" << std::endl;
         return 0;
     }
-    if (client.flag != 2) {
+    if (g_client.flag != 2) {
         //没有接收到目标主机的回应，认为目标主机的端口
         //映射没有打开，那么发送请求到服务器要求“打洞”。
-        st_trans MessageHost;
-        memset(&MessageHost, 0, sizeof(st_trans));
+        StMsgContent MessageHost;
+        memset(&MessageHost, 0, sizeof(StMsgContent));
         MessageHost.uiCmdMsg = PEER2P;
         memcpy(MessageHost.type, "P2P", 4);
-        memcpy(MessageHost.username, trans.username, 24);
+        memcpy(MessageHost.username, g_content.username, 24);
         memcpy(MessageHost.peer_name, userName, 24);
         //请求服务器“打洞”
         SendClientMessage(&MessageHost);
@@ -323,7 +322,7 @@ int p2pMessage(unsigned char* userName, int UserIP, unsigned int UserPort, char 
 #endif
             = htonl(UserIP);
 
-        st_trans MessagePeer;
+        StMsgContent MessagePeer;
         memset(&MessagePeer, 0, sizeof(MessagePeer));
         MessagePeer.uiCmdMsg = PEER2P;
         memcpy(MessagePeer.username, userName, 24);
@@ -335,9 +334,9 @@ int p2pMessage(unsigned char* userName, int UserIP, unsigned int UserPort, char 
         ppres = sendto(PrimaryUDP, (const char*)&Message, (int)strlen(Message) + 1, 0, (const sockaddr*)&remote, sizeof(remote));
         if (ppres < 0)
             return ppres;
-        memset(&MessagePeer, 0, sizeof(st_trans));
-        memcpy(&MessagePeer, Message, sizeof(st_trans));
-        if (client.count == 0) {
+        memset(&MessagePeer, 0, sizeof(StMsgContent));
+        memcpy(&MessagePeer, Message, sizeof(StMsgContent));
+        if (g_client.count == 0) {
             //启动接收线程
             P2P_NETWORK pp_sock;
             pp_sock.addr = remote;
@@ -345,10 +344,10 @@ int p2pMessage(unsigned char* userName, int UserIP, unsigned int UserPort, char 
             Pthreadt threads;
             _beginthreadex(NULL, 0, RecvThreadProc, &pp_sock, 0, &threads);
         }
-        client.count++;
+        g_client.count++;
         //等待接收消息线程修改标志
         for (int i = 0; i < 10; i++) {
-            if (client.flag >= 0 && client.flag < 2)
+            if (g_client.flag >= 0 && g_client.flag < 2)
                 Sleep(300);
             else
                 return -1;
@@ -359,20 +358,20 @@ int p2pMessage(unsigned char* userName, int UserIP, unsigned int UserPort, char 
 
 int IsChatActive()
 {
-    return client.flag;
+    return g_client.flag;
 }
 
 void SetChatActive(int flag)
 {
-    client.flag = flag;
+    g_client.flag = flag;
 }
 
 int GetRecvState()
 {
-    return client.rcvstat;
+    return g_client.rcvstat;
 }
 
 void SetRecvState(int state)
 {
-    client.rcvstat = state;
+    g_client.rcvstat = state;
 }

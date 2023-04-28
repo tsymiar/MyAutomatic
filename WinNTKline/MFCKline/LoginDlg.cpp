@@ -25,12 +25,12 @@ namespace logDlg
 
     struct SOAPELEM {
         struct soap soap;
-        st_sock sock;
+        StSock sock;
         struct api__ArrayOfEmp2 rslt;
-        st_trans user;
+        StMsgContent user;
         char msg[512];
         char** __rslt;
-        int erno;
+        int error;
     } elem;
 }
 
@@ -107,18 +107,18 @@ unsigned int _stdcall call_soap_thrd(void* lr)
     SOAPELEM* elem = (SOAPELEM*)malloc(sz_t);
     memset(elem, 0, sz_t);
     elem->rslt = api__ArrayOfEmp2();
-    elem->sock = st_sock();
+    elem->sock = StSock();
     memset(&elem->msg, 0, 32);
-    memcpy(&elem->sock, lr, sizeof(st_sock));
+    memcpy(&elem->sock, lr, sizeof(StSock));
     if (elem->sock.addr[0] == NULL) {
         AfxMessageBox("获取请求链接错误！");
         return -1;
     }
     if (elem->soap.state == 0)
         soap_init(&elem->soap);
-    elem->erno = soap_call_api__trans(&elem->soap, elem->sock.addr, (char*)&(elem->user.uiCmdMsg), elem->sock.form, (char**)&elem->msg);
+    elem->error = soap_call_api__trans(&elem->soap, elem->sock.addr, (char*)&(elem->user.uiCmdMsg), elem->sock.form, (char**)&elem->msg);
     CString msg;
-    if (elem->erno != 0)
+    if (elem->error != 0)
     {
         soap_sprint_fault(&elem->soap, elem->msg, 512);
         msg.Format("%s\n%s", *soap_faultstring(&elem->soap), elem->msg);
@@ -129,7 +129,7 @@ unsigned int _stdcall call_soap_thrd(void* lr)
         delete status;
     }
     AfxMessageBox(msg);
-    return elem->erno;
+    return elem->error;
 }
 
 void CLoginDlg::OnBnClickedLogin()
@@ -169,9 +169,9 @@ void CLoginDlg::OnBnClickedLogin()
     //CloseHandle((HANDLE)_beginthreadex(NULL, 0, \
     //    (_beginthreadex_proc_type)&call_soap_thrd \
     //    , (void *)&elem, 0, NULL));
-    elem.erno = soap_call_api__login_by_key(&elem.soap, elem.sock.addr, "",
+    elem.error = soap_call_api__login_by_key(&elem.soap, elem.sock.addr, "",
         (char*)elem.user.username, (char*)elem.user.password, elem.rslt);
-    switch (elem.erno)
+    switch (elem.error)
     {
     case 0:
         if (elem.rslt.rslt.flag != 200)
@@ -358,7 +358,7 @@ INT_PTR CLoginDlg::testRegist(char* m_IP)
     return m_crgist.DoModal();
 }
 
-BOOL CLoginDlg::testLogin(st_sock& log)
+BOOL CLoginDlg::testLogin(StSock& log)
 {
     return CloseHandle((HANDLE)_beginthreadex(NULL, 0, \
         (_beginthreadex_proc_type)&call_soap_thrd\

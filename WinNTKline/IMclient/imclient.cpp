@@ -14,7 +14,7 @@ parseRcvMsg(void* lprcv)
     static char srv_net[32];
     CRITICAL_SECTION wrcon;
     InitializeCriticalSection(&wrcon);
-    st_client* client = (st_client*)lprcv;
+    StClient* client = (StClient*)lprcv;
     int fw_len = 0;
     int ui_val = 0;
     volatile int count = 0;
@@ -22,17 +22,17 @@ parseRcvMsg(void* lprcv)
         if (client->flag == 0)
             continue;
         memset(rcv_buf, 0, 256);
-        int rcvlen = recv(client->sock, rcv_buf, 256, 0);
-        if (rcvlen == 2 && (rcv_buf[1] == '\0')) {
+        int size = recv(client->sock, rcv_buf, 256, 0);
+        if (size == 2 && (rcv_buf[1] == '\0')) {
             Sleep(1);
             continue;
         }
         EnterCriticalSection(&wrcon);
-        st_trans* mesg = (st_trans*)rcv_buf;
-        ui_val = mesg->uiCmdMsg;
+        StMsgContent* msg = (StMsgContent*)rcv_buf;
+        ui_val = msg->uiCmdMsg;
 #ifdef _DEBUG
         if ((ui_val != NETNDT) && (ui_val != GETIMAGE)) {
-            for (int c = 0; c < rcvlen; c++) {
+            for (int c = 0; c < size; c++) {
 #ifndef _WIN32
                 if (ui_val == 0) {
                     g_printed = 0;
@@ -53,7 +53,7 @@ parseRcvMsg(void* lprcv)
 #ifndef _WIN32
             if (ui_val > 15)
                 ui_val = GETIMAGE;
-            if (mesg->uiCmdMsg != 0 && mesg->uiCmdMsg < 16)
+            if (msg->uiCmdMsg != 0 && msg->uiCmdMsg < 16)
 #endif
                 fprintf(stdout, "\n");
             SetRecvState(RCV_TCP);
@@ -71,38 +71,38 @@ parseRcvMsg(void* lprcv)
         }
 #endif
         if (ui_val == PEER2P) {
-            int ip = atoi((const char*)mesg->peerIP);
+            int ip = atoi((const char*)msg->peerIP);
             unsigned char* val = (unsigned char*)&ip;
-            int port = atoi((const char*)mesg->peer_port);
+            int port = atoi((const char*)msg->peer_port);
             fprintf(stdout, "User:\t%s\nIP:\t%u.%u.%u.%u\nPORT:\t%d\n",
-                mesg->username, val[3], val[2], val[1], val[0], port);
+                msg->username, val[3], val[2], val[1], val[0], port);
             if (port <= 0) {
                 fprintf(stdout, "Error number of user port, stopping send P2P message!\n");
             } else {
-                struct MoreMesg p2pmsg;
-                memset(&p2pmsg, 0, sizeof(MoreMesg));
-                p2pmsg.cmd[0] = mesg->uiCmdMsg;
-                memcpy(&p2pmsg.mesg, "hello", 6);
-                int parse = p2pMessage(mesg->username, ip, port, (char*)&p2pmsg);
+                struct ExtraMessage p2pMsg;
+                memset(&p2pMsg, 0, sizeof(ExtraMessage));
+                p2pMsg.cmd[0] = msg->uiCmdMsg;
+                memcpy(&p2pMsg.msg, "hello", 6);
+                int parse = p2pMessage(msg->username, ip, port, (char*)&p2pMsg);
                 if (parse == 0) {
                     SetRecvState(RCV_P2P);
                 }
             }
         }
         if (ui_val == NETNDT) {
-            if (atoi((const char*)mesg->recv_mesg.status) == 200) {
-                fprintf(stdout, "\r%*c\rReceived: %s\n", 64, ' ', mesg->recv_mesg.message);
+            if (atoi((const char*)msg->rcv_msg.status) == 200) {
+                fprintf(stdout, "\r%*c\rReceived: %s\n", 64, ' ', msg->rcv_msg.message);
                 SetRecvState(RCV_NDT);
                 if (g_printed > 0) {
                     fprintf(stdout, youSaid);
                 }
-            } else if (rcvlen < 0) {
+            } else if (size < 0) {
                 fprintf(stdout, "Status error.\n");
                 closesocket(client->sock);
                 LeaveCriticalSection(&wrcon);
                 exit(0);
             } else {
-                fprintf(stdout, "\r%*c\r%s\n", 64, ' ', mesg->ndt_msg);
+                fprintf(stdout, "\r%*c\r%s\n", 64, ' ', msg->ndt_msg);
                 SetRecvState(RCV_TCP);
                 g_printed = 2;
             }
@@ -137,49 +137,49 @@ parseRcvMsg(void* lprcv)
             fclose(file);
         }
         LeaveCriticalSection(&wrcon);
-        if (rcvlen <= 0 || (mesg->value[0] == 'e' && mesg->value[1] == '8')) {
+        if (size <= 0 || (msg->value[0] == 'e' && msg->value[1] == '8')) {
             snprintf(srv_net, 32, "Connection lost!\n%s:%d", inet_ntoa(client->srvaddr.sin_addr), client->srvaddr.sin_port);
             char title[32];
-            snprintf(title, 32, "socket: %s", _itoa((int)client->sock, (char*)mesg, 10));
+            snprintf(title, 32, "socket: %s", _itoa((int)client->sock, (char*)msg, 10));
             MessageBox(0, srv_net, title, MB_OK);
-            SetChatActive(rcvlen);
+            SetChatActive(size);
             closesocket(client->sock);
             exit(0);
         };
     };
 };
 
-st_trans* ParseChatMesg(st_trans& trans)
+StMsgContent* ParseChatData(StMsgContent& content)
 {
-    memset(&trans.user_sign, 0, 24);
-    switch (trans.uiCmdMsg) {
+    memset(&content.user_sign, 0, 24);
+    switch (content.uiCmdMsg) {
     case REGISTER:
         fprintf(stdout, "Input a new username AND password to register, divide with BLANK(' ').\n");
-        scanf_s("%s %s", trans.username, 24, trans.password, 24);
+        scanf_s("%s %s", content.username, 24, content.password, 24);
         break;
     case LOGIN:
     {
-        if (trans.username[0] != '\0') {
+        if (content.username[0] != '\0') {
             static char title[36];
-            snprintf(title, 36, "Welcome %s", (char*)trans.username);
+            snprintf(title, 36, "Welcome %s", (char*)content.username);
             SetConsoleTitle(title);
         } else {
             fprintf(stdout, "Input username AND password to login, divide with BLANK(' ').\n");
-            scanf_s("%s %s", trans.username, 24, trans.password, 24);
+            scanf_s("%s %s", content.username, 24, content.password, 24);
         }
         break;
     }
     case SETPSW:
     {
-        gets_s((char*)trans.password, 24);
+        gets_s((char*)content.password, 24);
         break;
     }
     case PEER2P:
     case NETNDT:
     {
-        memcpy(trans.type, "NDT", 4);
-        memcpy(&trans.peer_name, "iv9527", 7);
-        trans.more_mesg.cmd[0] = NETNDT;
+        memcpy(content.type, "NDT", 4);
+        memcpy(&content.peer_name, "iv9527", 7);
+        content.ext_msg.cmd[0] = NETNDT;
 #ifdef NDT_ONLY
         if (g_printed > -1) {
             fprintf(stdout, youSaid);
@@ -191,41 +191,41 @@ st_trans* ParseChatMesg(st_trans& trans)
             g_printed = 1;
         }
 #endif
-        memset(&trans.more_mesg.mesg, 0, 16);
-        if (scanf_s("%s", &trans.more_mesg.mesg.message, 16) <= 0) {
+        memset(&content.ext_msg.msg, 0, 16);
+        if (scanf_s("%s", &content.ext_msg.msg.message, 16) <= 0) {
             fprintf(stdout, "Error: characters limit 16!\n");
-            g_printed = trans.uiCmdMsg = -1;
-            return &trans;
+            g_printed = content.uiCmdMsg = -1;
+            return &content;
         }
         break;
     }
     case USERGROUP:
     {
         fprintf(stdout, "Input group name to show members in: ");
-        scanf_s("%s", trans.group_name, (unsigned)_countof(trans.group_name));
+        scanf_s("%s", content.group_name, (unsigned)_countof(content.group_name));
         break;
     }
     case HOSTGROUP:
     {
         fprintf(stdout, "Input group name AND group mark be to host, divide with BLANK(' ').\n");
-        scanf_s("%s %s", trans.group_host, (unsigned)_countof(trans.group_host), (trans.group_mark), (unsigned)_countof(trans.group_mark));
+        scanf_s("%s %s", content.group_host, (unsigned)_countof(content.group_host), (content.group_mark), (unsigned)_countof(content.group_mark));
         break;
     }
     case JOINGROUP:
     {
         fprintf(stdout, "Input group name you want to join in: ");
-        scanf_s("%s", (trans.group_join), (unsigned)_countof(trans.group_join));
+        scanf_s("%s", (content.group_join), (unsigned)_countof(content.group_join));
         break;
     }
     default:
     {
-        if (trans.value[0] == 0x0) {
-            MessageBox(0, const_cast<char*>("LoggingIn failure."), const_cast<char*>("message"), MB_OK);
-            return &trans;
+        if (content.value[0] == 0x0) {
+            MessageBox(0, const_cast<char*>("Invalid Value."), const_cast<char*>("message"), MB_OK);
+            return &content;
         }
     }
     }
-    return &trans;
+    return &content;
 }
 
 bool is_ip_valid(char s[])
@@ -259,8 +259,8 @@ bool is_ip_valid(char s[])
 
 int main(int argc, char* argv[])
 {
-    st_sock sock = {};
-    memset(&sock, 0, sizeof(st_sock));
+    StSock sock = {};
+    memset(&sock, 0, sizeof(StSock));
     if (argc > 1) {
         if (!is_ip_valid(argv[1]))
             fprintf(stdout, "Error: '%s' not in correct IP format.\n", argv[1]);
@@ -276,8 +276,8 @@ int main(int argc, char* argv[])
         if (IsChatActive() < 0) {
             return CloseChat();
         }
-        st_trans msg;
-        memset(&msg, 0, sizeof(st_trans));
+        StMsgContent msg;
+        memset(&msg, 0, sizeof(StMsgContent));
         volatile int received = GetRecvState();
         g_printed = 0;
 #ifdef USR_TEST
@@ -288,7 +288,7 @@ int main(int argc, char* argv[])
         if (comm > 1) {
             comm = CHATWITH;
         }
-        msg.more_mesg.cmd[0] = msg.uiCmdMsg = comm;
+        msg.ext_msg.cmd[0] = msg.uiCmdMsg = comm;
         while (IsChatActive() == 0) { ; }
         comm++;
 #else
@@ -307,11 +307,11 @@ int main(int argc, char* argv[])
         msg.uiCmdMsg = comm;
 #endif // NDT_ONLY
         if (received == RCV_NDT) {
-            msg.more_mesg.cmd[0] = msg.uiCmdMsg = NETNDT;
+            msg.ext_msg.cmd[0] = msg.uiCmdMsg = NETNDT;
         }
         if (received > RCV_ERR) {
             SetRecvState(RCV_ERR);
-            if (SendClientMessage(ParseChatMesg(msg)) < 0) {
+            if (SendClientMessage(ParseChatData(msg)) < 0) {
                 fprintf(stdout, "Error while set chatting message.\n");
                 return -1;
             }

@@ -139,40 +139,40 @@ typedef struct CLIENT {
     void* Dlg;
     void(*fp2p)(void*);
     int count = 0;
-    int erno = -1;
+    int error = -1;
     struct LAST {
         char lastuser[24];
         char lastgrop[24];
     } last;
-} st_client;
+} StClient;
 
 typedef struct IM_SOCK {
     char addr[MAX_PATH] = { '\0' };
     char form[80];
     char IP[16];
     unsigned int PORT;
-} st_sock;
+} StSock;
 
-struct MainMesg {
+struct MainMessage {
     unsigned char message[16];
     unsigned char status[8];
 };
 
-struct MoreMesg {
+struct ExtraMessage {
     unsigned char rsv[2];
     unsigned char cmd[2];
     unsigned char val[4];
-    struct MainMesg mesg;
+    struct MainMessage msg;
 };
 
-typedef struct MSG_TRANS {
+typedef struct MSG_CONTENT {
     unsigned char reserve;
     unsigned char uiCmdMsg;
     unsigned char value[2];
     unsigned char type[4];
     union {
         unsigned char username[24];
-        struct MainMesg recv_mesg;
+        struct MainMessage rcv_msg;
     };
     union {
         char password[24];
@@ -190,8 +190,8 @@ typedef struct MSG_TRANS {
         unsigned char group_host[24];
         unsigned char group_join[24];
     };
-    struct MoreMesg more_mesg;
-} st_trans;
+    struct ExtraMessage ext_msg;
+} StMsgContent;
 
 struct MENU {
     int key;
@@ -268,15 +268,15 @@ inline int checkPswValid(char* str)
     }
     return (z0 + zz + zZ + z_ == 4 ? 1 : 0);
 }
-int InitChat(st_sock* sock = NULL);
-int StartChat(int erno,
+int InitChat(StSock* sock = NULL);
+int StartChat(int error,
     void
 #ifndef _WIN32
     *
 #endif
     (*func)(void*)
 );
-int SendClientMessage(st_trans* msg = NULL);
+int SendClientMessage(StMsgContent* msg = NULL);
 int callbackLog(char* usr, char* psw);
 int CloseChat();
 int p2pMessage(unsigned char* userName, int UserIP, unsigned int UserPort, char const* Message);

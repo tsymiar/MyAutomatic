@@ -17,7 +17,7 @@
 #define LOOP_TIME 1
 
 namespace {
-    st_sock socks = {};
+    StSock socks = {};
     CLoginDlg login = {};
     CTPclient* g_ctp = nullptr;
     MyOglDrawDlg* g_ogl = nullptr;
