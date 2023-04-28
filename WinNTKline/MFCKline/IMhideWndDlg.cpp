@@ -32,7 +32,7 @@ static char THIS_FILE[] = __FILE__;
 
 IMPLEMENT_DYNAMIC(CIMhideWndDlg, CDialogEx)
 
-CIMhideWndDlg::CIMhideWndDlg(st_sock* socks, CWnd* pParent /*=NULL*/)
+CIMhideWndDlg::CIMhideWndDlg(StSock* socks, CWnd* pParent /*=NULL*/)
     : CDialogEx(IDD_IMHIDEWND, pParent)
 {
     //{{AFX_DATA_INIT(CIMhideWndDlg)
@@ -41,7 +41,7 @@ CIMhideWndDlg::CIMhideWndDlg(st_sock* socks, CWnd* pParent /*=NULL*/)
     // Note that LoadIcon does not require a subsequent DestroyIcon in Win32
 
     if (socks != NULL)
-        memcpy(&m_imSocks, socks, sizeof(st_sock));
+        memcpy(&m_imSocks, socks, sizeof(StSock));
 
     m_isSizeChanged = FALSE;
     m_isSetTimer = FALSE;
@@ -90,9 +90,9 @@ void* parseMessage(void* msg)
     char title[512];
     static char rslt[256];
     CRITICAL_SECTION wrcsec;
-    st_client client; // = (st_client*)malloc(sizeof(st_client));
+    StClient client; // = (StClient*)malloc(sizeof(StClient));
     memset(rslt, 0, 256);
-    client = (st_client)*((st_client*)msg);
+    client = (StClient) * ((StClient*)msg);
     InitializeCriticalSection(&wrcsec);
     while (1) {
         if (client.flag == 0)
@@ -508,16 +508,15 @@ void CIMhideWndDlg::OnBnClickedExit()
         DestroyWindow();
 }
 
-int ifsh = 0;
 int current = 0;
-st_trans transMsg;
+StMsgContent content;
 SetMarkDlg* g_setDlg = NULL; 
 IMlogDlg* g_logDlg = NULL;
 
 void callbackPasswdSet(char* psw)
 {
     if (g_setDlg->GetCallTimes() == 1) {
-        memcpy(transMsg.password, psw, 24);
+        memcpy(content.password, psw, 24);
         g_setDlg->SetCallback(callbackPasswdSet);
     }
     if (g_setDlg->GetCallTimes() == 2) {
@@ -526,10 +525,10 @@ void callbackPasswdSet(char* psw)
         setdlg->ShowWindow(SW_SHOW);
         setdlg->SetifCheck(true);
         setdlg->SetTitle("重置密码");
-        strcpy((char*)transMsg.username, g_logDlg->getUsername());
-        strcpy((char*)transMsg.user_newpass, psw);
-        if (*psw != NULL && transMsg.password[0] != psw[0]) {
-            SendClientMessage(&transMsg);
+        strcpy((char*)content.username, g_logDlg->getUsername());
+        strcpy((char*)content.user_newpass, psw);
+        if (*psw != NULL && content.password[0] != psw[0]) {
+            SendClientMessage(&content);
         }
     }
 }
@@ -537,8 +536,8 @@ void callbackPasswdSet(char* psw)
 
 void callbackGroupSet(char* name)
 {
-    memcpy(transMsg.group_host, name, 24);
-    SendClientMessage(&transMsg);
+    memcpy(content.group_host, name, 24);
+    SendClientMessage(&content);
 }
 
 BOOL CIMhideWndDlg::DestroyWindow()
@@ -578,6 +577,7 @@ UINT _NoMessageBox(LPVOID lparam)
 
 void CIMhideWndDlg::OnCbnSelchangeComm()
 {
+    static int ifsh = 0;
     if (current == 0)
     {
         m_commbo.DeleteString(0);
@@ -590,7 +590,7 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
     char item[8];
     // memset(&msg, 0, sizeof(MSG_trans));
     // msg.cmd = (comsel >> 8) & 0xff + comsel & 0xff;
-    transMsg.uiCmdMsg = comsel;
+    content.uiCmdMsg = comsel;
     switch (comsel)
     {
     case REGISTER:
@@ -621,7 +621,7 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
         if (m_logDlg != NULL) {
             m_logDlg->OnBnClickedCancel();
         }
-        if (SendClientMessage(&transMsg) == 0) {
+        if (SendClientMessage(&content) == 0) {
             MessageBox("已发起请求。", MB_OK);
         }
         break;
@@ -643,7 +643,7 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
         m_frndList.InsertItem(0, item);
         sprintf(item, "%03X", (ifsh + 11) * 13 - 19);
         m_frndList.InsertItem(1, item);
-        SendClientMessage(&transMsg);
+        SendClientMessage(&content);
         ifsh++;
         break;
     case ONLINE:
@@ -654,7 +654,7 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
         lvcol.pszText = _T("好友");
         m_frndList.SetColumn(0, &lvcol);
         m_frndList.ShowWindow(SW_SHOW);
-        SendClientMessage(&transMsg);
+        SendClientMessage(&content);
         break;
     case VIEWGROUP:
         if (m_logDlg != NULL) {
@@ -664,7 +664,7 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
         lvcol.pszText = _T("群列表");
         m_frndList.SetColumn(0, &lvcol);
         m_frndList.ShowWindow(SW_SHOW);
-        SendClientMessage(&transMsg);
+        SendClientMessage(&content);
         break;
     case USERGROUP:
         if (m_logDlg != NULL) {
@@ -694,7 +694,7 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
         g_setDlg->SetTitle("参加群组");
         break;
     case EXITGROUP:
-        SendClientMessage(&transMsg);
+        SendClientMessage(&content);
         break;
     default:
         break;

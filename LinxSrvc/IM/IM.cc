@@ -25,8 +25,8 @@
 #endif
 #define NE_VAL(a) (((~((a) & 0x0f)) | ((a) & 0xf0)) & 0xff)
 #define DEFAULT_PORT 8877
-#define IPCKEY 0x520905
-#define IPCFLAG IPC_CREAT|IPC_EXCL //|SHM_R|SHM_W
+#define IPC_KEY 0x520905
+#define IPC_FLAG IPC_CREAT|IPC_EXCL //|SHM_R|SHM_W
 #define THREAD_NUM 20
 #define ACC_REC "acnts"
 #define MAX_ACTIVE 30
@@ -272,7 +272,7 @@ type_thread_func monitor(void* arg)
     static USER user = {};
     constexpr int BUFF_SIZE = 256;
     int c, cnt = 0;
-    int qq = 0, loggedin = 0;
+    int qq = 0, loggedIn = 0;
     int val_rtn = -1;
     char sd_bufs[BUFF_SIZE], rcv_txt[BUFF_SIZE];
 #if !defined _WIN32
@@ -378,19 +378,19 @@ type_thread_func monitor(void* arg)
                     sn_stat = send(rcv_sock, sd_bufs, 48, 0);
                     fprintf(stdout, ">>> %s\n", sd_bufs + offset);
                 } else if (val_rtn == -2) {
-                    strncpy((sd_bufs + offset), "Too many users.", 17);
+                    snprintf((sd_bufs + offset), 16, "%s", "Too many users.");
                     sn_stat = send(rcv_sock, sd_bufs, 28, 0);
                     fprintf(stdout, ">>> %s\n", sd_bufs + offset);
                 } else if (val_rtn >= 0) {
-                    strncpy((sd_bufs + offset), "User already exists.", 22);
+                    snprintf((sd_bufs + offset), 21, "%s", "User already exists.");
                     sn_stat = send(rcv_sock, sd_bufs, 32, 0);
                     fprintf(stdout, ">>> %s\n", sd_bufs + offset);
                 } else if (val_rtn == -3) {
-                    strncpy((sd_bufs + offset), "Same user name exist.", 23);
+                    snprintf((sd_bufs + offset), 22, "%s", "Same user name exist.");
                     sn_stat = send(rcv_sock, sd_bufs, 32, 0);
                     fprintf(stdout, ">>> %s\n", sd_bufs + offset);
                 } else if (val_rtn == -4) {
-                    strncpy((sd_bufs + offset), "User name error.", 18);
+                    snprintf((sd_bufs + offset), 17, "%s", "User name error.");
                     sn_stat = send(rcv_sock, sd_bufs, 32, 0);
                     fprintf(stdout, ">>> %s\n", sd_bufs + offset);
                 };
@@ -401,7 +401,7 @@ type_thread_func monitor(void* arg)
             } else if ((user.rsv == 0) && (user.uiCmdMsg == 0x1)) {
                 val_rtn = user_auth(user.usr, user.psw);
                 snprintf(sd_bufs + 2, 8, "%x", NE_VAL(val_rtn));
-                if (val_rtn == (loggedin = 1)) {
+                if (val_rtn == (loggedIn = 1)) {
                     snprintf(sd_bufs + offset, 54, "[%s] logging on successfully.", user.usr);
                     set_user_peer(user.usr, IP, PORT, rcv_sock);
                     Network sock;
@@ -432,27 +432,28 @@ type_thread_func monitor(void* arg)
                         send(rcv_sock, sd_bufs, 64, 0);
                         closesocket(rcv_sock);
                         fprintf(stdout, ">>> %s\n", sd_bufs + offset);
-                        loggedin = 0;
+                        loggedIn = 0;
                         continue;
                     }
                 } else if (val_rtn < 0) {
                     snprintf(sd_bufs + 2, 8, "%x", NE_VAL(val_rtn));
-                    strncpy((sd_bufs + offset), "Error: check username/password again.", 39);
+                    snprintf((sd_bufs + offset), 38, "%s", "Error: check username/password again.");
                     send(rcv_sock, sd_bufs, 48, 0);
                     fprintf(stdout, ">>> %s\n", sd_bufs + offset);
                     continue;
                 } else {
+                    memset((sd_bufs + offset), 0, 64);
                     fprintf(stdout, ">>> Unknown Error!\n");
                     continue;
                 };
             } else if ((user.rsv == 0) && (user.uiCmdMsg == 0x3)) {
                 snprintf(sd_bufs + 2, 8, "%x", NE_VAL(-1));
-                strncpy((sd_bufs + offset), "Warning: user hasn't logged on yet.", 37);
+                snprintf((sd_bufs + offset), 36, "%s", "Warning: user hasn't logged on yet.");
                 send(rcv_sock, sd_bufs, 48, 0);
                 fprintf(stdout, ">>> %s\n", sd_bufs + offset);
                 continue;
             } else {
-                strncpy((sd_bufs + offset), "Warning: please Register(0) or Login(1) at first.", 51);
+                snprintf((sd_bufs + offset), 50, "%s", "Warning: please Register(0) or Login(1) at first.");
                 snprintf(sd_bufs + 2, 8, "%x", NE_VAL(-2));
                 send(rcv_sock, sd_bufs, 56, 0);
                 fprintf(stdout, ">>> %s\n", sd_bufs + offset);
@@ -466,7 +467,7 @@ type_thread_func monitor(void* arg)
 #endif
             // set current qq as last flg;
             qq = flg;
-            while (loggedin) {
+            while (loggedIn) {
                 time_t t1 = t;
                 time(&t);
                 // heart beat
@@ -486,7 +487,7 @@ type_thread_func monitor(void* arg)
 #if defined _WIN32 || !defined THREAD_PER_CONN || !defined SOCK_CONN_TEST
                     return NULL;
 #else
-                    loggedin = 0;
+                    loggedIn = 0;
                     goto comm_err1;
 #endif
                 } else {
@@ -516,18 +517,19 @@ type_thread_func monitor(void* arg)
                 if (user.rsv == 0) {
                     switch (sd_bufs[1] = user.uiCmdMsg) {
                     case CHECK:
-                        strncpy((sd_bufs + offset), "User has already on-line.", 27);
+                        snprintf((sd_bufs + offset), 26, "%s", "User has already on-line.");
                         total = 48;
                         break;
                     case USERNAME:
                         char mark[sizeof(user)];
                         snprintf(mark, 18 + 24 * 2, "User: %s(--%s--);", user.usr, user.sign);
-                        snprintf((sd_bufs + offset), strlen(mark) + 1, "%s", mark);
-                        total = offset + strlen(mark) + 1;
+                        mark[18 + 24 * 2 - 1] = '\0';
+                        snprintf((sd_bufs + offset), strlen(mark), "%s", mark);
+                        total = offset + strlen(mark);
                         break;
                     case LOGOUT:
                     {
-                        flg = loggedin = 0;
+                        flg = loggedIn = 0;
                         set_user_quit(userName);
                         snprintf(sd_bufs + offset, 17 + 24, "[%s] has logout.", userName);
                         send(rcv_sock, sd_bufs, 48, 0);
@@ -540,19 +542,19 @@ type_thread_func monitor(void* arg)
                         val_rtn = get_user_seq(user.usr);
                         snprintf(sd_bufs + 2, 8, "%x", NE_VAL(val_rtn));
                         if (1 == user_auth(user.usr, user.psw) && &user.npsw[0] != nullptr)
-                            strncpy(users[val_rtn].psw, user.npsw, 24);
+                            memcpy(users[val_rtn].psw, user.npsw, 24);
                         else
-                            strncpy((sd_bufs + offset), "Change password failure: user auth error.", 43);
+                            snprintf((sd_bufs + offset), 42, "%s", "Change password failure: user auth error.");
                         total = 56;
                     } break;
                     case ONLINE:
                     {
-                        strncpy((sd_bufs + offset), "Users on-line list:\n", 22);
+                        snprintf((sd_bufs + offset), 22, "%s", "Users on-line list:\n");
                         for (c = 0; c < MAX_ACTIVE; c++) {
                             set_n_get_mem(&active[c], c);
-                            if (strlen(active[c].user) > 0) {
+                            if (active[c].user[0] != '\0') {
                                 snprintf(sd_bufs + 2, 8, "%x", c);
-                                strncpy((sd_bufs + offset * (c + 4)), active[c].user, 24);
+                                memcpy((sd_bufs + offset * (c + 4)), active[c].user, 24);
                                 void* const psr = (sd_bufs + offset * (c + 4) + FiledSize);
                                 if ((*(char*)psr) == '\0') {
                                     memset(psr, '\t', 1);
@@ -565,7 +567,7 @@ type_thread_func monitor(void* arg)
                     case P2P:
                     {
                         unsigned int uiIP = 0;
-                        strncpy((sd_bufs + offset), user.usr, 24);
+                        memcpy((sd_bufs + offset), user.usr, 24);
                         val_rtn = get_user_seq(user.peer);
                         if (val_rtn >= 0) {
                             if (user_is_line(user.peer) >= 0) {
@@ -592,7 +594,7 @@ type_thread_func monitor(void* arg)
                                 if (memcmp(user.chk, "P2P", 4) == 0) { // recieved a hole digging message
                                     fprintf(stdout, "'%s' is communicating with '%s' via P2P.\n", user.usr, user.peer);
                                     snprintf(sd_bufs + 2, 8, "%x", NE_VAL(0));
-                                    strncpy((sd_bufs + 4), "P2P", 5);
+                                    memcpy((sd_bufs + 4), "P2P", 4);
                                     snprintf((sd_bufs + 64), 43, "%s request a hole.", user.usr);
                                     if (-1 != send(p2pnet.socket, sd_bufs, 108, 0)) {
                                         fprintf(stdout, "Have sent message to %s.\n", user.peer);
@@ -608,7 +610,7 @@ type_thread_func monitor(void* arg)
                                 // p2p_req2usr
                             } else {
                                 val_rtn = -2;
-                                strncpy((sd_bufs + 32), "P2P peer user offline!", 24);
+                                snprintf((sd_bufs + 32), 23, "%s", "P2P peer user offline!");
                             }
                         } else {
                             val_rtn = -3;
@@ -621,11 +623,11 @@ type_thread_func monitor(void* arg)
                     } break;
                     case NDT:
                     {
-                        strncpy((sd_bufs + offset), user.usr, 24);
+                        memcpy((sd_bufs + offset), user.usr, 24);
                         if (memcmp(user.chk, "NDT", 4) == 0) {
                             fprintf(stdout, "'%s' is communicating with '%s' via NDT.\n", user.usr, user.peer);
                         } else {
-                            strncpy((sd_bufs + 32), "Check message error for Network Data Translation.", 51);
+                            snprintf((sd_bufs + 32), 50, "%s", "Check message error for Network Data Translation.");
                             total = 88;
                             break;
                         }
@@ -637,7 +639,7 @@ type_thread_func monitor(void* arg)
                                 queryNetworkParams(user.peer, ndt_net);
 #endif
                                 if (&ndt_net.ip[0] == nullptr || ndt_net.port == 0) {
-                                    strncpy((sd_bufs + 32), "Peer user ip or port value error.", 35);
+                                    snprintf((sd_bufs + 32), 35, "%s", "Peer user ip or port value error.");
                                     total = 72;
                                 } else {
                                     char random = (char)(rand() % 255 + '\1');
@@ -645,11 +647,11 @@ type_thread_func monitor(void* arg)
                                     memset(ndt_msg, 0, 32);
                                     memcpy(ndt_msg, &user, 4);
                                     snprintf(ndt_msg + 4, 8, "%c", random);
-                                    strncpy((char*)&user.status, "200", 5);
+                                    memcpy((char*)&user.status, "200", 4);
                                     memcpy(ndt_msg + offset, &user.peer_msg.msg, FiledSize);
                                     if (-1 != send(ndt_net.socket, ndt_msg, 32, 0)) {
                                         if (ndt_net.socket == rcv_sock) {
-                                            strncpy((sd_bufs + 32), "Socket descriptor conflicts!", 30);
+                                            snprintf((sd_bufs + 32), 29, "%s", "Socket descriptor conflicts!");
                                             total = 64;
                                         } else {
                                             snprintf(sd_bufs + 32, 49, "[%c] NDT success to %s.", random, user.peer);
@@ -662,7 +664,7 @@ type_thread_func monitor(void* arg)
                                         } else {
                                             fprintf(stdout, "Error: %s(%d).\n", strerror(errno), ndt_net.socket);
                                         }
-                                        strncpy((sd_bufs + 32), "Got failure while sending a message.", 38);
+                                        snprintf((sd_bufs + 32), 38, "%s", "Got failure while sending a message.");
                                         total = 80;
                                     }
                                 }
@@ -680,7 +682,7 @@ type_thread_func monitor(void* arg)
                     case EXEC:
                     {
 #if !defined _WIN32
-                        char* mesg = NULL;
+                        char* exe_msg = NULL;
 #if (defined __GNUC__ && __APPLE__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -701,32 +703,32 @@ type_thread_func monitor(void* arg)
                             char* const agv[] = { (char*)GET_IMG_EXE, (char*)(0) };
 #endif
                             val_rtn = execvp(__ GET_IMG_EXE, agv);
-                            mesg = strerror(errno);
+                            exe_msg = strerror(errno);
                             snprintf(sd_bufs + 2, 8, "%x", NE_VAL(val_rtn));
-                            strcpy((sd_bufs + offset), mesg);
-                            total = offset + (int)strlen(mesg) + 1;
-                            fprintf(stdout, "Exec [ %s ] with execvp fail, %s.\n", __ GET_IMG_EXE, mesg);
+                            memcpy((sd_bufs + offset), exe_msg, strlen(exe_msg));
+                            total = offset + (int)strlen(exe_msg) + 1;
+                            fprintf(stdout, "Exec [ %s ] with execvp fail, %s.\n", __ GET_IMG_EXE, exe_msg);
                         } else {
                             wait(&val_rtn);
                             if (errno != ECHILD) {
-                                mesg = strerror(errno);
+                                exe_msg = strerror(errno);
                             } else {
                                 if (access(IMAGE_BLOB _0_, 0) == 0) {
-                                    mesg = (char*)"success";
+                                    exe_msg = (char*)"success";
                                 } else {
-                                    mesg = (char*)"Not save image file";
+                                    exe_msg = (char*)"Not save image file";
                                 }
                             }
                             snprintf(sd_bufs + 2, 8, "%x", NE_VAL(val_rtn));
-                            strcpy((sd_bufs + offset), mesg);
-                            total = offset + (int)strlen(mesg) + 1;
-                            fprintf(stdout, "Make image via '%s': %s.\n", __ GET_IMG_EXE, mesg);
+                            memcpy((sd_bufs + offset), exe_msg, strlen(exe_msg));
+                            total = offset + (int)strlen(exe_msg) + 1;
+                            fprintf(stdout, "Make image via '%s': %s.\n", __ GET_IMG_EXE, exe_msg);
                         }
 #else
-                        char* mesg = "OS don't support v4l.";
+                        char* exe_msg = "OS don't support v4l.";
                         total = 32;
-                        strcpy((sd_bufs + offset), mesg);
-                        fprintf(stdout, "%s\n", mesg);
+                        memcpy((sd_bufs + offset), exe_msg, strlen(exe_msg));
+                        fprintf(stdout, "%s\n", exe_msg);
 #endif
                     } break;
                     case IMAGE:
@@ -782,11 +784,11 @@ type_thread_func monitor(void* arg)
                     break;
                     case ZONES:
                     {
-                        strncpy((sd_bufs + offset), "Active zone list: \n", 21);
+                        snprintf((sd_bufs + offset), 20, "%s", "Active zone list: \n");
                         for (c = 0; c < MAX_ZONES; c++) {
                             if (zones[c].zone.name[0] != '\0') {
                                 snprintf(sd_bufs + 2, 8, "%x", c);
-                                strncpy((sd_bufs + offset * (c + 4)), zones[c].zone.name, 24);
+                                memcpy((sd_bufs + offset * (c + 4)), zones[c].zone.name, 24);
                             } else {
                                 break;
                             }
@@ -802,10 +804,10 @@ type_thread_func monitor(void* arg)
                             total = 56;
                         } else {
                             memset(sd_bufs + 2, 0, 2);
-                            strncpy((sd_bufs + offset), "Member(s) of the zone:\n", 25);
+                            snprintf((sd_bufs + offset), 24, "%s", "Member(s) of the zone:\n");
                             for (c = 0; c < MAX_MEMBERS_PER_GROUP; c++) {
                                 if (strlen(zones[val_rtn].zone.members[c]) >> 0) {
-                                    strncpy((sd_bufs + offset * (c + 4)), zones[val_rtn].zone.members[c], 24);
+                                    memcpy((sd_bufs + offset * (c + 4)), zones[val_rtn].zone.members[c], 24);
                                 };
                             };
                             if (val_rtn == -1 || val_rtn >= MAX_ZONES || c >= MAX_MEMBERS_PER_GROUP ||
@@ -819,7 +821,7 @@ type_thread_func monitor(void* arg)
                         val_rtn = host_zone(user);
                         snprintf(sd_bufs + 2, 8, "%x", NE_VAL(val_rtn));
                         if (val_rtn == -2) {
-                            strncpy((sd_bufs + offset), "Host zone rejected.", 21);
+                            snprintf((sd_bufs + offset), 20, "%s", "Host zone rejected.");
                             total = 32;
                         } else if (val_rtn < -2 && val_rtn > -MAX_ZONES - 3) {
                             int stat = join_zone(((val_rtn + 3 + MAX_ZONES)), user.usr, reinterpret_cast<char*>(user.join));
@@ -846,19 +848,19 @@ type_thread_func monitor(void* arg)
                             total = 48;
                             switch (val_rtn) {
                             case -1:
-                                strncpy((sd_bufs + offset), "Can not find such zone name.", 30);
+                                snprintf((sd_bufs + offset), 29, "Can not find such zone name.");
                                 break;
                             case -2:
-                                strncpy((sd_bufs + offset), "Limits: zone was full for new members.", 40);
+                                snprintf((sd_bufs + offset), 39, "Limits: zone was full for new members.");
                                 break;
                             case -3:
-                                strncpy((sd_bufs + offset), "You have already joined this zone.", 36);
+                                snprintf((sd_bufs + offset), 35, "You have already joined this zone.");
                                 break;
                             case -4:
-                                strncpy((sd_bufs + offset), "Wrong pass token to this zone.", 32);
+                                snprintf((sd_bufs + offset), 31, "Wrong pass token to this zone.");
                                 break;
                             default:
-                                strncpy((sd_bufs + offset), "Unknown error.", 16);
+                                snprintf((sd_bufs + offset), 15, "Unknown error.");
                                 break;
                             }
                         } else {
@@ -872,9 +874,9 @@ type_thread_func monitor(void* arg)
                         snprintf(sd_bufs + 2, 8, "%x", NE_VAL(val_rtn));
                         total = 42;
                         if (val_rtn >= 0)
-                            strncpy((sd_bufs + offset), "Leave the zone success.", 25);
+                            snprintf((sd_bufs + offset), 24, "%s", "Leave the zone success.");
                         else
-                            strncpy((sd_bufs + offset), "You aren't yet in this zone.", 30);
+                            snprintf((sd_bufs + offset), 29, "%s", "You aren't yet in this zone.");
                     } break;
                     case ALL_ZONE:
                     {
@@ -885,8 +887,8 @@ type_thread_func monitor(void* arg)
                         if (val_rtn < 0) {
                             if (-1 != user_is_line(user.usr)) {
                                 snprintf(sd_bufs + 3, 8, "%x", -1);
-                                strncpy((sd_bufs + offset), user.usr, 24);
-                                strncpy((sd_bufs + 32), user.sign, 24);
+                                memcpy((sd_bufs + offset), user.usr, 24);
+                                memcpy((sd_bufs + 32), user.sign, 24);
                                 send(rcv_sock, sd_bufs, 48, 0);
                             };
                         } else {
@@ -895,8 +897,8 @@ type_thread_func monitor(void* arg)
                                     snprintf(sd_bufs + 3, 8, "%x", -3);
                                     int uil = user_is_line(zones[val_rtn].zone.members[c]);
                                     if (uil != -1) {
-                                        strncpy((sd_bufs + offset), user.usr, 24);
-                                        strncpy((sd_bufs + 32), user.sign, 24);
+                                        memcpy((sd_bufs + offset), user.usr, 24);
+                                        memcpy((sd_bufs + 32), user.sign, 24);
                                         send(active[uil].netwk.socket, sd_bufs, 48, 0);
                                     }//if uil
                                 }//if strlen
@@ -938,7 +940,7 @@ type_thread_func monitor(void* arg)
         }
         qq = flg;
         SLEEP(99);
-    } while (!loggedin);
+    } while (!loggedIn);
 
 comm_err0:
     {
@@ -965,13 +967,13 @@ int inst_mesg(int argc, char* argv[])
     if (!load_accnt()) {
         fprintf(stdout, "account loads finish from [%s].\n", ACC_REC);
     } else {
-        strncpy(users[0].usr, "iv9527", 8);
-        strncpy(users[0].psw, "tesT123$", 10);
-        strncpy(users[1].usr, "AAAAA", 7);
-        strncpy(users[1].psw, "AAAAA", 7);
-        strncpy(zones[0].zone.name, "all", 5);
-        strncpy(zones[0].zone.brief, "all", 5);
-        strncpy(zones[0].zone.members[0], "iv9527", 8);
+        memcpy(users[0].usr, "iv9527", 8);
+        memcpy(users[0].psw, "tesT123$", 10);
+        memcpy(users[1].usr, "AAAAA", 7);
+        memcpy(users[1].psw, "AAAAA", 7);
+        memcpy(zones[0].zone.name, "all", 5);
+        memcpy(zones[0].zone.brief, "all", 5);
+        memcpy(zones[0].zone.members[0], "iv9527", 8);
     }
 #ifdef _WIN32
     InitializeCriticalSection(&mutex_allow);
@@ -1122,9 +1124,9 @@ template<typename T> int set_n_get_mem(T * shmem, int ndx, int rw)
 #if defined _SYS_SHM_H || defined _SYS_SHM_H_
     pthread_mutex_trylock(&mutex_allow);
     T* shared;
-    if ((shmids = shmget(IPCKEY, (MAX_ACTIVE * sizeof(T)), (0666 | IPCFLAG))) < 0) {
+    if ((shmids = shmget(IPC_KEY, (MAX_ACTIVE * sizeof(T)), (0666 | IPC_FLAG))) < 0) {
         if (EEXIST == errno) {
-            shmids = shmget(IPCKEY, (MAX_ACTIVE * sizeof(T)), 0666);
+            shmids = shmget(IPC_KEY, (MAX_ACTIVE * sizeof(T)), 0666);
             shared = (T*)shmat(shmids, NULL, 0);
         } else {
             fprintf(stderr, "fail to shmget.\n");
@@ -1199,7 +1201,7 @@ type_thread_func commands(void* arg)
 {
     char options[FiledSize], name[FiledSize];
     do {
-        scanf("%32s", reinterpret_cast<char*>(&options));
+        scanf("%23s", reinterpret_cast<char*>(&options));
         if (strcmp(options, "quit") == 0) {
             save_accnt();
             closesocket(listen_socket);
@@ -1216,7 +1218,7 @@ type_thread_func commands(void* arg)
         }
         if (strcmp(options, "kick") == 0) {
             fprintf(stdout, "Kick whom out?\n");
-            scanf("%32s", reinterpret_cast<char*>(&name));
+            scanf("%23s", reinterpret_cast<char*>(&name));
             int rtn = user_is_line(name);
             if (!(rtn == -1)) {
 #if !defined _WIN32
@@ -1298,9 +1300,9 @@ int new_user(char usr[FiledSize], char psw[FiledSize])
     }
     for (auto& user : users) {
         if (user.usr[0] == '\0') {
-            strncpy(user.usr, n, 24);
-            strncpy(user.psw, p, 24);
-            strncpy(user.intro, "intro weren't set.", 20);
+            memcpy(user.usr, n, 24);
+            memcpy(user.psw, p, 24);
+            memcpy(user.intro, "intro weren't set.", 20);
             return -1;
         }
     }
@@ -1377,7 +1379,7 @@ int set_user_peer(const char user[FiledSize], const char ip[INET_ADDRSTRLEN], co
         return -3;
     for (int i = 0; i < MAX_USERS; i++) {
         if (strcmp(u, users[i].usr) == 0) {
-            strncpy((char*)users[i].netwk.ip, ip, 16);
+            memcpy((char*)users[i].netwk.ip, ip, 16);
             users[i].netwk.port = port;
             users[i].netwk.socket = sock;
             return 0;
@@ -1421,10 +1423,10 @@ int host_zone(USER & user)
             return i - MAX_ZONES - 3;
         }
         if (strlen(zones[i].zone.name) == 0) {
-            strncpy(zones[i].zone.name, host, 24);
-            strncpy(zones[i].zone.brief, reinterpret_cast<char*>(brf), 24);
-            strncpy(zones[i].zone.chief, chief, 24);
-            strncpy(zones[i].zone.members[0], chief, 24);
+            memcpy(zones[i].zone.name, host, 24);
+            memcpy(zones[i].zone.brief, reinterpret_cast<char*>(brf), 24);
+            memcpy(zones[i].zone.chief, chief, 24);
+            memcpy(zones[i].zone.members[0], chief, 24);
             return i;
         }
     }
@@ -1445,7 +1447,7 @@ int join_zone(int at, char usr[FiledSize], char zone[FiledSize], char* cert)
     for (i = 0; i < MAX_MEMBERS_PER_GROUP; i++) {
         if (strlen(zones[at].zone.members[i]) == 0) {
             if (strcmp(zones[at].zone.name, z) == 0) {
-                strncpy(zones[at].zone.members[i], m, 24);
+                memcpy(zones[at].zone.members[i], m, 24);
                 return i;
             } else {
                 continue;
