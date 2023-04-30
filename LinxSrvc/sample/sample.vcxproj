@@ -37,7 +37,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{14944626-83d4-44df-b5ce-1e7489912e99}</ProjectGuid>
     <Keyword>Linux</Keyword>
-    <RootNamespace>httpsample</RootNamespace>
+    <RootNamespace>sample</RootNamespace>
     <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
     <ApplicationType>Linux</ApplicationType>
     <ApplicationTypeRevision>1.0</ApplicationTypeRevision>
@@ -111,12 +111,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="HttpEvent.cpp" />
-    <ClCompile Include="HttpSample.cpp" />
+    <ClCompile Include="HttpMain.cpp" />
     <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="HttpEvent.h" />
-    <ClInclude Include="HttpSample.h" />
+    <ClInclude Include="HttpMain.h" />
     <ClInclude Include="Utils.h" />
   </ItemGroup>
   <ItemGroup>

@@ -143,7 +143,7 @@ unsigned int __stdcall SocketThread(void* lp)
                             continue;
                         } else
                             printf("连接异常，请重试！\n"); // fail
-                    } else if (lencv == 0) {
+                    } else {
                         cout << "客户端已断开。" << endl;
                     }
                 } while (lencv > 0);

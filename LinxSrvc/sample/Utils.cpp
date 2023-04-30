@@ -109,7 +109,7 @@ std::string getVariable(const std::string& url, const std::string& key)
     return val;
 }
 
-std::string getFileAsstring(const std::string& filename)
+std::string getFileAsCstring(const std::string& filename)
 {
     std::string content{};
     std::ifstream file(filename);

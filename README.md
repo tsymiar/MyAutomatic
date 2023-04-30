@@ -19,7 +19,7 @@ LinxSrvc
     Client.exe
     kaics.exe
     pthdtest.exe
-    httpsample
+    sample
     gSOAPverify
     myweb.wsdl
      ```
@@ -49,7 +49,7 @@ LinxSrvc
 
       a thread pool based on `pthread`.
 
-  * httpsample
+  * sample
 
       a http server and client package library, depends on `libevent`.
 

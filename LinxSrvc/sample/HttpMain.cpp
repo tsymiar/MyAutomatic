@@ -1,4 +1,4 @@
-﻿#include "HttpSample.h"
+﻿#include "HttpMain.h"
 
 #include "HttpEvent.h"
 #include "Utils.h"
@@ -8,7 +8,7 @@ using namespace std;
 int main(int argc, char** argv)
 {
     if (argc <= 1) {
-        cout << "Usage:\n " << (argv == nullptr ? "httpsample" : argv[0]) << " [port | url(http://...)]\nactually:" << endl;
+        cout << "Usage:\n " << (argv == nullptr ? "./HttpSample" : argv[0]) << " [port | url(http://...)]\nactually:" << endl;
         int i = 0;
         while (i < argc) {
             cout << " " << argv[i];

@@ -144,11 +144,8 @@ int http_post(struct soap* soap, const char* endpoint, const char* host, int por
 
 int main_server(int argc, char** argv)
 {
-#ifdef NS_DEBUG
-    argv[1] = (char*)"8080";
-#endif // NS_DEBUG
-    if (argv[1] == nullptr) {
-        std::cout << "Input an argument as port eg. '\033[45m./gSOAPverify 8080\033[0m'\n" << argv[1] << std::endl;
+    if (argc > 1 && argv[1] == nullptr) {
+        std::cout << "Input an argument as port eg. '\033[45m" << argv[0] << "8080\033[0m'\n" << std::endl;
         kill(getppid(), SIGALRM);
         return -1;
     }
@@ -174,7 +171,9 @@ int main_server(int argc, char** argv)
     } else {
         struct soap* soap_thr[MAX_THR];
         pthread_t tid[MAX_THR];
-        int i, port = atoi(argv[1]);
+        int i, port = 8080;
+        if (argc > 1)
+            port = atoi(argv[1]);
         // 锁和条件变量初始化
         pthread_mutex_init(&queue_lock, NULL);
         pthread_cond_init(&queue_cond, NULL);
@@ -190,7 +189,7 @@ int main_server(int argc, char** argv)
             m = soap_bind(&Soap, NULL, port, BACKLOG);
             valid++;
         }
-        fprintf(stderr, "======== Socket Server Port: %s ========\n", argv[1]);
+        fprintf(stderr, "======== Socket Server Port: %d ========\n", port);
         // 生成服务线程
         for (i = 0; i < MAX_THR; i++) {
             soap_thr[i] = soap_copy(&Soap);

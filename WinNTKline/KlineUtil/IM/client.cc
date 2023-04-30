@@ -201,8 +201,6 @@ int SendClientMessage(StMsgContent* msg)
     int len = sizeof(g_content);
     g_content = { '\0', (unsigned char)(g_content.uiCmdMsg & 0xff) };
     if (msg != NULL) {
-        if ((int)msg->uiCmdMsg < 0)
-            return -2;
         memcpy(&g_content, msg, sizeof(StMsgContent));
     } else {
         send(g_client.sock, (char*)&g_content, len, 0);

@@ -117,7 +117,7 @@ A commercial-use license is available from Genivia, Inc., contact@genivia.com
  * Import                                                                     *
  *                                                                            *
 \******************************************************************************/
-#include "http/soapStub.h"
+#include "service/soapStub.h"
 /******************************************************************************\
  *                                                                            *
  * Schema Namespaces                                                          *

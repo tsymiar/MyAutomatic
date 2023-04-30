@@ -8,7 +8,7 @@
 #include "netwk/Simulation.h"
 
 //应加到具体源文件中
-#include "http/myweb.h"
+#include "service/myweb.h"
 #include "myweb.nsmap"
 #include "security\MD5.h"
 #include "security/encoding.h"
