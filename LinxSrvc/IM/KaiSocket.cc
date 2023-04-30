@@ -177,7 +177,7 @@ int KaiSocket::start()
             perror("epoll_wait");
         }
         for (int i = 0; i < actives; i++) {
-            if (!events[i].events & EPOLLIN) {
+            if ((!events[i].events) & EPOLLIN) {
                 continue;
             }
             if (events[i].data.fd == listen_socket) {
@@ -196,10 +196,10 @@ int KaiSocket::start()
 #ifdef USE_EPOLL
                 ev_pll.events = EPOLLIN | EPOLLET;
                 ev_pll.data.fd = conn_sock;
-                char* str = inet_ntoa(client.sin_addr);
+                char* addr = inet_ntoa(client.sin_addr);
                 if (epoll_ctl(poll_desc, EPOLL_CTL_ADD, conn_sock, &ev_pll) < 0) {
                     std::cerr
-                        << "Failed to add socket (" << conn_sock << ") to epoll: " << strerror(errno)
+                        << "Failed to add " << addr << "socket (" << conn_sock << ") to epoll: " << strerror(errno)
                         << std::endl;
                     return -4;
                 }
@@ -427,10 +427,12 @@ ssize_t KaiSocket::recv(uint8_t* buff, size_t size)
             if (deal)
                 strcpy(msg.data.stat, "SUCCESS");
             else {
-                *((long*)msg.head.buffer) = '\eeff';
+                *(reinterpret_cast<long*>(msg.head.buffer)) = '\eeff';
                 strcpy(msg.data.stat, "NOTDEAL");
                 msg.head.size = total;
                 stat = produce(msg);
+                if (stat < 0)
+                    return stat;
             }
         } else if (stat == -1)
             strcpy(msg.data.stat, "NULLPTR");
@@ -505,7 +507,7 @@ ssize_t KaiSocket::writes(Network network, const uint8_t* data, size_t len)
 
 ssize_t KaiSocket::broadcast(const uint8_t* data, size_t len)
 {
-    if (data == nullptr || len <= 0) {
+    if (data == nullptr || len == 0) {
         std::cerr << __FUNCTION__ << ": transfer data is null!" << std::endl;
         return -1;
     }
@@ -781,7 +783,7 @@ std::string KaiSocket::getFile2string(const std::string& filename)
         int len = ftell(fp);
         fseek(fp, 0, SEEK_SET);
         s.resize(len);
-        fread((void*)s.data(), 1, len, fp);
+        fread((void*)(s.c_str()), 1, len, fp);
         fclose(fp);
     } else {
         std::cerr << __FUNCTION__ << ": file[" << filename << "] open fail: " << strerror(errno) << std::endl;
@@ -859,7 +861,7 @@ ssize_t KaiSocket::Subscriber(const std::string& message, RECVCALLBACK callback)
                 msg.data.stat[0] = 'O';
                 msg.data.stat[1] = 'K';
                 msg.data.stat[2] = '\0';
-                Message* pMsg = (Message*)new char[sizeof(Message) + len];
+                Message* pMsg = reinterpret_cast<Message*>(new char[sizeof(Message) + len]);
                 if (pMsg != nullptr) {
                     memcpy(pMsg, &msg, sizeof(Message));
                     if (len > 0) {

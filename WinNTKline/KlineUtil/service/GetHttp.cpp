@@ -3,7 +3,7 @@
 
 using namespace std;
 
-CString HttpGet(string& sRequest, string sPort)
+CString HttpGet(string& sRequest, const string& sPort)
 {
     HINTERNET hSession = NULL;
     HINTERNET hConnection = NULL;

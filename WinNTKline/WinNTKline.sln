@@ -50,7 +50,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "hdware", "..\LinxSrvc\hdwar
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IM(Win32)", "IMclient\client.vcxproj", "{6B864007-F9E8-4469-92BA-2387CCEB1573}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "httpsample", "..\LinxSrvc\httpsample\httpsample.vcxproj", "{14944626-83D4-44DF-B5CE-1E7489912E99}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sample", "..\LinxSrvc\sample\sample.vcxproj", "{14944626-83D4-44DF-B5CE-1E7489912E99}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "bashfile", "bashfile", "{CCDCA3EF-3EF3-495B-8398-4FBE3EF562EE}"
 	ProjectSection(SolutionItems) = preProject

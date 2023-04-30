@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
 
 Sockets init(short port)
 {
-    Sockets socks;
+    Sockets socks{};
     SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock == INVALID_SOCKET) {
         printf("invalid socket!\n");

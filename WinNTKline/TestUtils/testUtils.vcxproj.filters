@@ -158,7 +158,7 @@
     <ClCompile Include="..\MFCKline\SetMarkDlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\KlineUtil\http\soapClient.cpp">
+    <ClCompile Include="..\KlineUtil\service\soapClient.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\KlineUtil\IM\client.cc">

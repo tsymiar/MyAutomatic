@@ -47,12 +47,14 @@ void NullFunc(...)
 
 void ElegantlyBreak(void* arg)
 {
-    if (arg != nullptr && !event_base_got_exit((struct event_base*)arg)) {
-        event_base_loopexit((struct event_base*)arg, nullptr);
+    if (arg != nullptr) {
+        struct event_base* ev = reinterpret_cast<struct event_base*>(arg);
+        if (!event_base_got_exit(ev))
+            event_base_loopexit(ev, nullptr);
     }
 }
 
-DEALRES_CALLBACK GetResHook(string uri, evhttp_cmd_type cmd)
+DEALRES_CALLBACK GetResHook(const string& uri, evhttp_cmd_type cmd)
 {
     auto it = g_dealHooks.find(uri);
     if (it != g_dealHooks.end() && it->second.method == cmd) {
@@ -169,7 +171,7 @@ void GenericHandler(struct evhttp_request* req_ptr, void* param)
                     if (ptr == nullptr) continue;
                     string val(ptr);
                     size_t len = val.size();
-                    Message("request param: %s = %s", it->c_str(), val.c_str());
+                    Message("request param(%zu): %s = %s", len, it->c_str(), val.c_str());
                     if (*it == "server") {
                         string server(val);
                         uint32_t port = 0;

@@ -15,7 +15,7 @@ int CPyTensor::testPyfunc(wchar_t *argv)
 	PyObject* pyFunc = PyObject_GetAttrString(pyModule, "Session");
 	PyEval_CallObject(pyFunc, NULL);
 	PyObject* pySess = PyObject_GetAttrString(pyFunc, "close"); 
-	PyEval_CallObject(pyFunc, NULL);
-	while (1);
+	PyEval_CallObject(pySess, NULL);
+	while (1) { ; };
 	return 0;
 }

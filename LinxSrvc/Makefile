@@ -2,11 +2,11 @@ all:
 	make -C IM all
 	make -C hdware all
 	make -C thread all
-	make -C httpsample build
+	make -C sample build
 	@echo Making gSOAPverify
 	@make -C gSOAPverify || true
 clean:
-	make -C httpsample cleanAll
+	make -C sample cleanAll
 	make -C gSOAPverify clean
 	make -C thread clean
 	make -C hdware clean

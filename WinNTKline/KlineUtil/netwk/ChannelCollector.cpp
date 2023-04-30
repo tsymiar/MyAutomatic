@@ -58,7 +58,7 @@ int MarketDataCollector::CtpMarketReqUserLogin()
     strcpy_s(req.UserID, STFTDC.USER_ID);
     strcpy_s(req.Password, STFTDC.PASSWORD);
     iResult = TRDAPI->ReqUserLogin(&req, ++STFTDC.iReqID);
-    cerr << "--->>> 发送用户登录请求: ", iResult == 0 ? cerr << "成功" : cerr << "失败 [" << iResult << (iResult != 0 ? "]" : "") << endl;
+    cerr << "--->>> 发送用户登录请求: ", iResult == 0 ? cerr << "成功" : cerr << "失败 [" << iResult << "]" << endl;
     void onRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin,
         CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
     return iResult;
@@ -107,24 +107,16 @@ void MarketDataCollector::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField * 
     strcpy(TradingDay, pDepthMarketData->TradingDay);
 
     InstrumentID_name = names;
-    string str1 = times;
-    string str2 = times;
-    string str3 = times;
 
-    str1 = str1.substr(0, 2);        //
-    str2 = str2.substr(3, 2);        //
-    str3 = str3.substr(6, 2);        //
-    int hours = atoi(str1.c_str());
-    int minutes = atoi(str2.c_str());
-    int seconds = atoi(str3.c_str());
+    int hours = atoi(string(times).substr(0, 2).c_str());
+    int minutes = atoi(string(times).substr(3, 2).c_str());
+    int seconds = atoi(string(times).substr(6, 2).c_str());
+
     int Millisecs = pDepthMarketData->UpdateMillisec;
-
     double NewPrice = pDepthMarketData->LastPrice;
 
     Q_BarTime_1 = hours * 60 * 60 + minutes * 60 + seconds;                        //时间采用秒计
     Q_BarTime_2 = (1 / 10e1)*hours + (1 / 10e3)*minutes + (1 / 10e5)*seconds;    //时间格式0.145100 = 14：51：00
-
-
 
     for (int i = 0; i < 20; i++)
     {
@@ -145,7 +137,6 @@ void MarketDataCollector::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField * 
             tick_data[i][7] = pDepthMarketData->LowestPrice;
 
             //***************************************************    
-
             bool check0 = (tick_data[i][2] > 0.0910 && tick_data[i][2] < 0.0915 && i>17) || (tick_data[i][2]<0.1518 && tick_data[i][2]>0.0914 && !FristTick[i] && i > 17);
             bool check1 = (tick_data[i][2] > 0.0856 && tick_data[i][2] < 0.0900 && i <= 17) || (tick_data[i][2]<0.1505 && tick_data[i][2]>0.0859 && !FristTick[i] && i <= 17);
             bool check2 = (tick_data[i][2] > 0.2056 && tick_data[i][2] < 0.2100 && i <= 17) || ((tick_data[i][2]<0.0235 || tick_data[i][2]>0.2059) && !FristTick[i] && i <= 17);
@@ -173,7 +164,6 @@ void MarketDataCollector::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField * 
                 Day_CloseProfitB[i] = 0;
 
                 Day_TradeNumb[i] = 0;
-
             }
 
             //***************************************************    

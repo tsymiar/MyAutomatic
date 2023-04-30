@@ -230,6 +230,7 @@ LoadDIBitmap(const char *filename, /* I - File to load */
     header.bfReserved1 = read_word(fp);
     header.bfReserved2 = read_word(fp);
     header.bfOffBits = read_dword(fp);
+    printf("%d %d %d %d %d\n", header.bfType, header.bfSize, header.bfReserved1, header.bfReserved2, header.bfOffBits);
 
     if (header.bfType != BF_TYPE) /* Check for BM reversed... */
     {

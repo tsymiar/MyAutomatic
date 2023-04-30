@@ -254,7 +254,7 @@ cd "..\$(ConfigurationName)"
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\KlineUtil\html\MfcHtmlView.cpp" />
-    <ClCompile Include="..\KlineUtil\http\soapClient.cpp" />
+    <ClCompile Include="..\KlineUtil\service\soapClient.cpp" />
     <ClCompile Include="..\KlineUtil\IM\client.cc" />
     <ClCompile Include="..\KlineUtil\mygl\OGLKview.cc">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>

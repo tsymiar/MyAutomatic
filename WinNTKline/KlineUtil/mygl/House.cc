@@ -2,7 +2,7 @@
 
 extern	TEXTURE_2D	**TextureList;
 
-House::House() : Width(0), Height(0)
+House::House() : Width(0), Height(0), m_GLPixelIndex(0)
 {
     texNum = 0;
 }
