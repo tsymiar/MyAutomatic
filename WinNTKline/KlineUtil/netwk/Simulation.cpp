@@ -223,7 +223,7 @@ void Sniffer()    //监听Tick数据已经指标计算 实盘用
     {
         if (simMode)
         {
-            if (((i >= 0 && i < 20) && fabs(tick_data[i][0] - 1) < 0.01) && ((tick_data[i][2] > 0.0913 && (i > 17 && i < 20)) || (tick_data[i][2] > 0.0858 && i <= 17))) //i>17合约为IF
+            if ((i < 20 && fabs(tick_data[i][0] - 1) < 0.01) && (((i > 17 && i < 20) && tick_data[i][2] > 0.0913) || (i <= 17 && tick_data[i][2] > 0.0858))) //i>17合约为IF
             {
                 Sniffer_A12(i);
                 Sniffer_B12(i);
@@ -718,7 +718,6 @@ void StopEndTime_B(double system_times, int i)
 
     bool stopdingshien = false;    //调试用
     int n = 10;                    //10分钟定时平仓
-    int nowtime = GetLocalTimeSec2();
 
     //定时平仓
     if (Trade_dataB[i][2] == 1 && (Q_BarTime_1n[i] - Trade_times[i]) > n * 60 && stopdingshien)
@@ -805,7 +804,7 @@ void Istrading()    //策略，下单
 
             if (simMode)
             {
-                if ((tick_data[i][2] > 0.0913 && (i > 17 && i < 20)) || (tick_data[i][2] > 0.0858 && i <= 17))
+                if ((i > 17 && (tick_data[i][2] > 0.0913)) || (i <= 17 && tick_data[i][2] > 0.0858))
                 {
                     StopLossA12(tick_data[i][2], i);        //Master
                     if (Sniffer_dataA[i][0] > 0)
@@ -948,7 +947,7 @@ void _record1(char *txt1, char *txt2, double m, int n, int i)
         if (n <= 4)
         {
             o_file << txt1 << ff2ss(tick_data[i][1]) << "_" << tick_data[i][2] << "_" << InstrumentID_n[i] << "_" << InstrumentID_lots[i] << "_" << txt2 << "_" << Trade_dataA[i][5] << "_" << Trade_dataA[i][3] << endl;
-        } else if (n > 4 && n <= 6)
+        } else if (n <= 6)
         {
             o_file << txt1 << ff2ss(tick_data[i][1]) << "_" << tick_data[i][2] << "_" << InstrumentID_n[i] << "_" << InstrumentID_lots[i] << "_" << txt2 << "_" << Trade_dataB[i][5] << "_" << Trade_dataB[i][3] << endl;
         }
@@ -1082,7 +1081,7 @@ bool ReadTradeConfiguration()
                 } else if (it < 40)
                 {
                     word >> Trade_dataB[i][j - 1];
-                } else if (it >= 40 && it < 60)
+                } else if (it < 60)
                 {
                     word >> Trade_dataC[i][j - 1];
                 }
@@ -1303,8 +1302,8 @@ void SendOrder(TThostFtdcInstrumentIDType FuturesId, int BuySell, int OpenClose,
         cerr << "--->>> 报单录入请求: " << InstrumentID_n[i] << ((iResult == 0) ? " 成功" : " 失败") << endl;
     } else
     {
-        int iResult = 0;    //测试，不真正下单
-        cerr << "--->>> 报单录入请求: " <<InstrumentID_n[i]<< ((iResult == 0) ? " 成功" : " 失败") << endl;
+        //测试，不真正下单
+        cerr << "--->>> 报单录入请求成功: " << InstrumentID_n[i] << endl;
     }
 }
 

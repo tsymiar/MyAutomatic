@@ -34,6 +34,7 @@ public class Client {
 static class FileType {
 
     private final static Map<String, String> MAP_FILE_TYPE = new HashMap<>();
+    private static final byte[] CRLF = new byte[]{13, 10};
 
     static {
         setAllFileType();
@@ -116,8 +117,6 @@ static class FileType {
         return type;
     }
 }
-
-    private static final byte[] CRLF = new byte[]{13, 10};
 
     private static String byte2String(byte[] _bytes) {
         StringBuilder dest_ = new StringBuilder();

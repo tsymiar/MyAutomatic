@@ -160,6 +160,7 @@ int main_server(int argc, char** argv)
     // 设置UTF-8编码
     soap_set_mode(&Soap, SOAP_C_UTFSTRING);
     soap_set_namespaces(&Soap, namespaces);
+    struct timespec ts = { 0, 50000 };
     // 没有参数，作为CGI程序处理
     if (argc < 2) {
         // CGI 风格服务请求，单线程
@@ -193,10 +194,10 @@ int main_server(int argc, char** argv)
             soap_thr[i] = soap_copy(&Soap);
             fprintf(stderr, " ++++\tthread %d.\n", i);
             pthread_create(&tid[i], NULL, (void* (*)(void*))process_queue, (void*)soap_thr[i]);
-            usleep(50);
+            nanosleep(&ts, NULL);
         }
         int j = 0;
-        static int cnt = 0;
+        static int no = 0;
         for (;;) {
             // 接受客户端连接
             SOAP_SOCKET sock = soap_accept(&Soap);
@@ -209,25 +210,28 @@ int main_server(int argc, char** argv)
                     break;
                 }
             }
-            cnt++;
+            no++;
             // 客户端IP地址
             fprintf(stderr, "\033[32mAccepted\033[0m \033[1mREMOTE\033[0m connection. IP = \033[33m%d.%d.%d.%d\033[0m, socket = %d, log(%d) \n", \
                 (int)(((Soap.ip) >> 24) & 0xFF), (int)(((Soap.ip) >> 16) & 0xFF), (int)(((Soap.ip) >> 8) & 0xFF), \
-                (int)((Soap.ip) & 0xFF), (int)(Soap.socket), cnt);
+                (int)((Soap.ip) & 0xFF), (int)(Soap.socket), no);
             // 套接字入队，如果队列已满则循环等待
-            while (enqueue(sock, ips[j]) == SOAP_EOM)
-                usleep(1000);
+            while (enqueue(sock, ips[j]) == SOAP_EOM) {
+                ts.tv_nsec = 100000;
+                nanosleep(&ts, NULL);
+            }
             j++;
             if (j >= MAX_THR)
                 j = 0;
         }
         // 清理服务
-        for (i = 0; i < MAX_THR; i++) {
+        for (int i = 0; i < MAX_THR; i++) {
             while (enqueue(SOAP_INVALID_SOCKET, ips[i]) == SOAP_EOM) {
-                usleep(1000);
+                ts.tv_nsec = 100000;
+                nanosleep(&ts, NULL);
             }
         }
-        for (i = 0; i < MAX_THR; i++) {
+        for (int i = 0; i < MAX_THR; i++) {
             fprintf(stderr, "Waiting for thread %d to terminate ..\n", i);
             pthread_join((pthread_t)tid[i], NULL);
             fprintf(stderr, "terminated \n");
@@ -263,7 +267,7 @@ int api__trans(struct soap* soap, char* msg, char* rtn[])
         text[i] = (char*)malloc(64);
         memset(text[0], 0, 64);
     }
-    if (token != NULL && (memcmp(token, "trans", 6) != 0 || strlen(token) > strlen("trans"))) {
+    if (token != NULL && (memcmp(token, "trans", 6) != 0)) {
         memcpy(text[0], "illegal command!", 17);
         return -2;
     }
@@ -288,10 +292,10 @@ int api__trans(struct soap* soap, char* msg, char* rtn[])
 
 int api__get_server_status(struct soap* soap, xsd_string req, xsd_string& rsp)
 {
-    if (req != NULL && strlen(req) >= 4 && memcmp(req, "1000", 5) == 0) {
+    if (req != NULL && memcmp(req, "1000", 5) == 0) {
         st_sys ss = { 0 };
         char gt[8];
-        get_mem_stat((char*)"localhost", &ss);
+        get_mem_stat(const_cast<char*>("localhost"), &ss);
         rsp = gcvt(100.f * ss.mem_free / ss.mem_all, 5, gt);
         cout << req << ": " << rsp << endl;
     }
@@ -312,7 +316,7 @@ int api__login_by_key(struct soap*, char* usr, char* psw, struct api__ArrayOfEmp
             ccc.rslt.email = info.msg->email;
             ccc.rslt.tell = info.msg->tell;
             printf("[OUT]:\temail:%s\t", ccc.rslt.email);
-            if (strlen(ccc.rslt.tell) != 0)
+            if (ccc.rslt.tell[0] != '\0')
                 cout << "tell:" << ccc.rslt.tell;
             cout << endl;
             ccc.rslt.flag = 200;

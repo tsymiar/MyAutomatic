@@ -17,7 +17,7 @@ BOOL APIENTRY DllMain(HANDLE hModule, DWORD ul_reason_for_call, LPVOID lpReserve
 }
 #endif
 
-OGLKview::OGLKview() : item0(0), moveDist(0.f){ }
+OGLKview::OGLKview() : item0(0), moveDist(0.f), Okv(0), st_stock{} { }
 
 #ifdef __linux//||_UNIX
 int OGLKview::mainGL(int argc, char** argv)
@@ -89,7 +89,7 @@ bool OGLKview::SetWindowPixelFormat(HDC m_hDC, HWND m_hWnd, int pixelformat)
 bool OGLKview::DrawKline(OGLKview::Market markdata, const OGLKview::FixWhat& co, bool hollow, Point pnt)
 {
     using namespace std;
-    float xVal(0), yVal(0);
+    float /*xVal(0), */yVal(0);
     float diff = 0, voly = 0;
     float proportion(0), delta = 1;
     float candleMiddle(0), candleRight(0), candleLeft(0);
@@ -1186,8 +1186,8 @@ bool OGLKview::GetMarkDatatoDraw(const char* file, void* P, char* title, int hl,
                         Pter = Pt[li];
                         //绘制MA线
                         (line < 20 && line >= 10) ? ot_ma20old = ot_ma20 : \
-                            ((line < 10 && line >= 5) ? ot_ma10old = ot_ma10 : \
-                                (line < 5 ? ot_ma5old = ot_ma5 : ot_ma5old));
+                            (line >= 5 ? ot_ma10old = ot_ma10 : \
+                                (ot_ma5old = ot_ma5));
                         if ((line - 1) % 20 == 0) {
                             ma20.X = (int)totma._20;
                             ma20.M = 1;
