@@ -17,6 +17,11 @@ import java.util.Map;
 import java.util.Objects;
 
 public class BareBonesBrowserLaunch {
+    private static final String[] browsers = {"x-www-browser", "google-chrome",
+            "firefox", "opera", "epiphany", "konqueror", "conkeror", "midori",
+            "kazehakase", "mozilla"};
+    private static final String errMsg = "Error attempting to launch web browser";
+
     static class StreamThread extends Thread {
         private final String type;
         private final InputStream is;
@@ -44,11 +49,6 @@ public class BareBonesBrowserLaunch {
             }
         }
     }
-
-    private static final String[] browsers = {"x-www-browser", "google-chrome",
-            "firefox", "opera", "epiphany", "konqueror", "conkeror", "midori",
-            "kazehakase", "mozilla"};
-    private static final String errMsg = "Error attempting to launch web browser";
 
     public static void openURL(String url) {
         try {  //attempt to use Desktop library from JDK 1.6+
@@ -135,5 +135,4 @@ public class BareBonesBrowserLaunch {
             System.out.println(text);
         }
     }
-
 }
