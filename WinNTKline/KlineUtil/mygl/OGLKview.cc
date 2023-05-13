@@ -17,7 +17,7 @@ BOOL APIENTRY DllMain(HANDLE hModule, DWORD ul_reason_for_call, LPVOID lpReserve
 }
 #endif
 
-OGLKview::OGLKview(): item0(0) { item0 = 0; }
+OGLKview::OGLKview() : item0(0), moveDist(0.f){ }
 
 #ifdef __linux//||_UNIX
 int OGLKview::mainGL(int argc, char** argv)
@@ -111,7 +111,7 @@ bool OGLKview::DrawKline(OGLKview::Market markdata, const OGLKview::FixWhat& co,
     hollow = !dlginfo.bkg;
     mouse.x = static_cast<float>(dlginfo.mouX);
     mouse.y = static_cast<float>(dlginfo.mouY);
-    candleMiddle = xVal = pnt.x = Okv->Pxtinker(co);
+    candleMiddle = /*xVal =*/pnt.x = Okv->Pxtinker(co);
     fillitem.closing = markdata.close;
     fillitem.curprice = markdata.price;
     fillitem.gross = markdata.amount;
@@ -169,6 +169,10 @@ bool OGLKview::DrawKline(OGLKview::Market markdata, const OGLKview::FixWhat& co,
     if (fixeddata.high != fixeddata.low)
         proportion = delta / (fixeddata.high - fixeddata.low);
     else { };
+    char text[64];
+    sprintf(text, "price %.3f to %.3f, proportion=%.3f\n", min_price, max_price, proportion);
+    OGLKview::Point coor = { 0, 0 };
+    DrawKtext(text, coor);
     if (fabs(fillitem.upadp) < 0.01f)
         fixeddata.open -= 0.009f;
     //比例超过临界
@@ -385,7 +389,7 @@ void OGLKview::print_string(const char* str)
     MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, str, -1, wstring, len);
     if (wstring != nullptr) return;
     wstring[len] = _T('\0');
-    if ((wstring[0] > 0x7f) || (47 < wstring[0]))
+    if (0x2f < wstring[0])
         //if (wstring[0] > 127)
         i = 0;
     else
@@ -1064,8 +1068,7 @@ bool OGLKview::GetMarkDatatoDraw(const char* file, void* P, char* title, int hl,
         while (getline(Readfile, text))//逐行读
         {
             char cotx[64] = { NULL };//切分临时数据
-            buff = (char*)text.c_str();
-            token = _Strtok(buff, "/,\t", (char**)&cotx);
+            token = _Strtok((char*)text.c_str(), "/,\t", (char**)&cotx);
             while (token != NULL) {
                 markdata.push_back(token);//获取描述
                 token = _Strtok(NULL, "/,\t", (char**)&cotx);
@@ -1182,8 +1185,8 @@ bool OGLKview::GetMarkDatatoDraw(const char* file, void* P, char* title, int hl,
                         this->DrawPoly(Pter, Pt[li], { 0.f,1.f,0.f });
                         Pter = Pt[li];
                         //绘制MA线
-                        line < 20 ? ot_ma20old = ot_ma20 : \
-                            (line < 10 ? ot_ma10old = ot_ma10 : \
+                        (line < 20 && line >= 10) ? ot_ma20old = ot_ma20 : \
+                            ((line < 10 && line >= 5) ? ot_ma10old = ot_ma10 : \
                                 (line < 5 ? ot_ma5old = ot_ma5 : ot_ma5old));
                         if ((line - 1) % 20 == 0) {
                             ma20.X = (int)totma._20;

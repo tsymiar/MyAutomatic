@@ -1,4 +1,4 @@
-﻿cmake_minimum_required(VERSION 2.8...3.16)
+cmake_minimum_required(VERSION 2.8...3.16)
 
 set(TARGET sample_server)
 

@@ -49,7 +49,7 @@ int main(int argc, char** argv)
         read(fd, buf, sizeof(buf));
         printf("Default chars is [%s].\n", buf);
         printf("Please input a string written to chars device: ");
-        scanf("%s", buf);
+        scanf("%1023s", buf);
         write(fd, buf, sizeof(buf));
         read(fd, buf, sizeof(buf));
         printf("Chars [%s] written to '%s'.\n", buf, DEV_NODE);

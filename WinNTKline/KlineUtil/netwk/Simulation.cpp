@@ -186,9 +186,11 @@ void Sniffer_B12(int i)    //监听Tick数据以及指标计算
         bool condtion5 = tick_AskPrice1[i][2] > tick_AskPrice1[i][3];
         bool condtion6 = tick_AskPrice1[i][2] < tick_AskPrice1[i][3];
 
-        if (((condtion1 && 1) && 1) && TradingTimeA) {
+        cout << "condtion3~6=[" << condtion3 << condtion4 << condtion5 << condtion6 << "], TradingTimeB=" << TradingTimeB << endl;
+
+        if ((condtion1 && 1) && TradingTimeA) {
             Sniffer_dataB[i][0] = 5;
-        } else if (((condtion2 && 1) && 1) && TradingTimeA) {
+        } else if ((condtion2 && 1) && TradingTimeA) {
             Sniffer_dataB[i][0] = 6;
         } else {
             Sniffer_dataB[i][0] = 0;
@@ -221,7 +223,7 @@ void Sniffer()    //监听Tick数据已经指标计算 实盘用
     {
         if (simMode)
         {
-            if ((i < 20 && fabs(tick_data[i][0] - 1) < 0.01) && ((tick_data[i][2] > 0.0913 && i > 17) || (tick_data[i][2] > 0.0858 && i <= 17))) //i>17合约为IF
+            if (((i >= 0 && i < 20) && fabs(tick_data[i][0] - 1) < 0.01) && ((tick_data[i][2] > 0.0913 && (i > 17 && i < 20)) || (tick_data[i][2] > 0.0858 && i <= 17))) //i>17合约为IF
             {
                 Sniffer_A12(i);
                 Sniffer_B12(i);
@@ -426,7 +428,6 @@ void StopEndTime_A(double system_times, int i)
 
     bool stopdingshien = false;    //调试用
     int n = 10;                    //10分钟定时平仓
-    int nowtime = GetLocalTimeSec2();
 
     //定时平仓
     if (Trade_dataA[i][2] == 1 && (Q_BarTime_1n[i] - Trade_times[i]) > n * 60 && stopdingshien)
@@ -804,7 +805,7 @@ void Istrading()    //策略，下单
 
             if (simMode)
             {
-                if ((tick_data[i][2] > 0.0913 && i > 17) || (tick_data[i][2] > 0.0858 && i <= 17))
+                if ((tick_data[i][2] > 0.0913 && (i > 17 && i < 20)) || (tick_data[i][2] > 0.0858 && i <= 17))
                 {
                     StopLossA12(tick_data[i][2], i);        //Master
                     if (Sniffer_dataA[i][0] > 0)
@@ -1053,7 +1054,7 @@ bool ReadTradeConfiguration()
     }
 
     char line[1024] = { 0 };
-    vector < double > data(10);
+    // vector < double > data(10);
     double temp0 = 0;
     double temp1 = 0;
 
@@ -1078,7 +1079,7 @@ bool ReadTradeConfiguration()
                 if (it < 20)
                 {
                     word >> Trade_dataA[i][j - 1];
-                } else if (it >= 20 && it < 40)
+                } else if (it < 40)
                 {
                     word >> Trade_dataB[i][j - 1];
                 } else if (it >= 40 && it < 60)
@@ -1303,7 +1304,7 @@ void SendOrder(TThostFtdcInstrumentIDType FuturesId, int BuySell, int OpenClose,
     } else
     {
         int iResult = 0;    //测试，不真正下单
-                            //cerr << "--->>> 报单录入请求: " <<InstrumentID_n[i]<< ((iResult == 0) ? " 成功" : " 失败") << endl;
+        cerr << "--->>> 报单录入请求: " <<InstrumentID_n[i]<< ((iResult == 0) ? " 成功" : " 失败") << endl;
     }
 }
 

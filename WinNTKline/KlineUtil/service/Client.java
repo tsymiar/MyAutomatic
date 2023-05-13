@@ -11,10 +11,12 @@ import java.io.OutputStream;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 
 import org.apache.http.Header;
 import org.apache.http.HeaderElement;
@@ -27,7 +29,9 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.DefaultHttpClient;
 
-class FileType {
+public class Client {
+
+static class FileType {
 
     private final static Map<String, String> MAP_FILE_TYPE = new HashMap<>();
 
@@ -113,8 +117,6 @@ class FileType {
     }
 }
 
-public class Client {
-
     private static final byte[] CRLF = new byte[]{13, 10};
 
     private static String byte2String(byte[] _bytes) {
@@ -167,7 +169,7 @@ public class Client {
                 binary.getName() +
                 "\"\r\n" +
                 "Content-Type:application/octet-stream\r\n\r\n";
-        byte[] head = sb.getBytes("utf-8");
+        byte[] head = sb.getBytes(StandardCharsets.UTF_8);
 
         // get output stream
         OutputStream output = new DataOutputStream(connection.getOutputStream());
@@ -182,7 +184,7 @@ public class Client {
         }
         input.close();
         // End of multipart/form-data.
-        byte[] foot = ("\r\n--" + boundary + "--\r\n").getBytes("utf-8");
+        byte[] foot = ("\r\n--" + boundary + "--\r\n").getBytes(StandardCharsets.UTF_8);
         output.write(foot);
         output.flush();
         output.close();
@@ -209,7 +211,7 @@ public class Client {
     }
 
     // @param: remote file path; local file path.
-    private static int httpDownload(String reqsturl, String local) throws Exception {
+    private static void httpDownload(String reqsturl, String local) {
         String url;
         String head;
         if (reqsturl == null) {
@@ -258,7 +260,8 @@ public class Client {
             }
             String root;
             String splash;
-            if (System.getProperty("os.name") != null && System.getProperty("os.name").toLowerCase().contains("windows")) {
+            if (System.getProperty("os.name") != null
+                    && Objects.requireNonNull(System.getProperty("os.name")).toLowerCase().contains("windows")) {
                 splash = "\\";
                 root = "D:\\home";
             } else {
@@ -276,7 +279,7 @@ public class Client {
             }
 
             File file = new File(filelocal);
-            file.getParentFile().mkdirs();
+            Objects.requireNonNull(file.getParentFile()).mkdirs();
             FileOutputStream fileout = new FileOutputStream(file);
             /*set buffer size refer to real size of file.*/
             int cache = 10 * 1024;
@@ -292,7 +295,6 @@ public class Client {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return 0;
     }
 
     public static void main(String[] args) throws Exception {
