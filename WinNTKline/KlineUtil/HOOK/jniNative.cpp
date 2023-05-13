@@ -25,7 +25,7 @@ JNIEXPORT jstring JNICALL Java_Native_Func(JNIEnv *env, jclass clazz, int m)
 {
     FILE *f;
     f = fopen("hello.txt", "a+, ccs=UTF-8");
-    wchar_t *t = (wchar_t*)"嘿嘿xix你好啊！";
+    wchar_t *t = const_cast<wchar_t*>("嘿嘿xix你好啊！");
     fwrite(t, sizeof(wchar_t), 15, f);
     fclose(f);
     return env->NewStringUTF("hello jni.");

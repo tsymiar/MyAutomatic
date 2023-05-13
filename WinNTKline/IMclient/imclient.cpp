@@ -161,7 +161,7 @@ StMsgContent* ParseChatData(StMsgContent& content)
     {
         if (content.username[0] != '\0') {
             static char title[36];
-            snprintf(title, 36, "Welcome %s", (char*)content.username);
+            snprintf(title, 36, "Welcome %s", reinterpret_cast<char*>(content.username));
             SetConsoleTitle(title);
         } else {
             fprintf(stdout, "Input username AND password to login, divide with BLANK(' ').\n");

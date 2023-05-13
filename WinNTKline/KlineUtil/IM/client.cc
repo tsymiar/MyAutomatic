@@ -174,10 +174,8 @@ int CloseChat()
 int callbackLog(char* usr, char* psw)
 {
     g_content.uiCmdMsg = 0x1;
-    memset(g_content.username, 0, 24);
-    memcpy(g_content.username, usr, strlen(usr) + 1);
-    memset(g_content.password, 0, 24);
-    memcpy(g_content.password, psw, strlen(psw) + 1);
+    memcpy(g_content.username, usr, 24);
+    memcpy(g_content.password, psw, 24);
     send(g_client.sock, (char*)&g_content, sizeof(StMsgContent), 0);
     return g_content.uiCmdMsg;
 }
@@ -227,9 +225,9 @@ RecvThreadProc(void* PrimaryUDP)
     for (;;) {
         if (g_client.flag == 0 || P2Psock->socket == 0)
             continue;
-        char recvbuf[256];
-        memset(recvbuf, 0, 256);
-        int ret = recvfrom(P2Psock->socket, (char*)recvbuf, MAX_PACKET_SIZE, 0, (sockaddr*)&P2Psock->addr,
+        char rcvbuf[256];
+        memset(rcvbuf, 0, 256);
+        int ret = recvfrom(P2Psock->socket, reinterpret_cast<char*>(rcvbuf), MAX_PACKET_SIZE, 0, (sockaddr*)&P2Psock->addr,
 #ifdef _WIN32
             & len
 #else
@@ -261,11 +259,11 @@ RecvThreadProc(void* PrimaryUDP)
             for (c = 0; c < ret; c++) {
                 if (c > 0 && c % 32 == 0)
                     fprintf(stdout, "\n");
-                fprintf(stdout, "%02x ", (unsigned char)recvbuf[c]);
+                fprintf(stdout, "%02x ", (unsigned char)rcvbuf[c]);
             }
             fprintf(stdout, "\n");
             for (c = 0; c < ret; c++)
-                fprintf(stdout, "%c", (unsigned char)recvbuf[c]);
+                fprintf(stdout, "%c", (unsigned char)rcvbuf[c]);
             fprintf(stdout, "\n");
         }
     }
@@ -329,7 +327,7 @@ int p2pMessage(unsigned char* userName, int UserIP, unsigned int UserPort, char 
         if (ppres < 0)
             return ppres;
         //发送P2P消息体
-        ppres = sendto(PrimaryUDP, (const char*)&Message, (int)strlen(Message) + 1, 0, (const sockaddr*)&remote, sizeof(remote));
+        ppres = sendto(PrimaryUDP, (const char*)&Message, sizeof(StMsgContent), 0, (const sockaddr*)&remote, sizeof(remote));
         if (ppres < 0)
             return ppres;
         memset(&MessagePeer, 0, sizeof(StMsgContent));

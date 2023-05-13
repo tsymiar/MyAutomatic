@@ -1050,10 +1050,10 @@ int inst_mesg(int argc, char* argv[])
 #endif
     do {
         struct sockaddr_in fromAddr = {};
+#if (!defined SOCK_CONN_TEST) || (defined SOCK_CONN_TEST)
         type_len addrlen = static_cast<type_len>(sizeof(fromAddr));
+#endif
 #ifdef SOCK_CONN_TEST
-        if (addrlen < 0)
-            addrlen = 0; // use addrlen
         type_socket test_socket = accept(listen_socket, (struct sockaddr*)&fromAddr, &addrlen);
         if (test_socket
 #ifdef _WIN32
@@ -1062,8 +1062,8 @@ int inst_mesg(int argc, char* argv[])
             WSACleanup();
 #else
             < 0) {
-#endif
-            std::cerr << "ERROR(" << errno << "): " << strerror(errno) << std::endl;
+#endif // use addrlen
+            std::cerr << "ERROR(" << errno << "," << addrlen << "): " << strerror(errno) << std::endl;
             return -1;
         } else {
             char IPdotDec[16];
@@ -1101,10 +1101,11 @@ int inst_mesg(int argc, char* argv[])
         } else {
             int PID = 0;
             if ((PID = fork()) == 0) {
-                fprintf(stdout, "running child(%d) forks from Main process.\n", threadCnt);
+                fprintf(stdout, "running child(%d) forks from%i Main process.\n", threadCnt, addrlen);
                 monitor(&msg_socket);
-            } else
+            } else {
                 fprintf(stdout, "Parent: process %d established.\n", PID);
+            }
         }
 #endif
 #endif

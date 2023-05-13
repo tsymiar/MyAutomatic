@@ -137,9 +137,9 @@ void MarketDataCollector::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField * 
             tick_data[i][7] = pDepthMarketData->LowestPrice;
 
             //***************************************************    
-            bool check0 = (tick_data[i][2] > 0.0910 && tick_data[i][2] < 0.0915 && i>17) || (tick_data[i][2]<0.1518 && tick_data[i][2]>0.0914 && !FristTick[i] && i > 17);
-            bool check1 = (tick_data[i][2] > 0.0856 && tick_data[i][2] < 0.0900 && i <= 17) || (tick_data[i][2]<0.1505 && tick_data[i][2]>0.0859 && !FristTick[i] && i <= 17);
-            bool check2 = (tick_data[i][2] > 0.2056 && tick_data[i][2] < 0.2100 && i <= 17) || ((tick_data[i][2]<0.0235 || tick_data[i][2]>0.2059) && !FristTick[i] && i <= 17);
+            bool check0 = (tick_data[i][2] > 0.0910 && tick_data[i][2] < 0.0915 && i>17) || (tick_data[i][2]<0.1518 && tick_data[i][2]>0.0914 && !FirstTick[i] && i > 17);
+            bool check1 = (tick_data[i][2] > 0.0856 && tick_data[i][2] < 0.0900 && i <= 17) || (tick_data[i][2]<0.1505 && tick_data[i][2]>0.0859 && !FirstTick[i] && i <= 17);
+            bool check2 = (tick_data[i][2] > 0.2056 && tick_data[i][2] < 0.2100 && i <= 17) || ((tick_data[i][2]<0.0235 || tick_data[i][2]>0.2059) && !FirstTick[i] && i <= 17);
 
             if (STFTDC.stMDATA.MdMode && (check0 || check1 || check2))
             {
@@ -275,9 +275,9 @@ void MarketDataCollector::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField * 
                 //WriteConfiguration("./AutoTrader.dat");
             }
 
-            if ((tick_data[i][2] > 0.0913 && i > 17) || (tick_data[i][2] > 0.0858 && i <= 17))
+            if ((i < 20 && tick_data[i][2] > 0.0913 && i > 17) || (tick_data[i][2] > 0.0858 && i <= 17))
             {
-                FristTick[i] = true;
+                FirstTick[i] = true;
             }
 
             ReceiveTick[i] = false;
@@ -297,7 +297,7 @@ int MarketDataCollector::CtpMarketSubscribe()
 {
     Sleep(1000);
     iResult = STFTDC.MdApi->SubscribeMarketData(STFTDC.stMDATA.Instruments, iInstrumentID);
-    (cerr << "--->>> 发送行情订阅请求: ", iResult == 0 ? cerr << "成功" : cerr << "失败 [" << iResult << (iResult != 0 ? "]" : "")) << endl;
+    cout << "--->>> 发送行情订阅请求成功: [" << iResult << "]" << endl;
     return iResult;
 }
 

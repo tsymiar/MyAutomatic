@@ -37,7 +37,7 @@ class Exception
 private:
     char m_ExceptionMessage[EXCEPTION_MESSAGE_MAXLEN];
 public:
-    Exception(const char* msg = nullptr) : m_ExceptionMessage{ nullptr }
+    explicit Exception(const char* msg = nullptr) : m_ExceptionMessage{ nullptr }
     {
         if (msg != nullptr) {
             strncpy_s(m_ExceptionMessage, msg, EXCEPTION_MESSAGE_MAXLEN);

@@ -3,7 +3,7 @@ import http.cookiejar
 import threading
 import sys
 from time import ctime, sleep
-url = 'https://www.bilibili.com'
+url = 'https://github.com/tsymiar/MyAutomatic'
 def run():
     for i in range(100):
         if browse() == True:
@@ -33,10 +33,10 @@ if __name__ == '__main__':
     threads = []
     if len(sys.argv) > 1:
         url = sys.argv[1]
-    '''
+    """
     else
         url = raw_input("Please enter a web address: \n> ")
-    '''
+    """
     print("refreshing:\t" + url)
     for i in range(300):
         t1 = threading.Thread(target = run)

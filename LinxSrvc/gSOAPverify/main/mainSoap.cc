@@ -105,7 +105,7 @@ int http_post(struct soap* soap, const char* endpoint, const char* host, int por
     std::string fileName(filePath, pos + 1);
     // 将?替换为.
     size_t dotPos = fileName.rfind("?");
-    if ((int)dotPos == -1)
+    if (dotPos == std::string::npos)
         return 404;
     fileName.replace(dotPos, 1, ".");
     // 打开WSDL文件准备拷贝
@@ -171,13 +171,11 @@ int main_server(int argc, char** argv)
     } else {
         struct soap* soap_thr[MAX_THR];
         pthread_t tid[MAX_THR];
-        int i, port = 8080;
-        if (argc > 1)
-            port = atoi(argv[1]);
         // 锁和条件变量初始化
         pthread_mutex_init(&queue_lock, NULL);
         pthread_cond_init(&queue_cond, NULL);
         // 绑定服务端口
+        int port = atoi(argv[1]);
         SOAP_SOCKET m = soap_bind(&Soap, NULL, port, BACKLOG);
         int valid = 0;
         // 循环绑定直至服务套接字合法
@@ -191,7 +189,7 @@ int main_server(int argc, char** argv)
         }
         fprintf(stderr, "======== Socket Server Port: %d ========\n", port);
         // 生成服务线程
-        for (i = 0; i < MAX_THR; i++) {
+        for (int i = 0; i < MAX_THR; i++) {
             soap_thr[i] = soap_copy(&Soap);
             fprintf(stderr, " ++++\tthread %d.\n", i);
             pthread_create(&tid[i], NULL, (void* (*)(void*))process_queue, (void*)soap_thr[i]);

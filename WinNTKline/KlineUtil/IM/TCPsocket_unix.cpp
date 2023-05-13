@@ -63,14 +63,14 @@ Sockets init(short port)
     printf("start bind %d\n", port);
     if (bind(sock, (sockaddr*)&local, sizeof(local)) != 0) {
         close(sock);
-        printf("binds port[%d] failed: %s!", port, strerror(errno));
+        printf("binds port[%d] failed: %s!\n", port, strerror(errno));
         socks.runs = false;
         return socks;
     }
     printf("listening...\n");
     if (listen(sock, 5) != 0) {
         close(sock);
-        printf("listen port[%d] failed: %s!", port, strerror(errno));
+        printf("listen port[%d] failed: %s!\n", port, strerror(errno));
         socks.runs = false;
         return socks;
     }
@@ -113,7 +113,7 @@ int start(Sockets socks, CALLBACK callback)
                     memset(buff, 0, 1024);
                     size = recv(sockNew, buff, sizeof(buff), 0);
                     if (size == SOCKET_ERROR) {
-                        printf("socket error: %s!", strerror(errno));
+                        printf("socket error: %s!\n", strerror(errno));
                         continue;
                     } else if (size > 0) {
                         if (callback == nullptr) {
@@ -122,7 +122,7 @@ int start(Sockets socks, CALLBACK callback)
                         if (callback != nullptr) {
                             callback(buff, size);
                         } else {
-                            printf("deal callback is null!");
+                            printf("deal callback is null!\n");
                             return -1;
                         }
                     } else if (size < 0) {
@@ -130,14 +130,15 @@ int start(Sockets socks, CALLBACK callback)
                             printf("(slow system call): %u\n", ntohl((u_long)inet_addr(inet_ntoa(socks.local.sin_addr))));
                             continue;
                         } else {
-                            printf("connect failed, try again!");
+                            printf("connect failed, try again!\n");
                         }
                     } else if (size == 0) {
-                        printf("client peer closed.");
+                        printf("client peer closed.\n");
                     }
                 } while (size > 0);
             }
             sockMax = (sockMax > (int)sockNew ? sockMax : sockNew);
+            printf("select sockMax=%d+1\n", sockMax);
         }
     }
     return 0;
