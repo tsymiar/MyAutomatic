@@ -37,7 +37,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{14944626-83d4-44df-b5ce-1e7489912e99}</ProjectGuid>
     <Keyword>Linux</Keyword>
-    <RootNamespace>sample</RootNamespace>
+    <RootNamespace>webevent</RootNamespace>
     <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
     <ApplicationType>Linux</ApplicationType>
     <ApplicationTypeRevision>1.0</ApplicationTypeRevision>

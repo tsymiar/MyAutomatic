@@ -112,8 +112,8 @@ class House
 {
 public:
     // This is the holding space for the landscape colours.
-    int Width;
-    int Height;
+    int Width = 0;
+    int Height = 0;
     HGLRC m_hGLContext;
     int m_GLPixelIndex = 0;
     // Mouse position and button.
@@ -121,27 +121,28 @@ public:
     typedef Initialise::GLPoint Point;
     typedef Initialise::GLColor Color3f;
 protected:
-    int wide, tall;
+    int wide = 0;
+    int tall = 0;
     Initialise index;
 
-    TEXTURE_2D    **TextureList;
-    OBJECT	      *ObjectList;		/* ObjectList[0]:isolated surfaces*/
+    TEXTURE_2D    **TextureList = NULL;
+    OBJECT	      *ObjectList = NULL;		/* ObjectList[0]:isolated surfaces*/
 
-    INT4S         ObjectNum;
+    INT4S         ObjectNum = 0;
 
-    char          gEnergyFile[30];
-    char	      sLookAtFN[100];
-    char	      ImageName[30];
+    char          gEnergyFile[30] = {};
+    char	      sLookAtFN[100] = {};
+    char	      ImageName[30] = {};
 
     unsigned short int comp = 32; // Scale modifier.
 
-    unsigned short int temp, texture_mapping = FALSE,
+    unsigned short int texture_mapping = FALSE,
         land_fogging = TRUE, flat_shading = TRUE;
 
     float	angle, Near, ex, ey, ez, cx, cy, cz, ux, uy, uz;
 
-    unsigned char  *ImageDatas[MAX_TEX];
-    INT2U rslxs[MAX_TEX], rslys[MAX_TEX];
+    unsigned char* ImageDatas[MAX_TEX] = {};
+    INT2U rslxs[MAX_TEX], rslys[MAX_TEX] = {};
     int   texNum = 0;
 public:
     House();

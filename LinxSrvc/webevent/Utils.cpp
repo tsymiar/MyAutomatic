@@ -22,13 +22,17 @@ bool isNum(const std::string& in)
 bool ipIsValid(const char* ip)
 {
     int value = 0;
-    int dot = 0;
+    int dots = 0;
     char last = '.';
+
+    if (ip[0] == '.' || ip[0] == '0') {
+        return false;
+    }
 
     while (*ip) {
         if (*ip == '.') {
-            dot++;
-            if (dot > 3) {
+            dots++;
+            if (dots > 3) {
                 return false;
             }
             if (value >= 0 && value <= 255) {
@@ -38,7 +42,7 @@ bool ipIsValid(const char* ip)
             }
         } else if (*ip >= '0' && *ip <= '9') {
             value = value * 10 + *ip - '0';
-            if (last == '.' && *ip == '0') {
+            if (last == '.' && *ip == '0' && *(ip + 2) == '0' && *(ip + 4) == '0') {
                 return false;
             }
         } else {
@@ -49,7 +53,7 @@ bool ipIsValid(const char* ip)
     }
 
     if (value >= 0 && value <= 255) {
-        if (3 == dot) {
+        if (3 == dots) {
             return true;
         }
     }

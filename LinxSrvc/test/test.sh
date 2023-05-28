@@ -15,5 +15,6 @@ make -j
 lcov -d . -t unittest -o test.info -b . -c \
     --exclude '*/usr/include/*' \
     --exclude '/usr/lib/*' \
-    --exclude '*/gtest*'
+    --exclude '*/gtest*' \
+    --exclude '*/test/*'
 genhtml -o html test.info

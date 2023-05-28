@@ -275,7 +275,7 @@ void MarketDataCollector::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField * 
                 //WriteConfiguration("./AutoTrader.dat");
             }
 
-            if ((i < 20 && tick_data[i][2] > 0.0913 && i > 17) || (tick_data[i][2] > 0.0858 && i <= 17))
+            if ((i < 20 && i > 17 && tick_data[i][2] > 0.0913) || (i <= 17 && tick_data[i][2] > 0.0858))
             {
                 FirstTick[i] = true;
             }
