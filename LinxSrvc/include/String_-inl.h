@@ -2,7 +2,7 @@
 
 #if (defined __linux ) || (defined sprintf_s) || (!defined _WIN32)
 #undef sprintf_s
-#define sprintf_s sprintf
+#define sprintf_s snprintf
 #endif // __linux
 
 #define Concat(x,y) (x##y)
@@ -387,7 +387,7 @@ inline char* /*__cdecl*/ String_::strcat_(char* destination, const char* source)
     return(destination);
 }
 //截取字符串src内字符ch左右两边的子串，ch不保留。
-inline int String_::strcut_(unsigned char* src, char ch, char* str1, char* str2)
+inline int String_::strcut_(unsigned char* src, char ch, char* left, char* right)
 {
     char s1[16];
     char s2[16];
@@ -399,14 +399,14 @@ inline int String_::strcut_(unsigned char* src, char ch, char* str1, char* str2)
             break;
         }
     if (!exist) {
-        strcpy_(str1, (const char*)src, (int)strlen_((const char*)src) + 1);
-        str2[0] = '\0';
+        strcpy_(left, (const char*)src, (int)strlen_((const char*)src) + 1);
+        right[0] = '\0';
         return -1;
     }
-    sprintf_s(s1, "%s", (char*)strsub_(src, 0, i));
-    strcpy_(str1, s1, (int)strlen_(s1) + 1);
-    sprintf_s(s2, "%s", (char*)strsub_(src, i + 1, (int)strlen_((char*)src) + 1 - i));
-    strcpy_(str2, s2, (int)strlen_(s2) + 1);
+    sprintf_s(s1, 16, "%s", (char*)strsub_(src, 0, i));
+    strcpy_(left, s1, (int)strlen_(s1) + 1);
+    sprintf_s(s2, 16, "%s", (char*)strsub_(src, i + 1, (int)strlen_((char*)src) + 1 - i));
+    strcpy_(right, s2, (int)strlen_(s2) + 1);
     return i;
 }
 //从第pos位开始截取src的len个字符。

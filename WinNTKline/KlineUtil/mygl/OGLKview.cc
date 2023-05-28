@@ -17,7 +17,7 @@ BOOL APIENTRY DllMain(HANDLE hModule, DWORD ul_reason_for_call, LPVOID lpReserve
 }
 #endif
 
-OGLKview::OGLKview() : item0(0), moveDist(0.f), Okv(0), st_stock{} { }
+OGLKview::OGLKview() : item0(0), moveDist(0.f), Okv(0), st_stock{}, dlginfo{} { }
 
 #ifdef __linux//||_UNIX
 int OGLKview::mainGL(int argc, char** argv)

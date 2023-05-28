@@ -707,8 +707,8 @@ type_thread_func monitor(void* arg)
                             val_rtn = execvp(__ GET_IMG_EXE, agv);
                             exe_msg = strerror(errno);
                             snprintf(sd_bufs + 2, 8, "%x", NE_VAL(val_rtn));
-                            memcpy((sd_bufs + offset), exe_msg, strlen(exe_msg));
-                            total = offset + (int)strlen(exe_msg) + 1;
+                            memcpy((sd_bufs + offset), exe_msg, 64);
+                            total = offset + 64 + 1;
                             fprintf(stdout, "Exec [ %s ] with execvp fail, %s.\n", __ GET_IMG_EXE, exe_msg);
                         } else {
                             wait(&val_rtn);
@@ -753,7 +753,7 @@ type_thread_func monitor(void* arg)
                         if (pos == NULL) {
                             snprintf((sd_bufs + offset), 36, "Fail malloc for \"%s\".", IMAGE_BLOB);
                             fprintf(stdout, "%s\n", sd_bufs + offset);
-                            total = offset + strlen(IMAGE_BLOB) + FiledSize;
+                            total = offset + 6 + FiledSize;
                             break;
                         }
                         int slice = 0;
@@ -1052,6 +1052,7 @@ int inst_mesg(int argc, char* argv[])
         struct sockaddr_in fromAddr = {};
 #if (!defined SOCK_CONN_TEST) || (defined SOCK_CONN_TEST)
         type_len addrlen = static_cast<type_len>(sizeof(fromAddr));
+        printf("%08x\n", addrlen);
 #endif
 #ifdef SOCK_CONN_TEST
         type_socket test_socket = accept(listen_socket, (struct sockaddr*)&fromAddr, &addrlen);
@@ -1093,7 +1094,7 @@ int inst_mesg(int argc, char* argv[])
 #ifdef THREAD_PER_CONN
         pthread_t threadid;
         pthread_create(&threadid, NULL, monitor, NULL);
-#elif !defined SOCK_CONN_TEST
+#elif !defined SOCK_CONN_TEST || defined SOCK_CONN_TEST
         type_socket msg_socket = accept(listen_socket, (struct sockaddr*)&fromAddr, &addrlen);
         if (msg_socket < 0) {
             std::cerr << "ERROR(" << errno << "): " << strerror(errno) << std::endl;

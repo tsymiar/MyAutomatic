@@ -1,11 +1,8 @@
 #include "House.h"
 
-extern	TEXTURE_2D	**TextureList;
+extern	TEXTURE_2D** TextureList;
 
-House::House() : Width(0), Height(0), m_GLPixelIndex(0), wide(0), tall(0)
-{
-    texNum = 0;
-}
+House::House() {}
 
 // Create an OpenGL rendering context
 BOOL House::CreateViewGLContext(HDC hDC)
@@ -57,21 +54,21 @@ void House::MoveEye(int type, GLfloat amount, int update)
     GLfloat a;
     switch (type) {
     case FORWARD:
-        a = sqrt((cx - ex)*(cx - ex) + (cz - ez)*(cz - ez));
-        ex = (amount*(cx - ex) + a * ex) / a;
-        ez = (amount*(cz - ez) + a * ez) / a;
-        cx = (amount*(cx - ex) + a * cx) / a;
-        cz = (amount*(cz - ez) + a * cz) / a;
+        a = sqrt((cx - ex) * (cx - ex) + (cz - ez) * (cz - ez));
+        ex = (amount * (cx - ex) + a * ex) / a;
+        ez = (amount * (cz - ez) + a * ez) / a;
+        cx = (amount * (cx - ex) + a * cx) / a;
+        cz = (amount * (cz - ez) + a * cz) / a;
         break;
     case MOVELR:
-        a = sqrt((cx - ex)*(cx - ex) + (cy - ey)*(cy - ey));
-        ex = (amount*(cx - ex) + a * ex) / a;
-        ey = (amount*(cy - ey) + a * ey) / a;
-        cx = (amount*(cx - ex) + a * cx) / a;
-        cy = (amount*(cy - ey) + a * cy) / a;
+        a = sqrt((cx - ex) * (cx - ex) + (cy - ey) * (cy - ey));
+        ex = (amount * (cx - ex) + a * ex) / a;
+        ey = (amount * (cy - ey) + a * ey) / a;
+        cx = (amount * (cx - ex) + a * cx) / a;
+        cy = (amount * (cy - ey) + a * cy) / a;
     case TURNLEFT:
-        cx = (cx - ex)*(float)cos(amount / 360.0f) + (cz - ez)*(float)sin(amount / 360.0f) + ex;
-        cz = (cz - ez)*(float)cos(amount / 360.0f) - (cx - ex)*(float)sin(amount / 360.0f) + ez;
+        cx = (cx - ex) * (float)cos(amount / 360.0f) + (cz - ez) * (float)sin(amount / 360.0f) + ex;
+        cz = (cz - ez) * (float)cos(amount / 360.0f) - (cx - ex) * (float)sin(amount / 360.0f) + ez;
         break;
     case UPDOWN:
         ey += amount;
@@ -96,16 +93,15 @@ void  House::ReadData()
 {
     int  i;
     unsigned  j, l;
-    FILE    *fp;
+    FILE* fp;
     char    stemp[100];
-    POINT3D   *plist;
+    POINT3D* plist;
     INT4U   nAllVertexNum;
-    INT4U   *pchlist;
+    INT4U* pchlist;
 
     strcpy_s(gEnergyFile, "data/ROOM.ED");
     fopen_s(&fp, gEnergyFile, "r");
-    if (fp == NULL)
-    {
+    if (fp == NULL) {
         printf("\n Can not open energy data file:%s\n", gEnergyFile);
         exit(0);
     }
@@ -117,10 +113,9 @@ void  House::ReadData()
     while (strcmp(stemp, "texnum") != 0)  fscanf_s(fp, "%s", stemp, sizeof(stemp));
     fscanf_s(fp, "%d", &texNum);
 
-    TextureList = (TEXTURE_2D **)malloc(sizeof(TEXTURE_2D)*(texNum + 1));
-    for (i = 1; i <= texNum; i++)
-    {
-        TextureList[i] = (TEXTURE_2D *)malloc(sizeof(TEXTURE_2D));
+    TextureList = (TEXTURE_2D**)malloc(sizeof(TEXTURE_2D) * (texNum + 1));
+    for (i = 1; i <= texNum; i++) {
+        TextureList[i] = (TEXTURE_2D*)malloc(sizeof(TEXTURE_2D));
         fscanf_s(fp, "%s%s", TextureList[i]->fname, sizeof(TextureList[i]->fname), stemp, sizeof(stemp));
         if (strcmp(stemp, "REPEAT_TEXTURE") == 0)
             TextureList[i]->type = 1;
@@ -134,16 +129,14 @@ void  House::ReadData()
     while (strcmp(stemp, "ObjectNum") != 0) fscanf_s(fp, "%s", stemp, sizeof(stemp));
     fscanf_s(fp, "%ld", &ObjectNum);
 
-    ObjectList = (OBJECT *)malloc(sizeof(OBJECT) * ObjectNum);
-    for (i = 0; i < ObjectNum; i++)
-    {
+    ObjectList = (OBJECT*)malloc(sizeof(OBJECT) * ObjectNum);
+    for (i = 0; i < ObjectNum; i++) {
         fscanf_s(fp, "%s", stemp, sizeof(stemp));
         while (strcmp(stemp, "SurfaceNum") != 0) fscanf_s(fp, "%s", stemp, sizeof(stemp));
         fscanf_s(fp, "%ld", &(ObjectList[i].SurfNum));
 
-        ObjectList[i].surflist = (SURFACE *)malloc(sizeof(SURFACE) * ObjectList[i].SurfNum);
-        for (j = 0; j < ObjectList[i].SurfNum; j++)
-        {
+        ObjectList[i].surflist = (SURFACE*)malloc(sizeof(SURFACE) * ObjectList[i].SurfNum);
+        for (j = 0; j < ObjectList[i].SurfNum; j++) {
             /******   Read surface infor   ******/
             fscanf_s(fp, "%s", stemp, sizeof(stemp));
             while (strcmp(stemp, "TextureId") != 0) fscanf_s(fp, "%s", stemp, sizeof(stemp));
@@ -178,7 +171,7 @@ void  House::ReadData()
             nAllVertexNum = ObjectList[i].surflist[j].triangle * 3 +
                 ObjectList[i].surflist[j].quadric * 4;
 
-            ObjectList[i].surflist[j].patchlist = (INT4U *)malloc(sizeof(INT4U) * nAllVertexNum);
+            ObjectList[i].surflist[j].patchlist = (INT4U*)malloc(sizeof(INT4U) * nAllVertexNum);
 
             pchlist = ObjectList[i].surflist[j].patchlist;
 
@@ -191,18 +184,16 @@ void  House::ReadData()
 
 void House::InitLookAt()
 {
-    FILE	*fp;
+    FILE* fp;
 
     strcpy_s(sLookAtFN, "data/ROOM.LK");
     fopen_s(&fp, sLookAtFN, "rb");
-    if (fp == NULL)
-    {
+    if (fp == NULL) {
         ex = ey = ez = 1.0f;
         cx = cy = cz = 0.0f;
         Near = 0.1f;
         angle = 30.0f;
-    }
-    else
+    } else
         fscanf_s(fp, "%f%f%f%f%f%f%f%f", &angle, &Near, &ex, &ey, &ez, &cx, &cy, &cz);
     fclose(fp);
 }
@@ -224,13 +215,12 @@ void	House::Render(void)
 {
     int     	i;
     unsigned  j, k, l, m, TexIndex;
-    POINT3D   	*plist;
-    INT4U   	*pchlist;
+    POINT3D* plist;
+    INT4U* pchlist;
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_ACCUM_BUFFER_BIT);
     for (i = 0; i < ObjectNum; i++)
-        for (j = 0; j < ObjectList[i].SurfNum; j++)
-        {
+        for (j = 0; j < ObjectList[i].SurfNum; j++) {
             TexIndex = ObjectList[i].surflist[j].texId;
             if (TexIndex > 0)
                 InitTex(TexIndex);
@@ -238,11 +228,9 @@ void	House::Render(void)
             pchlist = ObjectList[i].surflist[j].patchlist;
 
             l = 0;
-            for (k = 0; k < ObjectList[i].surflist[j].triangle; k++)
-            {
+            for (k = 0; k < ObjectList[i].surflist[j].triangle; k++) {
                 glBegin(GL_TRIANGLES);
-                for (m = 0; m < 3; m++)
-                {
+                for (m = 0; m < 3; m++) {
                     glColor3f(plist[pchlist[l]].r,
                         plist[pchlist[l]].g,
                         plist[pchlist[l]].b);
@@ -257,11 +245,9 @@ void	House::Render(void)
 
             }/* k */
 
-            for (k = 0; k < ObjectList[i].surflist[j].quadric; k++)
-            {
+            for (k = 0; k < ObjectList[i].surflist[j].quadric; k++) {
                 glBegin(GL_QUADS);
-                for (m = 0; m < 4; m++)
-                {
+                for (m = 0; m < 4; m++) {
                     glColor3f(plist[pchlist[l]].r,
                         plist[pchlist[l]].g,
                         plist[pchlist[l]].b);
@@ -284,10 +270,8 @@ void House::CleanList()
     int i;
     unsigned  j;
 
-    for (i = 0; i < ObjectNum; i++)
-    {
-        for (j = 0; j < ObjectList[i].SurfNum; j++)
-        {
+    for (i = 0; i < ObjectNum; i++) {
+        for (j = 0; j < ObjectList[i].SurfNum; j++) {
             free(ObjectList[i].surflist[j].pointlist);
             free(ObjectList[i].surflist[j].patchlist);
         }
@@ -302,14 +286,14 @@ void House::CleanList()
 /********************************/
 /*	function : OpenTexImage	*/
 /********************************/
-unsigned char 	*House::OpenTexImage(INT2U TexIndex, INT2U *rslx, INT2U *rsly)
+unsigned char* House::OpenTexImage(INT2U TexIndex, INT2U* rslx, INT2U* rsly)
 {
-    unsigned char *image;
-    FILE *fp;
+    unsigned char* image;
+    FILE* fp;
     INT2U		srcx, srcy;
     INT4U		i, j;
     char		ImageName[30];
-    unsigned char		*SImageData;
+    unsigned char* SImageData;
     int width, height;
 
     strcpy_s(ImageName, TextureList[TexIndex]->fname);
@@ -322,10 +306,10 @@ unsigned char 	*House::OpenTexImage(INT2U TexIndex, INT2U *rslx, INT2U *rsly)
     fread(&height, sizeof(long), 1, fp);
     *rslx = srcx = width; *rsly = srcy = height;
     fseek(fp, 54L, 0);
-    image = (unsigned char *)malloc(width*height * 3);
-    fread(image, width*height * 3, 1, fp);
+    image = (unsigned char*)malloc(width * height * 3);
+    fread(image, width * height * 3, 1, fp);
     fclose(fp);
-    SImageData = (unsigned char *)malloc(srcx*srcy * 3);
+    SImageData = (unsigned char*)malloc(srcx * srcy * 3);
     for (i = 0; i < srcx; i++) {
         for (j = 0; j < srcy; j++) {
             (unsigned char)*(SImageData + i * srcx * 3 + j * 3 + 0) = (unsigned char)*(image + i * srcx * 3 + j * 3 + 2);
@@ -334,7 +318,7 @@ unsigned char 	*House::OpenTexImage(INT2U TexIndex, INT2U *rslx, INT2U *rsly)
         }
     }
     free(image);
-    printf("%s : %d=%ul\n", ImageName, srcx*srcy * 3, (unsigned int)(i*j * 3));
+    printf("%s : %d=%ul\n", ImageName, srcx * srcy * 3, (unsigned int)(i * j * 3));
     return(SImageData);
 }
 
@@ -344,12 +328,11 @@ unsigned char 	*House::OpenTexImage(INT2U TexIndex, INT2U *rslx, INT2U *rsly)
 void	House::InitTex(int TexIndex)
 {
     INT2U  TextType;
-    unsigned char		*ImageData;
+    unsigned char* ImageData;
     static	int	OldIndex = -1;
 
     if (TexIndex <= 0) return;
-    if (TexIndex == OldIndex)
-    {
+    if (TexIndex == OldIndex) {
         glEnable(GL_TEXTURE_2D);
         return;
     }
@@ -363,13 +346,10 @@ void	House::InitTex(int TexIndex)
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-    if (TextType == CLAMP_TEXTURE)
-    {
+    if (TextType == CLAMP_TEXTURE) {
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-    }
-    else
-    {
+    } else {
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     }
