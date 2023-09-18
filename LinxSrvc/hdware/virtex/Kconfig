@@ -1,0 +1,12 @@
+config VIRTEXDRV
+bool "virtexdrv"
+default y
+choice
+    prompt "choose if transmit data between user and kernel"
+config KNL_TO_USR
+    bool
+config USR_TO_KNL
+    bool
+endchoice
+help
+    a small virtex driver

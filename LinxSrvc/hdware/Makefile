@@ -10,6 +10,8 @@ chsdev:
 	make -C chsdev KNLDIR=$(PWD)/../../../kernel/linux
 chstest:
 	gcc -g -DDRIVER test.c -o $(GEN)/chstest
+virtexdrv:
+	gcc -g -DDRIVER test.c -o $(GEN)/virtexdrv
 pipefifo:
 	gcc -g -DPIPE_FIFO test.c -o $(GEN)/pipefifo
 video:
@@ -20,15 +22,20 @@ all:
 	make gpio
 	make mes909
 	make dirty
+ifeq ($(shell uname), Linux)
 	make chstest
+	make virtexdrv
+endif
 	make pipefifo
 ifeq ($(shell uname), Linux)
 	make video
 	make image
 endif
 clean:
-	@rm -rvf $(GEN)/gpio* $(GEN)/mes909* $(GEN)/dirty* $(GEN)/chstest*
-	@rm -rvf $(GEN)/pipefifo* $(GEN)/VideoCapture* $(GEN)/imagesnap*
+	@rm -rvf $(GEN)/gpio* $(GEN)/mes909* $(GEN)/dirty*
+	@rm -rvf $(GEN)/chstest* $(GEN)/virtexdrv* $(GEN)/pipefifo*
+	@rm -rvf $(GEN)/VideoCapture* $(GEN)/imagesnap*
 ifeq ($(shell uname), Linux)
 	@make -C chsdev clean
+	@make -C virtexdrv clean
 endif
