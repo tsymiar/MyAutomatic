@@ -1,0 +1,262 @@
+#include <unistd.h>
+#include <getopt.h>
+#include <stdlib.h>
+#include <string>
+#include <cstdint>
+#include <errno.h>
+#include <sys/time.h>
+#include <sys/_endian.h>
+
+namespace {
+    const char* g_file = "test";
+    uint64_t g_total = 1048576;
+    int g_bits = 32;
+    bool g_decrease = 0;
+    int g_endian = 0;
+    int g_interval = 1;
+    int g_start = 0x0;
+};
+
+union Number {
+    uint8_t _8v;
+    uint16_t _16v;
+    uint32_t _32v;
+    uint64_t _64v;
+};
+
+void parse_args(int argc, char** argv);
+void usage_exit(const char* argv0 = "");
+uint64_t gettime4usec();
+bool isSmallEndian();
+void byteSwap16(uint16_t* val);
+void byteSwap321(uint32_t* val);
+void byteSwap32(uint32_t* val);
+uint64_t size2bytes(const std::string& value);
+
+int main(int argc, char* argv[])
+{
+    if (argc <= 1) {
+        usage_exit(argv[0]);
+    }
+    parse_args(argc, argv);
+    size_t size = 0;
+    bool small = isSmallEndian();
+    bool byteswap = !small;
+    if (g_endian == 0) {
+        byteswap = small;
+    }
+    switch (g_bits) {
+    case 8:
+        size = sizeof(uint8_t);
+        break;
+    case 16:
+        size = sizeof(uint16_t);
+        break;
+    case 64:
+        size = sizeof(uint64_t);
+        break;
+    case 32:
+    default:
+        size = sizeof(uint32_t);
+        break;
+    }
+    uint64_t count = g_total / size;
+    FILE* fp = fopen(g_file, "wb+");
+    if (fp == nullptr) {
+        fprintf(stderr, "fwrite open '%s' failed: %s\n", g_file, strerror(errno));
+        return -1;
+    }
+    uint64_t value = g_start;
+    uint64_t begin = gettime4usec();
+    for (uint64_t i = 0; i < count; i++) {
+        Number number;
+        number._64v = value;
+        if (byteswap) {
+            switch (size) {
+                case sizeof(uint16_t) :
+                    byteSwap16((uint16_t*)&number._16v);
+                    break;
+                    case sizeof(uint64_t) :
+#ifdef __GNUC__
+                        number._64v = __builtin_bswap64((uint64_t)number._64v);
+#else
+                        if (small) {
+                            number._64v = htonll(number._64v);
+                        } else {
+                            number._64v = ntohll(number._64v);
+                        }
+#endif
+                    break;
+                    case sizeof(uint32_t) :
+                    default:
+                        byteSwap32((uint32_t*)&number._32v);
+                        break;
+            }
+        }
+        int64_t wroteSize = fwrite(&number, size, 1, fp);
+        if (wroteSize != 1) {
+            fprintf(stderr, "fwrite(file=%s) failed: %s\n", g_file, strerror(errno));
+            return -2;
+        }
+        if (!g_decrease) {
+            value += g_interval;
+        } else {
+            value -= g_interval;
+        }
+    }
+    fclose(fp);
+    fprintf(stdout, "write done, average speed %.3f M/s\n", (g_total * 1.f) / (gettime4usec() - begin) * 0x100000 / 1000000.f);
+}
+
+uint64_t gettime4usec()
+{
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (tv.tv_sec * 1000000ULL + tv.tv_usec);
+}
+
+bool isSmallEndian()
+{
+    union {
+        int i;
+        char c;
+    } v;
+    v.i = 1;
+    return (!(v.c == 1));
+}
+
+void byteSwap16(uint16_t* val)
+{
+    uint16_t v1 = (*val & 0xff00) >> 8;
+    uint16_t v0 = (*val & 0x00ff) << 8;
+    *val = (v1 | v0);
+}
+
+void byteSwap321(uint32_t* val)
+{
+    uint32_t v3 = ((uint32_t)(*val) & 0xff000000) >> 24;
+    uint32_t v2 = ((uint32_t)(*val) & 0x00ff0000) >> 8;
+    uint32_t v1 = ((uint32_t)(*val) & 0x0000ff00) << 8;
+    uint32_t v0 = ((uint32_t)(*val) & 0x000000ff) << 24;
+    *val = (uint32_t)(v0 | v1 | v2 | v3);
+}
+
+void byteSwap24(uint32_t* val)
+{
+    uint32_t v1 = ((uint32_t)(*val) & 0xff) << 16;
+    uint32_t v0 = ((uint32_t)(*val) & 0xff0000) >> 16;
+    *val = (uint32_t)(v0 | v1);
+}
+
+void byteSwap32(uint32_t* val)
+{
+    uint32_t v = *val;
+    *val = (((v & 0xff00) << 24)
+        | ((v & 0xff00) << 8) | ((v & 0xff0000) >> 8)
+        | ((v >> 24) & 0xff));
+}
+
+uint64_t size2bytes(const std::string& value)
+{
+    uint64_t u64_size = 0;
+    for (size_t i = 0; i < value.size(); ++i) {
+        if (value[i] >= '0' && value[i] <= '9') {
+            u64_size = u64_size * 10 + value[i] - '0';
+        } else if (value[i] == 'T') {
+            u64_size = u64_size * 1024 * 1024 * 1024 * 1024;
+        } else if (value[i] == 'G') {
+            u64_size *= 1024 * 1024 * 1024;
+        } else if (value[i] == 'M') {
+            u64_size *= 1024 * 1024;
+        } else if (value[i] == 'K') {
+            u64_size *= 1024;
+        } else {
+            continue;
+        }
+    }
+    return u64_size;
+}
+
+void usage_exit(const char* argv0)
+{
+    fprintf(stderr,
+        "Usage: %s [option] ARGUMENT\n"
+        "\n"
+        "-f --file      FILENAME        Name of the file to save, required.\n"
+        "-t --total     SIZE(K/M/G)     Total size to write, required.\n"
+        "-b --bits      8/16/32/64      Bit width of every number. (default: 32)\n"
+        "-d --decrease  0/1             Number increasing(0) or decreasing(1). (default: 0)\n"
+        "-e --endian    1/0             Big endian(1) or small endian(0). (default: 0)\n"
+        "-i --interval  VALUE           Interval value between next number. (default: 1)\n"
+        "-s --start     HEX             Start number value 0x123. (default: 0x0)\n"
+        "\n",
+        argv0
+    );
+    exit(0);
+}
+
+void parse_args(int argc, char** argv)
+{
+    static struct option opts[] = {
+            { "file",     required_argument, NULL, 'f' },
+            { "total",    required_argument, NULL, 't' },
+            { "bits",     no_argument,       NULL, 'b' },
+            { "decrease", no_argument,       NULL, 'd' },
+            { "endian",   no_argument,       NULL, 'e' },
+            { "interval", no_argument,       NULL, 'i' },
+            { "start",    no_argument,       NULL, 's' },
+            { 0 }
+    };
+    while (1) {
+        int idx;
+        char* tail;
+        int c = getopt_long(argc, argv, "f:t:b:d:e:i:s:", opts, &idx);
+        if (c == -1) break;
+
+        switch (c) {
+        case 'f':
+            g_file = optarg;
+            break;
+        case 't':
+            g_total = size2bytes(optarg);
+            break;
+        case 'b':
+            g_bits = atoi(optarg);
+            break;
+        case 'd':
+            g_decrease = (atoi(optarg) > 0 ? 1 : 0);
+            break;
+        case 'e':
+            g_endian = (atoi(optarg) > 0 ? 1 : 0);
+            break;
+        case 'i':
+            g_interval = atoi(optarg);
+            break;
+        case 's':
+            g_start = strtoul(optarg, &tail, 16);
+            if (*tail) {
+                fprintf(stderr,
+                    "invalid argument to start: %s\n",
+                    optarg);
+                usage_exit(argv[0]);
+            }
+            break;
+        case '?':
+            usage_exit(argv[0]);
+        case 0:
+            break;
+        default:
+            abort();
+        }
+    }
+
+    argv += optind;
+    argc -= optind;
+
+    if (argc > 1) {
+        fprintf(stderr, "Too many arguments.\n");
+        usage_exit(argv[0]);
+    }
+
+    // if (argc) g_file = *argv;
+}
