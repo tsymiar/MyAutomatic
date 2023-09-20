@@ -5,6 +5,10 @@ ifeq ($(KERNELRELEASE),)
 endif
 ARM_LINUX_KERNEL := ${KNLDIR}
 default:
-	make -C $(ARM_LINUX_KERNEL) M=$(PWD) modules # insmod chsdev.ko
+	make -C $(ARM_LINUX_KERNEL) M=$(PWD) modules
+	insmod virtexdrv.ko
 clean:
-	make -C $(ARM_LINUX_KERNEL) M=$(PWD) clean
+	@if [ -d $(ARM_LINUX_KERNEL) ]; then make -C $(ARM_LINUX_KERNEL) M=$(PWD) clean; fi;
+ifeq ($(shell lsmod | grep virtexdrv), virtexdrv)
+	@rmmod virtexdrv
+endif

@@ -4,8 +4,13 @@
 #include <string>
 #include <cstdint>
 #include <errno.h>
+#include <string.h>
 #include <sys/time.h>
+#ifdef __linux
+#include <bits/endian.h>
+#else
 #include <sys/_endian.h>
+#endif
 
 namespace {
     const char* g_file = "test";
