@@ -7,17 +7,17 @@ mes909:
 dirty:
 	gcc -g -pthread dirtyc0w.c -o $(GEN)/dirtyhack -Wno-int-conversion -Wno-pointer-to-int-cast
 chsdev:
-	make -C chsdev KNLDIR=$(PWD)/../../../kernel/linux
+	@if [ -d $(PWD)/../../../kernel/linux ]; then make -C chsdev KNLDIR=$(PWD)/../../../kernel/linux; fi;
+virtexdrv:
+	@if [ -d $(PWD)/../../../kernel/linux ]; then make -C virtexdrv KNLDIR=$(PWD)/../../../kernel/linux; fi;
 chstest:
 	gcc -g -DDRIVER test.c -o $(GEN)/chstest
-virtexdrv:
-	gcc -g -DDRIVER test.c -o $(GEN)/virtexdrv
-pipefifo:
-	gcc -g -DPIPE_FIFO test.c -o $(GEN)/pipefifo
 video:
 	gcc -g -DVIDEO test.c routine.c -lm -o $(GEN)/VideoCapture
 image:
 	gcc -g -DSNAP test.c linuxsnap.c -o $(GEN)/imagesnap
+pipefifo:
+	gcc -g -DPIPE_FIFO test.c -o $(GEN)/pipefifo
 all:
 	make gpio
 	make mes909
@@ -25,16 +25,14 @@ all:
 ifeq ($(shell uname), Linux)
 	make chstest
 	make virtexdrv
-endif
-	make pipefifo
-ifeq ($(shell uname), Linux)
 	make video
 	make image
 endif
+	make pipefifo
 clean:
 	@rm -rvf $(GEN)/gpio* $(GEN)/mes909* $(GEN)/dirty*
-	@rm -rvf $(GEN)/chstest* $(GEN)/virtexdrv* $(GEN)/pipefifo*
-	@rm -rvf $(GEN)/VideoCapture* $(GEN)/imagesnap*
+	@rm -rvf $(GEN)/chstest* $(GEN)/virtexdrv*
+	@rm -rvf $(GEN)/VideoCapture* $(GEN)/imagesnap* $(GEN)/pipefifo*
 ifeq ($(shell uname), Linux)
 	@make -C chsdev clean
 	@make -C virtexdrv clean

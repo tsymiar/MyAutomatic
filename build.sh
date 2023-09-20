@@ -23,7 +23,7 @@ then
     cd "${PWD}"
     exit 0;
 else
-    cd "${PWD}/LinxSrvc" && make "$@" && cd -
+    cd "${PWD}/LinxSrvc" && make "$@" && gm/build.sh $1 && cd -
 fi
 if [ "$1" == "clean" ]
 then

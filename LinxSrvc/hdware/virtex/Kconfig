@@ -9,4 +9,4 @@ config USR_TO_KNL
     bool
 endchoice
 help
-    a small virtex driver
+    a small virtex driver sample
