@@ -117,7 +117,7 @@ struct cdev g_cdev;
 struct class* g_class;
 struct device* g_device;
 dev_t g_devno;
-static int g_majno = 234, g_minno;
+static int g_majno = 0x123, g_minno;
 static Queue g_queue;
 static ST_UsrMsg g_msg_user;
 static volatile int ev_ok = 0;

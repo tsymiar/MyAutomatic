@@ -3,5 +3,10 @@
 **/chsdev/.*
 **/chsdev/[Mm]odule*
 **/chsdev/*.mod.*
+#virtex
+**/virtex/*.ko
+**/virtex/.*
+**/virtex/[Mm]odule*
+**/virtex/*.mod.*
 #test
-*.xxx
+*.xx*

@@ -10,6 +10,7 @@ LinxSrvc
 
     Once when build SUCCESS, some binary files will shown in the `bin` directory, such as:
     ```c
+    gm
     gpio
     mes909
     pipefifo
@@ -56,6 +57,10 @@ LinxSrvc
   * gSOAPverify
 
       a `SOAP-server` which is to verify login using the config file *myweb.wsdl*.
+
+  * gm
+
+      a *cross-platform*, *big/small endian*, *increasing/decreasing* binary number generator.
 
 QtCases
 -------
