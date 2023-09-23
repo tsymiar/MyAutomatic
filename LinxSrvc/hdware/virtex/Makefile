@@ -9,6 +9,6 @@ default:
 	insmod virtexdrv.ko
 clean:
 	@if [ -d $(ARM_LINUX_KERNEL) ]; then make -C $(ARM_LINUX_KERNEL) M=$(PWD) clean; fi;
-ifeq ($(shell lsmod | grep virtexdrv), virtexdrv)
+ifeq ($(shell lsmod | grep virtexdrv | awk '{print $1}'), virtexdrv)
 	@rmmod virtexdrv
 endif

@@ -11,6 +11,15 @@
 #else
 #include <sys/_endian.h>
 #endif
+#include <thread>
+#include <vector>
+
+struct Runtime {
+    bool kmg;
+    float prog;
+    uint64_t past;
+    uint64_t total;
+};
 
 namespace {
     const char* g_file = "test";
@@ -19,7 +28,8 @@ namespace {
     bool g_decrease = 0;
     int g_endian = 0;
     int g_interval = 1;
-    int g_start = 0x0;
+    std::vector<uint64_t> g_begins;
+    Runtime g_runtime = {};
 };
 
 union Number {
@@ -38,12 +48,42 @@ void byteSwap321(uint32_t* val);
 void byteSwap32(uint32_t* val);
 uint64_t size2bytes(const std::string& value);
 
+template<class T>
+std::vector<T> str2vector(std::string str, const char* split = ",")
+{
+    std::vector<T> vec;
+    char* s = (char*)str.c_str();
+    char* p = strtok(s, split);
+    T a;
+    while (p != nullptr) {
+        sscanf(p, "%llx", &a);
+        vec.push_back(a);
+        p = strtok(nullptr, split);
+    }
+    return vec;
+}
+
 int main(int argc, char* argv[])
 {
     if (argc <= 1) {
         usage_exit(argv[0]);
     }
     parse_args(argc, argv);
+    std::thread task(
+        [&]()->void {
+            while (true) {
+                usleep(10000);
+                if (!g_runtime.kmg) {
+                    continue;
+                }
+                fprintf(stdout, "\r%.3f %%", g_runtime.past * 100.f / g_runtime.total);
+                fflush(stdout);
+            }
+        }
+    );
+    if (task.joinable()) {
+        task.detach();
+    }
     size_t size = 0;
     bool small = isSmallEndian();
     bool byteswap = !small;
@@ -65,52 +105,68 @@ int main(int argc, char* argv[])
         size = sizeof(uint32_t);
         break;
     }
-    uint64_t count = g_total / size;
     FILE* fp = fopen(g_file, "wb+");
     if (fp == nullptr) {
         fprintf(stderr, "fwrite open '%s' failed: %s\n", g_file, strerror(errno));
         return -1;
     }
-    uint64_t value = g_start;
-    uint64_t begin = gettime4usec();
+    size_t length = g_begins.size();
+    std::vector<uint64_t> values = g_begins;
+    if (length == 0) {
+        values.push_back(0);
+        length++;
+    }
+    g_runtime.total = g_total * length;
+    if (g_total < size) {
+        fprintf(stderr, "Total size must upper than unit size, actually: %lld < %zu.\n", g_total, size);
+        usage_exit(argv[0]);
+    } else {
+        g_runtime.kmg = true;
+    }
+    uint64_t count = g_total / size;
+    uint64_t start = gettime4usec();
     for (uint64_t i = 0; i < count; i++) {
-        Number number;
-        number._64v = value;
-        if (byteswap) {
-            switch (size) {
-                case sizeof(uint16_t) :
-                    byteSwap16((uint16_t*)&number._16v);
-                    break;
-                    case sizeof(uint64_t) :
-#ifdef __GNUC__
-                        number._64v = __builtin_bswap64((uint64_t)number._64v);
-#else
-                        if (small) {
-                            number._64v = htonll(number._64v);
-                        } else {
-                            number._64v = ntohll(number._64v);
-                        }
-#endif
-                    break;
-                    case sizeof(uint32_t) :
-                    default:
-                        byteSwap32((uint32_t*)&number._32v);
+        for (size_t i = 0; i < length; i++) {
+            Number number;
+            number._64v = values[i];
+            if (byteswap) {
+                switch (size) {
+                    case sizeof(uint16_t) :
+                        byteSwap16((uint16_t*)&number._16v);
                         break;
+                        case sizeof(uint64_t) :
+#ifdef __GNUC__
+                            number._64v = __builtin_bswap64((uint64_t)number._64v);
+#else
+                            if (small) {
+                                number._64v = htonll(number._64v);
+                            } else {
+                                number._64v = ntohll(number._64v);
+                            }
+#endif
+                        break;
+                        case sizeof(uint32_t) :
+                        default:
+                            byteSwap32((uint32_t*)&number._32v);
+                            break;
+                }
             }
-        }
-        int64_t wroteSize = fwrite(&number, size, 1, fp);
-        if (wroteSize != 1) {
-            fprintf(stderr, "fwrite(file=%s) failed: %s\n", g_file, strerror(errno));
-            return -2;
-        }
-        if (!g_decrease) {
-            value += g_interval;
-        } else {
-            value -= g_interval;
+            int64_t wroteSize = fwrite(&number, size, 1, fp);
+            if (wroteSize != 1) {
+                fprintf(stderr, "fwrite(file=%s) failed: %s\n", g_file, strerror(errno));
+                return -2;
+            }
+            g_runtime.past += size;
+            if (!g_decrease) {
+                values[i] += g_interval;
+            } else {
+                values[i] -= g_interval;
+            }
         }
     }
     fclose(fp);
-    fprintf(stdout, "write done, average speed %.3f M/s\n", (g_total * 1.f) / (gettime4usec() - begin) * 0x100000 / 1000000.f);
+    fprintf(stdout, "\n%llu bytes write done, average speed %.3f M/s\n", length * count * size,
+        (g_runtime.total * 1.f) / (gettime4usec() - start) * 0x100000 / 1000000.f);
 }
 
 uint64_t gettime4usec()
@@ -185,12 +241,12 @@ uint64_t size2bytes(const std::string& value)
 void usage_exit(const char* argv0)
 {
     fprintf(stderr,
-        "Usage: %s [option] ARGUMENT\n"
+        "\nUsage: %s [option] ARGUMENT\n"
         "\n"
         "-f --file      FILENAME        Name of the file to save, required.\n"
-        "-t --total     SIZE(K/M/G)     Total size to write, required.\n"
+        "-n --total     SIZE(K/M/G)     Number of total size to write, required.\n"
         "-b --bits      8/16/32/64      Bit width of every number. (default: 32)\n"
-        "-d --decrease  0/1             Number increasing(0) or decreasing(1). (default: 0)\n"
+        "-d --decrease  0/1             Number to be increasing(0) or decreasing(1). (default: 0)\n"
         "-e --endian    1/0             Big endian(1) or small endian(0). (default: 0)\n"
         "-i --interval  VALUE           Interval value between next number. (default: 1)\n"
         "-s --start     HEX             Start number value 0x123. (default: 0x0)\n"
@@ -204,7 +260,7 @@ void parse_args(int argc, char** argv)
 {
     static struct option opts[] = {
             { "file",     required_argument, NULL, 'f' },
-            { "total",    required_argument, NULL, 't' },
+            { "total",    required_argument, NULL, 'n' },
             { "bits",     no_argument,       NULL, 'b' },
             { "decrease", no_argument,       NULL, 'd' },
             { "endian",   no_argument,       NULL, 'e' },
@@ -215,15 +271,25 @@ void parse_args(int argc, char** argv)
     while (1) {
         int idx;
         char* tail;
-        int c = getopt_long(argc, argv, "f:t:b:d:e:i:s:", opts, &idx);
+        int c = getopt_long(argc, argv, "f:n:b:d:e:i:s:", opts, &idx);
         if (c == -1) break;
 
         switch (c) {
         case 'f':
             g_file = optarg;
             break;
-        case 't':
-            g_total = size2bytes(optarg);
+        case 'n':
+            if (std::string(optarg).find("0x") == 0) {
+                g_total = strtoul(optarg, &tail, 16);
+                if (*tail) {
+                    fprintf(stderr,
+                        "invalid argument to start: %s\n",
+                        optarg);
+                    usage_exit(argv[0]);
+                }
+            } else {
+                g_total = size2bytes(optarg);
+            }
             break;
         case 'b':
             g_bits = atoi(optarg);
@@ -238,13 +304,7 @@ void parse_args(int argc, char** argv)
             g_interval = atoi(optarg);
             break;
         case 's':
-            g_start = strtoul(optarg, &tail, 16);
-            if (*tail) {
-                fprintf(stderr,
-                    "invalid argument to start: %s\n",
-                    optarg);
-                usage_exit(argv[0]);
-            }
+            g_begins = str2vector<uint64_t>(optarg);
             break;
         case '?':
             usage_exit(argv[0]);
@@ -262,6 +322,4 @@ void parse_args(int argc, char** argv)
         fprintf(stderr, "Too many arguments.\n");
         usage_exit(argv[0]);
     }
-
-    // if (argc) g_file = *argv;
 }
