@@ -23,7 +23,10 @@ then
     cd "${PWD}"
     exit 0;
 else
-    cd "${PWD}/LinxSrvc" && make "$@" && gm/build.sh $1 && cd -
+    cd "${PWD}/LinxSrvc";
+    if [ ! -d bin ]; then mkdir bin; fi;
+    if [ ! -d out ]; then mkdir out; fi;
+    make "$@" && cd -;
 fi
 if [ "$1" == "clean" ]
 then

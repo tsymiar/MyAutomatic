@@ -1,16 +1,12 @@
-#include <unistd.h>
-#include <getopt.h>
 #include <stdlib.h>
 #include <string>
 #include <cstdint>
 #include <errno.h>
 #include <string.h>
+#include <unistd.h>
+#include <getopt.h>
 #include <sys/time.h>
-#ifdef __linux
-#include <bits/endian.h>
-#else
-#include <sys/_endian.h>
-#endif
+#include <sys/types.h>
 #include <thread>
 #include <vector>
 

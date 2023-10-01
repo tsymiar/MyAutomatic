@@ -5,7 +5,7 @@ cd %BATDIR%
 echo clean build
 rd /s /q build
 echo clean LinxSrvc
-rd /s /q LinxSrvc\obj
+rd /s /q LinxSrvc\out
 echo clean cache
 rd /s /q WinNTKline\cache
 echo clean MFC

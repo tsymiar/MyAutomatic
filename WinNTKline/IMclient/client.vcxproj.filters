@@ -5,6 +5,9 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
+    <Filter Include="gm">
+      <UniqueIdentifier>{400137bd-92f9-4dc3-b26f-a0bc35a91789}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\LinxSrvc\IM\IM.cc">
@@ -19,10 +22,26 @@
     <ClCompile Include="..\KlineUtil\IM\TCPsocket_win.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\LinxSrvc\gm\main.cxx">
+      <Filter>gm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\KlineUtil\IM\client.h">
       <Filter>源文件</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\LinxSrvc\gm\build.sh">
+      <Filter>gm</Filter>
+    </None>
+    <None Include="..\..\LinxSrvc\gm\clean-all.cmake">
+      <Filter>gm</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\..\LinxSrvc\gm\CMakeLists.txt">
+      <Filter>gm</Filter>
+    </Text>
   </ItemGroup>
 </Project>
