@@ -312,6 +312,8 @@ int proxyHook(KaiSocket* kai)
         } else {
             std::cout << __FUNCTION__ << ": msg tag = " << msg.head.etag << ": [" << msg.head.size << "]" << std::endl;
         }
+    } else {
+        std::cout << __FUNCTION__ << ": KaiSocket status = " << len << std::endl;
     }
     return len;
 }
@@ -378,7 +380,7 @@ ssize_t KaiSocket::recv(uint8_t* buff, size_t size)
     auto* message = new(std::nothrow) uint8_t[total];
     if (message == nullptr) {
         std::cerr << __FUNCTION__ << ": message malloc fail, size = " << total << "!" << std::endl;
-        return -1;
+        return -4;
     }
     ssize_t left = m_network.flag.size - len;
     ssize_t err = -1;
@@ -387,7 +389,7 @@ ssize_t KaiSocket::recv(uint8_t* buff, size_t size)
         if (err <= 0) {
             handleNotify(m_network);
             delete[] message;
-            return -4;
+            return -5;
         }
     }
     Message msg = *reinterpret_cast<Message*>(buff);
@@ -398,7 +400,13 @@ ssize_t KaiSocket::recv(uint8_t* buff, size_t size)
         break;
     case CONSUMER:
         stat = consume(msg);
-        break;
+        if (stat < 0) {
+            handleNotify(m_network);
+            delete[] message;
+            return -6;
+        } else {
+            break;
+        }
     default: break;
     }
     if (msg.head.etag >= NONE && msg.head.etag <= SUBSCRIBE) {
@@ -443,7 +451,7 @@ ssize_t KaiSocket::recv(uint8_t* buff, size_t size)
         handleNotify(m_network);
         std::cerr << __FUNCTION__ << ": unsupported tag [" << msg.head.etag << "]" << std::endl;
         delete[] message;
-        return -5;
+        return -7;
     }
     delete[] message;
     return (err + res);
@@ -461,10 +469,10 @@ bool KaiSocket::running()
 void KaiSocket::wait(unsigned int tms)
 {
 #ifdef USE_SELECT
-    const int THOS = 1000;
+    const int THOUS = 1000;
     struct timeval delay = {
-        .tv_sec = time_t(tms / THOS),
-        .tv_usec = (long)(tms % THOS * THOS)
+        .tv_sec = time_t(tms / THOUS),
+        .tv_usec = (long)(tms % THOUS * THOUS)
     };
     select(0, NULL, NULL, NULL, &delay);
 #else
@@ -495,7 +503,7 @@ ssize_t KaiSocket::writes(Network network, const uint8_t* data, size_t len)
                 } else {
                     handleNotify(network);
                     delete[] buff;
-                    return -2; /* error */
+                    return -3; /* error */
                 }
             }
         }
@@ -707,7 +715,7 @@ void KaiSocket::setRequestHandle(void(*func)(uint8_t*, size_t), uint8_t* data, s
 int KaiSocket::produce(const Message& msg)
 {
     if (m_msgQue == nullptr) {
-        std::cout << __FUNCTION__ << ": msgque pool is null." << std::endl;
+        std::cout << __FUNCTION__ << ": msgQue pool is null." << std::endl;
         return -1;
     }
     std::lock_guard<std::mutex> lock(m_lock);
@@ -725,23 +733,24 @@ ssize_t KaiSocket::consume(Message& msg)
         std::cout << __FUNCTION__ << ": message pool has no elem(s)." << std::endl;
         return -1;
     }
-    std::mutex mtxLck = {};
-    std::lock_guard<std::mutex> lock(mtxLck);
+    std::lock_guard<std::mutex> lock(m_lock);
     size_t size = m_msgQue->size();
-    static Message* msgQ = nullptr;
-    try {
-        msgQ = const_cast<Message*>(m_msgQue->front());
-        if (msgQ == nullptr || msgQ->head.etag != CONSUMER) {
-            return size;
+    Message* msgQ = nullptr;
+    do {
+        try {
+            msgQ = const_cast<Message*>(m_msgQue->front());
+            if (msgQ->head.etag != CONSUMER) {
+                continue;
+            }
+            msg.head = msgQ->head; // fixme memmove_avx_unaligned_erms
+            memmove(&msg.data, &msgQ->data, sizeof(Message::Payload));
+        } catch (const std::exception& e) {
+            std::cerr << __FUNCTION__ << ": segmentation fault: " << e.what() << std::endl;
         }
-        msg.head = msgQ->head; // fixme memmove_avx_unaligned_erms
-        memmove(&msg.data, &msgQ->data, sizeof(Message::Payload));
-    } catch (const std::exception& e) {
-        std::cerr << __FUNCTION__ << ": segmentation fault: " << e.what() << std::endl;
-    }
-    if (size > 0) {
-        m_msgQue->pop_front();
-    }
+        if (size > 0) {
+            m_msgQue->pop_front();
+        }
+    } while (msgQ == nullptr);
     // if 1: success, 0: nothing
     return static_cast<int>(size - m_msgQue->size());
 }

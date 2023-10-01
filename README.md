@@ -8,7 +8,7 @@ LinxSrvc
 -------
 * Generats by executing `./build.sh all -j` command.
 
-    Once when build SUCCESS, some binary files will shown in the `bin` directory, such as:
+    Once when build SUCCESS, some binary files will shown in the `bin/gen` directory, such as:
     ```c
     gm
     gpio
@@ -20,7 +20,7 @@ LinxSrvc
     Client.exe
     kaics.exe
     pthdtest.exe
-    webevent
+    webevent_server
     gSOAPverify
     myweb.wsdl
      ```
@@ -50,7 +50,7 @@ LinxSrvc
 
       a thread pool based on `pthread`.
 
-  * webevent
+  * webevent_server
 
       a http server and client package library, depends on `libevent`.
 

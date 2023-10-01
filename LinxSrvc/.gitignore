@@ -10,3 +10,7 @@
 **/virtex/*.mod.*
 #test
 *.xx*
+bin
+gen
+out
+vs

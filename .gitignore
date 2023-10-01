@@ -58,6 +58,4 @@ build
 !.vsconfig
 *.user
 *Debug
-*bin
-*obj
 test.txt

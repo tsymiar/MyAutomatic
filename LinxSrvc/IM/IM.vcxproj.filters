@@ -7,7 +7,7 @@
     <ClCompile Include="IM.cc">
       <Filter>IM</Filter>
     </ClCompile>
-    <ClCompile Include="KaiTest.cpp">
+    <ClCompile Include="KaiTest.cxx">
       <Filter>Kai</Filter>
     </ClCompile>
   </ItemGroup>
