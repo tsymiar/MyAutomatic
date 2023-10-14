@@ -13,6 +13,8 @@ TEST(Utils, isNum)
     EXPECT_TRUE(isNum(num));
     num = "0.5";
     EXPECT_TRUE(isNum(num));
+    num = 'a';
+    EXPECT_FALSE(isNum(num));
 }
 
 TEST(Utils, ipIsValid)
@@ -37,10 +39,13 @@ TEST(Utils, ipIsValid)
     EXPECT_TRUE(ipIsValid(ip));
     ip = "123.123.123.123";
     EXPECT_TRUE(ipIsValid(ip));
+    ip = "123.123.123.123.";
+    EXPECT_FALSE(ipIsValid(ip));
 }
 
 TEST(Utils, sIP2long)
 {
+    EXPECT_EQ(sIP2long(nullptr), 0);
     const char* sip = "127.0.0.1";
     EXPECT_EQ(sIP2long(sip), 2130706433);
     sip = "192.168.0.1";
@@ -77,7 +82,7 @@ TEST(Utils, getVariable)
 TEST(Utils, getFileAsCstring)
 {
     std::string filename = "";
-    EXPECT_EQ(getFileAsCstring(filename), "");
+    EXPECT_NE(getFileAsCstring(filename).c_str(), "");
     filename = "./test.txt";
     EXPECT_EQ(getFileAsCstring(filename), "aaa");
 }
