@@ -9,12 +9,14 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -ggdb -g -fprofile-arcs -ftest-cov
 add_subdirectory(googletest)
 
 include_directories(
+    ${CMAKE_CURRENT_SOURCE_DIR}
     ../include
     ../webevent
 )
 
 set(TEST_FILE
     ../webevent/Utils.cpp
+    test_main.cpp
 )
 
 foreach(lib libgmock_main.a libgmock.a libgtest_main.a libgtest.a)
@@ -27,7 +29,7 @@ if(${LIBS_LACK})
     include_directories(googletest/googletest/include/gtest)
 endif()
 
-file(GLOB SRC_FILE_LIST "*_test.c*")
+file(GLOB SRC_FILE_LIST "tests/test*_*.c*")
 add_executable(${TARGET}
     ${SRC_FILE_LIST}
     ${TEST_FILE}
