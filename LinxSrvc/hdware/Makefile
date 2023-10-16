@@ -2,8 +2,8 @@ PWD = $(shell pwd)
 GEN = $(PWD)/../bin
 #BUILD = ${PWD}/../../../kernel/linux
 BUILD = /lib/modules/$(shell uname -r)/build
-gpio:
-	gcc -g -DGPIO test.c -o $(GEN)/gpio
+chigpio:
+	gcc -g -DGPIO test.c -o $(GEN)/chigpio
 mes909:
 	gcc -std=gnu99 -g -DME9S test.c -o $(GEN)/mes909
 dirty:
@@ -21,7 +21,7 @@ image:
 pipefifo:
 	gcc -g -DPIPE_FIFO test.c -o $(GEN)/pipefifo
 all:
-	make gpio
+	make chigpio
 	make mes909
 	make dirty
 ifeq ($(shell uname), Linux)
@@ -33,7 +33,7 @@ ifeq ($(shell uname), Linux)
 endif
 	make pipefifo
 clean:
-	@rm -rvf $(GEN)/gpio* $(GEN)/mes909* $(GEN)/dirtyhack*
+	@rm -rvf $(GEN)/chigpio* $(GEN)/mes909* $(GEN)/dirtyhack*
 	@rm -rvf $(GEN)/chstest* $(GEN)/VideoCapture*
 	@rm -rvf $(GEN)/imagesnap* $(GEN)/pipefifo*
 ifeq ($(shell uname), Linux)

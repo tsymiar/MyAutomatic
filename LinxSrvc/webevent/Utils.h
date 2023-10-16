@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdio>
 #include <libgen.h>
+#include <string.h>
 #include <string>
 #include <vector>
 

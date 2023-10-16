@@ -10,7 +10,6 @@ $(BUILD_PATH)/Makefile:
 	@cd $(BUILD_PATH) && cmake $(PROJECT_BASE) -DAPPOINT_EVENT=/usr/local && cd -
 
 $(EXECUTALBE):$(BUILD_PATH)/Makefile
-	@ if [ ! -d $(PROJECT_BASE)/../gen ]; then mkdir -p $(PROJECT_BASE)/../gen; fi;
 	@$(MAKE_COMMAND) -C $(BUILD_PATH) && \
 	if [ -f $(BUILD_PATH)/$(TARGET) ] && [ -d $(PROJECT_BASE)/../gen ]; then cp $(BUILD_PATH)/$(TARGET) $(EXECUTALBE); fi;
 

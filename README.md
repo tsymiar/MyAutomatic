@@ -2,39 +2,44 @@
 
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/af21f03e75a14429a74a0ec437d41993)](https://www.codacy.com/gh/tsymiar/MyAutomatic/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=tsymiar/MyAutomatic) [![996.icu](https://img.shields.io/badge/link-996.icu-red.svg)](https://996.icu)
 
-##### This is MyAutomatic, including sub-projects below ⇣
+##### This is **MyAutomatic** [`git clone https://github.com/tsymiar/MyAutomatic.git`], including sub-projects below ⇣
 
 LinxSrvc
 -------
 * Generats by executing `./build.sh all -j` command.
 
     Once when build SUCCESS, some binary files will shown in the `bin/gen` directory, such as:
+
+    *gen*
     ```c
     gm
-    gpio
+    webevent_server
+     ```
+    *bin*
+    ```c
+    chstest
+    chigpio
     mes909
     pipefifo
     VideoCapture
-    imgsnap
-    IM.exe
+    imagesnap
     Client.exe
     kaics.exe
     pthdtest.exe
-    webevent_server
-    gSOAPverify
-    myweb.wsdl
+    gSOAPverify/myweb.wsdl
      ```
     * 
-       | gpio | mes909 | pipefifo |
-       | :---:| :----: | :------: |
+       | chstest | chigpio | mes909 | pipefifo |
+       | :------:| :--: | :----: | :-------:|
 
-       Some scattered *.c files is driver of **hardware**s such as `GPIO`, `ME909S-821`(*a Huawei LTE 4G network module*), `pipe`/`fifo` etc..
+       Some scattered *.c files is driver of **hardware**s such as `GPIO`, `ME909S-821`(*a Huawei LTE 4G network module*), `pipe`/`fifo` etc.., *chstest* is a test to *chsdev* driver.
 
-  * VideoCapture | imgsnap
+
+  * VideoCapture | imagesnap
 
       `VideoCapture` is a video capture program based on **v4l2** which should only able to run on linux.
 
-      `imgsnap` is a photo take*r*, could running on linux only.
+      `imagesnap` is a photo take*r*, could running on linux only.
 
   * IM.exe | Client.exe
 

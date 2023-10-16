@@ -22,17 +22,17 @@ CLIENTLOCAL=../../WinNTKline/IMclient
 CLIENTFILES=$(IMLOCAL)/client.cc $(CLIENTLOCAL)/imclient.cpp
 IM/fast:
 	@if [ ! -d "$(GEN)" ]; then mkdir $(GEN); fi;
-	$(CXX) $(FLAG) $(IMFILE) -o $(GEN)/IM.exe $(PTHD)
+	$(CXX) $(FLAG) $(IMFILE) $(PTHD) -o $(GEN)/IM.exe
 .PHONY: IM
 client:
-	$(CXX) $(FLAG) -I$(IMLOCAL) $(CLIENTFILES) -o $(GEN)/Client.exe $(PTHD)
+	$(CXX) $(FLAG) -I$(IMLOCAL) $(CLIENTFILES) $(PTHD) -o $(GEN)/Client.exe
 Kai.o:
 	@if [ ! -d "$(OBJ)" ]; then mkdir $(OBJ); fi;
 	@$(CXX) -c $(CUR)/KaiSocket.cc $(FLAG) $(PTHD) $(EXP) -o Kai.o
 	@mv *.o $(OBJ)/;
 .PHONY: Kai.o
 Kai:Kai.o
-	$(CXX) $(FLAG) $(OBJ)/Kai.o $(CUR)/KaiTest.cxx -o $(GEN)/kaics.exe
+	$(CXX) $(FLAG) $(OBJ)/Kai.o $(CUR)/KaiTest.cxx $(PTHD) -o $(GEN)/kaics.exe
 clean/fast:
 	@rm -rvf $(GEN)/*.exe* .*/ *.json $(OBJ) bin out build
 .PHONY: clean

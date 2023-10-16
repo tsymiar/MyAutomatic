@@ -14,7 +14,7 @@ include_directories (
 find_library(EVENT_LIB event ${APPOINT_EVENT}/lib /usr/lib /usr/local/lib /usr/lib/arm-linux-gnueabihf NOTFOUND)
 
 if (NOT ${EVENT_LIB} MATCHES "NOTFOUND")
-    file(GLOB SRC_FILE_LIST "*.cpp")
+    file(GLOB SRC_FILE_LIST "*[^.h]*.c*[^.txt]*")
     add_executable (${TARGET} ${SRC_FILE_LIST})
     target_link_libraries (${TARGET}
         -fPIC

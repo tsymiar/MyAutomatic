@@ -8,7 +8,6 @@ all:
 	make cmake
 cmake:
 	@ if [ ! -d build ]; then mkdir -p build; else rm -rf build/*; fi;
-	@ if [ ! -d gen ]; then mkdir gen; fi;
 	@ cd build && cmake .. && make -j4 && cd -
 clean:
 	make -C webevent clean-all

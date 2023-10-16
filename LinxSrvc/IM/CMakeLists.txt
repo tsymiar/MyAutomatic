@@ -24,14 +24,14 @@ else()
     include_directories(..)
 endif()
 
-file(GLOB SRC_FILE_LIST "Kai*[^Test]*.*")
+file(GLOB SRC_FILE_LIST "Kai*[^est]*.c*")
 
 add_library(${TARGET} SHARED ${SRC_FILE_LIST})
 
 if("${ANDROID}" EQUAL "1")
     target_link_libraries(${TARGET} log android)
 else()
-    file(GLOB TEST_FILE "Kai*Test*.*")
+    file(GLOB TEST_FILE "K*est*.c*")
     if(EXISTS ${TEST_FILE})
         if(WIN32)
             set(PROC ${TARGET}_test)
