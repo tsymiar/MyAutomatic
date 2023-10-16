@@ -25,6 +25,7 @@ then
 else
     cd "${PWD}/LinxSrvc";
     if [ ! -d bin ]; then mkdir bin; fi;
+    if [ ! -d gen ]; then mkdir gen; fi;
     if [ ! -d out ]; then mkdir out; fi;
     make "$@" && cd -;
 fi
