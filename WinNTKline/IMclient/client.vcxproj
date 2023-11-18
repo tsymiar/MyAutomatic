@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\LinxSrvc\gm\main.cxx">
+    <ClCompile Include="..\..\LinxSrvc\gn\main.cxx">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -48,11 +48,11 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\LinxSrvc\gm\build.sh" />
-    <None Include="..\..\LinxSrvc\gm\clean-all.cmake" />
+    <None Include="..\..\LinxSrvc\gn\build.sh" />
+    <None Include="..\..\LinxSrvc\gn\clean-all.cmake" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="..\..\LinxSrvc\gm\CMakeLists.txt" />
+    <Text Include="..\..\LinxSrvc\gn\CMakeLists.txt" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

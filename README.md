@@ -12,7 +12,7 @@ LinxSrvc
 
     *gen*
     ```c
-    gm
+    gn
     webevent_server
      ```
     *bin*
@@ -63,7 +63,7 @@ LinxSrvc
 
       a `SOAP-server` which is to verify login using the config file *myweb.wsdl*.
 
-  * gm
+  * gn
 
       a *cross-platform*, *big/small endian*, *increasing/decreasing* binary number generator.
 
