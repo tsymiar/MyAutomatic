@@ -525,7 +525,7 @@ void callbackPasswdSet(char* psw)
         setdlg->ShowWindow(SW_SHOW);
         setdlg->SetifCheck(true);
         setdlg->SetTitle("重置密码");
-        strcpy((char*)content.username, g_logDlg->getUsername());
+        strcpy((char*)content.username, g_logDlg == NULL ? "" : g_logDlg->getUsername());
         strcpy((char*)content.user_newpass, psw);
         if (*psw != NULL && content.password[0] != psw[0]) {
             SendClientMessage(&content);

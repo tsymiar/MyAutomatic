@@ -1,8 +1,8 @@
 ﻿#include "client.h"
 
 static StSock g_socks = {};
-static StMsgContent g_content = {};
 static StClient g_client = {};
+static StMsgContent g_content = {};
 
 // 参考该函数编写报文处理函数
 #ifdef _WIN32
@@ -53,7 +53,7 @@ runtime(void* param)
 
 int InitChat(StSock* sock)
 {
-    SetConsoleTitle("g_client v0.1");
+    SetConsoleTitle("IM client v0.1");
     WSADATA wsaData;
     if (WSAStartup(0x202, &wsaData) == SOCKET_ERROR) {
         std::cerr << "WSAStartup failed with error " << WSAGetLastError() << std::endl;
@@ -64,7 +64,7 @@ int InitChat(StSock* sock)
     static char ipaddr[16];
     memset(ipaddr, 0, 16);
     if (sock == NULL || sock->IP[0] == '\0' || sock->IP[0] < 0) {
-        fprintf_s(stdout, "Current OS is %d bit.\nNow enter server address: ", (int)(sizeof(void*) * 8));
+        fprintf_s(stdout, "Current OS is %d bit.\nEnter server IP: ", (int)(sizeof(void*) * 8));
         scanf_s("%15s", (char*)&ipaddr, 16);
         if (*ipaddr != 0) {
             memcpy(g_socks.IP, &ipaddr, 16);
@@ -86,7 +86,7 @@ int InitChat(StSock* sock)
 #endif
     g_client.srvaddr.sin_port = htons(g_socks.PORT);
     char title[32];
-    snprintf(title, 27, "g_client: %s", ipaddr);
+    snprintf(title, 27, "IM client: %s", ipaddr);
     SetConsoleTitle(title);
     g_client.sock = socket(AF_INET, SOCK_STREAM, 0);
     BOOL bReuseaddr = TRUE;
@@ -125,7 +125,7 @@ void* Chat_Msg(void* func)
 #endif
 {
     if (connect(g_client.sock, (struct sockaddr*)&g_client.srvaddr, sizeof(g_client.srvaddr)) == SOCKET_ERROR) {
-        std::cerr << "connect() error " << "[" <<
+        std::cerr << "call connect() fail " << "[" <<
             GetLastErrorToString(WSAGetLastError()).c_str()
             << "] " << std::endl;
         WSACleanup();

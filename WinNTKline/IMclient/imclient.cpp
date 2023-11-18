@@ -136,6 +136,9 @@ parseRcvMsg(void* lprcv)
                 fwrite(data, sizeof(unsigned char), 224, file);
             fclose(file);
         }
+        if (ui_val == 0xf) {
+            SetRecvState(RCV_SCC);
+        }
         LeaveCriticalSection(&wrcon);
         if (size <= 0 || (msg->value[0] == 'e' && msg->value[1] == '8')) {
             snprintf(srv_net, 32, "Connection lost!\n%s:%d", inet_ntoa(client->srvaddr.sin_addr), client->srvaddr.sin_port);
@@ -220,7 +223,7 @@ StMsgContent* ParseChatData(StMsgContent& content)
     default:
     {
         if (content.value[0] == 0x0) {
-            MessageBox(0, const_cast<char*>("Invalid Value."), const_cast<char*>("message"), MB_OK);
+            MessageBox(0, const_cast<char*>("content.value is null."), const_cast<char*>("message"), MB_OK);
             return &content;
         }
     }
@@ -294,9 +297,9 @@ int main(int argc, char* argv[])
 #else
         int comm = 0;
         if (received >= RCV_SCC) {
-            fprintf(stdout, "Input command [1-13]: ");
+            fprintf(stdout, "Select a command [1 - 13]: ");
             if (scanf("%3d", &comm) <= 0) {
-                fprintf(stdout, "Command format to integer error .\n");
+                fprintf(stdout, "Command not in integer format, exit.\n");
                 break;
             }
             if (comm > 13 || comm < 0) {
