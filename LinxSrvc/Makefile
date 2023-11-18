@@ -15,5 +15,5 @@ clean:
 	make -C thread clean
 	make -C hdware clean
 	make -C IM clean
-	@rm -rvf bin/*.exe* ./gen ./out ./*.o vs
+	@rm -rvf bin/*.exe* ./gen ./out ./*.o */.vs vs
 	@rm -rvf jniLibs

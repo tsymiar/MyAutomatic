@@ -4,7 +4,7 @@ project(kaics CXX C)
 
 set(CMAKE_CXX_STANDARD 14)
 set(TARGET kaics)
-set(OPTION "-fPIC -pthread")
+set(OPTION "-fPIC -pthread rt c")
 set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g -ggdb")
 set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
 set(CMAKE_CXX_FLAGS "-std=c++0x ${CMAKE_CXX_FLAGS} -g -ftest-coverage -fprofile-arcs")

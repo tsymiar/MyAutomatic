@@ -22,17 +22,22 @@
 #include <cerrno>
 #include <arpa/inet.h>
 #include <signal.h>
+#include <fcntl.h>
 #endif
 #define NE_VAL(a) (((~((a) & 0x0f)) | ((a) & 0xf0)) & 0xff)
 #define DEFAULT_PORT 8877
 #define IPC_KEY 0x520905
 #define IPC_FLAG IPC_CREAT|IPC_EXCL //|SHM_R|SHM_W
-#define THREAD_NUM 20
-#define ACC_REC "acnts"
-#define MAX_ACTIVE 30
+#define THREAD_NUM 24
+#define ACC_REC "accounts"
 #define MAX_USERS 99
 #define MAX_ZONES 9
 #define MAX_MEMBERS_PER_GROUP 11
+#if (! defined __APPLE__)
+#define MAX_ACTIVE 30
+#else
+#define MAX_ACTIVE 6 // ??
+#endif
 //using namespace std;
 //'C++11 std' bind func conflicts with in 'socket.h'
 #ifdef _WIN32
@@ -92,8 +97,8 @@ mutex_allow;
 
 int aim2exit = 0;
 type_socket listen_socket;
-volatile type_socket current_socket = 0;
 static unsigned int g_threadNo_ = 0;
+static int g_filedes[2];
 const int FiledSize = 24;
 
 struct Network {
@@ -154,7 +159,7 @@ typedef struct UsrMsgStu {
     private:
         unsigned char rsv[2];
     public:
-        PeerStruct():msg{ 0 }, rsv{ 0 } {};
+        PeerStruct() :msg{ 0 }, rsv{ 0 } {};
         ~PeerStruct() {};
         char msg[16];
         unsigned char cmd[2]{ 0 };
@@ -185,7 +190,7 @@ void pipesig_handler(int s)
 {
 #ifdef _UNISTD_H
     write(STDERR_FILENO, "Signal: caught a SIGPIPE!\n", 27); // 27: write buffer size.
-    exit(0);
+    // exit(0);
 #endif
 }
 
@@ -207,7 +212,7 @@ enum {
     ALL_ZONE = 0x0f,
 };
 
-int inst_mesg(int argc, char* argv[]);
+int inst_mssg(int argc, char* argv[]);
 template<typename T> int set_n_get_mem(T* shmem, int ndx = 0, int rw = 0);
 void func_waitpid(int signo);
 int queryNetworkParams(const char* username, Network& network, const int max = MAX_ACTIVE);
@@ -259,11 +264,14 @@ int main(int argc, char* argv[])
         }
     }
 #ifdef _WIN32
-    inst_mesg(1, { nullptr });
+    inst_mssg(1, { nullptr });
 #else
+    if (pipe(g_filedes) < 0) {
+        fprintf(stderr, "Make pipe channel fail: %s\n", strerror(errno));
+    }
     if (fork() == 0) {
         signal(SIGPIPE, pipesig_handler);
-        inst_mesg(argc, argv);
+        inst_mssg(argc, argv);
     }
 #endif
     return 0;
@@ -306,7 +314,7 @@ type_thread_func monitor(void* arg)
     time(&t);
     lt = localtime(&t);
     g_threadNo_++;
-    fprintf(stdout, "accepted peer(%u) address [%s:%d] (@ %d/%02d/%02d-%02d:%02d:%02d)\n", g_threadNo_, IP, PORT, lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
+    fprintf(stdout, "Accepted peer(%u) address [%s:%d] (@ %d/%02d/%02d-%02d:%02d:%02d)\n", g_threadNo_, IP, PORT, lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
     bool set = true;
     setsockopt(rcv_sock, SOL_SOCKET, SO_KEEPALIVE, reinterpret_cast<const char*>(&set), sizeof(bool));
     if (rcv_sock
@@ -317,10 +325,10 @@ type_thread_func monitor(void* arg)
 #else
         < 0) {
 #endif
-        std::cerr << "accept() error(" << errno << "): " << strerror(errno) << std::endl;
+        std::cerr << "Call accept() error(" << errno << "): " << strerror(errno) << std::endl;
         return type_thread_func(-1);
     };
-    fprintf(stdout, "socket monitor: %d; waiting for massage.\n", rcv_sock);
+    fprintf(stdout, "Socket monitor: %d; waiting for massage...\n", rcv_sock);
     do {
         memset(sd_bufs, 0, BUFF_SIZE);
         memset(rcv_txt, 0, BUFF_SIZE);
@@ -332,7 +340,6 @@ type_thread_func monitor(void* arg)
 #endif
             lol = sizeof(int);
         int val;
-        current_socket = rcv_sock;
         if (getsockopt(rcv_sock, SOL_SOCKET, SO_KEEPALIVE, reinterpret_cast<char*>(&val), &lol) == 0) {
             if (cnt > 0)
                 fprintf(stderr, "### Connect--%d status changed, socket: %s.\n", cnt, strerror(errno));
@@ -364,13 +371,20 @@ type_thread_func monitor(void* arg)
                 memcpy(&user, rcv_txt, sizeof(user));
                 PRINT_RECV("1-RCV", user.uiCmdMsg, user.chk, user.usr, flg, THREAD_NUM - g_threadNo_, rcv_txt);
 #endif
+#ifndef _WIN32
+                if (g_filedes[0] > 0)
+                    close(g_filedes[0]);
+                if (g_filedes[1] <= 0 || write(g_filedes[1], (void*)&rcv_sock, sizeof(rcv_sock)) < 0) {
+                    fprintf(stderr, "Can't write socket to filedes[1][%d]: %s\n", g_filedes[1], strerror(errno));
+                }
+#endif
             }
+            ssize_t sn_stat = -1;
             const int offset = 8;
             char userName[FiledSize];
             memset(userName, 0, FiledSize);
             memcpy(sd_bufs, &user, 2); // 2: head bytes
             if ((user.rsv == 0) && (user.uiCmdMsg == 0)) {
-                ssize_t sn_stat = -1;
                 // user.usr: 8; user.psw: 32.
                 val_rtn = new_user(user.usr, user.psw);
                 snprintf(sd_bufs + 2, 8, "%x", NE_VAL(val_rtn + 1));
@@ -429,19 +443,19 @@ type_thread_func monitor(void* arg)
                         continue;
                     } else {
                         snprintf((sd_bufs + 2), 8, "%02x", 0xe8);
-                        snprintf((sd_bufs + offset), 50, "LoggingIn status invalid, will close this socket.");
+                        snprintf((sd_bufs + offset), 52, "Logging status invalid, we will close this connect.");
                         set_user_quit(user.usr);
-                        send(rcv_sock, sd_bufs, 64, 0);
+                        sn_stat = send(rcv_sock, sd_bufs, 64, 0);
                         closesocket(rcv_sock);
-                        fprintf(stdout, ">>> %s\n", sd_bufs + offset);
+                        fprintf(stdout, ">>>%s %s\n", sn_stat < 0 ? strerror(errno) : "", sd_bufs + offset);
                         loggedIn = 0;
                         continue;
                     }
                 } else if (val_rtn < 0) {
                     snprintf(sd_bufs + 2, 8, "%x", NE_VAL(val_rtn));
                     snprintf((sd_bufs + offset), 38, "%s", "Error: check username/password again.");
-                    send(rcv_sock, sd_bufs, 48, 0);
-                    fprintf(stdout, ">>> %s\n", sd_bufs + offset);
+                    sn_stat = send(rcv_sock, sd_bufs, 48, 0);
+                    fprintf(stdout, ">>>%s %s\n", sn_stat < 0 ? strerror(errno) : "", sd_bufs + offset);
                     continue;
                 } else {
                     memset((sd_bufs + offset), 0, 64);
@@ -451,14 +465,14 @@ type_thread_func monitor(void* arg)
             } else if ((user.rsv == 0) && (user.uiCmdMsg == 0x3)) {
                 snprintf(sd_bufs + 2, 8, "%x", NE_VAL(-1));
                 snprintf((sd_bufs + offset), 36, "%s", "Warning: user hasn't logged on yet.");
-                send(rcv_sock, sd_bufs, 48, 0);
-                fprintf(stdout, ">>> %s\n", sd_bufs + offset);
+                sn_stat = send(rcv_sock, sd_bufs, 48, 0);
+                fprintf(stdout, ">>>%s %s\n", sn_stat < 0 ? strerror(errno) : "", sd_bufs + offset);
                 continue;
             } else {
                 snprintf((sd_bufs + offset), 50, "%s", "Warning: please Register(0) or Login(1) at first.");
                 snprintf(sd_bufs + 2, 8, "%x", NE_VAL(-2));
-                send(rcv_sock, sd_bufs, 56, 0);
-                fprintf(stdout, ">>> %s\n", sd_bufs + offset);
+                sn_stat = send(rcv_sock, sd_bufs, 58, 0);
+                fprintf(stdout, ">>>%s %s\n", sn_stat < 0 ? strerror(errno) : "", sd_bufs + offset);
                 continue;
             }
 #ifdef _DEBUG
@@ -534,9 +548,9 @@ type_thread_func monitor(void* arg)
                         flg = loggedIn = 0;
                         set_user_quit(userName);
                         snprintf(sd_bufs + offset, 17 + 24, "[%s] has logout.", userName);
-                        send(rcv_sock, sd_bufs, 48, 0);
-                        fprintf(stderr, "### [%0x, %x]: %s\n", sd_bufs[1],
-                            static_cast<unsigned>(*user.chk), sd_bufs + offset);
+                        sn_stat = send(rcv_sock, sd_bufs, 48, 0);
+                        fprintf(stderr, "### [%0x, %x]:%s %s\n", sd_bufs[1],
+                            static_cast<unsigned>(*user.chk), sn_stat < 0 ? strerror(errno) : "", sd_bufs + offset);
                         continue;
                     }
                     case PASSWD:
@@ -604,8 +618,8 @@ type_thread_func monitor(void* arg)
                                         memset(sd_bufs + offset, 0, 248);
                                         snprintf(sd_bufs + 2, 8, "%x", NE_VAL(-1));
                                         snprintf((sd_bufs + 32), 27 + 24, "failed send command to %s.", user.peer);
-                                        send(rcv_sock, sd_bufs, total, 0);
-                                        fprintf(stdout, "Got failure trans message to %s:%u (%s).\n", p2pnet.ip, p2pnet.port, strerror(errno));
+                                        sn_stat = send(rcv_sock, sd_bufs, total, 0);
+                                        fprintf(stdout, "Got failure trans message to %s:%u (%zd,%s).\n", p2pnet.ip, p2pnet.port, sn_stat, strerror(errno));
                                     }
                                     break;
                                 }
@@ -707,8 +721,8 @@ type_thread_func monitor(void* arg)
                             val_rtn = execvp(__ GET_IMG_EXE, agv);
                             exe_msg = strerror(errno);
                             snprintf(sd_bufs + 2, 8, "%x", NE_VAL(val_rtn));
-                            memcpy((sd_bufs + offset), exe_msg, 64);
-                            total = offset + 64 + 1;
+                            memcpy((sd_bufs + offset), exe_msg, 72);
+                            total = offset + 72 + 1;
                             fprintf(stdout, "Exec [ %s ] with execvp fail, %s.\n", __ GET_IMG_EXE, exe_msg);
                         } else {
                             wait(&val_rtn);
@@ -776,6 +790,7 @@ type_thread_func monitor(void* arg)
                                 }
                                 memset(sd_bufs + 32 + offset, pos[i], 1);
                                 fprintf(stdout, /*"\r%*c*/"\r%.02f%% ", /*7, ' ',*/ i * 100.f / len);
+                                fflush(stdout);
                             }
                             slice++;
                         }
@@ -960,7 +975,7 @@ comm_err0:
     return 0;
 };
 
-int inst_mesg(int argc, char* argv[])
+int inst_mssg(int argc, char* argv[])
 {
     int srvPort = DEFAULT_PORT;
     if (argc == 2 && atoi(argv[1]) != 0) {
@@ -985,6 +1000,7 @@ int inst_mesg(int argc, char* argv[])
     pthread_mutex_init(&(mutex_allow), &attr);
 #endif
     aim2exit = 0;
+    pthread_t threadid;
 #ifdef _WIN32
     SetConsoleTitle((
 #ifdef _UNICODE
@@ -993,7 +1009,6 @@ int inst_mesg(int argc, char* argv[])
         LPCSTR
 #endif
         )"chat server for network design");
-    pthread_t threadid;
     _beginthreadex(nullptr, 0, (_beginthreadex_proc_type)commands, nullptr, 0, &threadid);
     WSADATA wsaData;
     if (WSAStartup(0x202, &wsaData) == SOCKET_ERROR) {
@@ -1052,14 +1067,13 @@ int inst_mesg(int argc, char* argv[])
         struct sockaddr_in fromAddr = {};
 #if (!defined SOCK_CONN_TEST) || (defined SOCK_CONN_TEST)
         type_len addrlen = static_cast<type_len>(sizeof(fromAddr));
-        printf("%08x\n", addrlen);
 #endif
 #ifdef SOCK_CONN_TEST
         type_socket test_socket = accept(listen_socket, (struct sockaddr*)&fromAddr, &addrlen);
         if (test_socket
 #ifdef _WIN32
             == INVALID_SOCKET) {
-            std::cerr << "accept() failed error " << WSAGetLastError() << std::endl;
+            std::cerr << "Call accept() failed: " << WSAGetLastError() << std::endl;
             WSACleanup();
 #else
             < 0) {
@@ -1073,7 +1087,7 @@ int inst_mesg(int argc, char* argv[])
 #else
             inet_ntop(AF_INET, (void*)&form.sin_addr, IPdotDec, 16);
 #endif
-            fprintf(stdout, "accept [%s] success.\n", IPdotDec);
+            fprintf(stdout, "Accept [%s] success.\n", IPdotDec);
         }
 #ifdef _DEBUG
         fprintf(stdout, ">>> Socket test-%d: val=%d\n", threadCnt, test_socket);
@@ -1092,7 +1106,6 @@ int inst_mesg(int argc, char* argv[])
 #endif
 #else
 #ifdef THREAD_PER_CONN
-        pthread_t threadid;
         pthread_create(&threadid, NULL, monitor, NULL);
 #elif !defined SOCK_CONN_TEST || defined SOCK_CONN_TEST
         type_socket msg_socket = accept(listen_socket, (struct sockaddr*)&fromAddr, &addrlen);
@@ -1102,7 +1115,7 @@ int inst_mesg(int argc, char* argv[])
         } else {
             int PID = 0;
             if ((PID = fork()) == 0) {
-                fprintf(stdout, "running child(%d) forks from%i Main process.\n", threadCnt, addrlen);
+                fprintf(stdout, "Running child(%d) forks from one of [%i] MAIN process.\n", threadCnt, addrlen);
                 monitor(&msg_socket);
             } else {
                 fprintf(stdout, "Parent: process %d established.\n", PID);
@@ -1110,6 +1123,7 @@ int inst_mesg(int argc, char* argv[])
         }
 #endif
 #endif
+        fprintf(stdout, "%d\t%08X\n", threadCnt, *(uint32_t*)&threadid);
         threadCnt++;
         SLEEP(99);
     } while (!aim2exit);
@@ -1120,6 +1134,7 @@ int inst_mesg(int argc, char* argv[])
 #endif
     return 0;
 };
+
 template<typename T> int set_n_get_mem(T * shmem, int ndx, int rw)
 {
     int shmid = -1;
@@ -1142,7 +1157,7 @@ template<typename T> int set_n_get_mem(T * shmem, int ndx, int rw)
     if (rw >= 1) {
         memmove(share + ndx * sizeof(T), shmem, sizeof(T));
     } else if (rw == 0) {
-        memmove(shmem, share + ndx * sizeof(T), sizeof(T));
+        memmove(shmem, (char*)share + (ndx * sizeof(T)), sizeof(T));
     } else if (rw + 1 == 0) {
         memset(share + ndx * sizeof(T), 0, sizeof(T));
     } else {
@@ -1163,11 +1178,24 @@ void func_waitpid(int signo)
     int stat;
     pid_t pid;
     while ((pid = waitpid(-1, &stat, WNOHANG)) > 0) {
-        static char buf[64];
-        snprintf(buf, 64, "Signal(%d): child process %d exit just now.\n", signo, pid);
-        write(STDERR_FILENO, buf, sizeof(buf));
+        char msg[64];
+        type_socket sock = -1;
+        if (g_filedes[1] > 0)
+            close(g_filedes[1]);
+        if (g_filedes[0] <= 0 || read(g_filedes[0], &sock, sizeof(sock)) < 0) {
+            fprintf(stderr, "Can't read socket from filedes[0][%d]: %s\n", g_filedes[0], strerror(errno));
+        }
+        if (sock > 0) {
+            memset(msg + 1, 0xf, 1);
+            snprintf(msg + 2, 8, "%x", NE_VAL(-1));
+            memcpy(msg + 8, "Fail: something wrong with peer !!!", 36);
+            ssize_t val = send(sock, msg, 64, 0);
+            fprintf(stderr, "Error(%zd) message to client - %s.\n", val, msg + 8);
+            memset(msg, 0, 64);
+        }
+        snprintf(msg, 64, "Signal(%d): child process %d exit just now, sock=%d.\n", signo, pid, sock);
+        write(STDERR_FILENO, msg, sizeof(msg));
     }
-    return;
 #endif
 }
 int queryNetworkParams(const char* username, Network & network, const int max)
@@ -1314,15 +1342,15 @@ int new_user(char usr[FiledSize], char psw[FiledSize])
 }
 int user_is_line(char user[FiledSize])
 {
-    char* match = user;
 #if !defined _WIN32
     struct ONLINE active[MAX_ACTIVE];  // = { 0, "" };
-    memset(active, 0, sizeof(ONLINE) * MAX_ACTIVE);
+    memset(active, 0, sizeof(struct ONLINE) * MAX_ACTIVE);
 #endif
     for (int i = 0; i < MAX_ACTIVE; i++) {
         set_n_get_mem(&active[i], i);
-        if (strcmp(match, active[i].user) == 0)
+        if (strncmp(user, active[i].user, FiledSize) == 0) {
             return i;
+        }
     }
     return -1;
 }

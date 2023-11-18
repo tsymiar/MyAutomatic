@@ -24,12 +24,17 @@ FOREACH(TARGET_NAME ${LIST_TARGET})
     ENDFOREACH()
     SET(J)
 ENDFOREACH()
+SET(EXEC_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../gen/)
+IF (${CMAKE_HOST_SYSTEM_NAME} MATCHES "Linux")
+    SET(EXEC_PATH /usr/local/bin/)
+    SET(HINT_MSG ", build by 'root' to install it")
+ENDIF()
 ADD_CUSTOM_COMMAND(
     TARGET ${_TARGET}
     POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/${_TARGET} ${CMAKE_CURRENT_SOURCE_DIR}/../gen/
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/${_TARGET} ${EXEC_PATH}
  #  COMMAND ${CMAKE_COMMAND} -E rm -rf ${CMAKE_CURRENT_BINARY_DIR}/../../build/*
-    COMMENT "-- 'gn' is a cross-platform tool to generatting numbers."
+    COMMENT "-- 'gn' is a cross-platform tool to generatting numbers${HINT_MSG}."
 )
 ADD_CUSTOM_TARGET(clear
     COMMAND ${CMAKE_BUILD_TOOL} clean
