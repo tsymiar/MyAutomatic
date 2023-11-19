@@ -7,11 +7,13 @@ EXECUTALBE:=$(PROJECT_BASE)/../gen/$(TARGET)
 
 $(BUILD_PATH)/Makefile:
 	@if [ ! -d $(BUILD_PATH) ]; then mkdir -p $(BUILD_PATH); else rm -rf $(BUILD_PATH)/*; fi;
-	@cd $(BUILD_PATH) && cmake $(PROJECT_BASE) -DAPPOINT_EVENT=/usr/local && cd -
+	@cd $(BUILD_PATH) && cmake $(PROJECT_BASE)/../$(notdir $(MAKEFILE_DIR_PATSUBST)) -DAPPOINT_EVENT=/usr/local && cd -
 
 $(EXECUTALBE):$(BUILD_PATH)/Makefile
 	@$(MAKE_COMMAND) -C $(BUILD_PATH) && \
-	if [ -f $(BUILD_PATH)/$(TARGET) ] && [ -d $(PROJECT_BASE)/../gen ]; then cp $(BUILD_PATH)/$(TARGET) $(EXECUTALBE); fi;
+	if [ -f $(BUILD_PATH)/$(TARGET) ] && [ -d $(PROJECT_BASE)/../gen ]; then \
+		\cp $(BUILD_PATH)/$(TARGET) $(EXECUTALBE); \
+		else rm -rf $(BUILD_PATH)/* ; fi;
 
 .PHONY: build
 build:$(EXECUTALBE)
@@ -19,6 +21,5 @@ build:$(EXECUTALBE)
 .PHONY: clean
 clean:
 	@rm -rvf $(BUILD_PATH)
-clean-all:
-	@rm -rvf $(BUILD_PATH)
+clean-all:clean
 	@rm -rvf $(EXECUTALBE)

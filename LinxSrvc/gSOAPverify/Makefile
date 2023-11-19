@@ -32,7 +32,7 @@ endif
 	@mkdir -p $(PRJ)
 	@mv $(CUR)/../*.o ${OBJ}
 	@mv ./*.o $(PRJ)
-	@echo make SUCCESS
+	@echo make gSOAPverify SUCCESS
 all:
 	@if [ `ps -fe| grep gSOAPverify | grep -v grep` -eq 0 ]; then killall -9 gSOAPverify; else echo "making gSOAPverify."; fi;
 	make clear
