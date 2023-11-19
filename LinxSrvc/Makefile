@@ -1,11 +1,14 @@
 all:
-	make -C IM
+	@echo Making IM.exe Client.exe etc.
+	@make -C IM
 	make -C hdware all
 	make -C thread all
-	make -C webevent build
+	@echo Making webevent
+	@make -C webevent build
 	@echo Making gSOAPverify
 	@make -C gSOAPverify || true
-	make cmake
+	@echo Making CMakeLists
+	@make cmake
 cmake:
 	@ if [ ! -d build ]; then mkdir -p build; else rm -rf build/*; fi;
 	@ cd build && cmake .. && make -j4 && cd -
