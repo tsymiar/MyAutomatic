@@ -52,7 +52,11 @@ public:
         Header head{};
         struct Payload {
             char stat[8];
-            char body[0]; // [256]
+#ifdef _WIN32
+            char body[0x10000]; // [65536]
+#else
+            char body[0];
+#endif
         } __attribute__((packed)) data {};
         void* operator new(size_t, const Message& msg) {
             static void* mss = (void*)(&msg);
