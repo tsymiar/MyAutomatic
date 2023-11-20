@@ -283,7 +283,7 @@ int KaiSocket::connect()
 void KaiSocket::rsync(Message& msg)
 {
     while (consume(msg) > 0) {
-        if ((long)*msg.head.buffer == '\eeff') {
+        if ((long)*msg.head.buffer == 'effe') {
             writes(m_network, (uint8_t*)&msg, msg.head.size);
         }
     }
@@ -435,7 +435,7 @@ ssize_t KaiSocket::recv(uint8_t* buff, size_t size)
             if (deal)
                 strcpy(msg.data.stat, "SUCCESS");
             else {
-                *(reinterpret_cast<long*>(msg.head.buffer)) = '\eeff';
+                memset(msg.head.buffer, 'effe', 4);
                 strcpy(msg.data.stat, "NOTDEAL");
                 msg.head.size = total;
                 stat = produce(msg);
@@ -599,7 +599,7 @@ void KaiSocket::handleNotify(Network& network)
                 it = m_networks.begin();;
             }
         } else {
-            //++it;
+            // ++it;
         }
         wait(1);
     }
@@ -635,7 +635,7 @@ void KaiSocket::runCallback(KaiSocket* sock, KAISOCKHOOK func)
         }
         int stat = func(sock);
         if (stat <= 0) {
-            std::cout << "callback stat = [" << stat << "," << errno << "]" << std::endl;
+            std::cout << "callback stat = [" << stat << "," << errno << "," << strerror(errno) << "]" << std::endl;
             break;
         }
     }
