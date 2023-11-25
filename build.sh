@@ -27,7 +27,10 @@ else
     if [ ! -d bin ]; then mkdir bin; fi;
     if [ ! -d gen ]; then mkdir gen; fi;
     if [ ! -d out ]; then mkdir out; fi;
-    make "$@" && cd -;
+    echo "-------- Begin 'LinxSrvc' building ... --------"
+    make "$@"
+    echo "-------- All build progress(es) finish --------"
+    cd ${PWD};
 fi
 if [ "$1" == "clean" ]
 then

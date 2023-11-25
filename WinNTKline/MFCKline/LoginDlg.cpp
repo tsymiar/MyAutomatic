@@ -20,8 +20,8 @@ namespace logDlg
 #define M 8
     char dftip[] = "127.0.0.1";
     CString STrslt;
-    char form[80];
-    char m_Port[16];
+    char form[0x50];
+    char m_Port[INET_ADDRSTRLEN];
 
     struct SOAPELEM {
         struct soap soap;

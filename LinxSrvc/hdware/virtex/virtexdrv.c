@@ -100,8 +100,8 @@ void msg_pop(Queue* q)
 void msg_push(Queue* q, ST_UsrMsg msg)
 {
     ST_UsrMsg* st = (ST_UsrMsg*)kmalloc(sizeof(ST_UsrMsg), GFP_ATOMIC);
-    memset(st, 0, sizeof(ST_UsrMsg));
     if (st != NULL) {
+        memset(st, 0, sizeof(ST_UsrMsg));
         st->msg = msg.msg;
         st->next = NULL;
     }

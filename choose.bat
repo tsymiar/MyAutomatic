@@ -4,6 +4,7 @@
 @echo off
 setlocal enabledelayedexpansion
 
+setx MYAUTOMATIC %CD%
 set local=BOOST CEFDIR QTDIR OPENCV OPENSSL PTHD_LIB86 JAVA_HOME ZLIB libPNG
 set t=%local%
 :loop

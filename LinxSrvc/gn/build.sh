@@ -1,6 +1,7 @@
 #!/bin/bash
-if [ "$1" == "clean" ]; then
-    rm -f `pwd`/bin/gn
+BIN=$(pwd)/../bin
+if [ "${1}" == "clean" ]; then
+    rm -f ${BIN}/gn
 else
-    g++ gn/main.cxx -o `pwd`/bin/gn -std=c++11 -lpthread
+    g++ main.cxx -o ${BIN}/gn -std=c++11 -lpthread
 fi

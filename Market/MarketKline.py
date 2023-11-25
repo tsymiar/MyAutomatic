@@ -1,18 +1,25 @@
 #!/usr/bin/python
 # coding: utf-8
-import numpy as np
-from matplotlib.dates import DateFormatter, WeekdayLocator, DayLocator, MONDAY, YEARLY
-
 # from matplotlib.finance import quotes_historical_yahoo_ochl, candlestick_ohlc
+from matplotlib.dates import (
+    DateFormatter,
+    WeekdayLocator,
+    DayLocator,
+    MONDAY,
+    ## YEARLY
+)
+
+# import matplotlib.figure as fig
+# import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
-import matplotlib.figure as fig
-import matplotlib.mlab as mlab
+import numpy as np
 import importlib
-import pylab
+
+# import pylab
+# import os
 import time
 import sys
 import six
-import os
 
 fileEncoding = "gb2312"
 
@@ -32,7 +39,7 @@ def main():
 
     weekdays = WeekdayLocator(MONDAY)  # 主要刻度
     allday = DayLocator()  # 次要刻度
-    monthFormatter = DateFormatter("%b %d")  # eg.: Jan 12
+    # mondayFormatter = DateFormatter("%b %d")  # eg.: Jan 12
     alldayFormatter = DateFormatter("%Y-%m-%d")  # eg.: 2-29-2015
     dayFormatter = DateFormatter("%d")  # eg.: 12
 
@@ -63,27 +70,22 @@ def main():
 
 
 # 从文件读取数据并返回数据列表
-def loadData(file):
+def loadPoints(file):
     filename = open(file, "r", encoding=fileEncoding)
     amount = []
     price = []
     openVal = []
     close = []
-    type = []
-    stock = []
     high = []
     date = []
-    name = []
-    data = []
     low = []
+    points = []
     for count, line in enumerate(filename):
         values = line.strip("\n")
         values = line.split("\t")  # 按TAB把数据分开
         if count == 0:
             values = line.split(" ")
-            stock = values[0]
-            name = values[1]
-            type = values[2]
+            print("stock: " + values[0] + ", " + values[1] + ", " + values[2])
         else:
             values = line.split("\t")
             date.append(values[0])
@@ -93,8 +95,8 @@ def loadData(file):
             close.append(float(values[4]))
             amount.append(int(values[5]))
             price.append(float(values[6]))
-    data = [date, amount, openVal, close, high, low, price]
-    return data
+        points = [date, amount, openVal, close, high, low, price]
+    return points
 
 
 # 截取
@@ -186,10 +188,10 @@ def figureOut(m):
 
 
 if __name__ == "__main__":
-    for args in sys.argv:
-        if not args.strip():
-            print(args)
-    args = "./File1.txt"
-    figureOut(loadData(args))
+    for param in sys.argv:
+        if not param.strip():
+            print(param)
+    param = "./File1.txt"
+    figureOut(loadPoints(param))
     input("Press <Enter> to exit:")
     main()
