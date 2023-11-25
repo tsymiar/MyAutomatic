@@ -30,8 +30,8 @@ int main(int argc, char** argv)
 #elif defined(ME9S)
     meat_main();
 #elif defined(PIPE_FIFO)
-    if (argc > 2) {
-        pipe_fifo_test((long long)atoi(argv[1]), atoi(argv[2]));
+    if (argc >= 2) {
+        pipe_fifo_test((long long)atoi(argv[1]), argv[2] == NULL ? -1 : atoi(argv[2]));
     } else {
         pipe_fifo_test(-1, 0);
     }

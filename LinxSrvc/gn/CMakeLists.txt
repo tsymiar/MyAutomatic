@@ -29,6 +29,8 @@ SET(EXEC_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../gen/)
 IF (${CMAKE_HOST_SYSTEM_NAME} MATCHES "Linux")
     SET(EXEC_PATH /usr/local/bin/)
     SET(HINT_MSG ", build by 'root' to install it")
+ELSEIF(${CMAKE_HOST_SYSTEM_NAME} MATCHES "Darwin")
+    ADD_DEFINITIONS("-Wno-format")
 ENDIF()
 ADD_CUSTOM_COMMAND(
     TARGET ${_TARGET}

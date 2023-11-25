@@ -11,15 +11,15 @@ do
     tmp=h_${idx}                                 #当处理debug文件时 tmp=head
     echo "[debug: idx=${idx} file=${tmp}]"
   fi
-  sed -i "{:loop /dim: 1$/!{N;b loop};s///g}" ${tmp}   #查找关联'dim: 1'的行，用空格取代这些行
-  sed -i "7a#      dim: 1" ${tmp}                      #第7行插入' dim: 1'变为第8行
-  sed -i "8s/^#//" ${tmp}                              #这两行是为了调整对齐格式
-  sed -i "/^ *$/d" ${tmp} 
+  sed -i "{:loop /dim: 1$/!{N;b loop};s///g}" "${tmp}"   #查找关联'dim: 1'的行，用空格取代这些行
+  sed -i "7a#      dim: 1" "${tmp}"                      #第7行插入' dim: 1'变为第8行
+  sed -i "8s/^#//" "${tmp}"                              #这两行是为了调整对齐格式
+  sed -i "/^ *$/d" "${tmp}"
   if [ 99 -lt $(< "$file" wc -l) ]; then
     #awk 'NR==FNR{a[FNR]=$0;}NR>FNR{print a[FNR]" "$0;}' $tmp t_$idx > $file
-    cat "${tmp}" > ${file}
-    cat "t_${idx}" > ${file}  #拼接
-    rm -f "${tmp}" "t_${idx}" #删除中间文件
+    cat "${tmp}" > "${file}"
+    cat "t_${idx}" > "${file}"  #拼接
+    rm -f "${tmp}" "t_${idx}"   #删除中间文件
   fi
   # echo `grep -C 1 'blobs {' $tmp`;
   let idx=$idx+1

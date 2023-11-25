@@ -76,7 +76,7 @@ inline char* strcpy_s(char(strDestination)[], char const* src)
 }
 inline int _countof(unsigned char* _Array)
 {
-    return strlen((const char*)_Array) + 1;
+    return strnlen((const char*)_Array, 256) + 1;
 }
 inline char* _itoa(int val, char* str, int rdx)
 {
@@ -252,7 +252,7 @@ inline int checkPswValid(char* str)
     int zz = 0;
     int zZ = 0;
     int z_ = 0;
-    for (int i = 0; i < (int)strlen(str); i++) {
+    for (int i = 0; i < (int)strnlen(str, 256); i++) {
         char ansi = str[i];
         if (ansi <= '9' && ansi >= '0') {
             z0 = 1;

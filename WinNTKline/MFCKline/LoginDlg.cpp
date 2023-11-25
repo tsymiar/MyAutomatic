@@ -272,27 +272,27 @@ void CLoginDlg::getNsetIPs()
     if (cnt_flg > 0)
         return;
     CString file = (LPCTSTR)"cfg//ips.ini";
-    char configStr[MAX_INI + 1];
-    int secNum = GetPrivateProfileString(NULL, NULL, (LPCTSTR)"", configStr, MAX_INI, file);
+    char configs[MAX_INI + 1];
+    int secNum = GetPrivateProfileString(NULL, NULL, (LPCTSTR)"", configs, MAX_INI, file);
     int cfgNum = 0;
     int offset = 0;
-    char* curstr = configStr + offset;
+    char* current = configs + offset;
     for (offset; offset < secNum;)
     {
-        offset += strlen(curstr) + 1;
-        curstr = configStr + offset;
+        offset += strnlen(current, 8) + 1;
+        current = configs + offset;
         cfgNum++;
     }
-    CString istr;
     if (cfgNum > MAX_INI)
         cfgNum = MAX_INI;
+    CString temp;
     for (int i = 0; i < cfgNum; i++)
     {
-        istr.Format(_T("%d"), i);
-        GetPrivateProfileString(istr, _T("name"), (LPCTSTR)"", st_ini[i].name, MAX_PATH, file);
-        GetPrivateProfileString(istr, _T("user"), (LPCTSTR)"", st_ini[i].user, MAX_PATH, file);
-        GetPrivateProfileString(istr, _T("addr"), (LPCTSTR)"", st_ini[i].addr, MAX_PATH, file);
-        GetPrivateProfileString(istr, _T("port"), (LPCTSTR)"", st_ini[i].port, MAX_PATH, file);
+        temp.Format(_T("%d"), i);
+        GetPrivateProfileString(temp, _T("name"), (LPCTSTR)"", st_ini[i].name, MAX_PATH, file);
+        GetPrivateProfileString(temp, _T("user"), (LPCTSTR)"", st_ini[i].user, MAX_PATH, file);
+        GetPrivateProfileString(temp, _T("addr"), (LPCTSTR)"", st_ini[i].addr, MAX_PATH, file);
+        GetPrivateProfileString(temp, _T("port"), (LPCTSTR)"", st_ini[i].port, MAX_PATH, file);
         m_combo.InsertString(m_combo.GetCount() + i, st_ini[i].name);
     }
     cnt_flg = 1;

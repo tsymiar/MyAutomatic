@@ -247,7 +247,7 @@ int main(int argc, char* argv[])
             }
             fprintf(stdout, "\tNo.\tuser\tIP\t\tPort\tsocket\n");
             for (int c = 0; c < MAX_ACTIVE; c++) {
-                if (&active[0] != nullptr && active[c].user[0] != '\0') {
+                if (active[c].user[0] != '\0') {
                     fprintf(stdout, "\t%d\t%s\t%s\t%u\t%d\n", c + 1,
                         active[c].user, active[c].netwk.ip, active[c].netwk.port, active[c].netwk.socket);
                 }
@@ -557,7 +557,7 @@ type_thread_func monitor(void* arg)
                     {
                         val_rtn = get_user_seq(user.usr);
                         snprintf(sd_bufs + 2, 8, "%x", NE_VAL(val_rtn));
-                        if (1 == user_auth(user.usr, user.psw) && &user.npsw[0] != nullptr)
+                        if (1 == user_auth(user.usr, user.psw) && user.npsw[0] != '\0')
                             memcpy(users[val_rtn].psw, user.npsw, 24);
                         else
                             snprintf((sd_bufs + offset), 42, "%s", "Change password failure: user auth error.");
@@ -619,7 +619,7 @@ type_thread_func monitor(void* arg)
                                         snprintf(sd_bufs + 2, 8, "%x", NE_VAL(-1));
                                         snprintf((sd_bufs + 32), 27 + 24, "failed send command to %s.", user.peer);
                                         sn_stat = send(rcv_sock, sd_bufs, total, 0);
-                                        fprintf(stdout, "Got failure trans message to %s:%u (%zd,%s).\n", p2pnet.ip, p2pnet.port, sn_stat, strerror(errno));
+                                        fprintf(stdout, "Got failure trans message to %s:%u (%zd,%s).\n", p2pnet.ip, p2pnet.port, ssize_t(sn_stat), strerror(errno));
                                     }
                                     break;
                                 }
@@ -654,7 +654,7 @@ type_thread_func monitor(void* arg)
 #if !defined _WIN32
                                 queryNetworkParams(user.peer, ndt_net);
 #endif
-                                if (&ndt_net.ip[0] == nullptr || ndt_net.port == 0) {
+                                if (ndt_net.ip[0] == '\0' || ndt_net.port == 0) {
                                     snprintf((sd_bufs + 32), 35, "%s", "Peer user ip or port value error.");
                                     total = 72;
                                 } else {
@@ -665,6 +665,7 @@ type_thread_func monitor(void* arg)
                                     snprintf(ndt_msg + 4, 8, "%c", random);
                                     memcpy(reinterpret_cast<char*>(&user.status), "200", 4);
                                     memcpy(ndt_msg + offset, &user.peer_msg.msg, FiledSize);
+                                    fprintf(stdout, "Command(%d) NDT is: %08x.\n", *(uint16_t*)user.peer_msg.cmd, *(uint32_t*)user.peer_msg.val);
                                     if (-1 != send(ndt_net.socket, ndt_msg, 32, 0)) {
                                         if (ndt_net.socket == rcv_sock) {
                                             snprintf((sd_bufs + 32), 29, "%s", "Socket descriptor conflicts!");
@@ -810,7 +811,7 @@ type_thread_func monitor(void* arg)
                                 break;
                             }
                         };
-                        total = offset * (c + 4 + 3);
+                        total = static_cast<unsigned long>(offset * (c + 4 + 3));
                     } break;
                     case MEMBERS:
                     {
@@ -903,7 +904,7 @@ type_thread_func monitor(void* arg)
                             set_n_get_mem(&active[i], i);
                         if (val_rtn < 0) {
                             if (-1 != user_is_line(user.usr)) {
-                                snprintf(sd_bufs + 3, 8, "%x", -1);
+                                snprintf(sd_bufs + 3, 9, "%x", -1);
                                 memcpy((sd_bufs + offset), user.usr, 24);
                                 memcpy((sd_bufs + 32), user.sign, 24);
                                 send(rcv_sock, sd_bufs, 48, 0);
@@ -911,7 +912,7 @@ type_thread_func monitor(void* arg)
                         } else {
                             for (c = 0; c < MAX_MEMBERS_PER_GROUP; c++) {
                                 if (zones[val_rtn].zone.members[c][0] != '\0') {
-                                    snprintf(sd_bufs + 3, 8, "%x", -3);
+                                    snprintf(sd_bufs + 3, 9, "%x", -3);
                                     int uil = user_is_line(zones[val_rtn].zone.members[c]);
                                     if (uil != -1) {
                                         memcpy((sd_bufs + offset), user.usr, 24);

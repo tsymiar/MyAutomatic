@@ -11,7 +11,7 @@ struct PipeFifo {
     char a[0];
 };
 
-const char* FIFO_FILE = "/tmp/fifo1";
+const char* FIFO_FILE = "/tmp/fifo0";
 static int filedes[2];
 
 void open_pipe()
@@ -56,11 +56,11 @@ int write_fifo(const struct PipeFifo* fifo)
         return -1;
     }
     if (stat(FIFO_FILE, &status) < 0 || access(FIFO_FILE, F_OK) != 0) {
-        fprintf(stderr, "fifo file does not exist.\n");
+        fprintf(stderr, "fifo file not exist, will make it, run again.\n");
     } else {
         fileSize = status.st_size;
         if (fileSize % size != 0) {
-            fprintf(stdout, "file format may invalid.\n");
+            fprintf(stderr, "file format may invalid.\n");
         }
     }
     if (mkfifo(FIFO_FILE, 0666) < 0 && errno != EEXIST) {
@@ -75,7 +75,7 @@ int write_fifo(const struct PipeFifo* fifo)
     if (fileSize > 0)
         lseek(fio, 0, SEEK_END);
     if (write(fio, (void*)fifo, size) < 0) {
-        perror("write FIFO fail");
+        perror("write FIFO fail, read first");
         close(fio);
         return -5;
     }
@@ -98,21 +98,21 @@ struct PipeFifo read_fifo(long long flag)
     };
     if (flag == -1) return fifo;
     if (stat(FIFO_FILE, &status) < 0) {
-        fprintf(stderr, "stat fifo fail");
+        perror("stat fifo fail");
         return fifo;
     }
     if ((fio = open(FIFO_FILE, O_RDONLY)) < 0
         && fio != -1 && errno != ENXIO) {
-        fprintf(stderr, "open FIFO by RDONLY fail");
+        perror("open FIFO by RDONLY fail");
         return fifo;
     }
     while ((len = read(fio, &fifo, size)) > 0) {
         if (fifo.flag == flag) {
             break;
         } else {
-            fprintf(stderr, "FIFO catch: { %d, %lld, %p }.\n", fifo.value, fifo.flag, fifo.reserve);
+            fprintf(stdout, "FIFO catch: { %d, %lld, %p }.\n", fifo.value, fifo.flag, fifo.reserve);
             fifo.flag = -1;
-            write(fio, (void*)'\0', 1);
+            write(fio, (void*)'\1', 1);
             fio = open(FIFO_FILE, O_RDONLY);
             continue;
         }
@@ -124,7 +124,7 @@ struct PipeFifo read_fifo(long long flag)
 
 int pipe_fifo_test(long long flag, int value)
 {
-    const char* hint = "Usage:\n./pipefifo [cmd] [val]\n cmds:\n -- pipe: 0\n -- fifo: 1(r)/2(w)";
+    const char* hint = "Usage:\n ./pipefifo [flag] [val (if flag is 0,2)]\n flags:\n -- pipe: 0\n -- fifo: 1(r)/2(w)";
     if (flag < 0) {
         printf("%s\n", hint);
         return -1;
@@ -140,26 +140,27 @@ int pipe_fifo_test(long long flag, int value)
         pid_t pid = fork();
         if (pid == 0) {
             stat = write_pipe(pp0ff);
-            printf("PIPE wrote: { %d, %lld, %p }\n", pp0ff.value, pp0ff.flag, pp0ff.reserve);
+            printf("PIPE wrote: { %d, %lld, %p }, stat = %d.\n", pp0ff.value, pp0ff.flag, pp0ff.reserve, stat);
             exit(0);
         } else if (pid > 0) {
             pp0ff = read_pipe(&pp0ff);
-            stat = pp0ff.flag;
-            printf("PIPE reads: { %d, %lld, %p }, ", pp0ff.value, pp0ff.flag, pp0ff.reserve);
+            printf("PIPE reads: { %d, %lld, %p }\n", pp0ff.value, pp0ff.flag, pp0ff.reserve);
         } else {
             perror("fork child fail");
         }
-    } else if (flag == 1) {
-        pp0ff = read_fifo(flag);
-        stat = pp0ff.flag;
-        printf("FIFO reads: { %d, %lld, %p }, ", pp0ff.value, pp0ff.flag, pp0ff.reserve);
-    } else if (flag == 2) {
-        stat = write_fifo(&pp0ff);
-        printf("FIFO wrote ");
+    } else if (flag > 0) {
+        if (flag == 1) {
+            pp0ff = read_fifo(flag);
+            stat = pp0ff.flag;
+            printf("FIFO reads: { %d, %lld, %p }, ", pp0ff.value, pp0ff.flag, pp0ff.reserve);
+        } else if (flag == 2) {
+            stat = write_fifo(&pp0ff);
+            printf("FIFO wrote: { %d, %lld, %p }, ", pp0ff.value, pp0ff.flag, pp0ff.reserve);
+        }
+        printf("stat = %d.\n", stat);
     } else {
         printf("%s\n", hint);
         return 1;
     }
-    printf("stat = %d.\n", stat);
     return 0;
 }
