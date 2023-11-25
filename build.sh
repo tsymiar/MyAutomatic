@@ -30,7 +30,7 @@ else
     echo "-------- Begin 'LinxSrvc' building ... --------"
     make "$@"
     echo "-------- All build progress(es) finish --------"
-    cd ${PWD};
+    cd "${PWD}";
 fi
 if [ "$1" == "clean" ]
 then

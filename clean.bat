@@ -4,8 +4,8 @@ echo locate: @%BATDIR%
 cd %BATDIR%
 echo[
 echo cleaning LinxSrvc
-rd /s /q LinxSrvc\out
-rd /s /q build
+rd /s /q LinxSrvc\build
+rd /s /q LinxSrvc\gn\out
 echo cleaning build caches
 rd /s /q WinNTKline\.vs
 rd /s /q WinNTKline\cache

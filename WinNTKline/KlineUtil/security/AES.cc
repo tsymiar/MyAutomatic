@@ -211,7 +211,7 @@ vector<vector<unsigned char> > expandKey(const vector<vector<unsigned char> >& k
     return expandedKey;
 }
 
-vector<vector<unsigned char> > encrypt(const vector<vector<unsigned char> >& roundKey, vector<vector<unsigned char> > dataSet, int rounds) {
+vector<vector<unsigned char> > encrypt(const vector<vector<unsigned char> >& roundKey, const vector<vector<unsigned char> >& dataSet, int rounds) {
     vector<vector<unsigned char> > encryptedData(4, vector<unsigned char>(4, 0));
     vector<unsigned char> tempWord(4, 0);
     //Initial encrypt
@@ -389,6 +389,6 @@ int aes_test() {
     delete[] outputArray;
     cout << endl;
     myFile.close();
-    getchar();
+    // getchar();
     return 0;
 }

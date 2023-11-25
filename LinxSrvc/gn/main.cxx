@@ -43,6 +43,7 @@ void byteSwap16(uint16_t* val);
 void byteSwap321(uint32_t* val);
 void byteSwap32(uint32_t* val);
 uint64_t size2bytes(const std::string& value);
+void msleep(unsigned long ms);
 
 template<class T>
 std::vector<T> string2Vector(const std::string& str, const char* split = ",")
@@ -52,7 +53,7 @@ std::vector<T> string2Vector(const std::string& str, const char* split = ",")
     char* p = strtok(s, split);
     T a;
     while (p != nullptr) {
-        sscanf(p, "%llx", &a);
+        sscanf(p, "%lx", &a);
         vec.push_back(a);
         p = strtok(nullptr, split);
     }
@@ -68,7 +69,7 @@ int main(int argc, char* argv[])
     std::thread task(
         [&]()->void {
             while (true) {
-                usleep(10000);
+                msleep(100);
                 if (!g_runtime.kmg) {
                     continue;
                 }
@@ -115,7 +116,7 @@ int main(int argc, char* argv[])
     }
     g_runtime.total = g_total * length;
     if (g_total < size) {
-        fprintf(stderr, "Total size must upper than unit size, actually: %llu < %zu.\n", g_total, size);
+        fprintf(stderr, "Total size must upper than unit size, actually: %lu < %zu.\n", g_total, size);
         usage_exit(argv[0]);
     } else {
         g_runtime.kmg = true;
@@ -162,7 +163,7 @@ int main(int argc, char* argv[])
         }
     }
     fclose(fp);
-    fprintf(stdout, "\n%llu bytes write done, average speed %.3f M/s\n", length * count * size,
+    fprintf(stdout, "\n%lu bytes write done, average speed %.3f M/s\n", reinterpret_cast<uint64_t>(length * count * size),
         (g_runtime.total * 1.f) / (gettime4usec() - start) * 0x100000 / 1000000.f);
 }
 
@@ -319,4 +320,13 @@ void parse_args(int argc, char** argv)
         fprintf(stderr, "Too many arguments.\n");
         usage_exit(argv[0]);
     }
+}
+
+void msleep(unsigned long ms)
+{
+    struct timespec ts = {
+        .tv_sec = static_cast<long>(ms / 1000),
+        .tv_nsec = static_cast<long>((ms % 1000) * 1000000ul)
+    };
+    nanosleep(&ts, 0);
 }
