@@ -13,7 +13,7 @@
 struct Runtime {
     bool kmg;
     float prog;
-    uint64_t past;
+    uint64_t bytes;
     uint64_t total;
 };
 
@@ -29,7 +29,7 @@ namespace {
 };
 
 union Number {
-    uint8_t _8v;
+    // uint8_t _8v;
     uint16_t _16v;
     uint32_t _32v;
     uint64_t _64v;
@@ -45,10 +45,10 @@ void byteSwap32(uint32_t* val);
 uint64_t size2bytes(const std::string& value);
 
 template<class T>
-std::vector<T> str2vector(std::string str, const char* split = ",")
+std::vector<T> string2Vector(const std::string& str, const char* split = ",")
 {
     std::vector<T> vec;
-    char* s = (char*)str.c_str();
+    char* s = const_cast<char*>(str.c_str());
     char* p = strtok(s, split);
     T a;
     while (p != nullptr) {
@@ -72,7 +72,8 @@ int main(int argc, char* argv[])
                 if (!g_runtime.kmg) {
                     continue;
                 }
-                fprintf(stdout, "\r%.3f %%", g_runtime.past * 100.f / g_runtime.total);
+                g_runtime.prog = g_runtime.bytes * 100.f / g_runtime.total;
+                fprintf(stdout, "\r%.3f %%", g_runtime.prog);
                 fflush(stdout);
             }
         }
@@ -114,7 +115,7 @@ int main(int argc, char* argv[])
     }
     g_runtime.total = g_total * length;
     if (g_total < size) {
-        fprintf(stderr, "Total size must upper than unit size, actually: %lld < %zu.\n", g_total, size);
+        fprintf(stderr, "Total size must upper than unit size, actually: %llu < %zu.\n", g_total, size);
         usage_exit(argv[0]);
     } else {
         g_runtime.kmg = true;
@@ -128,11 +129,11 @@ int main(int argc, char* argv[])
             if (byteswap) {
                 switch (size) {
                     case sizeof(uint16_t) :
-                        byteSwap16((uint16_t*)&number._16v);
+                        byteSwap16(reinterpret_cast<uint16_t*>(&number._16v));
                         break;
                         case sizeof(uint64_t) :
 #ifdef __GNUC__
-                            number._64v = __builtin_bswap64((uint64_t)number._64v);
+                            number._64v = __builtin_bswap64(reinterpret_cast<uint64_t>(number._64v));
 #else
                             if (small) {
                                 number._64v = htonll(number._64v);
@@ -143,7 +144,7 @@ int main(int argc, char* argv[])
                         break;
                         case sizeof(uint32_t) :
                         default:
-                            byteSwap32((uint32_t*)&number._32v);
+                            byteSwap32(reinterpret_cast<uint32_t*>(&number._32v));
                             break;
                 }
             }
@@ -152,7 +153,7 @@ int main(int argc, char* argv[])
                 fprintf(stderr, "fwrite(file=%s) failed: %s\n", g_file, strerror(errno));
                 return -2;
             }
-            g_runtime.past += size;
+            g_runtime.bytes += size;
             if (!g_decrease) {
                 values[i] += g_interval;
             } else {
@@ -300,7 +301,7 @@ void parse_args(int argc, char** argv)
             g_interval = atoi(optarg);
             break;
         case 's':
-            g_begins = str2vector<uint64_t>(optarg);
+            g_begins = string2Vector<uint64_t>(optarg);
             break;
         case '?':
             usage_exit(argv[0]);

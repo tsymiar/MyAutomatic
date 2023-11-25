@@ -578,7 +578,7 @@ type_thread_func monitor(void* arg)
                             } else if (active[c].user[0] == '\0')
                                 break;
                         };
-                        total = offset * (c + 4 + 4);
+                        total = static_cast<unsigned long>(offset * (c + 4 + 4));
                     } break;
                     case P2P:
                     {
@@ -663,7 +663,7 @@ type_thread_func monitor(void* arg)
                                     memset(ndt_msg, 0, 32);
                                     memcpy(ndt_msg, &user, 4);
                                     snprintf(ndt_msg + 4, 8, "%c", random);
-                                    memcpy((char*)&user.status, "200", 4);
+                                    memcpy(reinterpret_cast<char*>(&user.status), "200", 4);
                                     memcpy(ndt_msg + offset, &user.peer_msg.msg, FiledSize);
                                     if (-1 != send(ndt_net.socket, ndt_msg, 32, 0)) {
                                         if (ndt_net.socket == rcv_sock) {
@@ -736,14 +736,14 @@ type_thread_func monitor(void* arg)
                                 }
                             }
                             snprintf(sd_bufs + 2, 8, "%x", NE_VAL(val_rtn));
-                            memcpy((sd_bufs + offset), exe_msg, strlen(exe_msg));
-                            total = offset + (int)strlen(exe_msg) + 1;
+                            memcpy((sd_bufs + offset), exe_msg, strnlen(exe_msg, 256));
+                            total = offset + (int)strnlen(exe_msg, 256) + 1;
                             fprintf(stdout, "Make image via '%s': %s.\n", __ GET_IMG_EXE, exe_msg);
                         }
 #else
                         char* exe_msg = "OS don't support v4l.";
                         total = 32;
-                        memcpy((sd_bufs + offset), exe_msg, strlen(exe_msg));
+                        memcpy((sd_bufs + offset), exe_msg, strnlen(exe_msg, 256));
                         fprintf(stdout, "%s\n", exe_msg);
 #endif
                     } break;
@@ -830,7 +830,7 @@ type_thread_func monitor(void* arg)
                             if (val_rtn == -1 || val_rtn >= MAX_ZONES || c >= MAX_MEMBERS_PER_GROUP ||
                                 zones[val_rtn].zone.members[c][0] == '\0')
                                 break;
-                            total = offset * (c + 4 + 4);
+                            total = static_cast<unsigned long>(offset * (c + 4 + 4));
                         };
                     } break;
                     case HOST_ZONE:
@@ -918,9 +918,9 @@ type_thread_func monitor(void* arg)
                                         memcpy((sd_bufs + 32), user.sign, 24);
                                         send(active[uil].netwk.socket, sd_bufs, 48, 0);
                                     }//if uil
-                                }//if strlen
-                            }//for MEMBERS
-                        }//else val_rtn
+                                }//if zones[val_rtn]
+                            }//for MAX_MEMBERS_PER_GROUP
+                        }//else val_rtn < 0
                     } break;
                     default: break;
                     }

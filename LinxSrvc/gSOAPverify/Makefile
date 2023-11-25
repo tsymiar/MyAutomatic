@@ -34,7 +34,7 @@ endif
 	@mv ./*.o $(PRJ)
 	@echo make gSOAPverify SUCCESS
 all:
-	@if [ `ps -fe| grep gSOAPverify | grep -v grep` -eq 0 ]; then killall -9 gSOAPverify; else echo "making gSOAPverify."; fi;
+	@if [ `ps -fe | grep gSOAPverify | grep -v grep` -eq 0 ]; then killall -9 gSOAPverify; else echo "making gSOAPverify."; fi;
 	make clear
 	make -j4
 	$(GEN)/gSOAPverify 8080

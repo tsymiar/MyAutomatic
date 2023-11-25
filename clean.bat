@@ -5,12 +5,13 @@ cd %BATDIR%
 echo[
 echo cleaning LinxSrvc
 rd /s /q LinxSrvc\out
-echo cleaning build caches
 rd /s /q build
+echo cleaning build caches
 rd /s /q WinNTKline\.vs
 rd /s /q WinNTKline\cache
 rd /s /q WinNTKline\out
-echo cleaning debug dlls
+rd /s /q WinNTKline\x64
+rd /s /q WinNTKline\x86
 rd /s /q WinNTKline\Debug
 echo cleaning MFC
 rd /s /q WinNTKline\MFC

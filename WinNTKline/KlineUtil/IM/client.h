@@ -148,8 +148,8 @@ typedef struct CLIENT {
 
 typedef struct IM_SOCK {
     char addr[MAX_PATH] = { '\0' };
-    char form[80];
-    char IP[16];
+    char form[0x50];
+    char IP[INET_ADDRSTRLEN];
     unsigned int PORT;
 } StSock;
 

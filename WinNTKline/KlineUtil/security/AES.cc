@@ -44,7 +44,7 @@ unsigned char Recon[44] = {
     /*Round 40*/        0x36,0x0,0x0,0x0
 };
 
-vector<vector<unsigned char> > storeArray(vector<unsigned char> byte, int tick, int maxTick) {
+vector<vector<unsigned char> > storeArray(const vector<unsigned char>& byte, int tick, int maxTick) {
     vector<vector<unsigned char> > roundArray(4, vector<unsigned char>(4, 0));
 
     for (int i = 0; i < 4; i++) {
@@ -135,7 +135,7 @@ unsigned char charMult(unsigned char a, unsigned char b) {
     return returnValue;
 }
 
-vector<unsigned char> shiftColumns(vector<unsigned char> input) {
+vector<unsigned char> shiftColumns(const vector<unsigned char>& input) {
     vector<unsigned char> mixedColumns(4, 0);
     /*
     unsigned char aMatrix[4][4] = { {0x02, 0x01, 0x01, 0x03},
@@ -174,7 +174,7 @@ vector<unsigned char> g(vector<unsigned char>& test, int round) {
     return test;
 }
 
-vector<vector<unsigned char> > expandKey(vector<vector<unsigned char> > key, int keyLength, int round) {
+vector<vector<unsigned char> > expandKey(const vector<vector<unsigned char> >& key, int keyLength, int round) {
     vector<vector<unsigned char> > expandedKey(4 * (round + 1), vector<unsigned char>(4, 0));
     vector<unsigned char> word(4, 0);
     int nK;
@@ -211,7 +211,7 @@ vector<vector<unsigned char> > expandKey(vector<vector<unsigned char> > key, int
     return expandedKey;
 }
 
-vector<vector<unsigned char> > encrypt(vector<vector<unsigned char> > roundKey, vector<vector<unsigned char> > dataSet, int rounds) {
+vector<vector<unsigned char> > encrypt(const vector<vector<unsigned char> >& roundKey, vector<vector<unsigned char> > dataSet, int rounds) {
     vector<vector<unsigned char> > encryptedData(4, vector<unsigned char>(4, 0));
     vector<unsigned char> tempWord(4, 0);
     //Initial encrypt

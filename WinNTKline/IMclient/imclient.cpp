@@ -234,7 +234,7 @@ StMsgContent* ParseChatData(StMsgContent& content)
 bool is_ip_valid(char s[])
 {
     int val = 0, dot = 0;
-    size_t len = strlen(s);
+    size_t len = strnlen(s, INET_ADDRSTRLEN);
     if (s[0] == '.')
         return false;
     if (s[0] <= '9' && s[0] >= '0')
@@ -268,7 +268,7 @@ int main(int argc, char* argv[])
         if (!is_ip_valid(argv[1]))
             fprintf(stdout, "Error: '%s' not in correct IP format.\n", argv[1]);
         else
-            memcpy(sock.IP, argv[1], strlen(argv[1]) + 1);
+            memcpy(sock.IP, argv[1], strnlen(argv[1], INET_ADDRSTRLEN) + 1);
     }
     if (StartChat(InitChat(&sock), parseRcvMsg) < 0)
         return -1;
