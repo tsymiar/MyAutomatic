@@ -13,3 +13,4 @@
 *.cc linguist-language=C++
 *.cpp linguist-language=C++
 *.hpp linguist-language=C++
+*.cxx linguist-language=C++

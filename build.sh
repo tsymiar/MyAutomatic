@@ -1,8 +1,9 @@
 #!/bin/bash
+echo "-------- Begin 'LinxSrvc' building ... --------"
 PWD=$(pwd)
 if [ "$1" == "test" ]
 then
-    cd LinxSrvc/test
+    cd "${PWD}/LinxSrvc/test"
     if [ ! $(whereis lcov | awk '{print $2}') ]
     then
         if [ $(ls lcov/* | wc -l) -le 0 ]
@@ -20,25 +21,23 @@ then
     fi
     ./test.sh clean
     ./test.sh
-    cd "${PWD}"
-    exit 0;
 else
     cd "${PWD}/LinxSrvc";
-    if [ ! -d bin ]; then mkdir bin; fi;
-    if [ ! -d gen ]; then mkdir gen; fi;
-    if [ ! -d out ]; then mkdir out; fi;
-    echo "-------- Begin 'LinxSrvc' building ... --------"
-    make "$@"
-    echo "-------- All build progress(es) finish --------"
-    cd "${PWD}";
-fi
-if [ "$1" == "clean" ]
-then
-    if [ -d "build" ]; then rm -rvf lib build; fi;
-    if [ -d "${PWD}/LinxSrvc/test/build" ];
+    if [ "$1" != "clean" ]
     then
-        cd "${PWD}/LinxSrvc/test"
-        ./test.sh clean
-        cd -
+        if [ ! -d bin ]; then mkdir bin; fi;
+        if [ ! -d gen ]; then mkdir gen; fi;
+        if [ ! -d out ]; then mkdir out; fi;
+    fi
+    make "$@"
+    if [ "$1" == "clean" ]
+    then
+        if [ -d "build" ]; then rm -rvf lib build; fi;
+        if [ -d "test/build" ]
+        then
+            cd test; ./test.sh clean
+        fi
     fi
 fi
+echo "-------- All '$1' build progress(es) finish --------"
+exit 0;
