@@ -71,7 +71,7 @@ int KaiSocket::Initialize(const char* ip, unsigned short port)
         std::cerr << "WSAStartup fails with error " << WSAGetLastError() << std::endl;
         WSACleanup();
         return -1;
-}
+    }
 #else
     signal(SIGPIPE, signalCatch);
     signal(SIGSEGV, signalCatch);
@@ -480,7 +480,7 @@ void KaiSocket::wait(unsigned int tms)
 #endif
 }
 
-ssize_t KaiSocket::writes(Network network, const uint8_t* data, size_t len)
+ssize_t KaiSocket::writes(Network& network, const uint8_t* data, size_t len)
 {
     if (data == nullptr || len == 0)
         return 0;
@@ -539,13 +539,13 @@ ssize_t KaiSocket::broadcast(const uint8_t* data, size_t len)
     return bytes;
 }
 
-void KaiSocket::registerCallback(KAISOCKHOOK func)
+void KaiSocket::registerCallback(KAI_SOCK_HOOK func)
 {
     m_callbacks.clear();
     appendCallback(func);
 }
 
-void KaiSocket::appendCallback(KAISOCKHOOK func)
+void KaiSocket::appendCallback(KAI_SOCK_HOOK func)
 {
     if (std::find(m_callbacks.begin(), m_callbacks.end(), func) == m_callbacks.end()) {
         m_callbacks.emplace_back(func);
@@ -573,7 +573,7 @@ void KaiSocket::handleNotify(Network& network)
     if (!exist) {
         m_networks.emplace_back(network);
     }
-    for (auto it = m_networks.begin(); it != m_networks.end(); ++it) {
+    for (auto it = m_networks.begin(); it != m_networks.end();) {
         if (it->socket < 0 || m_network.socket < 0 || m_networks.empty())
             break;
         std::stringstream hint;
@@ -593,19 +593,16 @@ void KaiSocket::handleNotify(Network& network)
                 m_networks.clear();
                 break;
             } else {
-                auto st = it;
-                if (m_networks.erase(st) == m_networks.end())
-                    return;
-                it = m_networks.begin();;
+                it = m_networks.erase(it);
+                continue;
             }
-        } else {
-            // ++it;
         }
+        ++it;
         wait(1);
     }
 }
 
-void KaiSocket::runCallback(KaiSocket* sock, KAISOCKHOOK func)
+void KaiSocket::runCallback(KaiSocket* sock, KAI_SOCK_HOOK func)
 {
     if (sock == nullptr)
         return;
@@ -813,7 +810,7 @@ void KaiSocket::setTopic(const std::string& topic, Header& header)
     m_network.flag.etag = header.etag;
 }
 
-ssize_t KaiSocket::Subscriber(const std::string& message, RECVCALLBACK callback)
+ssize_t KaiSocket::Subscriber(const std::string& message, CALLBACK_RCV callback)
 {
     if (this->connect() < 0)
         return -2;

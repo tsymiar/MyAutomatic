@@ -64,8 +64,8 @@ public:
         }
     } __attribute__((packed));
 #pragma pack()
-    typedef int(*KAISOCKHOOK)(KaiSocket*);
-    typedef void(*RECVCALLBACK)(const Message&);
+    typedef int(*KAI_SOCK_HOOK)(KaiSocket*);
+    typedef void(*CALLBACK_RCV)(const Message&);
     static char G_KaiRole[][0xe];
     KaiSocket() = default;
     virtual ~KaiSocket() = default;
@@ -84,15 +84,15 @@ public:
     //
     int Broker();
     ssize_t Publisher(const std::string& topic, const std::string& payload, ...);
-    ssize_t Subscriber(const std::string& message, RECVCALLBACK callback = nullptr);
+    ssize_t Subscriber(const std::string& message, CALLBACK_RCV callback = nullptr);
     // packaged
     static void wait(unsigned int tms);
     ssize_t send(const uint8_t* data, size_t len);
     ssize_t recv(uint8_t* buff, size_t size);
     ssize_t broadcast(const uint8_t* data, size_t len);
     // callback
-    void registerCallback(KAISOCKHOOK func);
-    void appendCallback(KAISOCKHOOK func);
+    void registerCallback(KAI_SOCK_HOOK func);
+    void appendCallback(KAI_SOCK_HOOK func);
     //
     static bool isLittleEndian();
     std::string getFile2string(const std::string&);
@@ -129,12 +129,12 @@ private:
     static std::deque<const Message*>* m_msgQue;
 private:
     uint64_t setSsid(const Network& network, SOCKET socket = 0);
-    ssize_t writes(Network, const uint8_t*, size_t);
+    ssize_t writes(Network&, const uint8_t*, size_t);
     bool checkSsid(SOCKET key, uint64_t ssid);
     bool running();
     void finish();
     void handleNotify(Network& network);
-    void runCallback(KaiSocket* sock, KAISOCKHOOK func);
+    void runCallback(KaiSocket* sock, KAI_SOCK_HOOK func);
     void setTopic(const std::string& topic, Header& header);
     int produce(const Message& msg);
     ssize_t consume(Message& msg);
