@@ -27,6 +27,7 @@ IM:
 Kai.o:
 	@if [ ! -d "$(OBJ)" ]; then mkdir $(OBJ); fi;
 	@$(CXX) -c $(CUR)/KaiSocket.cc $(FLAG) $(PTHD) $(EXP) -o Kai.o
+	@if [ -d "$(GEN)" ]; then cp kaics.cfg $(GEN)/ ; fi;
 	@mv *.o $(OBJ)/;
 .PHONY: Kai.o
 Kai:Kai.o
