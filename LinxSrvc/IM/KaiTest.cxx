@@ -4,13 +4,17 @@
 #include <unistd.h>
 #endif
 #include <iostream>
+#include <fstream>
 
 using namespace std;
 
-int hook0(KaiSocket*);
-int hook1(KaiSocket*);
+int hook_rcv(KaiSocket*);
+int hook_snd(KaiSocket*);
 
-int main(int argc, char* argv[]) {
+std::string getFileVariable(const std::string& filename, const std::string& keyword);
+
+int main(int argc, char* argv[])
+{
     KaiRoles usage = USAGE;
     if (argc > 1) {
         string argv1 = string(argv[1]);
@@ -27,14 +31,18 @@ int main(int argc, char* argv[]) {
         KaiSocket kai;
         const int PORT = 9999;
         const char* IP = "127.0.0.1";
+        string var = getFileVariable("kaics.cfg", "IP");
+        if (!var.empty()) {
+            IP = var.c_str();
+        }
         if (usage >= CLIENT) {
             kai.Initialize(IP, PORT);
         } else {
             kai.Initialize(nullptr, PORT);
         }
         if (usage == CLIENT || usage == SERVER) {
-            kai.registerCallback(hook0);
-            kai.appendCallback(hook1);
+            kai.registerCallback(hook_rcv);
+            kai.appendCallback(hook_snd);
         }
         if (usage < 0xe && usage >= 0) {
             cout << argv[0] << ": Run as [" << usage << "](" << KaiSocket::G_KaiRole[usage] << ")" << endl;
@@ -91,7 +99,8 @@ int main(int argc, char* argv[]) {
 #endif
 }
 
-int hook0(KaiSocket* kai) {
+int hook_rcv(KaiSocket* kai)
+{
     uint8_t* text = new uint8_t[64];
     memset(text, 0, 64);
     int len = kai->recv(text, 64);
@@ -107,7 +116,8 @@ int hook0(KaiSocket* kai) {
     return 0;
 }
 
-int hook1(KaiSocket* kai) {
+int hook_snd(KaiSocket* kai)
+{
     auto* text = new uint8_t[64];
     memset(text, 0, 64);
     char c;
@@ -116,4 +126,35 @@ int hook1(KaiSocket* kai) {
     cout << "----------------" << endl;
     delete[]text;
     return 0;
+}
+
+std::string getFileVariable(const std::string& filename, const std::string& keyword)
+{
+    std::string content{};
+    std::ifstream file(filename);
+    if (file.is_open()) {
+        content.assign(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
+    } else {
+        return {};
+    }
+    file.close();
+    if (content.empty()) {
+        return {};
+    }
+    std::string val = {};
+    size_t pos = content.find(keyword);
+    if (pos != std::string::npos) {
+        val = content.substr(pos, content.size());
+        pos = val.find("=");
+        size_t org = val.find("&");
+        if (org == std::string::npos) {
+            val = val.substr(pos + 1, val.size() - pos - 1);
+        } else {
+            val = val.substr(pos + 1, org - pos - 1);
+        }
+    }
+    if (val.back() == '\n') {
+        val.pop_back();
+    }
+    return val;
 }

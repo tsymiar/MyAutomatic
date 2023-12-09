@@ -33,10 +33,8 @@ else
     if [ "$1" == "clean" ]
     then
         if [ -d "build" ]; then rm -rvf lib build; fi;
-        if [ -d "test/build" ]
-        then
-            cd test; ./test.sh clean
-        fi
+        if [ -d "test/build" ]; then cd test && ./test.sh clean; fi;
+        if [ -d "../build" ]; then rm -rvf ../lib ../build; fi;
     fi
 fi
 echo "-------- All '$1' build progress(es) finish --------"
