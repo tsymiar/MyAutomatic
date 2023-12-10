@@ -32,10 +32,14 @@ IF (${CMAKE_HOST_SYSTEM_NAME} MATCHES "Linux")
 ELSEIF(${CMAKE_HOST_SYSTEM_NAME} MATCHES "Darwin")
     ADD_DEFINITIONS("-Wno-format")
 ENDIF()
+IF (WIN32)
+    SET(_TARGET_ "${_TARGET}.exe")
+    SET(EXEC_PATH ${CMAKE_CURRENT_SOURCE_DIR}/out/)
+ENDIF()
 ADD_CUSTOM_COMMAND(
     TARGET ${_TARGET}
     POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/${_TARGET} ${EXEC_PATH}
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/${_TARGET_} ${EXEC_PATH}
  #  COMMAND ${CMAKE_COMMAND} -E rm -rf ${CMAKE_CURRENT_BINARY_DIR}/../../build/*
     COMMENT "-- 'gn' is a cross-platform tool to generatting numbers${HINT_MSG}."
 )
