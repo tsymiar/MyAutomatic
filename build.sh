@@ -3,13 +3,16 @@ echo "-------- Begin 'LinxSrvc' building ... --------"
 PWD=$(pwd)
 if [ "$1" == "test" ]
 then
-    cd "${PWD}/LinxSrvc/test"
+    cd "${PWD}/LinxSrvc/test";
+    rm -rvf build/*;
     if [ ! $(whereis lcov | awk '{print $2}') ]
     then
-        if [ $(ls lcov/* | wc -l) -le 0 ]
+        if [ -d lcov ] && [ $(ls lcov/* | wc -l) -le 0 ]
         then
             git submodule update --init --recursive
             git pull
+        else
+            mkdir lcov
         fi
         cd lcov && make install
         cd - && rm -rvf lcov
@@ -19,7 +22,6 @@ then
         git clone https://github.com/google/googletest.git
         git pull
     fi
-    ./test.sh clean
     ./test.sh
 else
     cd "${PWD}/LinxSrvc";
