@@ -49,6 +49,7 @@ runtime(void* param)
             continue;
         };
     };
+    DeleteCriticalSection(&wrcon);
 };
 
 int InitChat(StSock* sock)
