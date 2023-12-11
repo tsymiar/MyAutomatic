@@ -5,19 +5,19 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![996.icu](https://img.shields.io/badge/link-996.icu-red.svg)](https://996.icu)
 
-##### This is **MyAutomatic** [`git clone https://github.com/tsymiar/MyAutomatic.git`], including sub-projects below ⇣
+##### This is **MyAutomatic**,
+```c
+git clone https://github.com/tsymiar/MyAutomatic.git`
+```
+including sub-projects below ⇣⇣⇣
 
 LinxSrvc
 -------
-* Generats by executing `./build.sh all -j` command.
 
-    Once when build SUCCESS, some binary files will shown in the `bin/gen` directory, such as:
+* Building executes `./build.sh all -j` command. Testing using `./build.sh test`, deleting caches using `./build.sh clean`.
 
-    *gen*
-    ```c
-    gn
-    webevent_server
-     ```
+    Once when generates SUCCESS, some binary files will shown in the `bin`/`gen` directories, such as:
+
     *bin*
     ```c
     chstest
@@ -26,11 +26,16 @@ LinxSrvc
     pipefifo
     VideoCapture
     imagesnap
+    IM.exe
     Client.exe
     kaics.exe
     pthdtest.exe
-    gSOAPverify/myweb.wsdl
+    gSOAPverify(myweb.wsdl)
      ```
+    *gen* *`gn webevent_server`*
+    
+    Descriptions:
+
     * 
        | chstest | chigpio | mes909 | pipefifo |
        | :------:| :--: | :----: | :-------:|
@@ -58,10 +63,6 @@ LinxSrvc
 
       a thread pool based on `pthread`.
 
-  * webevent_server
-
-      a http server and client package library, depends on `libevent`.
-
   * gSOAPverify
 
       a `SOAP-server` which is to verify login using the config file *myweb.wsdl*.
@@ -70,10 +71,14 @@ LinxSrvc
 
       a *cross-platform*, *big/small endian*, *increasing/decreasing* binary number generator.
 
+  * webevent_server
+
+      a http server and client package library, depends on `libevent`.
+
 QtCases
 -------
 
-* [it](https://github.com/tsymiar/MyAutomatic/tree/auto-dev/QtCases) is a test with Qt, OpenGL.
+* [it](https://github.com/tsymiar/MyAutomatic/tree/auto-dev/QtCases) is a test-case uses Qt, OpenGL.
   
 ## WinNTKline:
 > 
@@ -100,6 +105,6 @@ A K-line application using C#.
 
 -------
 
-#### impact of the exe in `Market`:
+#### impact of the program in [`Market`]:
 
-<img src="WinNTKline/image/impact.png" title="impact" height="50%" width="50%" align="middle"/>
+<img src="WinNTKline/image/impact.png" title="impact" height="60%" width="60%" align="middle"/>
