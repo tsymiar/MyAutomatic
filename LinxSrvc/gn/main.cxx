@@ -1,14 +1,54 @@
-#include <stdlib.h>
-#include <string>
-#include <cstdint>
-#include <errno.h>
-#include <string.h>
+#if (defined _WIN32) && (!defined __GNUC__)
+#define _CRT_SECURE_NO_WARNINGS
+#include <winsock2.h>
+#ifdef small
+#undef small
+#endif
+#define required_argument NULL
+#define no_argument NULL
+#define optarg NULL
+#define optind NULL
+#define getopt_long() {}
+struct option { const char* _1; void* _2; void* _3; char _4; };
+#else
 #include <unistd.h>
 #include <getopt.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#endif
+#include <cstdlib>
+#include <cstdint>
+#include <cstring>
+#include <cerrno>
+#include <string>
 #include <thread>
 #include <vector>
+
+#if (defined _WIN32) && (!defined __GNUC__)
+static const unsigned __int64 epoch = ((unsigned __int64)116444736000000000ULL);
+static void gettimeofday(struct timeval* tp, struct timezone* tzp)
+{
+    FILETIME    file_time;
+    SYSTEMTIME  system_time;
+    ULARGE_INTEGER ularge;
+    GetSystemTime(&system_time);
+    SystemTimeToFileTime(&system_time, &file_time);
+    ularge.LowPart = file_time.dwLowDateTime;
+    ularge.HighPart = file_time.dwHighDateTime;
+    tp->tv_sec = (long)((ularge.QuadPart - epoch) / 10000000L);
+    tp->tv_usec = (long)(system_time.wMilliseconds * 1000);
+}
+static void usleep(unsigned long usec)
+{
+    HANDLE timer;
+    LARGE_INTEGER interval;
+    interval.QuadPart = -long(10 * usec);
+    timer = CreateWaitableTimer(NULL, TRUE, NULL);
+    SetWaitableTimer(timer, &interval, 0, NULL, NULL, 0);
+    WaitForSingleObject(timer, INFINITE);
+    CloseHandle(timer);
+}
+#endif
 
 struct Runtime {
     bool kmg;
@@ -46,7 +86,7 @@ uint64_t size2bytes(const std::string& value);
 void msleep(unsigned long ms);
 
 template<class T>
-std::vector<T> string2Vector(const std::string& str, const char* split = ",")
+std::vector<T> string2vector(const std::string& str, const char* split = ",")
 {
     std::vector<T> vec;
     char* s = const_cast<char*>(str.c_str());
@@ -62,10 +102,15 @@ std::vector<T> string2Vector(const std::string& str, const char* split = ",")
 
 int main(int argc, char* argv[])
 {
+#if (defined _WIN32) && (!defined __GNUC__)
+    fprintf(stdout, "\nOptions: file '%s' size=%lld, %d bits, interval=%d, %s, %s.\n", g_file, g_total, g_bits, g_interval,
+        g_decrease ? "decrease" : "increase", g_endian ? "bigendian" : "small-endian");
+#else
     if (argc <= 1) {
         usage_exit(argv[0]);
     }
     parse_args(argc, argv);
+#endif
     std::thread task(
         [&]()->void {
             while (true) {
@@ -163,7 +208,7 @@ int main(int argc, char* argv[])
         }
     }
     fclose(fp);
-    fprintf(stdout, "\n%lu bytes write done, average speed %.3f M/s\n", reinterpret_cast<uint64_t>(length * count * size),
+    fprintf(stdout, "\n%lu bytes write done, average speed %.3f M/s\n", static_cast<uint64_t>(length * count * size),
         (g_runtime.total * 1.f) / (gettime4usec() - start) * 0x100000 / 1000000.f);
 }
 
@@ -241,13 +286,14 @@ void usage_exit(const char* argv0)
     fprintf(stderr,
         "\nUsage: %s [option] ARGUMENT\n"
         "\n"
-        "-f --file      FILENAME        Name of the file to save, required.\n"
-        "-n --total     SIZE(K/M/G)     Number of total size to write, required.\n"
-        "-b --bits      8/16/32/64      Bit width of every number. (default: 32)\n"
-        "-d --decrease  0/1             Number to be increasing(0) or decreasing(1). (default: 0)\n"
-        "-e --endian    1/0             Big endian(1) or small endian(0). (default: 0)\n"
-        "-i --interval  VALUE           Interval value between next number. (default: 1)\n"
-        "-s --start     HEX             Start number value 0x123. (default: 0x0)\n"
+        "-f | --file      FILENAME        Name of the file to save, required.\n"
+        "-n | --total     SIZE(K/M/G)     Number of total size to write, required.\n"
+        "-b | --bits      8/16/32/64      Bit width of every number. (default: 32)\n"
+        "-d | --decrease  0/1             Number to be increasing(0) or decreasing(1). (default: 0)\n"
+        "-e | --endian    1/0             Big endian(1) or small endian(0). (default: 0)\n"
+        "-i | --interval  VALUE           Interval value between next number. (default: 1)\n"
+        "-s | --start     HEX             Start number value 0x123. (default: 0x0)\n"
+        "                                 Multi-channels if separate by ','. (eg.: 0x0,0x321,0xff)\n"
         "\n",
         argv0
     );
@@ -302,7 +348,7 @@ void parse_args(int argc, char** argv)
             g_interval = atoi(optarg);
             break;
         case 's':
-            g_begins = string2Vector<uint64_t>(optarg);
+            g_begins = string2vector<uint64_t>(optarg);
             break;
         case '?':
             usage_exit(argv[0]);
@@ -324,9 +370,13 @@ void parse_args(int argc, char** argv)
 
 void msleep(unsigned long ms)
 {
+#if (defined _WIN32) && (!defined __GNUC__)
+    usleep(1000 * ms);
+#else
     struct timespec ts = {
         .tv_sec = static_cast<long>(ms / 1000),
         .tv_nsec = static_cast<long>((ms % 1000) * 1000000ul)
     };
     nanosleep(&ts, 0);
+#endif // _WIN32
 }
