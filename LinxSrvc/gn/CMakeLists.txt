@@ -4,7 +4,9 @@ PROJECT(${_TARGET})
 ADD_DEFINITIONS("-std=c++11")
 set(CMAKE_CXX_STANDARD 11)
 #ADD_DEFINITIONS("-Wno-extra")
-SET(EXTRA_LIBS pthread)
+IF (NOT WIN32)
+    SET(EXTRA_LIBS pthread)
+ENDIF()
 FILE(GLOB SOURCE_FILES "*.c*")
 SET(UNDEFS)
 LIST(APPEND LIST_DEFINE _GN)
@@ -34,6 +36,9 @@ ELSEIF(${CMAKE_HOST_SYSTEM_NAME} MATCHES "Darwin")
 ENDIF()
 IF (WIN32)
     SET(_TARGET_ "${_TARGET}.exe")
+    IF (${CMAKE_BUILD_TYPE} STREQUAL "Release")
+        SET(_TARGET_ "${CMAKE_BUILD_TYPE}/${_TARGET}.exe")
+    ENDIF()
     SET(EXEC_PATH ${CMAKE_CURRENT_SOURCE_DIR}/out/)
 ELSE()
     SET(_TARGET_ ${_TARGET})
@@ -41,8 +46,8 @@ ENDIF()
 ADD_CUSTOM_COMMAND(
     TARGET ${_TARGET}
     POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${EXEC_PATH}
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/${_TARGET_} ${EXEC_PATH}
- #  COMMAND ${CMAKE_COMMAND} -E rm -rf ${CMAKE_CURRENT_BINARY_DIR}/../../build/*
     COMMENT "-- 'gn' is a cross-platform tool to generatting numbers${HINT_MSG}."
 )
 ADD_CUSTOM_TARGET(clear
