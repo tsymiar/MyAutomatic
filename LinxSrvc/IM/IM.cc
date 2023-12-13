@@ -619,7 +619,7 @@ type_thread_func monitor(void* arg)
                                         snprintf(sd_bufs + 2, 8, "%x", NE_VAL(-1));
                                         snprintf((sd_bufs + 32), 27 + 24, "failed send command to %s.", user.peer);
                                         sn_stat = send(rcv_sock, sd_bufs, total, 0);
-                                        fprintf(stdout, "Got failure trans message to %s:%u (%zd,%s).\n", p2pnet.ip, p2pnet.port, ssize_t(sn_stat), strerror(errno));
+                                        fprintf(stdout, "Got failure trans message to %s:%u (%zd,%s).\n", p2pnet.ip, p2pnet.port, sn_stat, strerror(errno));
                                     }
                                     break;
                                 }
@@ -1068,6 +1068,7 @@ int inst_mssg(int argc, char* argv[])
         struct sockaddr_in fromAddr = {};
 #if (!defined SOCK_CONN_TEST) || (defined SOCK_CONN_TEST)
         type_len addrlen = static_cast<type_len>(sizeof(fromAddr));
+        std::cout << std::ios::fixed << "socklen=" << std::ios::hex << addrlen << std::ios::unitbuf << std::endl;
 #endif
 #ifdef SOCK_CONN_TEST
         type_socket test_socket = accept(listen_socket, (struct sockaddr*)&fromAddr, &addrlen);
@@ -1180,11 +1181,15 @@ void func_waitpid(int signo)
     pid_t pid;
     while ((pid = waitpid(-1, &stat, WNOHANG)) > 0) {
         char msg[64];
+        ssize_t len = 0;
         type_socket sock = -1;
         if (g_filedes[1] > 0)
             close(g_filedes[1]);
-        if (g_filedes[0] <= 0 || read(g_filedes[0], &sock, sizeof(sock)) < 0) {
+        if (g_filedes[0] <= 0 || (len = read(g_filedes[0], &sock, sizeof(sock))) < 0) {
             fprintf(stderr, "Can't read socket from filedes[0][%d]: %s\n", g_filedes[0], strerror(errno));
+        }
+        if (len > sizeof(sock) || len < 0) {
+            fprintf(stderr, "Beyond filed size: %d\n", len);
         }
         if (sock > 0) {
             memset(msg + 1, 0xf, 1);
