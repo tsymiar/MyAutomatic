@@ -46,12 +46,18 @@ int main(int argc, char** argv)
         perror("open ["DEV_NODE"] fail");
     } else {
         char buf[1024];
-        read(fd, buf, sizeof(buf));
+        ssize_t len = read(fd, buf, sizeof(buf));
+        if (len > 1024 || len < 0) {
+            perror("beyond read size");
+        }
         printf("Default chars is [%s].\n", buf);
         printf("Please input a string written to chars device: ");
         scanf("%1023s", buf);
         write(fd, buf, sizeof(buf));
-        read(fd, buf, sizeof(buf));
+        len = read(fd, buf, sizeof(buf));
+        if (len > 1024 || len < 0) {
+            perror("beyond read size");
+        }
         printf("Chars [%s] written to '%s'.\n", buf, DEV_NODE);
         close(fd);
     }
