@@ -1181,15 +1181,17 @@ void func_waitpid(int signo)
     pid_t pid;
     while ((pid = waitpid(-1, &stat, WNOHANG)) > 0) {
         char msg[64];
-        ssize_t len = 0;
         type_socket sock = -1;
         if (g_filedes[1] > 0)
             close(g_filedes[1]);
-        if (g_filedes[0] <= 0 || (len = read(g_filedes[0], &sock, sizeof(sock))) < 0) {
+        if (g_filedes[0] <= 0) {
             fprintf(stderr, "Can't read socket from filedes[0][%d]: %s\n", g_filedes[0], strerror(errno));
+            break;
         }
-        if (len > sizeof(sock) || len < 0) {
-            fprintf(stderr, "Beyond filed size: %d\n", len);
+        ssize_t len = read(g_filedes[0], &sock, sizeof(sock));
+        if (len < 0 || len > sizeof(sock)) {
+            fprintf(stderr, "Beyond filed size: %zd\n", len);
+            break;
         }
         if (sock > 0) {
             memset(msg + 1, 0xf, 1);

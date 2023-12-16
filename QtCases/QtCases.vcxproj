@@ -162,7 +162,6 @@
     <None Include="QtCases.pro" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\WinNTKline\MfcUtil\com\qalgorithms.h" />
     <ClInclude Include="OglMaterial.h" />
     <ClInclude Include="OglImage.h" />
   </ItemGroup>

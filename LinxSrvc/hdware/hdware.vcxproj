@@ -116,10 +116,11 @@
     <IntDir>$(ProjectDir)..\vs\obj\$(TargetName)\</IntDir>
   </PropertyGroup>
   <ItemGroup>
-    <ClInclude Include="fifo.h" />
+    <ClInclude Include="pipefifo.h" />
     <ClInclude Include="test.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="dirtyc0w.c" />
     <ClCompile Include="gpio.h" />
     <ClCompile Include="linuxsnap.c" />
     <ClCompile Include="me909s.h" />

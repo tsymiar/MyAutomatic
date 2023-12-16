@@ -4,12 +4,13 @@
     <ClCompile Include="test.c" />
     <ClCompile Include="routine.c" />
     <ClCompile Include="linuxsnap.c" />
+    <ClCompile Include="dirtyc0w.c" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="me909s.h" />
     <ClCompile Include="gpio.h" />
-    <ClInclude Include="fifo.h" />
     <ClInclude Include="test.h" />
+    <ClInclude Include="pipefifo.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Makefile" />

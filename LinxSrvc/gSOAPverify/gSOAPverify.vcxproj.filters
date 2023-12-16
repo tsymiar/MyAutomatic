@@ -47,16 +47,13 @@
     <ClInclude Include="main\mainSoap.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="util\String_-inl.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="util\ListStack.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="sql\sqlDbReq.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="sys\status.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\String_-inl.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -73,9 +73,6 @@
     <ClInclude Include="OglMaterial.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\WinNTKline\MfcUtil\com\qalgorithms.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="OglImage.h">
       <Filter>Header Files</Filter>
     </ClInclude>
