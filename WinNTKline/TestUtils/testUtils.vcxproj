@@ -220,15 +220,11 @@ cd "..\$(ConfigurationName)"
     <ClInclude Include="..\KlineUtil\dos\DOSCout.h" />
     <ClInclude Include="..\KlineUtil\elem\Screen-Sharing.h" />
     <ClInclude Include="..\KlineUtil\html\cefWebKit.h" />
-    <ClInclude Include="..\KlineUtil\IMlogDlg.h" />
-    <ClInclude Include="..\KlineUtil\IM\IMclient.h" />
-    <ClInclude Include="..\KlineUtil\LoginDlg.h" />
     <ClInclude Include="..\KlineUtil\mygl\OGLKview.h" />
     <ClInclude Include="..\KlineUtil\netwk\ChannelCollector.h" />
     <ClInclude Include="..\KlineUtil\netwk\CTPclient.h" />
     <ClInclude Include="..\KlineUtil\netwk\Simulation.h" />
     <ClInclude Include="..\KlineUtil\opencv\CvimgMat.h" />
-    <ClInclude Include="..\KlineUtil\resource.h" />
     <ClInclude Include="..\MFCKline\IMhideWndDlg.h" />
     <ClInclude Include="..\MFCKline\IMlogDlg.h" />
     <ClInclude Include="..\MFCKline\LoginDlg.h" />

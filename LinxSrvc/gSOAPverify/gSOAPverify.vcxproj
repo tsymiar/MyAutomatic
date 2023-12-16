@@ -43,6 +43,7 @@
     <ClCompile Include="sys\status.cc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\include\String_-inl.h" />
     <ClInclude Include="main\mainSoap.h" />
     <ClInclude Include="soap\soapH.h" />
     <ClInclude Include="soap\soapStub.h" />
@@ -50,8 +51,6 @@
     <ClInclude Include="soap\rpcapi.h" />
     <ClInclude Include="sql\sqlDbReq.h" />
     <ClInclude Include="sys\status.h" />
-    <ClInclude Include="util\ListStack.h" />
-    <ClInclude Include="util\String_-inl.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="file\mysql.sh" />

@@ -49,6 +49,7 @@ int main(int argc, char** argv)
         ssize_t len = read(fd, buf, sizeof(buf));
         if (len > 1024 || len < 0) {
             perror("beyond read size");
+            return -1;
         }
         printf("Default chars is [%s].\n", buf);
         printf("Please input a string written to chars device: ");
@@ -57,6 +58,7 @@ int main(int argc, char** argv)
         len = read(fd, buf, sizeof(buf));
         if (len > 1024 || len < 0) {
             perror("beyond read size");
+            return -1;
         }
         printf("Chars [%s] written to '%s'.\n", buf, DEV_NODE);
         close(fd);
