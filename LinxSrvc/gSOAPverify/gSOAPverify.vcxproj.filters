@@ -58,9 +58,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="soap\myweb.nsmap">
-      <Filter>头文件</Filter>
-    </None>
     <None Include="Makefile">
       <Filter>其他</Filter>
     </None>
@@ -68,6 +65,9 @@
       <Filter>其他</Filter>
     </None>
     <None Include="soap\make.sh">
+      <Filter>其他</Filter>
+    </None>
+    <None Include="soap\myweb.nsmap">
       <Filter>其他</Filter>
     </None>
   </ItemGroup>

@@ -10,9 +10,6 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IM", "..\LinxSrvc\IM\IM.vcxproj", "{28813B8F-EA1E-4039-9BDE-11F0EB52986C}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Linux", "Linux", "{9AF30FB0-9135-4EBA-B07E-16B1F1D98C76}"
-	ProjectSection(SolutionItems) = preProject
-		..\LinxSrvc\Makefile = ..\LinxSrvc\Makefile
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Mix", "Mix", "{929677BC-1A53-4CD4-B120-259D6A7FDBDB}"
 EndProject
@@ -20,6 +17,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "K-line", "K-line", "{748D08
 	ProjectSection(SolutionItems) = preProject
 		..\choose.bat = ..\choose.bat
 		..\clean.bat = ..\clean.bat
+		..\MyAutomatic.vbs = ..\MyAutomatic.vbs
 		..\README.md = ..\README.md
 		KlineUtil\res\windows.manifest = KlineUtil\res\windows.manifest
 	EndProjectSection
@@ -52,8 +50,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IM(Win32)", "IMclient\clien
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "webevent", "..\LinxSrvc\webevent\webevent.vcxproj", "{14944626-83D4-44DF-B5CE-1E7489912E99}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "bashfile", "bashfile", "{CCDCA3EF-3EF3-495B-8398-4FBE3EF562EE}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "makefiles", "makefiles", "{CCDCA3EF-3EF3-495B-8398-4FBE3EF562EE}"
 	ProjectSection(SolutionItems) = preProject
+		..\build.sh = ..\build.sh
+		..\LinxSrvc\CMakeLists.txt = ..\LinxSrvc\CMakeLists.txt
 		..\LinxSrvc\bashfile\gitbase.sh = ..\LinxSrvc\bashfile\gitbase.sh
 		..\LinxSrvc\Makefile = ..\LinxSrvc\Makefile
 		..\LinxSrvc\bashfile\shadowsocks.sh = ..\LinxSrvc\bashfile\shadowsocks.sh
@@ -61,7 +61,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "bashfile", "bashfile", "{CC
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "thread", "..\LinxSrvc\thread\thread.vcxproj", "{7F892CB5-8B42-4258-8E06-3E78DA00ACF2}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "scadup", "scadup\scadup.vcxproj", "{2C7A0C60-F3E2-4B0C-A7E7-FD8AAD724A7F}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Scadup", "scadup\scadup.vcxproj", "{2C7A0C60-F3E2-4B0C-A7E7-FD8AAD724A7F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
