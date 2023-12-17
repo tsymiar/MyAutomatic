@@ -918,7 +918,7 @@ ssize_t KaiSocket::Publisher(const std::string& topic, const std::string& payloa
         if (!m_callbacks.empty()) m_callbacks.clear();
         g_maxTimes = 0;
     }
-    const int maxLen = payload.max_size();
+    std::size_t maxLen = payload.max_size();
     Message msg = {};
     memset(static_cast<void*>(&msg), 0, sizeof(Message));
     size = (size > maxLen ? maxLen : size);

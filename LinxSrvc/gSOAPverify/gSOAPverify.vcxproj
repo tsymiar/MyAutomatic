@@ -149,7 +149,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Link>
       <ShowProgress>true</ShowProgress>
-      <LibraryDependencies>pthread;mysqlclient;%(LibraryDependencies)</LibraryDependencies>
+      <LibraryDependencies>mysqlclient;pthread;%(LibraryDependencies)</LibraryDependencies>
       <AdditionalOptions>-lpthread -lmysqlclient %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PreBuildEvent>
@@ -172,8 +172,8 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <ClCompile />
     <Link>
-      <LibraryDependencies>/usr/lib/mysql;mysqlclient;pthread;%(LibraryDependencies)</LibraryDependencies>
-      <AdditionalOptions>-lpthread -lmysqlclient %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-lpthread %(AdditionalOptions)</AdditionalOptions>
+      <LibraryDependencies>mysqlclient;%(LibraryDependencies)</LibraryDependencies>
     </Link>
     <ClCompile>
       <CppLanguageStandard>gnu++11</CppLanguageStandard>
@@ -199,6 +199,7 @@
     </ClCompile>
     <Link>
       <AdditionalOptions>-lpthread -lmysqlclient %(AdditionalOptions)</AdditionalOptions>
+      <LibraryDependencies>/usr/lib/mysql;mysqlclient;pthread;%(LibraryDependencies)</LibraryDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
