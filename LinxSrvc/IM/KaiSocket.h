@@ -43,7 +43,7 @@ public:
         char rsv;
         int etag;
         /*volatile*/ unsigned long long ssid; // ssid = port | socket | ip
-        char buffer[32];
+        char text[32];
         unsigned int size;
     } __attribute__((packed));
 #pragma pack()

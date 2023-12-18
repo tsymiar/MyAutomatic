@@ -15,14 +15,19 @@ std::string getFileVariable(const std::string& filename, const std::string& keyw
 
 int main(int argc, char* argv[])
 {
-    KaiRoles usage = USAGE;
+    KaiRoles usage = NONE;
     if (argc > 1) {
         string argv1 = string(argv[1]);
-        usage = (argv1 == "-C" ? CLIENT :
-            (argv1 == "-S" ? SUBSCRIBE :
-                (argv1 == "-P" ? PUBLISH :
-                    (argv1 == "-TF" ? FILE_CONTENT :
-                        (argv1 == "-B" ? BROKER : SERVER)))));
+        usage =
+            (argv1 == "-C" ? CLIENT :
+                (argv1 == "-S" ? SERVER :
+                    (argv1 == "-SS" ? SUBSCRIBE :
+                        (argv1 == "-PB" ? PUBLISH :
+                            (argv1 == "-TF" ? FILE_CONTENT :
+                                (argv1 == "-BK" ? BROKER :
+                                    USAGE))))));
+    } else {
+        usage = USAGE;
     }
 #ifdef _USE_FORK_PROCESS_
     pid_t child = fork();
@@ -58,13 +63,13 @@ int main(int argc, char* argv[])
         switch (usage) {
         case USAGE:
             cout << "Usage:" << endl
-                << "-A -- run as server" << endl
-                << "-B -- run as broker" << endl
-                << "-C -- run as client" << endl
-                << "<none> -- print this message" << endl
-                << "-S  [topic] -- run as subscriber, default topic is 'topic'" << endl
-                << "-P  [topic] [payload] -- run as publisher messaging to broker" << endl
-                << "-TF [topic] [filename] -- run as publisher trans file content" << endl;
+                << "-C  -- run as client" << endl
+                << "-S  -- run as server" << endl
+                << "<none> -- print these" << endl
+                << "-BK -- run as mq broker" << endl
+                << "-SS [topic] -- run as subscriber, default topic is 'topic', the same below" << endl
+                << "-PB [topic] [payload] -- run as publisher messaging to broker" << endl
+                << "-TF [topic] [filename] -- run as publisher transfer file content" << endl;
             break;
         case CLIENT:
             kai.connect();
@@ -82,9 +87,12 @@ int main(int argc, char* argv[])
             kai.Publisher(topic, param);
             break;
         case FILE_CONTENT:
+            param = "test.txt";
             param = kai.getFile2string(param);
             if (!param.empty()) {
                 kai.Publisher(topic, param);
+            } else {
+                cout << "file content is empty!" << endl;
             }
             break;
         default:
@@ -92,7 +100,7 @@ int main(int argc, char* argv[])
         }
 #ifdef _USE_FORK_PROCESS_
     } else if (child > 0) {
-        cout << "child process " << child << " started" << endl;
+        cout << "child process " << child << " start" << endl;
     } else {
         cout << "KaiSocket fork process failed!" << endl;
     }

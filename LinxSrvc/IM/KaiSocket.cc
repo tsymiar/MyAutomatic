@@ -38,7 +38,7 @@ typedef int socklen_t;
 const int g_epollMax = 1024;
 #endif
 #endif
-
+const int g_hText = 0x12345678;
 static bool g_thrStat = false;
 static unsigned int g_maxTimes = 100;
 volatile unsigned int g_thrNo_ = 0;
@@ -283,7 +283,7 @@ int KaiSocket::connect()
 void KaiSocket::rsync(Message& msg)
 {
     while (consume(msg) > 0) {
-        if ((long)*msg.head.buffer == 'effe') {
+        if (*(int*)msg.head.text == g_hText) {
             writes(m_network, (uint8_t*)&msg, msg.head.size);
         }
     }
@@ -303,7 +303,7 @@ int proxyHook(KaiSocket* kai)
         if (msg.head.etag >= NONE && msg.head.etag <= SUBSCRIBE) {
             std::cout
                 << __FUNCTION__ << ": message from " << KaiSocket::G_KaiRole[msg.head.etag]
-                << " [" << msg.data.stat << "], MQ detail: '" << msg.head.buffer
+                << " [" << msg.data.stat << "], MQ detail: '" << msg.head.text
                 << "', len = " << len
                 << std::endl;
             if (msg.head.etag == CONSUMER) {
@@ -326,9 +326,7 @@ int KaiSocket::Broker()
 
 #if (defined __GNUC__ && __APPLE__)
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wtautological-undefined-compare"
-#pragma GCC diagnostic ignored "-Wtautological-pointer-compare"
-#pragma GCC diagnostic ignored "-Wundefined-bool-conversion"
+#pragma GCC diagnostic ignored "-Wtautological-compare"
 #endif
 
 ssize_t KaiSocket::recv(uint8_t* buff, size_t size)
@@ -366,13 +364,13 @@ ssize_t KaiSocket::recv(uint8_t* buff, size_t size)
         if (checkSsid(network.socket, ssid)) {
             prsid = ssid;
             network.flag.etag = header.etag;
-            memmove(network.flag.buffer, header.buffer, sizeof(Header::buffer));
+            memmove(network.flag.text, header.text, sizeof(Header::text));
         }
         wait(1);
     }
     m_network.flag.etag = header.etag;
     m_network.flag.size = header.size;
-    memmove(m_network.flag.buffer, header.buffer, sizeof(Header::buffer));
+    memmove(m_network.flag.text, header.text, sizeof(Header::text));
     memmove(buff, &header, len);
     size_t total = m_network.flag.size;
     if (total < sizeof(Message))
@@ -419,7 +417,7 @@ ssize_t KaiSocket::recv(uint8_t* buff, size_t size)
         memmove(message, &msg, sizeof(Message));
         bool deal = false;
         for (auto& network : m_networks) {
-            if (strcmp(network.flag.buffer, m_network.flag.buffer) == 0
+            if (strcmp(network.flag.text, m_network.flag.text) == 0
 #if !defined MULTI_SEND
                 && network.flag.ssid == prsid /* comment to multi-send */
 #endif
@@ -435,7 +433,7 @@ ssize_t KaiSocket::recv(uint8_t* buff, size_t size)
             if (deal)
                 strcpy(msg.data.stat, "SUCCESS");
             else {
-                memset(msg.head.buffer, 'effe', 4);
+                memset(msg.head.text, g_hText, 4);
                 strcpy(msg.data.stat, "NOTDEAL");
                 msg.head.size = total;
                 stat = produce(msg);
@@ -792,7 +790,7 @@ std::string KaiSocket::getFile2string(const std::string& filename)
         fread((void*)(s.c_str()), 1, len, fp);
         fclose(fp);
     } else {
-        std::cerr << __FUNCTION__ << ": file[" << filename << "] open fail: " << strerror(errno) << std::endl;
+        std::cerr << __FUNCTION__ << ": file [" << filename << "] open failed: " << strerror(errno) << std::endl;
     }
     return s;
 }
@@ -801,12 +799,12 @@ void KaiSocket::setTopic(const std::string& topic, Header& header)
 {
     std::lock_guard<std::mutex> lock(m_lock);
     size_t size = topic.size();
-    if (size > sizeof(header.buffer)) {
+    if (size > sizeof(header.text)) {
         std::cerr << __FUNCTION__ << ": topic length " << size << " out of bounds." << std::endl;
-        size = sizeof(header.buffer);
+        size = sizeof(header.text);
     }
-    memmove(header.buffer, topic.c_str(), size);
-    memmove(m_network.flag.buffer, header.buffer, size);
+    memmove(header.text, topic.c_str(), size);
+    memmove(m_network.flag.text, header.text, size);
     m_network.flag.etag = header.etag;
 }
 
@@ -845,7 +843,7 @@ ssize_t KaiSocket::Subscriber(const std::string& message, CALLBACK_RCV callback)
                 return -4;
             }
             std::cout << __FUNCTION__ << " process run as " << KaiSocket::G_KaiRole[msg.head.etag]
-                << ", MQ(" << count << ") topic is '" << msg.head.buffer << "'." << std::endl;
+                << ", MQ(" << count << ") topic is '" << msg.head.text << "'." << std::endl;
             count++;
         } else {
             count = 0;
@@ -878,7 +876,7 @@ ssize_t KaiSocket::Subscriber(const std::string& message, CALLBACK_RCV callback)
                         callback(*pMsg);
                     }
                     std::cout << __FUNCTION__ << ": message payload(" << (len + Size) << ") = [" << pMsg->data.stat << "]-[" << pMsg->data.body << "]" << std::endl;
-                    delete pMsg;
+                    delete[] pMsg;
                 }
             }
             delete[] body;
