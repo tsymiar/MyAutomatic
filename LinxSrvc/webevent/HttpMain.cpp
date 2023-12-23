@@ -8,7 +8,7 @@ using namespace std;
 int main(int argc, char** argv)
 {
     if (argc <= 1) {
-        cout << "Usage:\n " << (argv == nullptr ? "./HttpSample" : argv[0]) << " [port | url(http://...)]\nactually:" << endl;
+        cout << "Usage:\n " << (argv == nullptr ? "./webevent_server" : argv[0]) << " [ port || url(http://...) ]\nactually:" << endl;
         int i = 0;
         while (i < argc) {
             cout << " " << argv[i];
@@ -26,6 +26,6 @@ int main(int argc, char** argv)
             Message("status = %d, message:\n[%s]", stat, message.msg.c_str());
         }
     }
-    cout << "Goodby HttpSample." << endl;
+    cout << "Goodby webevent_server." << endl;
     return 0;
 }
