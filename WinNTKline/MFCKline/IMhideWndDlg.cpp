@@ -116,7 +116,7 @@ void* parseMessage(void* msg)
                 MessageBox(NULL, title, "---Message---", MB_OK);
                 continue;
             }
-            for (int c = 0; c < 30; c++) {
+            for (int c = 0; c < atoi(rslt + 4); c++) {
                 char user[25];
                 user[24] = '\0';
                 memcpy(user, rslt + 32 + 8 * c, 8);
@@ -127,6 +127,14 @@ void* parseMessage(void* msg)
                 strcpy(title + 36 + 8 * c - (8 - len - 2), user);
                 ((CIMhideWndDlg*)client.Dlg)->m_frndList.InsertItem(c, user);
             }
+        } else if (rslt[1] == NETNDT) {
+            char msg[256];
+            if (*(rslt + 2) == '\0') {
+                sprintf_s(msg, 256, "%s %s", title, rslt + 32);
+            } else {
+                strncpy(msg, title, strlen(title));
+            }
+            MessageBox(NULL, msg, "---Message---", MB_OK);
         } else if (rslt[1] == USERGROUP && rslt[3] == 0) {
             for (int c = 0; c < 30; c++) {
                 char user[25];
@@ -142,7 +150,7 @@ void* parseMessage(void* msg)
                 continue;
             }
             char group[25];
-            for (int c = 0; c < 30; c++) {
+            for (int c = 0; c < atoi(rslt + 4); c++) {
                 memcpy(group, rslt + 32 + 8 * c, 8);
                 len = strlen(group);
                 if (len <= 0)
@@ -560,19 +568,20 @@ UINT _NoMessageBox(LPVOID lparam)
 {
     CIMhideWndDlg* ImWnd = reinterpret_cast<CIMhideWndDlg*>(lparam);
     return
-        ImWnd->MessageBox("[注册]\n----跳转到WEB注册页面\
-                         \n[登陆]\n----请输入用户和密码\
-                         \n[帮助]\n----弹出该对话框\
-                         \n[登出]\n----退出当前用户\
-                         \n[设置密码]\n----重置密码\
-                         \n[在线用户]\n----获取在线用户列表\
-                         \n[聊天对象]\n----对话关系\
-                         \n[群列表]\n----查看群列表\
-                         \n[群成员]\n----查看成员信息\
-                         \n[创建群]\n----作为群主创建群\
-                         \n[进群]\n----加入某个聊天室\
-                         \n[退群]\n----退出聊天室", 
-                        "HELP", MB_OK);
+        ImWnd->MessageBox(
+            "[注册]\n----跳转到WEB注册页面\
+                   \n[登陆]\n----请输入用户和密码\
+                   \n[帮助]\n----弹出该对话框\
+                   \n[登出]\n----退出当前用户\
+                   \n[设置密码]\n----重置密码\
+                   \n[在线用户]\n----获取在线用户列表\
+                   \n[聊天对象]\n----对话关系\
+                   \n[群列表]\n----查看群列表\
+                   \n[群成员]\n----查看成员信息\
+                   \n[建群]\n----作为群主创建群\
+                   \n[进群]\n----加入某个聊天室\
+                   \n[退群]\n----退出聊天室",
+            "HELP", MB_OK);
 }
 
 void CIMhideWndDlg::OnCbnSelchangeComm()
@@ -587,7 +596,7 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
     LVCOLUMN lvcol;
     CRegistDlg m_crgist(m_imSocks.IP);
     int comsel = m_commbo.GetCurSel();
-    char item[8];
+    char item[16];
     // memset(&msg, 0, sizeof(MSG_trans));
     // msg.cmd = (comsel >> 8) & 0xff + comsel & 0xff;
     content.uiCmdMsg = comsel;
@@ -639,9 +648,11 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
         g_setDlg->SetTitle("原密码");
         break;
     case NETNDT:
-        sprintf(item, "%03d", ifsh);
+        lvcol.pszText = _T("Random");
+        m_frndList.SetColumn(0, &lvcol);
+        sprintf(item, "%08d", ifsh);
         m_frndList.InsertItem(0, item);
-        sprintf(item, "%03X", (ifsh + 11) * 13 - 19);
+        sprintf(item, "%08X", (ifsh + 11) * 13 - 19);
         m_frndList.InsertItem(1, item);
         SendClientMessage(&content);
         ifsh++;
@@ -679,7 +690,7 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
         g_setDlg = new SetMarkDlg(callbackGroupSet);
         g_setDlg->Create(IDD_MARKDLG);
         g_setDlg->ShowWindow(SW_SHOW);
-        g_setDlg->SetTitle("查看成员");
+        g_setDlg->SetTitle("输入群组查看成员");
         break;
     case HOSTGROUP:
         g_setDlg = new SetMarkDlg(callbackGroupSet);
@@ -691,7 +702,7 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
         g_setDlg = new SetMarkDlg(callbackGroupSet);
         g_setDlg->Create(IDD_MARKDLG);
         g_setDlg->ShowWindow(SW_SHOW);
-        g_setDlg->SetTitle("参加群组");
+        g_setDlg->SetTitle("加入群组");
         break;
     case EXITGROUP:
         SendClientMessage(&content);
