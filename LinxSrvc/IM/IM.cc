@@ -566,6 +566,7 @@ type_thread_func monitor(void* arg)
                     case ONLINE:
                     {
                         snprintf((sd_bufs + offset), 22, "%s", "Users on-line list:\n");
+                        int n = 0;
                         for (c = 0; c < MAX_ACTIVE; c++) {
                             set_n_get_mem(&active[c], c);
                             if (active[c].user[0] != '\0') {
@@ -575,9 +576,12 @@ type_thread_func monitor(void* arg)
                                 if ((*reinterpret_cast<char*>(psr)) == '\0') {
                                     memset(psr, '\t', 1);
                                 }
+                                n++;
                             } else if (active[c].user[0] == '\0')
                                 break;
                         };
+                        *(sd_bufs + 2) = '0';
+                        snprintf(sd_bufs + 4, 4, "%x", n);
                         total = static_cast<unsigned long>(offset * (c + 4 + 4));
                     } break;
                     case P2P:
@@ -803,14 +807,18 @@ type_thread_func monitor(void* arg)
                     case ZONES:
                     {
                         snprintf((sd_bufs + offset), 20, "%s", "Active zone list: \n");
+                        int n = 0;
                         for (c = 0; c < MAX_ZONES; c++) {
                             if (zones[c].zone.name[0] != '\0') {
                                 snprintf(sd_bufs + 2, 8, "%x", c);
                                 memcpy((sd_bufs + offset * (c + 4)), zones[c].zone.name, 24);
+                                n++;
                             } else {
                                 break;
                             }
                         };
+                        *(sd_bufs + 2) = '0';
+                        snprintf(sd_bufs + 4, 4, "%x", n);
                         total = static_cast<unsigned long>(offset * (c + 4 + 3));
                     } break;
                     case MEMBERS:
@@ -854,8 +862,8 @@ type_thread_func monitor(void* arg)
                                 total = 29;
                             }
                         } else {
-                            snprintf((sd_bufs + offset), 50, "Create zone '%s' as host.", user.host);
-                            total = 64;
+                            snprintf((sd_bufs + offset), 52, "Created zone '%s' as host.", user.host);
+                            total = 66;
                         }
                     } break;
                     case JOIN_ZONE:
