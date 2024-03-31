@@ -30,12 +30,13 @@ public:
 	afx_msg void OnBnClickedCtp();
 	afx_msg void OnBnClickedSimbtn();
 	afx_msg void OnBnClickedImser();
+	afx_msg void OnBnClickedOk();
+	afx_msg void OnBnClickedCancel();
 private:
 	CIPAddressCtrl m_ipAddr;
 	CEdit m_Port;
     char a_IP[16] = { NULL };
 	CString a_Port;
 public:
-	afx_msg void OnBnClickedOk();
-	afx_msg void OnBnClickedCancel();
+	afx_msg void OnBnClickedQtcase();
 };

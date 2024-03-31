@@ -855,11 +855,16 @@ type_thread_func monitor(void* arg)
                                 snprintf((sd_bufs + offset), 32 + 24 * 2, "'%s' exist, %s joins the group.", user.host, user.usr);
                                 total = 88;
                             } else if (stat == -3) {
-                                snprintf((sd_bufs + offset), 22, "Already in the group!");
-                                total = 31;
+                                if (user.join[0] == '\0') {
+                                    snprintf((sd_bufs + offset), 29, "Group Name should not empty!");
+                                    total = 38;
+                                } else {
+                                    snprintf((sd_bufs + offset), 27, "User already in the group!");
+                                    total = 36;
+                                }
                             } else {
-                                snprintf((sd_bufs + offset), 20, "Group name invalid!");
-                                total = 29;
+                                snprintf((sd_bufs + offset), 25, "Group parameter invalid!");
+                                total = 34;
                             }
                         } else {
                             snprintf((sd_bufs + offset), 52, "Created zone '%s' as host.", user.host);
@@ -874,7 +879,8 @@ type_thread_func monitor(void* arg)
                             total = 48;
                             switch (val_rtn) {
                             case -1:
-                                snprintf((sd_bufs + offset), 29, "Can not find such zone name.");
+                                snprintf((sd_bufs + offset), 50, "Can't find such zone: %s.", user.join);
+                                total = 58;
                                 break;
                             case -2:
                                 snprintf((sd_bufs + offset), 39, "Limits: zone was full for new members.");
