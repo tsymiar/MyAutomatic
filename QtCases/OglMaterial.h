@@ -66,7 +66,7 @@ private:
     OglImage png;
     void coord();
     QString text;
-    void textout(int left = 10, int upon = 40, QColor color = Qt::yellow, float th = 1, QString family = nullptr);
+    void textout(int left = 10, int upon = 40, QColor color = Qt::yellow, float th = 1, QString family = NULL);
     bool bingo = false;
 public:
     inline void setXval(GLfloat x) { xVal = x; }
