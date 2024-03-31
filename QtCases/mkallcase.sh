@@ -2,6 +2,7 @@
 if [ -f "Makefile" ]; then
 	make clean
 fi
+sudo apt install libpng++-dev freeglut3-dev libsdl2-dev
 qmake -o Makefile QtCases.pro
 for ui in $(ls -- *.ui)
 do

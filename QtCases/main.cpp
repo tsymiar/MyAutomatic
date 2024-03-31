@@ -1,6 +1,7 @@
 #include <QtPlugin>
 #include <QtWidgets/qmessagebox.h>
 #include "OpenGLWindow.h"
+#include <QApplication>
 
 // Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)
 #ifdef _WIN32

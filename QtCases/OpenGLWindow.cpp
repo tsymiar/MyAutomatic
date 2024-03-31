@@ -117,7 +117,7 @@ void OpenGLWindow::mouseMoveEvent(QMouseEvent * e)
     setYloc(e->y());
 }
 
-void OpenGLWindow::timerDone()
+void OpenGLWindow::timeTickDone()
 {
 #ifndef _GLVBO_
     h -= 0.01f;

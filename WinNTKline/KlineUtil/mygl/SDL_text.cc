@@ -1,14 +1,24 @@
 #include "SDL_text.h"
 
+static SDL_Surface *g_newSurface = NULL;
+
 int SDL_GL_init()
 {
+#if SDL_MAJOR_VERSION < 2
 	if (SDL_Init(SDL_INIT_EVERYTHING) == -1)
-		return -1;
+        return -1;
+#else
+    // static SDL_Surface * imgSurface = SDLTest_ImageBlit(); // sdl3
+    // g_newSurface = SDL_CreateSurface(imgSurface->w, imgSurface->h, SDL_PIXELFORMAT_RGBA32);
+    if (g_newSurface == NULL) {
+        return -1;
+    }
+#endif
 	//Initialize SDL_ttf
 	return TTF_Init();
 }
 
-void SDL_GL_Enter2DMode(int w, int h)
+void SDL_GL_SetAs2DMode(int w, int h)
 {
 	/* Note, there may be other things you need to change,
 	depending on how you have your OpenGL state set up.
@@ -58,7 +68,8 @@ static int power_of_two(int input)
 
 GLuint SDL_GL_LoadTexture(SDL_Surface *surface, GLfloat *texcoord)
 {
-	GLuint texture;
+    GLuint texture;
+#if SDL_MAJOR_VERSION < 2
 	int w, h;
 	SDL_Surface *image;
 	SDL_Rect area;
@@ -91,18 +102,17 @@ GLuint SDL_GL_LoadTexture(SDL_Surface *surface, GLfloat *texcoord)
 	);
 	if (image == NULL) {
 		return 0;
-	}
-
-	/* Save the alpha blending attributes */
-	saved_flags = surface->flags&(SDL_SRCALPHA | SDL_RLEACCELOK);
+    }
+    /* Save the alpha blending attributes */
+    saved_flags = surface->flags&(SDL_SRCALPHA | SDL_RLEACCELOK);
 #if SDL_VERSION_ATLEAST(1, 3, 0)
 	SDL_GetSurfaceAlphaMod(surface, &saved_alpha);
-	SDL_SetSurfaceAlphaMod(surface, 0xFF);
+    SDL_SetSurfaceAlphaMod(surface, 0xFF);
 #else
-	saved_alpha = surface->format->alpha;
-	if ((saved_flags & SDL_SRCALPHA) == SDL_SRCALPHA) {
-		SDL_SetAlpha(surface, 0, 0);
-	}
+    saved_alpha = surface->format->alpha;
+    if ((saved_flags & SDL_SRCALPHA) == SDL_SRCALPHA) {
+        SDL_SetAlpha(surface, 0, 0);
+    }
 #endif
 
 	/* Copy the surface into the GL texture image */
@@ -114,13 +124,12 @@ GLuint SDL_GL_LoadTexture(SDL_Surface *surface, GLfloat *texcoord)
 
 	/* Restore the alpha blending attributes */
 #if SDL_VERSION_ATLEAST(1, 3, 0)
-	SDL_SetSurfaceAlphaMod(surface, saved_alpha);
+    SDL_SetSurfaceAlphaMod(surface, saved_alpha);
 #else
-	if ((saved_flags & SDL_SRCALPHA) == SDL_SRCALPHA) {
-		SDL_SetAlpha(surface, saved_flags, saved_alpha);
-	}
+    if ((saved_flags & SDL_SRCALPHA) == SDL_SRCALPHA) {
+        SDL_SetAlpha(surface, saved_flags, saved_alpha);
+    }
 #endif
-
 	/* Create an OpenGL texture for the image */
 	glGenTextures(1, &texture);
 	glBindTexture(GL_TEXTURE_2D, texture);
@@ -133,8 +142,10 @@ GLuint SDL_GL_LoadTexture(SDL_Surface *surface, GLfloat *texcoord)
 		0,
 		GL_RGBA,
 		GL_UNSIGNED_BYTE,
-		image->pixels);
-	SDL_FreeSurface(image); /* No longer needed */
-
+        image->pixels);
+    SDL_FreeSurface(image); /* No longer needed */
+#else
+    // new interface instead.
+#endif
 	return texture;
 }
