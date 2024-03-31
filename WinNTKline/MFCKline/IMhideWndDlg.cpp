@@ -430,16 +430,16 @@ void CIMhideWndDlg::FixMoving(UINT fwSide, LPRECT pRect)
     INT width = pRect->right - pRect->left;
 
     if (curPos.y <= INTERVAL)
-    {   //粘附在下边
+    {   //粘附在上边
         pRect->bottom = height - m_edgeHeight;
         pRect->top = -m_edgeHeight;
-        m_hideMode = HM_BOTTOM;
+        m_hideMode = HM_TOP;
     }
     else if (curPos.y >= (screenHeight - INTERVAL - m_taskBarHeight))
-    {   //粘附在上边
+    {   //粘附在下边
         pRect->top = screenHeight - m_taskBarHeight - height;
         pRect->bottom = screenHeight - m_taskBarHeight;
-        m_hideMode = HM_TOP;
+        m_hideMode = HM_BOTTOM;
     }
     else if (curPos.x < INTERVAL)
     {    //粘附在左边    

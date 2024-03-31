@@ -58,6 +58,7 @@ BEGIN_MESSAGE_MAP(CtestUtilsDlg, CDialogEx)
     ON_BN_CLICKED(IDC_IMSER, &CtestUtilsDlg::OnBnClickedImser)
     ON_BN_CLICKED(IDOK, &CtestUtilsDlg::OnBnClickedOk)
     ON_BN_CLICKED(IDCANCEL, &CtestUtilsDlg::OnBnClickedCancel)
+    ON_BN_CLICKED(IDC_QTCASE, &CtestUtilsDlg::OnBnClickedQtcase)
 END_MESSAGE_MAP()
 
 BOOL CtestUtilsDlg::OnInitDialog()
@@ -182,4 +183,23 @@ void CtestUtilsDlg::OnBnClickedOk()
 void CtestUtilsDlg::OnBnClickedCancel()
 {
     OnBnClickedOk();
+}
+
+void CtestUtilsDlg::OnBnClickedQtcase()
+{
+    STARTUPINFO sInfo;
+    PROCESS_INFORMATION prInfo;
+    ZeroMemory(&prInfo, sizeof(prInfo));
+    ZeroMemory(&sInfo, sizeof(sInfo));
+    sInfo.cb = sizeof(sInfo);
+    sInfo.dwFlags = STARTF_USESHOWWINDOW;
+    sInfo.wShowWindow = SW_SHOWNORMAL;
+    CString filename = _T("QtCases.exe");
+    WIN32_FIND_DATA findFileData;
+    if (FindFirstFile(filename, &findFileData) == INVALID_HANDLE_VALUE) {
+        MessageBox(filename + "\nNo such exec file!");
+        return;
+
+    }
+    ::CreateProcess(filename, _T("1"), NULL, NULL, false, 0, NULL, NULL, &sInfo, &prInfo);
 }
