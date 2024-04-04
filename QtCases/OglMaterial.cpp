@@ -19,6 +19,7 @@ QOglMaterial::QOglMaterial(QWidget* parent)
 
 QOglMaterial::~QOglMaterial()
 {
+    SDL_GL_quit();
 }
 
 #ifdef _GLVBO_
@@ -144,8 +145,7 @@ void QOglMaterial::initializeGL()
     if (!program->addShaderFromSourceCode(QOpenGLShader::Vertex, vertexShaderSourceCore)) {
         return;
     }
-    if (!program->addShaderFromSourceCode(QOpenGLShader::Fragment, fragmentShaderSourceCore))
-    {
+    if (!program->addShaderFromSourceCode(QOpenGLShader::Fragment, fragmentShaderSourceCore)) {
         return;
     }
 
@@ -177,6 +177,10 @@ void QOglMaterial::initializeGL()
     kv.AdjustDraw(640, 480);
 #else
     png.setPixels("../WinNTKline/KlineUtil/image/atlas.png");
+#if SDL_MAJOR_VERSION >= 2
+    SDL_GL_init();
+    SDL_GL_loadImage("../WinNTKline/KlineUtil/image/spabandari.bmp");
+#endif
 #endif
 #endif // _GLVBO_
 }
@@ -195,8 +199,7 @@ void QOglMaterial::resizeGL(int width, int height)
     ///< 增加模型矩阵，做一定偏移量，使物体刚开始渲染出来时就可以显示！
     m_projection.translate(0.0f, 0.0f, -2.0f);
 #else
-    if (height == 0)
-    {
+    if (height == 0) {
         height = 1;
     }
     glViewport(0, 0, (GLint)width, (GLint)height);
@@ -258,13 +261,11 @@ void QOglMaterial::paintGL()
     glDisableVertexAttribArray(clorLocation);
 #else
     glTranslatef(0, 0, 0);
-    png.Show();
+    png.showPixels();
 
-    if (bingo)
-    {
+    if (bingo) {
         textout(30, 40, Qt::red, 3, "Helvetica");
-    } else
-    {
+    } else {
         coord();
         textout();
 

@@ -1,5 +1,5 @@
 <RCC>
     <qresource prefix="/QtCases">
-        <file>openglwindow.ui</file>
+        <file>mainwindow.ui</file>
     </qresource>
 </RCC>

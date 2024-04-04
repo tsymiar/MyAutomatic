@@ -1,11 +1,13 @@
-﻿#include "OglImage.h"
+﻿#include "OglImgShow.h"
+#include "SDL2tex.h"
 
 unsigned char* pixels = NULL;
 png_uint_32 width, height;
 int color_type;
 
 // 获取每一行所用的字节数，需凑足4的倍数
-int getRowBytes(int width) {
+int getRowBytes(int width)
+{
     if ((width * 3) % 4 == 0) {
         return width * 3;
     } else {
@@ -13,27 +15,25 @@ int getRowBytes(int width) {
     }
 }
 
-int OglImage::setPixels(const char* filename)
+int OglImgShow::setPixels(const char* filename)
 {
     png_structp png_ptr;
     png_infop info_ptr;
     int bit_depth;
-    FILE *fp;
+    FILE* fp;
 
-    qDebug() << "lpng16(" << PNG_LIBPNG_VER_STRING << "), zlib(" << ZLIB_VERSION << ")";
+    qDebug() << QString("lpng16( v%1 ), zlib( v%2 ), sdl( v%3 )").arg(PNG_LIBPNG_VER_STRING).arg(ZLIB_VERSION).arg(SDL_GetRevisionNumber());
 
     if ((fp = fopen(filename, "rb")) == NULL) {
         return EXIT_FAILURE;
     }
     png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-    if (png_ptr == NULL)
-    {
+    if (png_ptr == NULL) {
         fclose(fp);
         return EXIT_FAILURE;
     }
     info_ptr = png_create_info_struct(png_ptr);
-    if (info_ptr == NULL)
-    {
+    if (info_ptr == NULL) {
         fclose(fp);
         png_destroy_read_struct(&png_ptr, NULL, NULL);
         return EXIT_FAILURE;
@@ -70,7 +70,7 @@ int OglImage::setPixels(const char* filename)
     pixels = (unsigned char*)malloc(size);
     if (pixels == NULL)
         return EXIT_FAILURE;
-    int i;
+    unsigned int i;
     for (i = 0; i < height; i++) {
         // 拷贝每行数据给pixel，
         // opengl原点在下方，拷贝时倒置
@@ -85,7 +85,7 @@ int OglImage::setPixels(const char* filename)
     return EXIT_SUCCESS;
 }
 
-GLuint OglImage::CreateTextureFromPng(const char* filename)
+GLuint OglImgShow::CreateTextureFromPng(const char* filename)
 {
     unsigned char header[8];
     int k; // 循环计数器
@@ -97,19 +97,18 @@ GLuint OglImage::CreateTextureFromPng(const char* filename)
     png_structp png_ptr; // 图片
     png_infop info_ptr; // 图片信息
     int number_of_passes; // 隔行扫描
-    png_bytep * row_pointers; // 图片数据内容
+    png_bytep* row_pointers; // 图片数据内容
     int row, col, pos; // 图片像素排列
-    GLubyte *rgba;
+    GLubyte* rgba;
 
-    FILE *fp = fopen(filename, "rb"); // 以只读形式打开文件
+    FILE* fp = fopen(filename, "rb"); // 以只读形式打开文件
     if (NULL == fp) {
         printf("error: %s\n", strerror(errno)); // 关闭打开的文件给出默认贴图
         return 0;
     }
     // 读取文件头判断是否是PNG格式图片.
     fread(header, 1, 8, fp);
-    if (png_sig_cmp(header, 0, 8))
-    {
+    if (png_sig_cmp(header, 0, 8)) {
         fclose(fp);
         return 0;
     }
@@ -123,15 +122,13 @@ GLuint OglImage::CreateTextureFromPng(const char* filename)
     // 根据已初始化的png_ptr初始化png_infop
     info_ptr = png_create_info_struct(png_ptr);
 
-    if (!info_ptr)
-    {
+    if (!info_ptr) {
         // 初始化失败 销毁png_structp
         png_destroy_read_struct(&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
         fclose(fp);
         return 0;
     }
-    if (setjmp(png_jmpbuf(png_ptr)))
-    {
+    if (setjmp(png_jmpbuf(png_ptr))) {
         // 释放占用内存
         png_destroy_read_struct(&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
         fclose(fp);
@@ -166,7 +163,7 @@ GLuint OglImage::CreateTextureFromPng(const char* filename)
     row_pointers = (png_bytep*)malloc(sizeof(png_bytep) * height);
 
     for (k = 0; k < height; k++)
-        memset(row_pointers[k], NULL, sizeof(png_bytep));
+        memset(row_pointers[k], 0, sizeof(unsigned char));
 
     // 通过扫描图片信息流中每一行，将数据赋值给动态数组
     for (k = 0; k < height; k++)
@@ -177,10 +174,8 @@ GLuint OglImage::CreateTextureFromPng(const char* filename)
     png_read_image(png_ptr, row_pointers);
 
     pos = (width * height * 4) - (4 * width);
-    for (row = 0; row < height; row++)
-    {
-        for (col = 0; col < (4 * width); col += 4)
-        {
+    for (row = 0; row < height; row++) {
+        for (col = 0; col < (4 * width); col += 4) {
             rgba[pos++] = row_pointers[row][col];        // red  
             rgba[pos++] = row_pointers[row][col + 1];    // green  
             rgba[pos++] = row_pointers[row][col + 2];    // blue  
@@ -206,14 +201,13 @@ GLuint OglImage::CreateTextureFromPng(const char* filename)
     return textureID;
 }
 
-void OglImage::loadGLTextures(const char* filename)
+void OglImgShow::loadGLTextures(const char* filename)
 {
     if (filename == NULL)
         return;
 #ifdef QT_GUI_LIB
     QImage tex, img;
-    if (!img.load(filename))
-    {
+    if (!img.load(filename)) {
         qWarning("Could not read image file, using single-color instead.");
         QImage dummy(128, 128, QImage::Format_RGB32);
 #ifdef QCOLOR_H
@@ -242,12 +236,12 @@ void OglImage::loadGLTextures(const char* filename)
 #endif
 }
 
-void OglImage::Show(const char* filename)
+void OglImgShow::ShowPngTex(const char* filename)
 {
     if (filename == NULL)
         return;
     glEnable(GL_TEXTURE_2D);
-    if (NULL == texture[0])
+    if (0 == texture[0])
         texture[0] = CreateTextureFromPng(filename);
     glBindTexture(GL_TEXTURE_2D, texture[0]);
     glBegin(GL_QUADS);
@@ -260,7 +254,8 @@ void OglImage::Show(const char* filename)
 }
 
 // 显示图片
-void OglImage::Show() {
+void OglImgShow::showPixels()
+{
     glDisable(GL_DEPTH_TEST);
     // 是否设置图片透明度
     if (color_type == PNG_COLOR_TYPE_RGB) {
