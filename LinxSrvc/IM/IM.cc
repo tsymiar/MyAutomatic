@@ -647,7 +647,7 @@ type_thread_func monitor(void* arg)
                         if (memcmp(user.chk, "NDT", 4) == 0) {
                             fprintf(stdout, "'%s' is communicating with '%s' via NDT.\n", user.usr, user.peer);
                         } else {
-                            snprintf((sd_bufs + 32), 50, "%s", "Check message error for Network Data Translation.");
+                            snprintf((sd_bufs + 32), 50, "%s", "Check message detail of Network Data Translation.");
                             total = 88;
                             break;
                         }
@@ -806,7 +806,7 @@ type_thread_func monitor(void* arg)
                     break;
                     case ZONES:
                     {
-                        snprintf((sd_bufs + offset), 20, "%s", "Active zone list: \n");
+                        snprintf((sd_bufs + offset), 21, "%s", "Active group list: \n");
                         int n = 0;
                         for (c = 0; c < MAX_ZONES; c++) {
                             if (zones[c].zone.name[0] != '\0') {
@@ -826,11 +826,11 @@ type_thread_func monitor(void* arg)
                         val_rtn = find_zone(user.seek);
                         snprintf(sd_bufs + 2, 8, "%x", NE_VAL(val_rtn));
                         if (val_rtn == -2) {
-                            snprintf((sd_bufs + offset), 43, "No such [%s] zone.", user.seek);
+                            snprintf((sd_bufs + offset), 44, "No such [%s] group!", user.seek);
                             total = 56;
                         } else {
                             memset(sd_bufs + 2, 0, 2);
-                            snprintf((sd_bufs + offset), 24, "%s", "Member(s) of the zone:\n");
+                            snprintf((sd_bufs + offset), 25, "%s", "Member(s) of the group:\n");
                             for (c = 0; c < MAX_MEMBERS_PER_GROUP; c++) {
                                 if (zones[val_rtn].zone.members[c][0] >> 0) {
                                     memcpy((sd_bufs + offset * (c + 4)), zones[val_rtn].zone.members[c], 24);
@@ -847,7 +847,7 @@ type_thread_func monitor(void* arg)
                         val_rtn = host_zone(user);
                         snprintf(sd_bufs + 2, 8, "%x", NE_VAL(val_rtn));
                         if (val_rtn == -2) {
-                            snprintf((sd_bufs + offset), 20, "%s", "Host zone rejected.");
+                            snprintf((sd_bufs + offset), 21, "%s", "Host group rejected.");
                             total = 32;
                         } else if (val_rtn < -2 && val_rtn > -MAX_ZONES - 3) {
                             int stat = join_zone(((val_rtn + 3 + MAX_ZONES)), user.usr, reinterpret_cast<char*>(user.join));
@@ -859,7 +859,7 @@ type_thread_func monitor(void* arg)
                                     snprintf((sd_bufs + offset), 29, "Group Name should not empty!");
                                     total = 38;
                                 } else {
-                                    snprintf((sd_bufs + offset), 27, "User already in the group!");
+                                    snprintf((sd_bufs + offset), 31, "User already joined the group!");
                                     total = 36;
                                 }
                             } else {
@@ -867,7 +867,7 @@ type_thread_func monitor(void* arg)
                                 total = 34;
                             }
                         } else {
-                            snprintf((sd_bufs + offset), 52, "Created zone '%s' as host.", user.host);
+                            snprintf((sd_bufs + offset), 56, "Created the group '%s' as host.", user.host);
                             total = 66;
                         }
                     } break;
@@ -879,17 +879,17 @@ type_thread_func monitor(void* arg)
                             total = 48;
                             switch (val_rtn) {
                             case -1:
-                                snprintf((sd_bufs + offset), 50, "Can't find such zone: %s.", user.join);
+                                snprintf((sd_bufs + offset), 51, "Can't find such group: %s.", user.join);
                                 total = 58;
                                 break;
                             case -2:
-                                snprintf((sd_bufs + offset), 39, "Limits: zone was full for new members.");
+                                snprintf((sd_bufs + offset), 45, "Join Limits: group was full for new members.");
                                 break;
                             case -3:
-                                snprintf((sd_bufs + offset), 35, "You have already joined this zone.");
+                                snprintf((sd_bufs + offset), 36, "You have already joined this group.");
                                 break;
                             case -4:
-                                snprintf((sd_bufs + offset), 31, "Wrong pass token to this zone.");
+                                snprintf((sd_bufs + offset), 46, "Sth. wrong while passing token to this group.");
                                 break;
                             default:
                                 snprintf((sd_bufs + offset), 15, "Unknown error.");
@@ -897,7 +897,7 @@ type_thread_func monitor(void* arg)
                             }
                         } else {
                             total = 64;
-                            snprintf((sd_bufs + offset), 27 + 24, "Joining zone (%s) success.", user.join);
+                            snprintf((sd_bufs + offset), 28 + 24, "Joining group (%s) success.", user.join);
                         }
                     } break;
                     case EXIT_ZONE:
@@ -906,9 +906,9 @@ type_thread_func monitor(void* arg)
                         snprintf(sd_bufs + 2, 8, "%x", NE_VAL(val_rtn));
                         total = 42;
                         if (val_rtn >= 0)
-                            snprintf((sd_bufs + offset), 24, "%s", "Leave the zone success.");
+                            snprintf((sd_bufs + offset), 25, "%s", "Leave the group success.");
                         else
-                            snprintf((sd_bufs + offset), 29, "%s", "You aren't yet in this zone.");
+                            snprintf((sd_bufs + offset), 32, "%s", "You aren't yet join this group.");
                     } break;
                     case ALL_ZONE:
                     {
@@ -1082,7 +1082,7 @@ int inst_mssg(int argc, char* argv[])
         struct sockaddr_in fromAddr = {};
 #if (!defined SOCK_CONN_TEST) || (defined SOCK_CONN_TEST)
         type_len addrlen = static_cast<type_len>(sizeof(fromAddr));
-        std::cout << std::ios::fixed << "socklen=" << std::ios::hex << addrlen << std::ios::unitbuf << std::endl;
+        std::cout << "sock " << std::ios::fixed << " len=" << std::ios::hex << addrlen << std::ios::unitbuf << std::endl;
 #endif
 #ifdef SOCK_CONN_TEST
         type_socket test_socket = accept(listen_socket, (struct sockaddr*)&fromAddr, &addrlen);
@@ -1139,7 +1139,7 @@ int inst_mssg(int argc, char* argv[])
         }
 #endif
 #endif
-        fprintf(stdout, "%d\t%08X\n", threadCnt, *(uint32_t*)&threadid);
+        fprintf(stdout, "thrd %d\t0x%08x\n", threadCnt, *(uint32_t*)&threadid);
         threadCnt++;
         SLEEP(99);
     } while (!aim2exit);

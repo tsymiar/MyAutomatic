@@ -7,17 +7,18 @@
 #include <zlib.h>
 #include <png.h>
 
-class OglImage
-{
+class OglImgShow {
 public:
-    OglImage() {};
-    ~OglImage() {};
+    OglImgShow() { }
+    ~OglImgShow() { }
+
     int setPixels(const char* filename);
-    void Show();
-    void Show(const char* filename);
+    void showPixels();
+
+    void ShowPngTex(const char* filename);
 private:
-    GLuint texture[3] = { NULL };
-private:
-    void loadGLTextures(const char* filename);
     GLuint CreateTextureFromPng(const char* filename);
+    void loadGLTextures(const char* filename);
+private:
+    GLuint texture[3] = { 0, 0, 0 };
 };

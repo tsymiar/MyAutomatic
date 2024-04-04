@@ -17,7 +17,8 @@
 #include <QEventLoop>
 #include <QTimer>
 #include <QDebug>
-#include "OglImage.h"
+#include "OglImgShow.h"
+#include "SDL2tex.h"
 
 #ifndef _PI_
 #define _PI_ 3.14159265f
@@ -42,7 +43,7 @@ protected:
 private:
     /* [1] 定义着色器和片段着色器，否则做不了任何渲染 */
     /* 定义一个着色器[顶点着色器、片段着色器]编译对象 */
-    QOpenGLShaderProgram * program;
+    QOpenGLShaderProgram* program;
     ///< 视图矩阵、投影矩阵、MVP矩阵
     ///< 分三个矩阵，分别是模型矩阵、视图矩阵、透视矩阵:
     ///  1. 单独控制模型灯光跟随，shader要传入除了mvp矩阵外的模型矩阵*视图矩阵
@@ -63,7 +64,7 @@ private:
 #endif
     GLfloat xVal, yVal, zZoom, tHigh;
     int mX, mY;
-    OglImage png;
+    OglImgShow png;
     void coord();
     QString text;
     void textout(int left = 10, int upon = 40, QColor color = Qt::yellow, float th = 1, QString family = NULL);

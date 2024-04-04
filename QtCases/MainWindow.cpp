@@ -1,9 +1,9 @@
-#include "OpenGLWindow.h"
+#include "MainWindow.h"
 
-OpenGLWindow::OpenGLWindow(const char* title, bool fs)
+MainWindow::MainWindow(const char* title, bool fs)
 {
     setGeometry(400, 200, 287, 512);
-    fullscreen = fs;
+    fullscrn = fs;
     x = y = z = h = 0.0;
 
     light = false;
@@ -12,21 +12,23 @@ OpenGLWindow::OpenGLWindow(const char* title, bool fs)
 #else
     setWindowTitle(title);
 #endif
-    if (fullscreen)
+    setWindowIcon(QIcon("qrc:/WinNTKline/image/qtlogo.ico"));
+    if (fullscrn)
         showFullScreen();
-    timer = new QTimer(this);
-    connect(timer, SIGNAL(timeout()), this, SLOT(timerDone()));
-    timer->start(100 / 24);
+    tick = new QTimer(this);
+    connect(tick, SIGNAL(timeout()), this, SLOT(timeTickDone()));
+    tick->start(100 / 24);
     setMouseTracking(true);
 }
 
-OpenGLWindow::~OpenGLWindow()
+MainWindow::~MainWindow()
 {
-    if (timer->isActive())
-        timer->stop();
+    if (tick->isActive()) {
+        tick->stop();
+    }
 }
 
-void OpenGLWindow::keyPressEvent(QKeyEvent * e)
+void MainWindow::keyPressEvent(QKeyEvent* e)
 {
     qDebug() << "+++ key(" << e->key() << ")" <<
         QString("x=%1 y=%2 z=%3")
@@ -34,32 +36,38 @@ void OpenGLWindow::keyPressEvent(QKeyEvent * e)
         .arg(y)
         .arg(z)
         << "+++";
-    switch (e->key())
-    {
+    switch (e->key()) {
     case Qt::Key_F2:
-        fullscreen = !fullscreen;
-        if (fullscreen)
-        {
+        fullscrn = !fullscrn;
+        if (fullscrn) {
             showFullScreen();
-        }
-        else
-        {
+        } else {
             showNormal();
             setGeometry(400, 200, 640, 480);
         }
         break;
     case Qt::Key_L:
         light = !light;
-        if (!light)
-        {
+        if (!light) {
             glDisable(GL_LIGHTING);
-        }
-        else
-        {
+        } else {
             glEnable(GL_LIGHTING);
         }
         break;
-#ifndef _GLVBO_
+#ifdef _GLVBO_
+    case Qt::Key_A:
+        getProject().rotate(1, 0, 1, 0);
+        break;
+    case Qt::Key_D:
+        getProject().rotate(-1, 0, 1, 0);
+        break;
+    case Qt::Key_W:
+        getProject().rotate(1, 1, 0, 0);
+        break;
+    case Qt::Key_S:
+        getProject().rotate(-1, 1, 0, 0);
+        break;
+#else
     case Qt::Key_Right:   //→
         x += 0.01f;
         setXval(x);
@@ -90,19 +98,6 @@ void OpenGLWindow::keyPressEvent(QKeyEvent * e)
         h += 0.3f;
         setHigh(h);
         break;
-#else
-    case Qt::Key_A:
-        getProject().rotate(1, 0, 1, 0);
-        break;
-    case Qt::Key_D:
-        getProject().rotate(-1, 0, 1, 0);
-        break;
-    case Qt::Key_W:
-        getProject().rotate(1, 1, 0, 0);
-        break;
-    case Qt::Key_S:
-        getProject().rotate(-1, 1, 0, 0);
-        break;
 #endif
     case Qt::Key_Escape:
         close();
@@ -111,23 +106,25 @@ void OpenGLWindow::keyPressEvent(QKeyEvent * e)
     update();
 }
 
-void OpenGLWindow::mouseMoveEvent(QMouseEvent * e)
+void MainWindow::mouseMoveEvent(QMouseEvent* e)
 {
+    if (e->MouseButtonDblClick == e->type()) {
+        qDebug() << "DblClick!";
+    }
     setXloc(e->x());
     setYloc(e->y());
 }
 
-void OpenGLWindow::timeTickDone()
+void MainWindow::timeTickDone()
 {
-#ifndef _GLVBO_
+#if (!defined _GLVBO_)
     h -= 0.01f;
     if (h < -1)
         h = -1;
     if (h > 5.55)
         h = 5.55;
     setHigh(h);
-    if (fabs(h - getH()) < 0.01)
-    {
+    if (fabs(h - getH()) < 0.01) {
         setText("bingo!");
         setBingo();
     }
