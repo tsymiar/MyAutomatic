@@ -337,8 +337,8 @@ public:
     int DrawTrade(char time[32] = { NULL });
     bool DrawItems(const Market& market, int row);
     int DrawPoly(Point Pb, Point Pe, OGLKview::Color4f color = { 1,1,1,1 }, int viewport = 1);
-    bool DrawKline(OGLKview::Market markdata, const OGLKview::FixWhat& co, bool hollow = 1, Point pnt = { 0,0 });
-    int Data2View(std::vector<struct OGLKview::Market> market, OGLKview::Dlginfo toview);
+    bool DrawKline(const OGLKview::Market& markdata, const OGLKview::FixWhat& co, bool hollow = 1, Point pnt = { 0,0 });
+    int Data2View(const std::vector<struct OGLKview::Market>& market, OGLKview::Dlginfo toview);
 #ifdef _MSC_VER
     bool SetWindowPixelFormat(HDC m_hDC, HWND m_hWnd, int pixelformat = 0);
 #endif

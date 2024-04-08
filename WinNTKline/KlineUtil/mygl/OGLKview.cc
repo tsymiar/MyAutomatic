@@ -86,7 +86,7 @@ bool OGLKview::SetWindowPixelFormat(HDC m_hDC, HWND m_hWnd, int pixelformat)
 //}
 #endif
 
-bool OGLKview::DrawKline(OGLKview::Market markdata, const OGLKview::FixWhat& co, bool hollow, Point pnt)
+bool OGLKview::DrawKline(const OGLKview::Market& markdata, const OGLKview::FixWhat& co, bool hollow, Point pnt)
 {
     using namespace std;
     float /*xVal(0), */yVal(0);
@@ -731,10 +731,10 @@ int OGLKview::DrawPoly(Point Pb, Point Pe, OGLKview::Color4f color, int viewport
     return viewport;
 }
 
-int OGLKview::Data2View(std::vector<struct OGLKview::Market> market, OGLKview::Dlginfo toview)
+int OGLKview::Data2View(const std::vector<struct OGLKview::Market> &market, OGLKview::Dlginfo toview)
 {
     //添加迭代器用于遍历向量元素
-    std::vector<OGLKview::Market>::iterator it = market.begin();
+    std::vector<OGLKview::Market>::const_iterator it = market.begin();
     while (it != market.end())
         ++it;
     //std::vector<OGLKview::Market>::iterator element = std::find(market.begin(), market.end(), who);

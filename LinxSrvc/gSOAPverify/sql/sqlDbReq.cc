@@ -21,7 +21,6 @@ MYSQL_FIELD* field = NULL;
 unsigned int rownum;
 unsigned int fieldnum;
 MYSQL_ROW fetch = NULL;
-const int g_wait = 1000000;
 int get_rslt_new(struct queryInfo* info);
 
 bool get_rslt_raw(struct queryInfo* info)
@@ -70,7 +69,7 @@ void* test_connect(void* lp)
                 j++;
             }
         }
-        usleep(10 * g_wait);
+        sleep(3);
     }
     return lp;
 }
@@ -128,7 +127,7 @@ int get_rslt_new(queryInfo* info)
         if (cnt == 1) {
             pthread_mutex_unlock(&sql_lock);
             cout << LL << "[INFO] first time went failure, waiting for retring..." << endl;
-            usleep(3 * g_wait);
+            sleep(3);
             return get_rslt_new(info);
         }
         cout << LL << "Query database fail: " << mysql_error(&mysql) << "!" << endl;
