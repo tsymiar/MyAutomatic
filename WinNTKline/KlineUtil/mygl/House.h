@@ -78,8 +78,7 @@
 // Initial eye position and vector of sight.
 static GLfloat speed = 0;
 /* Data struct		*/
-typedef struct texture_2d
-{
+typedef struct texture_2d {
     char	fname[30];
     INT2U	type;	/* CLAMP_TEXTURE or REPEAT_TEXTEXTURE */
 }   TEXTURE_2D;
@@ -97,19 +96,18 @@ typedef struct surface		/* surface	*/
     INT4U	pointn;		/* point number		*/
     INT4U	triangle;	/* triangle number	*/
     INT4U	quadric;	/* quadrangle number	*/
-    POINT3D	*pointlist;	/* points list		*/
-    INT4U	*patchlist;	/* patches list(list of point No.)*/
+    POINT3D* pointlist;	/* points list		*/
+    INT4U* patchlist;	/* patches list(list of point No.)*/
     INT4U	texId;	        /* texture index	*/
 }   SURFACE;
 
 typedef struct object		/* OBJECT		*/
 {
     INT4U	SurfNum; /* surface number and list size*/
-    SURFACE	*surflist; 	/* surfaces list in the object*/
+    SURFACE* surflist; 	/* surfaces list in the object*/
 }   OBJECT;
 
-class House
-{
+class House {
 public:
     // This is the holding space for the landscape colours.
     int Width = 0;
@@ -125,8 +123,8 @@ protected:
     int tall = 0;
     Initialise index;
 
-    TEXTURE_2D    **TextureList = NULL;
-    OBJECT	      *ObjectList = NULL;		/* ObjectList[0]:isolated surfaces*/
+    TEXTURE_2D** TextureList = NULL;
+    OBJECT* ObjectList = NULL;		/* ObjectList[0]:isolated surfaces*/
 
     INT4S         ObjectNum = 0;
 
@@ -139,7 +137,11 @@ protected:
     unsigned short int texture_mapping = FALSE,
         land_fogging = TRUE, flat_shading = TRUE;
 
-    float	angle, Near, ex, ey, ez, cx, cy, cz, ux, uy, uz;
+    float Angle = 0;
+    float Near = 0;
+    float ex = 0, ey = 0, ez = 0;
+    float cx = 0, cy = 0, cz = 0;
+    float ux = 0, uy = 0, uz = 0;
 
     unsigned char* ImageDatas[MAX_TEX] = {};
     INT2U rslxs[MAX_TEX], rslys[MAX_TEX] = {};
@@ -157,7 +159,7 @@ public:
     void    CleanList();
     void    InitLookAt();
     void    ReadData();
-    unsigned char	*OpenTexImage(INT2U TexIndex, INT2U *rslx, INT2U *rsly);
+    unsigned char* OpenTexImage(INT2U TexIndex, INT2U* rslx, INT2U* rsly);
     void    InitRenderWin();
     void InitGeometry(void);
     void    Render(void);

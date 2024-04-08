@@ -2,7 +2,7 @@
 
 extern	TEXTURE_2D** TextureList;
 
-House::House() {}
+House::House() { }
 
 // Create an OpenGL rendering context
 BOOL House::CreateViewGLContext(HDC hDC)
@@ -192,9 +192,9 @@ void House::InitLookAt()
         ex = ey = ez = 1.0f;
         cx = cy = cz = 0.0f;
         Near = 0.1f;
-        angle = 30.0f;
+        Angle = 30.0f;
     } else
-        fscanf_s(fp, "%f%f%f%f%f%f%f%f", &angle, &Near, &ex, &ey, &ez, &cx, &cy, &cz);
+        fscanf_s(fp, "%f%f%f%f%f%f%f%f", &Angle, &Near, &ex, &ey, &ez, &cx, &cy, &cz);
     fclose(fp);
 }
 
@@ -207,7 +207,7 @@ void	House::InitRenderWin()
     glLoadIdentity();
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    gluPerspective(angle, (float)Width / (float)Height, Near, 1000000000.0);
+    gluPerspective(Angle, (float)Width / (float)Height, Near, 1000000000.0);
     gluLookAt(ex, ey, ez, cx, cy, cz, 0.0, 1.0, 0.0);
 }
 
@@ -382,8 +382,7 @@ void House::CleanAllTexture()
 }
 
 House::~House()
-{
-}
+{ }
 
 #ifdef __error //ws2tcpip.h 'Error' redefined.
 #undef __error
