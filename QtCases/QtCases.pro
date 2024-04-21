@@ -27,7 +27,7 @@ SOURCES = main.cpp \
             MainWindow.cpp OglMaterial.cpp OglImgShow.cpp \
             $${MYGL}/SDL2tex.cc # $${MYGL}/OGLKview.cc
 
-RC_ICONS = ../WinNTKline/KlineUtil/image/qtlogo.ico
+RC_ICONS = qtlogo.ico
 
 RESOURCES += \
     qtlogo.qrc

@@ -1,11 +1,13 @@
 #include "SDL2tex.h"
 
 #if SDL_MAJOR_VERSION >= 2
-static SDL_Window* g_window = NULL;
-static SDL_Renderer* g_render = NULL;
-static SDL_Texture* g_texture = NULL;
-static SDL_Surface* g_surface = NULL;
+    static SDL_Window* g_window = NULL;
+    static SDL_Renderer* g_render = NULL;
+    static SDL_Surface* g_surface = NULL;
 #endif
+
+const int W = 640;
+const int H = 480;
 
 int SDL_GL_init()
 {
@@ -15,7 +17,7 @@ int SDL_GL_init()
         return -1;
 	}
 #if SDL_MAJOR_VERSION >= 2
-	g_window = SDL_CreateWindow("SDL SHOW", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 480, SDL_WINDOW_OPENGL);
+    g_window = SDL_CreateWindow("SDL SHOW", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, W, H, SDL_WINDOW_OPENGL);
 	if (g_window == NULL) {
 		SDL_Log("Can't creat window, %s", SDL_GetError());
 		return -2;
@@ -28,10 +30,14 @@ int SDL_GL_init()
     SDL_SetRenderDrawColor(g_render, 255, 255, 255, 255);
     SDL_RenderClear(g_render);
 #endif
-	return TTF_Init();
+    if (TTF_Init() == -1) {
+        SDL_Log("Can't init TTF, %s", SDL_GetError());
+        return -4;
+    }
+    return 0;
 }
 
-int SDL_GL_loadImage(const char* filename)
+int SDL_GL_loadImage(const char* filename, CopyRect rect)
 {
 #if SDL_MAJOR_VERSION >= 2
 	g_surface = SDL_LoadBMP(filename);
@@ -39,19 +45,47 @@ int SDL_GL_loadImage(const char* filename)
 		SDL_Log("Can't creat surface, %s", SDL_GetError());
 		return -1;
 	}
-	g_texture = SDL_CreateTextureFromSurface(g_render, g_surface);
-	if (g_texture == NULL) {
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(g_render, g_surface);
+    if (texture == NULL) {
 		SDL_Log("Can't creat texture, %s", SDL_GetError());
 		return -2;
-	}
-	SDL_Rect rect{ 1,1,400,300 };
-	if (0 != SDL_RenderCopy(g_render, g_texture, &rect, &rect)) {
+    }
+    if (0 != SDL_RenderCopy(g_render, texture, &rect.src, &rect.dst)) {
 		SDL_Log("Can't copy render, %s", SDL_GetError());
 		return -3;
-	}
+    }
 	SDL_RenderPresent(g_render);
+    SDL_DestroyTexture(texture);
 #endif
     return 0;
+}
+
+void SDL_GL_showText(const char* text, TextCfg cfg)
+{
+    TTF_Font *font = TTF_OpenFont(cfg.font, 16);
+    if(font != NULL) {
+        TTF_SetFontStyle(font, cfg.style);
+        SDL_Surface * message = TTF_RenderUTF8_Solid( font, text, cfg.color );
+        if(message != NULL) {
+            //Temporary rectangle to hold the offsets
+            // SDL_BlitSurface(message, NULL, g_surface, &cfg.rect.dst);
+            SDL_Texture* texture = SDL_CreateTextureFromSurface(g_render, message);
+            if (texture == NULL) {
+                SDL_Log("Can't creat texture, %s", SDL_GetError());
+                return;
+            }
+            if (0 != SDL_RenderCopy(g_render, texture, &cfg.rect.src, &cfg.rect.dst)) {
+                SDL_Log("Can't copy render, %s", SDL_GetError());
+                return;
+            }
+            SDL_RenderPresent(g_render);
+            SDL_DestroyTexture(texture);
+            SDL_FreeSurface(message);
+        }
+        TTF_CloseFont(font);
+    } else {
+        SDL_Log("TTF_OpenFont: Open simsun.ttf %s\n", TTF_GetError());
+    }
 }
 
 void SDL_GL_SetAs2DMode(int w, int h)
@@ -190,8 +224,7 @@ GLuint SDL_GL_LoadTexture(SDL_Surface* surface, GLfloat* texcoord)
 void SDL_GL_quit()
 {
 #if SDL_MAJOR_VERSION >= 2
-	TTF_Quit();
-	SDL_DestroyTexture(g_texture);
+    TTF_Quit();
 	SDL_FreeSurface(g_surface);
     SDL_RenderClear(g_render);
 	SDL_DestroyWindow(g_window);

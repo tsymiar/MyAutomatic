@@ -58,3 +58,5 @@ build
 !.vsconfig
 *Debug
 test.txt
+qrc_*
+*.user
