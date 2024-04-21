@@ -1,5 +1,7 @@
 #include "OglMaterial.h"
 
+#define IMAGE_PATH "../WinNTKline/KlineUtil/image/"
+
 QOglMaterial::QOglMaterial(QWidget* parent)
     : QOpenGLWidget(parent)
 {
@@ -176,10 +178,21 @@ void QOglMaterial::initializeGL()
 #ifdef  OGL_KVIEW_H_
     kv.AdjustDraw(640, 480);
 #else
-    png.setPixels("../WinNTKline/KlineUtil/image/atlas.png");
+    png.setPixels(IMAGE_PATH"atlas.png");
 #if SDL_MAJOR_VERSION >= 2
-    SDL_GL_init();
-    SDL_GL_loadImage("../WinNTKline/KlineUtil/image/spabandari.bmp");
+    if (SDL_GL_init() == 0) {
+        CopyRect rect{ { 100,10,360,70 },{ 70,360,500,70 } };
+        SDL_GL_loadImage(IMAGE_PATH"spabandari.bmp", rect);
+        rect.src = { 128,160,360,256 };
+        rect.dst = { 1,1,256,180 };
+        SDL_GL_loadImage(IMAGE_PATH"spabandari.bmp", rect);
+        TextCfg cfg;
+        cfg.font = IMAGE_PATH"../font/Deng.ttf";
+        cfg.style = TTF_STYLE_NORMAL;
+        cfg.color = { 255, 0, 0, 255 };
+        cfg.rect = { { 0,0,300,60 }, {100,256,256,24} };
+        SDL_GL_showText("这ge是打在窗口上的等线字体", cfg);
+    }
 #endif
 #endif
 #endif // _GLVBO_

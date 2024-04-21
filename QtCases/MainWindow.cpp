@@ -12,7 +12,8 @@ MainWindow::MainWindow(const char* title, bool fs)
 #else
     setWindowTitle(title);
 #endif
-    setWindowIcon(QIcon("qrc:/WinNTKline/image/qtlogo.ico"));
+    // setWindowIcon(QIcon("qrc:/qtlogo.ico"));
+    setWindowIcon(QIcon(":/qtlogo.ico"));
     if (fullscrn)
         showFullScreen();
     tick = new QTimer(this);

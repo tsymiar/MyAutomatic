@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "-------- Begin 'LinxSrvc' building ... --------"
+echo "-------- Begin '$(uname)' building ... --------"
 PWD=$(pwd)
 if [ "$1" == "test" ]
 then
@@ -36,7 +36,12 @@ else
     then
         if [ -d "build" ]; then rm -rvf lib build; fi;
         if [ -d "test/build" ]; then cd test && ./test.sh clean; fi;
-        if [ -d "../build" ]; then rm -rvf ../lib ../build; fi;
+        shopt -s nullglob
+        files=$(ls ../build* 2> /dev/null | wc -l)
+        if [ "$files" != "0" ]; then
+            rm -rvf ../lib
+            find ../build* ! -name 'build.sh' -exec rm -rvf {} +
+        fi
     fi
 fi
 echo "-------- All '$1' build progress(es) finish --------"

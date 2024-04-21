@@ -218,7 +218,7 @@ int GlModel::LoadGLTexture()                                // Load Bitmaps And 
         memset(TextureImage, i, sizeof(void *) * 1);        // Set The Pointer To NULL
                                                             // Load The Bitmap, Check For Errors, If Bitmap's Not Found Quit
     if ((TextureImage[0] = LoadBMP("image/qdu.bmp")) &&
-        (TextureImage[1] = LoadBMP("image/outdoor.bmp")) && (TextureImage[2] = LoadBMP("image/bkg.bmp")))
+        (TextureImage[1] = LoadBMP("image/outdoor.bmp")) && (TextureImage[2] = LoadBMP("image/background.bmp")))
     {
         load = TRUE;                                       // Set The Status To TRUE
         for (int k = 0; k < NUM; k++)

@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/icon">
-        <file>../WinNTKline/image/qtlogo.ico</file>
+    <qresource prefix="/">
+        <file>qtlogo.ico</file>
     </qresource>
 </RCC>
