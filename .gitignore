@@ -52,11 +52,8 @@ CMakeSettings.json
 */build
 build
 *.idea
-*/moc_*
-*/ui_*
 **/.vs*
 !.vsconfig
 *Debug
 test.txt
-qrc_*
-*.user
+*.so.*

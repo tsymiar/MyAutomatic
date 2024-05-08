@@ -1,4 +1,7 @@
 Makefile
-*.pro.use*
 QtCases
+*.pro.use*
 .fuse_*
+qrc_*
+moc_*
+ui_*
