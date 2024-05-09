@@ -17,7 +17,7 @@ chstest:
 video:
 	gcc -g -DVIDEO test.c routine.c -lm -o $(GEN)/VideoCapture
 image:
-	gcc -g -DSNAP test.c linuxsnap.c -o $(GEN)/imagesnap
+	gcc -g -DSNAP test.c linuxsnap.c -o $(GEN)/imagesnap.exe
 pipefifo:
 	gcc -g -DPIPE_FIFO test.c -o $(GEN)/pipefifo
 all:
