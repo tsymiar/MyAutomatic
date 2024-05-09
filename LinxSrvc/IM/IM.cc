@@ -76,7 +76,7 @@ pthread_mutexattr_t attr;
 #define __ "./"
 #define _0_ "_0"
 #define IMAGE_BLOB "image"
-#define GET_IMG_EXE "snap.exe"
+#define GET_IMG_EXE IMAGE_BLOB"snap.exe"
 #define PRINT_RECV(msg, cmd, chk, usr, flg, idx, txt) do { \
     fprintf(stdout, "----------------------------------------------------------------\\ \
                         \n>>> %s [%0x,%0x]: %s, %d, %u\n", msg, cmd, static_cast<unsigned>(*chk), usr, flg, (idx)); \
