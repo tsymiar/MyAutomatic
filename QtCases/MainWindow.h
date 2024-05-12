@@ -5,8 +5,9 @@
 #include "OglMaterial.h"
 
 class MainWindow : public QOglMaterial {
+#if (! defined _WIN32)
     Q_OBJECT
-
+#endif
 public:
     MainWindow(const char* title = "tsymiar's Tutorial", bool fs = false);
     ~MainWindow();

@@ -209,9 +209,9 @@ void WPSMainWindow::closeApp()
 	KComVariant vars[3];
 	if (m_spApplication != NULL)
 	{
-		m_spApplication->Quit(vars, vars+1, vars+2);
+        m_spApplication->Quit(vars, vars+1, vars+2);
 		m_mainArea->destroyWpsApplication();
-		m_spDocs = NULL;
+        m_spDocs = NULL;
 		m_spApplication = NULL;
 		m_spApplicationEx = NULL;
 	}
@@ -276,6 +276,27 @@ void WPSMainWindow::openDoc(QString filename)
 		}
 	}
 	m_mainArea->setFocus();
+}
+
+QString WPSMainWindow::getDocContent()
+{
+    QString content = "";
+    if (m_spApplication)
+    {
+        ks_stdptr<_Document> spDoc;
+        m_spApplication->get_ActiveDocument((Document**)&spDoc);
+        if (spDoc)
+        {
+            ks_stdptr<Range> spRange;
+            spDoc->get_Content(&spRange);
+            BSTR* text = new BSTR[1024];
+            spRange->get_Text(text);
+            char* ctxt = (char*)(*text);
+            content = QString::fromLocal8Bit("%1").arg(ctxt);
+            delete text;
+        }
+    }
+    return content;
 }
 
 void WPSMainWindow::saveAs()

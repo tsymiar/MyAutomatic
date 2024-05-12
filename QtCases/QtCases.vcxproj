@@ -68,6 +68,9 @@
       <AdditionalDependencies>qtmaind.lib;Qt5Cored.lib;Qt5Guid.lib;Qt5Networkd.lib;Qt5AxContainerd.lib;Qt5AxBased.lib;Qt5OpenGLd.lib;Qt5QuickWidgetsd.lib;Qt5SerialPortd.lib;Qt5Svgd.lib;Qt5UiToolsd.lib;Qt5WebSocketsd.lib;Qt5Widgetsd.lib;Qt5Xmld.lib;opengl32.lib;glu32.lib;libpng16.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/FORCE:MULTIPLE %(AdditionalOptions)</AdditionalOptions>
     </Link>
+    <PostBuildEvent>
+      <Command>COPY $(libPNG)\lib\$(ConfigurationName)\libpng16.dll $(LocalDebuggerWorkingDirectory)..\WinNTKline\$(ConfigurationName)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -86,19 +89,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="GeneratedFiles\Debug\moc_MainWindow.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="GeneratedFiles\qrc_mainwindow.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="GeneratedFiles\Release\moc_MainWindow.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="OfficeWidget.cpp" />
     <ClCompile Include="OglMaterial.cpp" />
     <ClCompile Include="MainWindow.cpp" />
     <ClCompile Include="OglImgShow.cpp" />
@@ -162,6 +160,7 @@
     <None Include="QtCases.pro" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="OfficeWidget.h" />
     <ClInclude Include="OglMaterial.h" />
     <ClInclude Include="OglImgShow.h" />
   </ItemGroup>
