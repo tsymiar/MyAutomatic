@@ -78,6 +78,7 @@ public:
 	void newDoc();
     void openDoc();
     void openDoc(QString filename);
+    QString getDocContent();
 	void saveAs();
 	void closeDoc();
 	void printOutDoc();

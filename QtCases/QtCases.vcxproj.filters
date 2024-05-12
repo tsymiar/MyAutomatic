@@ -45,13 +45,10 @@
     <ClCompile Include="GeneratedFiles\qrc_mainwindow.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
-    <ClCompile Include="GeneratedFiles\Debug\moc_MainWindow.cpp">
-      <Filter>Generated Files\Debug</Filter>
-    </ClCompile>
-    <ClCompile Include="GeneratedFiles\Release\moc_MainWindow.cpp">
-      <Filter>Generated Files\Release</Filter>
-    </ClCompile>
     <ClCompile Include="OglImgShow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="OfficeWidget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -74,6 +71,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="OglImgShow.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="OfficeWidget.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
