@@ -1,9 +1,9 @@
-#include "GetHttp.h"
+#include "httpGet.h"
 #include <wininet.h>
 
 using namespace std;
 
-CString HttpGet(string& sRequest, const string& sPort)
+CString httpGetReq(string& sRequest, const string& sPort)
 {
     HINTERNET hSession = NULL;
     HINTERNET hConnection = NULL;
@@ -29,8 +29,7 @@ CString HttpGet(string& sRequest, const string& sPort)
     DWORD dwFlags = INTERNET_FLAG_RELOAD | INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_KEEP_CONNECTION;
     hSession = ::InternetOpen("RookIE/1.0", INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
 
-    if (hSession == NULL)
-    {
+    if (hSession == NULL) {
         goto LERROR;
     }
 
@@ -38,8 +37,7 @@ CString HttpGet(string& sRequest, const string& sPort)
     //创建http连接
     hConnection = ::InternetConnect(hSession, sHostName.c_str(), atoi(sPort.c_str()), NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
 
-    if (hConnection == NULL)
-    {
+    if (hConnection == NULL) {
         goto LERROR;
     }
 
@@ -47,29 +45,26 @@ CString HttpGet(string& sRequest, const string& sPort)
     sAcceptTypes = "text/*";
     hRequest = ::HttpOpenRequest(hConnection, "POST", lpszName.c_str(), HTTP_VERSION, NULL, &sAcceptTypes, dwFlags, 0);
 
-    if (hRequest == NULL)
-    {
+    if (hRequest == NULL) {
         goto LERROR;
     }
     //添加请求报文头
     sHeaders = "Accept: \r\nContent-Type:text/xml;charset=utf-8";
     nRet = ::HttpAddRequestHeaders(hRequest, sHeaders.c_str(), -1, HTTP_ADDREQ_FLAG_ADD | HTTP_ADDREQ_FLAG_REPLACE);
 
-    if (nRet == 0)
-    {
+    if (nRet == 0) {
         goto LERROR;
     }
-    //发送请求
+
     int nLen = sRequest.length();
+    //发送请求
     nRet = ::HttpSendRequest(hRequest, NULL, -1, (void*)sRequest.c_str(), nLen);
 
     int nErrorCount = 0;
-    while (0 == nRet && nErrorCount < 3)
-    {
+    while (0 == nRet && nErrorCount < 3) {
         nErrorCount++;
         DWORD dwError = GetLastError();
-        if (dwError == ERROR_INTERNET_CLIENT_AUTH_CERT_NEEDED)
-        {
+        if (dwError == ERROR_INTERNET_CLIENT_AUTH_CERT_NEEDED) {
             LPVOID  dwCert = NULL;
             InternetErrorDlg((HWND)GetDesktopWindow(),
                 hRequest,
@@ -79,25 +74,19 @@ CString HttpGet(string& sRequest, const string& sPort)
                 FLAGS_ERROR_UI_FLAGS_CHANGE_OPTIONS,
                 &dwCert);
             InternetSetOption(hRequest, INTERNET_OPTION_SECURITY_SELECT_CLIENT_CERT, dwCert, sizeof(dwCert));
-        }
-        else if (dwError == ERROR_INTERNET_INVALID_CA)
-        {
+        } else if (dwError == ERROR_INTERNET_INVALID_CA) {
             DWORD  dwBuffLen = sizeof(dwFlags);
             InternetQueryOption(hRequest, INTERNET_OPTION_SECURITY_FLAGS, (LPVOID)&dwFlags, &dwBuffLen);
             dwFlags |= SECURITY_FLAG_IGNORE_UNKNOWN_CA;
             InternetSetOption(hRequest, INTERNET_OPTION_SECURITY_FLAGS, &dwFlags, sizeof(dwFlags));
-        }
-        else
-        {
+        } else {
             break;
         }
     }
-    if (0 == nRet)
-    {
+    if (0 == nRet) {
         nRet = ::HttpSendRequest(hRequest, NULL, -1, (void*)sRequest.c_str(), nLen);
     }
-    if (nRet == 0)
-    {
+    if (nRet == 0) {
         goto LERROR;
     }
 
@@ -106,20 +95,17 @@ CString HttpGet(string& sRequest, const string& sPort)
     memset(szRet, 0x0, sizeof(szRet));
     nRet = ::HttpQueryInfo(hRequest, HTTP_QUERY_STATUS_CODE, szRet, &dwRetLen, NULL);
 
-    if (nRet == 0)
-    {
+    if (nRet == 0) {
         goto LERROR;
     }
     nRet = atoi(szRet);
 
-    if (HTTP_STATUS_PROXY_AUTH_REQ == nRet)
-    {
+    if (HTTP_STATUS_PROXY_AUTH_REQ == nRet) {
         InternetSetOption(hRequest, INTERNET_OPTION_PROXY_USERNAME, "User-001", strlen("User-001"));
         InternetSetOption(hRequest, INTERNET_OPTION_PROXY_PASSWORD, "111111", strlen("111111"));
         nRet = ::HttpSendRequest(hRequest, NULL, -1, (void*)sRequest.c_str(), nLen);
 
-        if (nRet == 0)
-        {
+        if (nRet == 0) {
             goto LERROR;
         }
 
@@ -127,20 +113,17 @@ CString HttpGet(string& sRequest, const string& sPort)
         memset(szRet, 0x0, sizeof(szRet));
 
         nRet = ::HttpQueryInfo(hRequest, HTTP_QUERY_STATUS_CODE, szRet, &dwRetLen, NULL);
-        if (nRet == 0)
-        {
+        if (nRet == 0) {
             goto LERROR;
         }
         nRet = atoi(szRet);
     }
-    if (nRet != HTTP_STATUS_OK)
-    {
+    if (nRet != HTTP_STATUS_OK) {
         goto LERROR;
     }
     sResponse.clear();
     //读取文件
-    do
-    {
+    do {
         memset(szBuf, 0x0, sizeof(szBuf));
         ::InternetReadFile(hRequest, szBuf, sizeof(szBuf), &dwReadLen);
         sResponse += szBuf;

@@ -123,13 +123,15 @@
       <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <PostBuildEvent>
-      <Command>copy "$(ProjectDir)..\KlineUtil\script\call.bat" "$(TargetDir)"
-set TARGET='$(TargetDir)'
-echo '%TARGET:~0,3%'
-cmd @echo off
-echo '%~dp0'
-cd "..\$(ConfigurationName)"
-.\call.bat</Command>
+      <Command>
+        copy "$(ProjectDir)..\KlineUtil\script\call.bat" "$(TargetDir)"
+        set TARGET='$(TargetDir)'
+        echo '%TARGET:~0,3%'
+        cmd @echo off
+        echo '%~dp0'
+        cd "..\$(ConfigurationName)"
+        .\call.bat
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

@@ -1,16 +1,18 @@
 @echo off
-if exist data (
-echo
-)else (
-md data
-)
+mklink /d cfg ..\KlineUtil\cfg
 if exist cfg (
-echo
+    echo
 )else (
-md cfg
+    md cfg
+    copy ..\KlineUtil\cfg\*.ini .\cfg
 )
-copy ..\KlineUtil\cfg\*.ini .\cfg
-copy ..\KlineUtil\data .\data
+mklink /d data ..\KlineUtil\data
+if exist data (
+    echo
+)else (
+    md data
+    copy ..\KlineUtil\data .\data
+)
 copy ..\KlineUtil\CTP\*.dll .\
 copy ..\KlineUtil\WPF\*.dll .\
 copy ..\KlineUtil\font\lib\*.dll .\

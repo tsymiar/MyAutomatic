@@ -14,6 +14,7 @@
 #include <WS2tcpip.h>
 #else
 #include <winsock2.h>
+#include <Ws2ipdef.h>
 #endif
 #include <process.h>
 #include <conio.h>

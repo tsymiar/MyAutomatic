@@ -3,7 +3,6 @@
 
 #include <../jni.h>
 #include <mygl/OGLKview.h>
-/// TODO
 #define JNIREG_CLASS "com/automatic/kline/Native"
 
 #ifdef __cplusplus
@@ -14,18 +13,18 @@ extern "C" {
     * Method:    getNative
     * Signature: ()V
     */
-    JNIEXPORT jstring JNICALL Java_Native_Func(JNIEnv *, jclass, int);
+    JNIEXPORT jstring JNICALL Java_Native_Func(JNIEnv*, jclass, int);
 
 
 #ifdef __cplusplus
 }
 #endif
 
-JNIEXPORT jstring JNICALL Java_Native_Func(JNIEnv *env, jclass clazz, int m)
+JNIEXPORT jstring JNICALL Java_Native_Func(JNIEnv* env, jclass clazz, int m)
 {
-    FILE *f;
+    FILE* f;
     f = fopen("hello.txt", "a+, ccs=UTF-8");
-    wchar_t *t = const_cast<wchar_t*>("嘿嘿xix你好啊！");
+    wchar_t* t = (wchar_t*)("嘿嘿xix你好啊！");
     fwrite(t, sizeof(wchar_t), 15, f);
     fclose(f);
     return env->NewStringUTF("hello jni.");
@@ -51,7 +50,7 @@ static int registerNativeMethods(JNIEnv* env, const char* className,
     return JNI_TRUE;
 }
 
-int register_ndk_load(JNIEnv *env)
+int register_ndk_load(JNIEnv* env)
 {
     return registerNativeMethods(env, JNIREG_CLASS,
         method_table, SZ_ELEM(method_table));
