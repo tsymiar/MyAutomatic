@@ -10,7 +10,7 @@
 
         <StackPanel Grid.Row="0" Orientation="Horizontal">
             <Label Margin="0,5,0,5" Content="Local File:"></Label>
-            <TextBox Name="txtFilePath" Margin="0,5,0,5" Width="520" Height="22"></TextBox>
+            <TextBox Name="txtFilePath" Margin="0,5,0,5" Width="520" Height="22" KeyUp="txtFilePath_KeyUp"></TextBox>
             <Button Name="btnOpenFile" Margin="5,5,0,5" Width="22" Content="..." Height="22" ToolTipService.ToolTip="打开文件"
                     Click="btnOpenFile_Click">
             </Button>

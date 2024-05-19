@@ -372,6 +372,9 @@ void OGLKview::print_string(const char* str)
     if ((wstring = (wchar_t*)malloc(len * sizeof(wchar_t))) == NULL)
         return;
 #else
+    if (str == NULL) {
+        str = "null";
+    }
     const GLuint list = glGenLists(1);
     for (i = 0; str[i] != '\0'; ++i) {
         if (IsDBCSLeadByte(str[i]))
@@ -585,7 +588,9 @@ int OGLKview::DrawTrade(char time[32])
     mc.y = (float)dlginfo.mouY;
     min += (417 - dlginfo.mouY) * (float)fixpixely * step / fold * 3.9f;
     sprintf(hintx, "%.2f", min);
-    if (time[0] != NULL && g_ltime != time) {
+    if (time == NULL || g_ltime == time) {
+        printf("time is invalid: %08x", time);
+    } else {
         memcpy(time, g_ltime, 32);
     }
     SwitchViewport(1);
@@ -731,7 +736,7 @@ int OGLKview::DrawPoly(Point Pb, Point Pe, OGLKview::Color4f color, int viewport
     return viewport;
 }
 
-int OGLKview::Data2View(const std::vector<struct OGLKview::Market>& market, OGLKview::Dlginfo toview)
+int OGLKview::Data2View(const std::vector<struct OGLKview::Market>& market, const OGLKview::Dlginfo& toview)
 {
     //添加迭代器用于遍历向量元素
     std::vector<OGLKview::Market>::const_iterator it = market.begin();

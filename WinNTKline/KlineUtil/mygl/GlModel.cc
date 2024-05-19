@@ -15,9 +15,9 @@ BMP::BMP(const char* FileName)
 
 BMP::~BMP()
 {
-    if (Data != NULL) {
-        free(Data);
-        Data = NULL;
+    if (m_bmp != NULL) {
+        free(m_bmp);
+        m_bmp = NULL;
     }
 }
 
@@ -71,19 +71,19 @@ bool BMP::Load(const char* FileName)
     }
     //跳过24bit，监测RGB数据
     fseek(File, 24, SEEK_CUR);//读取数据
-    Data = (char*)malloc(size);
-    if (Data == NULL) {
+    m_bmp = (char*)malloc(size);
+    if (m_bmp == NULL) {
         std::cout << "内存量不能锁定" << std::endl;
         return false;
     }
-    if ((i = fread(Data, size, 1, File)) != 1) {
+    if ((i = fread(m_bmp, size, 1, File)) != 1) {
         std::cout << "不能读取数据" << std::endl;
         return false;
     }
     for (i = 0; i < size; i += 3) {//bgr -> rgb
-        char color = Data[i];
-        Data[i] = Data[i + 2];
-        Data[i + 2] = color;
+        char color = m_bmp[i];
+        m_bmp[i] = m_bmp[i + 2];
+        m_bmp[i + 2] = color;
     }
     return true;
 }
@@ -94,7 +94,7 @@ void BMP::TexSet()
     glBindTexture(GL_TEXTURE_2D, texture);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, horizon, vertical, 0, GL_RGB, GL_UNSIGNED_BYTE, Data);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, horizon, vertical, 0, GL_RGB, GL_UNSIGNED_BYTE, m_bmp);
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
