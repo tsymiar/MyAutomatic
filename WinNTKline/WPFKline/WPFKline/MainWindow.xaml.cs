@@ -51,7 +51,7 @@ namespace WPFKline
                             Double high = Double.Parse(subLines[2]);
                             Double low = Double.Parse(subLines[3]);
                             Double close = Double.Parse(subLines[4]);
-                            Double volumn = Double.Parse(subLines[5]);
+                            Double volume = Double.Parse(subLines[5]);
 
                             res.Add(
                                 new StockParam
@@ -61,7 +61,7 @@ namespace WPFKline
                                     high = high,
                                     low = low,
                                     close = close,
-                                    volume = volumn
+                                    volume = volume
                                 });
                         }
                         return res;
@@ -82,14 +82,14 @@ namespace WPFKline
         }
         private void LoadFile()
         {
-            string rootpath = System.Windows.Forms.Application.StartupPath;// AppDomain.CurrentDomain.BaseDirectory;
-            if (!String.IsNullOrEmpty(rootpath))
+            string rootPath = System.Windows.Forms.Application.StartupPath;// AppDomain.CurrentDomain.BaseDirectory;
+            if (!String.IsNullOrEmpty(rootPath))
             {
-                txtFilePath.Text = rootpath +
+                txtFilePath.Text = rootPath +
 #if DEBUG
-                    @"\data\SH600747.DAT";
+                @"\..\..\KlineUtil\data\SH600747.DAT";
 #else
-                @"\..\..\..\..\KlineUtil\data\SH600747.DAT";
+                @"\data\SH600747.DAT";
 #endif
                 LoadData(txtFilePath.Text);
                 stockSet.ItemsSource = Data;

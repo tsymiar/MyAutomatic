@@ -585,7 +585,7 @@ int OGLKview::DrawTrade(char time[32])
     mc.y = (float)dlginfo.mouY;
     min += (417 - dlginfo.mouY) * (float)fixpixely * step / fold * 3.9f;
     sprintf(hintx, "%.2f", min);
-    if (time[0] = '\0') {
+    if (time[0] != NULL && g_ltime != time) {
         memcpy(time, g_ltime, 32);
     }
     SwitchViewport(1);
@@ -731,7 +731,7 @@ int OGLKview::DrawPoly(Point Pb, Point Pe, OGLKview::Color4f color, int viewport
     return viewport;
 }
 
-int OGLKview::Data2View(const std::vector<struct OGLKview::Market> &market, OGLKview::Dlginfo toview)
+int OGLKview::Data2View(const std::vector<struct OGLKview::Market>& market, OGLKview::Dlginfo toview)
 {
     //添加迭代器用于遍历向量元素
     std::vector<OGLKview::Market>::const_iterator it = market.begin();

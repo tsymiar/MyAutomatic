@@ -7,15 +7,15 @@ float _dX, _dY;
 int W, H;
 House house;
 
-BMP::BMP(const char *FileName) {
+BMP::BMP(const char* FileName)
+{
     Load(FileName);
     TexSet();
 }
 
 BMP::~BMP()
 {
-    if (Data != NULL)
-    {
+    if (Data != NULL) {
         free(Data);
         Data = NULL;
     }
@@ -26,13 +26,14 @@ GLint BMP::getTex()
     return texture;
 }
 
-bool BMP::Load(const char *FileName) {
-    FILE *File;
+bool BMP::Load(const char* FileName)
+{
+    FILE* File;
     unsigned long size;
     unsigned long i;
     unsigned short int planes;          // 面数
     unsigned short int bpp;             // 像素数
-                                        // 打开图片
+    // 打开图片
     if (fopen_s(&File, FileName, "rb") != 0) {
         std::cout << "图片不存在" << std::endl;
         return false;
@@ -70,7 +71,7 @@ bool BMP::Load(const char *FileName) {
     }
     //跳过24bit，监测RGB数据
     fseek(File, 24, SEEK_CUR);//读取数据
-    Data = (char *)malloc(size);
+    Data = (char*)malloc(size);
     if (Data == NULL) {
         std::cout << "内存量不能锁定" << std::endl;
         return false;
@@ -97,9 +98,9 @@ void BMP::TexSet()
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-AUX_RGBImageRec *LoadBMP(char *Filename)
+AUX_RGBImageRec* LoadBMP(char* Filename)
 {
-    FILE *File = NULL;                          // File Handle
+    FILE* File = NULL;                          // File Handle
     if (!Filename)                              // Make Sure A Filename Was Given
     {
         return NULL;                            // If Not Return NULL
@@ -133,14 +134,12 @@ void __sphere(GLfloat xx, GLfloat yy, GLfloat zz, GLfloat radius, GLfloat M, GLf
     float step_xy = 2 * float(_PI_) / N;
     double x[4], y[4], z[4];
 
-    // float angle_xy = 0.0;
+    float angle_xy = 0.0f;
     glBegin(GL_QUADS);
-    for (int i = 0; i < M; i++)
-    {
+    for (int i = 0; i < M; i++) {
         float angle_z = i * step_z;
 
-        for (int j = 0; j < N; j++)
-        {
+        for (int j = 0; j < N; j++) {
             angle_xy = j * step_xy;
 
             x[0] = radius * sin(angle_z) * cos(angle_xy);
@@ -151,16 +150,15 @@ void __sphere(GLfloat xx, GLfloat yy, GLfloat zz, GLfloat radius, GLfloat M, GLf
             y[1] = radius * sin(angle_z + step_z) * sin(angle_xy);
             z[1] = radius * cos(angle_z + step_z);
 
-            x[2] = radius * sin(angle_z + step_z)*cos(angle_xy + step_xy);
-            y[2] = radius * sin(angle_z + step_z)*sin(angle_xy + step_xy);
+            x[2] = radius * sin(angle_z + step_z) * cos(angle_xy + step_xy);
+            y[2] = radius * sin(angle_z + step_z) * sin(angle_xy + step_xy);
             z[2] = radius * cos(angle_z + step_z);
 
             x[3] = radius * sin(angle_z) * cos(angle_xy + step_xy);
             y[3] = radius * sin(angle_z) * sin(angle_xy + step_xy);
             z[3] = radius * cos(angle_z);
 
-            for (int k = 0; k < 4; k++)
-            {
+            for (int k = 0; k < 4; k++) {
                 glVertex3f(xx + float(x[k]), yy + float(y[k]), zz + float(z[k]));
             }
         }
@@ -182,7 +180,7 @@ void __ball()
 
     glPushMatrix();//保存变换后的位置和角度。
     glTranslatef(-5.0f, -2.0f, -10.0f);
-    GLUquadricObj * sphere = gluNewQuadric();//绘制二次曲面
+    GLUquadricObj* sphere = gluNewQuadric();//绘制二次曲面
     gluQuadricOrientation(sphere, GLU_OUTSIDE);//法线向外
     gluQuadricNormals(sphere, GLU_SMOOTH);//法线风格
     gluSphere(sphere, 1.0, 50, 50);//二次曲面绘制函数
@@ -213,16 +211,14 @@ void GlModel::GlTexture(bool oo)
 int GlModel::LoadGLTexture()                                // Load Bitmaps And Convert To Textures
 {
     int load = FALSE;                                       // Status Indicator
-    AUX_RGBImageRec *TextureImage[NUM];
+    AUX_RGBImageRec* TextureImage[NUM];
     for (int i = 0; i < NUM; i++)
-        memset(TextureImage, i, sizeof(void *) * 1);        // Set The Pointer To NULL
-                                                            // Load The Bitmap, Check For Errors, If Bitmap's Not Found Quit
+        memset(TextureImage, i, sizeof(void*) * 1);        // Set The Pointer To NULL
+    // Load The Bitmap, Check For Errors, If Bitmap's Not Found Quit
     if ((TextureImage[0] = LoadBMP("image/qdu.bmp")) &&
-        (TextureImage[1] = LoadBMP("image/outdoor.bmp")) && (TextureImage[2] = LoadBMP("image/background.bmp")))
-    {
+        (TextureImage[1] = LoadBMP("image/outdoor.bmp")) && (TextureImage[2] = LoadBMP("image/background.bmp"))) {
         load = TRUE;                                       // Set The Status To TRUE
-        for (int k = 0; k < NUM; k++)
-        {
+        for (int k = 0; k < NUM; k++) {
             glGenTextures(1, &texture[k]);
             // Create Nearest Filtered Texture
             glBindTexture(GL_TEXTURE_2D, texture[k]);
@@ -230,11 +226,9 @@ int GlModel::LoadGLTexture()                                // Load Bitmaps And 
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, TextureImage[k]->sizeX, TextureImage[k]->sizeY, 0, GL_RGB, GL_UNSIGNED_BYTE, TextureImage[k]->data);
         }
-    }
-    else
+    } else
         return NUM;
-    for (int j = 0; j < NUM; j++)
-    {
+    for (int j = 0; j < NUM; j++) {
         if (TextureImage[j])                    // If Texture Exists
         {
             if (TextureImage[j]->data)          // If Texture Image Exists
@@ -250,7 +244,7 @@ int GlModel::LoadGLTexture()                                // Load Bitmaps And 
 void GlModel::Load__QDU(int wide, int tall)
 {
     glOrtho(0, wide, tall, 0, -1, 1);
-    BMP *bmp = new BMP("image/qdu.bmp");
+    BMP* bmp = new BMP("image/qdu.bmp");
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glOrtho(0.0, wide, tall, 0.0, -1.0, 1.0);

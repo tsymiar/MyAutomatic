@@ -4,8 +4,7 @@
 #define EXCEPTION_MESSAGE_MAXLEN 256
 
 template <class TestClass>
-class TestCase
-{
+class TestCase {
 public:
     TestCase<TestClass>() { testClass = nullptr; };
     TestCase<TestClass> getInstance();
@@ -14,8 +13,8 @@ private:
     TestCase<TestClass> instance;
     TestClass* testClass;
 };
-
-TestClass::testClass = new TestClass();
+class TestClass { };
+void* test = new TestClass();
 template <class TestClass>
 TestCase<TestClass>
 TestCase<TestClass>::getInstance()
@@ -32,18 +31,17 @@ TestCase<TestClass>::~TestCase()
     delete instance;
 }
 
-class Exception
-{
+class Exception {
 private:
     char m_ExceptionMessage[EXCEPTION_MESSAGE_MAXLEN];
 public:
-    explicit Exception(const char* msg = nullptr) : m_ExceptionMessage{ nullptr }
+    explicit Exception(const char* msg = nullptr) : m_ExceptionMessage{ NULL }
     {
         if (msg != nullptr) {
             strncpy_s(m_ExceptionMessage, msg, EXCEPTION_MESSAGE_MAXLEN);
         }
     }
-    inline char *GetMessage()
+    inline char* GetMessage()
     {
         return m_ExceptionMessage;
     }

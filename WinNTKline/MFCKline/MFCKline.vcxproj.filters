@@ -129,9 +129,6 @@
     <ClInclude Include="..\KlineUtil\mygl\OGLKview.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\KlineUtil\http\myweb.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="..\KlineUtil\security\MD5.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -162,7 +159,10 @@
     <ClInclude Include="..\KlineUtil\mygl\bitmap.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\KlineUtil\http\GetHttp.h">
+    <ClInclude Include="..\KlineUtil\service\httpGet.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KlineUtil\service\myweb.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -269,16 +269,16 @@
     <ClCompile Include="..\KlineUtil\security\verify.cc">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\KlineUtil\http\soapClient.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\KlineUtil\http\GetHttp.cpp">
+    <ClCompile Include="..\KlineUtil\service\httpGet.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\IMclient\imclient.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\KlineUtil\IM\client.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KlineUtil\service\soapClient.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -316,6 +316,7 @@
     <None Include="..\KlineUtil\script\reptile.py">
       <Filter>配置文件</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\KlineUtil\res\bit+.bmp">
