@@ -2,8 +2,12 @@
 using System.CodeDom;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 using System.Text;
 using System.Windows;
+using System.Windows.Forms;
 
 #pragma warning disable 1591
 
@@ -21,9 +25,10 @@ namespace WPFKline
         public MainWindow()
         {
             InitializeComponent();
+            // EventManager.RegisterClassHandler(typeof(TextBox), TextBox.KeyEvent, new System.Windows.Input.KeyEventHandler(txtFilePath_KeyUp));
         }
 
-        private List<StockParam> LoadStockInfo(string fileName)
+        private List<StockParam> LoadStockDetail(string fileName)
         {
             if (File.Exists(fileName))
             {
@@ -91,7 +96,7 @@ namespace WPFKline
 #else
                 @"\data\SH600747.DAT";
 #endif
-                LoadData(txtFilePath.Text);
+                getFileStockData(txtFilePath.Text);
                 stockSet.ItemsSource = Data;
             }
         }
@@ -101,9 +106,9 @@ namespace WPFKline
             LoadFile();
         }
 
-        private void LoadData(string path)
+        private void getFileStockData(string path)
         {
-            Data = LoadStockInfo(path);
+            Data = LoadStockDetail(path);
             //stockChart.Charts[0].Collapse();
             stockChart.Charts[0].Graphs[0].Title = stockName;
             stockChart.Charts[1].Graphs[0].Title = stockName;
@@ -118,8 +123,18 @@ namespace WPFKline
             if (!String.IsNullOrEmpty(ofd.FileName))
             {
                 txtFilePath.Text = ofd.FileName;
-                LoadData(ofd.FileName);
+                getFileStockData(ofd.FileName);
                 stockSet.ItemsSource = Data;
+            }
+        }
+
+        private void txtFilePath_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == System.Windows.Input.Key.Return)
+            {
+                getFileStockData(txtFilePath.Text);
+                stockSet.ItemsSource = Data;
+                e.Handled = true;
             }
         }
 

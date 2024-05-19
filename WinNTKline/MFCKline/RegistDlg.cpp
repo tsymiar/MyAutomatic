@@ -147,7 +147,7 @@ BOOL CRegistDlg::OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT* p
     // TODO: Add your specialized code here and/or call the base class 
     if (WM_MSG_NAVIURL == message)
     {
-        m_HTMLPage->Navigate(_T("e:\\index.html"));
+        m_HTMLPage->Navigate(_T("c:\\gh-pages\\index.html"));
         return TRUE;
     }
     return CDialog::OnWndMsg(message, wParam, lParam, pResult);

@@ -40,7 +40,7 @@
 #define INT2U	unsigned short		/* 2 byte unsigned int	*/
 #define	INT4S	signed   long		/* 4 byte signed int	*/
 #define	INT4U	unsigned long		/* 4 byte unsigned int	*/
-#define INT8U	unsigned long	long	/* 8 byte unsigned int	*/		
+#define INT8U	unsigned long long  /* 8 byte unsigned int	*/		
 
 /* for material type	*/
 #define DIFFUSE		1
@@ -83,28 +83,28 @@ typedef struct texture_2d {
     INT2U	type;	/* CLAMP_TEXTURE or REPEAT_TEXTEXTURE */
 }   TEXTURE_2D;
 
-typedef struct point3d     /* point in 3D  */
+typedef struct point3d  /* point in 3D */
 {
-    FLOAT	x, y, z;	/* 3D coordinate */
-    FLOAT	r, g, b;	/* color		 */
-    FLOAT	u, v;		/* texture coordinate	*/
+    FLOAT	x, y, z;	/* 3D coordinate*/
+    FLOAT	r, g, b;	/* color        */
+    FLOAT	u, v;		/* texture coordinate */
 }   POINT3D;
 
 
-typedef struct surface		/* surface	*/
+typedef struct surface	/* surface */
 {
-    INT4U	pointn;		/* point number		*/
+    INT4U	pointn;     /* point number		*/
     INT4U	triangle;	/* triangle number	*/
-    INT4U	quadric;	/* quadrangle number	*/
+    INT4U	quadric;	/* quadrangle number*/
     POINT3D* pointlist;	/* points list		*/
     INT4U* patchlist;	/* patches list(list of point No.)*/
-    INT4U	texId;	        /* texture index	*/
+    INT4U	texId;      /* texture index	*/
 }   SURFACE;
 
-typedef struct object		/* OBJECT		*/
+typedef struct object	/* OBJECT */
 {
-    INT4U	SurfNum; /* surface number and list size*/
-    SURFACE* surflist; 	/* surfaces list in the object*/
+    INT4U	SurfNum;    /* surface number and list size */
+    SURFACE* surflist;  /* surfaces list in the object  */
 }   OBJECT;
 
 class House {
@@ -124,7 +124,7 @@ protected:
     Initialise index;
 
     TEXTURE_2D** TextureList = NULL;
-    OBJECT* ObjectList = NULL;		/* ObjectList[0]:isolated surfaces*/
+    OBJECT* ObjectList = NULL;  /* ObjectList[0]:isolated surfaces*/
 
     INT4S         ObjectNum = 0;
 
@@ -132,7 +132,7 @@ protected:
     char	      sLookAtFN[100] = {};
     char	      ImageName[30] = {};
 
-    unsigned short int comp = 32; // Scale modifier.
+    unsigned short int comp = 32;   // Scale modifier.
 
     unsigned short int texture_mapping = FALSE,
         land_fogging = TRUE, flat_shading = TRUE;
