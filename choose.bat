@@ -2,10 +2,13 @@
 :: launches a Directory... Open sort of path chooser and outputs choice(s) to the console
 
 @echo off
+
+chcp 65001
+title Choose
 setlocal enabledelayedexpansion
 
 setx MYAUTOMATIC %CD%
-set local=BOOST CEFDIR QTDIR OPENCV OPENSSL PTHD_LIB86 JAVA_HOME ZLIB libPNG
+set local=VCINSTALLDIR BOOST CEFDIR QTDIR OPENCV OPENSSL PTHD_LIB86 JAVA_HOME ZLIB libPNG
 set t=%local%
 :loop
 for /f "tokens=1*" %%a in ("%t%") do (

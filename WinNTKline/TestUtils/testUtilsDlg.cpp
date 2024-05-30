@@ -168,9 +168,8 @@ void CtestUtilsDlg::OnBnClickedImser()
     CString filename = _T("..\\Debug\\IM(Win32).exe");
     WIN32_FIND_DATA findFileData;
     if (FindFirstFile(filename, &findFileData) == INVALID_HANDLE_VALUE) {
-        MessageBox(filename + "\nProcess not found!");
+        MessageBox(filename + "\nProcess 'IM' NOT found!");
         return;
-
     }
     ::CreateProcess(filename, _T("1"), NULL, NULL, false, 0, NULL, NULL, &sInfo, &prInfo);
 }
@@ -194,12 +193,11 @@ void CtestUtilsDlg::OnBnClickedQtcase()
     sInfo.cb = sizeof(sInfo);
     sInfo.dwFlags = STARTF_USESHOWWINDOW;
     sInfo.wShowWindow = SW_SHOWNORMAL;
-    CString filename = _T("QtCases.exe");
+    CString filename = _T("..\\Debug\\QtCases.exe");
     WIN32_FIND_DATA findFileData;
     if (FindFirstFile(filename, &findFileData) == INVALID_HANDLE_VALUE) {
         MessageBox(filename + "\nNo such exec file!");
         return;
-
     }
     ::CreateProcess(filename, _T("1"), NULL, NULL, false, 0, NULL, NULL, &sInfo, &prInfo);
 }
