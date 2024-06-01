@@ -24,10 +24,8 @@ struct GaussImage {
 
 void createAlphaMat(Mat& mat)
 {
-    for (int i = 0; i < mat.rows; ++i)
-    {
-        for (int j = 0; j < mat.cols; ++j)
-        {
+    for (int i = 0; i < mat.rows; ++i) {
+        for (int j = 0; j < mat.cols; ++j) {
             Vec4b& rgba = mat.at<Vec4b>(i, j);
             rgba[0] = UCHAR_MAX;
             rgba[1] = saturate_cast<uchar>((float(mat.cols - j)) / ((float)mat.cols) * UCHAR_MAX);
@@ -160,11 +158,9 @@ Mat CvimgMat::getImageMat(const String& img, int flg)
         src = imread(img, flg);
     if (!src.data)
         fprintf(stdout, "error imread raw image!\n");
-    else
-    {
+    else {
         out = src.clone();
-        if (flg <= -1)
-        {
+        if (flg <= -1) {
             namedWindow("Raw image", WINDOW_NORMAL);
             imshow("Raw image", src);
         }
@@ -195,8 +191,7 @@ int CvimgMat::interestRegionImage(const String& src, const String& mask)
     saveMat2PNG(90, 90, g_jpegFile);
     Mat logImage = imread(mask);
 
-    if (!logImage.data)
-    {
+    if (!logImage.data) {
         fprintf(stdout, "error imread logo image!\n");
         return -1;
     }
@@ -207,8 +202,7 @@ int CvimgMat::interestRegionImage(const String& src, const String& mask)
     imshow("imageROI[0,90]", imageROI);
 
     Mat srcImage = imread(src);
-    if (!srcImage.data)
-    {
+    if (!srcImage.data) {
         fprintf(stdout, "error imread roi image!\n");
         return -2;
     }
@@ -378,7 +372,7 @@ int CvimgMat::cvmatTest(const String& file)
     bilateralImage(g_jpgFile);
     thresholdImage(g_jpgFile);
 
-    while (char(waitKey(1)) != 27) {}
+    while (char(waitKey(1)) != 27) { }
     return 0;
 }
 

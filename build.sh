@@ -42,8 +42,16 @@ else
             rm -rvf ../lib
             find ../build* ! -name 'build.sh' -exec rm -rvf {} +
         fi
+        cd ../QtCases
+        which qmake >/dev/null 2>&1
+        if [ $? -eq 0 ]; then
+            if [ -f "./Makefile" ]; then
+                make clean
+            fi
+        else
+            rm -vf ./*.o
+        fi
         cd -
-        if [ -f "QtCases/Makefile" ]; then cd QtCases && make clean && cd -; fi;
     fi
 fi
 echo "-------- All '$1' build progress(es) finish --------"
