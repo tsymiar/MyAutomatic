@@ -35,7 +35,9 @@ runtime(void* param)
             if (rcvlen == -1) {
                 g_client->flag = -1;
                 closesocket(g_client->sock);
+#ifndef _WIN32
                 exit(0);
+#endif // _WIN32
             }
 #ifdef __GNUC__
 #pragma GCC diagnostic push
@@ -57,9 +59,11 @@ int InitChat(StSock* sock)
     SetConsoleTitle("IM client v0.1");
     WSADATA wsaData;
     if (WSAStartup(0x202, &wsaData) == SOCKET_ERROR) {
-        std::cerr << "WSAStartup failed with error " << WSAGetLastError() << std::endl;
+        std::cerr << "WSAStartup failed with error: " << WSAGetLastError() << std::endl;
         WSACleanup();
+#ifndef _WIN32
         exit(0);
+#endif // _WIN32
     }
     InitializeCriticalSection(&g_client.wrcon);
     static char ipaddr[16];
@@ -94,7 +98,9 @@ int InitChat(StSock* sock)
     if (g_client.sock == INVALID_SOCKET) {
         std::cerr << "socket() invalid with error " << WSAGetLastError() << std::endl;
         WSACleanup();
+#ifndef _WIN32
         exit(0);
+#endif // _WIN32
     }
     setsockopt(g_client.sock, SOL_SOCKET, SO_REUSEADDR, (const char*)&bReuseaddr, sizeof(BOOL));
     SetRecvState(RCV_TCP);
@@ -130,7 +136,9 @@ void* Chat_Msg(void* func)
             GetLastErrorToString(WSAGetLastError()).c_str()
             << "] " << std::endl;
         WSACleanup();
+#ifndef _WIN32
         exit(0);
+#endif // _WIN32
     }
     Pthreadt threads;
     g_client.flag = 1;

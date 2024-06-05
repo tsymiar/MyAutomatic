@@ -14,9 +14,12 @@ int main(int argc, char* argv[])
     QApplication a(argc, argv);
     MainWindow w("flappy TRIANGLE");
     a.setActiveWindow(&w);
+    // w.setSdlWin();
     w.show();
-    OfficeWidget office;
-    office.showWidget();
-    office.test();
+    /*
+        OfficeWidget office;
+        office.showWidget();
+        office.test();
+    */
     return a.exec();
 }

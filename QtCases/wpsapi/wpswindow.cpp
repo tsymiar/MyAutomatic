@@ -289,10 +289,16 @@ QString WPSMainWindow::getDocContent()
         {
             ks_stdptr<Range> spRange;
             spDoc->get_Content(&spRange);
+            spRange->AutoFormat();
+            single sig;
+            spRange->Calculate(&sig);
             BSTR* text = new BSTR[1024];
             spRange->get_Text(text);
-            char* ctxt = (char*)(*text);
-            content = QString::fromLocal8Bit("%1").arg(ctxt);
+            for (int i = 0; i < 1024; i++)
+            {
+                char* ctxt = (char*)(*text) + i;
+                content += QString::fromLocal8Bit("%1").arg(ctxt);
+            }
             delete text;
         }
     }

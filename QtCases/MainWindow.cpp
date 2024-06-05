@@ -3,7 +3,7 @@
 MainWindow::MainWindow(const char* title, bool fs)
 {
     setGeometry(400, 200, 287, 512);
-    fullscrn = fs;
+    fllscrn = fs;
     x = y = z = h = 0.0;
 
     light = false;
@@ -14,7 +14,7 @@ MainWindow::MainWindow(const char* title, bool fs)
 #endif
     // setWindowIcon(QIcon("qrc:/qtlogo.ico"));
     setWindowIcon(QIcon(":/qtlogo.ico"));
-    if (fullscrn)
+    if (fllscrn)
         showFullScreen();
     tick = new QTimer(this);
     connect(tick, SIGNAL(timeout()), this, SLOT(timeTickDone()));
@@ -24,8 +24,9 @@ MainWindow::MainWindow(const char* title, bool fs)
 
 MainWindow::~MainWindow()
 {
-    if (tick->isActive()) {
+    if (tick != NULL && tick->isActive()) {
         tick->stop();
+        delete tick;
     }
 }
 
@@ -39,8 +40,8 @@ void MainWindow::keyPressEvent(QKeyEvent* e)
         << "+++";
     switch (e->key()) {
     case Qt::Key_F2:
-        fullscrn = !fullscrn;
-        if (fullscrn) {
+        fllscrn = !fllscrn;
+        if (fllscrn) {
             showFullScreen();
         } else {
             showNormal();
@@ -94,9 +95,9 @@ void MainWindow::keyPressEvent(QKeyEvent* e)
         setZoom(z);
         break;
     case Qt::Key_Space:
-        if (fabs(h - getH()) < 0.01)
+        if (fabs(h - getHeight()) < 0.01f)
             setBingo(false);
-        h += 0.3f;
+        h += 0.1f;
         setHigh(h);
         break;
 #endif
@@ -119,13 +120,13 @@ void MainWindow::mouseMoveEvent(QMouseEvent* e)
 void MainWindow::timeTickDone()
 {
 #if (!defined _GLVBO_)
-    h -= 0.01f;
-    if (h < -1)
+    h -= 0.03f;
+    if (h <= -1)
         h = -1;
-    if (h > 5.55)
-        h = 5.55;
+    if (h > 5)
+        h = 5;
     setHigh(h);
-    if (fabs(h - getH()) < 0.01) {
+    if (fabs(h - getHeight()) < 0.0099f) {
         setText("bingo!");
         setBingo();
     }
