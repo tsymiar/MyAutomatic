@@ -21,7 +21,7 @@
 #include "SDL2tex.h"
 
 #ifndef _PI_
-#define _PI_ 3.14159265f
+#define _PI_ 3.141592653589793f
 #endif
 #define EPSILON 0.000001
 
@@ -64,19 +64,22 @@ private:
 #endif
     GLfloat xVal, yVal, zZoom, tHigh;
     int mX, mY;
-    OglImgShow png;
+    OglImgShow mPng;
     void coord();
     QString text;
-    void textout(int left = 10, int upon = 40, QColor color = Qt::yellow, float th = 1, QString family = NULL);
+    void textOut(int left = 10, int upon = 40, QColor color = Qt::yellow, float th = 1, QString family = NULL);
     bool bingo = false;
-public:
+    bool m_showSdl = false;
+protected:
     inline void setXval(GLfloat x) { xVal = x; }
     inline void setYval(GLfloat y) { yVal = y; }
     inline void setZoom(GLfloat z) { zZoom = z; }
     inline void setHigh(GLfloat h) { tHigh = h; }
     inline void setXloc(int x) { mX = x; }
     inline void setYloc(int y) { mY = y; }
-    inline GLfloat getH() { return yVal + 0.5; }
+    inline GLfloat getHeight() { return yVal + 0.5f; }
     inline void setText(QString text) { this->text = text; }
     inline void setBingo(bool bingo = true) { this->bingo = bingo; }
+public:
+    inline void setSdlWin(bool show = true) { m_showSdl = show; }
 };

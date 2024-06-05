@@ -1,18 +1,20 @@
 ﻿#include "OglImgShow.h"
 #include "SDL2tex.h"
 
-unsigned char* pixels = NULL;
+unsigned char* g_pixels = NULL;
 png_uint_32 width, height;
 int color_type;
 
 // 获取每一行所用的字节数，需凑足4的倍数
 int getRowBytes(int width)
 {
+    int bytes = 0;
     if ((width * 3) % 4 == 0) {
-        return width * 3;
+        bytes = width * 3;
     } else {
-        return ((width * 3) / 4 + 1) * 4;
+        bytes = ((width * 3) / 4 + 1) * 4;
     }
+    return bytes;
 }
 
 int OglImgShow::setPixels(const char* filename)
@@ -20,10 +22,14 @@ int OglImgShow::setPixels(const char* filename)
     png_structp png_ptr;
     png_infop info_ptr;
     int bit_depth;
-    FILE* fp;
+    FILE* fp = NULL;
 
     qDebug() << QString("lpng16( v%1 ), zlib( v%2 ), sdl( v%3 )").arg(PNG_LIBPNG_VER_STRING).arg(ZLIB_VERSION).arg(SDL_GetRevisionNumber());
 
+    if (filename == NULL) {
+        qFatal("image is null");
+        return 0;
+    }
     if ((fp = fopen(filename, "rb")) == NULL) {
         return EXIT_FAILURE;
     }
@@ -67,17 +73,17 @@ int OglImgShow::setPixels(const char* filename)
         return EXIT_FAILURE;
     }
     // 申请堆空间
-    pixels = (unsigned char*)malloc(size);
-    if (pixels == NULL)
+    g_pixels = (unsigned char*)malloc(size);
+    if (g_pixels == NULL)
         return EXIT_FAILURE;
     unsigned int i;
     for (i = 0; i < height; i++) {
         // 拷贝每行数据给pixel，
         // opengl原点在下方，拷贝时倒置
         if (color_type == PNG_COLOR_TYPE_RGB) {
-            memcpy(pixels + getRowBytes(width) * i, row_pointers[height - i - 1], width * 3);
+            memcpy(g_pixels + getRowBytes(width) * i, row_pointers[height - i - 1], width * 3);
         } else if (color_type == PNG_COLOR_TYPE_RGBA) {
-            memcpy(pixels + i * width * 4, row_pointers[height - i - 1], width * 4);
+            memcpy(g_pixels + i * width * 4, row_pointers[height - i - 1], width * 4);
         }
     }
     png_destroy_read_struct(&png_ptr, &info_ptr, 0);
@@ -101,6 +107,10 @@ GLuint OglImgShow::CreateTextureFromPng(const char* filename)
     int row, col, pos; // 图片像素排列
     GLubyte* rgba;
 
+    if (filename == NULL) {
+        qFatal("image is null");
+        return 0;
+    }
     FILE* fp = fopen(filename, "rb"); // 以只读形式打开文件
     if (NULL == fp) {
         printf("error: %s\n", strerror(errno)); // 关闭打开的文件给出默认贴图
@@ -203,43 +213,43 @@ GLuint OglImgShow::CreateTextureFromPng(const char* filename)
 
 void OglImgShow::loadGLTextures(const char* filename)
 {
-    if (filename == NULL)
-        return;
+    if (filename != NULL) {
 #ifdef QT_GUI_LIB
-    QImage tex, img;
-    if (!img.load(filename)) {
-        qWarning("Could not read image file, using single-color instead.");
-        QImage dummy(128, 128, QImage::Format_RGB32);
+        QImage tex, img;
+        if (!img.load(filename)) {
+            qWarning("Could not read image file, using single-color instead.");
+            QImage dummy(128, 128, QImage::Format_RGB32);
 #ifdef QCOLOR_H
-        dummy.fill(QColor("darkCyan").rgb());
+            dummy.fill(QColor("darkCyan").rgb());
 #endif
-        img = dummy;
-        qDebug() << "image size = " << img.size();
-    }
+            img = dummy;
+            qDebug() << "image size = " << img.size();
+        }
 #ifdef QGL_H
-    tex = QGLWidget::convertToGLFormat(img);
+        tex = QGLWidget::convertToGLFormat(img);
 #endif
-    glGenTextures(3, &texture[0]);
-    glBindTexture(GL_TEXTURE_2D, texture[0]);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexImage2D(GL_TEXTURE_2D, 0, 3, tex.width(), tex.height(), 0,
-        GL_RGBA, GL_UNSIGNED_BYTE, tex.bits());
-    glBindTexture(GL_TEXTURE_2D, texture[1]);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, 3, tex.width(), tex.height(), 0,
-        GL_RGBA, GL_UNSIGNED_BYTE, tex.bits());
-    glBindTexture(GL_TEXTURE_2D, texture[2]);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+        glGenTextures(3, &texture[0]);
+        glBindTexture(GL_TEXTURE_2D, texture[0]);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexImage2D(GL_TEXTURE_2D, 0, 3, tex.width(), tex.height(), 0,
+            GL_RGBA, GL_UNSIGNED_BYTE, tex.bits());
+        glBindTexture(GL_TEXTURE_2D, texture[1]);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexImage2D(GL_TEXTURE_2D, 0, 3, tex.width(), tex.height(), 0,
+            GL_RGBA, GL_UNSIGNED_BYTE, tex.bits());
+        glBindTexture(GL_TEXTURE_2D, texture[2]);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
 #endif
+    } else {
+        qFatal("image is null");
+    }
 }
 
-void OglImgShow::ShowPngTex(const char* filename)
+void OglImgShow::showPngTexByName(const char* filename)
 {
-    if (filename == NULL)
-        return;
     glEnable(GL_TEXTURE_2D);
     if (0 == texture[0])
         texture[0] = CreateTextureFromPng(filename);
@@ -254,15 +264,23 @@ void OglImgShow::ShowPngTex(const char* filename)
 }
 
 // 显示图片
-void OglImgShow::showPixels()
+void OglImgShow::showPixels(png_uint_32 w, png_uint_32 h)
 {
     glDisable(GL_DEPTH_TEST);
     // 是否设置图片透明度
     if (color_type == PNG_COLOR_TYPE_RGB) {
-        glDrawPixels(width, height, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+        glDrawPixels(w, h, GL_RGB, GL_UNSIGNED_BYTE, g_pixels);
     } else if (color_type == PNG_COLOR_TYPE_RGBA) {
-        glDrawPixels(width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+        glDrawPixels(w, h, GL_RGBA, GL_UNSIGNED_BYTE, g_pixels);
     }
+    glFlush();
+    glEnable(GL_DEPTH_TEST);
+}
+
+void OglImgShow::showFullPixels()
+{
+    glDisable(GL_DEPTH_TEST);
+    showPixels(width, height);
     glFlush();
     glEnable(GL_DEPTH_TEST);
 }

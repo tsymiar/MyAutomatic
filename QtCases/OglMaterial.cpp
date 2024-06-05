@@ -21,7 +21,9 @@ QOglMaterial::QOglMaterial(QWidget* parent)
 
 QOglMaterial::~QOglMaterial()
 {
-    SDL_GL_quit();
+    if (m_showSdl) {
+        SDL_GL_quit();
+    }
 }
 
 #ifdef _GLVBO_
@@ -111,7 +113,7 @@ void QOglMaterial::coord()
     glEnable(GL_DEPTH_TEST);
 }
 
-void QOglMaterial::textout(int left, int upon, QColor color, float th, QString family)
+void QOglMaterial::textOut(int left, int upon, QColor color, float th, QString family)
 {
     glDisable(GL_DEPTH_TEST);
     QPen pen;
@@ -178,9 +180,9 @@ void QOglMaterial::initializeGL()
 #ifdef  OGL_KVIEW_H_
     kv.AdjustDraw(640, 480);
 #else
-    png.setPixels(IMAGE_PATH"atlas.png");
+    mPng.setPixels(IMAGE_PATH"atlas.png");
 #if SDL_MAJOR_VERSION >= 2
-    if (SDL_GL_init() == 0) {
+    if (m_showSdl && (SDL_GL_init() == 0)) {
         CopyRect rect{ { 100,10,360,70 },{ 70,360,500,70 } };
         SDL_GL_loadImage(IMAGE_PATH"spabandari.bmp", rect);
         rect.src = { 128,160,360,256 };
@@ -192,6 +194,8 @@ void QOglMaterial::initializeGL()
         cfg.color = { 255, 0, 0, 255 };
         cfg.rect = { { 0,0,300,60 }, {100,256,256,24} };
         SDL_GL_showText("这ge是打在窗口上的等线字体", cfg);
+    } else {
+        qDebug(m_showSdl ? "SDL_GL_init fail!" : "No SDL GL");
     }
 #endif
 #endif
@@ -274,30 +278,35 @@ void QOglMaterial::paintGL()
     glDisableVertexAttribArray(clorLocation);
 #else
     glTranslatef(0, 0, 0);
-    png.showPixels();
+    static Uint32 i = 0, j = 0;
+    mPng.showPixels(i, j);
+    i++;j++;
+    if (i == 1024) i = 0;
+    if (j == 768) j = 0;
 
     if (bingo) {
-        textout(30, 40, Qt::red, 3, "Helvetica");
+        textOut(30, 40, Qt::red, 3, "Helvetica");
+        mPng.showFullPixels();
     } else {
         coord();
-        textout();
+        textOut();
 
         glTranslatef(-1.0, 0, -8.0);
         glBegin(GL_QUADS);
-        glVertex3f(0.0 + xVal, 0.5 + yVal, zZoom);
-        glVertex3f(0.5 + xVal, 0.5 + yVal, zZoom);
-        glVertex3f(0.5 + xVal, 0.0 + yVal, zZoom);
+        glVertex3f(0.0 + xVal, 0.4 + yVal, zZoom);
+        glVertex3f(0.4 + xVal, 0.4 + yVal, zZoom);
+        glVertex3f(0.4 + xVal, 0.0 + yVal, zZoom);
         glVertex3f(0.0 + xVal, 0.0 + yVal, zZoom);
         glEnd();
 
         glTranslatef(3, tHigh, -8.0);
         glBegin(GL_TRIANGLES);
         glColor3f(1.0, 0.0, 0.0);
-        glVertex3f(0.0, 1.0, 0.0);
+        glVertex3f(0.0, 0.8, 0.0);
         glColor3f(0.0, 1.0, 0.0);
-        glVertex3f(-1, -1, 0.0);
+        glVertex3f(-0.8, -0.8, 0.0);
         glColor3f(0.0, 0.0, 1.0);
-        glVertex3f(1.0, -1, 0.0);
+        glVertex3f(0.8, -0.8, 0.0);
         glEnd();
     }
 #endif

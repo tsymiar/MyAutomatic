@@ -15,8 +15,8 @@ protected:
     void keyPressEvent(QKeyEvent* e);
     void mouseMoveEvent(QMouseEvent* e);
 private:
-    bool fullscrn;
     bool light;
+    bool fllscrn;
     GLfloat x, y, z, h;
     QTimer* tick = NULL;
 private slots:

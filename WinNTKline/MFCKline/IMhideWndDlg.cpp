@@ -107,7 +107,7 @@ void* parseMessage(void* msg)
                 break;
             closesocket(client.sock);
             continue;
-        };
+        }
         sprintf_s(title, 512, "%s", rslt + 8);
         if (rslt[1] == LOGIN && rslt[3] == 'e') {
             continue;
@@ -170,7 +170,7 @@ void servMsgCallback(void* msg)
 {
     unsigned int thrdAddr;
     _beginthreadex(NULL, 0, (_beginthreadex_proc_type)parseMessage, msg, 0, &thrdAddr);
-};
+}
 
 int CIMhideWndDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
