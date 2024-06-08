@@ -10,7 +10,7 @@
 class Initialise {
 
 public:
-    Initialise() {}
+    Initialise() { }
 
     struct GLColor {
         float R;
@@ -28,11 +28,11 @@ public:
 
         double a1 = pow(1 - t, 3);
         double a2 = pow(1 - t, 2) * 3 * t;
-        double a3 = 3 * t*t*(1 - t);
-        double a4 = t * t*t;
+        double a3 = 3 * t * t * (1 - t);
+        double a4 = t * t * t;
 
-        P.x = float(a1*A[0].x + a2 * A[1].x + a3 * A[2].x + a4 * A[3].x);
-        P.y = float(a1*A[0].y + a2 * A[1].y + a3 * A[2].y + a4 * A[3].y);
+        P.x = float(a1 * A[0].x + a2 * A[1].x + a3 * A[2].x + a4 * A[3].x);
+        P.y = float(a1 * A[0].y + a2 * A[1].y + a3 * A[2].y + a4 * A[3].y);
 
         return P;
     }
@@ -61,7 +61,7 @@ public:
     inline static void* freeLeak(void* ptr)
     {
         if (ptr != nullptr)
-            delete ptr;
+            delete (char*)ptr;
         ptr = nullptr;
         return ptr;
     }

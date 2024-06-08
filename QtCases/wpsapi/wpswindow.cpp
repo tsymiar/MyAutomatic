@@ -40,7 +40,7 @@ using namespace wpsapi;
 using namespace kfc;
 using namespace wpsapiex;
 
-WPSWindow::WPSWindow(QWidget *parent)
+WPSWindow::WPSWindow(QWidget* parent)
 #if (QT_VERSION < QT_VERSION_CHECK(5,0,0))
 	: QX11EmbedContainer(parent)
 	, m_containerWin(NULL)
@@ -52,7 +52,7 @@ WPSWindow::WPSWindow(QWidget *parent)
 	: QWidget(parent)
 	, m_containerWin(NULL)
 {
-	m_hlayout  = new QHBoxLayout;
+	m_hlayout = new QHBoxLayout;
 	m_hlayout->setContentsMargins(1, 1, 1, 1);
 	setLayout(m_hlayout);
 }
@@ -60,25 +60,22 @@ WPSWindow::WPSWindow(QWidget *parent)
 
 WPSWindow::~WPSWindow()
 {
-	if (m_containerWin)
-	{
+	if (m_containerWin) {
 		delete m_containerWin;
 		m_containerWin = NULL;
 	}
-	if (m_hlayout)
-	{
+	if (m_hlayout) {
 		delete m_hlayout;
 		m_hlayout = NULL;
 	}
 }
 
-IKRpcClient * WPSWindow::initWpsApplication()
+IKRpcClient* WPSWindow::initWpsApplication()
 {
-	IKRpcClient *pWpsRpcClient = NULL;
+	IKRpcClient* pWpsRpcClient = NULL;
 	HRESULT hr = createWpsRpcInstance(&pWpsRpcClient);
-	if (hr != S_OK)
-	{
-		qDebug() <<"get WpsRpcClient erro";
+	if (hr != S_OK) {
+		qDebug() << "get WpsRpcClient erro";
 		return NULL;
 	}
 	BSTR StrWpsAddress = SysAllocString(__X("/opt/kingsoft/wps-office/office6/wps"));
@@ -87,18 +84,17 @@ IKRpcClient * WPSWindow::initWpsApplication()
 
 	QVector<BSTR> vArgs;
 	vArgs.resize(7);
-	vArgs[0] =  SysAllocString(__X("-shield"));
-	vArgs[1] =  SysAllocString(__X("-multiply"));
-	vArgs[2] =  SysAllocString(__X("-x11embed"));
-	vArgs[3] =  SysAllocString(QString::number(winId()).utf16());
-	vArgs[4] =  SysAllocString(QString::number(width()).utf16());
-	vArgs[5] =  SysAllocString(QString::number(height()).utf16());
+	vArgs[0] = SysAllocString(__X("-shield"));
+	vArgs[1] = SysAllocString(__X("-multiply"));
+	vArgs[2] = SysAllocString(__X("-x11embed"));
+	vArgs[3] = SysAllocString(QString::number(winId()).utf16());
+	vArgs[4] = SysAllocString(QString::number(width()).utf16());
+	vArgs[5] = SysAllocString(QString::number(height()).utf16());
 	//-hidentp默认隐藏任务窗格
 	//vArgs[6] =  SysAllocString(__X("-hidentp"));
 	pWpsRpcClient->setProcessArgs(vArgs.size(), vArgs.data());
 
-	for (int i = 0; i < vArgs.size(); i++)
-	{
+	for (int i = 0; i < vArgs.size(); i++) {
 		SysFreeString(vArgs.at(i));
 	}
 	m_rpcClient = pWpsRpcClient;
@@ -120,11 +116,10 @@ void WPSWindow::removeHotKey(const QString& hotKey)
 	m_enableHotKeysMap.remove(hotKey);
 }
 
-bool WPSWindow::eventFilter(QObject *Object, QEvent *Event)
+bool WPSWindow::eventFilter(QObject* Object, QEvent* Event)
 {
-	if (Event->type() == QEvent::KeyPress)
-	{
-		QKeyEvent *keyEvent = static_cast<QKeyEvent*>(Event);
+	if (Event->type() == QEvent::KeyPress) {
+		QKeyEvent* keyEvent = static_cast<QKeyEvent*>(Event);
 		int keyInt = keyEvent->key();
 		Qt::KeyboardModifiers modifiers = keyEvent->modifiers();
 		if (modifiers & Qt::ShiftModifier)
@@ -138,12 +133,9 @@ bool WPSWindow::eventFilter(QObject *Object, QEvent *Event)
 
 		QKeySequence hotkey(keyInt);
 		QMap<QString, bool>::iterator pos = m_enableHotKeysMap.begin();
-		for (; pos != m_enableHotKeysMap.end(); pos++)
-		{
-			if (QKeySequence::ExactMatch == hotkey.matches(pos.key()))
-			{
-				if (!pos.value())
-				{
+		for (; pos != m_enableHotKeysMap.end(); pos++) {
+			if (QKeySequence::ExactMatch == hotkey.matches(pos.key())) {
+				if (!pos.value()) {
 					return true;
 				}
 			}
@@ -164,10 +156,9 @@ void WPSWindow::onEmbeded()
 #endif
 }
 
-void WPSWindow::addContainerWin(QWidget *containerWin)
+void WPSWindow::addContainerWin(QWidget* containerWin)
 {
-	if (m_containerWin)
-	{
+	if (m_containerWin) {
 		m_hlayout->removeWidget(m_containerWin);
 		delete m_containerWin;
 		m_containerWin = NULL;
@@ -177,7 +168,7 @@ void WPSWindow::addContainerWin(QWidget *containerWin)
 	m_hlayout->setStretchFactor(m_containerWin, 140);
 }
 
-WPSMainWindow::WPSMainWindow(QWidget *parent)
+WPSMainWindow::WPSMainWindow(QWidget* parent)
 	: QWidget(parent)
 	, m_mainArea(NULL)
 {
@@ -192,10 +183,9 @@ WPSMainWindow::WPSMainWindow(QWidget *parent)
 
 WPSMainWindow::~WPSMainWindow()
 {
-	if (m_spApplication)
-	{
+	if (m_spApplication) {
 		KComVariant vars[3];
-		m_spApplication->Quit(vars, vars+1, vars+2);
+		m_spApplication->Quit(vars, vars + 1, vars + 2);
 		m_spApplication.clear();
 	}
 	m_mainArea->destroyWpsApplication();
@@ -207,29 +197,25 @@ WPSMainWindow::~WPSMainWindow()
 void WPSMainWindow::closeApp()
 {
 	KComVariant vars[3];
-	if (m_spApplication != NULL)
-	{
-        m_spApplication->Quit(vars, vars+1, vars+2);
+	if (m_spApplication != NULL) {
+		m_spApplication->Quit(vars, vars + 1, vars + 2);
 		m_mainArea->destroyWpsApplication();
-        m_spDocs = NULL;
-		m_spApplication = NULL;
-		m_spApplicationEx = NULL;
+		m_spApplication = 0;
+		m_spApplicationEx = 0;
+		m_spDocs = 0;
 	}
 }
 
 void WPSMainWindow::initApp()
 {
-	if (!m_spApplication)
-	{
-		IKRpcClient *pRpcClient = m_mainArea->initWpsApplication();
+	if (!m_spApplication) {
+		IKRpcClient* pRpcClient = m_mainArea->initWpsApplication();
 		m_rpcClient = pRpcClient;
-		if (pRpcClient && pRpcClient->getWpsApplication((IUnknown**)&m_spApplication) == S_OK)
-		{
+		if (pRpcClient && pRpcClient->getWpsApplication((IUnknown**)&m_spApplication) == S_OK) {
 			m_spApplication->get_Documents(&m_spDocs);
 			m_spApplication->QueryInterface(IID__WpsApplicationEx, (void**)&m_spApplicationEx);
 #if (QT_VERSION >= QT_VERSION_CHECK(5,0,0))
-			if (m_spApplicationEx)
-			{
+			if (m_spApplicationEx) {
 				unsigned long wid = 0;
 				m_spApplicationEx->get_EmbedWid(&wid);
 				QWidget* container = QWidget::createWindowContainer(QWindow::fromWinId(wid), this);
@@ -242,11 +228,9 @@ void WPSMainWindow::initApp()
 
 void WPSMainWindow::newDoc()
 {
-	if (m_spApplication)
-	{
+	if (m_spApplication) {
 		bool ret = m_spApplication->createDocument("wps");
-		if (!ret)
-		{
+		if (!ret) {
 			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("新建失败"));
 			message.exec();
 		}
@@ -256,21 +240,19 @@ void WPSMainWindow::newDoc()
 
 void WPSMainWindow::openDoc()
 {
-    openDoc(nullptr);
+	openDoc(nullptr);
 }
 
 void WPSMainWindow::openDoc(QString filename)
 {
-	if (m_spApplication)
-	{
-        QString openFile;
+	if (m_spApplication) {
+		QString openFile;
 		if (filename == nullptr)
-            openFile = QFileDialog::getOpenFileName((QWidget*)parent(), QString::fromUtf8("打开文档"));
-        else
-            openFile = filename;
+			openFile = QFileDialog::getOpenFileName((QWidget*)parent(), QString::fromUtf8("打开文档"));
+		else
+			openFile = filename;
 
-		if (!m_spApplication->openDocument(openFile, false))
-		{
+		if (!m_spApplication->openDocument(openFile, false)) {
 			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("打开失败"));
 			message.exec();
 		}
@@ -280,35 +262,31 @@ void WPSMainWindow::openDoc(QString filename)
 
 QString WPSMainWindow::getDocContent()
 {
-    QString content = "";
-    if (m_spApplication)
-    {
-        ks_stdptr<_Document> spDoc;
-        m_spApplication->get_ActiveDocument((Document**)&spDoc);
-        if (spDoc)
-        {
-            ks_stdptr<Range> spRange;
-            spDoc->get_Content(&spRange);
-            spRange->AutoFormat();
-            single sig;
-            spRange->Calculate(&sig);
-            BSTR* text = new BSTR[1024];
-            spRange->get_Text(text);
-            for (int i = 0; i < 1024; i++)
-            {
-                char* ctxt = (char*)(*text) + i;
-                content += QString::fromLocal8Bit("%1").arg(ctxt);
-            }
-            delete text;
-        }
-    }
-    return content;
+	QString content = "";
+	if (m_spApplication) {
+		ks_stdptr<_Document> spDoc;
+		m_spApplication->get_ActiveDocument((Document**)&spDoc);
+		if (spDoc) {
+			ks_stdptr<Range> spRange;
+			spDoc->get_Content(&spRange);
+			spRange->AutoFormat();
+			single sig;
+			spRange->Calculate(&sig);
+			BSTR* text = new BSTR[1024];
+			spRange->get_Text(text);
+			for (int i = 0; i < 1024; i++) {
+				char* ctxt = (char*)(*text) + i;
+				content += QString::fromLocal8Bit("%1").arg(ctxt);
+			}
+			delete text;
+		}
+	}
+	return content;
 }
 
 void WPSMainWindow::saveAs()
 {
-	if (m_spApplication)
-	{
+	if (m_spApplication) {
 		QString saveFile = QFileDialog::getSaveFileName((QWidget*)parent(), QString::fromUtf8("保存文档"));
 		if (!saveFile.isEmpty())
 			m_spApplication->saveAs(saveFile);
@@ -318,12 +296,10 @@ void WPSMainWindow::saveAs()
 
 void WPSMainWindow::closeDoc()
 {
-	if (m_spApplication)
-	{
+	if (m_spApplication) {
 		ks_stdptr<_Document> spDoc;
 		m_spApplication->get_ActiveDocument((Document**)&spDoc);
-		if (spDoc)
-		{
+		if (spDoc) {
 			KComVariant varSaveOptions(wdPromptToSaveChanges);
 			KComVariant varOriginalFormat(wdWordDocument);
 			KComVariant varRouteDocument;
@@ -335,18 +311,16 @@ void WPSMainWindow::closeDoc()
 
 void WPSMainWindow::printOutDoc()
 {
-	if (m_spApplication)
-	{
+	if (m_spApplication) {
 		ks_stdptr<_Document> spDoc;
 		m_spApplication->get_ActiveDocument((Document**)&spDoc);
-		if (spDoc)
-		{
+		if (spDoc) {
 			KComVariant varEmpty;
 			V_VT(&varEmpty) = VT_ERROR;
 			V_ERROR(&varEmpty) = DISP_E_PARAMNOTFOUND;
-			HRESULT ret = spDoc->PrintOut(&varEmpty, &varEmpty, &varEmpty,&varEmpty, &varEmpty, &varEmpty, &varEmpty, &varEmpty, &varEmpty, &varEmpty, &varEmpty,
-							&varEmpty, &varEmpty, &varEmpty, &varEmpty, &varEmpty, &varEmpty, &varEmpty);
-            qDebug() << "PrintOut: " << QString::number(ret);
+			HRESULT ret = spDoc->PrintOut(&varEmpty, &varEmpty, &varEmpty, &varEmpty, &varEmpty, &varEmpty, &varEmpty, &varEmpty, &varEmpty, &varEmpty, &varEmpty,
+				&varEmpty, &varEmpty, &varEmpty, &varEmpty, &varEmpty, &varEmpty, &varEmpty);
+			qDebug() << "PrintOut: " << QString::number(ret);
 		}
 	}
 	m_mainArea->setFocus();
@@ -355,8 +329,7 @@ void WPSMainWindow::printOutDoc()
 void WPSMainWindow::showAllTool()
 {
 	static bool enable = false;
-	if (m_spApplication)
-	{
+	if (m_spApplication) {
 		m_spApplication->setToolbarAllVisible(enable);
 		enable = !enable;
 	}
@@ -366,8 +339,7 @@ void WPSMainWindow::showAllTool()
 void WPSMainWindow::forceBackUpEnabled()
 {
 	static bool enable = false;
-	if (m_spApplicationEx)
-	{
+	if (m_spApplicationEx) {
 		m_spApplicationEx->put_ForceBackupEnable(enable ? VARIANT_TRUE : VARIANT_FALSE);
 		enable = !enable;
 	}
@@ -392,16 +364,13 @@ void WPSMainWindow::hideToolBar()
 	*/
 	static bool enable = false;
 	ks_stdptr<ksoapi::_CommandBars> spCommandBars;
-	if (m_spApplication)
-	{
+	if (m_spApplication) {
 		m_spApplication->get_CommandBars((ksoapi::CommandBars**)&spCommandBars);
-		if (spCommandBars)
-		{
+		if (spCommandBars) {
 			ks_stdptr<ksoapi::CommandBar> spCommandBar;
 			KComVariant vIndex(__X("Standard"));
 			spCommandBars->get_Item(vIndex, &spCommandBar);
-			if (spCommandBar)
-			{
+			if (spCommandBar) {
 				spCommandBar->put_Visible(enable ? VARIANT_TRUE : VARIANT_FALSE);
 				enable = !enable;
 			}
@@ -417,12 +386,10 @@ void WPSMainWindow::setHeaderFooter()
 	ks_stdptr<_Document> spDoc;
 	ks_stdptr<Section> spSection;
 	m_spApplication->get_ActiveDocument((Document**)&spDoc);
-	if (spDoc)
-	{
+	if (spDoc) {
 		ks_stdptr<Sections> spSections;
 		spDoc->get_Sections(&spSections);
-		if (spSections)
-		{
+		if (spSections) {
 			spSections->Item(1, &spSection);
 			if (!spSection)
 				return;
@@ -431,33 +398,27 @@ void WPSMainWindow::setHeaderFooter()
 
 	ks_stdptr<HeadersFooters> spHeaders;
 	spSection->get_Headers(&spHeaders);
-	if (spHeaders)
-	{
+	if (spHeaders) {
 		ks_stdptr<HeaderFooter> spHeader;
 		spHeaders->Item(wdHeaderFooterPrimary, &spHeader);
-		if (spHeader)
-		{
+		if (spHeader) {
 			ks_stdptr<Range> spRange;
 			spHeader->get_Range(&spRange);
-			if (spRange)
-			{
-				ks_bstr text( __X("Header") );
+			if (spRange) {
+				ks_bstr text(__X("Header"));
 				spRange->put_Text(text);
 			}
 		}
 	}
 	ks_stdptr<HeadersFooters> spFooters;
 	spSection->get_Footers(&spFooters);
-	if (spFooters)
-	{
+	if (spFooters) {
 		ks_stdptr<HeaderFooter> spFooter;
 		spFooters->Item(wdHeaderFooterPrimary, &spFooter);
-		if (spFooter)
-		{
+		if (spFooter) {
 			ks_stdptr<Range> spRange;
 			spFooter->get_Range(&spRange);
-			if (spRange)
-			{
+			if (spRange) {
 				ks_bstr text(__X("Footer"));
 				spRange->put_Text(text);
 			}
@@ -470,12 +431,10 @@ void WPSMainWindow::setHeaderFooter()
 
 void WPSMainWindow::getSaved()
 {
-	if (m_spApplication)
-	{
+	if (m_spApplication) {
 		ks_stdptr<_Document> spDoc;
 		m_spApplication->get_ActiveDocument((Document**)&spDoc);
-		if (spDoc)
-		{
+		if (spDoc) {
 			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), "");
 			VARIANT_BOOL isSaved = VARIANT_FALSE;
 			spDoc->get_Saved(&isSaved);
@@ -491,12 +450,10 @@ void WPSMainWindow::getSaved()
 
 void WPSMainWindow::getPagesNum()
 {
-	if (m_spApplication)
-	{
+	if (m_spApplication) {
 		ks_stdptr<_Document> spDoc;
 		m_spApplication->get_ActiveDocument((Document**)&spDoc);
-		if (spDoc)
-		{
+		if (spDoc) {
 			long nPages = 2;
 			KComVariant vIncludeFootnotesAndEndnotes;
 			spDoc->ComputeStatistics(wdStatisticPages, &vIncludeFootnotesAndEndnotes, &nPages);
@@ -514,12 +471,10 @@ void WPSMainWindow::disableHotKey()
 
 void WPSMainWindow::enableProtect()
 {
-	if (m_spApplication)
-	{
+	if (m_spApplication) {
 		ks_stdptr<_Document> spDoc;
 		m_spApplication->get_ActiveDocument((Document**)&spDoc);
-		if (spDoc)
-		{
+		if (spDoc) {
 			KComVariant varEmpty;
 			V_VT(&varEmpty) = VT_ERROR;
 			V_ERROR(&varEmpty) = DISP_E_PARAMNOTFOUND;
@@ -534,12 +489,10 @@ void WPSMainWindow::enableProtect()
 
 void WPSMainWindow::disableProtect()
 {
-	if (m_spApplication)
-	{
+	if (m_spApplication) {
 		ks_stdptr<_Document> spDoc;
 		m_spApplication->get_ActiveDocument((Document**)&spDoc);
-		if (spDoc)
-		{
+		if (spDoc) {
 			KComVariant vPassword(__X("123"));
 			spDoc->Unprotect(&vPassword);
 		}
@@ -549,18 +502,15 @@ void WPSMainWindow::disableProtect()
 
 void WPSMainWindow::hideToolBtn()
 {
-	if (m_spApplication)
-	{
+	if (m_spApplication) {
 		static bool enable = false;
 		ks_stdptr<ksoapi::_CommandBars> spCommandBars;
 		m_spApplication->get_CommandBars((ksoapi::CommandBars**)&spCommandBars);
-		if (spCommandBars)
-		{
+		if (spCommandBars) {
 			ks_stdptr<ksoapi::CommandBar> spCommandBar;
 			KComVariant vCommandBarIndex(__X("Formatting"));
 			spCommandBars->get_Item(vCommandBarIndex, &spCommandBar);
-			if (spCommandBar)
-			{
+			if (spCommandBar) {
 				ks_stdptr<ksoapi::CommandBarControls> spControls;
 				spCommandBar->get_Controls(&spControls);
 				int iCount = 0;
@@ -568,13 +518,11 @@ void WPSMainWindow::hideToolBtn()
 				if (FAILED(ret))
 					return;
 
-				for (int i = 1; i <= iCount; i++)
-				{
+				for (int i = 1; i <= iCount; i++) {
 					KComVariant vControlIndex(i);
 					ks_stdptr<ksoapi::CommandBarControl> spControl;
 					spControls->get_Item(vControlIndex, &spControl);
-					if (spControl)
-					{
+					if (spControl) {
 						spControl->put_Visible(enable ? VARIANT_TRUE : VARIANT_FALSE);
 						//button对应的index和name，用户可根据index隐藏自己所需按钮
 						//ks_bstr ksName;
@@ -591,12 +539,10 @@ void WPSMainWindow::hideToolBtn()
 
 void WPSMainWindow::listTemplates()
 {
-	if (m_spApplication)
-	{
+	if (m_spApplication) {
 		ks_stdptr<wpsapi::Selection> spSelection;
 		HRESULT hr = m_spApplication->get_Selection(&spSelection);
-		if (FAILED(hr))
-		{
+		if (FAILED(hr)) {
 			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("获取Selection对象失败"));
 			message.exec();
 			return;
@@ -604,8 +550,7 @@ void WPSMainWindow::listTemplates()
 
 		ks_bstr context(__X("编号一"));
 		hr = spSelection->TypeText(context);
-		if (FAILED(hr))
-		{
+		if (FAILED(hr)) {
 			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("输入文字失败"));
 			message.exec();
 			return;
@@ -613,8 +558,7 @@ void WPSMainWindow::listTemplates()
 
 		ks_stdptr<wpsapi::Range> spRange;
 		hr = spSelection->get_Range(&spRange);
-		if (FAILED(hr))
-		{
+		if (FAILED(hr)) {
 			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("获取Range对象失败"));
 			message.exec();
 			return;
@@ -622,8 +566,7 @@ void WPSMainWindow::listTemplates()
 
 		ks_stdptr<wpsapi::ListFormat> spListFormat;
 		hr = spRange->get_ListFormat(&spListFormat);
-		if (FAILED(hr))
-		{
+		if (FAILED(hr)) {
 			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("回去ListFormat对象失败"));
 			message.exec();
 			return;
@@ -631,8 +574,7 @@ void WPSMainWindow::listTemplates()
 
 		ks_stdptr<wpsapi::ListGalleries> spListGalleries;
 		hr = m_spApplication->get_ListGalleries(&spListGalleries);
-		if (FAILED(hr))
-		{
+		if (FAILED(hr)) {
 			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("获取ListGalleries对象失败"));
 			message.exec();
 			return;
@@ -640,8 +582,7 @@ void WPSMainWindow::listTemplates()
 
 		ks_stdptr<wpsapi::ListGallery> spListGallery;
 		hr = spListGalleries->Item(wpsapi::wdNumberGallery, &spListGallery);
-		if (FAILED(hr))
-		{
+		if (FAILED(hr)) {
 			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("获取ListGallerie对象失败"));
 			message.exec();
 			return;
@@ -649,8 +590,7 @@ void WPSMainWindow::listTemplates()
 
 		ks_stdptr<wpsapi::ListTemplates> spListTemplates;
 		hr = spListGallery->get_ListTemplates(&spListTemplates);
-		if (FAILED(hr))
-		{
+		if (FAILED(hr)) {
 			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("获取ListTemplates对象失败"));
 			message.exec();
 			return;
@@ -664,8 +604,7 @@ void WPSMainWindow::listTemplates()
 		KComVariant ContinuePreviousList(wdContinueList);
 		KComVariant DefaultListBehavior(262144);
 		hr = spListFormat->ApplyListTemplate(spListTemplate, &ContinuePreviousList, &ApplyTo, &DefaultListBehavior);
-		if (FAILED(hr))
-		{
+		if (FAILED(hr)) {
 			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("添加列表失败"));
 			message.exec();
 			return;
@@ -676,12 +615,10 @@ void WPSMainWindow::listTemplates()
 
 void WPSMainWindow::hyperlinks()
 {
-	if (m_spApplication)
-	{
+	if (m_spApplication) {
 		ks_stdptr<wpsapi::_Document> spActiveDoc;
 		HRESULT hr = m_spApplication->get_ActiveDocument((wpsapi::Document**)&spActiveDoc);
-		if (FAILED(hr))
-		{
+		if (FAILED(hr)) {
 			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("获取document对象失败"));
 			message.exec();
 			return;
@@ -689,8 +626,7 @@ void WPSMainWindow::hyperlinks()
 
 		ks_stdptr<wpsapi::Selection> spSelection;
 		hr = m_spApplication->get_Selection(&spSelection);
-		if (FAILED(hr))
-		{
+		if (FAILED(hr)) {
 			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("获取selection对象失败"));
 			message.exec();
 			return;
@@ -698,8 +634,7 @@ void WPSMainWindow::hyperlinks()
 
 		ks_stdptr<wpsapi::Range> spRange;
 		hr = spSelection->get_Range(&spRange);
-		if (FAILED(hr))
-		{
+		if (FAILED(hr)) {
 			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("获取range对象失败"));
 			message.exec();
 			return;
@@ -707,8 +642,7 @@ void WPSMainWindow::hyperlinks()
 
 		ks_stdptr<wpsapi::Hyperlinks> spHyperlinks;
 		hr = spActiveDoc->get_Hyperlinks(&spHyperlinks);
-		if (FAILED(hr))
-		{
+		if (FAILED(hr)) {
 			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("获取Hyperlinks对象失败"));
 			message.exec();
 			return;
@@ -722,8 +656,7 @@ void WPSMainWindow::hyperlinks()
 		V_VT(&varEmpty) = VT_ERROR;
 		V_ERROR(&varEmpty) = DISP_E_PARAMNOTFOUND;
 		hr = spHyperlinks->Add((IDispatch*)spRange, &Address, &varEmpty, &varEmpty, &varEmpty, &varEmpty, &spHyperlink);
-		if (FAILED(hr))
-		{
+		if (FAILED(hr)) {
 			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("添加超链接失败"));
 			message.exec();
 			return;
@@ -734,12 +667,10 @@ void WPSMainWindow::hyperlinks()
 
 void WPSMainWindow::highlight()
 {
-	if (m_spApplication)
-	{
+	if (m_spApplication) {
 		ks_stdptr<wpsapi::Selection> spSelection;
 		HRESULT hr = m_spApplication->get_Selection(&spSelection);
-		if (FAILED(hr))
-		{
+		if (FAILED(hr)) {
 			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("获取selection对象失败"));
 			message.exec();
 			return;
@@ -754,16 +685,14 @@ void WPSMainWindow::highlight()
 
 		ks_stdptr<wpsapi::Range> spRange;
 		hr = spSelection->get_Range(&spRange);
-		if (FAILED(hr))
-		{
+		if (FAILED(hr)) {
 			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("获取range对象失败"));
 			message.exec();
 			return;
 		}
 
 		hr = spRange->put_HighlightColorIndex(wpsapi::wdYellow);
-		if (FAILED(hr))
-		{
+		if (FAILED(hr)) {
 			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("设置突出显示失败"));
 			message.exec();
 			return;
@@ -774,12 +703,10 @@ void WPSMainWindow::highlight()
 
 void WPSMainWindow::inserttable()
 {
-	if (m_spApplication)
-	{
+	if (m_spApplication) {
 		ks_stdptr<wpsapi::_Document> spActiveDoc;
 		HRESULT hr = m_spApplication->get_ActiveDocument((wpsapi::Document**)&spActiveDoc);
-		if (FAILED(hr))
-		{
+		if (FAILED(hr)) {
 			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("获取Document对象失败"));
 			message.exec();
 			return;
@@ -787,8 +714,7 @@ void WPSMainWindow::inserttable()
 
 		ks_stdptr<wpsapi::Range> spRange;
 		hr = spActiveDoc->get_Content(&spRange);
-		if (FAILED(hr))
-		{
+		if (FAILED(hr)) {
 			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("获取Range对象失败"));
 			message.exec();
 			return;
@@ -796,8 +722,7 @@ void WPSMainWindow::inserttable()
 
 		ks_stdptr<wpsapi::Tables> spTables;
 		hr = spActiveDoc->get_Tables(&spTables);
-		if (FAILED(hr))
-		{
+		if (FAILED(hr)) {
 			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("获取Tables对象失败"));
 			message.exec();
 			return;
@@ -809,8 +734,7 @@ void WPSMainWindow::inserttable()
 		KComVariant AutoFitBehavior;
 		ks_stdptr<wpsapi::Table> spTable;
 		hr = spTables->Add(spRange, NumRows, NumColumns, &DefaultTableBehavior, &AutoFitBehavior, &spTable);
-		if (FAILED(hr))
-		{
+		if (FAILED(hr)) {
 			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("添加表格失败"));
 			message.exec();
 			return;
@@ -821,12 +745,10 @@ void WPSMainWindow::inserttable()
 
 void WPSMainWindow::setFontSize()
 {
-	if (m_spApplication)
-	{
+	if (m_spApplication) {
 		ks_stdptr<wpsapi::Selection> spSelection;
 		HRESULT hr = m_spApplication->get_Selection(&spSelection);
-		if (FAILED(hr))
-		{
+		if (FAILED(hr)) {
 			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("获取Selection对象失败"));
 			message.exec();
 			return;
@@ -834,16 +756,14 @@ void WPSMainWindow::setFontSize()
 
 		ks_stdptr<wpsapi::_Font> spFont;
 		hr = spSelection->get_Font((wpsapi::Font**)&spFont);
-		if (FAILED(hr))
-		{
+		if (FAILED(hr)) {
 			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("获取Font对象失败"));
 			message.exec();
 			return;
 		}
 
 		hr = spFont->put_Size(36);
-		if (FAILED(hr))
-		{
+		if (FAILED(hr)) {
 			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("设置字体大小失败"));
 			message.exec();
 			return;
@@ -857,12 +777,10 @@ void WPSMainWindow::setFontSize()
 
 void WPSMainWindow::insertEllipse()
 {
-	if (m_spApplication)
-	{
+	if (m_spApplication) {
 		ks_stdptr<wpsapi::_Document> spDocumment;
 		HRESULT hr = m_spApplication->get_ActiveDocument((wpsapi::Document**)&spDocumment);
-		if (FAILED(hr))
-		{
+		if (FAILED(hr)) {
 			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("获取Document对象失败"));
 			message.exec();
 			return;
@@ -870,8 +788,7 @@ void WPSMainWindow::insertEllipse()
 
 		ks_stdptr<wpsapi::Shapes> spShapes;
 		hr = spDocumment->get_Shapes(&spShapes);
-		if (FAILED(hr))
-		{
+		if (FAILED(hr)) {
 			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("获取shapes对象失败"));
 			message.exec();
 			return;
@@ -885,8 +802,7 @@ void WPSMainWindow::insertEllipse()
 		KComVariant Anchor;
 		ks_stdptr<wpsapi::Shape> spShape;
 		hr = spShapes->AddShape(Type, Left, Top, Width, Height, &Anchor, &spShape);
-		if (FAILED(hr))
-		{
+		if (FAILED(hr)) {
 			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("添加图形失败"));
 			message.exec();
 			return;
@@ -898,15 +814,15 @@ void WPSMainWindow::insertEllipse()
 static HRESULT wpsDocumentBeforeCloseCallback(_Document* pdoc, VARIANT_BOOL* Cancel)
 {
 	*Cancel = VARIANT_FALSE;
+	qDebug() << "wpsDocumentBeforeCloseCallback: " << pdoc;
 	QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("关闭回调"));
-    message.exec();
-    return 0;
+	message.exec();
+	return 0;
 }
 
 void WPSMainWindow::registerCloseEvent()
 {
-	if (m_spApplication)
-	{
+	if (m_spApplication) {
 		HRESULT ret = m_rpcClient->registerEvent(m_spApplication, DIID_ApplicationEvents4, __X("DocumentBeforeClose"), (void*)wpsDocumentBeforeCloseCallback);
 		QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), "");
 		if (ret == S_OK)
@@ -921,15 +837,16 @@ void WPSMainWindow::registerCloseEvent()
 static HRESULT wpsDocumentBeforeSaveCallback(_Document* pdoc, VARIANT_BOOL* SaveAsUI, VARIANT_BOOL* Cancel)
 {
 	*SaveAsUI = VARIANT_TRUE;
+	*Cancel = VARIANT_FALSE;
+	qDebug() << "wpsDocumentBeforeSaveCallback: " << pdoc;
 	QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("保存回调"));
 	message.exec();
-    return 0;
+	return 0;
 }
 
 void WPSMainWindow::registerSaveEvent()
 {
-	if (m_spApplication)
-	{
+	if (m_spApplication) {
 		HRESULT ret = m_rpcClient->registerEvent(m_spApplication, DIID_ApplicationEvents4, __X("DocumentBeforeSave"), (void*)wpsDocumentBeforeSaveCallback);
 		QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), "");
 		if (ret == S_OK)
@@ -944,10 +861,9 @@ void WPSMainWindow::registerSaveEvent()
 
 void WPSMainWindow::slotButtonClick(const QString& name)
 {
-	typedef void (WPSMainWindow::*WpsOperationFun)(void);
+	typedef void (WPSMainWindow::* WpsOperationFun)(void);
 	static QMap<QString, WpsOperationFun> s_operationFunMap;
-	if (s_operationFunMap.isEmpty())
-	{
+	if (s_operationFunMap.isEmpty()) {
 		s_operationFunMap.insert(QString::fromUtf8("初始化"), &WPSMainWindow::initApp);
 		s_operationFunMap.insert(QString::fromUtf8("新建文档"), &WPSMainWindow::newDoc);
 		s_operationFunMap.insert(QString::fromUtf8("打开文档"), &WPSMainWindow::openDoc);

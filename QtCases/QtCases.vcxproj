@@ -13,14 +13,14 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{B12702AD-ABFB-343A-A199-8E24837244A3}</ProjectGuid>
     <Keyword>Qt4VSv1.0</Keyword>
-    <WindowsTargetPlatformVersion>10.0.20348.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <ProjectName>QtCases</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -57,14 +57,18 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <DisableSpecificWarnings>4005;4819</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4819</DisableSpecificWarnings>
+      <CompileAs>Default</CompileAs>
+      <AdditionalOptions>/std:c++17 /Zc:__cplusplus /permissive- %(AdditionalOptions)</AdditionalOptions>
+      <PrecompiledHeaderFile />
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <OutputFile>$(OutDir)\$(ProjectName).exe</OutputFile>
       <AdditionalLibraryDirectories>$(QTDIR)\lib;$(QTDIR)\plugins\platforms;$(libPNG)\lib\$(Configuration);$(OPENCV)\lib\$(Configuration);$(SolutionDir)KlineUtil\GL\lib;$(SolutionDir)KlineUtil\font\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>qtmaind.lib;Qt5Cored.lib;Qt5Guid.lib;Qt5Networkd.lib;Qt5AxContainerd.lib;Qt5AxBased.lib;Qt5OpenGLd.lib;Qt5QuickWidgetsd.lib;Qt5SerialPortd.lib;Qt5Svgd.lib;Qt5UiToolsd.lib;Qt5WebSocketsd.lib;Qt5Widgetsd.lib;Qt5Xmld.lib;opengl32.lib;glu32.lib;libpng16.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;glu32.lib;libpng16.lib;zlib.lib;Qt6Cored.lib;Qt6Guid.lib;Qt6Networkd.lib;Qt6AxContainerd.lib;Qt6AxBased.lib;Qt6OpenGLd.lib;Qt6QuickWidgetsd.lib;Qt6Widgetsd.lib;Qt6Xmld.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/FORCE:MULTIPLE %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
@@ -84,7 +88,7 @@
       <OutputFile>$(OutDir)\$(ProjectName).exe</OutputFile>
       <AdditionalLibraryDirectories>$(QTDIR)\lib;$(QTDIR)\plugins\platforms;$(libPNG)\lib\$(Configuration);$(OPENCV)\lib\$(Configuration);$(SolutionDir)KlineUtil\GL\lib;$(SolutionDir)KlineUtil\font\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalDependencies>qtmain.lib;Qt5Core.lib;Qt5Gui.lib;Qt5Network.lib;Qt5AxContainer.lib;Qt5AxBase.lib;Qt5OpenGL.lib;Qt5QuickWidgets.lib;Qt5SerialPort.lib;Qt5Svg.lib;Qt5UiTools.lib;Qt5WebSockets.lib;Qt5Widgets.lib;Qt5Xml.lib;opengl32.lib;glu32.lib;libpng16.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;glu32.lib;libpng16.lib;zlib.lib;qtmain.lib;Qt5Core.lib;Qt5Gui.lib;Qt5Network.lib;Qt5AxContainer.lib;Qt5AxBase.lib;Qt5OpenGL.lib;Qt5QuickWidgets.lib;Qt5SerialPort.lib;Qt5Svg.lib;Qt5UiTools.lib;Qt5WebSockets.lib;Qt5Widgets.lib;Qt5Xml.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

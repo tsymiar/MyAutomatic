@@ -2,8 +2,12 @@
 #include <cmath>
 #include <cstdarg>
 #include <iostream>
+#include <Qt>
+#if QT_VERSION >= 0x060800
+#include <QOpenGLFunctions>
+#else
 #include <QtOpenGL/QGL>
-#include <QDebug>
+#endif
 #include <zlib.h>
 #include <png.h>
 

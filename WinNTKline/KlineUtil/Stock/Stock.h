@@ -63,7 +63,7 @@ public:
     float DEA(float dea[])
     {
         float sum = 0;
-        int size = sizeof(dea) / sizeof(*dea);
+        int size = sizeof(*dea) / sizeof(float);
         for (int i = 0; i < size; i++)
             sum += dea[i];
         return sum / size;
@@ -73,7 +73,8 @@ public:
         EMA12 = ema.yema12 * 11 / 13 + toclose * 2 / 13;
         EMA26 = ema.yema26 * 25 / 27 + toclose * 2 / 27;
         DIF = EMA12 - EMA26;
-        return (DIF - DEA(f_dea)) * 2;
+        float macd = ((DIF - DEA(f_dea)) * 2) + yesDEA;
+        return macd;
     }
     float MACD(float DIF, float DEA)
     {

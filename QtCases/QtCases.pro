@@ -1,11 +1,18 @@
+# QT make file
 CONFIG += qt warn_on debug \
         -finput-charset='UTF-8' \
         -fshort-wchar
 
 QT += core gui network
 QT += opengl
+greaterThan(QT_MAJOR_VERSION, 5) {
+    QT += openglwidgets
+    CONFIG += c++17
+    QMAKE_CXXFLAGS += -std=c++17
+} else {
+    QMAKE_CXXFLAGS += -std=c++0x -Wno-attributes
+}
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
-QMAKE_CXXFLAGS += -std=c++0x -Wno-attributes
 
 unix {
     exists(/opt/kingsoft/wps-office/office6/libstdc++.so.6) {
@@ -49,31 +56,35 @@ INCLUDEPATH += \
     include/wps \
     ./wpsapi
 
+win32 {
+    INCLUDEPATH += $$(libPNG) $$(ZLIB)
+}
+
 HEADERS = MainWindow.h OglMaterial.h OglImgShow.h \
-    $${MYGL}/SDL2tex.h $${MYGL}/OGLKview.h \
-    OfficeWidget.h
+    $${MYGL}/SDL2tex.h $${MYGL}/OGLKview.h
 
 unix {
-    HEADERS += wpsapi/wpswindow.h
-} else {
+    HEADERS += wpsapi/wpswindow.h \
+            OfficeWidget.h
 }
 
 SOURCES = main.cpp \
     MainWindow.cpp OglMaterial.cpp OglImgShow.cpp \
-    $${MYGL}/SDL2tex.cc \  # $${MYGL}/OGLKview.cc \
-    OfficeWidget.cpp
+    $${MYGL}/OGLKview.cc
 
 unix {
-    SOURCES += wpsapi/wpswindow.cpp
-} else {
+    SOURCES += wpsapi/wpswindow.cpp \
+        $${MYGL}/SDL2tex.cc \
+        OfficeWidget.cpp
 }
 
 FORMS += \
     mainwindow.ui
 
-RC_ICONS = qtlogo.ico
-
-RESOURCES += \
-    qtlogo.qrc
+unix {
+    RC_ICONS = qtlogo.ico
+    RESOURCES += \
+        qtlogo.qrc
+}
 
 DISTFILES +=

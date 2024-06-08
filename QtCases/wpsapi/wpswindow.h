@@ -49,14 +49,14 @@ class WPSWindow : public QWidget
 {
 	Q_OBJECT
 public:
-	WPSWindow(QWidget *parent = NULL);
+	WPSWindow(QWidget* parent = NULL);
 	~WPSWindow();
-	IKRpcClient * initWpsApplication();
+	IKRpcClient* initWpsApplication();
 	void destroyWpsApplication();
 	void addHotKey(const QString& hotKey, bool isEnable = false);
 	void removeHotKey(const QString& hotKey);
 protected:
-	bool eventFilter(QObject *Object, QEvent *Event);
+	bool eventFilter(QObject* Object, QEvent* Event);
 public slots:
 	void onEmbeded();
 	void addContainerWin(QWidget* containerWin);
@@ -67,18 +67,17 @@ private:
 	QWidget* m_containerWin;
 };
 
-class WPSMainWindow : public QWidget
-{
+class WPSMainWindow : public QWidget {
 	Q_OBJECT
 public:
-	WPSMainWindow(QWidget *parent = NULL);
+	WPSMainWindow(QWidget* parent = NULL);
 	~WPSMainWindow();
 	void closeApp();
 	void initApp();
 	void newDoc();
-    void openDoc();
-    void openDoc(QString filename);
-    QString getDocContent();
+	void openDoc();
+	void openDoc(QString filename);
+	QString getDocContent();
 	void saveAs();
 	void closeDoc();
 	void printOutDoc();

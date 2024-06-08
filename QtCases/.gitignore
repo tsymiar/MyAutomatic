@@ -6,3 +6,5 @@ QtCases
 qrc_*
 moc_*
 ui_*
+*.TMP
+*.qtvscr

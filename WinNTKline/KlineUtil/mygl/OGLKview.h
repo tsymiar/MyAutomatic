@@ -82,11 +82,11 @@
 #include    "com/Initialise-inl.h"
 #ifdef _WIN32
 #include    "com/CPUID.H"
+#include    "dos/DOSCout.h"
+#else
+
 #endif
 #include    "../../../LinxSrvc/include/String_-inl.h"
-#if !defined(QT_VERSION)
-#include    "dos/DOSCout.h"
-#endif
 #include    "Stock/Stock.h"
 #include    "Def/MacroDef.h"
 
@@ -115,8 +115,11 @@ DLL_KVIEW_API
 
 #ifdef __linux
 #include "SDL2tex.h"
+#ifdef sprintf_s
+#undef sprintf_s
 #define sprintf_s sprintf
-#define _itoa_s String_ s;s._itoa
+#endif
+#define _itoa_s String_ s;s.itoa_
 #endif
 
 #ifdef __linux
@@ -142,7 +145,7 @@ public:
 #ifdef _WIN32
     typedef HWND(WINAPI* PROCGETCONSOLEWINDOW)();
 #endif
-    typedef char* SB;
+    typedef const char* SB;
 
     struct Market {
         tm    time;
@@ -210,7 +213,7 @@ public:
         int mode;
         OGLKview::SB bs;
     };
-    struct OglAttr {
+    struct OglRange {
         int wide;
         int tall;
     };
@@ -245,13 +248,13 @@ public:
     }
     template<typename T> inline std::vector<T> SelectPeriod(std::vector<T> elem, unsigned space)
     {
-        std::vector<T>::iterator it = elem.begin();
+        auto it = elem.begin();
         if (elem.size() > space) {
             it = elem.begin() + space;
             elem.erase(it, elem.end());
             it = elem.begin();
-            return elem;
-        } else return elem;
+        }
+        return elem;
     }
     void SetColor(OGLKview::Color4f color) const
     {
@@ -280,12 +283,11 @@ private:
     float y_fix = 0;
     int  failmsg = 0;
     bool g_multi = false;
-    char g_mktim[16] = { NULL };
-    char g_ltime[32] = { NULL };
+    char g_mktim[16] = { 0 };
+    char g_ltime[32] = { 0 };
     ViewSize viewsize = { 0,0,0,0 };
-    OglAttr attr = { 1366,768 };
     Item g_ITEM = { {0,0},0,0,NULL };
-    Charmarket markchars = { "---","---","---" };
+    Charmarket markchars = { "---","---","---","---","---","---","---","---","---","---" };
 #ifdef _WIN32
     PROCGETCONSOLEWINDOW GetConsoleWindow;
     void print_string(const char* str);
@@ -299,7 +301,7 @@ private:
     void GetChangeMatrix(float& angel, float& x, float& y, float& z) const;
 public:
 #if !defined(QT_VERSION)
-#if !defined(_WIN32)
+#ifdef _WIN32
     DOSCout DOS;
 #endif
 #endif
@@ -331,11 +333,11 @@ public:
     void DrawDash(void);
     void DrawCurve(Point A[4]);
     void DrawLevel(float mascl, float miscl);
-    int DrawKtext(char text[], Point& coor, int size = 14, OGLKview::Color4f color = { 1,1,1,1 }, char font[] = "Arial", bool dim = true);
+    int DrawKtext(char text[], Point& coor, int size = 14, OGLKview::Color4f color = { 1,1,1,1 }, char font[] = (char*)"Arial", bool dim = true);
     int DrawCoord(int mX, int mY);
     int DrawArrow(Point begin);
     int DrawTrade(char time[32] = { NULL });
-    bool DrawItems(const Market& market, int row);
+    bool DrawItems(const Market& market);
     int DrawPoly(Point Pb, Point Pe, OGLKview::Color4f color = { 1,1,1,1 }, int viewport = 1);
     bool DrawKline(const OGLKview::Market& markdata, const OGLKview::FixWhat& co, bool hollow = 1, Point pnt = { 0,0 });
     int Data2View(const std::vector<struct OGLKview::Market>& market, const OGLKview::Dlginfo& toview);

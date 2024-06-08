@@ -247,7 +247,7 @@ inline String_ String_::replace_(char old, char dst)
 
 inline char String_::charAt_(size_t z)
 {
-    if (z < 0 || z > strlen_(m_data)) {
+    if (z > strlen_(m_data)) {
         return 0;
     } else {
         return m_data[z];

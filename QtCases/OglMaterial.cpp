@@ -1,4 +1,6 @@
 #include "OglMaterial.h"
+#include <QPainter>
+#include <QPen>
 
 #define IMAGE_PATH "../WinNTKline/KlineUtil/image/"
 
@@ -278,7 +280,7 @@ void QOglMaterial::paintGL()
     glDisableVertexAttribArray(clorLocation);
 #else
     glTranslatef(0, 0, 0);
-    static Uint32 i = 0, j = 0;
+    static uint32_t i = 0, j = 0;
     mPng.showPixels(i, j);
     i++;j++;
     if (i == 1024) i = 0;
