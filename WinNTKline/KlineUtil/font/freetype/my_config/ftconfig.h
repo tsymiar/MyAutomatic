@@ -279,16 +279,6 @@ FT_BEGIN_HEADER
 
 #endif /* !FT_BASE_DEF */
 
-/*
-#ifndef FT_EXPORT
-
-#ifdef __cplusplus
-#define FT_EXPORT( x )  extern "C"  x
-#else
-#define FT_EXPORT( x )  extern  x
-#endif
-
-#endif /* !FT_EXPORT */
 #ifdef DLL_EXPORT
 #undef DLL_EXPORT
 #define DLL_EXPORT declspec(dllimport)

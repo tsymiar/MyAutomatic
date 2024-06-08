@@ -1,5 +1,8 @@
 ﻿#include "OglImgShow.h"
 #include "SDL2tex.h"
+#include <QDebug>
+#include <QImage>
+#include <QPen>
 
 unsigned char* g_pixels = NULL;
 png_uint_32 width, height;

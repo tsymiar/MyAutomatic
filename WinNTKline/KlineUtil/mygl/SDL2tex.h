@@ -28,5 +28,6 @@ void SDL_GL_SetAs2DMode(int w, int h);
 void SDL_GL_Leave2DMode();
 GLuint SDL_GL_LoadTexture(SDL_Surface* surface, GLfloat* coord);
 void SDL_GL_quit();
+static void SDL_GL_SwapBuffers() {}
 
 #endif // _WIN32

@@ -13,6 +13,8 @@
 #define _TRACE(...) __noop 
 #endif
 
+BOOL WINAPI HandlerRoutine(__in DWORD CtrlType);
+
 class DOSCout
 {
 public:
