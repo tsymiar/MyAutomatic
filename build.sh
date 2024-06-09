@@ -49,7 +49,7 @@ else
                 make clean
             fi
         else
-            rm -vf ./*.o
+            rm -vrf ./*.o build
         fi
         cd -
     fi
