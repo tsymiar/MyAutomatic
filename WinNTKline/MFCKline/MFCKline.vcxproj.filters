@@ -162,7 +162,10 @@
     <ClInclude Include="..\KlineUtil\service\httpGet.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\KlineUtil\service\myweb.h">
+    <ClInclude Include="..\..\LinxSrvc\gSOAPverify\soap\myweb.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\LinxSrvc\gSOAPverify\soap\soapStub.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -278,7 +281,7 @@
     <ClCompile Include="..\KlineUtil\IM\client.cc">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\KlineUtil\service\soapClient.cpp">
+    <ClCompile Include="..\..\LinxSrvc\gSOAPverify\fix\soapClient_fix.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -291,20 +294,11 @@
     <None Include="..\..\LinxSrvc\gSOAPverify\file\myautomatic.sql">
       <Filter>配置文件</Filter>
     </None>
-    <None Include="..\KlineUtil\http\BareBonesBrowserLaunch.java">
-      <Filter>配置文件</Filter>
-    </None>
     <None Include="..\KlineUtil\ClassDiagram.cd" />
     <None Include="..\KlineUtil\com\plus1second">
       <Filter>头文件</Filter>
     </None>
     <None Include="..\KlineUtil\cfg\ips.ini">
-      <Filter>配置文件</Filter>
-    </None>
-    <None Include="..\KlineUtil\http\Client.java">
-      <Filter>配置文件</Filter>
-    </None>
-    <None Include="..\KlineUtil\http\myweb.nsmap">
       <Filter>配置文件</Filter>
     </None>
     <None Include="..\KlineUtil\script\call.bat">
@@ -317,6 +311,24 @@
       <Filter>配置文件</Filter>
     </None>
     <None Include="packages.config" />
+    <None Include="..\KlineUtil\service\Client.java">
+      <Filter>配置文件</Filter>
+    </None>
+    <None Include="..\..\LinxSrvc\gSOAPverify\soap\myweb.nsmap">
+      <Filter>配置文件</Filter>
+    </None>
+    <None Include="..\KlineUtil\service\BareBonesBrowserLaunch.java">
+      <Filter>配置文件</Filter>
+    </None>
+    <None Include="..\..\choose.ps1">
+      <Filter>配置文件</Filter>
+    </None>
+    <None Include="..\..\clean.bat">
+      <Filter>配置文件</Filter>
+    </None>
+    <None Include="..\KlineUtil\script\MarketKline.py">
+      <Filter>配置文件</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\KlineUtil\res\bit+.bmp">
@@ -339,14 +351,8 @@
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="..\KlineUtil\IM\MSG.txt">
+    <Text Include="..\..\LinxSrvc\IM\MSG.txt">
       <Filter>配置文件</Filter>
     </Text>
-    <Text Include="..\KlineUtil\ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <Manifest Include="..\KlineUtil\res\windows.manifest">
-      <Filter>配置文件</Filter>
-    </Manifest>
   </ItemGroup>
 </Project>

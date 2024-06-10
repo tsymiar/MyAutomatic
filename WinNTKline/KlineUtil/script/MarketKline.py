@@ -83,7 +83,7 @@ def loadPoints(file):
     for count, line in enumerate(filename):
         values = line.strip("\n")
         values = line.split("\t")  # 按TAB把数据分开
-        if count == 0:
+        if count <= 1:
             values = line.split(" ")
             print("stock: " + values[0] + ", " + values[1] + ", " + values[2])
         else:
@@ -191,7 +191,7 @@ if __name__ == "__main__":
     for param in sys.argv:
         if not param.strip():
             print(param)
-    param = "./File1.txt"
+    param = "../data/SH600747.DAT"
     figureOut(loadPoints(param))
     input("Press <Enter> to exit:")
     main()

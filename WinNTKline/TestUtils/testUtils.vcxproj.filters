@@ -149,9 +149,6 @@
     <ClCompile Include="..\MFCKline\SetMarkDlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\KlineUtil\service\soapClient.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="..\KlineUtil\IM\client.cc">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -165,6 +162,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\KlineUtil\mygl\House.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\LinxSrvc\gSOAPverify\fix\soapClient_fix.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
