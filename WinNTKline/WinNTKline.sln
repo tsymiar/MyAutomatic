@@ -15,10 +15,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Mix", "Mix", "{929677BC-1A5
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "K-line", "K-line", "{748D08E6-622E-4CD2-9AC7-7766F288389B}"
 	ProjectSection(SolutionItems) = preProject
-		..\choose.bat = ..\choose.bat
-		..\clean.bat = ..\clean.bat
 		..\MyAutomatic.vbs = ..\MyAutomatic.vbs
 		..\README.md = ..\README.md
+		KlineUtil\ReadMe.txt = KlineUtil\ReadMe.txt
 		KlineUtil\res\windows.manifest = KlineUtil\res\windows.manifest
 	EndProjectSection
 EndProject

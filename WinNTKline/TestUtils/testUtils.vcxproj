@@ -241,6 +241,7 @@
     <ClInclude Include="testUtilsDlg.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\LinxSrvc\gSOAPverify\fix\soapClient_fix.cpp" />
     <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\soapC.cpp" />
     <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\stdsoap2.cpp" />
     <ClCompile Include="..\KlineUtil\deep\Level2View.cpp" />
@@ -254,7 +255,6 @@
     </ClCompile>
     <ClCompile Include="..\KlineUtil\html\MfcHtmlView.cpp" />
     <ClCompile Include="..\KlineUtil\mygl\House.cc" />
-    <ClCompile Include="..\KlineUtil\service\soapClient.cpp" />
     <ClCompile Include="..\KlineUtil\IM\client.cc" />
     <ClCompile Include="..\KlineUtil\mygl\OGLKview.cc">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
