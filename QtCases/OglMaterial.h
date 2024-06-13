@@ -3,18 +3,18 @@
 #ifdef K_line
 #include <QOglKview>
 #endif
-#ifdef _WIN32
-#include <QtOpenGLWidgets/qopenglwidget.h>
-#else
 #if QT_VERSION >= 0x060800
 #include <QOpenGLWidget>
-#else
-#if QT_VERSION >= 0x050400
+#ifdef _WIN32
+#include <QtOpenGLWidgets/qopenglwidget.h>
+#endif
+#elif QT_VERSION >= 0x050400
+#ifdef _WIN32
+#pragma execution_character_set("utf-8")
+#endif
 #include <QtWidgets/QOpenGLWidget>
 #else
 #error Only support QT version 5.4+, while current is under v5.4.
-#endif
-#endif
 #endif
 //#include <QOpenGLFunctions_4_3_Compatibility>
 #include <QOpenGLFunctions>

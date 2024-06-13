@@ -13,18 +13,23 @@ if exist data (
     md data
     copy ..\KlineUtil\data .\data
 )
-windeployqt QtCases.exe
-if %ERRORLEVEL% equ 0 (
-    echo deploy 'QtCases' done
+if exist QtCases.exe (
+    windeployqt QtCases.exe
+    if %ERRORLEVEL% equ 0 (
+        echo deploy 'QtCases' done
+    ) else (
+        copy %QTDIR%\bin\*d.dll .\
+    )
+    copy %OPENCV%\bin\Debug\*.dll .\
 ) else (
-    copy %QTDIR%\bin\*d.dll .\
+    echo 'QtCases.exe' does not exist.
 )
 copy ..\KlineUtil\CTP\*.dll .\
 copy ..\KlineUtil\WPF\*.dll .\
 copy ..\KlineUtil\font\lib\*.dll .\
 copy %OPENSSL%\bin\*.dll .\
-copy %OPENCV%\bin\Debug\*.dll .\
 copy %CEFDIR%\Debug\libcef.dll .\
 copy %CEFDIR%\Debug\chrome_elf.dll .\
 copy %libPNG%\lib\Debug\libpng16.dll .\
+copy %SDL2%\lib\x86\SDL2*.dll .\
 copy %PTHD_LIB86%\..\..\dll\x86\pthreadVC*.dll .\

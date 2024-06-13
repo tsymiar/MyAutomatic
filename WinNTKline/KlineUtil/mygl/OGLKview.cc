@@ -963,7 +963,7 @@ int OGLKview::DrawKtext(char text[], Point& coor, int size, OGLKview::Color4f co
     texMaxX = texcoord[2];
     texMaxY = texcoord[3];
     /* Show the text */
-    SDL_GL_SetAs2DMode(g_glRange.wide, g_glRange.tall);
+    SDL_GL_SetAs2DTex(g_glRange.wide, g_glRange.tall);
     glBindTexture(GL_TEXTURE_2D, texture);
     glBegin(GL_TRIANGLE_STRIP);
     glTexCoord2f(texMinX, texMinY); glVertex2i(50 * coor.x, 50 * coor.y);
@@ -971,7 +971,7 @@ int OGLKview::DrawKtext(char text[], Point& coor, int size, OGLKview::Color4f co
     glTexCoord2f(texMinX, texMaxY); glVertex2i(50 * coor.x, (50 + message->h) * coor.y);
     glTexCoord2f(texMaxX, texMaxY); glVertex2i((50 + message->w) * coor.x, (50 + message->h) * coor.y);
     glEnd();
-    SDL_GL_Leave2DMode();
+    SDL_GL_Leave2DTex();
 
     SDL_GL_SwapBuffers();
     SDL_FreeSurface(message);
