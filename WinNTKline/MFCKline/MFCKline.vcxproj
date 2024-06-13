@@ -131,7 +131,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <AdditionalLibraryDirectories>$(PTHD_LIB86);$(QTDIR)\lib;$(CEFDIR)\$(Configuration);$(OPENSSL)\lib;$(OPENCV)\lib\$(Configuration);$(SolutionDir)KlineUtil;$(SolutionDir)KlineUtil\CTP;$(SolutionDir)KlineUtil\GL\lib;$(SolutionDir)KlineUtil\font\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opencv_calib3d330d.lib;opencv_highgui330d.lib;opencv_photo330d.lib;opencv_video330d.lib;opencv_core330d.lib;opencv_imgcodecs330d.lib;opencv_shape330d.lib;opencv_videoio330d.lib;opencv_dnn330d.lib;opencv_imgproc330d.lib;opencv_stitching330d.lib;opencv_videostab330d.lib;opencv_features2d330d.lib;opencv_ml330d.lib;opencv_superres330d.lib;opencv_flann330d.lib;opencv_objdetect330d.lib;Qt6Gui.lib;Qt6Core.lib;Qt6OpenGL.lib;Qt6Widgets.lib;pthreadVC2.lib;libcef.lib;libcrypto.lib;libcef_dll_wrapper.lib;thosttraderapi.lib;thostmduserapi.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opencv_calib3d330d.lib;opencv_highgui330d.lib;opencv_photo330d.lib;opencv_video330d.lib;opencv_core330d.lib;opencv_imgcodecs330d.lib;opencv_shape330d.lib;opencv_videoio330d.lib;opencv_dnn330d.lib;opencv_imgproc330d.lib;opencv_stitching330d.lib;opencv_videostab330d.lib;opencv_features2d330d.lib;opencv_ml330d.lib;opencv_superres330d.lib;opencv_flann330d.lib;opencv_objdetect330d.lib;Qt5Gui.lib;Qt5Core.lib;Qt5OpenGL.lib;Qt5Widgets.lib;pthreadVC2.lib;libcef.lib;libcrypto.lib;libcef_dll_wrapper.lib;thosttraderapi.lib;thostmduserapi.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>

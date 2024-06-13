@@ -2,7 +2,11 @@
 #include <QPainter>
 #include <QPen>
 
+#ifdef _WIN32
+#define IMAGE_PATH "..\\WinNTKline\\KlineUtil\\image\\"
+#else
 #define IMAGE_PATH "../WinNTKline/KlineUtil/image/"
+#endif
 
 QOglMaterial::QOglMaterial(QWidget* parent)
     : QOpenGLWidget(parent)
@@ -185,17 +189,25 @@ void QOglMaterial::initializeGL()
     mPng.setPixels(IMAGE_PATH"atlas.png");
 #if SDL_MAJOR_VERSION >= 2
     if (m_showSdl && (SDL_GL_init() == 0)) {
-        CopyRect rect{ { 100,10,360,70 },{ 70,360,500,70 } };
-        SDL_GL_loadImage(IMAGE_PATH"spabandari.bmp", rect);
+#ifndef MAX_PATH
+#define MAX_PATH 256
+#endif
+        char fileName[MAX_PATH];
+        sprintf(fileName, "%sspabandari.bmp", IMAGE_PATH);
+        struct stCopyRect rect{ { 100,10,360,70 },{ 70,360,500,70 } };
+        SDL_GL_loadImage(fileName, rect);
         rect.src = { 128,160,360,256 };
         rect.dst = { 1,1,256,180 };
-        SDL_GL_loadImage(IMAGE_PATH"spabandari.bmp", rect);
-        TextCfg cfg;
+        SDL_GL_loadImage(fileName, rect);
+        struct TextCfg cfg;
         cfg.font = IMAGE_PATH"../font/Deng.ttf";
         cfg.style = TTF_STYLE_NORMAL;
         cfg.color = { 255, 0, 0, 255 };
         cfg.rect = { { 0,0,300,60 }, {100,256,256,24} };
-        SDL_GL_showText("这ge是打在窗口上的等线字体", cfg);
+#ifndef _WIN32
+        const char* text = "这ge是打在窗口上的等线字体";
+        SDL_GL_showText(text, cfg);
+#endif
     } else {
         qDebug(m_showSdl ? "SDL_GL_init fail!" : "No SDL GL");
     }

@@ -277,7 +277,7 @@ int HttpClient(HookDetail& detail)
         Release(base);
         return -4;
     }
-    int port = evhttp_uri_get_port(uri);
+    short int port = evhttp_uri_get_port(uri);
     if (port < 0) port = 80;
 
     Message("url: %s, host: %s, port: %d, path: %s.", detail.url.c_str(), host, port, path);

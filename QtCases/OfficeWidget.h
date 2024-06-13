@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #ifdef WIN32
+#include <QAxObject>
 
 class OfficeWidget : public QWidget
 {
@@ -33,6 +34,9 @@ private:
     void openDoc(const char* file);
     QString getDocContent();
     void closeDoc();
+private:
+    QAxObject* m_axCom = NULL;
+    QAxObject* m_doc = NULL;
 #endif
 };
 

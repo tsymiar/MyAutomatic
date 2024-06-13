@@ -52,7 +52,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <PreprocessorDefinitions>UNICODE;WIN32;_AFXDLL;QT_CORE_LIB;QT_GUI_LIB;QT_NETWORK_LIB;QT_OPENGL_LIB;QT_QUICKWIDGETS_LIB;QT_SERIALPORT_LIB;QT_SVG_LIB;QT_UITOOLS_LIB;QT_WEBSOCKETS_LIB;QT_WIDGETS_LIB;QT_XML_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(libPNG);$(ZLIB);$(OPENCV)\include;.;.\GeneratedFiles;.\GeneratedFiles\$(ConfigurationName);$(SolutionDir)KlineUtil;$(SolutionDir)KlineUtil\com;$(SolutionDir)KlineUtil\font;$(SolutionDir)KlineUtil\mygl;$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtNetwork;$(QTDIR)\include\ActiveQt;$(QTDIR)\include\QtOpenGL;$(QTDIR)\include\QtQuickWidgets;$(QTDIR)\include\QtSerialPort;$(QTDIR)\include\QtSvg;$(QTDIR)\include\QtUiTools;$(QTDIR)\include\QtWebSockets;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtXml;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(libPNG);$(ZLIB);$(SDL2);$(OPENCV)\include;.;.\GeneratedFiles;.\GeneratedFiles\$(ConfigurationName);$(SolutionDir)KlineUtil;$(SolutionDir)KlineUtil\com;$(SolutionDir)KlineUtil\font;$(SolutionDir)KlineUtil\mygl;$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtNetwork;$(QTDIR)\include\ActiveQt;$(QTDIR)\include\QtOpenGL;$(QTDIR)\include\QtQuickWidgets;$(QTDIR)\include\QtSerialPort;$(QTDIR)\include\QtSvg;$(QTDIR)\include\QtUiTools;$(QTDIR)\include\QtWebSockets;$(QTDIR)\include\QtWidgets;$(QTDIR)\include\QtXml;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>MaxSpeed</Optimization>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
@@ -64,11 +64,11 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>NotSet</SubSystem>
       <OutputFile>$(OutDir)\$(ProjectName).exe</OutputFile>
-      <AdditionalLibraryDirectories>$(QTDIR)\lib;$(QTDIR)\plugins\platforms;$(libPNG)\lib\$(Configuration);$(OPENCV)\lib\$(Configuration);$(SolutionDir)KlineUtil\GL\lib;$(SolutionDir)KlineUtil\font\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(QTDIR)\lib;$(QTDIR)\plugins\platforms;$(SDL2)\lib\$(PlatformTarget);$(libPNG)\lib\$(Configuration);$(OPENCV)\lib\$(Configuration);$(SolutionDir)KlineUtil\GL\lib;$(SolutionDir)KlineUtil\font\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>opengl32.lib;glu32.lib;libpng16.lib;zlib.lib;Qt6Cored.lib;Qt6Guid.lib;Qt6Networkd.lib;Qt6AxContainerd.lib;Qt6AxBased.lib;Qt6OpenGLd.lib;Qt6QuickWidgetsd.lib;Qt6Widgetsd.lib;Qt6Xmld.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;glu32.lib;libpng16.lib;zlib.lib;SDL2.lib;SDL2_image.lib;SDL2_ttf.lib;Qt5Cored.lib;Qt5Guid.lib;Qt5Networkd.lib;Qt5AxContainerd.lib;Qt5AxBased.lib;Qt5OpenGLd.lib;Qt5QuickWidgetsd.lib;Qt5Widgetsd.lib;Qt5Xmld.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/FORCE:MULTIPLE %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
@@ -92,6 +92,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\WinNTKline\KlineUtil\mygl\SDL2tex.cc" />
     <ClCompile Include="GeneratedFiles\qrc_mainwindow.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="OfficeWidget.cpp" />
