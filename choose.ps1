@@ -4,7 +4,7 @@ param (
         [string]$option
     )
 
-$libSymbols = "BOOST", "CEFDIR", "QTDIR", "OPENCV", "OPENSSL", "PTHD_LIB86", "JAVA_HOME", "ZLIB", "libPNG"
+$libSymbols = "BOOST", "CEFDIR", "QTDIR", "OPENCV", "OPENSSL", "PTHD_LIB86", "JAVA_HOME", "ZLIB", "libPNG", " SDL2"
 
 if ($option -eq "clean")
 {
