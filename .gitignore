@@ -57,3 +57,4 @@ build
 *Debug
 test.txt
 *.so.*
+.venv
