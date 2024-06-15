@@ -10,7 +10,7 @@ if ($option -eq "clean")
 {
 	foreach ($lib in $libSymbols) {
 		[Environment]::SetEnvironmentVariable($lib, $null, "User")
-		Write-Host "$option '$lib' OK"
+		Write-Output "$option '$lib' OK"
 	}
 }
 elseif ($option)
@@ -28,8 +28,8 @@ else
 
 	$form = New-Object Windows.Forms.Form
 	$onFormClosingScript = {
-		param($sender, $e)
-		Write-Host "closing window..."
+		# param($sender, $e)
+		Write-Output "closing window..."
 	}
 	$form.add_FormClosing($onFormClosingScript)
 
