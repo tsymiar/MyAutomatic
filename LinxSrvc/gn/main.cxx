@@ -38,7 +38,7 @@ static void gettimeofday(struct timeval* tp, struct timezone* tzp)
     tp->tv_sec = (long)((ularge.QuadPart - epoch) / 10000000L);
     tp->tv_usec = (long)(system_time.wMilliseconds * 1000);
 }
-static void usleep(unsigned long usec)
+static void uSleep(unsigned long usec)
 {
     HANDLE timer;
     LARGE_INTEGER interval;
@@ -372,7 +372,7 @@ void parse_args(int argc, char** argv)
 void msleep(unsigned long ms)
 {
 #if (defined _WIN32) && (!defined __GNUC__)
-    usleep(1000 * ms);
+    uSleep(1000 * ms);
 #else
     struct timespec ts = {
         .tv_sec = static_cast<long>(ms / 1000),

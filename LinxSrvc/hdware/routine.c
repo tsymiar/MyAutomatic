@@ -588,8 +588,8 @@ void send_data(void* fp, const void* buf, int size)
 void us_sleep(unsigned long us)
 {
     struct timespec ns_sleep;
-    ns_sleep.tv_sec = us / 1000000L;
-    ns_sleep.tv_nsec = us * 1000;
+    ns_sleep.tv_sec = us / 1000000ul;
+    ns_sleep.tv_nsec = (us % 1000000ul) * 1000ul;
     nanosleep(&ns_sleep, 0);
 }
 
