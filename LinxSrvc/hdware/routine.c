@@ -13,14 +13,15 @@
 #include <unistd.h>
 #include <errno.h>
 #include <malloc.h>
+#include <time.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/mman.h>
 #include <sys/ioctl.h>
 #include <asm/types.h>          /* videodev2.h */
-// #include <bits/types/struct_timespec.h>
-// #include <bits/types/struct_timeval.h>
+ // #include <bits/types/struct_timespec.h>
+ // #include <bits/types/struct_timeval.h>
 #include <linux/videodev2.h>
 #include <netinet/in.h>         /* socket */
 #include <arpa/inet.h>
@@ -374,6 +375,18 @@ static void init_mmap(void)
     }
 }
 
+void set2pow(int* val)
+{
+    int n = *val;
+    if (n <= 0) {
+        *val = 0;
+    }
+    if ((n & (n - 1)) != 0) {
+        n -= 1;
+    }
+    *val = n;
+}
+
 static void init_userp(unsigned int buffer_size)
 {
     struct v4l2_requestbuffers req;
@@ -406,11 +419,10 @@ static void init_userp(unsigned int buffer_size)
     }
 
     for (n_buffers = 0; n_buffers < req.count/*4*/; ++n_buffers) {
+        set2pow(&buffer_size);
         data_buff[n_buffers].length = buffer_size;
-        data_buff[n_buffers].start = memalign(/* boundary */page_size, buffer_size);
-
-        if (!data_buff[n_buffers].start) {
-            fprintf(stderr, "Out of memory\n");
+        if (posix_memalign(data_buff[n_buffers].start, /* boundary */page_size, buffer_size) != 0) {
+            fprintf(stderr, "posix_memalign: %s\n", strerror(errno));
             exit(EXIT_FAILURE);
         }
     }
@@ -573,6 +585,14 @@ void send_data(void* fp, const void* buf, int size)
     send(*((int*)fp), buf, size, 0);
 }
 
+void us_sleep(unsigned long us)
+{
+    struct timespec ns_sleep;
+    ns_sleep.tv_sec = us / 1000000L;
+    ns_sleep.tv_nsec = us * 1000;
+    nanosleep(&ns_sleep, 0);
+}
+
 void socket_routine(const char* ip, int port)
 {
     const unsigned int maxTimes = 100;
@@ -586,7 +606,7 @@ void socket_routine(const char* ip, int port)
     setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &addrreuse, sizeof(char));
     while (connect(sock, (struct sockaddr*)&srvaddr, sizeof(srvaddr)) == (-1)) {
         if (times < maxTimes) {
-            usleep(100 * (int)pow(2.0f, times));
+            us_sleep(100 * (int)pow(2.0f, times));
             times++;
         } else {
             fprintf(stderr, "Retrying to connect finish (times=%d, %s).", (int)times, (errno != 0 ? strerror(errno) : "No error"));
@@ -634,7 +654,8 @@ static const struct option long_options[] = {
     { 0, 0, 0, 0 }
 };
 
-int IPv4_verify(char* arg, char* ip, int* port) {
+int IPv4_verify(char* arg, char* ip, int* port)
+{
     if (arg == NULL)
         return -1;
     int a, b, c, d, e;

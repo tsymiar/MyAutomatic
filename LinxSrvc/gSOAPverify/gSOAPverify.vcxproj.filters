@@ -7,7 +7,7 @@
     <Filter Include="源文件">
       <UniqueIdentifier>{6ad59e50-c53e-4fb2-822a-1b243e5b0ce7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="其他">
+    <Filter Include="配置">
       <UniqueIdentifier>{660e65d0-55fe-4989-8353-466b91f503ed}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -59,21 +59,21 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Makefile">
-      <Filter>其他</Filter>
+      <Filter>配置</Filter>
     </None>
     <None Include="file\mysql.sh">
-      <Filter>其他</Filter>
+      <Filter>配置</Filter>
     </None>
     <None Include="soap\make.sh">
-      <Filter>其他</Filter>
+      <Filter>配置</Filter>
     </None>
     <None Include="soap\myweb.nsmap">
-      <Filter>其他</Filter>
+      <Filter>配置</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="soap\myweb.wsdl">
-      <Filter>其他</Filter>
+      <Filter>配置</Filter>
     </CustomBuild>
   </ItemGroup>
 </Project>

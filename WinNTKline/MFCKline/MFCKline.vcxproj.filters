@@ -13,7 +13,7 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="配置文件">
+    <Filter Include="配置脚本">
       <UniqueIdentifier>{a1f1038d-a651-4f0e-a134-792d5f1143e9}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -292,42 +292,42 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\LinxSrvc\gSOAPverify\file\myautomatic.sql">
-      <Filter>配置文件</Filter>
+      <Filter>配置脚本</Filter>
     </None>
     <None Include="..\KlineUtil\ClassDiagram.cd" />
     <None Include="..\KlineUtil\com\plus1second">
       <Filter>头文件</Filter>
     </None>
     <None Include="..\KlineUtil\cfg\ips.ini">
-      <Filter>配置文件</Filter>
+      <Filter>配置脚本</Filter>
     </None>
     <None Include="..\KlineUtil\script\call.bat">
-      <Filter>配置文件</Filter>
+      <Filter>配置脚本</Filter>
     </None>
     <None Include="..\KlineUtil\script\blobstxt.sh">
-      <Filter>配置文件</Filter>
+      <Filter>配置脚本</Filter>
     </None>
     <None Include="..\KlineUtil\script\reptile.py">
-      <Filter>配置文件</Filter>
+      <Filter>配置脚本</Filter>
     </None>
     <None Include="packages.config" />
     <None Include="..\KlineUtil\service\Client.java">
-      <Filter>配置文件</Filter>
+      <Filter>配置脚本</Filter>
     </None>
     <None Include="..\..\LinxSrvc\gSOAPverify\soap\myweb.nsmap">
-      <Filter>配置文件</Filter>
+      <Filter>配置脚本</Filter>
     </None>
     <None Include="..\KlineUtil\service\BareBonesBrowserLaunch.java">
-      <Filter>配置文件</Filter>
+      <Filter>配置脚本</Filter>
     </None>
     <None Include="..\..\choose.ps1">
-      <Filter>配置文件</Filter>
+      <Filter>配置脚本</Filter>
     </None>
     <None Include="..\..\clean.bat">
-      <Filter>配置文件</Filter>
+      <Filter>配置脚本</Filter>
     </None>
     <None Include="..\KlineUtil\script\MarketKline.py">
-      <Filter>配置文件</Filter>
+      <Filter>配置脚本</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -352,7 +352,7 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\..\LinxSrvc\IM\MSG.txt">
-      <Filter>配置文件</Filter>
+      <Filter>配置脚本</Filter>
     </Text>
   </ItemGroup>
 </Project>

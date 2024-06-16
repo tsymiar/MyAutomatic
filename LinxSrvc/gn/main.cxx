@@ -169,6 +169,7 @@ int main(int argc, char* argv[])
     uint64_t count = g_total / size;
     uint64_t start = gettime4usec();
     for (uint64_t i = 0; i < count; i++) {
+// #pragma omp parallel for private(i) reduction(+:length)
         for (size_t i = 0; i < length; i++) {
             Number number;
             number._64v = values[i];

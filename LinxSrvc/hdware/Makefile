@@ -1,5 +1,6 @@
 PWD = $(shell pwd)
 GEN = $(PWD)/../bin
+OS = $(shell uname -s)
 #BUILD = ${PWD}/../../../kernel/linux
 BUILD = /lib/modules/$(shell uname -r)/build
 chigpio:
@@ -14,22 +15,24 @@ virtex:
 	@if [ -d $(BUILD) ]; then make -C virtex KNLDIR=$(BUILD); fi;
 chstest:
 	gcc -g -DDRIVER test.c -o $(GEN)/chstest
-video:
-	gcc -g -DVIDEO test.c routine.c -lm -o $(GEN)/VideoCapture
 image:
 	gcc -g -DSNAP test.c linuxsnap.c -o $(GEN)/imagesnap.exe
+video:
+	gcc -g -DVIDEO test.c routine.c -lm -o $(GEN)/VideoCapture
 pipefifo:
 	gcc -g -DPIPE_FIFO test.c -o $(GEN)/pipefifo
 all:
 	make chigpio
 	make mes909
 	make dirty
-ifeq ($(shell uname), Linux)
-	make chstest
-	make video
-	make image
+ifneq ($(OS), )
 	make chsdev
 	make virtex
+	make chstest
+ifeq ($(OS), Linux)
+	make image
+	make video
+endif
 endif
 	make pipefifo
 clean:

@@ -72,7 +72,12 @@
       <AdditionalOptions>/FORCE:MULTIPLE %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
-      <Command>COPY $(libPNG)\lib\$(ConfigurationName)\libpng16.dll $(LocalDebuggerWorkingDirectory)..\WinNTKline\$(ConfigurationName)</Command>
+      <Command>
+        COPY $(libPNG)\lib\$(Configuration)\libpng*.dll $(OutputPath)
+        COPY $(SDL2)\lib\$(PlatformTarget)\SDL2*.dll  $(OutputPath)
+        $(QTDIR)\bin\windeployqt.exe $(OutputPath)$(TargetFileName)
+        COPY $(OPENCV)\bin\$(Configuration)\*.dll $(OutputPath)
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
