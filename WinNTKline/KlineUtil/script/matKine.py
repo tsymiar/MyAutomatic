@@ -30,23 +30,22 @@ if sys.getdefaultencoding() != fileEncoding:
 def main():
     plt.rcParams["font.sans-serif"] = ["SimHei"]
     plt.rcParams["axes.unicode_minus"] = False
+    """
+    ticket = "600747"  # 600747 是"大连控股"的股票代码
+    ticket += ".ss"  # .ss 表示上证 .sz表示深证
+    date_s = (2007, 1, 1)  # 起始日期，格式：(年，月，日)元组
+    date_e = (2011, 1, 1)  # 结束日期，格式：(年，月，日)元组
 
-    ticker = "600747"  # 600747 是"大连控股"的股票代码
-    ticker += ".ss"  # .ss 表示上证 .sz表示深证
+    quotes = quotes_historical_yahoo_ochl(ticket, date_s, date_e)
 
-    date1 = (2007, 1, 1)  # 起始日期，格式：(年，月，日)元组
-    date2 = (2011, 1, 1)  # 结束日期，格式：(年，月，日)元组
-
+    if len(quotes) == 0:
+        raise SystemExit
+    """
     weekdays = WeekdayLocator(MONDAY)  # 主要刻度
     allday = DayLocator()  # 次要刻度
     # mondayFormatter = DateFormatter("%b %d")  # eg.: Jan 12
     alldayFormatter = DateFormatter("%Y-%m-%d")  # eg.: 2-29-2015
     dayFormatter = DateFormatter("%d")  # eg.: 12
-
-    quotes = quotes_historical_yahoo_ochl(ticker, date1, date2)
-
-    if len(quotes) == 0:
-        raise SystemExit
 
     fig, ax = plt.subplots()
     fig.subplots_adjust(bottom=0.2)
@@ -55,10 +54,10 @@ def main():
     ax.xaxis.set_minor_locator(allday)
     ax.xaxis.set_major_formatter(alldayFormatter)
     ax.xaxis.set_minor_formatter(dayFormatter)
-
+    """
     plot_day_summary(ax, quotes, ticksize=3)
     candlestick(ax, quotes, width=0.6, colorup="red", colordown="green")
-
+    """
     ax.xaxis_date()
     ax.autoscale_view()
     plt.setp(plt.gca().get_xticklabels(), rotation=45, horizontalalignment="right")

@@ -19,9 +19,9 @@ typedef std::string String_;
 #define equals_ equals
 #define replace_ replace
 
-inline unsigned char* avoid_str_err(unsigned char* str)
+inline unsigned char* avoid_str_err(unsigned char* str, unsigned int len)
 {
-    for (int i = 0; i < (int)strlen((const char*)str); i++)
+    for (int i = 0; i < len; i++)
         switch (str[i]) {
         case 0xcc:/*烫 未初始化*/
         case 0xCD:/*heapk(new)*/
@@ -29,7 +29,7 @@ inline unsigned char* avoid_str_err(unsigned char* str)
         case 0xFD://隔离（栅栏字节）字节 下标越界
         case 0xAB://Memory allocated by LocalAlloc()
         case 0xBAADF00D://    Memory allocated by LocalAlloc() with LMEM_FIXED,
-                        //    but not yet written to.
+            //    but not yet written to.
         case 0xFEEEFEEE:/*  OS fill heap memory, which was marked for usage,\
                         but wasn't allocated by HeapAlloc() or LocalAlloc()\
                         Or that memory just has been freed by HeapFree().
@@ -63,7 +63,8 @@ public:
     bool operator==(const String_&);
     char& operator[](unsigned int) const;
     char* c_str_() const { return m_data; }
-    size_t size_() {
+    size_t size_()
+    {
         if (!m_data)
             return 0;
         int len;
