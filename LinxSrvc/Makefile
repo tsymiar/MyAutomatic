@@ -1,8 +1,9 @@
 all:
-	@echo Making IM.exe Client.exe etc.
+	@echo Making IM.exe client.exe etc.
 	@make -C IM
-	make -C hdware all
-	make -C thread all
+	@echo Making hdware thread
+	@make -C hdware all
+	@make -C thread all
 	@echo Making webevent
 	@make -C webevent build
 	@echo Making gSOAPverify

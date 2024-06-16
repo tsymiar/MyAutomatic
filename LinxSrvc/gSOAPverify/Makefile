@@ -8,7 +8,7 @@ STAT = status.o
 MAIN = sqlDbReq.o mainSoap.o
 SOAP= soapC.o stdsoap2.o soapServer.o
 BIT = $(shell if [ `getconf LONG_BIT` -eq '64' ];then echo 64;fi;)
-SQL = -std=c++11 -L/usr/lib$(BIT)/mysql -lmysqlclient
+SQL = -std=c++11 -I/usr/lib$(BIT)/mysql -lmysqlclient
 PTHD= -std=c++11 -lpthread #-lgsoap++#-L/usr/local/gSOAP/lib/libsoap++
 FLAG += -DNS_DEBUG
 gSOAPverify:

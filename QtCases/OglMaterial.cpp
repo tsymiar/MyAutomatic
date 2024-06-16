@@ -110,10 +110,9 @@ void QOglMaterial::coord()
     QPen pen;
     pen.setColor(Qt::yellow);
     painter.setPen(pen);
-    QString coord = QString("(x=%1,y=%2,t=%3)")
-        .arg(mX)
-        .arg(mY)
-        .arg(tHigh);
+    QString coord = QString("(x=%1,y=%2,h=%3,gl[%4,%5])")
+        .arg(mX).arg(mY).arg(tHigh)
+        .arg(xVal).arg(yVal);
     painter.drawText(10, 20, coord);
     painter.end();
     glEnable(GL_DEPTH_TEST);

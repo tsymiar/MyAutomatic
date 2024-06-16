@@ -15,6 +15,8 @@
 #error compile command unsupported
 #endif
 
+const int SizeOfBuf = 1024;
+
 int main(int argc, char** argv)
 {
 #ifdef GPIO
@@ -45,22 +47,22 @@ int main(int argc, char** argv)
     if (fd < 0) {
         perror("open ["DEV_NODE"] fail");
     } else {
-        char buf[1024];
-        ssize_t len = read(fd, buf, sizeof(buf));
-        if (len > 1024 || len < 0) {
+        char msg[SizeOfBuf];
+        ssize_t len = read(fd, msg, sizeof(msg));
+        if (len > SizeOfBuf || len < 0) {
             perror("beyond read size");
             return -1;
         }
-        printf("Default chars is [%s].\n", buf);
+        printf("Default chars is [%s].\n", msg);
         printf("Please input a string written to chars device: ");
-        scanf("%1023s", buf);
-        write(fd, buf, sizeof(buf));
-        len = read(fd, buf, sizeof(buf));
-        if (len > 1024 || len < 0) {
+        scanf("%1023s", msg);
+        write(fd, msg, sizeof(msg));
+        len = read(fd, msg, sizeof(msg));
+        if (len > SizeOfBuf || len < 0) {
             perror("beyond read size");
             return -1;
         }
-        printf("Chars [%s] written to '%s'.\n", buf, DEV_NODE);
+        printf("Chars [%s] written to '%s'.\n", msg, DEV_NODE);
         close(fd);
     }
 #endif

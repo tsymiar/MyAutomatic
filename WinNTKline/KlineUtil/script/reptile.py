@@ -21,7 +21,7 @@ def browse():
     br.set_handle_robots(False)
     br.set_handle_refresh(mechanize._http.HTTPRefreshProcessor(), max_time = 1)
     br.addheaders = [('User-agent', 'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.1) Gecko/2008071615 Fedora/3.0.1-1.fc9 Firefox/3.0.1')]
-    global url
+    # global url
     rd = br.open(url)
     html = rd.read()
     br.close()
@@ -35,12 +35,12 @@ if __name__ == '__main__':
         url = sys.argv[1]
     #else
     #    url = raw_input("Please enter a web address: \n> ")
-    print("refreshing:\t" + url)
+    print("Refreshing:\t" + url)
     for i in range(300):
         t1 = threading.Thread(target = run)
         threads.append(t1)
     for t in threads:
-        t.setDaemon(True)
+        t.daemon = True
         t.start()
         t.join()
     print("all over %s" %ctime())

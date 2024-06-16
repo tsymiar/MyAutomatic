@@ -33,7 +33,7 @@ Kai.o:
 Kai:Kai.o
 	$(CXX) $(FLAG) $(OBJ)/Kai.o $(CUR)/KaiTest.cxx $(PTHD) -o $(GEN)/kaics.exe
 Client:
-	$(CXX) $(FLAG) -I$(IMLOCAL) $(CLIENTFILES) $(PTHD) -o $(GEN)/Client.exe
+	$(CXX) $(FLAG) -I$(IMLOCAL) $(CLIENTFILES) $(PTHD) -o $(GEN)/client.exe
 clean/fast:
 	@rm -rvf $(GEN)/*.exe* .*/ *.json $(OBJ) bin out build
 .PHONY: clean

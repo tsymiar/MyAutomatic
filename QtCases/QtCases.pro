@@ -38,6 +38,7 @@ unix {
 
 # DEFINES += K_line # compile without K-line, to NOTE this line & HEADERS SOURCES include {MYGL}.
 # DEFINES += _GLVBO_
+DEFINES += SHOW_OFFICE
 MYGL=../WinNTKline/KlineUtil/mygl
 
 LIBS += -lglut \

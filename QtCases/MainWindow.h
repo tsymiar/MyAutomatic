@@ -13,7 +13,8 @@ public:
     ~MainWindow();
 protected:
     void keyPressEvent(QKeyEvent* e);
-    void mouseMoveEvent(QMouseEvent* e);
+    void mouseDoubleClickEvent(QMouseEvent* e);
+    void mouseMoveEvent(QMouseEvent *e) override;
 private:
     bool light;
     bool fllscrn;

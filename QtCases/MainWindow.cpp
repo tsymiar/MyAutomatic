@@ -32,12 +32,6 @@ MainWindow::~MainWindow()
 
 void MainWindow::keyPressEvent(QKeyEvent* e)
 {
-    qDebug() << "+++ key(" << e->key() << ")" <<
-        QString("x=%1 y=%2 z=%3")
-        .arg(x)
-        .arg(y)
-        .arg(z)
-        << "+++";
     switch (e->key()) {
     case Qt::Key_F2:
         fllscrn = !fllscrn;
@@ -105,16 +99,30 @@ void MainWindow::keyPressEvent(QKeyEvent* e)
         close();
         break;
     }
+    if (e->key() != Qt::Key_Space) {
+        qDebug() << "+++ key(" << e->key() << ")" <<
+            QString("x=%1 y=%2 z=%3")
+            .arg(x)
+            .arg(y)
+            .arg(z)
+            << "+++";
+    }
     update();
 }
 
-void MainWindow::mouseMoveEvent(QMouseEvent* e)
+void MainWindow::mouseDoubleClickEvent(QMouseEvent* e)
 {
     if (e->MouseButtonDblClick == e->type()) {
         qDebug() << "DblClick!";
     }
+    QWidget::mouseDoubleClickEvent(e);
+}
+
+void MainWindow::mouseMoveEvent(QMouseEvent *e)
+{
     setXloc(e->x());
     setYloc(e->y());
+    QWidget::mouseMoveEvent(e);
 }
 
 void MainWindow::timeTickDone()
