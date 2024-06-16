@@ -2172,56 +2172,65 @@
             }
             return false;
         }
-        function handle_request(url, element, method, param, callback)
-        {
+        function handleRequest(url, element, method, param, callback) {
             var xmlhttp;
-            if (window.XMLHttpRequest)
-            {// code for IE7+, Firefox, Chrome, Opera, Safari
-                xmlhttp=new XMLHttpRequest();
+            if (window.XMLHttpRequest) {// code for IE7+, Firefox, Chrome, Opera, Safari
+                xmlhttp = new XMLHttpRequest();
             }
-            else
-            {// code for IE6, IE5
-                xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+            else {// code for IE6, IE5
+                xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
             }
-            if(url!==null)
-            {
+            if (url !== null) {
                 if (url.substr(0, 4) != "http") {
                     url = "http://" + url;
                 }
-                xmlhttp.open(method, url, true);
-                if (method == "POST" && !isJSON(param) && param.indexOf("=") != -1) {
-                    xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded");
-                } else {
-                    xmlhttp.setRequestHeader("Content-type", "application/json;charset=utf-8");
+                try {
+                    xmlhttp.open(method, url, true);
+                } catch (e) {
+                    document.getElementById(element).innerHTML = e;
                 }
-                // send form by key-value
-                xmlhttp.send(param);
-                xmlhttp.onreadystatechange = function()
-                {
-                    if (xmlhttp.readyState===4 && xmlhttp.status===200)
-                    {
-                        try{
+                try {
+                    if (method == "POST" && !isJSON(param) && param.indexOf("=") != -1) {
+                        xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+                    } else {
+                        xmlhttp.setRequestHeader("Content-type", "application/json;charset=utf-8");
+                    }
+                } catch (e) {
+                    document.getElementById(element).innerHTML = e;
+                }
+                try {
+                    // send form by key-value
+                    xmlhttp.send(param);
+                } catch (e) {
+                    document.getElementById(element).innerHTML = e;
+                }
+                xmlhttp.onreadystatechange = function () {
+                    var rsptxt = xmlhttp.responseText;
+                    var stat = document.getElementById(element + '_stat');
+                    if (xmlhttp.readyState === 4 && xmlhttp.status === 200) {
+                        try {
                             document.getElementById(element).innerHTML = xmlhttp.responseText;
-                            if(typeof(callback) === "function")
+                            if (typeof (callback) === "function")
                                 callback();
-                        } catch (e){
+                        } catch (e) {
                             console.log(element + "\n" + e);
                         }
-                    }else if(xmlhttp.readyState>=4){
-                        var rsptxt = xmlhttp.responseText;
-                        if(rsptxt === null || rsptxt === undefined || rsptxt === ""){
+                    } else if (xmlhttp.readyState >= 4) {
+                        if (rsptxt === null || rsptxt === undefined || rsptxt === "") {
                             rsptxt = xmlhttp.statusText;
                         }
-                        if(xmlhttp.status === 0 || rsptxt === null){
+                        if (xmlhttp.status === 0 || rsptxt === null) {
                             rsptxt = "unknown";
                         }
-                        var stat = document.getElementById(element + '_stat');
                         if (rsptxt != null && stat != undefined) {
                             stat.innerHTML = xmlhttp.status;
                         } else {
                             rsptxt = (xmlhttp.status + ": " + rsptxt);
                         }
                         document.getElementById(element).innerHTML = rsptxt;
+                    } else {
+                        stat.innerHTML = xmlhttp.status;
+                        document.getElementById(element).innerHTML = xmlhttp.readyState;
                     }
                 };
             }
@@ -2299,7 +2308,7 @@
         function simRequest(method) {
             var elem = "rsp_msg";
             resetText(elem);
-            handle_request(document.getElementById("req_url").value, elem, method, document.getElementById("payload").value);
+            handleRequest(document.getElementById("req_url").value, elem, method, document.getElementById("payload").value);
         }
         function jqRequest(method) {
             var elem = "rsp_msg";
@@ -2337,6 +2346,10 @@
         function addNewItem(){
             item = document.getElementById("item").innerHTML;
             document.getElementById("item").innerHTML = item + "<div id='item_ok'><input id='item_name' title='name'><input id='item_val' title='value'><input type='button' value='ok' onclick='confirm()'></div>";
+        }
+        function formSubmit() {
+            document.getElementById("form_ret").innerHTML = "";
+            handleRequest(document.getElementById("form_act").value, "form_ret", "POST");
         }
         function convert(str){
             var val="";
@@ -2441,27 +2454,47 @@
                 autoFitText(elem);
             }
         }
-        function formSubmit() {
-            document.getElementById("form_ret").innerHTML = "";
-            handle_request(document.getElementById("form_act").value,"form_ret","POST");
-        }
         function publicKey_encrypt() {
-            let pub = KEYUTIL.getKey($("#publicKey").val());
-            let enc = KJUR.crypto.Cipher.encrypt($("#rawVal").val(),pub);
+            let pub = "";
+            try {
+                pub = KEYUTIL.getKey($("#publicKey").val());
+            } catch (err) {
+                $("#encvalerr").html(err);
+            }
+            let enc = "";
+            try {
+                enc = KJUR.crypto.Cipher.encrypt($("#rawVal").val(), pub);
+            } catch (err) {
+                $("#encvalerr").html(err);
+            }
             console.log(hextob64(enc));
             $("#encryptVal").html(enc);
         }
         function privateKey_decrypt() {
-            let prv = KEYUTIL.getKey($("#privateKey").val());
-            let dec = KJUR.crypto.Cipher.decrypt($("#encryptVal").html(),prv);
-            console.log("jsrsasign decrypt: "+dec);
+            let prv = "";
+            try {
+                prv = KEYUTIL.getKey($("#privateKey").val());
+            } catch (err) {
+                $("#decvalerr").html(err);
+            }
+            let dec = "";
+            try {
+                dec = KJUR.crypto.Cipher.decrypt($("#encryptVal").html(), prv);
+            } catch (err) {
+                $("#decvalerr").html(err);
+            }
+            console.log("jsrsasign decrypt: " + dec);
             $("#decryptVal").html(dec);
         }
         function decryptByPrivateKey() {
-            let prv = KEYUTIL.getKey($("#prvKey2").val());
-            let dec = KJUR.crypto.Cipher.decrypt(b64tohex($("#rawBase64").val()),prv);
-            console.log("jsrsasign decrypt: "+dec);
-            $("#decVal2").html(dec);
+            try {
+                let prv = KEYUTIL.getKey($("#prvKey2").val());
+                let dec = KJUR.crypto.Cipher.decrypt(b64tohex($("#rawBase64").val()), prv);
+                console.log("jsrsasign decrypt: " + dec);
+                $("#decVal2").html(dec);
+            } catch (err) {
+                $("#dec2err").html(err);
+            }
         }
         function getShaVal() {
             var nS = $("#sha_raw").val();
@@ -2541,22 +2574,24 @@
     <input id="cipher1" placeholder="cipher"/>
     <input id="key1" placeholder="key"/><br>
     <button onclick="aes_encrypt1()">encrypt</button>&nbsp;
-    <label id="aes_encrypt1"></label>
+    <label id="aes_encrypt1"></label><br>
 </div>
 <br>
 <div>
     <label>RSA:</label><br>
     <input id="rawVal" placeholder="cipher"><br><textarea id="publicKey" placeholder="publicKey"></textarea><br>
     <textarea id="privateKey" placeholder="privateKey"></textarea><br>
-    <button onclick="publicKey_encrypt()">PublicKey Encrypt</button>&nbsp;&nbsp;<button onclick="privateKey_decrypt()">PrivateKey Decrypt</button><br>
+    <button onclick="publicKey_encrypt()">PublicKey Encrypt</button>&nbsp;&nbsp;<label id="encvalerr">&nbsp;</label><br>
     <label id="encryptVal">&nbsp;</label><br>
-    <label id="decryptVal">&nbsp;</label><br>
+    <button onclick="privateKey_decrypt()">PrivateKey Decrypt</button>&nbsp;&nbsp;<label id="decvalerr">&nbsp;</label><br>
+    <label id="decryptVal">&nbsp;</label><br><br>
     <label>RSA Decrypt:</label><br>
     <textarea id="rawBase64" placeholder="rawBase64"></textarea><br>
     <textarea id="prvKey2" placeholder="prvKey2"></textarea><br>
-    <button onclick="decryptByPrivateKey()">PrivateKey Decrypt</button><br>
+    <button onclick="decryptByPrivateKey()">PrivateKey Decrypt</button>&nbsp;<label id="dec2err">&nbsp;</label><br>
     <label id="decVal2">&nbsp;</label><br>
-</div><br>
+</div>
+<br>
 <div>
     <label>Base64:</label><br>
     <textarea id="base64" placeholder="string"></textarea><br>
@@ -2666,27 +2701,32 @@
             $("#color_rgb_rslt").html(e);
         }
     }
+    function autofill() {
+        $("#rslt_rgb_color").css("background", "RGB(255,255,255)");
+        $("#color_hex_in").val($("#color_hex_rslt").html());
+        $("#color_rgb_rslt").html("");
+    }
     function rgb2hex() {
         let rgb_r = $("#color_r").val();
-        if(isNaN(rgb_r)){
+        if (isNaN(rgb_r)) {
             rgb_r = 0;
         }
         let rgb_g = $("#color_g").val();
-        if(isNaN(rgb_r)){
+        if (isNaN(rgb_r)) {
             rgb_g = 0;
         }
         let rgb_b = $("#color_b").val();
-        if(isNaN(rgb_b)){
+        if (isNaN(rgb_b)) {
             rgb_b = 0;
         }
-        if((rgb_r>>8)&255 || (rgb_g>>8)&255 || (rgb_b>>8)&255){
+        if ((rgb_r >> 8) & 255 || (rgb_g >> 8) & 255 || (rgb_b >> 8) & 255) {
             $("#color_hex_rslt").html("Error: RGB greater than 255.");
-        }else {
+        } else {
             let colorRgb = "rgb(" + rgb_r + "," + rgb_g + "," + rgb_b + ")";
             let colorHex = colorRgb.colorHex();
-            let colorVal = parseInt(colorHex.slice(1), 16);
+            let colorVal = colorHex.slice(1);
             $("#color_hex_rslt").html("#" + padding0(colorVal, 6).toString(16));
-            $("#rslt_hex_color").css("background",colorRgb);
+            $("#rslt_hex_color").css("background", colorRgb);
         }
     }
     function setClipboard(clazz, label, callback) {
@@ -2714,9 +2754,10 @@
     <br>
     <button onclick="rgb2hex()">RGB to Hex</button>
     <label id="rslt_hex_color">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
+    <br>
     <label id="color_hex_rslt"></label>
     <br><br>
-    <label for="color_hex_in"></label>#<input id="color_hex_in" style="width: 80px">
+    <label for="color_hex_in"></label>#<input id="color_hex_in" style="width: 80px"><button onclick="autofill()">ß</button>
     <br>
     &nbsp;&nbsp;<button onclick="hex2rgb()">Hex to RGB</button>
     <label id="rslt_rgb_color">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
@@ -2730,8 +2771,14 @@
     async function sleep(ms) {
         return await new Promise(resolve => setTimeout(resolve, ms));
     }
-    function farmatDate(time, fmt) {
-        var date = new Date(parseInt(time) * 1000);
+    function formatDate(time, fmt) {
+        let multi = 1000;
+        for (var i = 0; i < Math.abs(time.length - 10); i++) {
+            if (time.length > 0) {
+                multi /= 10;
+            }
+        }
+        var date = new Date(parseInt(time) * multi);
         if (/(y+)/.test(fmt)) {
             fmt = fmt.replace(RegExp.$1, date.getFullYear() + '').substr(4 - RegExp.$1.length);
         }
@@ -2752,7 +2799,13 @@
     }
     function getLocalTime() {
         var stamp = $("#time_max10").val();
-        var date = new Date(parseInt(stamp) * 1000);
+        let multi = 1000;
+        for (var i = 0; i < Math.abs(stamp.length - 10); i++) {
+            if (stamp.length > 0) {
+                multi /= 10;
+            }
+        }
+        var date = new Date(parseInt(stamp) * multi);
         var value = date.toLocaleString().replace(/:\d{1,2}$/, ' ');
         var time = date.toString();
         var pos = time.lastIndexOf(':');
@@ -2776,20 +2829,30 @@
             value += (ms + " " + week + " " + gmt);
         }
         $("#time_date_1").html(value);
-    }
-    function getLocaleTime() {
-        var fmt = $("#time_format").val();
+
+        var fmt = $("#time_fmt").val();
         if (fmt == null || fmt == '') {
-            fmt = $("#time_format").attr('placeholder');
+            fmt = $("#time_fmt").attr('placeholder');
         }
-        var time = $("#time_value").val();
-        var value = farmatDate(time, fmt);
+        var time = $("#time_max10").val();
+        var value = formatDate(time, fmt);
         $("#time_date_2").html(value);
     }
-    function onSleep() {
+    let eventTimeout = 0;
+    function clockFunc()
+    {
+        if (eventTimeout > 0)
+        {
+            eventTimeout--;
+            $("#clock_elem").html(eventTimeout);
+        }
+    }
+    function onEvent() {
         $("#sleep_elem").html('Taking a break...');
         let delay = $("#sleep_time").val();
-        sleep(parseInt(delay)).then(() => {
+        let timeout = eventTimeout = parseInt(delay);
+        setInterval(clockFunc, timeout);
+        sleep(timeout).then(() => {
             $("#sleep_elem").html(delay + ' millseconds later.');
         });
     }
@@ -2797,26 +2860,35 @@
         var timestamp = new Date().getTime();
         $("#timestamp").html(timestamp);
     }
+    function getTimeNow() {
+        $("#timestamp").html("&nbsp;");
+        var timestamp = new Date().getTime();
+        $("#time_max10").val(timestamp);
+        getLocalTime();
+    }
 </script>
 <div>
     <label>timestamp:</label>
+        <input id="time_fmt" placeholder="yyyy-MM-dd hh:mm" type="hidden">
+    <br><input type="button" value="Timestamp" onclick="getTimeStamp()">
+        <label id="timestamp">&nbsp;</label>
+        <button onclick="getTimeNow()">Now</button>
     <br><input id="time_max10" placeholder="timestamp">
         <input type="button" value="LocalTime" onclick="getLocalTime()">
     <br><label id="time_date_1">&nbsp;</label>
-    <br><input id="time_value" placeholder="timestamp">
-    <br><input id="time_format" placeholder="yyyy-MM-dd hh:mm">
-        <input type="button" value="LocalTime" onclick="getLocaleTime()">
     <br><label id="time_date_2">&nbsp;</label>
-    <br><input type="button" value="Timestamp" onclick="getTimeStamp()">
-        <label id="timestamp">&nbsp;</label>
 </div>
 <br>
-<input id="sleep_time" title="" value="0">
-<br>
-<button onclick="onSleep()">Sleep</button>
-<br>
-<label id="sleep_elem"></label>
-<br><br><br>
 </div>
+    <label>event:</label>
+    <br>
+    <input id="sleep_time" title="" value="0">
+    <br>
+    <button onclick="onEvent()">Sleep</button>
+    <label id="clock_elem"></label>
+    <br>
+    <label id="sleep_elem"></label>
+</div>
+    <br><br><br>
 </body>
 </html>
