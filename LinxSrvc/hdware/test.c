@@ -53,6 +53,7 @@ int main(int argc, char** argv)
             perror("beyond read size");
             return -1;
         }
+        msg[SizeOfBuf - 1] = '\0';
         printf("Default chars is [%s].\n", msg);
         printf("Please input a string written to chars device: ");
         scanf("%1023s", msg);
@@ -62,6 +63,7 @@ int main(int argc, char** argv)
             perror("beyond read size");
             return -1;
         }
+        msg[SizeOfBuf - 1] = '\0';
         printf("Chars [%s] written to '%s'.\n", msg, DEV_NODE);
         close(fd);
     }
