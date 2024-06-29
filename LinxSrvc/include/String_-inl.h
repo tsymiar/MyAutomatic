@@ -21,7 +21,7 @@ typedef std::string String_;
 
 inline unsigned char* avoid_str_err(unsigned char* str, unsigned int len)
 {
-    for (int i = 0; i < len; i++)
+    for (unsigned int i = 0; i < len; i++)
         switch (str[i]) {
         case 0xcc:/*烫 未初始化*/
         case 0xCD:/*heapk(new)*/

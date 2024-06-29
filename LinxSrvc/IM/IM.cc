@@ -47,8 +47,8 @@ typedef SOCKET type_socket;
 typedef unsigned int pthread_t;
 #endif
 typedef unsigned int type_thread_func;
-#ifndef ssize_t
-typedef long ssize_t;
+#ifndef _GNU_
+typedef signed long ssize_t;
 #endif
 #define flush_all() _flushall()
 #ifndef _CRT_SECURE_NO_WARNINGS

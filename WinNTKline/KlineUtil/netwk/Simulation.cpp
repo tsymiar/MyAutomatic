@@ -7,98 +7,99 @@ bool testfile = false;
 int simMode = 0;
 CThostFtdcTraderApi* usrApi;
 CThostFtdcMdApi* mdApi;
-int        iRequestID = 0;                                   //请求编号
-char  FRONT_ADDR_1A[] = "tcp://180.168.212.51:41205";        // 前置地址1交易:实盘
-char  FRONT_ADDR_1B[] = "tcp://180.168.212.51:41213";        // 前置地址1行情:实盘
+int iRequestID = 0; //请求编号
+char FRONT_ADDR_1A[] = "tcp://180.168.212.51:41205"; // 前置地址1交易:实盘
+char FRONT_ADDR_1B[] = "tcp://180.168.212.51:41213"; // 前置地址1行情:实盘
 // 交易时间
-TThostFtdcDateExprType    TradingDay;                        //交易日期
+TThostFtdcDateExprType TradingDay; //交易日期
 
-bool    JustRun = false;                                     //正在启动标志
-bool    CloseAll = false;                                    //收盘标志
+bool JustRun = false; //正在启动标志
+bool CloseAll = false; //收盘标志
 
-int        FirstVolume = 0;                                  //前一次成交量数据
+int FirstVolume = 0; //前一次成交量数据
 
-string    InstrumentID_name = "";                            //缓存TICK合约名称
+string InstrumentID_name = ""; //缓存TICK合约名称
 
-int        Q_BarTime_1 = 0;                                  //缓存TICK时间戳：秒计算
-double    Q_BarTime_2 = 0;                                   //缓存TICK时间戳：0.145500
+int Q_BarTime_1 = 0; //缓存TICK时间戳：秒计算
+double Q_BarTime_2 = 0; //缓存TICK时间戳：0.145500
 
-int        Q_BarTime_1n[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };       //合约时间戳：秒计算
-int        Trade_times[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //开仓时间戳：秒计算
+int Q_BarTime_1n[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; //合约时间戳：秒计算
+int Trade_times[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };  //开仓时间戳：秒计算
 
-char    LogFilePaths[80] = "";                               //交易日志
-char    TickFileWritepaths[20][80] = { "", "", "", "", "", "", "", "", "", "" ,"", "", "", "", "", "", "", "", "", "" };    //TICK数据保存文件名次格式，合约名称_日期.txt
+char LogFilePaths[80] = ""; //交易日志
+char TickFileWritepaths[20][80] = { "", "", "", "", "", "", "", "", "", "" , "", "", "", "", "", "", "", "", "", "" }; //TICK数据保存文件名次格式，合约名称_日期.txt
 
-//                                    0        1            2          3            4         5          6           7        8            9        10        11        12        13        14        15          16        17       18         19
-char    InstrumentID_n[20][10] = { "i1409", "jm1409", "j1409", "rb1410","rb1501", "TA409", "l1409","ru1409", "ru1501", "jd1409", "RM409", "m1409","y1501", "p1501","ag1506","ag1412","cu1408","cu1409","IF1409","IF1407" };   //交易合约
+//                                 0        1         2        3        4          5        6         7        8         9         10      11       12        13       14        15        16        17        18        19
+char InstrumentID_n[20][10] = { "i1409", "jm1409", "j1409", "rb1410", "rb1501", "TA409", "l1409", "ru1409", "ru1501", "jd1409", "RM409", "m1409", "y1501", "p1501", "ag1506", "ag1412", "cu1408", "cu1409", "IF1409", "IF1407" }; //交易合约
 
-int        InstrumentID_En[20] = { 0       ,        0,       0,        0,       0,       0,       0,       0,        0,        0,       0,       0,      0,       0,       0,       0,       0,      0,     0,       0 };     //交易使能 =1，会实盘下单
-int        InstrumentID_lots[20] = { 1       ,        1,       1,        1,       1,       1,       1,       1,        1,        1,       1,       1,      1,       1,       1,       1,       1,      1,     1,       1 };   //开仓量
+int InstrumentID_En[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; //交易使能 =1，会实盘下单
+int InstrumentID_lots[20] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }; //开仓量
 
-double  InstrumentID_minmove[20] = { 1       ,        1,       1,        1,       1,       2,       5,       5,        5,        1,       1,       1,      2,       2,       1,       1,      10,     10,   0.2,     0.2, };  //最小变动价位
+double InstrumentID_minmove[20] = { 1, 1, 1, 1, 1, 2, 5, 5, 5, 1, 1, 1, 2, 2, 1, 1, 10, 10, 0.2, 0.2, }; //最小变动价位
 
-double    Trade_Stopwin[20] = { 30       ,      30,      30,       20,      20,      30,      30,     120,      120,       30,      30,      30,     30,      30,      30,      30,      30,     30,    30,      30 };        //单次开仓止赢点
-double    Trade_Stoploss[20] = { 30       ,      30,      30,       20,      20,      30,      30,     180,      180,       30,      30,      30,     30,      30,      30,      30,      30,     30,    30,      30 };       //单次开仓止损点
-double    Trade_StopCloseProfit[20] = { 30       ,      30,      30,       10,      10,      30,      30,     110,      110,       30,      30,      30,     30,      30,      30,      30,      30,     30,    30,      30 };//>止损,限制新开
+double Trade_Stopwin[20] = { 30, 30, 30, 20, 20, 30, 30, 120, 120, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30 }; //单次开仓止赢点
+double Trade_Stoploss[20] = { 30, 30, 30, 20, 20, 30, 30, 180, 180, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30 }; //单次开仓止损点
+
+double Trade_StopCloseProfit[20] = { 30, 30, 30, 10, 10, 30, 30, 110, 110, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30 }; //>止损, 限制新开
 
 //tick数据
-bool    FristTick[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };                  //收到当日第一个有效TICK标记
-bool    LastTick[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };                   //收到当日最后一个有效TICK标记
-bool    ReceiveTick[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };                //TICK数据接收标记，暂未使用
+bool FristTick[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };   //收到当日第一个有效TICK标记
+bool LastTick[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };    //收到当日最后一个有效TICK标记
+bool ReceiveTick[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; //TICK数据接收标记，暂未使用
 
-double    tick_data[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };            //行情数据:基本信息
+double tick_data[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; //行情数据:基本信息
 
-double    tick_AskPrice1[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };       //行情数据:保存60个TICK数据
-double    tick_BidPrice1[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };       //行情数据:保存60个TICK数据
-double    tick_AskVolume1[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };      //行情数据:保存60个TICK数据
-double    tick_BidVolume1[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };      //行情数据:保存60个TICK数据
-double    tick_Volume[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };          //行情数据:保存60个TICK数据
-double    tick_OpenInterest[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };    //行情数据:保存60个TICK数据
+double tick_AskPrice1[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };    //行情数据:保存60个TICK数据
+double tick_BidPrice1[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };    //行情数据:保存60个TICK数据
+double tick_AskVolume1[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };   //行情数据:保存60个TICK数据
+double tick_BidVolume1[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };   //行情数据:保存60个TICK数据
+double tick_Volume[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };       //行情数据:保存60个TICK数据
+double tick_OpenInterest[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; //行情数据:保存60个TICK数据
 
-double    Sniffer_dataA[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //监测数据
-double    Sniffer_dataB[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //监测数据
-double    Sniffer_dataC[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //监测数据
-double    Sniffer_dataD[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //监测数据
+double Sniffer_dataA[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; //监测数据
+double Sniffer_dataB[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; //监测数据
+double Sniffer_dataC[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; //监测数据
+double Sniffer_dataD[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; //监测数据
 
 //----------------------
-double  Day_open[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };              //日K线数据开 
-double  Day_high[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };              //日K线数据高
-double  Day_low[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };               //日K线数据低
-double  Day_close[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };             //日K线数据收
+double Day_open[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };  //日K线数据开 
+double Day_high[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };  //日K线数据高
+double Day_low[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };   //日K线数据低
+double Day_close[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; //日K线数据收
 
-bool    MnKlinesig[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };                //分钟K线第一个TICK标记
-double  Mn_open[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };               //分钟K线数据开 
-double  Mn_high[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };               //分钟K线数据高
-double  Mn_low[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };                //分钟K线数据低
-double  Mn_close[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };              //分钟K线数据收
+bool MnKlinesig[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };     //分钟K线第一个TICK标记
+double Mn_open[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };  //分钟K线数据开 
+double Mn_high[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };  //分钟K线数据高
+double Mn_low[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };   //分钟K线数据低
+double Mn_close[20][60] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; //分钟K线数据收
 
 //-----------------------
-bool    SnifferSignalA[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };            //指标策略运算标记
-bool    TradingSignalA[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };            //下单标记
-bool    SnifferSignalB[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };            //指标策略运算标记
-bool    TradingSignalB[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };            //下单标记
+bool SnifferSignalA[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; //指标策略运算标记
+bool TradingSignalA[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; //下单标记
+bool SnifferSignalB[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; //指标策略运算标记
+bool TradingSignalB[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; //下单标记
 
 //基本订单数据
-double    Trade_dataA[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };         //订单数据
-double    Trade_dataB[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };         //订单数据
-double    Trade_dataC[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };         //订单数据
-double    Trade_dataD[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };         //订单数据
+double Trade_dataA[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; //订单数据
+double Trade_dataB[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; //订单数据
+double Trade_dataC[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; //订单数据
+double Trade_dataD[20][10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; //订单数据
 
 
 //测试开平仓统计数据
-double    Trade_CloseProfit[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };       //平仓盈亏，测试策略用
-double    Trade_Closetimes[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //平仓次数，测试策略用
-double    Day_CloseProfit[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };         //当日平仓收益，测试策略用
-double    Day_CloseProfitA[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //当日平仓收益，测试策略用
-double    Day_CloseProfitB[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };        //当日平仓收益，测试策略用
-double    Day_TradeNumb[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };           //开仓次数统计
+double Trade_CloseProfit[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; //平仓盈亏，测试策略用
+double Trade_Closetimes[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };  //平仓次数，测试策略用
+double Day_CloseProfit[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };   //当日平仓收益，测试策略用
+double Day_CloseProfitA[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };  //当日平仓收益，测试策略用
+double Day_CloseProfitB[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };  //当日平仓收益，测试策略用
+double Day_TradeNumb[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };     //开仓次数统计
 
-static bool g_dingShiEn = false;    //调试用
-static bool g_winNen = true;        //调试用
-static bool g_lossEn = false;       //调试用
-static bool g_fanNen = true;        //调试用
-static bool g_duoWen = true;        //调试用
-static bool g_konGen = true;        //调试用
+static bool g_dingShiEn = false; //调试用
+static bool g_winNen = true;     //调试用
+static bool g_lossEn = false;    //调试用
+static bool g_fanNen = true;     //调试用
+static bool g_duoWen = true;     //调试用
+static bool g_konGen = true;     //调试用
 
 void sim_test()
 {
@@ -107,7 +108,7 @@ void sim_test()
     _finddata_t file;
     long lf;
 
-    //输入文件夹路径  
+    //输入文件夹路径 
     if ((lf = _findfirst("..\\Bin\\testdata\\*.*", &file)) == -1)
         cout << "Not Found!" << endl;
     else {
@@ -146,9 +147,9 @@ void _record0(char* txt)
     o_file.close();
 }
 
-void Sniffer_A12(int i)    //监听Tick数据以及指标计算
+void Sniffer_A12(int i) //监听Tick数据以及指标计算
 {
-    void Sniffer_56(int i);    //
+    void Sniffer_56(int i); //
 
     if (!ReceiveTick[i] && fabs(tick_data[i][0] - 1) < 0.01) {
         SnifferSignalA[i] = true;
@@ -166,7 +167,7 @@ void Sniffer_A12(int i)    //监听Tick数据以及指标计算
     }
 }
 
-void Sniffer_B12(int i)    //监听Tick数据以及指标计算
+void Sniffer_B12(int i) //监听Tick数据以及指标计算
 {
     if (!ReceiveTick[i] && fabs(tick_data[i][0] - 1) < 0.01)//ru
     {
@@ -197,7 +198,7 @@ void Sniffer_B12(int i)    //监听Tick数据以及指标计算
     }
 }
 
-void Sniffer()    //监听Tick数据已经指标计算 实盘用
+void Sniffer() //监听Tick数据已经指标计算 实盘用
 {
     SYSTEMTIME sys_time;
     GetLocalTime(&sys_time);
@@ -210,7 +211,7 @@ void Sniffer()    //监听Tick数据已经指标计算 实盘用
     if (simMode && (tick_data[18][2] >= 0.151459 || tick_data[3][2] >= 0.145959) && Nowtime > 0.1518 && Nowtime < 0.1520 && CloseAll == false) {
         cerr << "--->>> " << ff2ss(tick_data[1][1]) << "准备收盘!" << endl;
         cerr << "--->>> " << "WriteMdConfiguration!" << endl;
-        WriteMdConfiguration();                //备份数据
+        WriteMdConfiguration(); //备份数据
         Sleep(3000);
         ErasingTradeConfiguration();
         cerr << "--->>> " << ff2ss(tick_data[1][1]) << "收盘!" << endl;
@@ -241,8 +242,8 @@ void TraderA12(double system_times, int i)
     double GetLocalTimeSec1();
     void _record1(char* txt1, char* txt2, double m, int n, int i);
 
-    bool TradingTimeB = (tick_data[i][2] > 0.1014 && tick_data[i][2] < 0.1400);// || (tick_data[i][2]>0.2105 && tick_data[i][2]<0.2350) ;
-    bool TradingTimeS = (tick_data[i][2] > 0.0905 && tick_data[i][2] < 0.1400);// || (tick_data[i][2]>0.2105 && tick_data[i][2]<0.2350) ;
+    bool TradingTimeB = (tick_data[i][2] > 0.1014 && tick_data[i][2] < 0.1400); // || (tick_data[i][2]>0.2105 && tick_data[i][2]<0.2350) ;
+    bool TradingTimeS = (tick_data[i][2] > 0.0905 && tick_data[i][2] < 0.1400); // || (tick_data[i][2]>0.2105 && tick_data[i][2]<0.2350) ;
 
     bool Condtion1 = (tick_BidPrice1[i][0] - tick_data[i][9]) > 20 * InstrumentID_minmove[i] && (tick_data[i][8] - tick_AskPrice1[i][0]) > 10 * InstrumentID_minmove[i];
     bool Condtion2 = (tick_data[i][8] - tick_AskPrice1[i][0]) > 20 * InstrumentID_minmove[i] && (tick_BidPrice1[i][0] - tick_data[i][9]) > 10 * InstrumentID_minmove[i];
@@ -409,7 +410,7 @@ void StopEndTime_A(double system_times, int i)
     int GetLocalTimeSec2();
     void _record1(char* txt1, char* txt2, double m, int n, int i);
 
-    int n = 10;                    //10分钟定时平仓
+    int n = 10; //10分钟定时平仓
 
     //定时平仓
     if (Trade_dataA[i][2] == 1 && (Q_BarTime_1n[i] - Trade_times[i]) > n * 60 && g_dingShiEn) {
@@ -477,7 +478,6 @@ void StopEndTime_A(double system_times, int i)
         SnifferSignalA[i] = false;
     }
 }
-
 
 void TraderB12(double system_times, int i)
 {
@@ -591,7 +591,6 @@ void TraderB12(double system_times, int i)
     }
 }
 
-
 void StopLossB12(double system_times, int i)
 {
     void SendOrder(TThostFtdcInstrumentIDType FuturesId, int a, int b, int md, int i);
@@ -666,8 +665,6 @@ void StopLossB12(double system_times, int i)
     }
 }
 
-
-
 void StopEndTime_B(double system_times, int i)
 {
     void SendOrder(TThostFtdcInstrumentIDType FuturesId, int a, int b, int md, int i);
@@ -675,7 +672,7 @@ void StopEndTime_B(double system_times, int i)
     int GetLocalTimeSec2();
     void _record1(char* txt1, char* txt2, double m, int n, int i);
 
-    int n = 10;                    //10分钟定时平仓
+    int n = 10; //10分钟定时平仓
 
     //定时平仓
     if (Trade_dataB[i][2] == 1 && (Q_BarTime_1n[i] - Trade_times[i]) > n * 60 && g_dingShiEn) {
@@ -745,10 +742,10 @@ void StopEndTime_B(double system_times, int i)
     }
 }
 
-void Istrading()    //策略，下单
+void Istrading() //策略，下单
 {
     for (int i = 0; i < 20; i++) {
-        if (1) //i!=8 && i!=9) //测试用，暂时不交易ag，cu,对仿真，实盘均有效
+        if (1) //i!=8 && i!=9) //测试用，暂时不交易ag，cu, 对仿真，实盘均有效
         {
 
             StopEndTime_A(tick_data[i][2], i);
@@ -756,9 +753,9 @@ void Istrading()    //策略，下单
 
             if (simMode) {
                 if ((i > 17 && (tick_data[i][2] > 0.0913)) || (i <= 17 && tick_data[i][2] > 0.0858)) {
-                    StopLossA12(tick_data[i][2], i);        //Master
+                    StopLossA12(tick_data[i][2], i); //Master
                     if (Sniffer_dataA[i][0] > 0) {
-                        TraderA12(tick_data[i][2], i);      //Master
+                        TraderA12(tick_data[i][2], i); //Master
                         Sniffer_dataA[i][0] = 0;
                     }
 
@@ -770,9 +767,9 @@ void Istrading()    //策略，下单
                 }
             } else //测试模式
             {
-                StopLossA12(tick_data[i][2], i);        //Master
+                StopLossA12(tick_data[i][2], i); //Master
                 if (Sniffer_dataA[i][0] > 0) {
-                    TraderA12(tick_data[i][2], i);      //Master
+                    TraderA12(tick_data[i][2], i); //Master
                     Sniffer_dataA[i][0] = 0;
                 }
 
@@ -864,10 +861,10 @@ void Simulation_onefile(char* pathstt)
                 Sniffer();
                 Istrading();
                 Sniffer();
-                Istrading();            //重复是为了和实际一致，1个tick收到后策略可能被多次运行。
+                Istrading(); //重复是为了和实际一致，1个tick收到后策略可能被多次运行。
                 //Sleep(100);
-                //cout << "Configuration:2_" << setprecision(9) <<GetLocalTimeMs1() << endl;    
-                //打印某个数据    
+                //cout << "Configuration:2_" << setprecision(9) <<GetLocalTimeMs1() << endl; 
+                //打印某个数据 
                 //鎵撳嵃鏌愪釜鏁版嵁
             }
         }
@@ -889,7 +886,7 @@ void _record1(char* txt1, char* txt2, double m, int n, int i)
             o_file << txt1 << ff2ss(tick_data[i][1]) << "_" << tick_data[i][2] << "_" << InstrumentID_n[i] << "_" << InstrumentID_lots[i] << "_" << txt2 << "_" << Trade_dataB[i][5] << "_" << Trade_dataB[i][3] << endl;
         }
     } else {
-        //                                                                                                                                                    --待修改！！！
+        // --待修改！！！
         o_file << txt1 << ff2ss(tick_data[i][1]) << "_" << tick_data[i][2] << "_" << InstrumentID_n[i] << "_" << InstrumentID_lots[i] << "_" << txt2 << "_" << m << "_" << Trade_Closetimes[i] << "_" << Trade_CloseProfit[i] << endl;
     }
     o_file.close();
@@ -1074,7 +1071,7 @@ void WriteTradeConfiguration()
 
 void ErasingTradeConfiguration()
 {
-    int    tn = 0;
+    int tn = 0;
     ofstream o_file("./AutoTrader.cfg", ios::trunc);
 
     for (int i = 0; i < 20; i++) {
@@ -1118,33 +1115,33 @@ void SendOrder(TThostFtdcInstrumentIDType FuturesId, int BuySell, int OpenClose,
     strcpy_s(req.BrokerID, STFTDC.BROKER_ID);
     ///投资者代码
     strcpy_s(req.InvestorID, STFTDC.INVESTOR_ID);
-    ///合约代码                                            //INSTRUMENT_ID
+    ///合约代码 //INSTRUMENT_ID
     strcpy_s(req.InstrumentID, STFTDC.INSTRUMENT_ID);
     ///报单引用
-    //strcpy_s(req.OrderRef, ORDER_REF);                  //下单前修改
+    //strcpy_s(req.OrderRef, ORDER_REF); //下单前修改
     ///用户代码
-    //    TThostFtdcUserIDType    UserID;
+    // TThostFtdcUserIDType UserID;
     ///报单价格条件: 限价
     req.OrderPriceType = THOST_FTDC_OPT_LimitPrice;
 
-    ///买卖方向:                                        //THOST_FTDC_D_Buy,THOST_FTDC_D_Sell
+    ///买卖方向: //THOST_FTDC_D_Buy, THOST_FTDC_D_Sell
     if (BuySell == 0) {
         req.Direction = THOST_FTDC_D_Buy;
     } else if (BuySell == 1) {
         req.Direction = THOST_FTDC_D_Sell;
     }
 
-    ///组合开平标志: 开仓                                //THOST_FTDC_OF_Open,THOST_FTDC_OF_Close,THOST_FTDC_OF_CloseToday
+    ///组合开平标志: 开仓 //THOST_FTDC_OF_Open, THOST_FTDC_OF_Close, THOST_FTDC_OF_CloseToday
     if (OpenClose == 0) {
         req.CombOffsetFlag[0] = THOST_FTDC_OF_Open;
     } else if (OpenClose == 1) {
-        req.CombOffsetFlag[0] = THOST_FTDC_OF_Close;       //其他交易所平今，平昨，上期平昨
+        req.CombOffsetFlag[0] = THOST_FTDC_OF_Close; //其他交易所平今，平昨，上期平昨
     } else if (OpenClose == 3) {
-        req.CombOffsetFlag[0] = THOST_FTDC_OF_CloseToday;  //上期平今
+        req.CombOffsetFlag[0] = THOST_FTDC_OF_CloseToday; //上期平今
     }
 
     ///组合投机套保标志
-    req.CombHedgeFlag[0] = THOST_FTDC_HF_Speculation;      //投机
+    req.CombHedgeFlag[0] = THOST_FTDC_HF_Speculation; //投机
 
     ///价格
     if (md) {
@@ -1168,7 +1165,7 @@ void SendOrder(TThostFtdcInstrumentIDType FuturesId, int BuySell, int OpenClose,
     ///有效期类型: 当日有效
     req.TimeCondition = THOST_FTDC_TC_GFD;
     ///GTD日期
-    //    TThostFtdcDateType    GTDDate;
+    // TThostFtdcDateType GTDDate;
     ///成交量类型: 任何数量
     req.VolumeCondition = THOST_FTDC_VC_AV;
     ///最小成交量: 1
@@ -1176,15 +1173,15 @@ void SendOrder(TThostFtdcInstrumentIDType FuturesId, int BuySell, int OpenClose,
     ///触发条件: 立即
     req.ContingentCondition = THOST_FTDC_CC_Immediately;
     ///止损价
-    //    TThostFtdcPriceType    StopPrice;
+    // TThostFtdcPriceType StopPrice;
     ///强平原因: 非强平
     req.ForceCloseReason = THOST_FTDC_FCC_NotForceClose;
     ///自动挂起标志: 否
     req.IsAutoSuspend = 0;
     ///业务单元
-    //    TThostFtdcBusinessUnitType    BusinessUnit;
+    // TThostFtdcBusinessUnitType BusinessUnit;
     ///请求编号
-    //    TThostFtdcRequestIDType    RequestID;
+    // TThostFtdcRequestIDType RequestID;
     ///用户强评标志: 否
     req.UserForceClose = 0;
 
@@ -1196,7 +1193,7 @@ void SendOrder(TThostFtdcInstrumentIDType FuturesId, int BuySell, int OpenClose,
         strcpy_s(req.OrderRef, STFTDC.ORDER_REF);
         //sprintf(ORDERACTION_REF[i], ORDER_REF);
 
-        int iResult = usrApi->ReqOrderInsert(&req, ++iRequestID);        //实盘，会正式下单
+        int iResult = usrApi->ReqOrderInsert(&req, ++iRequestID); //实盘，会正式下单
         cerr << "--->>> 报单录入请求: " << InstrumentID_n[i] << ((iResult == 0) ? " 成功" : " 失败") << endl;
     } else {
         //测试，不真正下单
@@ -1226,10 +1223,10 @@ void Simulation()
     // 初始化UserApi
     usrApi = CThostFtdcTraderApi::CreateFtdcTraderApi("./thosttraderapi.dll"); // 创建UserApi//"./thosttraderapi.dll"
     TradeChannel* trdSpi = new TradeChannel();
-    usrApi->RegisterSpi((CThostFtdcTraderSpi*)trdSpi);            // 注册事件类
-    usrApi->SubscribePublicTopic(THOST_TERT_RESTART);             // 注册公有流
-    usrApi->SubscribePrivateTopic(THOST_TERT_RESTART);            // 注册私有流
-    usrApi->RegisterFront(FRONT_ADDR_1A);                         // connect
+    usrApi->RegisterSpi((CThostFtdcTraderSpi*)trdSpi); // 注册事件类
+    usrApi->SubscribePublicTopic(THOST_TERT_RESTART); // 注册公有流
+    usrApi->SubscribePrivateTopic(THOST_TERT_RESTART); // 注册私有流
+    usrApi->RegisterFront(FRONT_ADDR_1A); // connect
     //usrApi->RegisterFront(FRONT_ADDR_2A); // connect
 
     if (simMode) {
@@ -1238,10 +1235,10 @@ void Simulation()
     }
 
     // 初始化MdApi
-    mdApi = CThostFtdcMdApi::CreateFtdcMdApi("./thostmduserapi.dll");// 创建MdApi//"./thostmduserapi.dll"
+    mdApi = CThostFtdcMdApi::CreateFtdcMdApi("./thostmduserapi.dll"); // 创建MdApi//"./thostmduserapi.dll"
     MarketDataCollector* mdSpi = new MarketDataCollector();
-    mdApi->RegisterSpi(mdSpi);                                       // 注册事件类
-    mdApi->RegisterFront(FRONT_ADDR_1B);                             // connect
+    mdApi->RegisterSpi(mdSpi); // 注册事件类
+    mdApi->RegisterFront(FRONT_ADDR_1B); // connect
     //mdApi->RegisterFront(FRONT_ADDR_2B); // connect
 
     if (simMode) {
@@ -1259,7 +1256,7 @@ void Simulation()
     Sleep(1000);
     cerr << "--->>> " << "初始化完成!" << endl;
 
-    while (simMode)  //实盘
+    while (simMode) //实盘
     {
         Sniffer();
         Istrading();

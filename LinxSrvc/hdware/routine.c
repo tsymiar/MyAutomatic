@@ -89,6 +89,7 @@ static int read_frame(Callback callback, void* flag)
             }
         }
 
+        ((char*)data_buff[0].start)[data_buff[0].length] = '\0';
         deal_image(callback, flag, data_buff[0].start, data_buff[0].length);
 
         break;

@@ -58,9 +58,12 @@ void signalCatch(int signo)
 
 bool KaiSocket::isLittleEndian()
 {
-    int a = 1;
-    char* c = (char*)&a;
-    return (*c == 1);
+    union {
+        int i;
+        char c;
+    } v;
+    v.i = 1;
+    return (!(v.c == 1));
 }
 
 int KaiSocket::Initialize(const char* ip, unsigned short port)
