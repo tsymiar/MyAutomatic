@@ -9,6 +9,7 @@
 **/virtex/[Mm]odule*
 **/virtex/*.mod.*
 #test
+**/*.tmp
 *.xx*
 bin
 gen
