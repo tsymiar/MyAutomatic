@@ -11,11 +11,11 @@ add_subdirectory(googletest)
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
     ../include
-    ../webevent
+    ../event
 )
 
 set(TEST_FILE
-    ../webevent/Utils.cpp
+    ../event/Utils.cpp
     test_main.cpp
 )
 

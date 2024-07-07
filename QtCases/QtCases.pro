@@ -16,7 +16,9 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 unix {
     exists(/opt/kingsoft/wps-office/office6/libstdc++.so.6) {
-        system(ln -s /opt/kingsoft/wps-office/office6/libstdc++.so.6 libstdc++.so.6)
+        !exists(libstdc++.so.6) {
+            system(ln -s /opt/kingsoft/wps-office/office6/libstdc++.so.6 libstdc++.so.6)
+        }
         LIBS += /opt/kingsoft/wps-office/office6/libstdc++.so.6
     }
 
@@ -26,7 +28,9 @@ unix {
     greaterThan(QT_MAJOR_VERSION, 4) {
         LIBS += -lrpcwpsapi_sysqt5 -lrpcetapi_sysqt5 -lrpcwppapi_sysqt5
         exists(/opt/kingsoft/wps-office/office6/libc++abi.so.1) {
-            system(ln -sf /opt/kingsoft/wps-office/office6/libc++abi.so.1 libc++abi.so.1)
+            !exists(libc++abi.so.1) {
+                system(ln -sf /opt/kingsoft/wps-office/office6/libc++abi.so.1 libc++abi.so.1)
+            }
             LIBS += /opt/kingsoft/wps-office/office6/libc++abi.so.1
         }
     } else {
@@ -36,10 +40,10 @@ unix {
     QT += axcontainer
 }
 
+MYGL=../WinNTKline/KlineUtil/mygl
 # DEFINES += K_line # compile without K-line, to NOTE this line & HEADERS SOURCES include {MYGL}.
 # DEFINES += _GLVBO_
 DEFINES += SHOW_OFFICE
-MYGL=../WinNTKline/KlineUtil/mygl
 
 LIBS += -lglut \
         -lGLU \

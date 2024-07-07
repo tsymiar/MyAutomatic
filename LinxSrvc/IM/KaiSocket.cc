@@ -185,68 +185,68 @@ int KaiSocket::start()
             }
             if (events[i].data.fd == listen_socket) {
 #else
-        {
+                {
 #endif
-                struct sockaddr_in client { };
-                auto len = static_cast<socklen_t>(sizeof(client));
-                SOCKET conn_sock = m_network.socket = ::accept(listen_socket, reinterpret_cast<struct sockaddr*>(&client), &len);
-                if ((int)conn_sock < 0) {
-                    std::cout
-                        << "Socket accept (" << (errno != 0 ? strerror(errno) : std::to_string(conn_sock)) << ")."
-                        << std::endl;
-                    return -3;
-                }
-#ifdef USE_EPOLL
-                ev_pll.events = EPOLLIN | EPOLLET;
-                ev_pll.data.fd = conn_sock;
-                char* addr = inet_ntoa(client.sin_addr);
-                if (epoll_ctl(poll_desc, EPOLL_CTL_ADD, conn_sock, &ev_pll) < 0) {
-                    std::cerr
-                        << "Failed to add " << addr << "socket (" << conn_sock << ") to epoll: " << strerror(errno)
-                        << std::endl;
-                    return -4;
-                }
-#endif
-            {
-                std::mutex mtxLck{};
-                std::lock_guard<std::mutex> lock(mtxLck);
-                time_t t{};
-                time(&t);
-                struct tm* lt = localtime(&t);
-                char ipaddr[INET_ADDRSTRLEN];
-                struct sockaddr_in peer { };
-                auto peerLen = static_cast<socklen_t>(sizeof(peer));
-                g_thrNo_++;
-                bool set = true;
-                setsockopt(m_network.socket, SOL_SOCKET, SO_KEEPALIVE, reinterpret_cast<const char*>(&set), sizeof(bool));
-                getpeername(m_network.socket, reinterpret_cast<struct sockaddr*>(&peer), &peerLen);
-                m_network.IP = inet_ntop(AF_INET, &peer.sin_addr, ipaddr, sizeof(ipaddr));
-                m_network.PORT = ntohs(peer.sin_port);
-                fprintf(stdout, "accepted peer(%u) address [%s:%d] (@ %d/%02d/%02d-%02d:%02d:%02d)\n",
-                    g_thrNo_,
-                    m_network.IP.c_str(), m_network.PORT,
-                    lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
-
-                Header head{ 0, 0, m_network.flag.ssid = setSsid(m_network), {0} };
-                ::send(m_network.socket, (char*)&head, HEAD_SIZE, 0);
-                m_networks.emplace_back(m_network);
-
-                std::cout << "socket monitor: " << m_network.socket << "; waiting massage..." << std::endl;
-                for (auto& callback : m_callbacks) {
-                    if (callback == nullptr)
-                        continue;
-                    try {
-                        std::thread(&KaiSocket::runCallback, this, this, callback).detach();
-                    } catch (const std::exception& e) {
-                        std::cerr << __FUNCTION__ << ": catch (...) exception: " << e.what() << std::endl;
+                    struct sockaddr_in client { };
+                    auto len = static_cast<socklen_t>(sizeof(client));
+                    SOCKET conn_sock = m_network.socket = ::accept(listen_socket, reinterpret_cast<struct sockaddr*>(&client), &len);
+                    if ((int)conn_sock < 0) {
+                        std::cout
+                            << "Socket accept (" << (errno != 0 ? strerror(errno) : std::to_string(conn_sock)) << ")."
+                            << std::endl;
+                        return -3;
                     }
-                }
-                wait(WAIT100ms);
-            }
 #ifdef USE_EPOLL
-            }
+                    ev_pll.events = EPOLLIN | EPOLLET;
+                    ev_pll.data.fd = conn_sock;
+                    char* addr = inet_ntoa(client.sin_addr);
+                    if (epoll_ctl(poll_desc, EPOLL_CTL_ADD, conn_sock, &ev_pll) < 0) {
+                        std::cerr
+                            << "Failed to add " << addr << "socket (" << conn_sock << ") to epoll: " << strerror(errno)
+                            << std::endl;
+                        return -4;
+                    }
 #endif
-        }
+                    {
+                        std::mutex mtxLck{};
+                        std::lock_guard<std::mutex> lock(mtxLck);
+                        time_t t{};
+                        time(&t);
+                        struct tm* lt = localtime(&t);
+                        char ipaddr[INET_ADDRSTRLEN];
+                        struct sockaddr_in peer { };
+                        auto peerLen = static_cast<socklen_t>(sizeof(peer));
+                        g_thrNo_++;
+                        bool set = true;
+                        setsockopt(m_network.socket, SOL_SOCKET, SO_KEEPALIVE, reinterpret_cast<const char*>(&set), sizeof(bool));
+                        getpeername(m_network.socket, reinterpret_cast<struct sockaddr*>(&peer), &peerLen);
+                        m_network.IP = inet_ntop(AF_INET, &peer.sin_addr, ipaddr, sizeof(ipaddr));
+                        m_network.PORT = ntohs(peer.sin_port);
+                        fprintf(stdout, "accepted peer(%u) address [%s:%d] (@ %d/%02d/%02d-%02d:%02d:%02d)\n",
+                            g_thrNo_,
+                            m_network.IP.c_str(), m_network.PORT,
+                            lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
+
+                        Header head{ 0, 0, m_network.flag.ssid = setSsid(m_network), {0} };
+                        ::send(m_network.socket, (char*)&head, HEAD_SIZE, 0);
+                        m_networks.emplace_back(m_network);
+
+                        std::cout << "socket monitor: " << m_network.socket << "; waiting massage..." << std::endl;
+                        for (auto& callback : m_callbacks) {
+                            if (callback == nullptr)
+                                continue;
+                            try {
+                                std::thread(&KaiSocket::runCallback, this, this, callback).detach();
+                            } catch (const std::exception& e) {
+                                std::cerr << __FUNCTION__ << ": catch (...) exception: " << e.what() << std::endl;
+                            }
+                        }
+                        wait(WAIT100ms);
+                    }
+#ifdef USE_EPOLL
+                }
+#endif
+                }
     } // while
 }
 
@@ -345,8 +345,17 @@ ssize_t KaiSocket::recv(uint8_t* buff, size_t size)
     }
     ssize_t res = ::recv(m_network.socket, reinterpret_cast<char*>(&header), len, 0);
     if (0 == res || (res < 0 && errno != EAGAIN)) { // fixme only when disconnect to continue
+        // delete this publisher network
         handleNotify(m_network);
-        return -3;
+        if (res < 0) {
+            if (errno != ENOTCONN) {
+                std::cerr << __FUNCTION__ << ": recv fail(" << res << "): " << strerror(errno) << std::endl;
+            }
+            res = -3;
+        } else {
+            std::cout << __FUNCTION__ << ": Peer SHUTDOWN!" << std::endl;
+        }
+        return res;
     }
 #ifdef HEART_BEAT
     if (strncmp(reinterpret_cast<char*>(&header), "Kai", 3) == 0)
@@ -641,7 +650,8 @@ void KaiSocket::runCallback(KaiSocket* sock, KAI_SOCK_HOOK func)
 
 uint64_t KaiSocket::setSsid(const Network& network, SOCKET socket)
 {
-    std::lock_guard<std::mutex> lock(m_lock);
+    std::mutex mtxLck = {};
+    std::lock_guard<std::mutex> lock(mtxLck);
     unsigned int ip = 0;
     const char* s = reinterpret_cast<char*>((unsigned char**)&network.IP);
     unsigned char t = 0;

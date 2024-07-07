@@ -35,5 +35,5 @@ Kai:Kai.o
 Client:
 	$(CXX) $(FLAG) -I$(IMLOCAL) $(CLIENTFILES) $(PTHD) -o $(GEN)/client.exe
 clean/fast:
-	@rm -rvf $(GEN)/*.exe* .*/ *.json $(OBJ) bin out build
+	@rm -rvf $(GEN)/*.exe* .*/ *.json $(OBJ) bin out build *.core
 .PHONY: clean
