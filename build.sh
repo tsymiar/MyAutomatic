@@ -24,7 +24,7 @@ then
     fi
     ./test.sh
 else
-    cd "${PWD}/LinxSrvc";
+    cd ${PWD}/LinxSrvc
     if [ "$1" != "clean" ]
     then
         if [ ! -d bin ]; then mkdir bin; fi;
@@ -42,16 +42,25 @@ else
             rm -rvf ../lib
             find ../build* ! -name 'build.sh' -exec rm -rvf {} +
         fi
-        cd ../QtCases
-        which qmake >/dev/null 2>&1
-        if [ $? -eq 0 ]; then
-            if [ -f "./Makefile" ]; then
-                make clean
+        cd ..
+        ARR_WIN=(QtCases WinNTKline)
+        for i in "${ARR_WIN[@]}"; do
+            cd $i
+            if [ "$i" == "$QtCases" ]; then
+                which qmake >/dev/null 2>&1
+                if [ $? -eq 0 ]; then
+                    if [ -f "./Makefile" ]; then
+                        make clean
+                    fi
+                fi
             fi
-        else
-            rm -vrf ./*.o build
-        fi
-        cd -
+            ARR_SUB=(cache Debug MFC build ./*.o .vs *.stash)
+            for j in "${ARR_SUB[@]}";
+            do
+                rm -vrf $j
+            done
+            cd -
+        done
     fi
 fi
 echo "-------- All '$1' build progress(es) finish --------"
