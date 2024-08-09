@@ -1,4 +1,4 @@
-# QT make file
+# QT make file with [Qt5.12.8+/Creator4.11+]
 CONFIG += qt warn_on debug \
         -finput-charset='UTF-8' \
         -fshort-wchar

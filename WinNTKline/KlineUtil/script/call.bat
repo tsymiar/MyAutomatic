@@ -20,7 +20,7 @@ if exist QtCases.exe (
     ) else (
         copy %QTDIR%\bin\*d.dll .\
     )
-    copy %OPENCV%\bin\Debug\*.dll .\
+    copy %OPENCV%\win32\Debug\opencv_*.dll .\
 ) else (
     echo 'QtCases.exe' does not exist.
 )

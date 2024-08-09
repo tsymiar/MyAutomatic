@@ -31,7 +31,7 @@ vector<string> g_headList = {
 
 namespace {
     const int g_wait100ms = 100000;
-    const char* HTTPD_SIGNATURE = "HttpEvent";
+    const char* HTTPD_SIGNATURE = "WebEvent";
     static unordered_map<void*, string> g_msgRecv = {};
     static unordered_map<string, string> g_extraOpts = {};
     static unordered_map<string, DealHooks> g_dealHooks = {};
