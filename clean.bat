@@ -42,9 +42,12 @@ rd /s /q WinNTKline\WPFKline\WPFKline\.vs
 rd /s /q WinNTKline\WPFKline\WPFKline\obj
 echo cleaning Scadup
 rd /s /q WinNTKline\Scadup\x64
+echo cleaning TestUtils
+del /f /q WinNTKline\TestUtils\*.con
 echo cleaning QtCases
 :: https://download.qt.io/archive/qt/5.14/5.14.2/qt-opensource-windows-x86-5.14.2.exe
 rd /s /q QtCases\GeneratedFiles
 rd /s /q QtCases\build
 del /f /q QtCases\*.so
-echo script finish clean
+del /f /q QtCases\*.stash
+echo ----- finish clean -----

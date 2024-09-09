@@ -24,7 +24,7 @@ then
     fi
     ./test.sh
 else
-    cd ${PWD}/LinxSrvc
+    cd "${PWD}/LinxSrvc"
     if [ "$1" != "clean" ]
     then
         if [ ! -d bin ]; then mkdir bin; fi;
@@ -45,7 +45,7 @@ else
         cd ..
         ARR_WIN=(QtCases WinNTKline)
         for i in "${ARR_WIN[@]}"; do
-            cd $i
+            cd "$i"
             if [ "$i" == "$QtCases" ]; then
                 which qmake >/dev/null 2>&1
                 if [ $? -eq 0 ]; then
@@ -57,7 +57,7 @@ else
             ARR_SUB=(cache Debug MFC build ./*.o .vs *.stash)
             for j in "${ARR_SUB[@]}";
             do
-                rm -vrf $j
+                rm -rvf "$j"
             done
             cd -
         done
