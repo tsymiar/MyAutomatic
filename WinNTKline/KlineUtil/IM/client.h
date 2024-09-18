@@ -136,14 +136,14 @@ typedef struct CLIENT {
     CRITICAL_SECTION wrcon;
     char url[64];
     int flag = 0;
-    volatile int rcvstat = 0;
+    volatile int status = 0;
     void* Dlg;
     void(*fp2p)(void*);
     int count = 0;
     int error = -1;
     struct LAST {
-        char lastuser[24];
-        char lastgrop[24];
+        char user[24];
+        char pswd[24];
     } last;
 } StClient;
 
@@ -184,7 +184,7 @@ typedef struct MSG_CONTENT {
     };
     union {
         unsigned char user_sign[24];
-        unsigned char user_newpass[24];
+        unsigned char new_passwd[24];
         unsigned char peer_name[24];
         unsigned char peer_port[24];
         unsigned char group_name[24];

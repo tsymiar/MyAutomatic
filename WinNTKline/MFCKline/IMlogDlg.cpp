@@ -20,7 +20,7 @@ IMlogDlg::IMlogDlg(int(*func)(char *, char *))
 
 IMlogDlg::~IMlogDlg()
 {
-    this->visable = 0;
+    this->m_canBSee = 0;
 }
 
 void IMlogDlg::DoDataExchange(CDataExchange* pDX)
@@ -39,7 +39,7 @@ END_MESSAGE_MAP()
 
 void IMlogDlg::PostNcDestroy()
 {
-    this->visable = 0;
+    this->m_canBSee = 0;
 }
 
 BOOL IMlogDlg::OnInitDialog()
@@ -52,15 +52,15 @@ BOOL IMlogDlg::OnInitDialog()
 
 BOOL IMlogDlg::Create(UINT Tmp, CWnd * Wnd)
 {
-    this->visable = 1;
+    this->m_canBSee = 1;
     return CDialog::Create(Tmp, Wnd);
 }
 
 void IMlogDlg::OnBnClickedOk()
 {
-    GetDlgItem(IDC_ACNT)->GetWindowText(m_strAcnt);
+    GetDlgItem(IDC_ACNT)->GetWindowText(m_strAccnt);
     GetDlgItem(IDC_PSW)->GetWindowText(m_strPsw);
-    if (lstrlen(m_strAcnt) < 3)
+    if (lstrlen(m_strAccnt) < 3)
     {
         AfxMessageBox("请输入3~20个字符。");
         return;
@@ -72,27 +72,27 @@ void IMlogDlg::OnBnClickedOk()
                 return;
             }
         }
-    if (setUsrPsw((LPSTR)(LPCSTR)m_strAcnt, (LPSTR)(LPCSTR)m_strPsw))
+    if (setUsrPsw((LPSTR)(LPCSTR)m_strAccnt, (LPSTR)(LPCSTR)m_strPsw))
         CDialogEx::OnOK();
 }
 
-int IMlogDlg::getVisable()
+bool IMlogDlg::getVision()
 {
-    return this->visable;
+    return this->m_canBSee;
 }
 
-void IMlogDlg::setVisable(int visable)
+void IMlogDlg::setVision(int canBSee)
 {
-    this->visable = visable;
+    this->m_canBSee = canBSee;
 }
 
 void IMlogDlg::OnBnClickedCancel()
 {
-    this->visable = 0;
+    this->m_canBSee = 0;
     CDialogEx::OnCancel();
 }
 
 char* IMlogDlg::getUsername() 
 {
-    return (LPSTR)(LPCSTR)(m_strAcnt);
+    return (LPSTR)(LPCSTR)(m_strAccnt);
 }

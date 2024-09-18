@@ -20,10 +20,10 @@ if exist QtCases.exe (
     ) else (
         copy %QTDIR%\bin\*d.dll .\
     )
-    copy %OPENCV%\win32\Debug\opencv_*.dll .\
 ) else (
     echo 'QtCases.exe' does not exist.
 )
+copy %OPENCV%\win32\Debug\opencv_*.dll .\
 copy ..\KlineUtil\CTP\*.dll .\
 copy ..\KlineUtil\WPF\*.dll .\
 copy ..\KlineUtil\font\lib\*.dll .\
