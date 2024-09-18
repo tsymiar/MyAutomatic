@@ -53,14 +53,17 @@ private:
                             //真:正在隐藏,假:正在显示
     StSock m_imSocks;
     IMlogDlg* m_logDlg = NULL;
-public:
+    
     int logflg = 0;
+    int m_count = 0;
     HICON m_hIcon;
     HBITMAP hBitmap = NULL;
-    CComboBox m_commbo;
-    CListCtrl m_frndList;
+    CComboBox m_combo;
     CStatic m_timeStatus;
     CButton m_AddBtn;
+public:
+    CStatic m_username;
+    CListCtrl m_frndList;
     void setFriendList();
     void setWidgetHide();
     afx_msg void OnBnClickedExit();

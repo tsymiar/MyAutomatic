@@ -14,6 +14,11 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+StMsgContent g_content = {};
+SetMarkDlg* g_setDlg = NULL;
+IMlogDlg* g_logDlg = NULL;
+#define MAX_MEMBERS_PER_GROUP 11
+
 //收缩模式
 #define HM_NONE     0   //不收缩
 #define HM_TOP      1   //置顶收缩
@@ -59,9 +64,10 @@ void CIMhideWndDlg::DoDataExchange(CDataExchange* pDX)
 {
     CDialogEx::DoDataExchange(pDX);
     DDX_Control(pDX, IDC_TIMER, m_timeStatus);
-    DDX_Control(pDX, IDC_COMM, m_commbo);
+    DDX_Control(pDX, IDC_COMM, m_combo);
     DDX_Control(pDX, IDC_LISTFRND, m_frndList);
     DDX_Control(pDX, IDC_SEEKNEW, m_AddBtn);
+    DDX_Control(pDX, IDC_USRTEXT, m_username);
 }
 
 
@@ -110,6 +116,8 @@ void* parseMessage(void* msg)
         }
         sprintf_s(title, 512, "%s", rslt + 8);
         if (rslt[1] == LOGIN && rslt[3] == 'e') {
+            LPCSTR username = TEXT(g_logDlg == NULL ? (char*)g_content.username : g_logDlg->getUsername());
+            ((CIMhideWndDlg*)client.Dlg)->m_username.SetWindowText(username);
             continue;
         } else if (rslt[1] == ONLINE) {
             if (*(rslt + 2) != '0') {
@@ -129,16 +137,16 @@ void* parseMessage(void* msg)
             }
         } else if (rslt[1] == NETNDT) {
             char msg[256];
-            if (*(rslt + 2) == '\0') {
+            if (*(rslt + 2) == '0') {
                 sprintf_s(msg, 256, "%s %s", title, rslt + 32);
             } else {
                 strncpy(msg, title, strlen(title));
             }
             MessageBox(NULL, msg, "---Message---", MB_OK);
         } else if (rslt[1] == USERGROUP && rslt[3] == 0) {
-            for (int c = 0; c < 30; c++) {
-                char user[25];
-                memcpy(user, rslt + 32 + 8 * c, 8);
+            for (int c = 0; c < rslt[5]; c++) {
+                char user[24];
+                memcpy(user, rslt + 8 * (c + 4), 24);
                 len = strlen(user);
                 if (len <= 0)
                     break;
@@ -490,12 +498,12 @@ void CIMhideWndDlg::FixMoving(UINT fwSide, LPRECT pRect)
 BOOL CIMhideWndDlg::OnInitDialog()
 {
     CDialogEx::OnInitDialog();
-    if (m_commbo.m_hWnd != NULL)
+    if (m_combo.m_hWnd != NULL)
     {
-        m_commbo.InsertString(0, menus[0].value.c_str());
-        m_commbo.SetCurSel(0);
+        m_combo.InsertString(0, menus[0].value.c_str());
+        m_combo.SetCurSel(0);
         for (int i = 1; i <= 0x0F; i++)
-            m_commbo.InsertString(i, menus[i].value.c_str());
+            m_combo.InsertString(i, menus[i].value.c_str());
     }
     setFriendList();
     hBitmap = (HBITMAP)::LoadImage(NULL, ".\\res\\bit+.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
@@ -516,15 +524,10 @@ void CIMhideWndDlg::OnBnClickedExit()
         DestroyWindow();
 }
 
-int current = 0;
-StMsgContent content;
-SetMarkDlg* g_setDlg = NULL; 
-IMlogDlg* g_logDlg = NULL;
-
 void callbackPasswdSet(char* psw)
 {
     if (g_setDlg->GetCallTimes() == 1) {
-        memcpy(content.password, psw, 24);
+        memcpy(g_content.password, psw, 24);
         g_setDlg->SetCallback(callbackPasswdSet);
     }
     if (g_setDlg->GetCallTimes() == 2) {
@@ -533,19 +536,18 @@ void callbackPasswdSet(char* psw)
         setdlg->ShowWindow(SW_SHOW);
         setdlg->SetifCheck(true);
         setdlg->SetTitle("重置密码");
-        strcpy((char*)content.username, g_logDlg == NULL ? "" : g_logDlg->getUsername());
-        strcpy((char*)content.user_newpass, psw);
-        if (*psw != NULL && content.password[0] != psw[0]) {
-            SendClientMessage(&content);
+        strcpy((char*)g_content.username, g_logDlg == NULL ? "" : g_logDlg->getUsername());
+        strcpy((char*)g_content.new_passwd, psw);
+        if (*psw != NULL && g_content.password[0] != psw[0]) {
+            SendClientMessage(&g_content);
         }
     }
 }
 
-
 void callbackGroupSet(char* name)
 {
-    memcpy(content.group_host, name, 24);
-    SendClientMessage(&content);
+    memcpy(g_content.group_host, name, 24);
+    SendClientMessage(&g_content);
 }
 
 BOOL CIMhideWndDlg::DestroyWindow()
@@ -560,7 +562,7 @@ BOOL CIMhideWndDlg::DestroyWindow()
         delete g_setDlg;
         g_setDlg = NULL;
     }
-    current = 0;
+    m_count = 0;
     return CDialogEx::DestroyWindow();
 }
 
@@ -587,19 +589,19 @@ UINT _NoMessageBox(LPVOID lparam)
 void CIMhideWndDlg::OnCbnSelchangeComm()
 {
     static int ifsh = 0;
-    if (current == 0)
+    if (m_count == 0)
     {
-        m_commbo.DeleteString(0);
-        current++;
+        m_combo.DeleteString(0);
+        m_count++;
     }
     CRect listrect;
     LVCOLUMN lvcol;
     CRegistDlg m_crgist(m_imSocks.IP);
-    int comsel = m_commbo.GetCurSel();
+    int comsel = m_combo.GetCurSel();
     char item[16];
     // memset(&msg, 0, sizeof(MSG_trans));
     // msg.cmd = (comsel >> 8) & 0xff + comsel & 0xff;
-    content.uiCmdMsg = comsel;
+    g_content.uiCmdMsg = comsel;
     switch (comsel)
     {
     case REGISTER:
@@ -608,12 +610,12 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
     case LOGIN:
         m_frndList.DeleteAllItems();
         m_frndList.ShowWindow(SW_SHOW);
-        if (m_logDlg != NULL && m_logDlg->getVisable())
+        if (m_logDlg != NULL && m_logDlg->getVision())
             return;
         g_logDlg = m_logDlg = new IMlogDlg(callbackLog);
         if (m_logDlg == NULL || ::IsWindowVisible(m_logDlg->m_hWnd))
             return;
-        if (m_logDlg->getVisable() == 0)
+        if (m_logDlg->getVision() == 0)
             if (m_frndList.m_hWnd != NULL)
             {
                 m_frndList.GetWindowRect(&listrect);
@@ -630,7 +632,7 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
         if (m_logDlg != NULL) {
             m_logDlg->OnBnClickedCancel();
         }
-        if (SendClientMessage(&content) == 0) {
+        if (SendClientMessage(&g_content) == 0) {
             MessageBox("已发起请求。", MB_OK);
         }
         break;
@@ -654,7 +656,7 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
         m_frndList.InsertItem(0, item);
         sprintf(item, "%08X", (ifsh + 11) * 13 - 19);
         m_frndList.InsertItem(1, item);
-        SendClientMessage(&content);
+        SendClientMessage(&g_content);
         ifsh++;
         break;
     case ONLINE:
@@ -665,7 +667,7 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
         lvcol.pszText = _T("好友");
         m_frndList.SetColumn(0, &lvcol);
         m_frndList.ShowWindow(SW_SHOW);
-        SendClientMessage(&content);
+        SendClientMessage(&g_content);
         break;
     case VIEWGROUP:
         if (m_logDlg != NULL) {
@@ -675,7 +677,7 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
         lvcol.pszText = _T("群列表");
         m_frndList.SetColumn(0, &lvcol);
         m_frndList.ShowWindow(SW_SHOW);
-        SendClientMessage(&content);
+        SendClientMessage(&g_content);
         break;
     case USERGROUP:
         if (m_logDlg != NULL) {
@@ -705,7 +707,7 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
         g_setDlg->SetTitle("加入群组");
         break;
     case EXITGROUP:
-        SendClientMessage(&content);
+        SendClientMessage(&g_content);
         break;
     default:
         break;

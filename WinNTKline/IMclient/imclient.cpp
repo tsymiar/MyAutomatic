@@ -10,14 +10,13 @@ void
 #endif
 parseRcvMsg(void* lprcv)
 {
-    static char rcv_buf[256];
-    static char srv_net[32];
     CRITICAL_SECTION wrcon;
     InitializeCriticalSection(&wrcon);
     StClient* client = (StClient*)lprcv;
     int fw_len = 0;
     int ui_val = 0;
     volatile int count = 0;
+    static char rcv_buf[256];
     while (1) {
         if (client->flag == 0)
             continue;
@@ -100,7 +99,11 @@ parseRcvMsg(void* lprcv)
                 fprintf(stdout, "Status error.\n");
                 closesocket(client->sock);
                 LeaveCriticalSection(&wrcon);
+#ifdef _WIN32
+                return;
+#else
                 exit(0);
+#endif
             } else {
                 fprintf(stdout, "\r%*c\r%s\n", 64, ' ', msg->ndt_msg);
                 SetRecvState(RCV_TCP);
@@ -141,13 +144,18 @@ parseRcvMsg(void* lprcv)
         }
         LeaveCriticalSection(&wrcon);
         if (size <= 0 || (msg->value[0] == 'e' && msg->value[1] == '8')) {
-            snprintf(srv_net, 32, "Connection lost!\n%s:%d", inet_ntoa(client->srvaddr.sin_addr), client->srvaddr.sin_port);
+            char detail[64];
+            snprintf(detail, 38 + 16, "Connection lost!\n\tsocket: %s, size=%d", _itoa((int)client->sock, (char*)msg, 10), size);
             char title[32];
-            snprintf(title, 32, "socket: %s", _itoa((int)client->sock, (char*)msg, 10));
-            MessageBox(0, srv_net, title, MB_OK);
+            snprintf(title, 32, "%s:%d", inet_ntoa(client->srvaddr.sin_addr), client->srvaddr.sin_port);
+            MessageBox(0, detail, title, MB_OK);
             SetChatActive(size);
             closesocket(client->sock);
+#ifdef _WIN32
+            return;
+#else
             exit(0);
+#endif
         };
     };
 };
@@ -157,7 +165,7 @@ StMsgContent* ParseChatData(StMsgContent& content)
     memset(&content.user_sign, 0, 24);
     switch (content.uiCmdMsg) {
     case REGISTER:
-        fprintf(stdout, "Input a new username AND password to register, divide with BLANK(' ').\n");
+        fprintf(stdout, "Type in a new username AND password to register, divide with BLANK(' ').\n");
         scanf_s("%s %s", content.username, 24, content.password, 24);
         break;
     case LOGIN:
@@ -167,7 +175,7 @@ StMsgContent* ParseChatData(StMsgContent& content)
             snprintf(title, 36, "Welcome %s", reinterpret_cast<char*>(content.username));
             SetConsoleTitle(title);
         } else {
-            fprintf(stdout, "Input username AND password to login, divide with BLANK(' ').\n");
+            fprintf(stdout, "Type in username AND password to login, divide with BLANK(' ').\n");
             scanf_s("%s %s", content.username, 24, content.password, 24);
         }
         break;
@@ -204,19 +212,19 @@ StMsgContent* ParseChatData(StMsgContent& content)
     }
     case USERGROUP:
     {
-        fprintf(stdout, "Input group name to show members in: ");
+        fprintf(stdout, "Type in group name to show members in: ");
         scanf_s("%s", content.group_name, (unsigned)_countof(content.group_name));
         break;
     }
     case HOSTGROUP:
     {
-        fprintf(stdout, "Input group name AND group mark be to host, divide with BLANK(' ').\n");
+        fprintf(stdout, "Type in group name AND group mark be to host, divide with BLANK(' ').\n");
         scanf_s("%s %s", content.group_host, (unsigned)_countof(content.group_host), (content.group_mark), (unsigned)_countof(content.group_mark));
         break;
     }
     case JOINGROUP:
     {
-        fprintf(stdout, "Input group name you want to join in: ");
+        fprintf(stdout, "Type in group name you want to join in: ");
         scanf_s("%s", (content.group_join), (unsigned)_countof(content.group_join));
         break;
     }
@@ -254,10 +262,7 @@ bool is_ip_valid(char s[])
                 return false;
         }
     }
-    if (dot == 3)
-        return true;
-    else
-        return false;
+    return (dot == 3);
 }
 
 int main(int argc, char* argv[])
@@ -295,15 +300,15 @@ int main(int argc, char* argv[])
         while (IsChatActive() == 0) { ; }
         comm++;
 #else
-        int comm = 0;
+        unsigned int comm = 0;
         if (received >= RCV_SCC) {
-            fprintf(stdout, "Select a command [1 - 13]: ");
-            if (scanf("%3d", &comm) <= 0) {
+            fprintf(stdout, "Select a command [0x1 - 0xd] >: ");
+            if (scanf("%x", &comm) <= 0) {
                 fprintf(stdout, "Command not in integer format, exit.\n");
                 break;
             }
-            if (comm > 13 || comm < 0) {
-                fprintf(stdout, "Error cmd value: out of range [1,13].\n");
+            if (comm > 0xf || comm < 0) {
+                fprintf(stdout, "Error cmd value: out of range [0x1,0xd].\n");
                 continue;
             }
         }

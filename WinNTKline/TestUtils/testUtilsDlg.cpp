@@ -197,7 +197,7 @@ void CtestUtilsDlg::OnBnClickedQtcase()
     WIN32_FIND_DATA findFileData;
     if (FindFirstFile(filename, &findFileData) == INVALID_HANDLE_VALUE) {
         MessageBox(filename + "\nNo such exec file!");
-        return;
+    } else {
+        ::CreateProcess(filename, _T("1"), NULL, NULL, false, 0, NULL, NULL, &sInfo, &prInfo);
     }
-    ::CreateProcess(filename, _T("1"), NULL, NULL, false, 0, NULL, NULL, &sInfo, &prInfo);
 }
