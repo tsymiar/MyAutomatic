@@ -1194,8 +1194,8 @@ bool OGLKview::GetMarkDatatoDraw(const char* file, void* P, char* title, int hl,
                         this->DrawPoly(Pter, Pt[li], { 0.f,1.f,0.f,0.f });
                         Pter = Pt[li];
                         //绘制MA线
-                        (line < 20 && line >= 10) ? ot_ma20old = ot_ma20 : \
-                            (line >= 5 ? ot_ma10old = ot_ma10 : \
+                        (line < 20 && line >= 10) ? (ot_ma20old = ot_ma20) : \
+                            (line >= 5 ? (ot_ma10old = ot_ma10) : \
                                 (ot_ma5old = ot_ma5));
                         if ((line - 1) % 20 == 0) {
                             ma20.X = (int)totma._20;

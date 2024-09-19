@@ -89,8 +89,8 @@ parseRcvMsg(void* lprcv)
             }
         }
         if (ui_val == NETNDT) {
-            if (atoi((const char*)msg->rcv_msg.status) == 200) {
-                fprintf(stdout, "\r%*c\rReceived: %s\n", 64, ' ', msg->rcv_msg.message);
+            if (atoi((const char*)msg->payload.status) == 200) {
+                fprintf(stdout, "\r%*c\rReceived: %s\n", 64, ' ', msg->payload.message);
                 SetRecvState(RCV_NDT);
                 if (g_printed > 0) {
                     fprintf(stdout, youSaid);
@@ -307,7 +307,7 @@ int main(int argc, char* argv[])
                 fprintf(stdout, "Command not in integer format, exit.\n");
                 break;
             }
-            if (comm > 0xf || comm < 0) {
+            if (comm > 0xf || comm <= 0) {
                 fprintf(stdout, "Error cmd value: out of range [0x1,0xd].\n");
                 continue;
             }
