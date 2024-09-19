@@ -59,6 +59,7 @@ BEGIN_MESSAGE_MAP(CtestUtilsDlg, CDialogEx)
     ON_BN_CLICKED(IDOK, &CtestUtilsDlg::OnBnClickedOk)
     ON_BN_CLICKED(IDCANCEL, &CtestUtilsDlg::OnBnClickedCancel)
     ON_BN_CLICKED(IDC_QTCASE, &CtestUtilsDlg::OnBnClickedQtcase)
+    ON_STN_CLICKED(IDC_IP_TEXT, &CtestUtilsDlg::OnStnClickedIpText)
 END_MESSAGE_MAP()
 
 BOOL CtestUtilsDlg::OnInitDialog()
@@ -200,4 +201,11 @@ void CtestUtilsDlg::OnBnClickedQtcase()
     } else {
         ::CreateProcess(filename, _T("1"), NULL, NULL, false, 0, NULL, NULL, &sInfo, &prInfo);
     }
+}
+
+
+void CtestUtilsDlg::OnStnClickedIpText()
+{
+    sprintf_s(a_IP, 16, "127.0.0.1");
+    m_ipAddr.SetAddress(ntohl(inet_addr(a_IP)));
 }

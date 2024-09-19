@@ -173,7 +173,7 @@ typedef struct MSG_CONTENT {
     unsigned char type[4];
     union {
         unsigned char username[24];
-        struct MainMessage rcv_msg;
+        struct MainMessage payload;
     };
     union {
         char password[24];

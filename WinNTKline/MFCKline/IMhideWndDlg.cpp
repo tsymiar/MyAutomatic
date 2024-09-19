@@ -94,10 +94,10 @@ void* parseMessage(void* msg)
 {
     int len = 0;
     char title[512];
-    static char rslt[256];
+    static char payload[256];
     CRITICAL_SECTION wrcsec;
     StClient client; // = (StClient*)malloc(sizeof(StClient));
-    memset(rslt, 0, 256);
+    memset(payload, 0, 256);
     client = (StClient) * ((StClient*)msg);
     InitializeCriticalSection(&wrcsec);
     while (1) {
@@ -106,7 +106,7 @@ void* parseMessage(void* msg)
         EnterCriticalSection(&wrcsec);
         if (client.sock == 0)
             continue;
-        len = recv(client.sock, rslt, 256, 0);
+        len = recv(client.sock, payload, 256, 0);
         if (len <= 0) {
             MessageBox(NULL, "connection lost!", "client", MB_OK);
             if (len == -1)
@@ -114,20 +114,20 @@ void* parseMessage(void* msg)
             closesocket(client.sock);
             continue;
         }
-        sprintf_s(title, 512, "%s", rslt + 8);
-        if (rslt[1] == LOGIN && rslt[3] == 'e') {
+        sprintf_s(title, 512, "%s", payload + 8);
+        if (payload[1] == LOGIN) {
             LPCSTR username = TEXT(g_logDlg == NULL ? (char*)g_content.username : g_logDlg->getUsername());
             ((CIMhideWndDlg*)client.Dlg)->m_username.SetWindowText(username);
             continue;
-        } else if (rslt[1] == ONLINE) {
-            if (*(rslt + 2) != '0') {
+        } else if (payload[1] == ONLINE) {
+            if (payload[2] != '0') {
                 MessageBox(NULL, title, "---Message---", MB_OK);
                 continue;
             }
-            for (int c = 0; c < atoi(rslt + 4); c++) {
+            for (int c = 0; c < atoi(payload + 4); c++) {
                 char user[25];
                 user[24] = '\0';
-                memcpy(user, rslt + 32 + 8 * c, 8);
+                memcpy(user, payload + 32 + 8 * c, 8);
                 len = strlen(user);
                 if (len <= 0)
                     break;
@@ -135,31 +135,31 @@ void* parseMessage(void* msg)
                 strcpy(title + 36 + 8 * c - (8 - len - 2), user);
                 ((CIMhideWndDlg*)client.Dlg)->m_frndList.InsertItem(c, user);
             }
-        } else if (rslt[1] == NETNDT) {
-            char msg[256];
-            if (*(rslt + 2) == '0') {
-                sprintf_s(msg, 256, "%s %s", title, rslt + 32);
+        } else if (payload[1] == NETNDT || payload[1] == PEER2P) {
+            char msg[64];
+            if (payload[2] != '0') {
+                sprintf_s(msg, 64, "'%s': %s", title, payload + 32);
             } else {
                 strncpy(msg, title, strlen(title));
             }
             MessageBox(NULL, msg, "---Message---", MB_OK);
-        } else if (rslt[1] == USERGROUP && rslt[3] == 0) {
-            for (int c = 0; c < rslt[5]; c++) {
+        } else if (payload[1] == USERGROUP && payload[3] == '\0') {
+            for (int c = 0; c < payload[5]; c++) {
                 char user[24];
-                memcpy(user, rslt + 8 * (c + 4), 24);
+                memcpy(user, payload + 8 * (c + 4), 24);
                 len = strlen(user);
                 if (len <= 0)
                     break;
                 ((CIMhideWndDlg*)client.Dlg)->m_frndList.InsertItem(c, user);
             }
-        } else if (rslt[1] == VIEWGROUP) {
-            if (*(rslt + 2) != '0') {
+        } else if (payload[1] == VIEWGROUP) {
+            if (payload[2] != '0') {
                 MessageBox(NULL, title, "---Message---", MB_OK);
                 continue;
             }
-            char group[25];
-            for (int c = 0; c < atoi(rslt + 4); c++) {
-                memcpy(group, rslt + 32 + 8 * c, 8);
+            char group[24];
+            for (int c = 0; c < atoi(payload + 4); c++) {
+                memcpy(group, payload + 32 + 8 * c, 8);
                 len = strlen(group);
                 if (len <= 0)
                     break;
@@ -599,6 +599,7 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
     CRegistDlg m_crgist(m_imSocks.IP);
     int comsel = m_combo.GetCurSel();
     char item[16];
+    int curr = 0;
     // memset(&msg, 0, sizeof(MSG_trans));
     // msg.cmd = (comsel >> 8) & 0xff + comsel & 0xff;
     g_content.uiCmdMsg = comsel;
@@ -628,6 +629,9 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
                 break;
             }
         break;
+    case IUSER:
+        ::AfxBeginThread(_NoMessageBox, this);
+        break;
     case LOGOUT:
         if (m_logDlg != NULL) {
             m_logDlg->OnBnClickedCancel();
@@ -635,9 +639,7 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
         if (SendClientMessage(&g_content) == 0) {
             MessageBox("已发起请求。", MB_OK);
         }
-        break;
-    case IUSER:
-        ::AfxBeginThread(_NoMessageBox, this);
+        m_frndList.DeleteAllItems();
         break;
     case SETPSW:
         if (g_logDlg == NULL) {
@@ -649,6 +651,19 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
         g_setDlg->ShowWindow(SW_SHOW);
         g_setDlg->SetTitle("原密码");
         break;
+    case ONLINE:
+        if (m_logDlg != NULL) {
+            m_logDlg->OnBnClickedCancel();
+        }
+        m_frndList.DeleteAllItems();
+        lvcol.pszText = _T("好友");
+        m_frndList.SetColumn(0, &lvcol);
+        m_frndList.ShowWindow(SW_SHOW);
+        SendClientMessage(&g_content);
+        break;
+    case PEER2P:
+        SendClientMessage(&g_content);
+        break;
     case NETNDT:
         lvcol.pszText = _T("Random");
         m_frndList.SetColumn(0, &lvcol);
@@ -659,14 +674,10 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
         SendClientMessage(&g_content);
         ifsh++;
         break;
-    case ONLINE:
-        if (m_logDlg != NULL) {
-            m_logDlg->OnBnClickedCancel();
-        }
-        m_frndList.DeleteAllItems();
-        lvcol.pszText = _T("好友");
-        m_frndList.SetColumn(0, &lvcol);
-        m_frndList.ShowWindow(SW_SHOW);
+    case V4L2IMG:
+        SendClientMessage(&g_content);
+        break;
+    case GETIMAGE:
         SendClientMessage(&g_content);
         break;
     case VIEWGROUP:
@@ -705,9 +716,17 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
         g_setDlg->Create(IDD_MARKDLG);
         g_setDlg->ShowWindow(SW_SHOW);
         g_setDlg->SetTitle("加入群组");
+        m_frndList.DeleteAllItems();
         break;
     case EXITGROUP:
         SendClientMessage(&g_content);
+        curr = 0;
+        for (; curr < m_frndList.GetItemCount(); curr++)
+        {
+            if (m_frndList.GetItemText(curr, 0) == CString(g_content.username))
+                break;
+        }
+        m_frndList.DeleteItem(curr);
         break;
     default:
         break;
@@ -759,7 +778,16 @@ void CIMhideWndDlg::OnPaint()
 
 void CIMhideWndDlg::OnBnClickedSeeknew()
 {
-    MessageBox("");
+    if (m_frndList.IsWindowVisible() && (m_logDlg != NULL && m_logDlg->getUsername() != NULL))
+    {
+        m_frndList.DeleteAllItems();
+        SendClientMessage(NULL);
+    }
+    if (m_logDlg != NULL)
+    {
+        m_logDlg->m_editUsr.SetWindowText("AAAAA");
+        m_logDlg->m_editPsw.SetWindowText("AAAAA");
+    }
 }
 
 CIMhideWndDlg::~CIMhideWndDlg()

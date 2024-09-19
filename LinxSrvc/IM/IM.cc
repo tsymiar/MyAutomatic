@@ -29,7 +29,7 @@
 #define DEFAULT_PORT 8877
 #define IPC_KEY 0x520905
 #define IPC_FLAG IPC_CREAT|IPC_EXCL //|SHM_R|SHM_W
-#define THREAD_NUM 16
+#define THREAD_NUM 8
 #define ACC_REC "accounts"
 #define MAX_USERS 99
 #define MAX_ZONES 9
@@ -70,7 +70,7 @@ pthread_mutexattr_t attr;
 
 /*-------------------- Message Structure --------------------*/
 /* .__________________________________________________________________________________________________________________________________________________________. */
-/* |  rsv(1)  |  uiCmdMsg(1)  |  rtn(2)  |  chk(4)  |  usr(24)  | psw/TOKEN/peerIP(24) | peer/port/sign/npsw | length(4) / PeerStruct peer_msg |  status (8)  | */
+/* |  head(1)  |  uiCmdMsg(1)  |  rtn(2)  |  chk(4)  |  usr(24)  | psw/TOKEN/peerIP(24) | peer/port/sign/npsw | length(4) / PeerStruct peer_msg |  status (8)  | */
 /* | reserved | cmd msg of ui | error No | checksum | user name | cert or udp peer ip  | host/join/seek(24)  |       msg(16) cmd(2) val(4)     | if necessary | */
 /* + ———————————————————————————————————————————————————————————————————————————+ */
 
@@ -135,7 +135,7 @@ struct member {
 };
 
 typedef struct UsrMsgStu {
-    unsigned char rsv;
+    unsigned char head;
     unsigned char uiCmdMsg;
     unsigned char rtn[2];
     unsigned char chk[4];
@@ -396,7 +396,7 @@ type_thread_func monitor(void* arg)
             char userName[FiledSize];
             memset(userName, 0, FiledSize);
             memcpy(sd_bufs, &user, 2); // 2: head bytes
-            if ((user.rsv == 0) && (user.uiCmdMsg == 0)) {
+            if ((user.head == 0) && (user.uiCmdMsg == 0)) {
                 // user.usr: 8; user.psw: 32.
                 val_rtn = new_user(user.usr, user.psw);
                 snprintf(sd_bufs + 2, 8, "%x", NE_VAL(val_rtn + 1));
@@ -414,11 +414,11 @@ type_thread_func monitor(void* arg)
                     sn_stat = send(rcv_sock, sd_bufs, 32, 0);
                     fprintf(stdout, ">>> %s\n", sd_bufs + offset);
                 } else if (val_rtn == -3) {
-                    snprintf((sd_bufs + offset), 22, "%s", "Same user name exist.");
+                    snprintf((sd_bufs + offset), 21, "%s", "Same username exist.");
                     sn_stat = send(rcv_sock, sd_bufs, 32, 0);
                     fprintf(stdout, ">>> %s\n", sd_bufs + offset);
                 } else if (val_rtn == -4) {
-                    snprintf((sd_bufs + offset), 17, "%s", "User name error.");
+                    snprintf((sd_bufs + offset), 17, "%s", "User Name error.");
                     sn_stat = send(rcv_sock, sd_bufs, 32, 0);
                     fprintf(stdout, ">>> %s\n", sd_bufs + offset);
                 };
@@ -426,7 +426,7 @@ type_thread_func monitor(void* arg)
                     fprintf(stderr, "### Socket status: %s\n", strerror(errno));
                 }
                 continue;
-            } else if ((user.rsv == 0) && (user.uiCmdMsg == 0x1)) {
+            } else if ((user.head == 0) && (user.uiCmdMsg == 0x1)) {
                 val_rtn = user_auth(user.usr, user.psw);
                 snprintf(sd_bufs + 2, 8, "%x", NE_VAL(val_rtn));
                 if (val_rtn == (loggedIn = 1)) {
@@ -474,7 +474,7 @@ type_thread_func monitor(void* arg)
                     fprintf(stdout, ">>> Unknown Error!\n");
                     continue;
                 };
-            } else if ((user.rsv == 0) && (user.uiCmdMsg == 0x3)) {
+            } else if ((user.head == 0) && (user.uiCmdMsg == 0x3)) {
                 snprintf(sd_bufs + 2, 8, "%x", NE_VAL(-1));
                 snprintf((sd_bufs + offset), 36, "%s", "Warning: user hasn't logged on yet.");
                 sn_stat = send(rcv_sock, sd_bufs, 48, 0);
@@ -547,7 +547,7 @@ type_thread_func monitor(void* arg)
                 unsigned short* length = reinterpret_cast<unsigned short*>(sd_bufs + 6);
                 unsigned short total = BUFF_SIZE;
                 memset(sd_bufs, 0, total);
-                if (user.rsv == 0) {
+                if (user.head == 0) {
                     switch (sd_bufs[1] = user.uiCmdMsg) {
                     case CHECK:
                         snprintf((sd_bufs + offset), 26, "%s", "User has already on-line.");
@@ -665,6 +665,7 @@ type_thread_func monitor(void* arg)
                             fprintf(stdout, "'%s' is communicating with '%s' via NDT.\n", user.usr, user.peer);
                         } else {
                             snprintf((sd_bufs + 32), 50, "%s", "Check message detail of Network Data Translation.");
+                            memset(sd_bufs + 2, NE_VAL(-1), 1);
                             total = 88;
                             break;
                         }
@@ -706,14 +707,15 @@ type_thread_func monitor(void* arg)
                                         total = 80;
                                     }
                                 }
+                                memset(sd_bufs + 2, NE_VAL(-2), 1);
                             } else {
                                 snprintf((sd_bufs + 32), 23, "NDT Peer User Offline!");
-                                memset(sd_bufs + 2, NE_VAL(-2), 1);
+                                memset(sd_bufs + 2, NE_VAL(-3), 1);
                                 total = 72;
                             }
                         } else {
                             snprintf((sd_bufs + 32), 36 + 24, "Get user network: No such user(%s)!", user.peer);
-                            snprintf((sd_bufs + 2), 8, "%x", NE_VAL(-3));
+                            snprintf((sd_bufs + 2), 6, "%x", NE_VAL(-4));
                             total = 96;
                         }
                     } break;
@@ -825,7 +827,7 @@ type_thread_func monitor(void* arg)
                     break;
                     case ZONES:
                     {
-                        snprintf((sd_bufs + offset), 21, "%s", "Active group list: \n");
+                        snprintf((sd_bufs + offset), 24, "%s", "Active group(s) list: \n");
                         char n = 0;
                         for (c = 0; c < MAX_ZONES; c++) {
                             if (zones[c].zone.name[0] != '\0') {
@@ -844,9 +846,9 @@ type_thread_func monitor(void* arg)
                     {
                         val_rtn = find_zone(user.seek);
                         snprintf(sd_bufs + 2, 8, "%x", NE_VAL(val_rtn));
-                        if (val_rtn == -2) {
-                            snprintf((sd_bufs + offset), 44, "No such [%s] group!", user.seek);
-                            total = 56;
+                        if (val_rtn < 0) {
+                            snprintf((sd_bufs + offset), 44, "No such NAME [%s]!", user.seek);
+                            total = 52;
                         } else {
                             memset(sd_bufs + 2, 0, 2);
                             snprintf((sd_bufs + offset), 25, "%s", "Member(s) of the group:\n");
@@ -869,29 +871,30 @@ type_thread_func monitor(void* arg)
                     {
                         val_rtn = host_zone(user);
                         snprintf(sd_bufs + 2, 8, "%x", NE_VAL(val_rtn));
-                        if (val_rtn == -2) {
-                            snprintf((sd_bufs + offset), 21, "%s", "Host group rejected.");
-                            total = 32;
-                        } else if (val_rtn < -2 && val_rtn > -MAX_ZONES - 3) {
+                        total = 32;
+                        if (val_rtn == -1) {
+                            snprintf((sd_bufs + offset), 23, "%s", "Group Name given NULL.");
+                        } else if (val_rtn == -2) {
+                            snprintf((sd_bufs + offset), 20, "%s", "Host been rejected.");
+                        } else if (val_rtn < -2 && val_rtn >= -MAX_ZONES - 3) {
                             int stat = join_zone(((val_rtn + 3 + MAX_ZONES)), user.usr, reinterpret_cast<char*>(user.join));
                             if (stat >= 0 && user.host[0] != '\0' && user.usr[0] != '\0') {
-                                snprintf((sd_bufs + offset), 32 + 24 * 2, "'%s' exist, %s joins the group.", user.host, user.usr);
-                                total = 88;
+                                snprintf((sd_bufs + offset), 30 + 24 * 2, "'%s' exist, %s just joins it.", user.host, user.usr);
+                                total = 87;
                             } else if (stat == -3) {
+                                total = 40;
                                 if (user.join[0] == '\0') {
-                                    snprintf((sd_bufs + offset), 29, "Group Name should not empty!");
-                                    total = 38;
+                                    snprintf((sd_bufs + offset), 32, "Group Name should Not be empty!");
                                 } else {
                                     snprintf((sd_bufs + offset), 31, "User already joined the group!");
-                                    total = 36;
                                 }
                             } else {
-                                snprintf((sd_bufs + offset), 25, "Group parameter invalid!");
-                                total = 34;
+                                snprintf((sd_bufs + offset), 29, "Group parameter may invalid!");
+                                total = 38;
                             }
                         } else {
-                            snprintf((sd_bufs + offset), 56, "Created the group '%s' as host.", user.host);
-                            total = 66;
+                            snprintf((sd_bufs + offset), 52, "Created group '%s' as host.", user.host);
+                            total = 62;
                         }
                         *length = total;
                     } break;
@@ -903,7 +906,7 @@ type_thread_func monitor(void* arg)
                             total = 48;
                             switch (val_rtn) {
                             case -1:
-                                snprintf((sd_bufs + offset), 51, "Can't find such group: %s.", user.join);
+                                snprintf((sd_bufs + offset), 58, "Can't find such named-group '%s'!", user.join);
                                 total += 10;
                                 break;
                             case -2:
@@ -911,21 +914,22 @@ type_thread_func monitor(void* arg)
                                 total += 10;
                                 break;
                             case -3:
-                                snprintf((sd_bufs + offset), 44, "Join Limits: group was full to new members.");
+                                snprintf((sd_bufs + offset), 43, "Join Limits: group was full to new member.");
                                 break;
                             case -4:
                                 snprintf((sd_bufs + offset), 36, "You have already joined this group.");
                                 break;
                             case -5:
-                                snprintf((sd_bufs + offset), 46, "Sth. wrong while passing token to this group.");
+                                snprintf((sd_bufs + offset), 51, "Sth. went wrong while passing token to this group.");
+                                total += 10;
                                 break;
                             default:
                                 snprintf((sd_bufs + offset), 15, "Unknown error.");
                                 break;
                             }
                         } else {
-                            total = 64;
-                            snprintf((sd_bufs + offset), 28 + 24, "Joining group (%s) success.", user.join);
+                            snprintf((sd_bufs + offset), 52, "Joining group [%s] success.", user.join);
+                            total = 60;
                         }
                         *length = total;
                     } break;
@@ -1532,6 +1536,7 @@ int find_zone(unsigned char basis[FiledSize])
 int host_zone(USER & user)
 {
     char* host = reinterpret_cast<char*>(user.host);
+    if (host[0] == '\0') return -1;
     unsigned char* brf = user.host + FiledSize;
     char* chief = user.usr;
     char i = 0;
@@ -1543,15 +1548,14 @@ int host_zone(USER & user)
                     break;
                 bit++;
             } while (bit < MAX_MEMBERS_PER_GROUP);
-            if (chief[0] != '\0' && strcmp(zones[i].zone.members[bit], chief) != 0) {
+            if (chief[0] != '\0' && (strcmp(zones[i].zone.members[bit], chief) != 0)) {
                 return i - MAX_ZONES - 3;
             }
         }
         if (zones[i].zone.name[0] == '\0')
             break;
     }
-    if (i == MAX_ZONES)
-        return -2;
+    if (i == MAX_ZONES) return -2;
     memcpy(zones[i].zone.name, host, 24);
     memcpy(zones[i].zone.brief, reinterpret_cast<char*>(brf), 24);
     memcpy(zones[i].zone.chief, chief, 24);

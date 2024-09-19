@@ -39,4 +39,5 @@ private:
 	CString a_Port;
 public:
 	afx_msg void OnBnClickedQtcase();
+	afx_msg void OnStnClickedIpText();
 };
