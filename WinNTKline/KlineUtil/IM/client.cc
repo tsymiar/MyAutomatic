@@ -56,7 +56,7 @@ runtime(void* param)
     DeleteCriticalSection(&section);
 };
 
-int InitChat(StSock* sock)
+int SetupChat(StSock* sock)
 {
     SetConsoleTitle("IM client v0.1");
     WSADATA wsaData;
@@ -209,7 +209,7 @@ int SetClientDlg(void* Wnd)
     }
 };
 #endif
-int SendClientMessage(StMsgContent* msg)
+int SendClientMessage(StMsgContent* msg, bool ignore)
 {
     if (g_client.flag < 0) {
         MessageBox(0, const_cast<char*>("Connection status error, will exit!"), const_cast<char*>("Quit"), MB_OK);
@@ -220,6 +220,9 @@ int SendClientMessage(StMsgContent* msg)
     if (msg != NULL) {
         memcpy(&g_content, msg, sizeof(StMsgContent));
     } else {
+        if (ignore) {
+            g_content.type[0] = 0xee;
+        }
         send(g_client.sock, (char*)&g_content, len, 0);
         return -1;
     }

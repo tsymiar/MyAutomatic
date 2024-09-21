@@ -191,7 +191,7 @@ typedef struct MSG_CONTENT {
         unsigned char group_host[24];
         unsigned char group_join[24];
     };
-    struct ExtraMessage ext_msg;
+    struct ExtraMessage extraMsg;
 } StMsgContent;
 
 struct MENU {
@@ -230,7 +230,7 @@ enum  EM_MENU {
     ONLINE,
     PEER2P,
     NETNDT,
-    V4L2IMG,
+    MAKEIMG,
     GETIMAGE,
     VIEWGROUP,
     USERGROUP,
@@ -269,7 +269,7 @@ inline int checkPswValid(char* str)
     }
     return (z0 + zz + zZ + z_ == 4 ? 1 : 0);
 }
-int InitChat(StSock* sock = NULL);
+int SetupChat(StSock* sock = NULL);
 int StartChat(int error,
     void
 #ifndef _WIN32
@@ -277,7 +277,7 @@ int StartChat(int error,
 #endif
     (*func)(void*)
 );
-int SendClientMessage(StMsgContent* msg = NULL);
+int SendClientMessage(StMsgContent* msg = NULL, bool ignore = false);
 int callbackLog(char* usr, char* psw);
 int CloseChat();
 int p2pMessage(unsigned char* userName, int UserIP, unsigned int UserPort, char const* Message);

@@ -57,6 +57,7 @@ typedef signed long ssize_t;
 #endif // !_CRT_SECURE_NO_WARNINGS
 #define SLEEP(t) Sleep((DWORD)t);
 #define _CAS(x,y,z) InterlockedCompareExchange((LONG volatile*)x, (LONG)y, (LONG)z)
+#define _OS_ "Windows "
 #else
 typedef int type_socket;
 typedef socklen_t type_len;
@@ -66,6 +67,7 @@ typedef void* type_thread_func;
 #define SLEEP(t) wait(t < 0.1f ? 1 : (int)(1.0f*(t)));
 pthread_mutexattr_t attr;
 #define _CAS __sync_bool_compare_and_swap
+#define _OS_ "Unix "
 #endif
 
 /*-------------------- Message Structure --------------------*/
@@ -297,13 +299,13 @@ type_thread_func monitor(void* arg)
     struct ONLINE active[MAX_ACTIVE];
     memset(active, 0, sizeof(ONLINE) * MAX_ACTIVE);
 #endif
-    type_socket rcv_sock = 0;
+    type_socket cur_sock = 0;
     type_socket* sock = reinterpret_cast<type_socket*>(arg);
     char ipAddr[INET_ADDRSTRLEN];
     struct sockaddr_in peerAddr;
     socklen_t peerLen = static_cast<socklen_t>(sizeof(peerAddr));
     if (arg && -1 != long(sock) && int(*sock) != 0) {
-        rcv_sock = *sock;
+        cur_sock = *sock;
     } else {
 #if (!defined THREAD_PER_CONN) && ((!defined _WIN32 ) || (defined SOCK_CONN_TEST))
         std::cerr << "ERROR: socket contra-valid([" << sock << "]" << (sock != nullptr ? *sock : -1) << ") " << strerror(errno) << std::endl;
@@ -311,10 +313,10 @@ type_thread_func monitor(void* arg)
 #else
         struct sockaddr_in sin;
         type_len len = static_cast<type_len>(sizeof(sin));
-        rcv_sock = accept(listen_socket, reinterpret_cast<struct sockaddr*>(&sin), &len);
+        cur_sock = accept(listen_socket, reinterpret_cast<struct sockaddr*>(&sin), &len);
 #endif
     }
-    getpeername(rcv_sock, reinterpret_cast<struct sockaddr*>(&peerAddr), &peerLen);
+    getpeername(cur_sock, reinterpret_cast<struct sockaddr*>(&peerAddr), &peerLen);
     const char* IP = inet_ntop(AF_INET, &peerAddr.sin_addr, ipAddr, sizeof(ipAddr));
     const int PORT = ntohs(peerAddr.sin_port);
     time_t t;
@@ -324,8 +326,8 @@ type_thread_func monitor(void* arg)
     g_threadNo_++;
     fprintf(stdout, "Accepted peer(%u) address [%s:%d] (@ %d/%02d/%02d-%02d:%02d:%02d)\n", g_threadNo_, IP, PORT, lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
     bool set = true;
-    setsockopt(rcv_sock, SOL_SOCKET, SO_KEEPALIVE, reinterpret_cast<const char*>(&set), sizeof(bool));
-    if (rcv_sock
+    setsockopt(cur_sock, SOL_SOCKET, SO_KEEPALIVE, reinterpret_cast<const char*>(&set), sizeof(bool));
+    if (cur_sock
 #ifdef _WIN32
         == INVALID_SOCKET) {
         std::cerr << "Accept failure ERROR " << WSAGetLastError() << std::endl;
@@ -336,7 +338,7 @@ type_thread_func monitor(void* arg)
         std::cerr << "Call accept() error(" << errno << "): " << strerror(errno) << std::endl;
         return type_thread_func(-1);
     };
-    fprintf(stdout, "Socket monitor: %d; waiting for massage...\n", rcv_sock);
+    fprintf(stdout, "Socket monitor: %d; waiting for massage...\n", cur_sock);
     do {
         memset(sd_bufs, 0, BUFF_SIZE);
         memset(rcv_txt, 0, BUFF_SIZE);
@@ -347,7 +349,7 @@ type_thread_func monitor(void* arg)
 #endif
             lol = sizeof(int);
         int val;
-        if (getsockopt(rcv_sock, SOL_SOCKET, SO_KEEPALIVE, reinterpret_cast<char*>(&val), &lol) == 0) {
+        if (getsockopt(cur_sock, SOL_SOCKET, SO_KEEPALIVE, reinterpret_cast<char*>(&val), &lol) == 0) {
             if (tms > 0)
                 fprintf(stderr, "### Connect times--%u, status: %s.\n", tms, strerror(errno));
             if (errno != 0) {
@@ -360,19 +362,19 @@ type_thread_func monitor(void* arg)
             }
             tms++;
         }
-        if (!sock_was_valid(rcv_sock)) {
+        if (!sock_was_valid(cur_sock)) {
             wait(100);
             continue;
         }
         memset(&user, 0, sizeof(user));
-        int flg = (int)recv(rcv_sock, rcv_txt, BUFF_SIZE, 0);
+        int flg = (int)recv(cur_sock, rcv_txt, BUFF_SIZE, 0);
         // rcv_txt: inc--8 bit crc_head, 24 bit username, 24 bit password.
         if (qq != flg && flg != 0) {
             if (flg <= -1 && flg != EWOULDBLOCK && flg != EAGAIN && flg != EINTR) {
                 set_user_quit(user.usr);
                 fprintf(stderr, "----------------------------------------------------------------\
-                    \n### Client socket [%u] closed by itself just now.\n", (unsigned)rcv_sock);
-                closesocket(rcv_sock);
+                    \n### Client socket [%u] closed by itself just now.\n", (unsigned)cur_sock);
+                closesocket(cur_sock);
 #ifdef _WIN32
                 break;
 #else
@@ -386,7 +388,7 @@ type_thread_func monitor(void* arg)
 #ifndef _WIN32
                 if (g_filedes[0] > 0)
                     close(g_filedes[0]);
-                if (g_filedes[1] <= 0 || write(g_filedes[1], (void*)&rcv_sock, sizeof(rcv_sock)) < 0) {
+                if (g_filedes[1] <= 0 || write(g_filedes[1], (void*)&cur_sock, sizeof(cur_sock)) < 0) {
                     fprintf(stderr, "Can't write socket to filedes[1][%d]: %s\n", g_filedes[1], strerror(errno));
                 }
 #endif
@@ -398,30 +400,34 @@ type_thread_func monitor(void* arg)
             memcpy(sd_bufs, &user, 2); // 2: head bytes
             if ((user.head == 0) && (user.uiCmdMsg == 0)) {
                 // user.usr: 8; user.psw: 32.
+                if (user.chk[0] == 0xee) {
+                    fprintf(stdout, ">>> this message ignored.\n");
+                    continue;
+                }
                 val_rtn = new_user(user.usr, user.psw);
                 snprintf(sd_bufs + 2, 8, "%x", NE_VAL(val_rtn + 1));
                 if (val_rtn == -1) {
                     snprintf(sd_bufs + offset, 37, "New user: %s", user.usr);
                     join_zone(0, user.usr, const_cast<char*>("all"));
-                    sn_stat = send(rcv_sock, sd_bufs, 48, 0);
+                    sn_stat = send(cur_sock, sd_bufs, 48, 0);
                     fprintf(stdout, ">>> %s\n", sd_bufs + offset);
                 } else if (val_rtn == -2) {
                     snprintf((sd_bufs + offset), 16, "%s", "Too many users.");
-                    sn_stat = send(rcv_sock, sd_bufs, 28, 0);
+                    sn_stat = send(cur_sock, sd_bufs, 28, 0);
                     fprintf(stdout, ">>> %s\n", sd_bufs + offset);
                 } else if (val_rtn >= 0) {
                     snprintf((sd_bufs + offset), 21, "%s", "User already exists.");
-                    sn_stat = send(rcv_sock, sd_bufs, 32, 0);
+                    sn_stat = send(cur_sock, sd_bufs, 32, 0);
                     fprintf(stdout, ">>> %s\n", sd_bufs + offset);
                 } else if (val_rtn == -3) {
                     snprintf((sd_bufs + offset), 21, "%s", "Same username exist.");
-                    sn_stat = send(rcv_sock, sd_bufs, 32, 0);
+                    sn_stat = send(cur_sock, sd_bufs, 32, 0);
                     fprintf(stdout, ">>> %s\n", sd_bufs + offset);
                 } else if (val_rtn == -4) {
-                    snprintf((sd_bufs + offset), 17, "%s", "User Name error.");
-                    sn_stat = send(rcv_sock, sd_bufs, 32, 0);
+                    snprintf((sd_bufs + offset), 19, "%s", "User Name is NULL.");
+                    sn_stat = send(cur_sock, sd_bufs, 32, 0);
                     fprintf(stdout, ">>> %s\n", sd_bufs + offset);
-                };
+                }
                 if (sn_stat < 0) {
                     fprintf(stderr, "### Socket status: %s\n", strerror(errno));
                 }
@@ -431,19 +437,19 @@ type_thread_func monitor(void* arg)
                 snprintf(sd_bufs + 2, 8, "%x", NE_VAL(val_rtn));
                 if (val_rtn == (loggedIn = 1)) {
                     snprintf(sd_bufs + offset, 54, "[%s] logging on successfully.", user.usr);
-                    set_user_peer(user.usr, IP, PORT, rcv_sock);
+                    set_user_peer(user.usr, IP, PORT, cur_sock);
                     Network sock;
                     static_cast<void>(memcpy((void*)(sock.ip), IP, INET_ADDRSTRLEN)),
                         static_cast<void>(sock.port = PORT),
-                        sock.socket = rcv_sock;
+                        sock.socket = cur_sock;
                     set_user_line(user.usr, sock);
                     memcpy(userName, user.usr, FiledSize);
-                    send(rcv_sock, sd_bufs, 64, 0);
+                    send(cur_sock, sd_bufs, 64, 0);
                 } else if (val_rtn == 0) {
                     if (memcmp(user.usr, userName, FiledSize) == 0) {
                         snprintf(sd_bufs + 2, 8, "%x", NE_VAL(-3));
-                        snprintf(sd_bufs + offset, 49, "Another [%s] is on line.", user.usr);
-                        if (send(rcv_sock, sd_bufs, 64, 0) < 0) {
+                        snprintf(sd_bufs + offset, 57, "Warn: another [%s] been on-line.", user.usr);
+                        if (send(cur_sock, sd_bufs, 66, 0) < 0) {
                             fprintf(stderr, "### User status: %s\n", strerror(errno));
 #if defined _WIN32
                             return NULL;
@@ -457,8 +463,8 @@ type_thread_func monitor(void* arg)
                         snprintf((sd_bufs + 2), 8, "%02x", 0xe8);
                         snprintf((sd_bufs + offset), 52, "Logging status invalid, we will close this connect.");
                         set_user_quit(user.usr);
-                        sn_stat = send(rcv_sock, sd_bufs, 64, 0);
-                        closesocket(rcv_sock);
+                        sn_stat = send(cur_sock, sd_bufs, 64, 0);
+                        closesocket(cur_sock);
                         fprintf(stdout, ">>>%s %s\n", sn_stat < 0 ? strerror(errno) : "", sd_bufs + offset);
                         loggedIn = 0;
                         continue;
@@ -466,7 +472,7 @@ type_thread_func monitor(void* arg)
                 } else if (val_rtn < 0) {
                     snprintf(sd_bufs + 2, 8, "%x", NE_VAL(val_rtn));
                     snprintf((sd_bufs + offset), 38, "%s", "Error: check username/password again.");
-                    sn_stat = send(rcv_sock, sd_bufs, 48, 0);
+                    sn_stat = send(cur_sock, sd_bufs, 48, 0);
                     fprintf(stdout, ">>>%s %s\n", sn_stat < 0 ? strerror(errno) : "", sd_bufs + offset);
                     continue;
                 } else {
@@ -477,13 +483,13 @@ type_thread_func monitor(void* arg)
             } else if ((user.head == 0) && (user.uiCmdMsg == 0x3)) {
                 snprintf(sd_bufs + 2, 8, "%x", NE_VAL(-1));
                 snprintf((sd_bufs + offset), 36, "%s", "Warning: user hasn't logged on yet.");
-                sn_stat = send(rcv_sock, sd_bufs, 48, 0);
+                sn_stat = send(cur_sock, sd_bufs, 48, 0);
                 fprintf(stdout, ">>>%s %s\n", sn_stat < 0 ? strerror(errno) : "", sd_bufs + offset);
                 continue;
             } else {
                 snprintf((sd_bufs + offset), 50, "%s", "Warning: please Register(0) or Login(1) at first.");
                 snprintf(sd_bufs + 2, 8, "%x", NE_VAL(-2));
-                sn_stat = send(rcv_sock, sd_bufs, 58, 0);
+                sn_stat = send(cur_sock, sd_bufs, 58, 0);
                 fprintf(stdout, ">>>%s %s\n", sn_stat < 0 ? strerror(errno) : "", sd_bufs + offset);
                 continue;
             }
@@ -500,7 +506,7 @@ type_thread_func monitor(void* arg)
                 time(&t);
                 // heart beat
                 if ((t - t1 > 30)
-                    && (send(rcv_sock, "\0\0", 2, 0) < 0)) {
+                    && (send(cur_sock, "\0\0", 2, 0) < 0)) {
 #if defined _WIN32
                     return NULL;
 #elif THREAD_PER_CONN || SOCK_CONN_TEST
@@ -508,11 +514,11 @@ type_thread_func monitor(void* arg)
 #endif
                 }
                 memset(&user, 0, sizeof(user));
-                if (!sock_was_valid(rcv_sock)) {
+                if (!sock_was_valid(cur_sock)) {
                     wait(100);
                     continue;
                 }
-                flg = (int)recv(rcv_sock, rcv_txt, BUFF_SIZE, 0);
+                flg = (int)recv(cur_sock, rcv_txt, BUFF_SIZE, 0);
                 if (flg < 0 && flg != EWOULDBLOCK && flg != EAGAIN && flg != EINTR) {
                     set_user_quit(userName);
                     fprintf(stderr, "### Lost connection with *[%s]: %s(%d)\n", userName, strerror(errno), flg);
@@ -565,7 +571,7 @@ type_thread_func monitor(void* arg)
                         flg = loggedIn = 0;
                         set_user_quit(userName);
                         snprintf(sd_bufs + offset, 17 + 24, "[%s] has logout.", userName);
-                        sn_stat = send(rcv_sock, sd_bufs, 48, 0);
+                        sn_stat = send(cur_sock, sd_bufs, 48, 0);
                         fprintf(stderr, "### [%0x, %x]:%s %s\n", sd_bufs[1],
                             static_cast<unsigned>(*user.chk), sn_stat < 0 ? strerror(errno) : "", sd_bufs + offset);
                         continue;
@@ -639,7 +645,7 @@ type_thread_func monitor(void* arg)
                                         memset(sd_bufs + offset, 0, 248);
                                         snprintf(sd_bufs + 2, 8, "%x", NE_VAL(-1));
                                         snprintf((sd_bufs + 32), 27 + 24, "failed send command to %s.", user.peer);
-                                        sn_stat = send(rcv_sock, sd_bufs, total, 0);
+                                        sn_stat = send(cur_sock, sd_bufs, total, 0);
                                         fprintf(stdout, "Got failure trans message to %s:%u (%zd,%s).\n", p2pnt.ip, p2pnt.port, sn_stat, strerror(errno));
                                     }
                                     break;
@@ -689,7 +695,7 @@ type_thread_func monitor(void* arg)
                                     memcpy(ndt_msg + offset, &user.peer_msg.msg, FiledSize);
                                     fprintf(stdout, "Command(%d) NDT is: %08x.\n", *(uint16_t*)user.peer_msg.cmd, *(uint32_t*)user.peer_msg.val);
                                     if (-1 != send(ndt_net.socket, ndt_msg, 32, 0)) {
-                                        if (ndt_net.socket == rcv_sock) {
+                                        if (ndt_net.socket == cur_sock) {
                                             snprintf((sd_bufs + 32), 29, "%s", "Socket descriptor conflicts!");
                                             total = 64;
                                         } else {
@@ -765,8 +771,8 @@ type_thread_func monitor(void* arg)
                             fprintf(stdout, "Make image via '%s': %s.\n", __ GET_IMG_EXE, exe_msg);
                         }
 #else
-                        char* exe_msg = "OS don't support v4l.";
-                        total = 32;
+                        char* exe_msg = _OS_"OS don't support EXEC call.";
+                        total = 44;
                         memcpy((sd_bufs + offset), exe_msg, strnlen(exe_msg, 256));
                         fprintf(stdout, "%s\n", exe_msg);
 #endif
@@ -776,16 +782,16 @@ type_thread_func monitor(void* arg)
                     {
                         FILE* file = fopen(IMAGE_BLOB _0_, "rb");
                         if (file == NULL) {
-                            snprintf((sd_bufs + offset), 48, "Fail read image file \"%s\".", IMAGE_BLOB);
+                            snprintf((sd_bufs + offset), 38, "Failed to get image file \"%s\".", IMAGE_BLOB);
                             fprintf(stdout, "%s\n", sd_bufs + offset);
-                            total = offset + 5 /*len_of(IMAGE_BLOB)*/ + 27;
+                            total = offset + 6 /*len_of(IMAGE_BLOB)*/ + 31;
                             break;
                         }
                         fseek(file, 0, SEEK_END);
                         long lSize = ftell(file);
                         rewind(file);
                         size_t block = (size_t)(lSize / sizeof(unsigned char));
-                        if (block > 2097152)
+                        if (block > 0x200000)
                             block = 4096;
                         memset(sd_bufs + offset, (int)lSize, 6);
                         unsigned char* pos = reinterpret_cast<unsigned char*>(malloc(sizeof(unsigned char) * block));
@@ -808,7 +814,7 @@ type_thread_func monitor(void* arg)
                             for (size_t i = 0; i <= len; ++i, ++offset) {
                                 if (((i > 0) && (i % CHIP == 0)) || (i == len)) {
                                     snprintf((sd_bufs + 22), 16, "%04zu", i);
-                                    send(rcv_sock, sd_bufs, BUFF_SIZE, 0);
+                                    send(cur_sock, sd_bufs, BUFF_SIZE, 0);
                                     memset(sd_bufs + 32, 0, CHIP);
                                     SLEEP(1.0 / 10000);
                                     offset = 0;
@@ -860,7 +866,7 @@ type_thread_func monitor(void* arg)
                                 }
                             }
                             sd_bufs[5] = static_cast<char>(s);
-                            if (val_rtn == -1 || val_rtn >= MAX_ZONES || c >= MAX_MEMBERS_PER_GROUP ||
+                            if (val_rtn >= MAX_ZONES || c >= MAX_MEMBERS_PER_GROUP ||
                                 zones[val_rtn].zone.members[c][0] == '\0')
                                 break;
                             total = static_cast<unsigned short>(offset * (c + 4 + 4));
@@ -873,7 +879,7 @@ type_thread_func monitor(void* arg)
                         snprintf(sd_bufs + 2, 8, "%x", NE_VAL(val_rtn));
                         total = 32;
                         if (val_rtn == -1) {
-                            snprintf((sd_bufs + offset), 23, "%s", "Group Name given NULL.");
+                            snprintf((sd_bufs + offset), 23, "%s", "Group Name given NULL!");
                         } else if (val_rtn == -2) {
                             snprintf((sd_bufs + offset), 20, "%s", "Host been rejected.");
                         } else if (val_rtn < -2 && val_rtn >= -MAX_ZONES - 3) {
@@ -939,9 +945,9 @@ type_thread_func monitor(void* arg)
                         snprintf(sd_bufs + 2, 8, "%x", NE_VAL(val_rtn));
                         *length = total = 42;
                         if (val_rtn >= 0)
-                            snprintf((sd_bufs + offset), 25, "%s", "Leave the group success.");
+                            snprintf((sd_bufs + offset), 29, "%s", "Leave current group success.");
                         else
-                            snprintf((sd_bufs + offset), 32, "%s", "You aren't yet join this group.");
+                            snprintf((sd_bufs + offset), 33, "%s", "You aren't yet joined the group.");
                     } break;
                     case ALL_ZONE:
                     {
@@ -954,7 +960,7 @@ type_thread_func monitor(void* arg)
                                 snprintf(sd_bufs + 3, 9, "%x", -1);
                                 memcpy((sd_bufs + offset), user.usr, 24);
                                 memcpy((sd_bufs + 32), user.sign, 24);
-                                send(rcv_sock, sd_bufs, 48, 0);
+                                send(cur_sock, sd_bufs, 48, 0);
                             };
                         } else {
                             for (c = 0; c < MAX_MEMBERS_PER_GROUP; c++) {
@@ -973,7 +979,7 @@ type_thread_func monitor(void* arg)
                     default: break;
                     }
                     if ((memcmp(user.chk, "P2P", 4) != 0) &&
-                        (send(rcv_sock, sd_bufs, total, 0) < 0)) {
+                        (send(cur_sock, sd_bufs, total, 0) < 0)) {
                         perror("Socket lost");
 #if defined _WIN32
                         return NULL;
@@ -1001,7 +1007,7 @@ type_thread_func monitor(void* arg)
                 SLEEP(99);
             }
         } else {
-            closesocket(rcv_sock);
+            closesocket(cur_sock);
         }
         qq = flg;
         SLEEP(99);
@@ -1016,7 +1022,7 @@ comm_err0:
 #if !defined _WIN32
     comm_err1 : {
         g_threadNo_--;
-        closesocket(rcv_sock);
+        closesocket(cur_sock);
         exit(errno);
     }
 #endif
@@ -1391,7 +1397,7 @@ int load_accnt()
 int user_auth(char usr[FiledSize], char psw[FiledSize])
 {
     char* n = usr, * p = psw;
-    if (n == nullptr)
+    if (n == nullptr || usr[0] == '\0')
         return -1;
     for (auto& user : users) {
         if ((strcmp(n, user.usr) == 0) && (strcmp(p, user.psw) == 0)) {
