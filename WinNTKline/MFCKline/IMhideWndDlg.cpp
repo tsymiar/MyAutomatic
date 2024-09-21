@@ -101,11 +101,15 @@ void* parseMessage(void* msg)
     client = (StClient) * ((StClient*)msg);
     InitializeCriticalSection(&wrcsec);
     while (1) {
-        if (client.flag == 0)
+        if (client.flag == 0) {
+            MessageBox(NULL, "ignore flag", "---Message---", MB_OK);
             continue;
+        }
         EnterCriticalSection(&wrcsec);
-        if (client.sock == 0)
+        if (client.sock == 0) {
+            MessageBox(NULL, "socket invalid!", "---Message---", MB_OK);
             continue;
+        }
         len = recv(client.sock, payload, 256, 0);
         if (len <= 0) {
             MessageBox(NULL, "connection lost!", "client", MB_OK);
@@ -203,8 +207,8 @@ int CIMhideWndDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
     m_edgeWidth = GetSystemMetrics(SM_CXFRAME);
 
     //开启聊天
-    //int err = InitChat(oimusr.addr);
-    StartChat(InitChat(&m_imSocks), servMsgCallback);
+    //int err = SetupChat(oimusr.addr);
+    StartChat(SetupChat(&m_imSocks), servMsgCallback);
     SetClientDlg(this);
     return 0;
 }
@@ -243,9 +247,9 @@ void CIMhideWndDlg::OnTimer(UINT nIDEvent)
         POINT curPos;
         GetCursorPos(&curPos);
 
-        CString str;
-        str.Format("Timing\r");
-        GetDlgItem(IDC_TIMER)->SetWindowText(str);
+        CString txt;
+        txt.Format("Timing\r");
+        GetDlgItem(IDC_TIMER)->SetWindowText(txt);
 
         CRect tRect;
         //获取此时窗口大小
@@ -509,7 +513,7 @@ BOOL CIMhideWndDlg::OnInitDialog()
     hBitmap = (HBITMAP)::LoadImage(NULL, ".\\res\\bit+.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
     if (hBitmap != NULL)
         m_AddBtn.SetBitmap(hBitmap);
-    this->SetWindowText("CIMhideWndDlg");
+    this->SetWindowText("聊天会话窗口");
     return TRUE;
 }
 
@@ -571,7 +575,7 @@ UINT _NoMessageBox(LPVOID lparam)
     CIMhideWndDlg* ImWnd = reinterpret_cast<CIMhideWndDlg*>(lparam);
     return
         ImWnd->MessageBox(
-            "[注册]\n----跳转到WEB注册页面\
+            "[注册]\n----跳转到WEB注册页面\n\t双击页面底部退出\
                    \n[登陆]\n----请输入用户和密码\
                    \n[帮助]\n----弹出该对话框\
                    \n[登出]\n----退出当前用户\
@@ -674,7 +678,7 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
         SendClientMessage(&g_content);
         ifsh++;
         break;
-    case V4L2IMG:
+    case MAKEIMG:
         SendClientMessage(&g_content);
         break;
     case GETIMAGE:
@@ -781,7 +785,7 @@ void CIMhideWndDlg::OnBnClickedSeeknew()
     if (m_frndList.IsWindowVisible() && (m_logDlg != NULL && m_logDlg->getUsername() != NULL))
     {
         m_frndList.DeleteAllItems();
-        SendClientMessage(NULL);
+        SendClientMessage(NULL, true);
     }
     if (m_logDlg != NULL)
     {

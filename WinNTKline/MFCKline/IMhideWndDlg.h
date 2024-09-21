@@ -59,10 +59,10 @@ private:
     HICON m_hIcon;
     HBITMAP hBitmap = NULL;
     CComboBox m_combo;
-    CStatic m_timeStatus;
     CButton m_AddBtn;
 public:
     CStatic m_username;
+    CStatic m_timeStatus;
     CListCtrl m_frndList;
     void setFriendList();
     void setWidgetHide();

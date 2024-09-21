@@ -190,7 +190,7 @@ StMsgContent* ParseChatData(StMsgContent& content)
     {
         memcpy(content.type, "NDT", 4);
         memcpy(&content.peer_name, "iv9527", 7);
-        content.ext_msg.cmd[0] = NETNDT;
+        content.extraMsg.cmd[0] = NETNDT;
 #ifdef NDT_ONLY
         if (g_printed > -1) {
             fprintf(stdout, youSaid);
@@ -202,8 +202,8 @@ StMsgContent* ParseChatData(StMsgContent& content)
             g_printed = 1;
         }
 #endif
-        memset(&content.ext_msg.msg, 0, 16);
-        if (scanf_s("%s", &content.ext_msg.msg.message, 16) <= 0) {
+        memset(&content.extraMsg.msg, 0, 16);
+        if (scanf_s("%s", &content.extraMsg.msg.message, 16) <= 0) {
             fprintf(stdout, "Error: characters limit 16!\n");
             g_printed = content.uiCmdMsg = -1;
             return &content;
@@ -275,7 +275,7 @@ int main(int argc, char* argv[])
         else
             memcpy(sock.IP, argv[1], strnlen(argv[1], INET_ADDRSTRLEN) + 1);
     }
-    if (StartChat(InitChat(&sock), parseRcvMsg) < 0)
+    if (StartChat(SetupChat(&sock), parseRcvMsg) < 0)
         return -1;
 #ifdef NDT_ONLY
     int comm = 1;
@@ -296,7 +296,7 @@ int main(int argc, char* argv[])
         if (comm > 1) {
             comm = CHATWITH;
         }
-        msg.ext_msg.cmd[0] = msg.uiCmdMsg = comm;
+        msg.extraMsg.cmd[0] = msg.uiCmdMsg = comm;
         while (IsChatActive() == 0) { ; }
         comm++;
 #else
@@ -307,15 +307,15 @@ int main(int argc, char* argv[])
                 fprintf(stdout, "Command not in integer format, exit.\n");
                 break;
             }
-            if (comm > 0xf || comm <= 0) {
-                fprintf(stdout, "Error cmd value: out of range [0x1,0xd].\n");
+            if (comm > 0xf || comm == 0) {
+                fprintf(stdout, "Error value: out of range (0x0,0xd].\n");
                 continue;
             }
         }
         msg.uiCmdMsg = comm;
 #endif // NDT_ONLY
         if (received == RCV_NDT) {
-            msg.ext_msg.cmd[0] = msg.uiCmdMsg = NETNDT;
+            msg.extraMsg.cmd[0] = msg.uiCmdMsg = NETNDT;
         }
         if (received > RCV_ERR) {
             SetRecvState(RCV_ERR);
