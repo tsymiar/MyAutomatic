@@ -230,7 +230,7 @@ enum  EM_MENU {
     ONLINE,
     PEER2P,
     NETNDT,
-    MAKEIMG,
+    GENIMG,
     GETIMAGE,
     VIEWGROUP,
     USERGROUP,

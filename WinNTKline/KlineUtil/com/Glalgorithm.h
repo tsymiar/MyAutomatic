@@ -1,38 +1,71 @@
 #if !defined(ALGORITHM_H)
 #define ALGORITHM_H
 
-#include <mygl/OGLKview.h>
+#include <cmath>
+#include <cfloat>
+#include <cassert>
+#include <random>
+#ifdef _MSC_VER
+#include <atlstr.h>
+#endif
+#define _N_ 10
 
-char* IdentifyCode(char* rtn)
+namespace GlAlgorithm
 {
-    default_random_engine reng;
-    // 构建一个从0到25之间的平均分布
-    uniform_int_distribution<int>  uni_dist(0, 25);
-
-    // 使用random_device设置随机数引擎的种子，
-    // 以防止每次运行都产生相同的伪随机数序列
-    random_device  rnd_device;
-    reng.seed(rnd_device());
-
-    // 验证码一共4位
-    const int bit = 4;
-    char code[bit]; // 保存验证码的字符数组
-                    // 利用for循环产生4个验证码字母字符
-    for (int i = 0; i < bit; ++i)
-    {
-        // uni_dist(reng)表示让reng引擎按照uni_dist分布
-        // 产生取值在0到25之间呈平均分布的随机数
-        // 然后在‘A’的基础上向后偏移，就得到了随机的验证码字母字符
-        code[i] = 'A' + uni_dist(reng);
-    }
-    code[bit] = '\0';
-    memcpy(rtn, code, bit);
-    return code;
+    struct GLColour {
+        float R;
+        float G;
+        float B;
+        float A;
+    };
+    struct GLPoint {
+        float x;
+        float y;
+    };
 }
 
-int getDaysofThisYear(unsigned int year, unsigned int month, unsigned int day, int* clacdays) 
+static GlAlgorithm::GLPoint /*CubicBézier*/CubicBezier(GlAlgorithm::GLPoint A[4], double t)
 {
-    if (year < 0 || month <= 0 || month > 12 || day <= 0)
+    GlAlgorithm::GLPoint P;
+
+    double a1 = pow(1 - t, 3);
+    double a2 = pow(1 - t, 2) * 3 * t;
+    double a3 = 3 * t * t * (1 - t);
+    double a4 = t * t * t;
+
+    P.x = float(a1 * A[0].x + a2 * A[1].x + a3 * A[2].x + a4 * A[3].x);
+    P.y = float(a1 * A[0].y + a2 * A[1].y + a3 * A[2].y + a4 * A[3].y);
+
+    return P;
+}
+/*
+   通过设置随机数引擎的种子
+   在‘A’的基础上向后偏移
+   构建一个从0到25之间的平均分布
+   产生4个验证码字母字符
+*/
+static char* IdentifyCode(char* rtn)
+{
+    using namespace std;
+    default_random_engine engine;
+    uniform_int_distribution<int> uni_dist(0, 25);
+
+    random_device rnd_device;
+    engine.seed(rnd_device());
+
+    const int bit = 4;
+    char code[bit];
+    for (int i = 0; i < bit; ++i) {
+        code[i] = 'A' + uni_dist(engine);
+    }
+    code[bit - 1] = '\0';
+    memcpy(rtn, code, bit);
+    return rtn;
+}
+
+static int getDaysOfThisYear(int year, int month, int day, int* dest)
+{
+    if (year <= 0 || month <= 0 || month > 12 || day <= 0)
         return -1;
     int comm[] = { 31,28,31,30,31,30,31,31,30,31,30,31 };
     int leap[] = { 31,29,31,30,31,30,31,31,30,31,30,31 };
@@ -44,30 +77,36 @@ int getDaysofThisYear(unsigned int year, unsigned int month, unsigned int day, i
             total += leap[i];
         else
             total += comm[i];
-        return *clacdays = month == 1 ? day : day + total;
     }
+    return *dest = month == 1 ? day : day + total;
 }
 
-class BearCharges
+struct BearCharges
 {
-    double Sqrt_sum(int x, int y)
+    static double Sqrt_sum(int x, int y)
     {
-        return sqrt(x*x + y * y);
+        return sqrt(x * x + y * y);
     }
 
-    double Max_len(OGLKview::Point Base[_N_]) {
+    static double Max_len(GlAlgorithm::GLPoint Base[_N_])
+    {
         double S, max = 0;
-        for (int i = 0; i < _N_; i++)
-        {
-            if (i != 0)
-            {
+        for (int i = 0; i < _N_; i++) {
+            if (i != 0) {
                 S = Sqrt_sum(int(Base[i].x - Base[i - 1].x), int(Base[i].y - Base[i - 1].y));
                 if (max <= S)
-                    return S;
+                    break;
             }
-            else
-                return 0;
         }
+        return S;
     }
 };
+
+static void LeakCheck(void* ptr)
+{
+    if (ptr != nullptr) {
+        delete (char*)ptr;
+        ptr = nullptr;
+    }
+}
 #endif

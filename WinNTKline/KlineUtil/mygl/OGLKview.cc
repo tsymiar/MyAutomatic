@@ -61,19 +61,19 @@ bool OGLKview::SetWindowPixelFormat(HDC m_hDC, HWND m_hWnd, int pixelformat)
         0,0,0,
     };
     if (!(pixelformat = ChoosePixelFormat(m_hDC, &pfd))) {
-        ::PostMessage(m_hWnd, WM_MSG_OGL, 0, (LPARAM)index.AllocBuffer(_T("Choose Pixel Format failed !")));
+        ::PostMessage(m_hWnd, WM_MSG_OGL, 0, (LPARAM)conv.AllocBuffer(_T("Choose Pixel Format failed !")));
         return false;
     }
     if (!SetPixelFormat(m_hDC, pixelformat, &pfd)) {
-        ::PostMessage(m_hWnd, WM_MSG_OGL, 1, (LPARAM)index.AllocBuffer(_T("Set Pixel Format failed !")));
+        ::PostMessage(m_hWnd, WM_MSG_OGL, 1, (LPARAM)conv.AllocBuffer(_T("Set Pixel Format failed !")));
         return false;
     }
     if (!(m_hRC = wglCreateContext(m_hDC))) {
-        ::PostMessage(m_hWnd, WM_MSG_OGL, 2, (LPARAM)index.AllocBuffer(_T("CreateContext failed!")));
+        ::PostMessage(m_hWnd, WM_MSG_OGL, 2, (LPARAM)conv.AllocBuffer(_T("CreateContext failed!")));
         return false;
     }
     if (!wglMakeCurrent(m_hDC, m_hRC)) {
-        ::PostMessage(m_hWnd, WM_MSG_OGL, 3, (LPARAM)index.AllocBuffer(_T("MakeCurrent failed!")));
+        ::PostMessage(m_hWnd, WM_MSG_OGL, 3, (LPARAM)conv.AllocBuffer(_T("MakeCurrent failed!")));
         return false;
     }
     HMODULE hKernel32 = GetModuleHandle(_T("kernel32"));
@@ -852,13 +852,12 @@ void OGLKview::DrawDash()
 
 void OGLKview::DrawCurve(Point A[4])
 {
-    Initialise idx;
     for (int i = 0; i <= 3; i++)
         A[i] = xytinker(A[i]);
     glColor3f(1, 1, 1);
     Point ptOld = { A[0].x,A[0].y };
     for (double t = 0.f; t <= 1.f; t += .1f) {
-        Point P = idx.CubicBezier/*CubicBézier*/(A, t);
+        Point P = CubicBezier/*CubicBézier*/(A, t);
         glBegin(GL_LINES);
         glVertex2f(ptOld.x, ptOld.y);
         glVertex2f(P.x, P.y);
@@ -1067,7 +1066,7 @@ bool OGLKview::GetMarkDatatoDraw(const char* file, void* P, char* title, int hl,
         //只发送一遍失败消息
         if (failmsg < 1)
 #ifdef _WIN32
-            ::PostMessage((*(HWND*)P), WM_MSG_OGL, 0, (LPARAM)this->index.AllocBuffer(_T("Reading failure!")));
+            ::PostMessage((*(HWND*)P), WM_MSG_OGL, 0, (LPARAM)this->conv.AllocBuffer(_T("Reading failure!")));
 #else
             cout << "Reading failure!" << hex << P << endl;
 #endif
@@ -1094,7 +1093,7 @@ bool OGLKview::GetMarkDatatoDraw(const char* file, void* P, char* title, int hl,
                         //memcpy();
 #ifdef _WIN32
                         if (failmsg <= 3)
-                            ::PostMessage((*(HWND*)P), WM_MSG_TITL, 0, (LPARAM)this->index.AllocBuffer((CString)title));
+                            ::PostMessage((*(HWND*)P), WM_MSG_TITL, 0, (LPARAM)this->conv.AllocBuffer((CString)title));
 #else
                         cout << "[\033[34m" << title << "\033[0m]" << endl;
 #endif // _MSC_VER

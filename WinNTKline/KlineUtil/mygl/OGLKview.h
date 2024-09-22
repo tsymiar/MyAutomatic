@@ -34,7 +34,7 @@
 #include    <cstdio>
 #include    <iostream>
 #include    <fstream>
-#include<cmath>
+#include    <cmath>
 #include    <random>
 #include    <fcntl.h>
 #if 0
@@ -79,7 +79,7 @@
 #ifdef BOOST
 #include    "boost/boostest.h"
 #endif // BOOST
-#include    "com/Initialise-inl.h"
+#include    "com/Glalgorithm.h"
 #ifdef _WIN32
 #include    "com/CPUID.H"
 #include    "dos/DOSCout.h"
@@ -89,6 +89,7 @@
 #include    "../../../LinxSrvc/include/String_-inl.h"
 #include    "Stock/Stock.h"
 #include    "Def/MacroDef.h"
+#include    "com/Converts.h"
 
 #ifdef _FILL_
 #define fixpixelx 0.002f
@@ -96,7 +97,6 @@
 #define fixpixelx 0.002f
 #endif
 
-#define _N_ 10
 # define SZ_ELEM(x) ((int) (sizeof(x) / sizeof((x)[0])))
 
 #ifdef OGL_KVIEW_H_
@@ -233,12 +233,12 @@ public:
     struct ZOOM {
         float z_vol = 1;
     };
-    typedef struct Strmap {
+    typedef struct StockDesc {
         std::string code;
         std::string desc;
-    }Strmap;
-    typedef Initialise::GLPoint Point;
-    typedef Initialise::GLColor Color4f;
+    }StockDesc;
+    typedef GlAlgorithm::GLPoint Point;
+    typedef GlAlgorithm::GLColour Color4f;
 public:
     template<typename T> inline std::list<T> Vec2List(const std::vector<T>& vec)
     {
@@ -298,7 +298,7 @@ private:
 #ifdef __linux
     int mainGL(int argc, char** argv);
 #endif
-    void GetChangeMatrix(float& angel, float& x, float& y, float& z) const;
+    void GetChangedMatrix(float& angel, float& x, float& y, float& z) const { };
 public:
 #if !defined(QT_VERSION)
 #ifdef _WIN32
@@ -310,12 +310,12 @@ public:
     char* file = nullptr;
     std::pair<float, float> price;
     ZOOM Zoom;
-    Initialise index;
+    Converts conv;
     FixWhat tinkep;
     Dlginfo dlginfo = {};
     Fillitem fillitem = {};
     OGLKview::Market lastmarket = {};
-    std::map<int, OGLKview::Strmap>stockmap = {};
+    std::map<int, OGLKview::StockDesc>stockmap = {};
 public:
 #ifdef __linux
     static

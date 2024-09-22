@@ -21,6 +21,6 @@ public:
     int neighbourAverageImage(const cv::String& src, cv::Size ksize = cv::Size(3, 3));
     int bilateralImage(const cv::String & src);
     int thresholdImage(const cv::String& src);
-    int cvmatTest(const cv::String& file);
-    int cvmatTest();
+    int cvMatTest(const cv::String& file);
+    int cvMatTest();
 };

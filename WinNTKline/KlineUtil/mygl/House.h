@@ -9,7 +9,7 @@
 #include <GL/glu.h>
 #include "../com/auto_tchar.h"
 #include "../GL/glaux.h"
-#include "../com/Initialise-inl.h"
+#include "../com/Glalgorithm.h"
 #include "../Def/MacroDef.h"
 
 #define INTS int
@@ -116,12 +116,11 @@ public:
     int m_GLPixelIndex = 0;
     // Mouse position and button.
     int oldmx = 0, oldmy = 0, mb = 0;
-    typedef Initialise::GLPoint Point;
-    typedef Initialise::GLColor Color3f;
+    typedef GlAlgorithm::GLPoint Point;
+    typedef GlAlgorithm::GLColour Color3f;
 protected:
     int wide = 0;
     int tall = 0;
-    Initialise index;
 
     TEXTURE_2D** TextureList = NULL;
     OBJECT* ObjectList = NULL;  /* ObjectList[0]:isolated surfaces*/

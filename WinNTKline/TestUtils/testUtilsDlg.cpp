@@ -34,9 +34,9 @@ CtestUtilsDlg::CtestUtilsDlg(CWnd* pParent /*=NULL*/)
 
 CtestUtilsDlg::~CtestUtilsDlg()
 {
-    Initialise::freeLeak(g_ogl);
-    Initialise::freeLeak(g_ctp);
-    Initialise::freeLeak(g_pIM);
+    LeakCheck(g_ogl);
+    LeakCheck(g_ctp);
+    LeakCheck(g_pIM);
 }
 
 void CtestUtilsDlg::DoDataExchange(CDataExchange* pDX)

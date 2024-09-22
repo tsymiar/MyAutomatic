@@ -33,7 +33,7 @@ unsigned int __stdcall CTPclient::SimpleClient(void* P)
     if (err != 0)
     {
         ::PostMessage(m_hWnd->m_hWnd, WM_MSG_BOX, 0,
-            (LPARAM)m_ctp->Ogl.index.AllocBuffer("服务器可能未启动！"));
+            (LPARAM)m_ctp->Ogl.conv.AllocBuffer("服务器可能未启动！"));
         return -1;
     }
     if (LOBYTE(wsaData.wVersion) != 1 || HIBYTE(wsaData.wVersion) != 1)
@@ -53,7 +53,7 @@ unsigned int __stdcall CTPclient::SimpleClient(void* P)
         {
             if (m_hWnd->m_hWnd != NULL)
                 ::PostMessage(m_hWnd->m_hWnd, WM_MSG_BOX, 0,
-                (LPARAM)m_ctp->Ogl.index.AllocBuffer("接收失败！"));
+                (LPARAM)m_ctp->Ogl.conv.AllocBuffer("接收失败！"));
             return -3;
         }//接收数据并填充到列表
         MultiByteToWideChar(CP_ACP, 0, Buf, strlen(Buf) + 1, LPCT, sizeof(LPCT) / sizeof(LPCT[0]));
@@ -83,12 +83,12 @@ unsigned int __stdcall CTPclient::TradeMarket(void* P)
     TRDAPI->SubscribePublicTopic(THOST_TERT_QUICK);
     TRDAPI->Init();
     TRDAPI->Join();
-    CString str;
-    str.Format(_T("%d"), tdChnl->getRtn());
+    CString stret;
+    stret.Format(_T("%d"), tdChnl->getRtn());
     CTPclient *m_ctp = new CTPclient;
     if (m_hWnd->m_hWnd != NULL)
         ::PostMessage(m_hWnd->m_hWnd, WM_MSG_BOX, 0,
-        (LPARAM)m_ctp->Ogl.index.AllocBuffer(str));
+        (LPARAM)m_ctp->Ogl.conv.AllocBuffer(stret));
     delete tdChnl, m_ctp;
     return 0;
 }
