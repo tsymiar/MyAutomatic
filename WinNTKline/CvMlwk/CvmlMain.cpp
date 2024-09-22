@@ -16,7 +16,7 @@ int main()
     const cv::String img = "../KlineUtil/image/taoxi.jpg";
     cv::Mat mat = vm.getImageMat(img, 0);
     std::cout << "ShannonEntropy -> [" << img << "] = " << ShannonEntropy::getInstance()->SingleEntropy(mat) << std::endl;
-    vm.cvmatTest(img);
+    vm.cvMatTest(img);
 #else
     CPyTensor tf;
     tf.testPyfunc();

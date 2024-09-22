@@ -261,7 +261,7 @@ void CIMhideWndDlg::OnTimer(UINT nIDEvent)
         {
             KillTimer(1); //关闭检测鼠标Timer
             m_isSetTimer = FALSE;
-            GetDlgItem(IDC_TIMER)->SetWindowText("Timer Off");
+            GetDlgItem(IDC_TIMER)->SetWindowText("Timing Off");
 
             m_hsFinished = FALSE;
             m_hiding = TRUE;
@@ -495,7 +495,7 @@ void CIMhideWndDlg::FixMoving(UINT fwSide, LPRECT pRect)
                 m_isSetTimer = FALSE;
         }
         m_hideMode = HM_NONE;
-        GetDlgItem(IDC_TIMER)->SetWindowText("Timer off");
+        GetDlgItem(IDC_TIMER)->SetWindowText("Timing off");
     }
 }
 
@@ -620,7 +620,7 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
         g_logDlg = m_logDlg = new IMlogDlg(callbackLog);
         if (m_logDlg == NULL || ::IsWindowVisible(m_logDlg->m_hWnd))
             return;
-        if (m_logDlg->getVision() == 0)
+        if (m_logDlg->getVision())
             if (m_frndList.m_hWnd != NULL)
             {
                 m_frndList.GetWindowRect(&listrect);
@@ -678,7 +678,7 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
         SendClientMessage(&g_content);
         ifsh++;
         break;
-    case MAKEIMG:
+    case GENIMG:
         SendClientMessage(&g_content);
         break;
     case GETIMAGE:

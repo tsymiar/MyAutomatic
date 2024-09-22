@@ -337,7 +337,7 @@ void CLoginDlg::OnCbnSelchangeCom()
         m_ComGL->ShowWindow(SW_SHOWNORMAL);
         break;
     case 5:
-        image.cvmatTest();
+        image.cvMatTest();
         break;
     case 6:
         m_ipCtrl.SetAddress(ntohl(inet_addr(st_ini[m_combo.GetCount() - curNo - 1].addr)));

@@ -357,7 +357,7 @@ int CvimgMat::thresholdImage(const String& src)
     return 0;
 }
 
-int CvimgMat::cvmatTest(const String& file)
+int CvimgMat::cvMatTest(const String& file)
 {
     if (!file.empty() && file.length() > 0) {
         g_jpgFile = file;
@@ -376,7 +376,7 @@ int CvimgMat::cvmatTest(const String& file)
     return 0;
 }
 
-int CvimgMat::cvmatTest()
+int CvimgMat::cvMatTest()
 {
-    return cvmatTest(g_jpegFile);
+    return cvMatTest(g_jpegFile);
 }

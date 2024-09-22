@@ -86,7 +86,7 @@
           <NewMemberFileName>mygl\OGLKview.h</NewMemberFileName>
         </TypeIdentifier>
       </Struct>
-      <Struct Name="OGLKview::Strmap" Collapsed="true">
+      <Struct Name="OGLKview::StockDesc" Collapsed="true">
         <TypeIdentifier>
           <NewMemberFileName>mygl\OGLKview.h</NewMemberFileName>
         </TypeIdentifier>

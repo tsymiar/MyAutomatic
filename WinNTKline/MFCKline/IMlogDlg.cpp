@@ -20,7 +20,7 @@ IMlogDlg::IMlogDlg(int(*func)(char *, char *))
 
 IMlogDlg::~IMlogDlg()
 {
-    this->m_canBSee = 0;
+    m_canBSee = 0;
 }
 
 void IMlogDlg::DoDataExchange(CDataExchange* pDX)
@@ -39,7 +39,7 @@ END_MESSAGE_MAP()
 
 void IMlogDlg::PostNcDestroy()
 {
-    this->m_canBSee = 0;
+    m_canBSee = 0;
 }
 
 BOOL IMlogDlg::OnInitDialog()
@@ -52,7 +52,7 @@ BOOL IMlogDlg::OnInitDialog()
 
 BOOL IMlogDlg::Create(UINT Tmp, CWnd * Wnd)
 {
-    this->m_canBSee = 1;
+    m_canBSee = 1;
     return CDialog::Create(Tmp, Wnd);
 }
 
@@ -78,17 +78,17 @@ void IMlogDlg::OnBnClickedOk()
 
 bool IMlogDlg::getVision()
 {
-    return this->m_canBSee;
+    return m_canBSee;
 }
 
-void IMlogDlg::setVision(int canBSee)
+void IMlogDlg::setVision(bool canBSee)
 {
-    this->m_canBSee = canBSee;
+    m_canBSee = canBSee;
 }
 
 void IMlogDlg::OnBnClickedCancel()
 {
-    this->m_canBSee = 0;
+    m_canBSee = 0;
     CDialogEx::OnCancel();
 }
 

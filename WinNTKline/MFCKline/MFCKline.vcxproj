@@ -294,9 +294,9 @@
     <ClInclude Include="..\KlineUtil\com\CPUID.H" />
     <ClInclude Include="..\KlineUtil\com\Glalgorithm.h" />
     <ClInclude Include="..\KlineUtil\com\Singleton.hpp" />
-    <ClInclude Include="..\KlineUtil\com\Timer.hpp" />
+    <ClInclude Include="..\KlineUtil\com\Timing.hpp" />
+    <ClInclude Include="..\KlineUtil\com\Converts.h" />
     <ClInclude Include="..\KlineUtil\com\_MACRO_.h" />
-    <ClInclude Include="..\KlineUtil\com\Initialise-inl.h" />
     <ClInclude Include="..\KlineUtil\mygl\bitmap.h" />
     <ClInclude Include="..\KlineUtil\mygl\GlF16.h" />
     <ClInclude Include="..\KlineUtil\mygl\GlModel.h" />

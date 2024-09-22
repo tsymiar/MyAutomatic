@@ -10,12 +10,12 @@
 #include <condition_variable> 
 #include <iostream>
 
-class Timer {
+class Timing {
 public:
-    Timer() :expired_(true), try_to_expire_(false) {}
+    Timing() :expired_(true), try_to_expire_(false) {}
 
-    Timer(const Timer& t) : expired_(t.expired_.load()), try_to_expire_(t.try_to_expire_.load()) {}
-    ~Timer() {
+    Timing(const Timing& t) : expired_(t.expired_.load()), try_to_expire_(t.try_to_expire_.load()) {}
+    ~Timing() {
         Expire();
 #ifdef _DEBUG
         std::cout << "timer destructed!" << std::endl;
