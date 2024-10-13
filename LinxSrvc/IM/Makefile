@@ -6,7 +6,7 @@ default_target: all
 .SUFFIXES: .hpux_make_needs_suffix_list
 $(VERBOSE)MAKESILENT = -s
 #$(VERBOSE).SILENT:
-all: IM Kai Client
+all: IM Kai client tcptest
 EXP =
 CUR = `pwd`
 GEN = $(CUR)/../bin
@@ -32,8 +32,10 @@ Kai.o:
 .PHONY: Kai.o
 Kai:Kai.o
 	$(CXX) $(FLAG) $(OBJ)/Kai.o $(CUR)/KaiTest.cxx $(PTHD) -o $(GEN)/kaics.exe
-Client:
-	$(CXX) $(FLAG) -I$(IMLOCAL) $(CLIENTFILES) $(PTHD) -o $(GEN)/client.exe
+client:
+	$(CXX) $(FLAG) -I$(IMLOCAL) $(CLIENTFILES) $(PTHD) -o $(GEN)/Client.exe
+tcptest:
+	$(CXX) $(FLAG) $(IMLOCAL)/TCPsocket_unix.cpp $(PTHD) -o $(GEN)/tcptest.exe
 clean/fast:
-	@rm -rvf $(GEN)/*.exe* .*/ *.json $(OBJ) bin out build *.core
+	@rm -rvf $(GEN)/*.exe* $(GEN)/*.bin .*/ *.json $(OBJ) bin out build *.core
 .PHONY: clean

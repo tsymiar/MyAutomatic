@@ -140,9 +140,9 @@ void* parseMessage(void* msg)
                 ((CIMhideWndDlg*)client.Dlg)->m_frndList.InsertItem(c, user);
             }
         } else if (payload[1] == NETNDT || payload[1] == PEER2P) {
-            char msg[64];
+            char msg[128];
             if (payload[2] != '0') {
-                sprintf_s(msg, 64, "'%s': %s", title, payload + 32);
+                sprintf_s(msg, 128, "'%s': %s", title, payload + 32);
             } else {
                 strncpy(msg, title, strlen(title));
             }
@@ -620,18 +620,17 @@ void CIMhideWndDlg::OnCbnSelchangeComm()
         g_logDlg = m_logDlg = new IMlogDlg(callbackLog);
         if (m_logDlg == NULL || ::IsWindowVisible(m_logDlg->m_hWnd))
             return;
-        if (m_logDlg->getVision())
-            if (m_frndList.m_hWnd != NULL)
-            {
-                m_frndList.GetWindowRect(&listrect);
-                //ScreenToClient(&listrect);
-                //listrect.top += 80;*/
-                m_logDlg->Create(IDD_IMMODAL, this/*FromHandle(m_frndList.m_hWnd)*/);
-                m_logDlg->MoveWindow(listrect);
-                m_logDlg->ShowWindow(SW_SHOW);
-                UpdateData(TRUE);
-                break;
-            }
+        if (!m_logDlg->getVision() && m_frndList.m_hWnd != NULL)
+        {
+            m_frndList.GetWindowRect(&listrect);
+            //ScreenToClient(&listrect);
+            //listrect.top += 80;*/
+            m_logDlg->Create(IDD_IMMODAL, this/*FromHandle(m_frndList.m_hWnd)*/);
+            m_logDlg->MoveWindow(listrect);
+            m_logDlg->ShowWindow(SW_SHOW);
+            UpdateData(TRUE);
+            break;
+        }
         break;
     case IUSER:
         ::AfxBeginThread(_NoMessageBox, this);

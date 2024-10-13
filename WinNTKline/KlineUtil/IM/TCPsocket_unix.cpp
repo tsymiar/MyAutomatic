@@ -14,15 +14,31 @@ typedef int SOCKET;
 #define nullptr NULL
 #define INVALID_SOCKET (~0)
 #define SOCKET_ERROR (-1)
+#define PRINT_RECV(txt, len) do { \
+    fprintf(stdout, "--------------------------------" \
+                    "--------------------------------\n"); \
+    for (int c = 0; c < len; c++) { \
+        if (c > 0 && c % 32 == 0) \
+            fprintf(stdout, "\n"); \
+        fprintf(stdout, "%02x ", static_cast<unsigned char>(txt[c])); \
+    } \
+    fprintf(stdout, "\n"); \
+    fprintf(stdout, "--------------------------------" \
+                    "--------------------------------\n"); \
+} while (0);
+#define SAVE_DATA
+
 CALLBACK g_callback = nullptr;
+const int BuffSize = 1024;
+static int g_fld = -1;
 
 struct Sockets {
-    bool runs;
+    bool running;
     SOCKET sock;
     struct sockaddr_in local;
 };
 
-Sockets init(short port);
+Sockets setup(short port);
 
 void RegisterCallback(CALLBACK CALLBACK);
 
@@ -35,25 +51,26 @@ static int dump(uint8_t*, uint32_t);
 int main(int argc, char* argv[])
 {
     int port = 9999;
-    if (argc > 1)
+    if (argc > 1) {
         port = atoi(argv[1]);
-    Sockets socks = init(port);
+    }
+    Sockets socks = setup(port);
     start(socks, dump);
     usleep(10000000);
     finish(socks);
     return 0;
 }
 
-Sockets init(short port)
+Sockets setup(short port)
 {
     Sockets socks{};
     SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock == INVALID_SOCKET) {
         printf("invalid socket!\n");
-        socks.runs = false;
+        socks.running = false;
         return socks;
     }
-    printf("socket initting\n");
+    printf("socket setup:\n");
     struct sockaddr_in local;
     local.sin_addr.s_addr = INADDR_ANY;
     local.sin_family = AF_INET;
@@ -64,19 +81,23 @@ Sockets init(short port)
     if (bind(sock, (sockaddr*)&local, sizeof(local)) != 0) {
         close(sock);
         printf("binds port[%d] failed: %s!\n", port, strerror(errno));
-        socks.runs = false;
+        socks.running = false;
         return socks;
     }
     printf("listening...\n");
     if (listen(sock, 5) != 0) {
         close(sock);
         printf("listen port[%d] failed: %s!\n", port, strerror(errno));
-        socks.runs = false;
+        socks.running = false;
         return socks;
     }
+#ifdef SAVE_DATA
+    g_fld = open("dump.bin", O_CREAT | O_RDWR | O_APPEND, 0644);
+#endif
     socks.sock = sock;
     socks.local = local;
-    socks.runs = true;
+    socks.running = true;
+
     return socks;
 }
 
@@ -89,7 +110,7 @@ int start(Sockets socks, CALLBACK callback)
 {
     fd_set fds;
     FD_ZERO(&fds);
-    while (socks.runs) {
+    while (socks.running) {
         SOCKET sockNew = 0;
         SOCKET sockMax = socks.sock;
         FD_SET(socks.sock, &fds);
@@ -98,7 +119,7 @@ int start(Sockets socks, CALLBACK callback)
             if (FD_ISSET(socks.sock, &fds) > 0) {
                 socklen_t len = sizeof(socks.local);
                 sockNew = accept(socks.sock, (sockaddr*)&socks.local, &len);
-            #if 0
+#ifdef ON_BIO
                 long item = 0;
                 item++;
                 char __data[8];
@@ -106,11 +127,11 @@ int start(Sockets socks, CALLBACK callback)
                 send(sockNew, __data, 8, 0);
                 u_long ul = 0;
                 int iResult = ioctlsocket(sockNew, FIONBIO, (unsigned long*)&ul);
-            #endif
+#endif
                 int size = 0;
-                uint8_t buff[1024];
+                uint8_t buff[BuffSize];
                 do {
-                    memset(buff, 0, 1024);
+                    memset(buff, 0, BuffSize);
                     size = recv(sockNew, buff, sizeof(buff), 0);
                     if (size == SOCKET_ERROR) {
                         printf("socket error: %s!\n", strerror(errno));
@@ -146,14 +167,20 @@ int start(Sockets socks, CALLBACK callback)
 
 void finish(Sockets socks)
 {
-    this->socks.runs = false;
+    socks.running = false;
+    close(g_fld);
+#ifdef SAVE_DATA
     close(socks.sock);
+#endif
 }
 
 int dump(uint8_t* buf, uint32_t len)
 {
-    int fd = open("test", O_CREAT | O_RDWR);
-    write(fd, buf, len);
-    close(fd);
-    return 0;
+    int size = len;
+#ifdef SAVE_DATA
+    size = write(g_fld, buf, len);
+#else
+    PRINT_RECV(buf, len);
+#endif
+    return size;
 }
