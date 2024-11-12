@@ -74,9 +74,9 @@
     <PostBuildEvent>
       <Command>
         COPY $(libPNG)\lib\$(Configuration)\libpng*.dll $(OutputPath)
-        COPY $(SDL2)\lib\$(PlatformTarget)\SDL2*.dll  $(OutputPath)
         $(QTDIR)\bin\windeployqt.exe $(OutputPath)$(TargetFileName)
-        COPY $(OPENCV)\bin\$(Configuration)\*.dll $(OutputPath)
+        COPY $(SDL2)\lib\$(PlatformTarget)\SDL2*.dll $(OutputPath)
+        COPY $(OPENCV)\win32\$(Configuration)\*.dll $(OutputPath)
       </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>

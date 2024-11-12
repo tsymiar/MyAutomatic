@@ -22,7 +22,7 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{FB5497B1-D980-4851-A42E-2AFD1A0126D8}</ProjectGuid>
     <RootNamespace>TestUtils</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.20348.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.22000.0</WindowsTargetPlatformVersion>
     <Keyword>MFCProj</Keyword>
     <ProjectName>testUtils</ProjectName>
   </PropertyGroup>

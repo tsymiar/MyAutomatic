@@ -13,8 +13,10 @@
 #include <sys/mman.h>    // unistd.h and sys/mman.h are needed by mmap function
 #include <stdbool.h>
 #include <sys/ioctl.h>
-// #include <bits/types/struct_timespec.h>
-// #include <bits/types/struct_timeval.h>
+#if defined(__arm__) || defined(__aarch64__)
+#include <bits/types/struct_timespec.h>
+#include <bits/types/struct_timeval.h>
+#endif
 #include <linux/videodev2.h>// v4l2 API
 
 #define DEFAULT_DEVICE "/dev/video0"

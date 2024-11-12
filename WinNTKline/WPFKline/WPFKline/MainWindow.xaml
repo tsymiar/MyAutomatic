@@ -1,7 +1,7 @@
 ﻿<Window x:Class="WPFKline.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="WPF K-line" Height="450" Width="700" xmlns:ams="http://schemas.amcharts.com/stock/wpf/2009/xaml" Loaded="Window_Loaded">
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="WPF K-line" Height="450" Width="700"
+    xmlns:ams="http://schemas.amcharts.com/stock/wpf/2009/xaml" Loaded="Window_Loaded">
     <Grid Margin="10,0,10,0">
         <Grid.RowDefinitions>
             <RowDefinition Height="40" />
@@ -11,55 +11,37 @@
         <StackPanel Grid.Row="0" Orientation="Horizontal">
             <Label Margin="0,5,0,5" Content="Local File:"></Label>
             <TextBox Name="txtFilePath" Margin="0,5,0,5" Width="520" Height="22" KeyUp="txtFilePath_KeyUp"></TextBox>
-            <Button Name="btnOpenFile" Margin="5,5,0,5" Width="22" Content="..." Height="22" ToolTipService.ToolTip="打开文件"
-                    Click="btnOpenFile_Click">
+            <Button Name="btnOpenFile" Margin="5,5,0,5" Width="22" Content="..." Height="22" ToolTipService.ToolTip="打开文件" Click="btnOpenFile_Click">
             </Button>
         </StackPanel>
 
         <ams:StockChart Name="stockChart" Grid.Row="1">
             <ams:StockChart.DataSets>
-                <ams:DataSet Name="stockSet" Brush="#7f8da9"
-                                ItemsSource="{Binding Data}"
-                                DateMemberPath="date"
-                                OpenMemberPath="open" HighMemberPath="high"
-                                LowMemberPath="low" CloseMemberPath="close"
-                                ValueMemberPath="close" VolumeMemberPath="volume"
-                                />
+                <ams:DataSet Name="stockSet" Brush="#7f8da9" ItemsSource="{Binding Data}" DateMemberPath="date" OpenMemberPath="open" HighMemberPath="high" LowMemberPath="low" CloseMemberPath="close" ValueMemberPath="close" VolumeMemberPath="volume" />
             </ams:StockChart.DataSets>
 
             <ams:StockChart.Charts>
                 <ams:Chart Title="股票价格" GridHeight="2*">
                     <ams:Chart.Graphs>
-                        <ams:Graph GraphType="Candlestick" 
-                                    NegativeBrush="Green" PositiveBrush="Red" 
-                                    LegendItemType="Ohlc" LegendPeriodItemType="Ohlc"
-                                    CursorBrush="Blue" CursorSize="6" />
+                        <ams:Graph GraphType="Candlestick" NegativeBrush="Green" PositiveBrush="Red" LegendItemType="Ohlc" LegendPeriodItemType="Ohlc" CursorBrush="Blue" CursorSize="6" />
                     </ams:Chart.Graphs>
 
                     <ams:Chart.DateTimeAxis>
-                        <ams:DateTimeAxis ValuesForeground="#90000000" StrokeThickness="0" TickLength="0" 
-                                            />
+                        <ams:DateTimeAxis ValuesForeground="#90000000" StrokeThickness="0" TickLength="0" />
                     </ams:Chart.DateTimeAxis>
 
                     <ams:Chart.LeftValueAxis>
-                        <ams:ValueAxis ValuesForeground="#90000000"
-                                StrokeThickness="0" TickLength="0" />
+                        <ams:ValueAxis ValuesForeground="#90000000" StrokeThickness="0" TickLength="0" />
                     </ams:Chart.LeftValueAxis>
 
                     <ams:Chart.Legend>
-                        <ams:Legend
-                            PositiveValueForeground="Red" NegativeValueForeground="Green"
-                            IsDateVisible="True"/>
+                        <ams:Legend PositiveValueForeground="Red" NegativeValueForeground="Green" IsDateVisible="True"/>
                     </ams:Chart.Legend>
                 </ams:Chart>
                 <!--成交量的Chart-->
                 <ams:Chart Title="成交量">
                     <ams:Chart.Graphs>
-                        <ams:Graph GraphType="Column"
-                                    LegendItemType="Value" LegendPeriodItemType="Value"
-                                    DataField="Volume" PeriodValue="Sum"
-                                    CursorBrush="Blue" CursorSize="6"
-                                    />
+                        <ams:Graph GraphType="Column" LegendItemType="Value" LegendPeriodItemType="Value" DataField="Volume" PeriodValue="Sum" CursorBrush="Blue" CursorSize="6" />
                     </ams:Chart.Graphs>
 
                     <ams:Chart.DateTimeAxis>
@@ -67,9 +49,7 @@
                     </ams:Chart.DateTimeAxis>
 
                     <ams:Chart.LeftValueAxis>
-                        <ams:ValueAxis ValuesForeground="#90000000"
-                                StrokeThickness="0" TickLength="0"
-                                />
+                        <ams:ValueAxis ValuesForeground="#90000000" StrokeThickness="0" TickLength="0" />
                     </ams:Chart.LeftValueAxis>
 
                     <ams:Chart.Legend>
@@ -79,9 +59,7 @@
             </ams:StockChart.Charts>
 
             <ams:StockChart.PeriodSelector>
-                <ams:PeriodSelector CustomPeriodLabelText="自定义间隔:" PresetPeriodLabelText="周期:"
-                                Margin="0,5,0,0"
-                                >
+                <ams:PeriodSelector CustomPeriodLabelText="自定义间隔:" PresetPeriodLabelText="周期:" Margin="0,5,0,0">
                     <ams:PeriodSelector.PresetPeriods>
                         <ams:PresetPeriodButton Interval="Day" Quantity="10" ToolTipService.ToolTip="十天" Content="十天" />
                         <ams:PresetPeriodButton Interval="Month" Quantity="1" ToolTipService.ToolTip="一个月" Content="一月" />
