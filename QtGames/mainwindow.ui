@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>QtCasesClass</class>
- <widget class="QMainWindow" name="QtCasesClass">
+ <class>QtGamesClass</class>
+ <widget class="QMainWindow" name="QtGamesClass">
   <property name="windowModality">
    <enum>Qt::ApplicationModal</enum>
   </property>
@@ -14,7 +14,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>QtCases</string>
+   <string>QtGames</string>
   </property>
   <property name="windowIcon">
    <iconset>

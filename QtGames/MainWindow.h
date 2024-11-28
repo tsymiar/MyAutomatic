@@ -21,7 +21,7 @@ private:
     GLfloat x, y, z, h;
     QTimer* tick = NULL;
 private slots:
-    void timeTickDone();
+    void timeTrigger();
 };
 
 #endif // MainWindow_H

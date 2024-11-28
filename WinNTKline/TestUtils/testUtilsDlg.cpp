@@ -194,7 +194,7 @@ void CtestUtilsDlg::OnBnClickedQtcase()
     sInfo.cb = sizeof(sInfo);
     sInfo.dwFlags = STARTF_USESHOWWINDOW;
     sInfo.wShowWindow = SW_SHOWNORMAL;
-    CString filename = _T("..\\Debug\\QtCases.exe");
+    CString filename = _T("..\\Debug\\QtGames.exe");
     WIN32_FIND_DATA findFileData;
     if (FindFirstFile(filename, &findFileData) == INVALID_HANDLE_VALUE) {
         MessageBox(filename + "\nNo such exec file!");

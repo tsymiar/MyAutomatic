@@ -76,7 +76,7 @@
     <None Include="mkallcase.sh">
       <Filter>Form Files</Filter>
     </None>
-    <None Include="QtCases.pro">
+    <None Include="QtGames.pro">
       <Filter>Form Files</Filter>
     </None>
   </ItemGroup>

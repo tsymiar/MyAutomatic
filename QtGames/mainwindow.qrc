@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/QtCases">
+    <qresource prefix="/QtGames">
         <file>mainwindow.ui</file>
     </qresource>
 </RCC>

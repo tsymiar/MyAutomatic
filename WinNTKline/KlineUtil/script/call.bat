@@ -13,15 +13,15 @@ if exist data (
     md data
     copy ..\KlineUtil\data .\data
 )
-if exist QtCases.exe (
-    windeployqt QtCases.exe
+if exist QtGames.exe (
+    windeployqt QtGames.exe
     if %ERRORLEVEL% equ 0 (
-        echo deploy 'QtCases' done
+        echo deploy 'QtGames' done
     ) else (
         copy %QTDIR%\bin\*d.dll .\
     )
 ) else (
-    echo 'QtCases.exe' does not exist.
+    echo 'QtGames.exe' does not exist.
 )
 copy %OPENCV%\win32\Debug\opencv_*.dll .\
 copy ..\KlineUtil\CTP\*.dll .\
