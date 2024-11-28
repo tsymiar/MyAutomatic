@@ -44,10 +44,10 @@ echo cleaning Scadup
 rd /s /q WinNTKline\Scadup\x64
 echo cleaning TestUtils
 del /f /q WinNTKline\TestUtils\*.con
-echo cleaning QtCases
+echo cleaning QtGames
 :: https://download.qt.io/archive/qt/5.14/5.14.2/qt-opensource-windows-x86-5.14.2.exe
-rd /s /q QtCases\GeneratedFiles
-rd /s /q QtCases\build
-del /f /q QtCases\*.so
-del /f /q QtCases\*.stash
+rd /s /q QtGames\GeneratedFiles
+rd /s /q QtGames\build
+del /f /q QtGames\*.so
+del /f /q QtGames\*.stash
 echo ----- finish clean -----
