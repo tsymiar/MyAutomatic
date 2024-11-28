@@ -52,6 +52,7 @@ CMakeSettings.json
 */build
 build
 *.idea
+vs
 **/.vs*
 !.vsconfig
 *Debug
