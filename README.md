@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![996.icu](https://img.shields.io/badge/link-996.icu-red.svg)](https://996.icu)
 
-##### This is **_`MyAutomatic`_**, clone with
+##### This is **_`MyAutomatic`_**, getting by
 
 ```c
 git clone https://github.com/tsymiar/MyAutomatic.git
@@ -19,7 +19,7 @@ LinxSrvc
 
 * Brief
 
-    Building all executes `./build.sh all -j` command. Using `./build.sh test` to test, deleting caches using `./build.sh clean`.
+    Building all executes by `./build.sh all -j8` command. Using `./build.sh test` to test, deleting caches use `./build.sh clean`.
 
     Once when generates _SUCCESS_, some binary files will shown in the _bin_ / _gen_ directories, such as:
 
@@ -61,7 +61,7 @@ LinxSrvc
 
       [_`IM.exe`_](https://raw.githubusercontent.com/tsymiar/MyAutomatic/auto-dev/LinxSrvc/IM/IM.cc) is a simple `instant-messaging` chat room, use it by register, login, send command and _a small amount of quantity_ messages.
 
-      `Client.exe` is a client peer implement of an _online chat_ room.
+      `Client.exe` is a client peer implement of an _online chat room_ menus like below.
 
       <img src="WinNTKline/image/client.jpg" title="IMClientDialog" width="40%" />
 
@@ -85,10 +85,10 @@ LinxSrvc
 
       a http server and client package library, depends on `libevent`.
 
-QtCases
+QtGames
 -------
 
-* [_`It`_](https://github.com/tsymiar/MyAutomatic/tree/auto-dev/QtCases) is a test-case using _`Qt`_, _`OpenGL`_. using _`mkallcase.sh`_ to build it.
+* [_`It`_](https://github.com/tsymiar/MyAutomatic/tree/auto-dev/QtGames) is a test-case using _`Qt`_, _`OpenGL`_. using _`mkallcase.sh`_ to build it.
   
 ## WinNTKline
 
