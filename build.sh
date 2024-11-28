@@ -42,19 +42,20 @@ else
             rm -rvf ../lib
             find ../build* ! -name 'build.sh' -exec rm -rvf {} +
         fi
-        cd ..
-        ARR_WIN=(QtCases WinNTKline)
+        ARR_WIN=($(ls -d ../*/ | awk '{gsub("\\.\\./", "", $1); print $1}' | tr '/\n' ' '))
         for i in "${ARR_WIN[@]}"; do
-            cd "$i"
-            if [ "$i" == "$QtCases" ]; then
+            cd "../$i"
+            if [[ "$i" == "Qt"* ]]; then
                 which qmake >/dev/null 2>&1
                 if [ $? -eq 0 ]; then
                     if [ -f "./Makefile" ]; then
                         make clean
                     fi
+                else
+                    rm -rvf GeneratedFiles .qmake.stash *.user* *.qtvscr *.TMP
                 fi
             fi
-            ARR_SUB=(cache Debug MFC build ./*.o .vs *.stash)
+            ARR_SUB=(cache Debug MFC build ./*.o .vs)
             for j in "${ARR_SUB[@]}";
             do
                 rm -rvf "$j"
