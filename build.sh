@@ -28,11 +28,11 @@ else
         if [ -d "$1" ]; then
             cd "$1"
             if [ -x /usr/bin/qmake ]; then
-                proj=$(echo ${1} | sed 's/\/*$//')
-                qmake ${proj}.pro
+                proj=$(echo "${1}" | sed 's/\/*$//')
+                qmake "${proj}.pro"
                 make all -j4
             else
-                echo Not support qmake!
+                echo Not support "$1" build!
             fi
             cd -
         fi
@@ -48,13 +48,13 @@ else
     make "$@"
     if [ "$1" == "clean" ]
     then
-        if [ -d "build" ]; then rm -rvf lib build; fi;
         shopt -s nullglob
-        files=$(ls ./lib* 2> /dev/null | wc -l)
+        files=$(ls ../build* 2> /dev/null | wc -l)
         if [ "${#files[@]}" != "0" ]; then
-            rm -rvf ./lib
+            rm -rvf ../build
             # find ./build* ! -name 'build.sh' -exec rm -rvf {} +
         fi
+        if [ -d "build" ]; then rm -rvf lib build; fi;
         ARR_WIN=($(ls -d ../*/ | awk '{gsub("\\.\\./", "", $1); print $1}' | tr '/\n' ' '))
         for i in "${ARR_WIN[@]}"; do
             cd "../$i"
