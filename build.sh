@@ -52,7 +52,7 @@ else
                         make clean
                     fi
                 else
-                    rm -rvf GeneratedFiles .qmake.stash *.user* *.qtvscr *.TMP
+                    rm -rvf GeneratedFiles* *.stash *.user* *.qtvscr *.TMP
                 fi
             fi
             ARR_SUB=(cache Debug MFC build ./*.o .vs)
