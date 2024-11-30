@@ -25,7 +25,6 @@
 ** POSSIBILITY OF SUCH DAMAGE.
 */
 #include "wpswindow.h"
-#include "mainwindow.h"
 #include "variant.h"
 #include "QDebug"
 #include <QMessageBox>

@@ -11,6 +11,9 @@ steps:
     ./build.sh all -j
   displayName: 'make exec'
 - script: |
+    ./build.sh QtGames/
+  displayName: 'build games'
+- script: |
     ./build.sh test
   displayName: 'make test-cov'
 - script: |

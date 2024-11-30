@@ -24,6 +24,20 @@ then
     fi
     ./test.sh
 else
+    if [[ "$1" == "Qt"* ]]; then
+        if [ -d "$1" ]; then
+            cd "$1"
+            if [ -x /usr/bin/qmake ]; then
+                proj=$(echo ${1} | sed 's/\/*$//')
+                qmake ${proj}.pro
+                make all -j4
+            else
+                echo Not support qmake!
+            fi
+            cd -
+        fi
+        exit 0
+    fi
     cd "${PWD}/LinxSrvc"
     if [ "$1" != "clean" ]
     then
@@ -35,12 +49,11 @@ else
     if [ "$1" == "clean" ]
     then
         if [ -d "build" ]; then rm -rvf lib build; fi;
-        if [ -d "test/build" ]; then cd test && ./test.sh clean; fi;
         shopt -s nullglob
-        files=$(ls ../build* 2> /dev/null | wc -l)
-        if [ "$files" != "0" ]; then
-            rm -rvf ../lib
-            find ../build* ! -name 'build.sh' -exec rm -rvf {} +
+        files=$(ls ./lib* 2> /dev/null | wc -l)
+        if [ "${#files[@]}" != "0" ]; then
+            rm -rvf ./lib
+            # find ./build* ! -name 'build.sh' -exec rm -rvf {} +
         fi
         ARR_WIN=($(ls -d ../*/ | awk '{gsub("\\.\\./", "", $1); print $1}' | tr '/\n' ' '))
         for i in "${ARR_WIN[@]}"; do
@@ -55,13 +68,16 @@ else
                     rm -rvf GeneratedFiles* *.stash *.user* *.qtvscr *.TMP
                 fi
             fi
-            ARR_SUB=(cache Debug MFC build ./*.o .vs)
+            ARR_SUB=(Debug */*Debug MFC cache build ./*.o .vs)
             for j in "${ARR_SUB[@]}";
             do
                 rm -rvf "$j"
             done
             cd -
         done
+        if [ -d "test/build" ]; then
+            cd test; ./test.sh clean; cd -;
+        fi
     fi
 fi
 echo "-------- All '$1' build progress(es) finish --------"

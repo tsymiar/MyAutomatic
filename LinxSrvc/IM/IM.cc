@@ -10,20 +10,21 @@
 #include <process.h>
 #include <conio.h>
 #else
-#include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/shm.h>
 #include <sys/ipc.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
+#include <sys/mman.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <signal.h>
+#include <fcntl.h>
 #include <pthread.h>
 #include <unistd.h>
 #include <cstring>
 #include <cerrno>
-#include <arpa/inet.h>
-#include <signal.h>
-#include <fcntl.h>
 #include <thread>
 #endif
 #define NE_VAL(a) (((~((a) & 0x0f)) | ((a) & 0xf0)) & 0xff)
@@ -81,9 +82,9 @@ pthread_mutexattr_t attr;
 #define _0_ "_0"
 #define IMAGE_BLOB "image"
 #define GET_IMG_EXE IMAGE_BLOB"snap.exe"
-#define PRINT_RECV(msg, cmd, chk, usr, flg, idx, txt) do { \
+#define PRINT_RECV(msg, cmd, rtn, chk, usr, flg, idx, txt) do { \
     fprintf(stdout, "----------------------------------------------------------------\\ \
-                        \n>>> %s msg [%0x,%0x]: [%s], size=%d, thread=%u\n", msg, cmd, static_cast<unsigned>(*chk), usr, flg, (idx)); \
+                        \n>>> %s msg [%0x,%02x,%04x]: [%s], size=%d, thread=%u\n", msg, cmd, static_cast<unsigned>(*rtn), static_cast<unsigned>(*chk), usr, flg, (idx)); \
     for (int c = 0; c < flg; c++) { \
         if (c > 0 && c % 32 == 0) \
             fprintf(stdout, "\n"); \
@@ -104,6 +105,7 @@ type_socket listen_socket;
 static unsigned int g_threadNo_ = 0;
 static int g_filedes[2];
 const int FiledSize = 24;
+const int Thousand = 1000;
 
 struct Network {
     volatile unsigned char ip[INET_ADDRSTRLEN];
@@ -224,7 +226,7 @@ template<typename T> int set_n_get_mem(T* shmem, int ndx = 0, int rw = 0);
 void func_waitpid(int signo);
 int queryNetworkParams(const char* username, Network& network, const int max = MAX_ACTIVE);
 Network queryNetworkParams(int uid);
-bool sock_was_valid(const type_socket sock, bool rd = true, long ms = 1000);
+bool sock_was_valid(const type_socket sock, bool rd = true, long ms = Thousand);
 type_thread_func commands(void* arg);
 void wait(unsigned int tms);
 int user_auth(char usr[FiledSize], char psw[FiledSize]);
@@ -385,7 +387,7 @@ type_thread_func monitor(void* arg)
             } else {
 #ifdef _DEBUG
                 memcpy(&g_usrMsg, rcv_txt, sizeof(g_usrMsg));
-                PRINT_RECV("1-RCV", g_usrMsg.uiCmdMsg, g_usrMsg.chk, g_usrMsg.usr, flg, THREAD_NUM - g_threadNo_, rcv_txt);
+                PRINT_RECV("1-RCV", g_usrMsg.uiCmdMsg, g_usrMsg.rtn, g_usrMsg.chk, g_usrMsg.usr, flg, THREAD_NUM - g_threadNo_, rcv_txt);
 #endif
 #ifndef _WIN32
                 if (g_filedes[0] > 0)
@@ -548,10 +550,8 @@ type_thread_func monitor(void* arg)
                     memcpy(&g_usrMsg, rcv_txt, flg);
                 }
                 if (flg > 0) {
-#ifdef _DEBUG
-                    PRINT_RECV("2-RCV", g_usrMsg.uiCmdMsg, g_usrMsg.chk, g_usrMsg.usr, flg, THREAD_NUM - g_threadNo_, rcv_txt);
+                    PRINT_RECV("2-RCV", g_usrMsg.uiCmdMsg, g_usrMsg.rtn, g_usrMsg.chk, g_usrMsg.usr, flg, THREAD_NUM - g_threadNo_, rcv_txt);
                     fprintf(stdout, "TOKEN-%s at %s:%s.\n", g_usrMsg.TOKEN, g_usrMsg.peerIp, g_usrMsg.port);
-#endif
                 }
                 unsigned short* length = reinterpret_cast<unsigned short*>(sd_bufs + 6);
                 unsigned short total = BUFF_SIZE;
@@ -649,7 +649,7 @@ type_thread_func monitor(void* arg)
                                         snprintf(sd_bufs + 2, 8, "%x", NE_VAL(-1));
                                         snprintf((sd_bufs + 32), 27 + FiledSize, "failed send command to %s.", g_usrMsg.peer);
                                         sn_stat = send(cur_sock, sd_bufs, total, 0);
-                                        fprintf(stdout, "Got failure trans message to %s:%u (%zd,%s).\n", p2pnt.ip, p2pnt.port, sn_stat, strerror(errno));
+                                        fprintf(stdout, "Got failure trans message to %s:%u (%ld,%s).\n", p2pnt.ip, p2pnt.port, sn_stat, strerror(errno));
                                     }
                                     break;
                                 }
@@ -1038,12 +1038,12 @@ comm_err0:
     }
 #endif
     return 0;
-    };
+    }
 
 int inst_mssg(int argc, char* argv[])
 {
     int srvPort = DEFAULT_PORT;
-    if (argc == 2 && atoi(argv[1]) != 0) {
+    if (argc >= 2 && atoi(argv[1]) != 0) {
         srvPort = atoi(argv[1]);
     }
     if (!load_accnt()) {
@@ -1141,12 +1141,12 @@ int inst_mssg(int argc, char* argv[])
     do {
         struct sockaddr_in fromAddr = {};
 #if (!defined SOCK_CONN_TEST) || (defined SOCK_CONN_TEST)
-        type_len addrlen = static_cast<type_len>(sizeof(fromAddr));
+        type_len socklen = static_cast<type_len>(sizeof(fromAddr));
         std::cout.setf(std::ios::scientific);
-        std::cout << "socket (" << listen_socket << ") addrlen=0x" << std::ios::hex << addrlen << std::ios::unitbuf << std::endl;
+        std::cout << "socket (" << listen_socket << ") socklen=0x" << std::ios::hex << socklen << std::ios::unitbuf << std::endl;
 #endif
 #ifdef SOCK_CONN_TEST
-        type_socket test_socket = accept(listen_socket, (struct sockaddr*)&fromAddr, &addrlen);
+        type_socket test_socket = accept(listen_socket, (struct sockaddr*)&fromAddr, &socklen);
         if (test_socket
 #ifdef _WIN32
             == INVALID_SOCKET) {
@@ -1154,8 +1154,8 @@ int inst_mssg(int argc, char* argv[])
             WSACleanup();
 #else
             < 0) {
-#endif // use addrlen
-            std::cerr << "ERROR(" << errno << "," << addrlen << "): " << strerror(errno) << std::endl;
+#endif // use socklen
+            std::cerr << "ERROR(" << errno << "," << socklen << "): " << strerror(errno) << std::endl;
             return -1;
         } else {
             char IPdotDec[16];
@@ -1185,14 +1185,14 @@ int inst_mssg(int argc, char* argv[])
 #ifdef THREAD_PER_CONN
         pthread_create(&threadid, NULL, monitor, NULL);
 #elif !defined SOCK_CONN_TEST || defined SOCK_CONN_TEST
-        type_socket msg_socket = accept(listen_socket, (struct sockaddr*)&fromAddr, &addrlen);
+        type_socket msg_socket = accept(listen_socket, (struct sockaddr*)&fromAddr, &socklen);
         if (msg_socket < 0) {
             std::cerr << "ERROR(" << errno << "): " << strerror(errno) << std::endl;
             return -1;
         } else {
             int PID = 0;
             if ((PID = fork()) == 0) {
-                fprintf(stdout, "Running child(%d) forks from one of [%i] MAIN process.\n", threadCnt, addrlen);
+                fprintf(stdout, "Running child(%d) forks from one of [%i] MAIN process.\n", threadCnt, socklen);
                 monitor(&msg_socket);
             } else {
                 fprintf(stdout, "Parent: process %d established.\n", PID);
@@ -1210,7 +1210,7 @@ int inst_mssg(int argc, char* argv[])
         SLEEP(9);
 #endif
     return 0;
-    };
+    }
 
 template<typename T> int set_n_get_mem(T * shmem, int ndx, int rw)
 {
@@ -1260,14 +1260,40 @@ void func_waitpid(int signo)
         if (g_filedes[1] > 0)
             close(g_filedes[1]);
         if (g_filedes[0] <= 0) {
-            fprintf(stderr, "Can't read socket from filedes[0][%d]: %s\n", g_filedes[0], strerror(errno));
+            fprintf(stderr, "Can't read socket from filedes[0][%d]\n", g_filedes[0]);
             break;
         }
+#ifdef _USE_MMAP_
+        struct stat sb;
+        if (fstat(g_filedes[0], &sb) == -1) {
+            perror("fstat");
+            continue;
+        }
+        if (sb.st_size <= 0)
+            sb.st_size = sizeof(sock);
+        long size = sysconf(_SC_PAGESIZE);
+        void* _va = reinterpret_cast<void*>(size); // (void*)((NULL + size - 1) & ~(size - 1));
+        void* map = mmap(_va, sb.st_size, PROT_READ, MAP_PRIVATE | MAP_FIXED, g_filedes[0], 0);
+        if (map == MAP_FAILED) {
+            fprintf(stderr, "mmap(%d) size=%ld: %s\n", g_filedes[0], size, strerror(errno));
+            continue;
+        }
+        if (memcpy(&sock, map, sizeof(sock)) == NULL) {
+            fprintf(stderr, "memcpy socket(%d): %s\n", sock, strerror(errno));
+            break;
+        }
+        if (munmap(map, sb.st_size) == -1) {
+            perror("munmap");
+            break;
+        }
+#else
         ssize_t len = read(g_filedes[0], &sock, sizeof(sock));
         if (len < 0 || len > sizeof(sock)) {
             fprintf(stderr, "Beyond filed size: %zd\n", len);
             break;
         }
+        if (len == 0) continue;
+#endif
         if (sock > 0) {
             memset(msg + 1, 0xf, 1);
             snprintf(msg + 2, 8, "%x", NE_VAL(-1));
@@ -1311,8 +1337,8 @@ bool sock_was_valid(const type_socket sock, bool rd, long ms)
     FD_ZERO(&rw_fds);
     FD_SET(sock, &rw_fds);
     timeval timeout;
-    timeout.tv_sec = ms / 1000;
-    timeout.tv_usec = (ms % 1000) * 1000;
+    timeout.tv_sec = ms / Thousand;
+    timeout.tv_usec = (ms % Thousand) * Thousand;
 
     int status = -1;
     if (rd) {
@@ -1338,8 +1364,8 @@ bool sock_was_valid(const type_socket sock, bool rd, long ms)
 void wait(unsigned int tms)
 {
     struct timeval time;
-    time.tv_sec = tms / 1000;
-    time.tv_usec = tms % 1000 * 1000;
+    time.tv_sec = tms / Thousand;
+    time.tv_usec = tms % Thousand * Thousand;
     select(0, NULL, NULL, NULL, &time);
 }
 type_thread_func commands(void* arg)
@@ -1366,8 +1392,8 @@ type_thread_func commands(void* arg)
         if (strncmp(cmds, "kick", 4) == 0) {
             fprintf(stdout, "Kick whom out?\n");
             scanf("%23s", reinterpret_cast<char*>(&whom));
-            int rtn = user_is_line(whom);
-            if (!(rtn == -1)) {
+            int val = user_is_line(whom);
+            if (!(val == -1)) {
 #if !defined _WIN32
                 struct ONLINE active[MAX_ACTIVE];
                 memset(active, 0, sizeof(ONLINE) * MAX_ACTIVE);
@@ -1375,7 +1401,7 @@ type_thread_func commands(void* arg)
                     set_n_get_mem(&active[i], i);
                 }
 #endif
-                closesocket(active[rtn].ntwrk.socket);
+                closesocket(active[val].ntwrk.socket);
                 fprintf(stdout, "User %s kicked out!\n", whom);
             }
         }
