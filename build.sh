@@ -10,7 +10,7 @@ then
         if [ -d lcov ] && [ $(ls lcov/* | wc -l) -le 0 ]
         then
             git submodule update --init --recursive
-            git pull
+            git pull origin main
         else
             mkdir lcov
         fi
@@ -19,7 +19,7 @@ then
     if [ $(ls googletest/* | wc -l) -le 0 ]
     then
         git clone https://github.com/google/googletest.git
-        git pull
+        git pull origin main
     fi
     ./test.sh
 else
