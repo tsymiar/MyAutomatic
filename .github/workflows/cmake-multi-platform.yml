@@ -25,11 +25,11 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
         build_type: [Release]
-        c_compiler: [gcc, clang, cl]
+        c_compiler: [gcc, clang, cl, msvc]
         include:
           - os: windows-latest
-            c_compiler: cl
-            cpp_compiler: cl
+            c_compiler: msvc
+            cpp_compiler: msvc
           - os: ubuntu-latest
             c_compiler: gcc
             cpp_compiler: g++
@@ -54,9 +54,13 @@ jobs:
       run: |
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
-    - name: Building - make all
-      run: >
-        ${{ github.workspace }}/build.sh all -j && ${{ github.workspace }}/build.sh clean
+    - name: Building - make exec
+      working-directory: ${{ github.workspace }}
+      run: ./build.sh all -j
+
+    - name: Building - make games
+      working-directory: ${{ github.workspace }}
+      run: ./build.sh QtGames
 
     - name: Test
       working-directory: ${{ github.workspace }}
