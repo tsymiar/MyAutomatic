@@ -4,7 +4,7 @@ PWD=$(pwd)
 if [ "$1" == "test" ]
 then
     cd "${PWD}/LinxSrvc/test";
-    rm -rvf build/*;
+    # rm -rvf build/*;
     if [ ! $(whereis lcov | awk '{print $2}') ]
     then
         if [ -d lcov ] && [ $(ls lcov/* | wc -l) -le 0 ]
@@ -14,8 +14,7 @@ then
         else
             mkdir lcov
         fi
-        cd lcov && make install
-        cd - && rm -rvf lcov
+        cd lcov && make install && cd -
     fi
     if [ $(ls googletest/* | wc -l) -le 0 ]
     then
