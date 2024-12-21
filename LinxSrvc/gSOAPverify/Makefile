@@ -10,7 +10,7 @@ SOAP= soapC.o stdsoap2.o soapServer.o
 BIT = $(shell if [ `getconf LONG_BIT` -eq '64' ];then echo 64;fi;)
 SQL = -std=c++11 -I/usr/lib$(BIT)/mysql -lmysqlclient
 PTHD= -std=c++11 -lpthread #-lgsoap++#-L/usr/local/gSOAP/lib/libsoap++
-FLAG += -DNS_DEBUG
+FLAG += -DNS_DBG
 gSOAPverify:
 	g++ $(FLAG) -c soap/soapC.cpp
 	g++ $(FLAG) -c soap/stdsoap2.cpp
@@ -25,7 +25,7 @@ ifneq ($(shell if [ ! -d /usr/lib/mysql ] && [ `ls /usr/lib/*/libmysql*.so | wc 
 	g++ $(FLAG) -I.. -c ./main/mainSoap.cc $(PTHD)
 	g++ $(FLAG) -o $(GEN)/gSOAPverify $(STAT) $(SOAP) $(MAIN) $(SQL) $(PTHD)
 else
-	@echo Built gSOAPverify without linking mysql library
+	@echo [100%] Built gSOAPverify without linking mysql library
 endif
 	$(shell if [ -f $(WSDL) ];then if [ -d $(GEN) ];then cp $(WSDL) $(GEN)/;fi;else @echo "file <$(WSDL)> don't exist.";fi;)
 	$(shell if [ -d $(PRJ) ];then rm -rf $(OBJ);fi;)

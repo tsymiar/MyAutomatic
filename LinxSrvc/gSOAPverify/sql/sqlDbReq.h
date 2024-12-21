@@ -20,27 +20,25 @@ typedef struct st_usr_msg {
 	char sex[3];
 	char tell[14];
 	char email[32];
+	bool flag;
 	char* text;
 	void* P;
 } USR_MSG;
 
-typedef struct st_raw {
-	int type;
+typedef struct st_usr_auth {
 	char* acc;
 	char* psw;
-} RAW;
+} USR_AUTH;
 
-struct queryInfo {
-	bool flg;
-	int idx;
-	RAW raw;
-	USR_MSG* msg;
+struct queryParam {
+	USR_AUTH user;
+	USR_MSG msg;
 };
 
 #  ifdef __cplusplus
 extern "C" {
 #  endif /* __cplusplus */
-	int sqlQuery(int type, char* acc, char* psw, struct queryInfo* info);
+	int sqlQuery(queryParam param, bool flag = 0);
 	void sqlClose();
 #  ifdef __cplusplus
 }

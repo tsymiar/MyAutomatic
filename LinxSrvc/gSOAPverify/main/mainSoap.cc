@@ -3,6 +3,9 @@
 #include"mainSoap.h"
 #include"../sql/sqlDbReq.h"
 #include"../sys/status.h"
+#ifdef NS_DBG
+#define SOAP_DEBUG
+#endif
 #include"../soap/soapStub.h"
 #include"../soap/myweb.nsmap"
 
@@ -13,7 +16,7 @@ int head = 0, tail = 0;          // 队列头队列尾初始化
 void* process_queue(void*);      // 线程入口函数
 int enqueue(SOAP_SOCKET, unsigned long ip); // 入队列函数
 SOAP_SOCKET dequeue(void);       // 出队列函数
-unsigned long dequeue_ip();
+void dequeue(unsigned int&);
 static unsigned long ips[MAX_QUEUE];
 
 void* process_queue(void* soap)
@@ -23,11 +26,9 @@ void* process_queue(void* soap)
     struct soap* serv = (struct soap*)soap;
     for (;;) {
         serv->socket = dequeue();
-        serv->ip = dequeue_ip();
+        dequeue(serv->ip);
         if (!soap_valid_socket(serv->socket)) {
-#ifdef DEBUG
             fprintf(stderr, "Thread %d terminating\n", (int)(long)serv->user);
-#endif
             break;
         }
         soap_serve(serv);
@@ -73,16 +74,14 @@ SOAP_SOCKET dequeue()
     return sock;
 }
 
-unsigned long dequeue_ip()
+void dequeue(unsigned int& ip)
 {
-    unsigned long ip;
-    int num = 0;
+    int j = 0;
     if (head == 0)
-        num = MAX_QUEUE - 1;
+        j = MAX_QUEUE - 1;
     else
-        num = head - 1;
-    ip = ips[num];
-    return ip;
+        j = head - 1;
+    ip = ips[j];
 }
 
 int http_get(struct soap* soap)
@@ -145,7 +144,7 @@ int http_post(struct soap* soap, const char* endpoint, const char* host, int por
 int main_server(int argc, char** argv)
 {
     if (argc > 1 && argv[1] == nullptr) {
-        std::cout << "Input an argument as port eg. '\033[45m" << argv[0] << "8080\033[0m'\n" << std::endl;
+        std::cout << "Please type an argument as port eg. '\033[45m" << argv[0] << " 8080\033[0m'" << std::endl;
         kill(getppid(), SIGALRM);
         return -1;
     }
@@ -188,7 +187,7 @@ int main_server(int argc, char** argv)
             m = soap_bind(&Soap, NULL, port, BACKLOG);
             valid++;
         }
-        fprintf(stderr, "======== Socket Server Port: %d ========\n", port);
+        fprintf(stdout, "======== Socket Server Port: %d ========\n", port);
         // 生成服务线程
         for (int i = 0; i < MAX_THR; i++) {
             soap_thr[i] = soap_copy(&Soap);
@@ -212,7 +211,7 @@ int main_server(int argc, char** argv)
             }
             no++;
             // 客户端IP地址
-            fprintf(stderr, "\033[32mAccepted\033[0m \033[1mREMOTE\033[0m connection. IP = \033[33m%d.%d.%d.%d\033[0m, socket = %d, log(%d) \n", \
+            fprintf(stdout, "\033[32mAccepted\033[0m \033[1mREMOTE\033[0m connection. IP = \033[33m%d.%d.%d.%d\033[0m, socket = %d, log(%d) \n", \
                 (int)(((Soap.ip) >> 24) & 0xFF), (int)(((Soap.ip) >> 16) & 0xFF), (int)(((Soap.ip) >> 8) & 0xFF), \
                 (int)((Soap.ip) & 0xFF), (int)(Soap.socket), no);
             // 套接字入队，如果队列已满则循环等待
@@ -302,27 +301,29 @@ int api__get_server_status(struct soap* soap, xsd_string req, xsd_string& rsp)
     return 0;
 }
 
-int api__login_by_key(struct soap*, char* usr, char* psw, struct api__ArrayOfEmp2& ccc)
+int api__login_by_key(struct soap*, char* usr, char* psw, struct api__ArrayOfEmp2& sch)
 {
-    struct queryInfo info;
-    ccc.rslt.flag = -3;
-    if (!(usr == nullptr || psw == nullptr)) {
-        if (sqlQuery(0, usr, psw, &info) != 0) {
-            info.flg = false;
-            ccc.rslt.flag = -2;
-            printf("[OUT]:\tqueryInfo.rslt is null.\n");
+    sch.rslt.flag = -3;
+    if (usr != nullptr && psw != nullptr) {
+        struct queryParam param;
+        param.user.acc = usr;
+        param.user.psw = psw;
+        if (sqlQuery(param) != 0) {
+            param.msg.flag = false;
+            sch.rslt.flag = -2;
+            printf("[OUT]:\tqueryParam.rslt is null.\n");
         }
-        if (info.flg) {
-            ccc.rslt.email = info.msg->email;
-            ccc.rslt.tell = info.msg->tell;
-            printf("[OUT]:\temail:%s\t", ccc.rslt.email);
-            if (ccc.rslt.tell[0] != '\0')
-                cout << "tell:" << ccc.rslt.tell;
+        if (param.msg.flag) {
+            sch.rslt.email = param.msg.email;
+            sch.rslt.tell = param.msg.tell;
+            sch.rslt.flag = 200;
+            printf("[OUT]:\temail:%s\t", sch.rslt.email);
+            if (sch.rslt.tell[0] != '\0')
+                cout << "tell:" << sch.rslt.tell;
             cout << endl;
-            ccc.rslt.flag = 200;
         }
     }
-    return 0;
+    return sch.rslt.flag;
 }
 
 int main(int argc, char* argv[])

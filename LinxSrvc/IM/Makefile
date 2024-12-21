@@ -33,7 +33,7 @@ Kai.o:
 Kai:Kai.o
 	$(CXX) $(FLAG) $(OBJ)/Kai.o $(CUR)/KaiTest.cxx $(PTHD) -o $(GEN)/kaics.exe
 client:
-	$(CXX) $(FLAG) -I$(IMLOCAL) $(CLIENTFILES) $(PTHD) -o $(GEN)/Client.exe
+	$(CXX) $(FLAG) -I$(IMLOCAL) $(CLIENTFILES) $(PTHD) -o $(GEN)/client.exe
 tcptest:
 	$(CXX) $(FLAG) $(IMLOCAL)/TCPsocket_unix.cpp $(PTHD) -o $(GEN)/tcptest.exe
 clean/fast:

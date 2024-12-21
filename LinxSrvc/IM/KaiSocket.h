@@ -38,14 +38,14 @@ using SOCKET = int;
 
 class KaiSocket {
 public:
-#pragma pack(1)
+#pragma pack(4)
     struct Header {
         char rsv;
         int etag;
         /*volatile*/ unsigned long long ssid; // ssid = port | socket | ip
         char text[32];
         unsigned int size;
-    } __attribute__((packed));
+    } __attribute__((aligned(4)));
 #pragma pack()
 #pragma pack(1)
     struct Message {
