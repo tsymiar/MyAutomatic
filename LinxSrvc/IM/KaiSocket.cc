@@ -808,17 +808,21 @@ std::string KaiSocket::getFile2string(const std::string& filename)
     return s;
 }
 
-void KaiSocket::setTopic(const std::string& topic, Header& header)
+void KaiSocket::setTopic(const std::string& topic, Header* header)
 {
+    if (header == nullptr) {
+        std::cerr << __FUNCTION__ << ": header is null." << std::endl;
+        return;
+    }
     std::lock_guard<std::mutex> lock(m_lock);
     size_t size = topic.size();
-    if (size > sizeof(header.text)) {
+    if (size > sizeof(header->text)) {
         std::cerr << __FUNCTION__ << ": topic length " << size << " out of bounds." << std::endl;
-        size = sizeof(header.text);
+        size = sizeof(header->text);
     }
-    memmove(header.text, topic.c_str(), size);
-    memmove(m_network.flag.text, header.text, size);
-    m_network.flag.etag = header.etag;
+    memcpy(header->text, topic.c_str(), size); // fixme memmove_avx_unaligned_erms
+    memcpy(m_network.flag.text, header->text, size);
+    m_network.flag.etag = header->etag;
 }
 
 ssize_t KaiSocket::Subscriber(const std::string& message, CALLBACK_RCV callback)
@@ -849,7 +853,7 @@ ssize_t KaiSocket::Subscriber(const std::string& message, CALLBACK_RCV callback)
             }
             // parse message divide to topic/etc...
             const std::string& topic = message; // "message.sub()...";
-            setTopic(topic, msg.head);
+            setTopic(topic, &msg.head);
             len = writes(m_network, (uint8_t*)&msg, Size);
             if (len < 0) {
                 std::cerr << __FUNCTION__ << ": writes " << strerror(errno) << std::endl;
@@ -936,7 +940,7 @@ ssize_t KaiSocket::Publisher(const std::string& topic, const std::string& payloa
     size_t msgLen = sizeof msg + size;
     msg.head.size = static_cast<unsigned int>(msgLen);
     msg.head.etag = PRODUCER;
-    setTopic(topic, msg.head);
+    setTopic(topic, &msg.head);
     if (this->connect() != 0) {
         std::cerr << __FUNCTION__ << ": unable to connect!" << std::endl;
         return -2;

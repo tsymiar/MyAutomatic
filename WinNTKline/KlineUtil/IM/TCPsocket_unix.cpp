@@ -8,6 +8,7 @@
 #include <netinet/in.h> // sockaddr_in
 #include <string.h> // strerror
 #include <arpa/inet.h> // inet_ntoa
+#include <signal.h> // signal
 
 typedef int (*CALLBACK) (uint8_t*, uint32_t);
 typedef int SOCKET;

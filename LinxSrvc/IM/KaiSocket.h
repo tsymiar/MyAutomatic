@@ -135,7 +135,7 @@ private:
     void finish();
     void handleNotify(Network& network);
     void runCallback(KaiSocket* sock, KAI_SOCK_HOOK func);
-    void setTopic(const std::string& topic, Header& header);
+    void setTopic(const std::string& topic, Header* header);
     int produce(const Message& msg);
     ssize_t consume(Message& msg);
 public:
