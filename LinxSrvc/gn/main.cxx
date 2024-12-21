@@ -121,6 +121,9 @@ int main(int argc, char* argv[])
                 g_runtime.prog = g_runtime.bytes * 100.f / g_runtime.total;
                 fprintf(stdout, "\r%.3f %%", g_runtime.prog);
                 fflush(stdout);
+                if (g_runtime.prog >= 100.0f) {
+                    break;
+                }
             }
         }
     );
@@ -168,6 +171,7 @@ int main(int argc, char* argv[])
     }
     uint64_t count = g_total / size;
     uint64_t start = gettime4usec();
+#pragma omp parallel for // Parallelize the outer loop
     for (uint64_t i = 0; i < count; i++) {
 // #pragma omp parallel for private(i) reduction(+:length)
         for (size_t i = 0; i < length; i++) {

@@ -1276,6 +1276,7 @@ void func_waitpid(int signo)
         void* map = mmap(_va, sb.st_size, PROT_READ, MAP_PRIVATE | MAP_FIXED, g_filedes[0], 0);
         if (map == MAP_FAILED) {
             fprintf(stderr, "mmap(%d) size=%ld: %s\n", g_filedes[0], size, strerror(errno));
+            munmap(map, sb.st_size); // Ensure munmap is called on error
             continue;
         }
         if (memcpy(&sock, map, sizeof(sock)) == NULL) {
@@ -1288,7 +1289,7 @@ void func_waitpid(int signo)
         }
 #else
         ssize_t len = read(g_filedes[0], &sock, sizeof(sock));
-        if (len < 0 || len > sizeof(sock)) {
+        if (len < 0 || len != sizeof(sock)) {
             fprintf(stderr, "Beyond filed size: %zd\n", len);
             break;
         }
@@ -1299,7 +1300,11 @@ void func_waitpid(int signo)
             snprintf(msg + 2, 8, "%x", NE_VAL(-1));
             memcpy(msg + 8, "Fail: something wrong with peer !!!", 36);
             ssize_t val = send(sock, msg, 64, 0);
-            fprintf(stderr, "Error(%zd) message to client - %s.\n", val, msg + 8);
+            if (val < 0) {
+                fprintf(stderr, "Error sending message to client: %s\n", strerror(errno));
+            } else {
+                fprintf(stderr, "Error(%zd) message to client - %s.\n", val, msg + 8);
+            }
             memset(msg, 0, 64);
         }
         snprintf(msg, 64, "Signal(%d): child process %d exit just now, sock=%d.\n", signo, pid, sock);
@@ -1421,7 +1426,7 @@ int save_accnt()
     flush_all();
     FILE* dump = fopen(ACC_REC, "w");
     if (dump == nullptr) {
-        fprintf(stderr, "save '" ACC_REC "': %s\n", strerror(errno));
+        fprintf(stderr, "fopen to save '" ACC_REC "': %s\n", strerror(errno));
         return -1;
     }
     fwrite(users, sizeof(user_clazz), MAX_USERS, dump);
@@ -1453,7 +1458,7 @@ int user_auth(char usr[FiledSize], char psw[FiledSize])
     for (auto& user : users) {
         if ((strcmp(n, user.usr) == 0) && (strcmp(p, user.psw) == 0)) {
             if (user_is_line(n) == -1) {
-                return 1; //success
+                return 1; //success,offline
             } else
                 return 0; //pass
         } else

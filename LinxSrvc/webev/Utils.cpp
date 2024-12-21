@@ -116,12 +116,16 @@ std::string getVariable(const std::string& url, const std::string& key)
 std::string getFileAsCstring(const std::string& filename)
 {
     std::string content{};
-    std::ifstream file(filename);
+    std::ifstream file(filename, std::ios::in | std::ios::binary);
     if (file.is_open()) {
-        content.assign(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
+        try {
+            content.assign(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
+        } catch (const std::ios_base::failure& e) {
+            Error("File read error: %s", e.what());
+        }
+        file.close();
     } else {
-        Error("%s", strerror(errno));
+        Error("File open error: %s", strerror(errno));
     }
-    file.close();
     return content;
 }
