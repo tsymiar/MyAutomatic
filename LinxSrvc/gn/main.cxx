@@ -171,11 +171,12 @@ int main(int argc, char* argv[])
     }
     uint64_t count = g_total / size;
     uint64_t start = gettime4usec();
+    int status = 0;
 #pragma omp parallel for // Parallelize the outer loop
-    for (uint64_t i = 0; i < count; i++) {
-// #pragma omp parallel for private(i) reduction(+:length)
+    for (uint64_t j = 0; j < count; j++) {
+        // #pragma omp parallel for private(i) reduction(+:length)
         for (size_t i = 0; i < length; i++) {
-            Number number;
+            Number number{};
             number._64v = values[i];
             if (byteswap) {
                 switch (size) {
@@ -202,7 +203,8 @@ int main(int argc, char* argv[])
             int64_t wroteSize = fwrite(&number, size, 1, fp);
             if (wroteSize != 1) {
                 fprintf(stderr, "fwrite(file=%s) failed: %s\n", g_file, strerror(errno));
-                return -2;
+                status = -2;
+                break;
             }
             g_runtime.bytes += size;
             if (!g_decrease) {
@@ -213,7 +215,8 @@ int main(int argc, char* argv[])
         }
     }
     fclose(fp);
-    fprintf(stdout, "\n%lu bytes write done, average speed %.3f M/s\n", static_cast<uint64_t>(length * count * size),
+    if (status < 0) return status;
+    fprintf(stdout, "\n%lu bytes write done, average speed %.3f M/s.\n", static_cast<uint64_t>(length * count * size),
         (g_runtime.total * 1.f) / (gettime4usec() - start) * 0x100000 / 1000000.f);
 }
 

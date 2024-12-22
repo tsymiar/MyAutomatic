@@ -24,11 +24,9 @@ bool ipIsValid(const char* ip)
     int value = 0;
     int dots = 0;
     char last = '.';
-
     if (ip[0] == '.' || ip[0] == '0') {
         return false;
     }
-
     while (*ip) {
         if (*ip == '.') {
             dots++;
@@ -51,7 +49,6 @@ bool ipIsValid(const char* ip)
         last = *ip;
         ip++;
     }
-
     if (value >= 0 && value <= 255) {
         if (3 == dots) {
             return true;

@@ -6,10 +6,12 @@
       "configurationType": "Debug",
       "buildRoot": "${projectDir}\\out\\build\\${name}",
       "buildCommandArgs": "-v",
-      "inheritEnvironments": [ "mingw_x64" ],
+      "inheritEnvironments": [
+        "mingw_x64"
+      ],
       "environments": [
         {
-          "MINGW64_ROOT": "C:/MinGW",
+          "MINGW64_ROOT": "%MINGW%",
           "BIN_ROOT": "${env.MINGW64_ROOT}/bin",
           "FLAVOR": "x86_64-w64-mingw32",
           "TOOLSET_VERSION": "6.3.0",

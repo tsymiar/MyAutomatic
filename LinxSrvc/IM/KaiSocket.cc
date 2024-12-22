@@ -162,7 +162,7 @@ int KaiSocket::start()
     getsockname(listen_socket, reinterpret_cast<struct sockaddr*>(&lsn), &listenLen);
     std::cout << "localhost listening [" << inet_ntoa(lsn.sin_addr) << ":" << port << "]." << std::endl;
 #ifdef USE_EPOLL
-    struct epoll_event ev_pll, events[g_epollMax];;
+    struct epoll_event ev_pll, events[g_epollMax];
     int poll_desc = epoll_create(g_epollMax);
     ev_pll.events = EPOLLIN | EPOLLET;
     ev_pll.data.fd = listen_socket;

@@ -144,7 +144,7 @@ int set_gpio_by_direction(unsigned gpio, int value, int direct)
     if (set_gpio_direct(gpio, direct) != 0) {
         perror("write GPIO fail");
     }
-    return set_gpio_value(gpio, value);;
+    return set_gpio_value(gpio, value);
 }
 
 void gpio_hint(int val)

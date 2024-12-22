@@ -675,7 +675,7 @@ void WPSMainWindow::highlight()
 			return;
 		}
 
-		ks_bstr context(__X("突出显示"));;
+		ks_bstr context(__X("突出显示"));
 		spSelection->TypeText(context);
 
 		long end = 0;
@@ -768,7 +768,7 @@ void WPSMainWindow::setFontSize()
 			return;
 		}
 
-		ks_bstr context(__X("字体设为36"));;
+		ks_bstr context(__X("字体设为36"));
 		spSelection->TypeText(context);
 	}
 	m_mainArea->setFocus();

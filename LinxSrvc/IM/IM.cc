@@ -73,9 +73,9 @@ pthread_mutexattr_t attr;
 #endif
 
 /*-------------------- Message Structure --------------------*/
-/* .__________________________________________________________________________________________________________________________________________________________. */
+/* .___________________________________________________________________________________________________________________________________________________________. */
 /* |  head(1)  |  uiCmdMsg(1)  |  rtn(2)  |  chk(4)  |  usr(24)  | psw/TOKEN/peerIP(24) | peer/port/sign/npsw | length(4) / PeerStruct peer_msg |  status (8)  | */
-/* | reserved | cmd msg of ui | error No | checksum | user name | cert or udp peer ip  | host/join/seek(24)  |       msg(16) cmd(2) val(4)     | if necessary | */
+/* |  reserve  | cmd msg of ui | error No | checksum | user name | cert or udp peer ip  | host/join/seek(24)  |       msg(16) cmd(2) val(4)     | if necessary | */
 /* + ———————————————————————————————————————————————————————————————————————————+ */
 
 #define __ "./"
@@ -232,6 +232,7 @@ void wait(unsigned int tms);
 int user_auth(char usr[FiledSize], char psw[FiledSize]);
 int new_user(char usr[FiledSize], char psw[FiledSize]);
 int user_is_line(char user[FiledSize]);
+int user_is_host(char usr[FiledSize]);
 int set_user_line(char user[FiledSize], Network& ntwrk);
 int set_user_peer(const char user[FiledSize], const char ip[INET_ADDRSTRLEN], const int port, type_socket sock);
 int set_user_quit(char user[FiledSize]);
@@ -491,7 +492,7 @@ type_thread_func monitor(void* arg)
                 fprintf(stdout, ">>>%s %s\n", sn_stat < 0 ? strerror(errno) : "", sd_bufs + offset);
                 continue;
             } else {
-                snprintf((sd_bufs + offset), 54, "%s", "Warning: please Login(0x01) / Register(0x00) at first! ");
+                snprintf((sd_bufs + offset), 55, "%s", "Warning: please Login(0x01) / Register(0x00) at first!");
                 snprintf(sd_bufs + 2, 8, "%x", NE_VAL(-2));
                 sn_stat = send(cur_sock, sd_bufs, 64, 0);
                 fprintf(stdout, ">>>%s %s\n", sn_stat < 0 ? strerror(errno) : "", sd_bufs + offset);
@@ -596,7 +597,7 @@ type_thread_func monitor(void* arg)
                         for (c = 0; c < MAX_ACTIVE; c++) {
                             set_n_get_mem(&active[c], c);
                             if (active[c].user[0] != '\0') {
-                                snprintf(sd_bufs + 2, 8, "%x", c);
+                                snprintf(sd_bufs + 2, 8, "%08x", c);
                                 memcpy((sd_bufs + offset * (c + 4)), active[c].user, FiledSize);
                                 void* const psr = (sd_bufs + offset * (c + 4) + FiledSize);
                                 if ((*reinterpret_cast<char*>(psr)) == '\0') {
@@ -804,14 +805,17 @@ type_thread_func monitor(void* arg)
                             total = offset + 6 + FiledSize;
                             break;
                         }
-                        int slice = 0;
+                        uint32_t slice = 0;
                         size_t len = 0;
                         constexpr int CHIP = 224;
                         while (bool sz = ((len = fread(pos, sizeof(unsigned char), block, file)) != 0 && !feof(file))
                             || (block > len && len > 0)) {
                             fprintf(stdout, "        "
-                                "File \"%s\": total = %ld, slice = %d, read = %zu.\r", IMAGE_BLOB, lSize, slice, len);
-                            snprintf((sd_bufs + 14), 8, "%04d", slice);
+                                "File \"%s\": total = %ld, slice = %u, size = %zu.\r", IMAGE_BLOB, lSize, slice, len);
+                            int n = snprintf((sd_bufs + 14), 8, "%08u", slice);
+                            if (n < 0 || n >= 8) {
+                                fprintf(stderr, "Error: snprintf output was truncated or an encoding error occurred.\n");
+                            }
                             memset(sd_bufs + 1, g_usrMsg.uiCmdMsg, 1);
                             volatile int offset = 0;
                             for (size_t i = 0; i <= len; ++i, ++offset) {
@@ -1038,7 +1042,7 @@ comm_err0:
     }
 #endif
     return 0;
-    }
+}
 
 int inst_mssg(int argc, char* argv[])
 {
@@ -1049,16 +1053,16 @@ int inst_mssg(int argc, char* argv[])
     if (!load_accnt()) {
         fprintf(stdout, "account loads finish from [%s].\n", ACC_REC);
     } else {
-        memcpy(users[0].usr, "iv9527", 8);
-        memcpy(users[0].psw, "tesT123$", 10);
-        memcpy(zones[0].zone.name, "all", 5);
-        memcpy(zones[0].zone.brief, "all", 5);
-        memcpy(zones[0].zone.members[0], "iv9527", 8);
+        memcpy(users[0].usr, "iv9527", 7);
+        memcpy(users[0].psw, "tesT123$", 9);
+        memcpy(zones[0].zone.name, "all", 4);
+        memcpy(zones[0].zone.brief, "all", 4);
+        memcpy(zones[0].zone.members[0], "iv9527", 7);
         zones[0].zone.ciHost = 1 << 0;
         zones[0].zone.ciUsr = 1;
 #ifdef _DEBUG
-        memcpy(users[1].usr, "AAAAA", 7);
-        memcpy(users[1].psw, "AAAAA", 7);
+        memcpy(users[1].usr, "AAAAA", 6);
+        memcpy(users[1].psw, "AAAAA", 6);
 #endif
     }
 #ifdef _WIN32
@@ -1203,14 +1207,14 @@ int inst_mssg(int argc, char* argv[])
         fprintf(stdout, "thread %d\t0x%08x\n", threadCnt, *(uint32_t*)&threadid);
         threadCnt++;
         SLEEP(99);
-        } while (!aim2exit);
+    } while (!aim2exit);
     fprintf(stdout, ">>> Executing thread count = %d.\n", threadCnt);
 #ifdef THREAD_PER_CONN
     while (true)
         SLEEP(9);
 #endif
     return 0;
-    }
+}
 
 template<typename T> int set_n_get_mem(T * shmem, int ndx, int rw)
 {
@@ -1484,7 +1488,7 @@ int new_user(char usr[FiledSize], char psw[FiledSize])
         if (user.usr[0] == '\0') {
             memcpy(user.usr, n, FiledSize);
             memcpy(user.psw, p, FiledSize);
-            memcpy(user.intro, "intro weren't set.", 20);
+            memcpy(user.intro, "intro weren't set. ", 20);
             return -1;
         }
     }
@@ -1684,4 +1688,15 @@ int free_zone(int at, char host[FiledSize])
         st = -2;
     }
     return st;
+}
+int user_is_host(char usr[FiledSize])
+{
+    char* u = usr;
+    if (u[0] == '\0')
+        return -1;
+    for (int i = 0; i < MAX_ZONES; i++) {
+        if (strcmp(zones[i].zone.chief, u) == 0)
+            return i;
+    }
+    return -2;
 }
