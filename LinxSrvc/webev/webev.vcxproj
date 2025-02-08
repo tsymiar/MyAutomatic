@@ -110,13 +110,13 @@
     <None Include="Makefile" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="HttpEvent.cpp" />
-    <ClCompile Include="HttpMain.cpp" />
+    <ClCompile Include="WebevApi.cpp" />
+    <ClCompile Include="WebMain.cpp" />
     <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="HttpEvent.h" />
-    <ClInclude Include="HttpMain.h" />
+    <ClInclude Include="WebevApi.h" />
+    <ClInclude Include="WebMain.h" />
     <ClInclude Include="Utils.h" />
   </ItemGroup>
   <ItemGroup>

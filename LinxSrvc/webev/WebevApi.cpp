@@ -1,4 +1,4 @@
-#include "HttpEvent.h"
+#include "WebevApi.h"
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -31,7 +31,7 @@ vector<string> g_headList = {
 
 namespace {
     const int g_wait100ms = 100000;
-    const char* HTTPD_SIGNATURE = "WebEvent";
+    const char* HTTPD_SIGNATURE = "webserver/1.0";
     static unordered_map<void*, string> g_msgRecv = {};
     static unordered_map<string, string> g_extraOpts = {};
     static unordered_map<string, DealHooks> g_dealHooks = {};

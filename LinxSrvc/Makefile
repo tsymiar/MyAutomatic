@@ -4,7 +4,7 @@ all:
 	@echo Making hdware thread
 	@make -C hdware all
 	@make -C thread all
-	@echo Making webev
+	@echo Making webserver
 	@make -C webev build
 	@echo Making gSOAPverify
 	@make -C gSOAPverify || true

@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <algorithm> // for std::max
 
 #ifndef WIN32
 #ifndef nullptr
@@ -14,24 +15,18 @@ struct List {
     void* addr;
     List* prev;
     List* next;
-    List() : check(0),
-        addr(NULL), prev(NULL), next(NULL) {
+    List() : check(0), addr(nullptr), prev(nullptr), next(nullptr)
+    {
         addr = malloc(sizeof(List));
     }
-    ~List() {
-        if (addr != NULL && !check) {
+    ~List()
+    {
+        if (addr != nullptr && !check) {
             free(addr);
-            addr = NULL;
+            addr = nullptr;
         }
     }
-    List(void* elem) : check(1) {
-        prev = next = NULL;
-        if (elem != NULL) {
-            addr = elem;
-        } else {
-            addr = NULL;
-        }
-    }
+    List(void* elem) : check(1), addr(elem), prev(nullptr), next(nullptr) { }
 };
 
 struct Stack {
@@ -45,10 +40,12 @@ struct Tree {
     Tree* right;
     Tree* left;
     int height;
-    Tree(void* elem) : addr(elem), right(0), left(0) {
+    Tree(void* elem) : addr(elem), right(0), left(0)
+    {
         height = 0;
     };
-    Tree() : addr(0), right(0), left(0) {
+    Tree() : addr(0), right(0), left(0)
+    {
         height = 0;
     };
 };
@@ -64,15 +61,18 @@ private:
     int m_count;
 public:
     typedef List* PosPtr;
-    LinkedList(Element elem) : m_list(nullptr), m_count(0) {
+    LinkedList(Element elem) : m_list(nullptr), m_count(0)
+    {
         m_list = new List((void*)elem);
         m_count++;
     }
-    ~LinkedList() {
+    ~LinkedList()
+    {
         if (this->MakeEmpty() != nullptr)
             delete m_list;
     }
-    List* get() {
+    List* get()
+    {
         return m_list;
     }
     PosPtr find(Element elem);
@@ -99,10 +99,12 @@ template <typename Element> class ListStack {
 private:
     Stack* m_stack;
 public:
-    ListStack(Element S) {
+    ListStack(Element S)
+    {
         m_stack = new Stack(S);
     }
-    ~ListStack() {
+    ~ListStack()
+    {
         dispose();
     }
     bool is_empty();
@@ -118,10 +120,12 @@ private:
     Tree* m_btree;
 public:
     typedef Tree* PosPtr;
-    BinaryTree(Element T) {
+    BinaryTree(Element T)
+    {
         m_btree = new Tree(T);
     }
-    virtual ~BinaryTree() {
+    virtual ~BinaryTree()
+    {
         if (this->MakeEmpty(m_btree) != nullptr) {
             delete m_btree;
             m_btree = nullptr;
@@ -142,10 +146,12 @@ template <typename Element> class AVLBinTree : public BinaryTree<Element> {
 public:
     AVLBinTree(Element T) : BinaryTree<Element>(T) { }
     using AvlTree = Tree*;
-    static int max(int x, int y) {
+    static int Max(int x, int y)
+    {
         return x > y ? x : y;
     }
-    static int Height(AvlTree posp) {
+    static int Height(AvlTree posp)
+    {
         if (posp == nullptr)
             return -1;
         else
@@ -161,9 +167,9 @@ public:
         if (k1 != nullptr)
             k1->right = k2;
         if (k2 != nullptr)
-            k2->height = max(Height(k2->left), Height(k2->right)) + 1;
+            k2->height = Max(Height(k2->left), Height(k2->right)) + 1;
         if (k1 != nullptr && k2 != nullptr)
-            k1->height = max(Height(k1->left), k2->height) + 1;
+            k1->height = Max(Height(k1->left), k2->height) + 1;
         return k1;
     }
     static AvlTree DoubleRotateWithLeft(AvlTree k3)
@@ -173,11 +179,12 @@ public:
         return SingleRotateWithLeft(k3);
     }
     AvlTree Insert(Element elem, AvlTree& posp) override;
-    int HeightBt(AvlTree posp) {
+    int HeightBt(AvlTree posp)
+    {
         if (posp == nullptr)
             return -1;
         else
-            return (1 + max(HeightBt(posp->left), HeightBt(posp->right)));
+            return (1 + Max(HeightBt(posp->left), HeightBt(posp->right)));
     }
 };
 
@@ -196,7 +203,7 @@ public:
 };
 
 template<typename Element>
-inline List* LinkedList<Element>::find(Element elem)
+List* LinkedList<Element>::find(Element elem)
 {
     PosPtr posp = m_list;
     int i = 0;
@@ -611,7 +618,7 @@ AVLBinTree<Element>::Insert(Element elem, typename AVLBinTree<Element>::AvlTree&
         }
     }
     if (posp != nullptr)
-        posp->height = max(Height(posp->left), Height(posp->right)) + 1;
+        posp->height = Max(Height(posp->left), Height(posp->right)) + 1;
     return posp;
 }
 
@@ -625,6 +632,25 @@ typename HashTable<Element>::Index HashTable<Element>::MakeHash(const char* key,
     return value % size;
 }
 
+bool IsPrime(int n)
+{
+    if (n <= 1) return false;
+    if (n <= 3) return true;
+    if (n % 2 == 0 || n % 3 == 0) return false;
+    for (int i = 5; i * i <= n; i += 6) {
+        if (n % i == 0 || n % (i + 2) == 0) return false;
+    }
+    return true;
+}
+
+int NextPrime(int n)
+{
+    while (!IsPrime(n)) {
+        n++;
+    }
+    return n;
+}
+
 template<typename Element>
 typename HashTable<Element>::HashTbl HashTable<Element>::Initialize(int size)
 {
@@ -632,7 +658,7 @@ typename HashTable<Element>::HashTbl HashTable<Element>::Initialize(int size)
         return nullptr;
     }
     HashTbl h = new Hash();
-    // h->size = NextPrime
+    h->size = NextPrime(size);
     h->lists = (List*)malloc(sizeof(List) * h->size);
     if (h->lists != nullptr) {
         for (int i = 0; i < h->size; i++) {

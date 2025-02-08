@@ -63,17 +63,7 @@ public:
     bool operator==(const String_&);
     char& operator[](unsigned int) const;
     char* c_str_() const { return m_data; }
-    size_t size_()
-    {
-        if (!m_data)
-            return 0;
-        int len;
-        for (len = 0; m_data[len] != '\0'; len++) { ; }
-        if (len == (sizeof(m_data) / sizeof(char*) + 1))
-            return (size_t)len;
-        else
-            return strlen_(m_data);
-    }
+    size_t size_();
     String_ trim_();
     template<typename T> bool equals_(T object);
     int indexOf_(String_ str);
@@ -188,6 +178,18 @@ inline istream& operator >> (istream& input, String_& s)
     return input; // 支持连续使用>>运算符
 }
 
+size_t String_::size_()
+{
+    if (!m_data)
+        return 0;
+    int len;
+    for (len = 0; m_data[len] != '\0'; len++) { ; }
+    if (len == (sizeof(m_data) / sizeof(char*) + 1))
+        return (size_t)len;
+    else
+        return strlen_(m_data);
+}
+
 inline String_ String_::trim_()
 {
     unsigned int i = 0, j = 0, k = 0;
@@ -205,7 +207,7 @@ inline String_ String_::trim_()
         }
     }
     len = k - j + 1;
-    char* str = new char[len];
+    char* str = new char[len + 1];
     strcpy_(str, m_data + j, len);
     str[len] = '\0';
     return str;
@@ -235,7 +237,7 @@ inline int String_::indexOf_(String_ str)
 inline String_ String_::replace_(char old, char dst)
 {
     size_t len = strlen_(m_data);
-    char* str = new char[len];
+    char* str = new char[len + 1];
     strcpy_(str, m_data, len);
     for (unsigned int i = 0; i < len; i++) {
         if (m_data[i] == old) {
@@ -243,7 +245,9 @@ inline String_ String_::replace_(char old, char dst)
         }
     }
     str[len] = '\0';
-    return str;
+    String_ res(str);
+    delete[] str;
+    return res;
 }
 
 inline char String_::charAt_(size_t z)
@@ -265,7 +269,9 @@ inline String_ String_::reverse_()
         str[i] = str[len - i - 1]; str[len - i - 1] = t;
     }
     str[len] = '\0';
-    return str;
+    String_ res(str);
+    delete[] str;
+    return res;
 }
 
 // 字符串逆序输出
@@ -287,7 +293,7 @@ inline char* String_::reverse_(char* src, char* cst)
 inline String_ String_::toLowerCase_()
 {
     size_t len = strlen_(m_data);
-    char* str = new char[len];
+    char* str = new char[len + 1];
     strcpy_(str, m_data, len);
     for (unsigned int i = 0; i < len; i++) {
         char up = m_data[i];
@@ -296,13 +302,15 @@ inline String_ String_::toLowerCase_()
         }
     }
     str[len] = '\0';
-    return str;
+    String_ res(str);
+    delete[] str;
+    return res;
 }
 
 inline String_ String_::toUpperCase_()
 {
     size_t len = strlen_(m_data);
-    char* str = new char[len];
+    char* str = new char[len + 1];
     strcpy_(str, m_data, len);
     for (unsigned int i = 0; i < len; i++) {
         char low = m_data[i];
@@ -311,7 +319,9 @@ inline String_ String_::toUpperCase_()
         }
     }
     str[len] = '\0';
-    return str;
+    String_ res(str);
+    delete[] str;
+    return res;
 }
 
 inline char* String_::itoa_(int num, char* str, int radix)
@@ -529,6 +539,7 @@ inline char* String_::str_pos_move_(char* w, int m, int d, bool fore)
             w[m - i] = s[m - (i + 1)];
         w[m - d] = s[m];
     }
+    delete[] s;
     return w;
 }
 //字符串整体环状移动
@@ -544,18 +555,19 @@ inline char* String_::str_roll_move_(char* w, int m, bool fore)
         while (w[m++] != '\0') {
             w[i++] = w[m - 1];
         }
-        for (; i <= m; i++) {
-            w[i] = *(s++);
+        for (unsigned int j = 0; i < len; i++, j++) {
+            w[i] = s[j];
         }
     } else {
         for (unsigned int t = 0; t < len - m; t++) {
-            w[t + m] = *(s + t);
+            w[t] = s[t + m];
         }
-        while (w[len - m + (i++)] != '\0') {
-            w[i - 1] = *(s + len - m + i - 1);
+        for (unsigned int t = 0; t < m; t++) {
+            w[len - m + t] = s[t];
         }
     }
     w[len] = '\0';
+    delete[] s;
     return w;
 }
 #endif

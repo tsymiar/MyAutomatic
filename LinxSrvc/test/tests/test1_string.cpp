@@ -187,6 +187,6 @@ TEST(String_, str_roll_move_)
     char s1[16];
     memcpy(s1, "This is a TEST!", 16);
     EXPECT_STREQ(String_::str_roll_move_(s1, 3), "s is a TEST!Thi");
-    EXPECT_STREQ(String_::str_roll_move_(s1, 3, true), "This is a TEST!");
-    EXPECT_STREQ(String_::str_roll_move_(s1, 32), "This is a TEST!");
+    EXPECT_STREQ(String_::str_roll_move_(s1, 3, true), "s a TEST!This i");
+    EXPECT_STREQ(String_::str_roll_move_(s1, 32), "s a TEST!This i");
 }

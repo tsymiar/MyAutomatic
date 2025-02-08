@@ -57,8 +57,9 @@ public:
 #else
             char body[0];
 #endif
-        } __attribute__((packed)) data {};
-        void* operator new(size_t, const Message& msg) {
+        } __attribute__((packed)) data { };
+        void* operator new(size_t, const Message& msg)
+        {
             static void* mss = (void*)(&msg);
             return mss;
         }
