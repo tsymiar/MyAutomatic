@@ -2,6 +2,8 @@
 #include <iostream>
 #include <thread>
 
+std::vector<std::string> CurlReq::m_messages = std::vector<std::string>();
+
 CurlReq::CurlReq() : m_curl(curl_easy_init())
 { }
 
@@ -47,14 +49,19 @@ void CurlReq::setHeader(const std::string& header)
     m_headers = curl_slist_append(m_headers, header.c_str());
 }
 
-void CurlReq::setPostData(const char* data, bool isJson)
+void CurlReq::setPostFields(const char* data, bool json)
 {
     curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS, data);
-    if (isJson) {
+    if (json) {
         m_headers = curl_slist_append(m_headers, "Content-Type: application/json");
     } else {
         m_headers = curl_slist_append(m_headers, "Content-Type: application/x-www-form-urlencoded");
     }
+}
+
+std::string CurlReq::getBalance()
+{
+    return processChat("null", false, true);
 }
 
 size_t CurlReq::writeCallback(void* contents, size_t size, size_t nmemb, void* userp)
@@ -67,6 +74,25 @@ size_t CurlReq::writeCallback(void* contents, size_t size, size_t nmemb, void* u
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
+std::string combineMessage(const std::string& msg)
+{
+    CurlReq::m_messages.push_back(msg);
+    json jsMsgs;
+    jsMsgs["model"] = "deepseek-chat";
+    jsMsgs["stream"] = false;
+    jsMsgs["messages"][0] = { {"role", "system"}, {"content", "You are a helpful assistant."} };
+    for (size_t i = 0; i < CurlReq::m_messages.size(); i++)
+    {
+        json jsMsg;
+        jsMsg["content"] = CurlReq::m_messages[i];
+        jsMsg["role"] = "user";
+        jsMsgs["messages"].push_back(jsMsg);
+    }
+    std::string message = jsMsgs.dump();
+    // std::cout << "json: " << message << std::endl;
+    return message;
+}
+
 void showLoadingIndicator(bool& isRunning)
 {
     const char* loadingSymbols = "|/-\\";
@@ -78,33 +104,40 @@ void showLoadingIndicator(bool& isRunning)
     std::cout << "\r " << std::flush;
 }
 
-std::string CurlReq::processInput(const std::string& input)
+std::string CurlReq::processChat(const std::string& text, bool multi, bool balance)
 {
     CurlReq curl;
     if (!curl.init()) {
-        std::cerr << "CURL Not init!" << std::endl;
-        return "";
+        std::cerr << "CURL Not init ok!" << std::endl;
+        return std::string();
     }
 
     const char* env_value = std::getenv("DPSK_API_KEY");
     if (env_value != nullptr) {
-        std::cout << "DPSK_API_KEY: " << env_value << std::endl;
+        // std::cout << "DPSK_API_KEY: " << env_value << std::endl;
     } else {
         std::cout << "DPSK_API_KEY environment variable not found." << std::endl;
-        return "";
+        return std::string();
     }
 
     std::string key = env_value;
     curl.setHeader("Authorization: Bearer " + key);
 
-    std::string postData = "{\"model\": \"deepseek-chat\",\"messages\" : [{\"role\": \"system\", \"content\" : \"You are a helpful assistant.\"},{ \"role\": \"user\", \"content\" : \"" + input + "\" }] ,\"stream\" : false}";
-    curl.setPostData(postData.c_str());
+    std::string postData = "{\"model\": \"deepseek-chat\",\"messages\" : [{\"role\": \"system\", \"content\" : \"You are a helpful assistant.\"},{ \"role\": \"user\", \"content\" : \"" + text + "\" }] ,\"stream\" : false}";
+    if (multi) {
+        postData = combineMessage(text);
+    }
+    curl.setPostFields(postData.c_str());
 
     bool isRunning = true;
     std::thread loadingThread(showLoadingIndicator, std::ref(isRunning));
 
+    std::string uri = "https://api.deepseek.com/chat/completions";
+    if (balance) {
+        uri = "https://api.deepseek.com/chat/balance";
+    }
     std::string message;
-    if (curl.performRequest("https://api.deepseek.com/chat/completions", message)) {
+    if (curl.performRequest(uri, message)) {
         isRunning = false;
         loadingThread.join();
         // std::cout << "\r" << message << std::endl;
@@ -112,12 +145,15 @@ std::string CurlReq::processInput(const std::string& input)
         isRunning = false;
         loadingThread.join();
         std::cerr << "Request Not ok!" << std::endl;
-        return "";
+        return std::string();
     }
 
     std::string content = "";
     try {
         auto jsonResponse = json::parse(message);
+        if (balance) {
+            return jsonResponse["error_msg"].dump();
+        }
         content = jsonResponse["choices"][0]["message"]["content"];
     } catch (json::parse_error& e) {
         std::cerr << "JSON parse error: " << e.what() << std::endl;

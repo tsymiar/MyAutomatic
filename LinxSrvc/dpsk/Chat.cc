@@ -1,6 +1,5 @@
 #include "CurlReq.h"
 #include <iostream>
-#include <string>
 
 int main()
 {
@@ -11,7 +10,7 @@ int main()
         if (text == "exit") {
             break;
         }
-        std::cout << CurlReq::processInput(text) << std::endl;
+        std::cout << CurlReq::processChat(text, true) << std::endl;
     }
     return 0;
 }
