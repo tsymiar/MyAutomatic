@@ -1,0 +1,43 @@
+#include <curl/curl.h>
+#include <string>
+#include <vector>
+
+struct ReqsPara {
+    bool json;
+    bool multi;
+    bool balance;
+    struct ApiPara {
+        bool stream;
+        float temperature;
+        int max_tokens;
+        float top_p;
+        std::string model = "deepseek-chat"; // "deep_thought_v1";
+        std::string depth = "high";
+        ApiPara() : stream(false), temperature(0.7), max_tokens(500), top_p(0.9) { }
+    };
+    ApiPara apiPara;
+    ReqsPara() : json(true), multi(true), balance(false) { }
+};
+
+class CurlReqs {
+public:
+    CurlReqs();
+    ~CurlReqs();
+
+    bool initReqs();
+    bool performRequest(const std::string& url, std::string& response);
+    void setHeader(const std::string& header);
+    void setPostFields(const char* data, bool json = true);
+
+    static std::string processChat(const std::string& text, ReqsPara para = ReqsPara());
+    static std::string getBalance();
+
+public:
+    static std::vector<std::string> m_messages;
+
+private:
+    CURL* m_curl = nullptr;
+    struct curl_slist* m_headers = nullptr;
+private:
+    static size_t writeCallback(void* contents, size_t size, size_t nmemb, void* userp);
+};

@@ -1,20 +1,24 @@
-#include "CurlReq.h"
+#include "CurlReqs.h"
 #include <iostream>
 #include <thread>
+#include <atomic>
 
-std::vector<std::string> CurlReq::m_messages = std::vector<std::string>();
+std::vector<std::string> CurlReqs::m_messages = std::vector<std::string>();
 
-CurlReq::CurlReq() : m_curl(curl_easy_init())
+CurlReqs::CurlReqs() : m_curl(curl_easy_init()), m_headers(nullptr)
 { }
 
-CurlReq::~CurlReq()
+CurlReqs::~CurlReqs()
 {
     if (m_curl) {
         curl_easy_cleanup(m_curl);
     }
+    if (m_headers) {
+        curl_slist_free_all(m_headers);
+    }
 }
 
-bool CurlReq::init()
+bool CurlReqs::initReqs()
 {
     if (!m_curl) {
         m_curl = curl_easy_init();
@@ -22,7 +26,7 @@ bool CurlReq::init()
     return m_curl != nullptr;
 }
 
-bool CurlReq::performRequest(const std::string& url, std::string& response)
+bool CurlReqs::performRequest(const std::string& url, std::string& response)
 {
     if (!m_curl) {
         return false;
@@ -36,20 +40,18 @@ bool CurlReq::performRequest(const std::string& url, std::string& response)
     CURLcode res = curl_easy_perform(m_curl);
     if (res != CURLE_OK) {
         std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
-        curl_slist_free_all(m_headers);
         return false;
     }
 
-    curl_slist_free_all(m_headers);
     return true;
 }
 
-void CurlReq::setHeader(const std::string& header)
+void CurlReqs::setHeader(const std::string& header)
 {
     m_headers = curl_slist_append(m_headers, header.c_str());
 }
 
-void CurlReq::setPostFields(const char* data, bool json)
+void CurlReqs::setPostFields(const char* data, bool json)
 {
     curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS, data);
     if (json) {
@@ -59,12 +61,16 @@ void CurlReq::setPostFields(const char* data, bool json)
     }
 }
 
-std::string CurlReq::getBalance()
+std::string CurlReqs::getBalance()
 {
-    return processChat("null", false, true);
+    ReqsPara para;
+    para.multi = false;
+    para.balance = true;
+    std::string content = processChat("null", para);
+    return ("\r--------\n" + content + "\n--------");
 }
 
-size_t CurlReq::writeCallback(void* contents, size_t size, size_t nmemb, void* userp)
+size_t CurlReqs::writeCallback(void* contents, size_t size, size_t nmemb, void* userp)
 {
     ((std::string*)userp)->append((char*)contents, size * nmemb);
     return size * nmemb;
@@ -74,26 +80,29 @@ size_t CurlReq::writeCallback(void* contents, size_t size, size_t nmemb, void* u
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
-std::string combineMessage(const std::string& msg)
+std::string combineMessage(const std::string& msg, ReqsPara::ApiPara para)
 {
-    CurlReq::m_messages.push_back(msg);
-    json jsMsgs;
-    jsMsgs["model"] = "deepseek-chat";
-    jsMsgs["stream"] = false;
-    jsMsgs["messages"][0] = { {"role", "system"}, {"content", "You are a helpful assistant."} };
-    for (size_t i = 0; i < CurlReq::m_messages.size(); i++)
-    {
-        json jsMsg;
-        jsMsg["content"] = CurlReq::m_messages[i];
-        jsMsg["role"] = "user";
-        jsMsgs["messages"].push_back(jsMsg);
+    CurlReqs::m_messages.push_back(msg);
+    json js_data;
+    js_data["model"] = para.model;
+    js_data["stream"] = para.stream;
+    js_data["temperature"] = para.temperature;
+    js_data["max_tokens"] = para.max_tokens;
+    js_data["top_p"] = para.top_p;
+    js_data["parameters"]["depth"] = para.depth;
+    js_data["messages"][0] = { {"role", "system"}, {"content", "You are a helpful assistant."} };
+    for (size_t i = 0; i < CurlReqs::m_messages.size(); i++) {
+        json js_msg;
+        js_msg["content"] = CurlReqs::m_messages[i];
+        js_msg["role"] = "user";
+        js_data["messages"].push_back(js_msg);
     }
-    std::string message = jsMsgs.dump();
+    std::string message = js_data.dump();
     // std::cout << "json: " << message << std::endl;
     return message;
 }
 
-void showLoadingIndicator(bool& isRunning)
+void showLoadingIndicator(std::atomic<bool>& isRunning)
 {
     const char* loadingSymbols = "|/-\\";
     int index = 0;
@@ -104,11 +113,11 @@ void showLoadingIndicator(bool& isRunning)
     std::cout << "\r " << std::flush;
 }
 
-std::string CurlReq::processChat(const std::string& text, bool multi, bool balance)
+std::string CurlReqs::processChat(const std::string& text, ReqsPara para)
 {
-    CurlReq curl;
-    if (!curl.init()) {
-        std::cerr << "CURL Not init ok!" << std::endl;
+    CurlReqs reqs;
+    if (!reqs.initReqs()) {
+        std::cerr << "CURL Not init reqs!" << std::endl;
         return std::string();
     }
 
@@ -121,23 +130,23 @@ std::string CurlReq::processChat(const std::string& text, bool multi, bool balan
     }
 
     std::string key = env_value;
-    curl.setHeader("Authorization: Bearer " + key);
+    reqs.setHeader("Authorization: Bearer " + key);
 
     std::string postData = "{\"model\": \"deepseek-chat\",\"messages\" : [{\"role\": \"system\", \"content\" : \"You are a helpful assistant.\"},{ \"role\": \"user\", \"content\" : \"" + text + "\" }] ,\"stream\" : false}";
-    if (multi) {
-        postData = combineMessage(text);
+    if (para.multi) {
+        postData = combineMessage(text, para.apiPara);
     }
-    curl.setPostFields(postData.c_str());
+    reqs.setPostFields(postData.c_str());
 
-    bool isRunning = true;
+    std::atomic<bool> isRunning(true);
     std::thread loadingThread(showLoadingIndicator, std::ref(isRunning));
 
     std::string uri = "https://api.deepseek.com/chat/completions";
-    if (balance) {
+    if (para.balance) {
         uri = "https://api.deepseek.com/chat/balance";
     }
     std::string message;
-    if (curl.performRequest(uri, message)) {
+    if (reqs.performRequest(uri, message)) {
         isRunning = false;
         loadingThread.join();
         // std::cout << "\r" << message << std::endl;
@@ -151,12 +160,13 @@ std::string CurlReq::processChat(const std::string& text, bool multi, bool balan
     std::string content = "";
     try {
         auto jsonResponse = json::parse(message);
-        if (balance) {
+        if (para.balance) {
             return jsonResponse["error_msg"].dump();
         }
         content = jsonResponse["choices"][0]["message"]["content"];
-    } catch (json::parse_error& e) {
-        std::cerr << "JSON parse error: " << e.what() << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "JSON parse exception: " << e.what() << std::endl;
+        return std::string();
     }
     return ("\r--------\n" + content + "\n--------");
 }

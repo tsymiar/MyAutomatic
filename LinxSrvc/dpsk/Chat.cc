@@ -1,4 +1,4 @@
-#include "CurlReq.h"
+#include "CurlReqs.h"
 #include <iostream>
 
 int main()
@@ -10,7 +10,9 @@ int main()
         if (text == "exit") {
             break;
         }
-        std::cout << CurlReq::processChat(text, true) << std::endl;
+        ReqsPara para;
+        para.apiPara.temperature = 1.5;
+        std::cout << CurlReqs::processChat(text, para) << std::endl;
     }
     return 0;
 }
