@@ -12,7 +12,7 @@ steps:
   displayName: 'make exec'
 - script: |
     ./build.sh QtGames/
-  displayName: 'build games'
+  displayName: 'build game'
 - script: |
     ./build.sh test
   displayName: 'make test-cov'

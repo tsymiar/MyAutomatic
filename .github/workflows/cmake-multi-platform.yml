@@ -58,7 +58,7 @@ jobs:
       working-directory: ${{ github.workspace }}
       run: ./build.sh all -j
 
-    - name: Building - make games
+    - name: Building - make game
       working-directory: ${{ github.workspace }}
       run: ./build.sh QtGames
 
