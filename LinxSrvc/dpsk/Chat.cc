@@ -1,5 +1,6 @@
 #include "CurlReqs.h"
 #include <iostream>
+#include "Parser.hpp"
 
 int main()
 {
@@ -11,8 +12,7 @@ int main()
             break;
         }
         ReqsPara para;
-        para.apiPara.temperature = 1.5;
-        std::cout << CurlReqs::processChat(text, para) << std::endl;
+        std::cout << Markdown::Parse(CurlReqs::processChat(text, para)) << std::endl;
     }
     return 0;
 }

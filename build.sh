@@ -38,13 +38,30 @@ else
         exit 0
     fi
     cd "${PWD}/LinxSrvc"
+    folders=( $(find . -maxdepth 1 -type d ! -path . -exec basename {} \;))
+    status=0
+    for path in "${folders[@]}"; do
+        if [ -f "$path/CMakeLists.txt" ] && [[ "$1" == "$path" ]]; then
+            if [ ! -d "$path/build" ]; then mkdir "$path/build"; fi;
+            cd "$path/build"
+            cmake ..
+            make -j4
+            cd -
+            status=1
+            break
+        fi
+    done
     if [ "$1" != "clean" ]
     then
         if [ ! -d bin ]; then mkdir bin; fi;
         if [ ! -d gen ]; then mkdir gen; fi;
         if [ ! -d out ]; then mkdir out; fi;
+    else
+        for built in "${folders[@]}"; do
+            if [ -d "$built/build" ]; then rm -rvf "$built/build"; fi;
+        done
     fi
-    make "$@"
+    if [ $status != 1 ]; then make "$@"; fi;
     if [ "$1" == "clean" ]
     then
         shopt -s nullglob

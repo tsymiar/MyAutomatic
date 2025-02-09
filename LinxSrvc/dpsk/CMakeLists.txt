@@ -5,7 +5,7 @@ set(CXX_STANDARD 11)
 
 SET(PROJ_NAME dpsk_test)
 PROJECT(${PROJ_NAME} C CXX)
-FILE(GLOB SOURCE_FILES "*.c*")
+file(GLOB SRC_FILE_LIST "*[^.h]*.c*[^.txt]*" "*.hpp")
 set(COMPILE_FLAGS "-fPIC -Wall -ggdb")
 
 find_package(CURL REQUIRED)
