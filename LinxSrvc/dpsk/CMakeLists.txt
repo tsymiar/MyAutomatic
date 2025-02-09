@@ -8,12 +8,25 @@ PROJECT(${PROJ_NAME} C CXX)
 file(GLOB SRC_FILE_LIST "*[^.h]*.c*[^.txt]*" "*.hpp")
 set(COMPILE_FLAGS "-fPIC -Wall -ggdb")
 
-find_package(CURL REQUIRED)
-include_directories(${CURL_INCLUDE_DIRS})
+find_package(CURL QUIET)
+if (NOT CURL_FOUND)
+    include(ExternalProject)
+    ExternalProject_Add(
+        curl
+        URL https://curl.se/download/curl-7.79.1.tar.gz
+        PREFIX ${CMAKE_BINARY_DIR}/curl
+        CONFIGURE_COMMAND ./configure --prefix=<INSTALL_DIR>
+        BUILD_COMMAND make
+        INSTALL_COMMAND make install
+    )
+    set(CURL_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/curl/include)
+    set(CURL_LIBRARIES ${CMAKE_BINARY_DIR}/curl/lib/libcurl.a)
+endif()
 if (${CURL_LIBRARIES} MATCHES "NOTFOUND")
     find_library(CURL_LIBRARIES curl /usr/lib /usr/local/lib /usr/lib/arm-linux-gnueabihf)
 endif()
 set(EXTERNAL_LIBS ${CURL_LIBRARIES})
+include_directories(${CURL_INCLUDE_DIRS})
 
 find_package(nlohmann_json QUIET)
 if (NOT nlohmann_json_FOUND)

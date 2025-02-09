@@ -11,6 +11,9 @@ int main()
         if (text == "exit") {
             break;
         }
+        if (text.empty()) {
+            continue;
+        }
         ReqsPara para;
         std::cout << Markdown::Parse(CurlReqs::processChat(text, para)) << std::endl;
     }
