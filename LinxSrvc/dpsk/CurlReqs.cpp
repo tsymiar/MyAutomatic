@@ -90,7 +90,7 @@ std::string combineMessage(const std::string& msg, ReqsPara::ApiPara para)
     js_data["max_tokens"] = para.max_tokens;
     js_data["top_p"] = para.top_p;
     js_data["parameters"]["depth"] = para.depth;
-    js_data["messages"][0] = { {"role", "system"}, {"content", "You are a helpful assistant."} };
+    js_data["messages"][0] = { {"role", "system"}, {"content", para.system_msg} };
     for (size_t i = 0; i < CurlReqs::m_messages.size(); i++) {
         json js_msg;
         js_msg["content"] = CurlReqs::m_messages[i];
@@ -113,7 +113,7 @@ void showLoadingIndicator(std::atomic<bool>& isRunning)
     std::cout << "\r " << std::flush;
 }
 
-std::string CurlReqs::processChat(const std::string& text, ReqsPara para)
+std::string CurlReqs::processChat(const std::string& text, const ReqsPara& para)
 {
     CurlReqs reqs;
     if (!reqs.initReqs()) {

@@ -6,9 +6,9 @@ int main()
 {
     while (true) {
         std::string text;
-        std::cout << "请输入聊天内容（输入 'exit' 退出）: ";
+        std::cout << "请输入聊天内容（输入 'bye' 退出）: ";
         std::getline(std::cin, text);
-        if (text == "exit") {
+        if (text == "bye") {
             break;
         }
         if (text.empty()) {

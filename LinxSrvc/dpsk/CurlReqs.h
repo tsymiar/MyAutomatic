@@ -13,6 +13,7 @@ struct ReqsPara {
         float top_p;
         std::string model = "deepseek-chat"; // "deep_thought_v1";
         std::string depth = "high";
+        std::string system_msg = "You are a helpful assistant.";
         ApiPara() : stream(false), temperature(0.7), max_tokens(500), top_p(0.9) { }
     };
     ApiPara apiPara;
@@ -29,7 +30,7 @@ public:
     void setHeader(const std::string& header);
     void setPostFields(const char* data, bool json = true);
 
-    static std::string processChat(const std::string& text, ReqsPara para = ReqsPara());
+    static std::string processChat(const std::string& text, const ReqsPara& para = ReqsPara());
     static std::string getBalance();
 
 public:
