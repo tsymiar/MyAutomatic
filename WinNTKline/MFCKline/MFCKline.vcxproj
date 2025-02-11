@@ -279,7 +279,7 @@
     <ClInclude Include="..\..\LinxSrvc\gSOAPverify\soap\soapStub.h" />
     <ClInclude Include="..\..\LinxSrvc\include\String_-inl.h" />
     <ClInclude Include="..\KlineUtil\boost\boostest.h" />
-    <ClInclude Include="..\KlineUtil\deep\Level2View.h" />
+    <ClInclude Include="..\KlineUtil\level2\Level2View.h" />
     <ClInclude Include="..\KlineUtil\Def\MacroDef.h" />
     <ClInclude Include="..\KlineUtil\dos\DOSCout.h" />
     <ClInclude Include="..\KlineUtil\elem\Screen-Sharing.h" />
@@ -331,7 +331,7 @@
     <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\soapC.cpp" />
     <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\stdsoap2.cpp" />
     <ClCompile Include="..\IMclient\imclient.cpp" />
-    <ClCompile Include="..\KlineUtil\deep\Level2View.cpp" />
+    <ClCompile Include="..\KlineUtil\level2\Level2View.cpp" />
     <ClCompile Include="..\KlineUtil\dos\DOSCout.cpp" />
     <ClCompile Include="..\KlineUtil\elem\CCustomCtl.cpp" />
     <ClCompile Include="..\KlineUtil\elem\Screen-Sharing.cpp" />

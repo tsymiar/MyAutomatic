@@ -67,7 +67,7 @@ public:
     String_ trim_();
     template<typename T> bool equals_(T object);
     int indexOf_(String_ str);
-    String_ replace_(char old, char rplc);
+    String_ replace_(char old, char dst);
     char charAt_(size_t z);
     String_ reverse_();
     String_ toLowerCase_();
@@ -490,7 +490,7 @@ inline int String_::char_count_array_(char** arr, char ch, int m)
   * b, 移动的位数
   * fore, 移动的方向(默认后移)
   **/
-inline char* String_::str_ch_move_(char* w, char ch, int d, bool fore)
+inline char* String_::str_ch_move_(char* w, char ch, int d, bool f)
 {
     int i = 0;
     char* t = w;
@@ -504,7 +504,7 @@ inline char* String_::str_ch_move_(char* w, char ch, int d, bool fore)
     int m = i;
     char* r = new char[len + 1];
     strcpy_(r, w);
-    if (fore) {
+    if (f) {
         (d > int(len) - m) ? (d = len - m) : 0;
         for (i = 0; i < d; i++)
             w[m + i] = *(r + m + (i + 1));
@@ -521,14 +521,14 @@ inline char* String_::str_ch_move_(char* w, char ch, int d, bool fore)
 // m: 字符位置
 // d: 位数
 // fore: 默认后移
-inline char* String_::str_pos_move_(char* w, int m, int d, bool fore)
+inline char* String_::str_pos_move_(char* w, int m, int d, bool f)
 {
     int i = 0;
     m -= 1;
     size_t len = strlen_(w);
     char* s = new char[len + 1];
     strcpy_(s, w);
-    if (fore) {
+    if (f) {
         (d > int(len) - m) ? (d = len - m) : 0;
         for (i = 0; i < d; i++)
             w[m + i] = s[m + (i + 1)];
@@ -543,29 +543,31 @@ inline char* String_::str_pos_move_(char* w, int m, int d, bool fore)
     return w;
 }
 //字符串整体环状移动
-inline char* String_::str_roll_move_(char* w, int m, bool fore)
+inline char* String_::str_roll_move_(char* w, int m, bool f)
 {
-    int i = 0;
     size_t len = strlen_(w);
-    char* s = new char[len + 1];
-    strcpy_(s, w);
     if (m > int(len))
         m = len;
-    if (!fore) {
-        while (w[m++] != '\0') {
-            w[i++] = w[m - 1];
+
+    char* s = new char[len + 1];
+    strcpy_(s, w);
+
+    if (!f) {
+        for (size_t i = 0; i < len - m; ++i) {
+            w[i] = s[m + i];
         }
-        for (unsigned int j = 0; i < len; i++, j++) {
-            w[i] = s[j];
+        for (size_t i = 0; i < m; ++i) {
+            w[len - m + i] = s[i];
         }
     } else {
-        for (unsigned int t = 0; t < len - m; t++) {
-            w[t] = s[t + m];
+        for (size_t i = 0; i < len - m; ++i) {
+            w[i] = s[m + i];
         }
-        for (unsigned int t = 0; t < m; t++) {
-            w[len - m + t] = s[t];
+        for (size_t i = 0; i < m; ++i) {
+            w[len - m + i] = s[i];
         }
     }
+
     w[len] = '\0';
     delete[] s;
     return w;

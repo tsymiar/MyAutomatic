@@ -218,7 +218,7 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\KlineUtil\deep\Level2View.h" />
+    <ClInclude Include="..\KlineUtil\level2\Level2View.h" />
     <ClInclude Include="..\KlineUtil\dos\DOSCout.h" />
     <ClInclude Include="..\KlineUtil\elem\Screen-Sharing.h" />
     <ClInclude Include="..\KlineUtil\html\cefWebKit.h" />
@@ -244,7 +244,7 @@
     <ClCompile Include="..\..\LinxSrvc\gSOAPverify\fix\soapClient_fix.cpp" />
     <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\soapC.cpp" />
     <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\stdsoap2.cpp" />
-    <ClCompile Include="..\KlineUtil\deep\Level2View.cpp" />
+    <ClCompile Include="..\KlineUtil\level2\Level2View.cpp" />
     <ClCompile Include="..\KlineUtil\dos\DOSCout.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>

@@ -93,7 +93,7 @@ typedef struct point3d  /* point in 3D */
 
 typedef struct surface	/* surface */
 {
-    INT4U	pointn;     /* point number		*/
+    INT4U	points;     /* point number		*/
     INT4U	triangle;	/* triangle number	*/
     INT4U	quadric;	/* quadrangle number*/
     POINT3D* pointlist;	/* points list		*/
@@ -104,7 +104,7 @@ typedef struct surface	/* surface */
 typedef struct object	/* OBJECT */
 {
     INT4U	SurfNum;    /* surface number and list size */
-    SURFACE* surflist;  /* surfaces list in the object  */
+    SURFACE* surfaceList;  /* surfaces list in the object  */
 }   OBJECT;
 
 class House {
@@ -123,9 +123,9 @@ protected:
     int tall = 0;
 
     TEXTURE_2D** TextureList = NULL;
-    OBJECT* ObjectList = NULL;  /* ObjectList[0]:isolated surfaces*/
+    OBJECT* objectList = NULL;  /* ObjectList[0]:isolated surfaces*/
 
-    INT4S         ObjectNum = 0;
+    INT4S         objectNum = 0;
 
     char          gEnergyFile[30] = {};
     char	      sLookAtFN[100] = {};
@@ -136,21 +136,21 @@ protected:
     unsigned short int texture_mapping = FALSE,
         land_fogging = TRUE, flat_shading = TRUE;
 
-    float Angle = 0;
+    float angle = 0;
     float Near = 0;
     float ex = 0, ey = 0, ez = 0;
     float cx = 0, cy = 0, cz = 0;
     float ux = 0, uy = 0, uz = 0;
 
     unsigned char* ImageDatas[MAX_TEX] = {};
-    INT2U rslxs[MAX_TEX], rslys[MAX_TEX] = {};
+    INT2U m_lxs[MAX_TEX], m_lys[MAX_TEX] = {};
     int   texNum = 0;
 public:
     House();
     // OpenGL specific
     BOOL CreateViewGLContext(HDC hDC);
     virtual ~House();
-    void MoveEye(int type, GLfloat amount = 0, int update = 0);
+    void    MoveEye(int type, GLfloat amount = 0, int update = 0);
     void	InitTex(int TexIndex);
     void	KillTex();
     void    LoadAllTexture();
@@ -158,8 +158,15 @@ public:
     void    CleanList();
     void    InitLookAt();
     void    ReadData();
-    unsigned char* OpenTexImage(INT2U TexIndex, INT2U* rslx, INT2U* rsly);
+    unsigned char* OpenTexImage(INT2U TexIndex, INT2U* slx, INT2U* sly);
     void    InitRenderWin();
-    void InitGeometry(void);
+    void    InitGeometry(void);
     void    Render(void);
+private:
+    void ReadUntil(FILE* fp, const char* target, char* buffer, size_t bufferSize);
+    void MoveForward(GLfloat amount);
+    void MoveLeftRight(GLfloat amount);
+    void TurnLeft(GLfloat amount);
+    void ResetView();
+    void UpdateView();
 };

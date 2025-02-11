@@ -1297,7 +1297,7 @@ void func_waitpid(int signo)
             fprintf(stderr, "Beyond filed size: %zd\n", len);
             break;
         }
-        if (len == 0) continue;
+        // if (len == 0) continue;
 #endif
         if (sock > 0) {
             memset(msg + 1, 0xf, 1);

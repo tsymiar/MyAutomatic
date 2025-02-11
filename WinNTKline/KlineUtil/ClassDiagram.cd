@@ -139,7 +139,7 @@
     <Position X="9" Y="0.5" Width="1.25" />
     <TypeIdentifier>
       <HashCode>AAAAAAgADMQAAAAAAEQAACAgQAACAACAAACDAAGIAAA=</HashCode>
-      <FileName>deep\Level2View.h</FileName>
+      <FileName>level2\Level2View.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="IMlogDlg" Collapsed="true">

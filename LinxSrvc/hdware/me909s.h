@@ -15,7 +15,7 @@
 #include <termios.h>
 
 #define TIME_WAIT 10000
-#define MAX_BUF_LEN	1024
+#define MAX_BUF_LEN 1024
 const char* PortName = "/dev/ttyUSB0";
 
 const char ME909Arguments[11][49] = {
@@ -47,18 +47,22 @@ int mem_usb_check()
     char* vendor, * prodid;
     size_t maxlinesize = 256;
     char* strperline = (char*)malloc(maxlinesize);
-    while (!feof(fusb)
-        && fgets(strperline, maxlinesize - 1, fusb) != NULL
-        && strperline[strlen(strperline) - 1] == '\n') {
-        if (strperline[0] == 'P') {
-            vendor = strstr(strperline, "Vendor=");
-            prodid = strstr(strperline, "ProdID=");
-            if (memcmp("12d1", (void*)(vendor + 7), 4) == 0 &&
-                memcmp("15c1", (void*)(prodid + 7), 4) == 0) {
-                free(strperline);
-                fclose(fusb);
+    if (strperline == NULL) {
+        perror("Memory allocation failed");
+        fclose(fusb);
+        return -1;
+    }
+    while (!feof(fusb) && fgets(strperline, maxlinesize - 1, fusb) != NULL) {
+        if (strperline[strlen(strperline) - 1] == '\n') {
+            if (strperline[0] == 'P') {
+                vendor = strstr(strperline, "Vendor=");
+                prodid = strstr(strperline, "ProdID=");
+                if (vendor && prodid && memcmp("12d1", vendor + 7, 4) == 0 && memcmp("15c1", prodid + 7, 4) == 0) {
+                    free(strperline);
+                    fclose(fusb);
+                    return 0;
+                }
             }
-            return 0;
         }
     }
     free(strperline);
@@ -78,7 +82,7 @@ int meat_main(void)
     int me_fd;
     int tries = 0;
     int flag = 0;
-    int cmmat = 0;
+    int cmds = 0;
     int curr = 0;
 
     if (mem_usb_check() == -2 && errno != 13) {
@@ -96,9 +100,7 @@ int meat_main(void)
     bzero(&options, sizeof(options));
 
     tcgetattr(me_fd, &options);
-    //位掩码方式激活本地连接、使能接收
     options.c_cflag |= (CLOCAL | CREAD);
-
     cfsetispeed(&options, B115200);
     cfsetospeed(&options, B115200);
     options.c_cflag &= ~CSIZE;
@@ -112,7 +114,7 @@ int meat_main(void)
     options.c_lflag = 0;
 
     tcflush(me_fd, TCIOFLUSH);
-    if (0 == tcsetattr(me_fd, TCSANOW, &options)) {
+    if (tcsetattr(me_fd, TCSANOW, &options) == 0) {
         printf("Serial of %s being ready...\n", PortName);
     }
 
@@ -125,7 +127,7 @@ int meat_main(void)
             printf("State changed inside 1.5s, select ret = %d.\n", ret);
         } else {
             tries++;
-            if (tries == 1 && cmmat == 0) {
+            if (tries == 1 && cmds == 0) {
                 sprintf(buff, "%s\r\n", ME909Arguments[0]);
                 write(me_fd, buff, strlen(buff) + 1);
                 usleep(TIME_WAIT);
@@ -135,7 +137,7 @@ int meat_main(void)
                     for (curr = 0; curr < 11; curr++) {
                         printf("\t%s\n", ME909Arguments[curr]);
                     }
-                    cmmat = 11;
+                    cmds = 11;
                     flag = 1;
                 } else {
                     flag = 0;
@@ -166,11 +168,11 @@ int meat_main(void)
                 } else {
                     if (strstr(rply, "OK") == NULL)
                         continue;
-                    if (cmmat == 0)
+                    if (cmds == 0)
                         printf("First command '%s' reply:\n--------\n%s\n--------\n", ME909Arguments[0], rply);
                     else
                         printf("Reply from %s:\n--------\n%s\n--------\n", PortName, rply);
-                    cmmat++;
+                    cmds++;
                 }
             }
             if (strstr(rply, "CONNECT")) {
@@ -181,9 +183,9 @@ int meat_main(void)
             usleep(TIME_WAIT);
         }
         memset(buff, 0, sizeof(buff));
-        if (cmmat <= 10 && curr == 0) {
-            printf("Current AT Command %d: %s\n", cmmat, ME909Arguments[cmmat]);
-            strcpy(buff, ME909Arguments[cmmat]);
+        if (cmds <= 10 && curr == 0) {
+            printf("Current AT Command %d: %s\n", cmds, ME909Arguments[cmds]);
+            strcpy(buff, ME909Arguments[cmds]);
         } else {
             printf("New serial command('q' to quit): ");
             if (scanf("%64s", rply) == -1) {

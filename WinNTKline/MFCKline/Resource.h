@@ -43,7 +43,7 @@
 #define ID_ACCLER                       32771
 #define IDR_BKG                         32780
 #define ID_BKG                          32781
-#define ID_DEEP                         32782
+#define ID_LEVEL                        32782
 #define ID_NULL                         32783
 #define ID_BTN_M                        32791
 #define ID_BTN_F                        32792

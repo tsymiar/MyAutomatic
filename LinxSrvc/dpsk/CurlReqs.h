@@ -10,11 +10,12 @@ struct ReqsPara {
         bool stream;
         float temperature;
         int max_tokens;
-        float top_p;
-        std::string model = "deepseek-chat"; // "deep_thought_v1";
+        bool web_search = false;
+        float top;
+        std::string model = "deepseek-chat"; // "deep_thought_v1"; "deepseek/deepseek-r1:free";
         std::string depth = "high";
         std::string system_msg = "You are a helpful assistant.";
-        ApiPara() : stream(false), temperature(0.7), max_tokens(500), top_p(0.9) { }
+        ApiPara() : stream(false), temperature(0.7), max_tokens(500), top(0.9) { }
     };
     ApiPara apiPara;
     ReqsPara() : json(true), multi(true), balance(false) { }

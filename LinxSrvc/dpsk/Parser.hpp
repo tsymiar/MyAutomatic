@@ -121,7 +121,7 @@ public:
                 }
                 break;
             case BlockType::Paragraph:
-                parsed << std::accumulate(std::next(block.contents.begin()), block.contents.end(), block.contents[0], [](std::string a, std::string b) { return std::move(a) + " " + b; }) << std::endl;
+                parsed << std::accumulate(std::next(block.contents.begin()), block.contents.end(), block.contents[0], [](std::string a, const std::string& b) { return std::move(a) + " " + b; }) << std::endl;
                 break;
             case BlockType::CodeBlock:
                 if (block.language == "cpp") {

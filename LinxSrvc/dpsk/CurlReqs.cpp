@@ -88,8 +88,9 @@ std::string combineMessage(const std::string& msg, ReqsPara::ApiPara para)
     js_data["stream"] = para.stream;
     js_data["temperature"] = para.temperature;
     js_data["max_tokens"] = para.max_tokens;
-    js_data["top_p"] = para.top_p;
+    js_data["search_config"]["enable_web_search"] = para.web_search;
     js_data["parameters"]["depth"] = para.depth;
+    js_data["top_p"] = para.top;
     js_data["messages"][0] = { {"role", "system"}, {"content", para.system_msg} };
     for (size_t i = 0; i < CurlReqs::m_messages.size(); i++) {
         json js_msg;
@@ -161,7 +162,11 @@ std::string CurlReqs::processChat(const std::string& text, const ReqsPara& para)
     try {
         auto jsonResponse = json::parse(message);
         if (para.balance) {
-            return jsonResponse["error_msg"].dump();
+            return (jsonResponse["error_msg"].empty() ? jsonResponse["balance"].dump() : jsonResponse["error_msg"].dump());
+        } else {
+            if (!jsonResponse["error"].empty()) {
+                return jsonResponse["error"]["message"].dump();
+            }
         }
         content = jsonResponse["choices"][0]["message"]["content"];
     } catch (const std::exception& e) {

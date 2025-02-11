@@ -69,7 +69,7 @@
     <ClInclude Include="..\KlineUtil\html\MfcHtmlView.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\KlineUtil\deep\Level2View.h">
+    <ClInclude Include="..\KlineUtil\level2\Level2View.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\KlineUtil\Def\MacroDef.h">
@@ -215,7 +215,7 @@
     <ClCompile Include="..\KlineUtil\HOOK\injectDLL.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\KlineUtil\deep\Level2View.cpp">
+    <ClCompile Include="..\KlineUtil\level2\Level2View.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\KlineUtil\HOOK\jniNative.cpp">

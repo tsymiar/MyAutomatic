@@ -4,7 +4,7 @@
 #include	"afxdialogex.h"
 #include	"MYGL/OGLKview.h"
 #include	"netwk/CTPclient.h"
-#include	"deep/Level2View.h"
+#include	"level2/Level2View.h"
 #include	"font/FontNehe.h"
 #include	"com/CommSet.h"
 #include	"dos/DOSCout.h"
