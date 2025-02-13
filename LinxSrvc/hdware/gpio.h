@@ -94,8 +94,8 @@ int set_gpio_value(unsigned int gpio, int value)
         return file;
     }
 
-    const char* value = value == LOW ? "0" : "1";
-    write(file, value, 2);
+    const char* ch = (value == LOW ? "0" : "1");
+    write(file, ch, 2);
     close(file);
 
     return 0;
@@ -113,13 +113,18 @@ int get_gpio_value(unsigned gpio)
 
     char ch;
     ssize_t len = read(file, &ch, 1);
+    if (len < 0) {
+        perror("get_gpio_value");
+        close(file);
+        return -1;
+    }
     close(file);
 
     if (len != 1) {
         return -2;
     }
 
-    return ch == '0' ? 0 : 1;
+    return (ch == '0' ? 0 : 1);
 }
 
 int set_gpio_by_direction(unsigned gpio, int value, int direct)

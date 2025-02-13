@@ -129,8 +129,11 @@ int meat_main(void)
             tries++;
             if (tries == 1 && cmds == 0) {
                 sprintf(buff, "%s\r\n", ME909Arguments[0]);
-                write(me_fd, buff, strlen(buff) + 1);
-                usleep(TIME_WAIT);
+                write(me_fd, buff, strnlen(buff, sizeof(buff)) + 1);
+                struct timespec time = { 0 };
+                time.tv_sec = 0;
+                time.tv_nsec = TIME_WAIT * 1000;
+                nanosleep(&time, NULL);
             } else {
                 if (tries > 1000) {
                     printf("Cause too many timeout, checking process exit!\n");
@@ -158,7 +161,8 @@ int meat_main(void)
         } else {
             ssize_t rd_stdin;
             memset(rply, 0, sizeof(rply));
-            if ((rd_stdin = read(me_fd, rply, sizeof(rply))) > 0) {
+            if ((rd_stdin = read(me_fd, rply, sizeof(rply) - 1)) > 0) {
+                rply[rd_stdin] = '\0'; // Null-terminate the buffer
                 if (strstr(rply, ">")) {
                     printf("Enter text to serial: ");
                     memset(buff, 0, sizeof(buff));

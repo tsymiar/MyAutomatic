@@ -27,12 +27,11 @@ while (len = _read(file, buff, sizeof(buff)) > 0)\
 using namespace freetype;
 // MyOglDrawDlg 对话框
 
-class MyOglDrawDlg : public CDialog
-{
+class MyOglDrawDlg : public CDialog {
     DECLARE_DYNAMIC(MyOglDrawDlg)
 
 public:
-    MyOglDrawDlg() {};
+    MyOglDrawDlg() { };
     MyOglDrawDlg(const char* sIP, CWnd* pParent = NULL);   // 标准构造函数
     virtual ~MyOglDrawDlg();
 
@@ -129,16 +128,18 @@ public:
         char* file = "./mysql/libmysql.dll";
         char* moving = "../x64/gSOAPWeb/libmysql.dll";
         FILE* fl = fopen(file, "rb"), * mv = fopen(moving, "a+");
-        if (!(fl || mv))
-        {
-            for (; i < (int)sizeof(text) - 1; i++)
-            {
+        if (!(fl || mv)) {
+            for (; i < (int)sizeof(text) - 1; i++) {
                 putchar(text[i]);
                 Sleep(70);
             }
             if (fl)
-                while (gc = fgetc(fl) != EOF)
-                {
+                while ((gc = fgetc(fl)) != EOF) {
+                    if (ferror(fl) || ferror(mv)) {
+                        fclose(fl);
+                        fclose(mv);
+                        return -1;
+                    }
                     fputc(gc, mv);
                 }
             fclose(fl);
