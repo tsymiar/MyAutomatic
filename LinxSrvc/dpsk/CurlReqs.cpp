@@ -2,6 +2,7 @@
 #include <iostream>
 #include <thread>
 #include <atomic>
+#include "Utils.hpp"
 
 std::vector<std::string> CurlReqs::m_messages = std::vector<std::string>();
 
@@ -92,11 +93,26 @@ std::string combineMessage(const std::string& msg, ReqsPara::ApiPara para)
     js_data["parameters"]["depth"] = para.depth;
     js_data["top_p"] = para.top;
     js_data["messages"][0] = { {"role", "system"}, {"content", para.system_msg} };
-    for (size_t i = 0; i < CurlReqs::m_messages.size(); i++) {
+    if (para.model.find("reasoner") != std::string::npos) {
         json js_msg;
-        js_msg["content"] = CurlReqs::m_messages[i];
         js_msg["role"] = "user";
-        js_data["messages"].push_back(js_msg);
+        std::string content = "";
+        for (size_t i = 0; i < CurlReqs::m_messages.size(); i++) {
+            content += CurlReqs::m_messages[i];
+            if (i < CurlReqs::m_messages.size() - 1) {
+                // content += " & inputText & ";
+                content += ", ";
+            }
+        }
+        js_msg["content"] = content;
+        js_data["messages"][1] = js_msg;
+    } else {
+        for (size_t i = 0; i < CurlReqs::m_messages.size(); i++) {
+            json js_msg;
+            js_msg["content"] = CurlReqs::m_messages[i];
+            js_msg["role"] = "user";
+            js_data["messages"].push_back(js_msg);
+        }
     }
     std::string message = js_data.dump();
     // std::cout << "json: " << message << std::endl;
@@ -161,6 +177,7 @@ std::string CurlReqs::processChat(const std::string& text, const ReqsPara& para)
     std::string content = "";
     try {
         auto jsonResponse = json::parse(message);
+        // std::cout << "\r" << jsonResponse << std::endl;
         if (para.balance) {
             return (jsonResponse["error_msg"].empty() ? jsonResponse["balance"].dump() : jsonResponse["error_msg"].dump());
         } else {
@@ -168,10 +185,15 @@ std::string CurlReqs::processChat(const std::string& text, const ReqsPara& para)
                 return jsonResponse["error"]["message"].dump();
             }
         }
-        content = jsonResponse["choices"][0]["message"]["content"];
+        std::string thinking = jsonResponse["choices"][0]["message"]["reasoning_content"];
+        if (!thinking.empty()) {
+            content = "[" + Markdown::Parse(thinking) + "]\n";
+        }
+        content += ("\r--------\n" + Markdown::Parse(jsonResponse["choices"][0]["message"]["content"]) + "\n--------");
     } catch (const std::exception& e) {
         std::cerr << "JSON parse exception: " << e.what() << std::endl;
+        CurlReqs::m_messages.pop_back();
         return std::string();
     }
-    return ("\r--------\n" + content + "\n--------");
+    return content;
 }

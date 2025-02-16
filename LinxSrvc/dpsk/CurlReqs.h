@@ -2,6 +2,14 @@
 #include <string>
 #include <vector>
 
+static std::vector<std::string> Models = {
+    "deepseek-chat",
+    "deepseek-coder",
+    "deepseek-reasoner",
+    "deep_thought_v1",
+    "deepseek/deepseek-r1:free"
+};
+
 struct ReqsPara {
     bool json;
     bool multi;
@@ -10,9 +18,9 @@ struct ReqsPara {
         bool stream;
         float temperature;
         int max_tokens;
-        bool web_search = false;
         float top;
-        std::string model = "deepseek-chat"; // "deep_thought_v1"; "deepseek/deepseek-r1:free";
+        bool web_search = false;
+        std::string model = Models[2];
         std::string depth = "high";
         std::string system_msg = "You are a helpful assistant.";
         ApiPara() : stream(false), temperature(0.7), max_tokens(500), top(0.9) { }

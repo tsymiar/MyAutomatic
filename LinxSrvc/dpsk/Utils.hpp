@@ -4,6 +4,7 @@
 #include <sstream>
 #include <numeric>
 #include <regex>
+#include <fstream>
 
 enum class BlockType {
     None,
@@ -211,5 +212,52 @@ private:
             lines.push_back(line);
         }
         return lines;
+    }
+};
+
+class Config {
+private:
+    std::string m_filename{};
+private:
+    std::string getFileContent(const std::string& filename)
+    {
+        std::string content{};
+        std::ifstream file(filename);
+        if (file.is_open()) {
+            content.assign(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
+        } else {
+            return {};
+        }
+        file.close();
+        if (content.empty()) {
+            return {};
+        }
+        return content;
+    }
+    std::string getFileVariable(const std::string& filename, const std::string& keyword)
+    {
+        std::string content = getFileContent(filename);
+        std::string val = {};
+        size_t pos = content.find(keyword);
+        if (pos != std::string::npos) {
+            val = content.substr(pos, content.size());
+            pos = val.find("=");
+            size_t org = val.find("&");
+            if (org == std::string::npos) {
+                val = val.substr(pos + 1, val.size() - pos - 1);
+            } else {
+                val = val.substr(pos + 1, org - pos - 1);
+            }
+        }
+        if (val.back() == '\n') {
+            val.pop_back();
+        }
+        return val;
+    }
+public:
+    Config(const std::string& filename) : m_filename(filename) { }
+    std::string getVariable(const std::string& keyword)
+    {
+        return getFileVariable(m_filename, keyword);
     }
 };

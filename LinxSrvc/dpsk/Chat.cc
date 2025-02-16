@@ -1,6 +1,6 @@
 #include "CurlReqs.h"
 #include <iostream>
-#include "Parser.hpp"
+#include "Utils.hpp"
 
 int main()
 {
@@ -15,7 +15,9 @@ int main()
             continue;
         }
         ReqsPara para;
-        std::cout << Markdown::Parse(CurlReqs::processChat(text, para)) << std::endl;
+        Config config("params.txt");
+        para.balance = atoi(config.getVariable("model").c_str());
+        std::cout << CurlReqs::processChat(text, para) << std::endl;
     }
     return 0;
 }

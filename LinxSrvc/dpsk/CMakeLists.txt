@@ -63,5 +63,6 @@ add_custom_command(
     POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory ${EXEC_PATH}
     COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:${PROJ_NAME}> ${EXEC_PATH}
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/params.txt ${EXEC_PATH}
     COMMENT "-- To use ${PROJ_NAME} DO NOT forget to set apiKey by `export DPSK_API_KEY=sk-xxxxxxxx` at first."
 )
