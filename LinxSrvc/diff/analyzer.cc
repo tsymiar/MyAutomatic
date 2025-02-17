@@ -62,6 +62,48 @@ class CodeAnalyzer {
         return lines;
     }
 
+    // New function: Extract effective content
+    static std::string get_effective_content(const std::string& line)
+    {
+        std::string stripped_content;
+
+        // Remove comments first
+        bool in_block_comment = false;
+        for (size_t i = 0; i < line.size(); ++i) {
+            if (in_block_comment) {
+                if (line[i] == '*' && i + 1 < line.size() && line[i + 1] == '/') {
+                    in_block_comment = false;
+                    i++; // Skip the closing '/'
+                }
+                // Skip all characters within block comment
+            } else {
+                if (line[i] == '/' && i + 1 < line.size()) {
+                    if (line[i + 1] == '*') {
+                        in_block_comment = true;
+                        i++; // Skip the '*'
+                    } else if (line[i + 1] == '/') {
+                        // Skip to end of line for single-line comment
+                        break;
+                    } else {
+                        stripped_content.push_back(line[i]);
+                    }
+                } else {
+                    stripped_content.push_back(line[i]);
+                }
+            }
+        }
+
+        // Now remove whitespace
+        std::string content;
+        for (char c : stripped_content) {
+            if (!std::isspace(c)) {
+                content += c;
+            }
+        }
+
+        return content;
+    }
+
     std::string colorize(const std::string& text, const char* color) const
     {
         return use_color_ ? (color + text + RESET) : text;
@@ -78,10 +120,23 @@ public:
         const auto lines1 = read_lines(file1);
         const auto lines2 = read_lines(file2);
 
+        // Preprocessing: Extract effective content
+        std::vector<std::string> preprocessed_lines1;
+        preprocessed_lines1.reserve(lines1.size());
+        for (const auto& line : lines1) {
+            preprocessed_lines1.push_back(get_effective_content(line));
+        }
+
+        std::vector<std::string> preprocessed_lines2;
+        preprocessed_lines2.reserve(lines2.size());
+        for (const auto& line : lines2) {
+            preprocessed_lines2.push_back(get_effective_content(line));
+        }
+
         // Calculate similarity
         std::map<std::string, int> counter1, counter2;
-        for (const auto& line : lines1) counter1[line]++;
-        for (const auto& line : lines2) counter2[line]++;
+        for (const auto& line : preprocessed_lines1) counter1[line]++;
+        for (const auto& line : preprocessed_lines2) counter2[line]++;
 
         size_t common = 0;
         for (const auto& [line, count] : counter1) {
@@ -100,8 +155,8 @@ public:
         // Generate diff
         if (show_diff_) {
             size_t i = 0, j = 0;
-            while (i < lines1.size() && j < lines2.size()) {
-                if (lines1[i] == lines2[j]) {
+            while (i < preprocessed_lines1.size() && j < preprocessed_lines2.size()) {
+                if (preprocessed_lines1[i] == preprocessed_lines2[j]) {
                     ++i;
                     ++j;
                 } else {
@@ -111,11 +166,11 @@ public:
                     ++j;
                 }
             }
-            while (i < lines1.size()) {
+            while (i < preprocessed_lines1.size()) {
                 out.diff.push_back(colorize("- " + lines1[i], RED));
                 ++i;
             }
-            while (j < lines2.size()) {
+            while (j < preprocessed_lines2.size()) {
                 out.diff.push_back(colorize("+ " + lines2[j], GREEN));
                 ++j;
             }
@@ -171,7 +226,7 @@ public:
     void print_results(const FileResult& total,
         const std::vector<FileResult>& details) const
     {
-        // Print diffs
+        // Output differences
         if (show_diff_ && !details.empty()) {
             std::cout << colorize("\n=== DIFFERENCES ===", CYAN) << "\n";
             for (const auto& res : details) {
@@ -184,13 +239,13 @@ public:
             }
         }
 
-        // Print summary
+        // Output summary
         std::cout << colorize("\n=== ANALYSIS SUMMARY ===", CYAN) << "\n"
             << colorize("Matched files: " + std::to_string(details.size()), YELLOW) << "\n"
             << colorize("Similarity: " + std::to_string(static_cast<int>(total.ratio * 100)) + "%", YELLOW) << "\n"
             << colorize("Duplicate lines: " + std::to_string(total.duplicates), MAGENTA) << "\n";
 
-        // Print file list
+        // Output file list
         std::cout << colorize("\n=== FILES ===", CYAN) << "\n";
         for (const auto& res : details) {
             const std::string color = res.ratio > 0.7 ? GREEN :

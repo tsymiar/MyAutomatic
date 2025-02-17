@@ -5,6 +5,9 @@
 #include <numeric>
 #include <regex>
 #include <fstream>
+#include <iostream>
+
+// using namespace std::string_literals; // C++14 or later for "s" suffix
 
 enum class BlockType {
     None,
@@ -109,7 +112,7 @@ public:
     static std::string Parse(const std::string& content)
     {
         Markdown mk;
-        std::vector<Block> blocks = mk.parse_blocks(content);
+        std::vector<Block> blocks = mk.parse_blocks(parse_formulas(content));
         std::stringstream parsed;
         for (const Block& block : blocks) {
             switch (block.type) {
@@ -171,7 +174,7 @@ private:
 
     bool is_code_block_delimiter(const std::string& line) const
     {
-        return line.find("```") == 0;
+        return (line.find("```") == 0);
     }
 
     std::string trim(const std::string& s) const
@@ -212,6 +215,36 @@ private:
             lines.push_back(line);
         }
         return lines;
+    }
+
+    static std::string parse_formulas(const std::string& mk)
+    {
+        std::string parsed = mk;
+        // 1. Escape any backslashes and $ to avoid conflicts during regex processing
+        parsed = std::regex_replace(
+            parsed,
+            std::regex(R"((?:\$([\\$])))"),
+            "\x01$1"
+        );
+        // 2. Handle display math (block-level) using $$...$$
+        parsed = std::regex_replace(
+            parsed,
+            std::regex(R"((\$\$)([^\$]*(?:\$(?!\$)[^\$]*)*)(\$\$))"),
+            "<display-math>$2</display-math>"
+        );
+        // 3. Handle inline math (inline) using $...$
+        parsed = std::regex_replace(
+            parsed,
+            std::regex(R"((\$)([^\\$]*(?:\\.[^\\$]*)*)(\$))"),
+            "<inline-math>$2</inline-math>"
+        );
+        // 4. Restore escaped characters
+        parsed = std::regex_replace(
+            parsed,
+            std::regex(R"(\x01([\\$]))"),
+            "\\$1"
+        );
+        return parsed;
     }
 };
 

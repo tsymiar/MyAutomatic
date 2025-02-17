@@ -3,6 +3,7 @@ import difflib
 import argparse
 from colorama import Fore, Style, init
 from collections import defaultdict
+import re
 
 # 初始化颜色支持
 init(autoreset=True)
@@ -39,15 +40,52 @@ def is_text_file(file_path):
 
 
 def read_file(file_path):
-    """安全读取文件内容"""
+    """安全读取文件内容，去除注释"""
     try:
         if not is_text_file(file_path):
             return []
         with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
-            return [line.rstrip("\n") for line in f]
+            content = f.read()
+        # 去除注释
+        # 只去掉行末所有空白、换行符：
+        # [line.rstrip() for line in f]
+        content_without_comments = strip_comments(file_path, content)
+        return content_without_comments.splitlines()
     except Exception as e:
         print(f"{Fore.RED}文件读取错误 {os.path.basename(file_path)}: {str(e)}")
         return []
+
+
+def strip_comments(file_path, code):
+    """去除代码中的注释"""
+    # 获取文件扩展名
+    file_ext = os.path.splitext(file_path)[1].lower()
+    comment_styles = {
+        ".py": (r"#.*", r'"""([^\"]|\"\")*"""', r"'''([^']|'')*'''"),
+        ".java": (r"//.*", r"/\*.*?\*/"),
+        ".js": (r"//.*", r"/\*.*?\*/"),
+        ".cpp": (r"//.*", r"/\*.*?\*/"),
+        ".c": (r"//.*", r"/\*.*?\*/"),
+        ".rs": (r"//.*", r"/\*.*?\*/"),
+        ".swift": (r"//.*", r"/\*.*?\*/"),
+        ".kt": (r"//.*", r"/\*.*?\*/"),
+        ".ts": (r"//.*", r"/\*.*?\*/"),
+        ".css": (r"/\*.*?\*/",),
+        ".scss": (r"/\*.*?\*/",),
+        ".less": (r"/\*.*?\*/",),
+    }
+    
+    comment_patterns = comment_styles.get(file_ext, ())
+    lines = code.splitlines()
+    result = []
+
+    for line in lines:
+        stripped_line = line
+        for pattern in comment_patterns:
+            stripped_line = re.sub(pattern, "", stripped_line)
+        result.append(stripped_line)
+    
+    return "\n".join(result)
 
 
 def generate_diff(file1, file2):
@@ -80,6 +118,7 @@ def generate_diff(file1, file2):
 
 def calculate_similarity(lines1, lines2):
     """计算文件相似度"""
+    # 去除注释后的内容
     valid1 = [ln.strip() for ln in lines1 if ln.strip()]
     valid2 = [ln.strip() for ln in lines2 if ln.strip()]
 

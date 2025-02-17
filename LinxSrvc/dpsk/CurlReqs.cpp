@@ -3,6 +3,9 @@
 #include <thread>
 #include <atomic>
 #include "Utils.hpp"
+#include <iostream>
+#include <chrono>
+#include <iomanip>
 
 std::vector<std::string> CurlReqs::m_messages = std::vector<std::string>();
 
@@ -162,6 +165,7 @@ std::string CurlReqs::processChat(const std::string& text, const ReqsPara& para)
     if (para.balance) {
         uri = "https://api.deepseek.com/chat/balance";
     }
+    auto start = std::chrono::steady_clock::now();
     std::string message;
     if (reqs.performRequest(uri, message)) {
         isRunning = false;
@@ -171,10 +175,23 @@ std::string CurlReqs::processChat(const std::string& text, const ReqsPara& para)
         isRunning = false;
         loadingThread.join();
         std::cerr << "Request Not ok!" << std::endl;
+        if (para.multi) {
+            CurlReqs::m_messages.pop_back();
+        }
         return std::string();
+    }
+    if (para.multi && message.empty()) {
+        CurlReqs::m_messages.pop_back();
+        return "Server is busy, try again later!";
     }
 
     std::string content = "";
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - start);
+    double seconds = duration.count() / 1000000.0;
+    std::stringstream ss;
+    ss << "\r(Think total " << std::fixed << std::setprecision(2) << seconds << " s.)" << std::endl;
+    content = ss.str();
+
     try {
         auto jsonResponse = json::parse(message);
         // std::cout << "\r" << jsonResponse << std::endl;
@@ -187,12 +204,15 @@ std::string CurlReqs::processChat(const std::string& text, const ReqsPara& para)
         }
         std::string thinking = jsonResponse["choices"][0]["message"]["reasoning_content"];
         if (!thinking.empty()) {
-            content = "[" + Markdown::Parse(thinking) + "]\n";
+            content += "[\n" + Markdown::Parse(thinking) + "]\n";
         }
-        content += ("\r--------\n" + Markdown::Parse(jsonResponse["choices"][0]["message"]["content"]) + "\n--------");
+        std::string json = jsonResponse["choices"][0]["message"]["content"];
+        content += ("\r--------\n" + Markdown::Parse(json) + "\n--------");
     } catch (const std::exception& e) {
         std::cerr << "JSON parse exception: " << e.what() << std::endl;
-        CurlReqs::m_messages.pop_back();
+        if (para.multi) {
+            CurlReqs::m_messages.pop_back();
+        }
         return std::string();
     }
     return content;
