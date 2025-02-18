@@ -65,7 +65,7 @@ ADD_CUSTOM_COMMAND(
     POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory ${EXEC_PATH}
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/${_TARGET_} ${EXEC_PATH}
-    COMMENT "-- 'gn' is a cross-platform tool to generatting numbers${HINT_MSG}."
+    COMMENT "-- 'gn' is a cross-platform tool to generating numbers${HINT_MSG}."
 )
 ADD_CUSTOM_TARGET(clear
     COMMAND ${CMAKE_BUILD_TOOL} clean

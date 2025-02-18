@@ -189,12 +189,12 @@ std::string CurlReqs::processChat(const std::string& text, const ReqsPara& para)
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - start);
     double seconds = duration.count() / 1000000.0;
     std::stringstream ss;
-    ss << "\r(Think total " << std::fixed << std::setprecision(2) << seconds << " s.)" << std::endl;
+    ss << "\r[Think total " << std::fixed << std::setprecision(2) << seconds << "s.]" << std::endl;
     content = ss.str();
 
     try {
         auto jsonResponse = json::parse(message);
-        // std::cout << "\r" << jsonResponse << std::endl;
+        // std::cout << jsonResponse << std::endl;
         if (para.balance) {
             return (jsonResponse["error_msg"].empty() ? jsonResponse["balance"].dump() : jsonResponse["error_msg"].dump());
         } else {
@@ -202,9 +202,11 @@ std::string CurlReqs::processChat(const std::string& text, const ReqsPara& para)
                 return jsonResponse["error"]["message"].dump();
             }
         }
-        std::string thinking = jsonResponse["choices"][0]["message"]["reasoning_content"];
-        if (!thinking.empty()) {
-            content += "[\n" + Markdown::Parse(thinking) + "]\n";
+        if (para.apiPara.model.find("reasoner") != std::string::npos) {
+            std::string thinking = jsonResponse["choices"][0]["message"]["reasoning_content"];
+            if (!thinking.empty()) {
+                content += "(\n" + Markdown::Parse(thinking) + ")\n";
+            }
         }
         std::string json = jsonResponse["choices"][0]["message"]["content"];
         content += ("\r--------\n" + Markdown::Parse(json) + "\n--------");

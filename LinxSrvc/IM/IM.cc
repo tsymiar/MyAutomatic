@@ -597,7 +597,7 @@ type_thread_func monitor(void* arg)
                         for (c = 0; c < MAX_ACTIVE; c++) {
                             set_n_get_mem(&active[c], c);
                             if (active[c].user[0] != '\0') {
-                                snprintf(sd_bufs + 2, 8, "%08x", c);
+                                snprintf(sd_bufs + 2, 9, "%08x", c);
                                 memcpy((sd_bufs + offset * (c + 4)), active[c].user, FiledSize);
                                 void* const psr = (sd_bufs + offset * (c + 4) + FiledSize);
                                 if ((*reinterpret_cast<char*>(psr)) == '\0') {
@@ -812,7 +812,7 @@ type_thread_func monitor(void* arg)
                             || (block > len && len > 0)) {
                             fprintf(stdout, "        "
                                 "File \"%s\": total = %ld, slice = %u, size = %zu.\r", IMAGE_BLOB, lSize, slice, len);
-                            int n = snprintf((sd_bufs + 14), 8, "%08u", slice);
+                            int n = snprintf((sd_bufs + 14), 10, "%08u", slice);
                             if (n < 0 || n >= 8) {
                                 fprintf(stderr, "Error: snprintf output was truncated or an encoding error occurred.\n");
                             }
