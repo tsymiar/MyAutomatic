@@ -112,7 +112,8 @@ struct PipeFifo read_fifo(long long flag)
         } else {
             fprintf(stdout, "FIFO catch: { %d, %lld, %p }.\n", fifo.value, fifo.flag, fifo.reserve);
             fifo.flag = -1;
-            write(fio, (void*)'\1', 1);
+            char c = '\1';
+            write(fio, &c, 1);
             fio = open(FIFO_FILE, O_RDONLY);
             continue;
         }

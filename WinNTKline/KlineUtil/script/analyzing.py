@@ -84,7 +84,7 @@ def strip_comments(file_path, code):
         for pattern in comment_patterns:
             stripped_line = re.sub(pattern, "", stripped_line)
         result.append(stripped_line)
-    
+
     return "\n".join(result)
 
 
