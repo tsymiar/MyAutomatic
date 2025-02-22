@@ -81,7 +81,7 @@ else
                         make clean
                     fi
                 else
-                    rm -rvf GeneratedFiles* *.stash *.user* *.qtvscr *.TMP
+                    rm -rvf -- GeneratedFiles* ./*.stash ./*.user* ./*.qtvscr ./*.TMP
                 fi
             fi
             ARR_SUB=(Debug */*Debug MFC cache build ./*.o .vs)

@@ -6,6 +6,9 @@
 #include <regex>
 #include <fstream>
 #include <iostream>
+#include <string>
+#include <vector>
+#include <algorithm>
 
 // using namespace std::string_literals; // C++14 or later for "s" suffix
 
@@ -22,6 +25,28 @@ struct Block {
     int heading_level;
     std::vector<std::string> contents;
     std::string language;
+};
+
+// Unicode mathematical symbol mapping
+const std::vector<std::pair<std::string, std::string>> SYMBOL_MAP = {
+    {"\\int", "∫"}, {"\\infty", "∞"}, {"\\pi", "π"},
+    {"\\sqrt", "√"}, {"\\frac", "/"}, {"\\sum", "Σ"}
+};
+
+// Superscript and subscript conversion table (including Greek letters)
+const std::vector<std::tuple<char, std::string, std::string>> SUPER_SUB_SCRIPT = {
+    {'0', "⁰", "₀"}, {'1', "¹", "₁"}, {'2', "²", "₂"}, {'3', "³", "₃"},
+    {'4', "⁴", "₄"}, {'5', "⁵", "₅"}, {'6', "⁶", "₆"}, {'7', "⁷", "₇"},
+    {'8', "⁸", "₈"}, {'9', "⁹", "₉"}, {'-', "⁻", "₋"}, {'+', "⁺", "₊"},
+    {'a', "ᵃ", "ₐ"}, {'b', "ᵇ", "♭"}, {'c', "ᶜ", "꜀"}, {'d', "ᵈ", "ꝱ"},
+    {'e', "ᵉ", "ₑ"}, {'f', "ᶠ", "ꞙ"}, {'x', "ˣ", "ₓ"}, {'y', "ʸ", "ᵧ"}
+};
+
+// Formula location structure
+struct FormulaSegment {
+    size_t start;
+    size_t tail;
+    bool is_block;
 };
 
 class Markdown {
@@ -112,35 +137,35 @@ public:
     static std::string Parse(const std::string& content)
     {
         Markdown mk;
-        std::vector<Block> blocks = mk.parse_blocks(parse_formulas(content));
+        std::vector<Block> blocks = mk.parse_blocks(parse_formulas(easy_formulas(content)));
         std::stringstream parsed;
         for (const Block& block : blocks) {
             switch (block.type) {
             case BlockType::Heading:
-                parsed << "H" << block.heading_level << ": " << block.contents[0] << std::endl;
+                parsed << "\033[1;34mH" << block.heading_level << ": " << block.contents[0] << "\033[0m" << std::endl;
                 break;
             case BlockType::List:
                 for (const std::string& item : block.contents) {
-                    parsed << "* " << item << std::endl;
+                    parsed << "\033[1;32m* " << item << "\033[0m" << std::endl;
                 }
                 break;
             case BlockType::Paragraph:
-                parsed << std::accumulate(std::next(block.contents.begin()), block.contents.end(), block.contents[0], [](std::string a, const std::string& b) { return std::move(a) + " " + b; }) << std::endl;
+                parsed << "\033[0;37m" << std::accumulate(std::next(block.contents.begin()), block.contents.end(), block.contents[0], [](std::string a, const std::string& b) { return std::move(a) + " " + b; }) << "\033[0m" << std::endl;
                 break;
             case BlockType::CodeBlock:
                 if (block.language == "cpp") {
-                    parsed << "+------C++-------+\n" << std::endl;
+                    parsed << "\033[1;36m+------C++-------+\033[0m\n" << std::endl;
                 } else {
-                    parsed << "+------" << block.language << "-------+\n" << std::endl;
+                    parsed << "\033[1;36m+------" << block.language << "-------+\033[0m\n" << std::endl;
                 }
                 for (const std::string& line : block.contents) {
-                    parsed << line << std::endl;
+                    parsed << "\033[0;33m" << line << "\033[0m" << std::endl;
                 }
-                parsed << "\n+-------------";
+                parsed << "\033[1;36m\n+-------------";
                 for (size_t i = 0; i < block.language.size(); i++) {
                     parsed << "-";
                 }
-                parsed << "+" << std::endl;
+                parsed << "+\033[0m" << std::endl;
                 break;
             default:
                 break;
@@ -217,7 +242,7 @@ private:
         return lines;
     }
 
-    static std::string parse_formulas(const std::string& mk)
+    static std::string easy_formulas(const std::string& mk)
     {
         std::string parsed = mk;
         // 1. Escape any backslashes and $ to avoid conflicts during regex processing
@@ -246,6 +271,211 @@ private:
         );
         return parsed;
     }
+
+    static std::string get_super(char c)
+    {
+        for (const auto& t : SUPER_SUB_SCRIPT)
+            if (get<0>(t) == tolower(c)) return get<1>(t);
+        return std::string(1, c);
+    }
+
+    static std::string get_sub(char c)
+    {
+        for (const auto& t : SUPER_SUB_SCRIPT)
+            if (get<0>(t) == tolower(c)) return get<2>(t);
+        return std::string(1, c);
+    }
+
+    // Enhanced formula conversion
+    static std::string improved_formula(const std::string& latex)
+    {
+        std::string parsed;
+
+        for (size_t i = 0; i < latex.length(); ++i) {
+            // Handle LaTeX commands
+            bool cmd_matched = false;
+            for (const auto& sym : SYMBOL_MAP) {
+                if (latex.substr(i, sym.first.length()) == sym.first) {
+                    parsed += sym.second;
+                    i += sym.first.length() - 1;
+                    cmd_matched = true;
+                    break;
+                }
+            }
+            if (cmd_matched) continue;
+
+            // Handle superscript and subscript
+            if (latex[i] == '^' || latex[i] == '_') {
+                bool is_super = (latex[i] == '^');
+                std::string content;
+                char wrap_char = 0;
+
+                if (latex[++i] == '{') {
+                    wrap_char = '}';
+                    i++;
+                }
+
+                while (i < latex.length()) {
+                    if (wrap_char && latex[i] == wrap_char) break;
+                    if (!wrap_char && (latex[i] == ' ' || latex[i] == '_' || latex[i] == '^')) break;
+                    content += latex[i++];
+                }
+
+                // Add parentheses to wrap complex content
+                bool needs_wrap = content.length() > 1 || !isalnum(content[0]);
+                std::string prefix = needs_wrap ? (is_super ? "⁽" : "₍") : "";
+                std::string suffix = needs_wrap ? (is_super ? "⁾" : "₎") : "";
+
+                for (char c : content) {
+                    prefix += is_super ? get_super(c) : get_sub(c);
+                }
+                parsed += prefix + suffix;
+
+                continue;
+
+                // Handle fractions
+                if (i + 4 < latex.length() && latex.substr(i, 5) == "\\frac") {
+                    i += 5;
+                    std::string num, den;
+                    int brace_count = 0;
+
+                    // Parse numerator
+                    if (latex[i] == '{') {
+                        i++;
+                        while (i < latex.length() && (latex[i] != '}' || brace_count > 0)) {
+                            if (latex[i] == '{') brace_count++;
+                            if (latex[i] == '}') brace_count--;
+                            num += latex[i++];
+                        }
+                        i++;
+                    }
+                    // Parse denominator
+                    if (latex[i] == '{') {
+                        i++;
+                        while (i < latex.length() && (latex[i] != '}' || brace_count > 0)) {
+                            if (latex[i] == '{') brace_count++;
+                            if (latex[i] == '}') brace_count--;
+                            den += latex[i++];
+                        }
+                        i++;
+                    }
+
+                    parsed += "(" + num + ")/(" + den + ")";
+                    continue;
+                }
+
+                // Default character handling
+                parsed += latex[i];
+            }
+            // Enhanced fraction handling
+            if (i + 4 < latex.length() && latex.substr(i, 5) == "\\frac") {
+                i += 5;
+                std::string num, den;
+                int brace_count = 0;
+
+                // Parse numerator
+                if (latex[i] == '{') {
+                    i++;
+                    while (i < latex.length() && (latex[i] != '}' || brace_count > 0)) {
+                        if (latex[i] == '{') brace_count++;
+                        if (latex[i] == '}') brace_count--;
+                        num += latex[i++];
+                    }
+                    i++;
+                } else {
+                    num = latex[i++];
+                }
+
+                // Parse denominator
+                if (latex[i] == '{') {
+                    i++;
+                    while (i < latex.length() && (latex[i] != '}' || brace_count > 0)) {
+                        if (latex[i] == '{') brace_count++;
+                        if (latex[i] == '}') brace_count--;
+                        den += latex[i++];
+                    }
+                    i++;
+                } else {
+                    den = latex[i++];
+                }
+
+                // Recursively process numerator and denominator content
+                std::string conv_num = improved_formula(num);
+                std::string conv_den = improved_formula(den);
+
+                // Intelligent parenthesis addition rules
+                auto needs_wrap = [](const std::string& s) {
+                    return s.length() > 1 ||
+                        (!isalnum(s[0]) && s != "π" && s != "Σ"); // Special handling for common symbols
+                    };
+
+            std::string display_num = needs_wrap(conv_num) ? "(" + conv_num + ")" : conv_num;
+            std::string display_den = needs_wrap(conv_den) ? "(" + conv_den + ")" : conv_den;
+
+            parsed += display_num + "/" + display_den;
+            continue;
+        }
+    }
+    return parsed;
+}
+
+static std::vector<FormulaSegment> locate_formulas(const std::string& content)
+{
+    std::vector<FormulaSegment> formulas;
+    size_t pos = 0;
+
+    while (pos < content.length()) {
+        size_t block_start = content.find("$$", pos);
+        size_t inline_start = content.find('$', pos);
+
+        // 优先处理块公式
+        if (block_start != std::string::npos &&
+            (inline_start == std::string::npos || block_start < inline_start)) {
+            size_t block_end = content.find("$$", block_start + 2);
+            if (block_end == std::string::npos) break;
+
+            formulas.push_back({ block_start, block_end + 1, true });
+            pos = block_end + 2;
+        }
+        // Process inline formulas
+        else if (inline_start != std::string::npos) {
+            size_t inline_end = content.find('$', inline_start + 1);
+            if (inline_end == std::string::npos) break;
+
+            formulas.push_back({ inline_start, inline_end, false });
+            pos = inline_end + 1;
+        } else {
+            break;
+        }
+    }
+
+    // Sort by start position in descending order
+    std::sort(formulas.begin(), formulas.end(), [](const FormulaSegment& a, const FormulaSegment& b) {
+        return a.start > b.start;
+        });
+
+    return formulas;
+}
+
+// Main processing function
+static std::string parse_formulas(const std::string& markdown)
+{
+    std::string output = markdown;
+    auto formulas = locate_formulas(markdown);
+
+    for (const auto& seg : formulas) {
+        std::string original = output.substr(seg.start, seg.tail - seg.start + (seg.is_block ? 1 : 0));
+        std::string content = original.substr(
+            seg.is_block ? 2 : 1,
+            original.length() - (seg.is_block ? 4 : 2)
+        );
+
+        std::string converted = improved_formula(content);
+        output.replace(seg.start, seg.tail - seg.start + 1, converted);
+    }
+
+    return output;
+}
 };
 
 class Config {
@@ -288,7 +518,7 @@ private:
         return val;
     }
 public:
-    Config(const std::string& filename) : m_filename(filename) { }
+    explicit Config(const std::string& filename) : m_filename(filename) { }
     std::string getVariable(const std::string& keyword)
     {
         return getFileVariable(m_filename, keyword);
