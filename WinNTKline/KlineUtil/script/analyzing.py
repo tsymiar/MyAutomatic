@@ -74,7 +74,7 @@ def strip_comments(file_path, code):
         ".scss": (r"/\*.*?\*/",),
         ".less": (r"/\*.*?\*/",),
     }
-    
+
     comment_patterns = comment_styles.get(file_ext, ())
     lines = code.splitlines()
     result = []

@@ -1,10 +1,10 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8...3.16)
 
-set(CXX_STANDARD 11)
+set(CXX_STANDARD 20)
 set(PROJ_NAME dpsk_test)
 project(${PROJ_NAME} C CXX)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fPIC -Wall -ggdb")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fPIC -Wall -ggdb -Wno-c++20-extensions")
 
 file(GLOB SRC_FILE_LIST "*[^.h]*.c*[^.txt]*" "*.hpp")
 

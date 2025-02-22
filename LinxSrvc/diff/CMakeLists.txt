@@ -1,7 +1,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8...3.16)
 
 set(CXX_STANDARD 17)
-set(PROJ_NAME analyzer)
+set(PROJ_NAME analyzing)
 project(${PROJ_NAME} C CXX)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -fPIC -Wall -ggdb")

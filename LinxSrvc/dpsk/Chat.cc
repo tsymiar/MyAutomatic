@@ -5,11 +5,16 @@
 int main()
 {
     while (true) {
-        std::string text;
+        std::string text = "";
         std::cout << "请输入聊天内容（输入 'q' 退出）: ";
         std::getline(std::cin, text);
         if (text == "q") {
             break;
+        }
+        if (std::cin.eof()) {
+            std::cout << std::endl;
+            std::cin.clear();
+            continue;
         }
         if (text.empty()) {
             continue;
