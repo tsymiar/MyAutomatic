@@ -301,13 +301,13 @@
     <None Include="..\KlineUtil\cfg\ips.ini">
       <Filter>配置脚本</Filter>
     </None>
-    <None Include="..\KlineUtil\script\call.bat">
+    <None Include="..\KlineUtil\tool\call.bat">
       <Filter>配置脚本</Filter>
     </None>
-    <None Include="..\KlineUtil\script\blobstxt.sh">
+    <None Include="..\KlineUtil\tool\blobstxt.sh">
       <Filter>配置脚本</Filter>
     </None>
-    <None Include="..\KlineUtil\script\reptile.py">
+    <None Include="..\KlineUtil\tool\reptile.py">
       <Filter>配置脚本</Filter>
     </None>
     <None Include="packages.config" />
@@ -326,7 +326,7 @@
     <None Include="..\..\clean.bat">
       <Filter>配置脚本</Filter>
     </None>
-    <None Include="..\KlineUtil\script\MarketKline.py">
+    <None Include="..\KlineUtil\tool\MarketKline.py">
       <Filter>配置脚本</Filter>
     </None>
   </ItemGroup>

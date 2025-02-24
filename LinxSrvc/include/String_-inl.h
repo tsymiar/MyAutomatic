@@ -84,7 +84,7 @@ public:
     static int char_count_array_(char** arr, char ch, int m = 1/*1st dim of arr*/);
     static char* str_ch_move_(char* w, char ch, int d, bool fore = false/*默认向后*/);
     static char* str_pos_move_(char* w, int m, int d, bool fore = false);
-    static char* str_roll_move_(char* w, int m, bool fore = false);
+    static char* str_roll_move_(char* w, unsigned int m, bool fore = false);
 private:
     char* m_data;
 };
@@ -543,7 +543,7 @@ inline char* String_::str_pos_move_(char* w, int m, int d, bool f)
     return w;
 }
 //字符串整体环状移动
-inline char* String_::str_roll_move_(char* w, int m, bool f)
+inline char* String_::str_roll_move_(char* w, unsigned int m, bool f)
 {
     size_t len = strlen_(w);
     if (m > int(len))
