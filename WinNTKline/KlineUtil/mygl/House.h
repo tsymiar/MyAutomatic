@@ -143,7 +143,8 @@ protected:
     float ux = 0, uy = 0, uz = 0;
 
     unsigned char* ImageDatas[MAX_TEX] = {};
-    INT2U m_lxs[MAX_TEX], m_lys[MAX_TEX] = {};
+    INT2U m_lxs[MAX_TEX] = {};
+    INT2U m_lys[MAX_TEX] = {};
     int   texNum = 0;
 public:
     House();

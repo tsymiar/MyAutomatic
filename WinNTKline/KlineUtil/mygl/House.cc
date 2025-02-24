@@ -7,7 +7,7 @@
 
 extern TEXTURE_2D** TextureList;
 
-House::House() : ex(1.0f), ey(1.0f), ez(1.0f), cx(0.0f), cy(0.0f), cz(0.0f), Near(0.1f), angle(30.0f), m_lxs(0) { }
+House::House() : ex(1.0f), ey(1.0f), ez(1.0f), cx(0.0f), cy(0.0f), cz(0.0f), Near(0.1f), angle(30.0f) { }
 
 BOOL House::CreateViewGLContext(HDC hDC)
 {
@@ -350,7 +350,7 @@ void House::KillTex()
 void House::LoadAllTexture()
 {
     for (int i = 0; i < texNum; i++)
-        ImageDatas[i] = OpenTexImage(i + 1, &m_[i], &m_lys[i]);
+        ImageDatas[i] = OpenTexImage(i + 1, &m_lxs[i], &m_lys[i]);
 }
 
 void House::CleanAllTexture()
