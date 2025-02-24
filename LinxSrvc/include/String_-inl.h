@@ -546,7 +546,7 @@ inline char* String_::str_pos_move_(char* w, int m, int d, bool f)
 inline char* String_::str_roll_move_(char* w, unsigned int m, bool f)
 {
     size_t len = strlen_(w);
-    if (m > int(len))
+    if (m > size_t(len))
         m = len;
 
     char* s = new char[len + 1];
