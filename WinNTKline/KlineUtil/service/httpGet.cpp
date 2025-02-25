@@ -1,17 +1,15 @@
 #include "httpGet.h"
 #include <wininet.h>
 
-using namespace std;
-
-CString httpGetReq(string& sRequest, const string& sPort)
+CString httpGetReq(std::string& sRequestUrl, const std::string& sPort, const std::string& proxyUsername, const std::string& proxyPassword)
 {
     HINTERNET hSession = NULL;
     HINTERNET hConnection = NULL;
     HINTERNET hRequest = NULL;
     LPCTSTR sAcceptTypes = NULL;
-    string sHeaders;
-    string sResponse = "";
-    string sLog;
+    std::string sHeaders;
+    std::string sResponse = "";
+    std::string sLog;
     int nRet = -1;
     int nCount = 0;
     char szRet[512];
@@ -20,9 +18,9 @@ CString httpGetReq(string& sRequest, const string& sPort)
     DWORD dwReadLen = 0;
 
     int t = 0;
-    string lpszName = sRequest;
+    std::string lpszName = sRequestUrl;
     lpszName.erase(0, lpszName.find("://") + 3);
-    string sHostName = lpszName;
+    std::string sHostName = lpszName;
     lpszName.erase(0, t = lpszName.find("/") + 1);
     sHostName.erase(t - 1, sHostName.length() - t + 1);
 
@@ -56,9 +54,9 @@ CString httpGetReq(string& sRequest, const string& sPort)
         goto LERROR;
     }
 
-    int nLen = sRequest.length();
+    int nLen = sRequestUrl.length();
     //发送请求
-    nRet = ::HttpSendRequest(hRequest, NULL, -1, (void*)sRequest.c_str(), nLen);
+    nRet = ::HttpSendRequest(hRequest, NULL, -1, (void*)sRequestUrl.c_str(), nLen);
 
     int nErrorCount = 0;
     while (0 == nRet && nErrorCount < 3) {
@@ -84,7 +82,7 @@ CString httpGetReq(string& sRequest, const string& sPort)
         }
     }
     if (0 == nRet) {
-        nRet = ::HttpSendRequest(hRequest, NULL, -1, (void*)sRequest.c_str(), nLen);
+        nRet = ::HttpSendRequest(hRequest, NULL, -1, (void*)sRequestUrl.c_str(), nLen);
     }
     if (nRet == 0) {
         goto LERROR;
@@ -101,9 +99,9 @@ CString httpGetReq(string& sRequest, const string& sPort)
     nRet = atoi(szRet);
 
     if (HTTP_STATUS_PROXY_AUTH_REQ == nRet) {
-        InternetSetOption(hRequest, INTERNET_OPTION_PROXY_USERNAME, "User-001", strlen("User-001"));
-        InternetSetOption(hRequest, INTERNET_OPTION_PROXY_PASSWORD, "111111", strlen("111111"));
-        nRet = ::HttpSendRequest(hRequest, NULL, -1, (void*)sRequest.c_str(), nLen);
+        InternetSetOption(hRequest, INTERNET_OPTION_PROXY_USERNAME, (LPVOID)proxyUsername.c_str(), proxyUsername.length());
+        InternetSetOption(hRequest, INTERNET_OPTION_PROXY_PASSWORD, (LPVOID)proxyPassword.c_str(), proxyPassword.length());
+        nRet = ::HttpSendRequest(hRequest, NULL, -1, (void*)sRequestUrl.c_str(), nLen);
 
         if (nRet == 0) {
             goto LERROR;

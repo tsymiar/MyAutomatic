@@ -39,7 +39,12 @@ struct PipeFifo read_pipe(struct PipeFifo* _pipe)
         return pipe;
     }
     close(filedes[1]);
-    read(filedes[0], _pipe, sizeof(struct PipeFifo));
+    ssize_t bytes = read(filedes[0], _pipe, sizeof(struct PipeFifo));
+    if (bytes < 0) {
+        perror("read pipe from filedes[0] fail");
+    } else if (bytes != sizeof(struct PipeFifo)) {
+        fprintf(stderr, "read pipe from filedes[0] incomplete\n");
+    }
     pipe = *_pipe;
     return pipe;
 }
@@ -106,7 +111,7 @@ struct PipeFifo read_fifo(long long flag)
         perror("open FIFO by RDONLY fail");
         return fifo;
     }
-    while ((len = read(fio, &fifo, size)) > 0) {
+    while ((len = read(fio, &fifo, size)) > 0 && len == size) {
         if (fifo.flag == flag) {
             break;
         } else {

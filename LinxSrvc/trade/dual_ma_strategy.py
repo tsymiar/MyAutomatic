@@ -1,14 +1,37 @@
-# pip install -r requirements.txt
+#!/usr/bin/python
+# coding: utf-8
+
 """
 股票双均线交易系统专业版
-支持：真实行情接入、多券商接口支持、多周期分析、高级风控
+支持：
+1.真实行情接入、
+2.券商接口支持、
+3.周期分析引擎、
+4.风险控制模块
 """
 
+# graph TD
+#     A[行情网关] --> B(策略引擎)
+#     B --> C{风控引擎}
+#     C --> D[交易网关]
+#     D --> E[券商系统]
+#     B --> F[监控中心]
+#     F --> G[Web界面]
+#     F --> H[移动报警]
+#     E --> I((清算系统))
+
+# 安装依赖
+# pip install -r requirements.txt
+# 查看日志
+# tail -f logs/strategy.log
+
 import pandas as pd
-import numpy as np
+
+# import numpy as np
 import time
 import requests
-from datetime import datetime
+
+# from datetime import datetime
 from threading import Thread, Lock
 import talib
 from abc import ABC, abstractmethod
@@ -16,9 +39,12 @@ from rich.console import Console
 from rich.table import Table
 from rich.layout import Layout
 import yaml
-import hashlib
+import os
+
+# import hashlib
 import json
 import websocket
+import logging
 
 
 # ------------------ 行情接口抽象类 ------------------
@@ -30,6 +56,13 @@ class MarketDataAPI(ABC):
     @abstractmethod
     def get_historical_data(self, symbol, timeframe):
         pass
+
+
+# 配置日志
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+)
 
 
 # ------------------ Tushare行情实现 ------------------
@@ -46,20 +79,44 @@ class TushareAPI(MarketDataAPI):
             "fields": "",
         }
         resp = requests.post(self.base_url, json=data)
-        return resp.json()
+        try:
+            return resp.json()
+        except Exception as e:
+            logging.error("JSON解析错误: %s", e)
+            return None
 
     def get_real_time_data(self, symbol):
         data = self._request("realtime_quote", ts_code=symbol)
+        if not data or "data" not in data:
+            logging.error("实时行情数据为空: %s", symbol)
+            return None
+        try:
+            item = data["data"]["items"][0]
+        except (IndexError, KeyError, TypeError) as e:
+            logging.error("解析实时行情数据失败: %s, error: %s", symbol, e)
+            return None
         return {
             "symbol": symbol,
-            "price": float(data["data"]["items"][0][21]),
-            "volume": int(data["data"]["items"][0][13]),
+            "price": float(item[21]),
+            "volume": int(item[13]),
         }
 
     def get_historical_data(self, symbol, timeframe):
         freq_map = {"15m": "15MIN", "30m": "30MIN"}
-        df = self._request("pro_bar", ts_code=symbol, freq=freq_map[timeframe])
-        return pd.DataFrame(df["data"]["items"])
+        json_rsp = self._request("pro_bar", ts_code=symbol, freq=freq_map[timeframe])
+        if not json_rsp or "data" not in json_rsp:
+            logging.error("获取历史数据失败: %s, timeframe: %s", symbol, timeframe)
+            return pd.DataFrame()
+        try:
+            data = json_rsp["data"]
+            if data == None:
+                logging.error("解析历史数据失败: %s, msg: %s", symbol, json_rsp["msg"])
+                return pd.DataFrame()
+            items = data["items"]
+        except (KeyError, TypeError) as e:
+            logging.error("解析历史数据失败: %s, error: %s", symbol, e)
+            return pd.DataFrame()
+        return pd.DataFrame(items)
 
 
 # ------------------ 交易接口抽象类 ------------------
@@ -86,12 +143,12 @@ class CTPTradeAPI(TradeAPI):
 
     def connect(self):
         def on_message(ws, message):
-            print("Received:", message)
+            logging.info("Received: %s", message)
 
         self.ws = websocket.WebSocketApp(
             self.config["trade_server"], on_message=on_message
         )
-        Thread(target=self.ws.run_forever).start()
+        Thread(target=self.ws.run_forever, daemon=True).start()
         time.sleep(3)  # 等待连接建立
 
     def place_order(self, symbol, price, qty, direction):
@@ -101,14 +158,21 @@ class CTPTradeAPI(TradeAPI):
             "Quantity": qty,
             "Direction": direction,
         }
-        self.ws.send(json.dumps(order))
+        try:
+            self.ws.send(json.dumps(order))
+            logging.info("Order sent: %s", order)
+        except Exception as e:
+            logging.error("Failed to send order %s, error: %s", order, e)
 
     def get_positions(self):
-        self.ws.send(json.dumps({"action": "query_position"}))
+        try:
+            self.ws.send(json.dumps({"action": "query_position"}))
+        except Exception as e:
+            logging.error("Failed to query positions, error: %s", e)
         # 需要实现异步处理...
 
 
-# ------------------ 多周期分析引擎 ------------------
+# ------------------ 周期分析引擎 ------------------
 class MultiTimeframeAnalyzer:
     def __init__(self, symbol, timeframes, data_api):
         self.symbol = symbol
@@ -165,6 +229,9 @@ class RiskManager:
 # ------------------ 策略核心类 ------------------
 class EnhancedDualMAStrategy:
     def __init__(self, config_file):
+        if not os.path.exists(config_file):
+            logging.error("配置文件不存在: %s", config_file)
+            exit(1)
         self.load_config(config_file)
         self.init_components()
         self.running = True
@@ -212,6 +279,8 @@ class EnhancedDualMAStrategy:
                     is_valid, reason = self.risk_mgr.check_order(order, self.account)
                     if is_valid:
                         valid_orders.append(order)
+                    else:
+                        logging.warning("Order rejected: %s, reason: %s", order, reason)
 
                 # 执行交易
                 self.execute_orders(valid_orders)
@@ -222,22 +291,25 @@ class EnhancedDualMAStrategy:
                 time.sleep(5)
 
             except Exception as e:
-                print(f"策略运行异常: {str(e)}")
+                logging.error("策略执行异常: %s", e)
 
     def generate_signals(self):
         signals = []
         for sym, analyzer in self.analyzers.items():
             indicators = analyzer.calculate_indicators()
-            # 多周期协同分析
             bullish = all(ind["MA5"] > ind["MA20"] for ind in indicators.values())
             bearish = all(ind["MA5"] < ind["MA20"] for ind in indicators.values())
+            rt_data = self.data_api.get_real_time_data(sym)
+            if rt_data is None:
+                # 跳过此 symbol
+                continue
 
             if bullish:
                 signals.append(
                     {
                         "symbol": sym,
                         "direction": "buy",
-                        "price": self.data_api.get_real_time_data(sym)["price"],
+                        "price": rt_data["price"],
                     }
                 )
             elif bearish:
@@ -245,7 +317,7 @@ class EnhancedDualMAStrategy:
                     {
                         "symbol": sym,
                         "direction": "sell",
-                        "price": self.data_api.get_real_time_data(sym)["price"],
+                        "price": rt_data["price"],
                     }
                 )
         return signals
@@ -309,6 +381,18 @@ class EnhancedDualMAStrategy:
 
 
 # ------------------ 优化措施 ------------------
+
+# ---------- 回测模块 ----------
+from backtrader import Cerebro
+
+
+class BacktestEngine:
+    def run_backtest(self):
+        bro = Cerebro()
+        bro.addstrategy(EnhancedDualMAStrategy)
+        bro.run()
+
+
 # 启用异步IO
 import asyncio
 
@@ -330,7 +414,6 @@ class HTSCAPI(TradeAPI):
 class DerivativesEngine:
     def calculate_greeks(self):
         """期权希腊值计算"""
-        pass
 
 
 class Predictor:
@@ -339,20 +422,54 @@ class Predictor:
         from tensorflow.keras.models import Sequential
 
         model = Sequential()
+        Console().print(model)
         # ...神经网络结构定义
 
 
-"""
-graph TD
-    A[行情网关] --> B(策略引擎)
-    B --> C{风控引擎}
-    C --> D[交易网关]
-    D --> E[券商系统]
-    B --> F[监控中心]
-    F --> G[Web界面]
-    F --> H[移动报警]
-    E --> I((清算系统))
-"""
+# ---------- 可视化面板 ----------
+
+
+def get_latest_price(symbol):
+    """
+    获取最新的股票价格
+    :param symbol: 股票代码
+    :return: 最新价格
+    """
+    # 假设使用 TushareAPI 获取实时数据
+    tushare_api = TushareAPI(token=self.config["market"]["tushare_token"])
+    real_time_data = tushare_api.get_real_time_data(symbol)
+    if real_time_data:
+        return real_time_data["price"]
+    else:
+        logging.error("无法获取股票 %s 的最新价格", symbol)
+        return None
+
+
+class Dashboard:
+    def display(self, account, signals):
+        console = Console()
+        table = Table(title="策略监控面板")
+
+        # 添加列
+        table.add_column("股票代码", justify="right")
+        table.add_column("当前价格", justify="right")
+        table.add_column("持仓数量", justify="right")
+        table.add_column("信号", justify="center")
+
+        # 添加行
+        for symbol in account.positions:
+            pos = account.positions[symbol]
+            price = get_latest_price(symbol)
+            signal = signals.get(symbol, "")
+            table.add_row(
+                symbol,
+                f"{price:.2f}",
+                str(pos["quantity"]),
+                f"[green]{signal}" if signal == "BUY" else f"[red]{signal}",
+            )
+
+        console.print(table)
+
 
 # ------------------ 示例 ------------------
 if __name__ == "__main__":
@@ -369,4 +486,5 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         strategy.running = False
         strategy_thread.join()
-        print("策略已停止")
+        Console().print("策略已停止")
+        exit(0)

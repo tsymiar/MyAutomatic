@@ -30,22 +30,11 @@ if sys.getdefaultencoding() != fileEncoding:
 def main():
     plt.rcParams["font.sans-serif"] = ["SimHei"]
     plt.rcParams["axes.unicode_minus"] = False
-    """
-    ticket = "600747"  # 600747 是"大连控股"的股票代码
-    ticket += ".ss"  # .ss 表示上证 .sz表示深证
-    date_s = (2007, 1, 1)  # 起始日期，格式：(年，月，日)元组
-    date_e = (2011, 1, 1)  # 结束日期，格式：(年，月，日)元组
 
-    quotes = quotes_historical_yahoo_ochl(ticket, date_s, date_e)
-
-    if len(quotes) == 0:
-        raise SystemExit
-    """
     weekdays = WeekdayLocator(MONDAY)  # 主要刻度
     allday = DayLocator()  # 次要刻度
-    # mondayFormatter = DateFormatter("%b %d")  # eg.: Jan 12
-    alldayFormatter = DateFormatter("%Y-%m-%d")  # eg.: 2-29-2015
-    dayFormatter = DateFormatter("%d")  # eg.: 12
+    alldayFormatter = DateFormatter("%Y-%m-%d")
+    dayFormatter = DateFormatter("%d")
 
     fig, ax = plt.subplots()
     fig.subplots_adjust(bottom=0.2)
@@ -54,22 +43,17 @@ def main():
     ax.xaxis.set_minor_locator(allday)
     ax.xaxis.set_major_formatter(alldayFormatter)
     ax.xaxis.set_minor_formatter(dayFormatter)
-    """
-    plot_day_summary(ax, quotes, ticksize=3)
-    candlestick(ax, quotes, width=0.6, colorup="red", colordown="green")
-    """
     ax.xaxis_date()
     ax.autoscale_view()
-    plt.setp(plt.gca().get_xticklabels(), rotation=45, horizontalalignment="right")
+    plt.setp(ax.get_xticklabels(), rotation=45, horizontalalignment="right")
 
     ax.grid(True)
     plt.title("600747")
     plt.show()
-    return
 
 
 # 从文件读取数据并返回数据列表
-def loadPoints(file):
+def load_points(file):
     filename = open(file, "r", encoding=fileEncoding)
     amount = []
     price = []
@@ -109,7 +93,7 @@ def txt_wrap_by(head, tail, text):
 
 
 # 绘制图表
-def figureOut(m):
+def figure_out(m):
     for idx, clr in enumerate("yc"):
         sub = plt.subplot(211 + idx)
         sub.set_facecolor(clr)
@@ -191,6 +175,6 @@ if __name__ == "__main__":
         if not param.strip():
             print(param)
     param = "../data/SH600747.DAT"
-    figureOut(loadPoints(param))
+    figure_out(load_points(param))
     input("Press <Enter> to exit:")
     main()
