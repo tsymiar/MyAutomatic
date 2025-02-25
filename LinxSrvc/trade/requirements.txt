@@ -1,6 +1,6 @@
 
 # 基础依赖
-python>=3.8
+# python>=3.8
 pandas>=1.4.0
 numpy>=1.22.0
 pyyaml>=6.0          # 配置文件解析
@@ -20,4 +20,7 @@ vnpy>=2.6.0          # 需要编译安装
 # 其他
 TA-Lib
 websocket-client
-ccxt
+PyYAML
+backtrader
+tensorflow
+asyncio

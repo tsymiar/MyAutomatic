@@ -1,7 +1,7 @@
 import re
 import argparse
 from colorama import Fore, Style, init
-from bs4 import BeautifulSoup, Comment
+from bs4 import BeautifulSoup
 
 class TerminalRenderer:
     def __init__(self):
@@ -107,26 +107,25 @@ class TerminalRenderer:
 class MarkdownHTMLParser:
     def transform_content(self, content):
         """
-        使用 BeautifulSoup 替换 HTML 标签（链接、图片、表格）为终端格式文本后，
-        按行扫描文档进行 Markdown 转换（包括代码块和 Markdown 表格检测），确保各元素嵌入原始文本对应位置。
+        Convert HTML to terminal formatted markdown text, 
+        replacing HTML tags with styled output and handling code blocks and tables.
         """
         soup = BeautifulSoup(content, "html.parser")
         renderer = TerminalRenderer()
-        # 替换 HTML 链接
+
+        # Replace HTML links
         for tag in soup.find_all("a"):
-            replacement = renderer.render_link({
+            tag.replace_with(renderer.render_link({
                 "text": tag.get_text(strip=True),
                 "url": tag.get("href", "")
-            })
-            tag.replace_with(replacement)
-        # 替换 HTML 图片
+            }))
+        # Replace HTML images
         for tag in soup.find_all("img"):
-            replacement = renderer.render_image({
+            tag.replace_with(renderer.render_image({
                 "alt": tag.get("alt", ""),
                 "src": tag.get("src", "")
-            })
-            tag.replace_with(replacement)
-        # 替换 HTML 表格
+            }))
+        # Replace HTML tables
         for tag in soup.find_all("table"):
             headers = [th.get_text(strip=True) for th in tag.find_all("th")]
             rows = []
@@ -135,27 +134,28 @@ class MarkdownHTMLParser:
                 if cells:
                     rows.append(cells)
             if headers or rows:
-                replacement = renderer.render_table({"headers": headers, "rows": rows})
-                tag.replace_with(replacement)
-        # 获取替换后的文本，保留原换行符位置
-        transformed = soup.get_text(separator="\n")
+                tag.replace_with(renderer.render_table({"headers": headers, "rows": rows}))
+
+        full_text = soup.get_text(separator="\n")
+        lines = full_text.split("\n")
         result_lines = []
-        lines = transformed.split("\n")
         i = 0
+
         while i < len(lines):
             line = lines[i]
-            # 处理代码块：检测以 ``` 开头和结束的块
+            # Process code blocks
             if line.strip().startswith("```"):
-                code_block_lines = []
+                code_lines = []
                 i += 1
                 while i < len(lines) and not lines[i].strip().startswith("```"):
-                    code_block_lines.append(lines[i])
+                    code_lines.append(lines[i])
                     i += 1
-                element = {"type": "code_block", "content": "\n".join(code_block_lines)}
-                result_lines.append(renderer.render_code_block(element))
+                result_lines.append(renderer.render_code_block({
+                    "type": "code_block",
+                    "content": "\n".join(code_lines)
+                }))
                 i += 1
-                continue
-            # 处理 Markdown 表格：检测以 "|" 开头且结尾的连续行
+            # Process markdown tables
             elif line.strip().startswith("|") and line.strip().endswith("|"):
                 table_lines = []
                 while i < len(lines) and lines[i].strip().startswith("|") and lines[i].strip().endswith("|"):
@@ -163,25 +163,28 @@ class MarkdownHTMLParser:
                     i += 1
                 if len(table_lines) >= 2 and re.match(r"^\|\s*-+\s*(\|\s*-+\s*)+\|$", table_lines[1]):
                     headers = [cell.strip() for cell in table_lines[0].strip("|").split("|")]
-                    data_rows = []
-                    for row_line in table_lines[2:]:
-                        data_rows.append([cell.strip() for cell in row_line.strip("|").split("|")])
+                    data_rows = [[cell.strip() for cell in row.strip("|").split("|")] for row in table_lines[2:]]
                 else:
                     headers = [cell.strip() for cell in table_lines[0].strip("|").split("|")]
-                    data_rows = []
-                    for row_line in table_lines[1:]:
-                        data_rows.append([cell.strip() for cell in row_line.strip("|").split("|")])
-                element = {"type": "md_table", "headers": headers, "rows": data_rows}
-                result_lines.append(renderer.render_md_table(element))
-                continue
-            # 处理标题（Markdown 标题）
-            m = re.match(r"^(#{1,6})\s+(.+)$", line)
-            if m:
-                element = {"type": "heading", "level": len(m.group(1)), "text": m.group(2).strip()}
-                result_lines.append(renderer.render_heading(element))
+                    data_rows = [[cell.strip() for cell in row.strip("|").split("|")] for row in table_lines[1:]]
+                result_lines.append(renderer.render_md_table({
+                    "type": "md_table",
+                    "headers": headers,
+                    "rows": data_rows
+                }))
+            # Process headings and paragraphs
             else:
-                result_lines.append(renderer.format_markdown(line))
-            i += 1
+                match = re.match(r"^(#{1,6})\s+(.+)$", line)
+                if match:
+                    result_lines.append(renderer.render_heading({
+                        "type": "heading",
+                        "level": len(match.group(1)),
+                        "text": match.group(2).strip()
+                    }))
+                else:
+                    result_lines.append(renderer.format_markdown(line))
+                i += 1
+
         return "\n".join(result_lines)
 
 if __name__ == "__main__":
