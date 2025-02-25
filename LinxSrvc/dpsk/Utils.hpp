@@ -528,6 +528,7 @@ private:
 class Config {
 private:
     std::string m_filename{};
+    std::string m_content{};
 private:
     std::string getFileContent(const std::string& filename)
     {
@@ -544,9 +545,8 @@ private:
         }
         return content;
     }
-    std::string getFileVariable(const std::string& filename, const std::string& keyword)
+    std::string getFileVariable(const std::string& content, const std::string& keyword)
     {
-        std::string content = getFileContent(filename);
         std::string val = {};
         size_t pos = content.find(keyword);
         if (pos != std::string::npos) {
@@ -566,8 +566,15 @@ private:
     }
 public:
     explicit Config(const std::string& filename) : m_filename(filename) { }
+    ~Config() = default;
     std::string getVariable(const std::string& keyword)
     {
-        return getFileVariable(m_filename, keyword);
+        if (m_content.empty()) {
+            m_content = getFileContent(m_filename);
+        }
+        if (m_content.empty()) {
+            return {};
+        }
+        return getFileVariable(m_content, keyword);
     }
 };

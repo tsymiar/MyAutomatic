@@ -1,7 +1,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8...3.16)
 
 set(CXX_STANDARD 20)
-set(PROJ_NAME dpsk_test)
+set(PROJ_NAME dpsk_chat)
 project(${PROJ_NAME} C CXX)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fPIC -Wall -ggdb -Wno-c++20-extensions")
@@ -74,5 +74,5 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E make_directory ${EXEC_PATH}
     COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:${PROJ_NAME}> ${EXEC_PATH}
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/params.txt ${EXEC_PATH}
-    COMMENT "-- To use ${PROJ_NAME} DO NOT forget to set apiKey by `export DPSK_API_KEY=sk-xxxxxxxx` at first."
+    COMMENT "-- To use ${PROJ_NAME} DO NOT forget to set DeepSeek apiKey by `export DPSK_API_KEY=sk-xxxxxxxx` at first."
 )

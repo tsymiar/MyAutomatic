@@ -436,7 +436,9 @@ def get_latest_price(symbol):
     :return: 最新价格
     """
     # 假设使用 TushareAPI 获取实时数据
-    tushare_api = TushareAPI(token=self.config["market"]["tushare_token"])
+    tushare_api = TushareAPI(
+        token=EnhancedDualMAStrategy.config["market"]["tushare_token"]
+    )
     real_time_data = tushare_api.get_real_time_data(symbol)
     if real_time_data:
         return real_time_data["price"]
