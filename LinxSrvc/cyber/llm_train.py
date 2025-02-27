@@ -4,14 +4,13 @@ import os
 import yaml
 import logging
 import argparse
-from datetime import datetime
 from tqdm import tqdm
 import torch
 from torch import nn, optim
 from torch.utils.data import Dataset, DataLoader, DistributedSampler
 from torch.utils.tensorboard import SummaryWriter
-from torch.nn.parallel import DistributedDataParallel as DDP
 from transformers import AutoTokenizer, AutoModelForCausalLM
+import ast
 
 
 class DeepSeekConfig:
@@ -31,22 +30,34 @@ class DeepSeekConfig:
 class CustomDataset(Dataset):
     """支持CUDA加速的自定义数据集"""
 
-    def __init__(self, data_path, tokenizer, max_length=4096, mode="train"):
+    def __init__(self, data_file, tokenizer, max_length=4096, mode="train"):
         super().__init__()
         self.tokenizer = tokenizer
         self.max_length = max_length
 
         # 示例数据加载逻辑（需根据实际数据修改）
-        with open(data_path, "r", encoding="utf-8") as f:
-            self.texts = [line.strip() for line in f if line.strip()]
+        if data_file == "dft_train":
+            self.texts = [
+                "1",
+                "2",
+                "3",
+            ]
+        elif data_file == "dft_val":
+            self.texts = [
+                "x",
+                "y",
+                "z",
+            ]
+        else:
+            with open(data_file, "r", encoding="utf-8") as f:
+                self.texts = [line.strip() for line in f if line.strip()]
 
-        # 使用CUDA加速的预处理（可选）
+        # CUDA加速预处理（可选）
         if torch.cuda.is_available():
             self._cuda_preprocess()
 
     def _cuda_preprocess(self):
-        """使用CUDA加速的预处理示例"""
-        pass  # 在此添加自定义CUDA加速逻辑
+        """自定义CUDA加速逻辑"""
 
     def __len__(self):
         return len(self.texts)
@@ -70,10 +81,11 @@ class CustomDataset(Dataset):
 class Trainer:
     """支持DeepSeek的训练器"""
 
-    def __init__(self, config, device, offload_device=torch.device("cuda:0")):
+    def __init__(self, config, device):
         self.config = config
         self.device = device
-        self.offload_device = offload_device
+        self.best_val_loss = float("inf")
+        self.patience_counter = 0  # 用于早停计数
         self._setup_infrastructure()
         self._initialize_components()
 
@@ -108,23 +120,71 @@ class Trainer:
         else:
             self.tokenizer = AutoTokenizer.from_pretrained(
                 self.config["model"]["tokenizer_path"]
+                if "tokenizer_path" in self.config["model"]
+                else self.config["model"].get("tokenizer_name", "gpt2")
             )
-            self.model = AutoModelForCausalLM.from_pretrained(
-                self.config["model"]["model_path"]
-            ).to(self.device)
+
+            # 加载本地模型或预训练模型
+            if "local_model_path" in self.config["model"] and os.path.exists(
+                self.config["model"]["local_model_path"]
+            ):
+                self.model = AutoModelForCausalLM.from_pretrained(
+                    self.config["model"]["local_model_path"]
+                ).to(self.device)
+                logging.info(
+                    f"Loaded local model from {self.config['model']['local_model_path']}"
+                )
+            else:
+                self.model = AutoModelForCausalLM.from_pretrained(
+                    self.config["model"]["model_path"]
+                    if "model_path" in self.config["model"]
+                    else self.config["model"].get("model_name", "gpt2")
+                ).to(self.device)
 
         # 数据加载
         self._init_dataloaders()
 
-        # 优化器
+        # 优化器（从配置中使用“lr”字段）
         self.optimizer = optim.AdamW(
             self.model.parameters(),
-            lr=self.config["training"]["learning_rate"],
+            lr=ast.literal_eval(self.config["training"]["lr"]),
             weight_decay=self.config["training"]["weight_decay"],
         )
 
+        # 学习率调度器（示例：线性调度）
+        self.scheduler = None
+        if "scheduler" in self.config and self.config["scheduler"]["type"] == "linear":
+            from transformers import get_linear_schedule_with_warmup
+
+            total_steps = len(self.train_loader) * self.config["training"]["epochs"]
+            self.scheduler = get_linear_schedule_with_warmup(
+                self.optimizer,
+                num_warmup_steps=self.config["scheduler"]["warmup_steps"],
+                num_training_steps=total_steps,
+            )
+
         # 混合精度训练
-        self.scaler = torch.cuda.amp.GradScaler(enabled=self.config["training"]["fp16"])
+        self.scaler = torch.amp.GradScaler(
+            self.device, enabled=self.config["training"]["fp16"]
+        )
+
+        # 启用LoRA时应用微调修改
+        if self.config["training"].get("use_lora", False):
+            self._apply_lora()
+
+    def _apply_lora(self):
+        """应用LoRA微调（示例代码，实际使用时需接入具体实现库如peft或loralib）"""
+        logging.info("Applying LoRA modifications...")
+        lora_config = self.config.get("lora", {})
+        target_modules = lora_config.get("target_modules", [])
+        for name in self.model.named_modules():
+            if any(target in name for target in target_modules):
+                # LoRA适配逻辑
+                logging.info(f"Applying LoRA to module: {name}")
+                # 示例伪代码：module = LoRAModule(module, r=lora_config.get("r", 8),
+                #                                   lora_alpha=lora_config.get("lora_alpha", 16),
+                #                                   lora_dropout=lora_config.get("lora_dropout", 0.1))
+                # 这里可将module替换为修改后的LoRA模块
 
     def _init_deepseek(self):
         """初始化DeepSeek模型"""
@@ -151,21 +211,35 @@ class Trainer:
 
     def _init_dataloaders(self):
         """初始化数据加载器"""
-        # 训练集
-        train_dataset = CustomDataset(
-            self.config["data"]["train_path"],
-            self.tokenizer,
-            max_length=self.config["data"]["max_seq_length"],
-            mode="train",
-        )
-
-        # 验证集
-        val_dataset = CustomDataset(
-            self.config["data"]["val_path"],
-            self.tokenizer,
-            max_length=self.config["data"]["max_seq_length"],
-            mode="val",
-        )
+        if self.config["data"].get("custom_dataset", False):
+            # 默认训练集
+            self.tokenizer.pad_token = self.tokenizer.eos_token
+            train_dataset = CustomDataset(
+                "dft_train",
+                self.tokenizer,
+                max_length=1024,
+                mode="train",
+            )
+            val_dataset = CustomDataset(
+                "dft_train",
+                self.tokenizer,
+                max_length=1024,
+                mode="val",
+            )
+        else:
+            # 自定义训练集
+            train_dataset = CustomDataset(
+                self.config["data"]["train_path"],
+                self.tokenizer,
+                max_length=self.config["data"]["max_seq_length"],
+                mode="train",
+            )
+            val_dataset = CustomDataset(
+                self.config["data"]["val_path"],
+                self.tokenizer,
+                max_length=self.config["data"]["max_seq_length"],
+                mode="val",
+            )
 
         # 分布式采样器
         sampler = DistributedSampler(train_dataset) if self.distributed else None
@@ -199,7 +273,9 @@ class Trainer:
                 inputs = {k: v.to(self.device) for k, v in batch.items()}
 
                 # 混合精度训练
-                with torch.cuda.amp.autocast(enabled=self.config["training"]["fp16"]):
+                with torch.amp.autocast(
+                    self.device, enabled=self.config["training"]["fp16"]
+                ):
                     outputs = self.model(**inputs)
                     loss = outputs.loss
 
@@ -218,15 +294,36 @@ class Trainer:
                 self.scaler.update()
                 self.optimizer.zero_grad()
 
+                # 学习率调度器更新
+                if self.scheduler:
+                    self.scheduler.step()
+
                 # 记录日志
                 total_loss += loss.item()
                 progress_bar.set_postfix(loss=loss.item())
 
-            # 验证与保存
+            # 计算平均训练损失和验证损失
             avg_loss = total_loss / len(self.train_loader)
             val_loss = self.validate()
 
-            # 保存检查点
+            # 记录日志
+            logging.info(
+                f"Epoch {epoch} - Training Loss: {avg_loss:.4f}, Validation Loss: {val_loss:.4f}"
+            )
+
+            # 早停判断
+            if val_loss < self.best_val_loss:
+                self.best_val_loss = val_loss
+                self.patience_counter = 0
+            else:
+                self.patience_counter += 1
+                if self.patience_counter >= self.config["training"].get(
+                    "early_stop_patience", 3
+                ):
+                    logging.info("Early stopping triggered.")
+                    return
+
+            # 检查点保存
             if epoch % self.config["training"]["save_interval"] == 0:
                 self._save_checkpoint(epoch)
 
@@ -248,7 +345,7 @@ class Trainer:
         return total_loss / len(self.val_loader)
 
     def _save_checkpoint(self, epoch):
-        """保存模型检查点"""
+        """模型检查点保存"""
         checkpoint = {
             "epoch": epoch,
             "model_state_dict": self.model.state_dict(),
@@ -256,17 +353,23 @@ class Trainer:
             "config": self.config,
         }
 
-        filename = os.path.join(
-            self.config["training"]["out_dir"], f"checkpoint_epoch{epoch}.pt"
-        )
-        torch.save(checkpoint, filename)
-        logging.info(f"Checkpoint saved at epoch {epoch}")
+        out_dir = os.path.abspath(os.path.normpath(self.config["training"]["out_dir"]))
+        filename = os.path.join(out_dir, f"checkpoint_epoch{epoch}.pt")
+        try:
+            torch.save(checkpoint, filename)
+            logging.info(f"Checkpoint saved at epoch {epoch}")
+        except Exception as e:
+            logging.error(f"Failed to save checkpoint at epoch {epoch}: {e}")
 
 
 def load_config(config_path):
     """加载配置文件"""
-    with open(config_path, "r") as f:
-        return yaml.safe_load(f)
+    try:
+        with open(config_path, "r") as f:
+            return yaml.safe_load(f)
+    except Exception as e:
+        logging.error(f"Failed to load config file {config_path}: {e}")
+        exit(1)
 
 
 def parse_args():
@@ -306,3 +409,4 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         logging.info("Training interrupted, saving final checkpoint...")
         trainer._save_checkpoint("interrupted")
+        exit(0)
