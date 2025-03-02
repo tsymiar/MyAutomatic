@@ -1,12 +1,12 @@
 #include <iostream>
 #include <fstream>
-#include <vector>
+#include <sstream>
 #include <string>
-#include <filesystem>
+#include <vector>
 #include <map>
 #include <algorithm>
 #include <iomanip>
-#include <sstream>
+#include <filesystem>
 
 namespace fs = std::filesystem;
 
@@ -22,13 +22,14 @@ struct FileResult {
     size_t duplicates = 0;
     size_t total1 = 0;
     size_t total2 = 0;
-    std::vector<std::string> diff;
-    std::string filename;
+    std::vector<std::string> diff{};
+    std::string filename{};
 };
 
 class CodeAnalyzer {
-    bool use_color_;
-    bool show_diff_;
+    bool use_color_ = false;
+    bool show_diff_ = false;
+    std::vector<fs::path> exclude_paths_{};
 
     static bool is_text_file(const fs::path& path)
     {
@@ -109,9 +110,18 @@ class CodeAnalyzer {
         return use_color_ ? (color + text + RESET) : text;
     }
 
+    bool is_excluded(const fs::path& path) const
+    {
+        for (const auto& exclude_path : exclude_paths_) {
+            if (fs::equivalent(path, exclude_path) || fs::equivalent(path.parent_path(), exclude_path)) {
+                return true;
+            }
+        }
+        return false;
+    }
 public:
-    CodeAnalyzer(bool use_color, bool show_diff)
-        : use_color_(use_color), show_diff_(show_diff)
+    CodeAnalyzer(bool use_color, bool show_diff, const std::vector<fs::path>& exclude_paths = {})
+        : use_color_(use_color), show_diff_(show_diff), exclude_paths_(exclude_paths)
     { }
 
     FileResult compare_files(const fs::path& file1, const fs::path& file2) const
@@ -185,11 +195,11 @@ public:
         std::map<std::string, fs::path> files1, files2;
 
         // Build file maps
-        auto build_index = [](const fs::path& dir) {
+        auto build_index = [this](const fs::path& dir) {
             std::map<std::string, fs::path> index;
             try {
                 for (const auto& entry : fs::recursive_directory_iterator(dir)) {
-                    if (entry.is_regular_file() && is_text_file(entry.path())) {
+                    if (entry.is_regular_file() && is_text_file(entry.path()) && !is_excluded(entry.path())) {
                         try {
                             index[fs::relative(entry.path(), dir).string()] = entry.path();
                         } catch (...) { } // Ignore path errors
@@ -239,12 +249,6 @@ public:
             }
         }
 
-        // Output summary
-        std::cout << colorize("\n=== ANALYSIS SUMMARY ===", CYAN) << "\n"
-            << colorize("Matched files: " + std::to_string(details.size()), YELLOW) << "\n"
-            << colorize("Similarity: " + std::to_string(static_cast<int>(total.ratio * 100)) + "%", YELLOW) << "\n"
-            << colorize("Duplicate lines: " + std::to_string(total.duplicates), MAGENTA) << "\n";
-
         // Output file list
         std::cout << colorize("\n=== FILES ===", CYAN) << "\n";
         for (const auto& res : details) {
@@ -255,26 +259,69 @@ public:
                 << " " << static_cast<int>(res.ratio * 100) << "%";
             std::cout << colorize(oss.str(), color.c_str()) << "\n";
         }
+
+        // Output summary
+        std::cout << colorize("\n=== ANALYSIS SUMMARY ===", CYAN) << "\n"
+            << colorize("Matched files: " + std::to_string(details.size()), YELLOW) << "\n"
+            << colorize("Similarity: " + std::to_string(static_cast<int>(total.ratio * 100)) + "%", YELLOW) << "\n"
+            << colorize("Duplicate lines: " + std::to_string(total.duplicates)
+                + " (S: " + std::to_string(total.total1) + ", T: " + std::to_string(total.total2) + ")", MAGENTA) << "\n";
     }
 };
 
+void print_usage(const std::string& exe)
+{
+    std::cout << "Usage: " << exe << " <source> <target> [--exclude <path>] [--diff] [--no-color]\n"
+        << "  <source> and <target>\n"
+        << "               can be both files or directories\n"
+        << "  --exclude    Exclude the given directory or file from analysis\n"
+        << "  --diff       Show detailed differences\n"
+        << "  --no-color   Disable colored output\n";
+}
+
 int main(int argc, char* argv[])
 {
+    // If no arguments or help requested, show usage
+    if (argc < 3) {
+        print_usage(argv[0]);
+        return 1;
+    }
+
     bool use_color = true;
     bool show_diff = false;
     fs::path source, target;
+    std::vector<fs::path> exclude_paths{};
 
-    // Parse arguments
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
-        if (arg == "--no-color") use_color = false;
-        else if (arg == "--diff") show_diff = true;
-        else if (source.empty()) source = arg;
-        else target = arg;
+        if (arg == "--exclude") {
+            if (i + 1 < argc) {
+                exclude_paths.push_back(argv[++i]);
+            } else {
+                std::cerr << "Error: --exclude requires a path argument\n";
+                return 1;
+            }
+        } else if (arg == "--diff") {
+            show_diff = true;
+        } else if (arg == "--no-color") {
+            use_color = false;
+        } else if (arg == "--help" || arg == "-h") {
+            print_usage(argv[0]);
+            return 0;
+        } else if (source.empty()) {
+            source = arg;
+        } else {
+            target = arg;
+        }
+    }
+
+    if (source.empty() || target.empty()) {
+        print_usage(argv[0]);
+        return 1;
     }
 
     try {
-        CodeAnalyzer analyzer(use_color, show_diff);
+        CodeAnalyzer analyzer(use_color, show_diff, exclude_paths);
 
         if (fs::is_regular_file(source) && fs::is_regular_file(target)) {
             auto res = analyzer.compare_files(source, target);
