@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8...3.16)
-project(video_player LANGUAGES C CXX)
+project(video_render LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -26,12 +26,12 @@ add_compile_options(
     -pthread
 )
 
-find_package(OpenGL REQUIRED)
-find_package(glfw3 REQUIRED)
-find_package(GLEW REQUIRED)
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(EGL egl REQUIRED)
-find_package(X11 REQUIRED)
+find_package(OpenGL)
+find_package(glfw3)
+find_package(GLEW)
+find_package(PkgConfig)
+pkg_check_modules(EGL egl)
+find_package(X11)
 
 if(NOT OpenGL_FOUND OR NOT glfw3_FOUND OR NOT GLEW_FOUND OR NOT EGL_FOUND OR NOT X11_FOUND)
     if(UNIX AND NOT APPLE)
@@ -72,7 +72,7 @@ if(JETSON_TARGET)
     link_directories(/usr/lib/aarch64-linux-gnu/nvidia
         .. 
        /usr/lib/aarch64-linux-gnu/libv4l/plugins/nv)
-    set(EXTRA_LIBS
+    set(EXTRA_LIBRARIES
         ${NVBUF_SURFACE_LIB}
         ${NVVIDEO_LIB}
         ${V4L2_NVARGUS_LIB}
@@ -84,66 +84,70 @@ if(JETSON_TARGET)
         v4l2
         gstreamer-1.0
         v4l2_nvvideocodec
+        GLEW::GLEW
+        OpenGL::GL
+        glfw
     )
 else()
     # FFmpeg
     find_package(PkgConfig REQUIRED)
-    pkg_check_modules(AVCODEC libavcodec REQUIRED)
-    pkg_check_modules(AVFORMAT libavformat REQUIRED)
-    pkg_check_modules(AVUTIL libavutil REQUIRED)
-    pkg_check_modules(SWSCALE libswscale REQUIRED)
+    pkg_check_modules(AVCODEC libavcodec)
+    pkg_check_modules(AVFORMAT libavformat)
+    pkg_check_modules(AVUTIL libavutil)
+    pkg_check_modules(SWSCALE libswscale)
+    execute_process(COMMAND which apt-get RESULT_VARIABLE APT_GET_FOUND)
+    if(APT_GET_FOUND EQUAL 0)
+        execute_process(COMMAND 
+            sudo apt-get install -y
+            ffmpeg
+            libavcodec-dev
+            libavformat-dev
+            libswscale-dev
+        )
+    endif()
     include_directories(
         ${AVCODEC_INCLUDE_DIRS}
         ${AVFORMAT_INCLUDE_DIRS}
         ${AVUTIL_INCLUDE_DIRS}
         ${SWSCALE_INCLUDE_DIRS}
     )
-    set(EXTRA_LIBS
+    set(EXTRA_LIBRARIES pthread
         ${AVCODEC_LIBRARIES}
         ${AVFORMAT_LIBRARIES}
         ${AVUTIL_LIBRARIES}
         ${SWSCALE_LIBRARIES}
     )
+    if(TARGET OpenGL::GL)
+        set(OpenGL_LIBRARIES OpenGL::GL)
+    endif()
+    if (NOT GLEW_LIBRARY)
+        message("## GLEW not found, skip build ${PROJECT_NAME}")
+        return()
+    endif()
 endif()
 
 file(GLOB SRC_FILE_LIST "*[^.h]*.c*[^.txt]*" "*.hpp" "*.c")
 add_executable(${PROJECT_NAME} ${SRC_FILE_LIST})
 
 target_include_directories(${PROJECT_NAME} PRIVATE
-    ${OPENGL_INCLUDE_DIRS}
-    ${GLFW3_INCLUDE_DIRS}
+    ${OpenGL_INCLUDE_DIRS}
+    ${glfw3_INCLUDE_DIRS}
     ${GLEW_INCLUDE_DIRS}
     ${EGL_INCLUDE_DIRS}
 )
 
 target_link_libraries(${PROJECT_NAME}
-    ${EXTRA_LIBS}
-    OpenGL::GL
-    glfw
-    GLEW::GLEW
     ${EGL_LIBRARIES}
     ${X11_LIBRARIES}
+    ${OpenGL_LIBRARIES}
+    ${glfw3_LIBRARIES}
+    ${GLEW_LIBRARIES}
+    ${EXTRA_LIBRARIES}
 )
 
 set(EXEC_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../gen)
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory ${EXEC_PATH}
     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${PROJECT_NAME}> ${EXEC_PATH}
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/set_watch.sh ${EXEC_PATH}
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/setWatch.sh ${EXEC_PATH}
 )
-
-if(NOT JETSON_TARGET AND UNIX AND NOT APPLE)
-    execute_process(COMMAND which apt-get RESULT_VARIABLE APT_GET_FOUND)
-    if(APT_GET_FOUND EQUAL 0)
-        message(STATUS "Checking for required packages...")
-        execute_process(COMMAND 
-            sudo apt-get install -y
-            libavcodec-dev
-            libavformat-dev
-            libswscale-dev
-            libglfw3-dev
-            libglew-dev
-            libopengl-dev
-        )
-    endif()
-endif()

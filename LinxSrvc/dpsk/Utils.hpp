@@ -525,26 +525,27 @@ private:
     }
 };
 
-class Config {
+inline std::string getFileContent(const std::string& filename)
+{
+    std::string content{};
+    std::ifstream file(filename);
+    if (file.is_open()) {
+        content.assign(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
+    } else {
+        return {};
+    }
+    file.close();
+    if (content.empty()) {
+        return {};
+    }
+    return content;
+}
+
+class Configs {
 private:
     std::string m_filename{};
     std::string m_content{};
 private:
-    std::string getFileContent(const std::string& filename)
-    {
-        std::string content{};
-        std::ifstream file(filename);
-        if (file.is_open()) {
-            content.assign(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
-        } else {
-            return {};
-        }
-        file.close();
-        if (content.empty()) {
-            return {};
-        }
-        return content;
-    }
     std::string getFileVariable(const std::string& content, const std::string& keyword)
     {
         std::string val = {};
@@ -565,8 +566,14 @@ private:
         return val;
     }
 public:
-    explicit Config(const std::string& filename) : m_filename(filename) { }
-    ~Config() = default;
+public:
+    static Configs& getConfig()
+    {
+        static Configs config("params.txt");
+        return config;
+    }
+    explicit Configs(const std::string& filename) : m_filename(filename) { }
+    ~Configs() = default;
     std::string getVariable(const std::string& keyword)
     {
         if (m_content.empty()) {
@@ -575,6 +582,10 @@ public:
         if (m_content.empty()) {
             return {};
         }
-        return getFileVariable(m_content, keyword);
+        std::string val = getFileVariable(m_content, keyword);
+        if (keyword == "model") {
+            val = (std::stoi(val) > 4 ? "4" : val);
+        }
+        return val;
     }
 };

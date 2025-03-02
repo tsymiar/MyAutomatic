@@ -121,8 +121,8 @@ private:
     void loadVideoFile(const char* filename)
     {
         // Load data using standard file IO
-        int file_fd = open(filename, O_RDONLY);
-        if (file_fd < 0) throw std::runtime_error("Open file failed");
+        int vi_fd = open(filename, O_RDONLY);
+        if (vi_fd < 0) throw std::runtime_error("Open file failed");
 
         // Map input buffers
         struct v4l2_buffer qbuf = {};
@@ -141,13 +141,30 @@ private:
                 PROT_READ | PROT_WRITE, MAP_SHARED,
                 m_vfd, qbuf.m.planes[0].m.mem_offset);
 
-            ssize_t bytes_read = read(file_fd, ptr, qbuf.m.planes[0].length);
-            if (bytes_read < 0) throw std::runtime_error("Read file failed");
+            off_t file_size = lseek(vi_fd, 0, SEEK_END);
+            if (file_size < 0) throw std::runtime_error("Failed to get file size");
+            off_t seek_pos = lseek(vi_fd, 0, SEEK_SET);
+            if (seek_pos < 0) throw std::runtime_error("Failed to seek file");
+            
+            size_t bytes_need = std::min(static_cast<size_t>(qbuf.m.planes[0].length), static_cast<size_t>(file_size - seek_pos));
+            if (bytes_need == 0) break;  // No more data to read
+            
+            size_t total = 0;
+            while (total < bytes_need) {
+                if (total > qbuf.m.planes[0].length)
+                    throw std::runtime_error("Beyond buffer size");
+                ssize_t bytes = read(vi_fd, static_cast<uint8_t*>(ptr) + total, bytes_need - total);
+                if (bytes < 0)
+                    throw std::runtime_error("Read file failed");
+                if (bytes == 0)
+                    break;  // EOF reached
+                total += bytes;
+            }
 
             if (ioctl(m_vfd, VIDIOC_QBUF, &qbuf) < 0)
                 throw std::runtime_error("Queue buffer failed");
         }
-        close(file_fd);
+        close(vi_fd);
     }
 
     int m_vfd; // V4L2 device file descriptor

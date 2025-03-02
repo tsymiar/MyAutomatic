@@ -23,10 +23,13 @@ struct ReqsPara {
         std::string model = Models[2];
         std::string depth = "high";
         std::string system_msg = "You are a helpful assistant.";
+        std::string file_content = "";
         ApiPara() : stream(false), temperature(0.7), max_tokens(500), top(0.9) { }
     };
     ApiPara apiPara;
     ReqsPara() : json(true), multi(true), balance(false) { }
+    void setModel(int model) { apiPara.model = Models[model]; }
+    void unset() { json = multi = true; balance = false; apiPara = ApiPara(); }
 };
 
 class CurlReqs {
