@@ -1,13 +1,12 @@
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
 #include <iostream>
-#include <queue>
 #include <mutex>
-#include <thread>
+#include <queue>
 #include <stdexcept>
+#include <thread>
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
-
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 #ifdef USE_JETSON_MULTIMEDIA_API
 #include <sys/utsname.h>
 // Jetson Multimedia API headers
@@ -29,7 +28,6 @@ bool isJetsonPlatform()
     if (uname(&buf)) return false;
     return std::string(buf.nodename).find("jetson") != std::string::npos;
 }
-
 #else
 // FFmpeg headers
 extern "C" {
@@ -145,10 +143,10 @@ private:
             if (file_size < 0) throw std::runtime_error("Failed to get file size");
             off_t seek_pos = lseek(vi_fd, 0, SEEK_SET);
             if (seek_pos < 0) throw std::runtime_error("Failed to seek file");
-            
+
             size_t bytes_need = std::min(static_cast<size_t>(qbuf.m.planes[0].length), static_cast<size_t>(file_size - seek_pos));
             if (bytes_need == 0) break;  // No more data to read
-            
+
             size_t total = 0;
             while (total < bytes_need) {
                 if (total > qbuf.m.planes[0].length)
@@ -167,6 +165,7 @@ private:
         close(vi_fd);
     }
 
+private:
     int m_vfd; // V4L2 device file descriptor
 };
 
@@ -313,18 +312,24 @@ int main(int argc, char** argv)
         return -1;
     }
     putenv((char*)"DISPLAY=:0");
-
+    const char* env = getenv("DISPLAY") ? getenv("DISPLAY") : ":0.0";
+    Display* display = XOpenDisplay(env);
+    if (!display) {
+        std::cerr << "ERROR: XOpenDisplay(" << env << ") failed." << std::endl;
+        exit(1);
+    }
     // EGL setup
-    eglDpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    eglDpy = eglGetDisplay(display);
     if (eglDpy == EGL_NO_DISPLAY) {
-        std::cerr << "Failed to get EGL display" << std::endl;
+        std::cerr << "Failed to get EGL display: " << eglGetError() << std::endl;
         return -1;
     }
     EGLint major, minor;
     if (!eglInitialize(eglDpy, &major, &minor)) {
-        std::cerr << "Failed to initialize EGL" << std::endl;
+        std::cerr << "EGL initialization failed with error: " << eglGetError() << std::endl;
         return -1;
     }
+
     EGLint configAttribs[] = {
         EGL_SURFACE_TYPE, EGL_PBUFFER_BIT,
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
@@ -336,7 +341,7 @@ int main(int argc, char** argv)
     EGLConfig eglConfig;
     EGLint numConfigs;
     if (!eglChooseConfig(eglDpy, configAttribs, &eglConfig, 1, &numConfigs)) {
-        std::cerr << "Failed to choose EGL config" << std::endl;
+        std::cerr << "Failed to choose EGL config: " << eglGetError() << std::endl;
         return -1;
     }
     // EGL context
@@ -346,9 +351,10 @@ int main(int argc, char** argv)
     };
     eglCtx = eglCreateContext(eglDpy, eglConfig, EGL_NO_CONTEXT, contextAttribs);
     if (eglCtx == EGL_NO_CONTEXT) {
-        std::cerr << "Failed to create EGL context" << std::endl;
+        std::cerr << "Failed to create EGL context: " << eglGetError() << std::endl;
         return -1;
     }
+
     EGLint pbufferAttribs[] = {
         EGL_WIDTH, 1280,
         EGL_HEIGHT, 720,
@@ -356,11 +362,12 @@ int main(int argc, char** argv)
     };
     EGLSurface eglSurf = eglCreatePbufferSurface(eglDpy, eglConfig, pbufferAttribs);
     if (eglSurf == EGL_NO_SURFACE) {
-        std::cerr << "Failed to create EGL surface" << std::endl;
+        std::cerr << "Failed to create EGL surface: " << eglGetError() << std::endl;
         return -1;
     }
+
     if (!eglMakeCurrent(eglDpy, eglSurf, eglSurf, eglCtx)) {
-        std::cerr << "Failed to make context current" << std::endl;
+        std::cerr << "Failed to make context current: " << eglGetError() << std::endl;
         return -1;
     }
 
@@ -369,6 +376,10 @@ int main(int argc, char** argv)
     glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
 
     GLFWwindow* window = glfwCreateWindow(1280, 720, "Video Player", NULL, NULL);
+    if (!window) {
+        std::cerr << "Failed to create GLFW window" << std::endl;
+        return -1;
+    }
     glfwMakeContextCurrent(window);
     glewInit();
 
