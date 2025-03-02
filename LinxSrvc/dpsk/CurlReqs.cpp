@@ -104,8 +104,11 @@ std::string combineMessage(const std::string& msg, ReqsPara::ApiPara para)
             content += CurlReqs::m_messages[i];
             if (i < CurlReqs::m_messages.size() - 1) {
                 // content += " & inputText & ";
-                content += ", ";
+                content += ",";
             }
+        }
+        if (!para.file_content.empty()) {
+            content += (",```" + para.file_content + "```");
         }
         js_msg["content"] = content;
         js_data["messages"][1] = js_msg;
@@ -156,8 +159,10 @@ std::string CurlReqs::processChat(const std::string& text, const ReqsPara& para)
     if (para.multi) {
         postData = combineMessage(text, para.apiPara);
     }
+#ifdef _TEST_
+    return postData;
+#endif
     reqs.setPostFields(postData.c_str());
-
     std::atomic<bool> isRunning(true);
     std::thread loadingThread(showLoadingIndicator, std::ref(isRunning));
 

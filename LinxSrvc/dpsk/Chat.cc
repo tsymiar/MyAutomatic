@@ -2,29 +2,49 @@
 #include <iostream>
 #include "Utils.hpp"
 
+enum State { Normal, AwaitingFile, FileReady };
+
 int main()
 {
+    ReqsPara para;
+    char status = Normal;
     while (true) {
         std::string text = "";
-        std::cout << "请输入聊天内容（输入 'q' 退出）: ";
+        if (status == AwaitingFile) {
+            std::cout << ">> 请输入文件位置: ";
+        } else {
+            status = Normal;
+            std::cout << "请输入请求内容（输入 'q' 退出，输入 'f' 读取文件）: ";
+        }
         std::getline(std::cin, text);
+        if (text.empty()) {
+            continue;
+        }
         if (text == "q") {
+            std::cout << "聊天退出！" << std::endl;
             break;
+        }
+        if (text == "f" && status == Normal) {
+            status = AwaitingFile;
+            continue;
+        }
+        if (text == "e" && status == FileReady) {
+            status = Normal;
+            continue;
         }
         if (std::cin.eof()) {
             std::cout << std::endl;
             std::cin.clear();
             continue;
         }
-        if (text.empty()) {
+        if (status == AwaitingFile) {
+            para.apiPara.file_content = getFileContent(text);
+            status = FileReady;
             continue;
         }
-        ReqsPara para;
-        Config config("params.txt");
-        int model = atoi(config.getVariable("model").c_str());
-        model = (model > 4 ? 4 : model);
-        para.apiPara.model = Models[model];
+        para.setModel(std::stoi(Configs::getConfig().getVariable("model")));
         std::cout << CurlReqs::processChat(text, para) << std::endl;
+        para.unset();
     }
     return 0;
 }
