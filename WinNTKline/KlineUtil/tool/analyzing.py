@@ -1,7 +1,7 @@
 import os
 import difflib
 import argparse
-from colorama import Fore, Style, init
+from colorama import Fore, init
 from collections import defaultdict
 import re
 import fnmatch
