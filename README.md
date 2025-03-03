@@ -26,22 +26,17 @@ LinxSrvc
     [_bin_]
 
     ```c
-    chstest
-    chigpio
-    mes909
-    pipefifo
-    VideoCapture
-    imagesnap
-    IM.exe
-    Client.exe
+    chstest chigpio mes909 pipefifo
+    VideoCapture imagesnap
+    IM.exe client.exe
     kaics.exe
-    pthdtest.exe
     gSOAPverify(myweb.wsdl)
+    pthdtest.exe
      ```
 
     [_gen_]
 
-     _`gn` / `webevent_server`_
+     _`gn1` / `webevent_server` / `dpsk_chat` / `analyzing`_
 
 * Description
 
@@ -49,7 +44,7 @@ LinxSrvc
        | chstest | chigpio | mes909 | pipefifo |
        | :------:| :--: | :----: | :-------:|
 
-       Some scattered _`*.c`_ files is driver of **hardware**s such as `GPIO`, `ME909S-821`(_a Huawei `LTE 4G` network module_), `pipe`/`fifo` _etc._; _chstest_ is a test to _chsdev_ driver.
+       Some scattered _`*.c`_ files is driver of **hardware**s such as `GPIO`, `ME909S-821`(_a Huawei `LTE 4G` network module_), `pipe`/`fifo` _etc._; _chstest_ is a sample to _chsdev_ driver.
 
   * VideoCapture | imagesnap
 
@@ -57,11 +52,11 @@ LinxSrvc
 
       _imagesnap_ is a photo take*r*, could running on linux _only_.
 
-  * IM.exe | Client.exe
+  * IM.exe | client.exe
 
-      [_`IM.exe`_](https://raw.githubusercontent.com/tsymiar/MyAutomatic/auto-dev/LinxSrvc/IM/IM.cc) is a simple `instant-messaging` chat room, use it by register, login, send command and _a small amount of quantity_ messages.
+      [_`IM.exe`_](https://raw.githubusercontent.com/tsymiar/MyAutomatic/auto-dev/LinxSrvc/IM/IM.cc) is a `instant-messaging` chat room demo, use it by register, login, send command and _a small amount of quantity_ messages.
 
-      `Client.exe` is a client peer implement of an _online chat room_ menus like below.
+      `client.exe` is a client peer implement of an _online chat room_ menus like below.
 
       <img src="WinNTKline/image/client.jpg" title="IMClientDialog" width="40%" />
 
@@ -69,21 +64,31 @@ LinxSrvc
 
       a _sub-pub_ message queue(_`MQ`_), which can penetrate the intranet, more info linked can get from [_here_](https://github.com/tsymiar/MyAutomatic/blob/auto-dev/LinxSrvc/IM/readme.md).
 
-  * pthdtest.exe
-
-      a thread pool based on `pthread`.
-
   * gSOAPverify
 
       a `SOAP-server` which is to verify login using the config file _myweb.wsdl_.
 
-  * gn
+  * pthdtest.exe
+
+      a thread pool based on `pthread`.
+
+  * gn1
 
       a _cross-platform_, _big/small endian_, _increasing/decreasing_ binary number generator.
 
   * webevent_server
 
-      a http server and client package library, depends on `libevent`.
+      a http server and client package manager, depends on `libevent`.
+
+  * dpsk_chat
+
+      a mini chat tool using _`DeepSeek`_ api to answer questions.
+
+  * analyzing
+
+      a code tool to compare differences between tow same-named files, or different directories.
+
+      Not only thus tools, check `sometools`.
 
 QtGames
 -------
@@ -102,7 +107,7 @@ QtGames
 | KlineUtil |
 |:-------:|
 
-> A MFC solution to _register_, catch files, show _K-line_, simulate _ctp_ ... _etc._
+> Utils of _cef-browser_, security libs, show _K-line_ by gl, simulate to _ctp_ ... _etc._
 
 | WPFKline |
 |:--------:|
@@ -111,7 +116,7 @@ QtGames
 
 | TestUtils |
 |:--------:|
-> A testcases to test files of _KlineUtil_ .
+> A testcases to test interface of _KlineUtil_ .
 
 -------
 
