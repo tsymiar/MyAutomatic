@@ -1,7 +1,7 @@
 all:
 	@echo Making IM.exe client.exe etc.
 	@make -C IM
-	@echo Making hdware thread
+	@echo Making hdware thread etc.
 	@make -C hdware all
 	@make -C thread all
 	@echo Making webserver
@@ -11,14 +11,14 @@ all:
 	@echo Making CMakeLists
 	@make cmake
 cmake:
-	@ if [ ! -d build ]; then mkdir -p build; else rm -rf build/*; fi;
+	@ if [ ! -d build ]; then mkdir -p build; else echo deleting built files; rm -rf build/*; fi;
 	@ cd build && cmake .. && make -j4 && cd -
 clean:
-	make -C webev clean-all
-	make -C gSOAPverify clean
-	make -C thread clean
-	make -C hdware clean
-	make -C IM clean
-	@rm -rvf bin/*.exe* ./*.o */.vs vs
-	@rm -rvf jniLibs gen out
-	@rm -rvf gn/out*
+	@make -C gSOAPverify clean
+	@make -C webev clean-all
+	@make -C thread clean
+	@make -C hdware clean
+	@make -C IM clean
+	@ if [ -d "$(pwd)../lib" ]; then rm -rvf $(pwd)../lib; fi;
+	@ rm -rvf bin/*.exe* ./*.o */.vs vs
+	@ rm -rvf gen out jniLibs

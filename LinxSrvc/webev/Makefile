@@ -21,6 +21,7 @@ build:clean make-all
 
 .PHONY: clean
 clean:
-	@rm -rvf $(BUILD_PATH)/* $(PROJECT_BASE)/*.user
+	@echo "-- Cleaning $(abspath $(BUILD_PATH))\n-- Project: $(PROJECT_BASE)"
+	@rm -fr $(BUILD_PATH)/* $(PROJECT_BASE)/*.user
 clean-all:clean
 	@rm -rvf $(EXECUTABLE)

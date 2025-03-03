@@ -1,5 +1,5 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8...3.16)
-SET(_TARGET gn)
+SET(_TARGET gn1)
 PROJECT(${_TARGET})
 ADD_DEFINITIONS("-std=c++11")
 SET(CMAKE_CXX_STANDARD 11)
@@ -65,7 +65,7 @@ ADD_CUSTOM_COMMAND(
     POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory ${EXEC_PATH}
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/${_TARGET_} ${EXEC_PATH}
-    COMMENT "-- 'gn' is a cross-platform tool to generating numbers${HINT_MSG}."
+    COMMENT "-- 'gn1' means generating numbers like 123... is a cross-platform tool${HINT_MSG}."
 )
 ADD_CUSTOM_TARGET(clear
     COMMAND ${CMAKE_BUILD_TOOL} clean

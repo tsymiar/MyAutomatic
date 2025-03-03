@@ -12,18 +12,19 @@ SQL = -std=c++11 -I/usr/lib$(BIT)/mysql -lmysqlclient
 PTHD= -std=c++11 -lpthread #-lgsoap++#-L/usr/local/gSOAP/lib/libsoap++
 FLAG += -DNS_DBG
 gSOAPverify:
-	g++ $(FLAG) -c soap/soapC.cpp
-	g++ $(FLAG) -c soap/stdsoap2.cpp
-	g++ $(FLAG) -c soap/soapServer.cpp
-	g++ $(FLAG) -c sys/status.cc -std=c++11
+	@g++ $(FLAG) -c soap/soapC.cpp
+	@g++ $(FLAG) -c soap/stdsoap2.cpp
+	@g++ $(FLAG) -c soap/soapServer.cpp
+	@g++ $(FLAG) -c sys/status.cc -std=c++11
 #	bash -c '`command -v apt >/dev/null 2>&1 || { echo >&2 "-";}` == "-"'
 #	if [ ! -d "/usr/include/mysql" ]; then if [ `command -v apt` == "" ]; then sudo yum install mariadb-devel -y; else sudo apt-get install libmysql++-dev -y; fi; fi;
-	@echo "### To install mysql develop library\n### REHL: 'sudo yum install mariadb-devel -y';\n### Debain: 'sudo apt install libmysql++-dev -y';"
+	@echo "### To install mysql develop library\n### \033[1mREHL:\033[0m 'sudo yum install mariadb-devel -y';\n### \033[1mDebain:\033[0m 'sudo apt install libmysql++-dev -y';"
 	@[ ! -d ${GEN} ] && mkdir ${GEN} || echo ${GEN}
 ifneq ($(shell if [ ! -d /usr/lib/mysql ] && [ `ls /usr/lib/*/libmysql*.so | wc -l` -le 0 ]; then echo false; fi;), false)
-	g++ $(FLAG) -c ./sql/sqlDbReq.cc $(SQL)
-	g++ $(FLAG) -I.. -c ./main/mainSoap.cc $(PTHD)
-	g++ $(FLAG) -o $(GEN)/gSOAPverify $(STAT) $(SOAP) $(MAIN) $(SQL) $(PTHD)
+	@g++ $(FLAG) -c ./sql/sqlDbReq.cc $(SQL)
+	@g++ $(FLAG) -I.. -c ./main/mainSoap.cc $(PTHD)
+	@g++ $(FLAG) -o $(GEN)/gSOAPverify $(STAT) $(SOAP) $(MAIN) $(SQL) $(PTHD)
+	@echo "-- Built: \033[1m$@\033[0m"
 else
 	@echo [100%] Built gSOAPverify without linking mysql library
 endif
