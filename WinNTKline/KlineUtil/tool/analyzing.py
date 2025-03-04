@@ -1,10 +1,11 @@
 import os
 import difflib
 import argparse
-from colorama import Fore, init
+import fnmatch
+from colorama import Fore, Style, init
 from collections import defaultdict
 import re
-import fnmatch
+
 
 # 初始化颜色支持
 init(autoreset=True)
@@ -163,7 +164,10 @@ def generate_diff(file1, file2):
 
 
 def calculate_similarity(lines1, lines2, orig1, orig2):
-    """改进的相似度计算，分母使用原始行数"""
+    """使用有效行数计算相似度"""
+    valid1 = len(lines1)
+    valid2 = len(lines2)
+
     counter = defaultdict(int)
     for line in lines1:
         counter[line] += 1
@@ -174,32 +178,36 @@ def calculate_similarity(lines1, lines2, orig1, orig2):
             common += 1
             counter[line] -= 1
 
-    denominator = max(orig1, orig2) or 1
-    return common / denominator, common, orig1, orig2
-
-
-def file_compare(file1, file2, base_dir, show_diff):
-    """执行文件比较"""
-    lines1, orig1 = read_file(file1)
-    lines2, orig2 = read_file(file2)
-
-    ratio, dup, _, _ = calculate_similarity(lines1, lines2, orig1, orig2)
-    diff_output = generate_diff(file1, file2) if show_diff else ""
-
+    denominator = max(valid1, valid2) or 1
     return {
-        "ratio": ratio,
-        "dup": dup,
-        "total1": orig1,
-        "total2": orig2,
-        "diff": diff_output,
-        "file_name": os.path.relpath(file1, base_dir),
-        "path1": file1,
-        "path2": file2,
+        "ratio": common / denominator,
+        "common": common,
+        "orig1": orig1,
+        "orig2": orig2,
+        "valid1": valid1,
+        "valid2": valid2,
     }
 
 
+def file_compare(file1, file2, base_dir, show_diff):
+    """更新文件比较逻辑"""
+    lines1, orig1 = read_file(file1)
+    lines2, orig2 = read_file(file2)
+
+    result = calculate_similarity(lines1, lines2, orig1, orig2)
+    result.update(
+        {
+            "diff": generate_diff(file1, file2) if show_diff else "",
+            "file_name": os.path.relpath(file1, base_dir),
+            "path1": file1,
+            "path2": file2,
+        }
+    )
+    return result
+
+
 def dir_compare(dir1, dir2, show_diff, ignore_dirs, ignore_files):
-    """带忽略规则的目录对比"""
+    """更新目录对比统计"""
     index1 = build_index(dir1, ignore_dirs, ignore_files)
     index2 = build_index(dir2, ignore_dirs, ignore_files)
     common_files = set(index1.keys()) & set(index2.keys())
@@ -209,40 +217,43 @@ def dir_compare(dir1, dir2, show_diff, ignore_dirs, ignore_files):
 
     for rel_path in common_files:
         res = file_compare(index1[rel_path], index2[rel_path], dir1, show_diff)
-        total["dup"] += res["dup"]
-        total["total1"] += res["total1"]
-        total["total2"] += res["total2"]
+        total["common"] += res["common"]
+        total["orig1"] += res["orig1"]
+        total["orig2"] += res["orig2"]
+        total["valid1"] += res["valid1"]
+        total["valid2"] += res["valid2"]
         details.append(res)
 
-    max_total = max(total["total1"], total["total2"]) or 1
-    total["ratio"] = total["dup"] / max_total
+    denominator = max(total["valid1"], total["valid2"]) or 1
+    total["ratio"] = total["common"] / denominator
     return total, details
 
 
 def print_results(total, details, use_color=True):
-    """打印带颜色的分析结果"""
+    """增强版结果显示"""
     color = lambda c: getattr(Fore, c.upper()) if use_color else ""
 
     # 文件列表
     print(f"\n{color('cyan')}=== 文件详情 ({len(details)} 个) ===")
     for info in sorted(details, key=lambda x: x["ratio"], reverse=True):
         ratio = info["ratio"]
-        if ratio > 0.7:
-            c = "GREEN"
-        elif ratio > 0.3:
-            c = "YELLOW"
-        else:
-            c = "RED"
-        print(f"{color(c)}▏ {info['file_name']:60} {ratio:.1%}")
+        color_code = "GREEN" if ratio > 0.7 else "YELLOW" if ratio > 0.3 else "RED"
+
+        line = (
+            f"{color(color_code)}▏ {info['file_name']:55} "
+            f"相似度: {ratio:.1%} "
+            f"(原始: {info['orig1']:4}→{info['valid1']:4} | "
+            f"目标: {info['orig2']:4}→{info['valid2']:4})"
+        )
+        print(line)
 
     # 综合分析
     print(f"\n{color('cyan')}=== 综合分析 ===")
-    print(f"{color('yellow')}▏ 匹配文件数: {len(details)}")
-    print(f"{color('yellow')}▏ 综合重复率: {total['ratio']:.2%}")
-    print(
-        f"{color('magenta')}▏ 总重复行数: {total['dup']} "
-        f"(源: {total['total1']} | 目标: {total['total2']})"
-    )
+    print(f"{color('green')}▏ 匹配文件数: {len(details)}")
+    print(f"{color('green')}▏ 重复总行数: {total['common']}")
+    print(f"{color('magenta')}▏ 总原始行数: {total['orig1']} → 有效 {total['valid1']}")
+    print(f"{color('magenta')}▏ 总目标行数: {total['orig2']} → 有效 {total['valid2']}")
+    print(f"{color('yellow')}▏ 综合重复率: {total['ratio']:.2%} (基于有效行数)")
 
 
 def main():
@@ -268,8 +279,8 @@ def main():
     try:
         use_color = not args.no_color
         if args.no_color:
-            # 修正类型错误：使用空类替代颜色属性
-            global Fore, Style
+            global Fore
+            global Style
             Fore = EmptyStyle()
             Style = EmptyStyle()
 
