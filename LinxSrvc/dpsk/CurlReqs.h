@@ -1,6 +1,7 @@
 #include <curl/curl.h>
 #include <string>
 #include <vector>
+#include <queue>
 
 static std::vector<std::string> Models = {
     "deepseek-chat",
@@ -24,7 +25,7 @@ struct ReqsPara {
         std::string depth = "high";
         std::string system_msg = "You are a helpful assistant.";
         std::string file_content = "";
-        ApiPara() : stream(false), temperature(0.7), max_tokens(500), top(0.9) { }
+        ApiPara() : stream(true), temperature(0.7), max_tokens(3000), top(0.9) { }
     };
     ApiPara apiPara;
     ReqsPara() : json(true), multi(true), balance(false) { }
@@ -41,12 +42,14 @@ public:
     bool performRequest(const std::string& url, std::string& response);
     void setHeader(const std::string& header);
     void setPostFields(const char* data, bool json = true);
+    bool getContents(std::string& content);
 
     static std::string processChat(const std::string& text, const ReqsPara& para = ReqsPara());
     static std::string getBalance();
 
 public:
     static std::vector<std::string> m_messages;
+    static std::queue<std::string> m_content;
 
 private:
     CURL* m_curl = nullptr;

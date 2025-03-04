@@ -1,6 +1,7 @@
 #include "CurlReqs.h"
 #include <iostream>
 #include "Utils.hpp"
+#include <thread>
 
 enum State { Normal, AwaitingFile, FileReady };
 
@@ -43,7 +44,26 @@ int main()
             continue;
         }
         para.setModel(std::stoi(Configs::getConfig().getVariable("model")));
-        std::cout << CurlReqs::processChat(text, para) << std::endl;
+        para.apiPara.stream = Configs::getConfig().getVariable("stream") == "true";
+        if (para.apiPara.stream)
+        {
+            std::thread task([]()->void {
+                CurlReqs creq;
+                std::string content;
+                do {
+                    if (!content.empty()) {
+                        std::cout << content;
+                        content = "";
+                    }
+                    msWait(10);
+                } while (creq.getContents(content));
+                std::cout << std::endl;
+                });
+            CurlReqs::processChat(text, para);
+            task.join();
+        } else {
+            std::cout << CurlReqs::processChat(text, para) << std::endl;
+        }
         para.unset();
     }
     return 0;

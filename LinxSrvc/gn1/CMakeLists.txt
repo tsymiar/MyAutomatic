@@ -35,13 +35,20 @@ FOREACH(TARGET_NAME ${LIST_TARGET})
     SET(J)
 ENDFOREACH()
 SET(EXEC_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../gen/)
+SET(HINT_MSG " to generate increments like 1234...")
 IF (${CMAKE_HOST_SYSTEM_NAME} MATCHES "Linux")
 IF (EXISTS "/proc/self/uid_map")
     FILE(STRINGS "/proc/self/uid_map" UID_MAP_CONTENTS NEWLINE_CONSUME)
     LIST(GET UID_MAP_CONTENTS 0 FIRST_LINE)
     STRING(REGEX MATCH "^[ \t]+0" IS_ROOT_USER "${FIRST_LINE}")
-    IF (NOT ${IS_ROOT_USER} MATCHES "0")
-        SET(HINT_MSG ", build by 'root' to install it")
+    EXECUTE_PROCESS(
+        COMMAND /bin/bash -c "echo | sudo -n true && [ -w /usr/local/bin ]"
+        RESULT_VARIABLE PERMISSION_WRITE
+        OUTPUT_QUIET
+        ERROR_QUIET
+    )
+    IF (NOT ${IS_ROOT_USER} MATCHES "0" OR NOT PERMISSION_WRITE EQUAL 0)
+        SET(HINT_MSG ", may building by 'sudo' to use as a system command")
     ELSE()
         SET(EXEC_PATH /usr/local/bin/)
     ENDIF()
@@ -65,7 +72,7 @@ ADD_CUSTOM_COMMAND(
     POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory ${EXEC_PATH}
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/${_TARGET_} ${EXEC_PATH}
-    COMMENT "-- 'gn1' means generating numbers like 123... is a cross-platform tool${HINT_MSG}."
+    COMMENT "-- 'gn1' is a cross-platform tool${HINT_MSG}."
 )
 ADD_CUSTOM_TARGET(clear
     COMMAND ${CMAKE_BUILD_TOOL} clean
