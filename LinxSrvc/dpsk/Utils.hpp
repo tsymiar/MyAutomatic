@@ -49,6 +49,31 @@ struct FormulaSegment {
     bool is_block;
 };
 
+inline void msWait(unsigned int tms)
+{
+    const int Thousand = 1000;
+    struct timeval time;
+    time.tv_sec = tms / Thousand;
+    time.tv_usec = tms % Thousand * Thousand;
+    select(0, NULL, NULL, NULL, &time);
+}
+
+inline std::string getFileContent(const std::string& filename)
+{
+    std::string content{};
+    std::ifstream file(filename);
+    if (file.is_open()) {
+        content.assign(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
+    } else {
+        return {};
+    }
+    file.close();
+    if (content.empty()) {
+        return {};
+    }
+    return content;
+}
+
 class Markdown {
 public:
     std::vector<Block> parse_blocks(const std::string& content) const
@@ -525,22 +550,6 @@ private:
     }
 };
 
-inline std::string getFileContent(const std::string& filename)
-{
-    std::string content{};
-    std::ifstream file(filename);
-    if (file.is_open()) {
-        content.assign(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
-    } else {
-        return {};
-    }
-    file.close();
-    if (content.empty()) {
-        return {};
-    }
-    return content;
-}
-
 class Configs {
 private:
     std::string m_filename{};
@@ -580,7 +589,10 @@ public:
             m_content = getFileContent(m_filename);
         }
         if (m_content.empty()) {
-            return {};
+            if (keyword == "model") {
+                return "0";
+            } else
+                return {};
         }
         std::string val = getFileVariable(m_content, keyword);
         if (keyword == "model") {

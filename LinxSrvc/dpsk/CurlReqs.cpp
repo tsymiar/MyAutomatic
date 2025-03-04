@@ -6,8 +6,13 @@
 #include <iostream>
 #include <chrono>
 #include <iomanip>
+#include <mutex>
 
 std::vector<std::string> CurlReqs::m_messages = std::vector<std::string>();
+volatile bool g_deltaContent = false;
+static std::mutex g_mtx{};
+std::queue<std::string> CurlReqs::m_content = std::queue<std::string>();
+std::atomic<bool> g_isRunning{};
 
 CurlReqs::CurlReqs() : m_curl(curl_easy_init()), m_headers(nullptr)
 { }
@@ -38,7 +43,12 @@ bool CurlReqs::performRequest(const std::string& url, std::string& response)
 
     curl_easy_setopt(m_curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, writeCallback);
-    curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &response);
+    if (g_deltaContent) {
+        curl_easy_setopt(m_curl, CURLOPT_BUFFERSIZE, 1024);
+        curl_easy_setopt(m_curl, CURLOPT_TCP_KEEPALIVE, 1L);
+    } else {
+        curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &response);
+    }
     curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, m_headers);
 
     CURLcode res = curl_easy_perform(m_curl);
@@ -65,6 +75,22 @@ void CurlReqs::setPostFields(const char* data, bool json)
     }
 }
 
+bool CurlReqs::getContents(std::string& content)
+{
+    std::lock_guard<std::mutex> lock(g_mtx);
+    if (!m_content.empty()) {
+        if (g_isRunning)
+            g_isRunning = false;
+        content = m_content.front();
+        if (strncmp(content.c_str(), "DONE", 4) == 0) {
+            content = content.substr(4, content.size() - 1);
+            return false;
+        }
+        m_content.pop();
+    }
+    return true;
+}
+
 std::string CurlReqs::getBalance()
 {
     ReqsPara para;
@@ -74,19 +100,77 @@ std::string CurlReqs::getBalance()
     return ("\r--------\n" + content + "\n--------");
 }
 
-size_t CurlReqs::writeCallback(void* contents, size_t size, size_t nmemb, void* userp)
-{
-    ((std::string*)userp)->append((char*)contents, size * nmemb);
-    return size * nmemb;
-}
-
 #include <cstdlib> 
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
+static char g_status = 0;
+
+std::string extract_content(const std::string& stream)
+{
+    using namespace std;
+    string content;
+    size_t pos = 0;
+    while ((pos = stream.find("data: ", pos)) != string::npos) {
+        size_t new_line = stream.find("\n", pos);
+        string _json = stream.substr(pos + 6, new_line - pos - 6);
+        if (_json.find("[DONE]") != string::npos)
+            return std::string("DONE""\n--------\n");
+        pos = new_line + 1;
+        try {
+            json j = json::parse(_json);
+            if (j.contains("choices") &&
+                j["choices"].is_array() &&
+                !j["choices"].empty() &&
+                j["choices"][0].is_object() &&
+                j["choices"][0].contains("delta") &&
+                j["choices"][0]["delta"].is_object()) {
+                string chunk = "";
+                if (j["choices"][0]["delta"].contains("reasoning_content") &&
+                    j["choices"][0]["delta"]["reasoning_content"].is_string()) {
+                    chunk = j["choices"][0]["delta"]["reasoning_content"];
+                    if (g_status == 0) {
+                        content += "\r\033[1mthinking\033[0m...\n";
+                        g_status = 1;
+                    }
+                }
+                if (j["choices"][0]["delta"].contains("content") &&
+                    j["choices"][0]["delta"]["content"].is_string()) {
+                    chunk = j["choices"][0]["delta"]["content"];
+                    if (g_status == 1) {
+                        content += "\n--------\n\033[1mAnswer\033[0m:\n";
+                        g_status = 2;
+                    }
+                }
+                content += chunk;
+            }
+        } catch (const json::exception& e) {
+            cerr << "JSON parse with error: " << e.what()
+                << "\nmessage was: " << _json << endl;
+        } catch (...) {
+            cerr << "Unknown exception" << endl;
+        }
+    }
+    return content;
+}
+
+size_t CurlReqs::writeCallback(void* contents, size_t size, size_t nmemb, void* userp)
+{
+    size_t msgLen = size * nmemb;
+    if (g_deltaContent) {
+        std::string message((char*)contents, msgLen);
+        // std::cout << message << std::endl;
+        std::string content = extract_content(message);
+        std::lock_guard<std::mutex> lock(g_mtx);
+        m_content.push(content);
+    } else {
+        ((std::string*)userp)->append((char*)contents, size * nmemb);
+    }
+    return msgLen;
+}
 
 std::string combineMessage(const std::string& msg, ReqsPara::ApiPara para)
 {
-    CurlReqs::m_messages.push_back(msg);
+    CurlReqs::m_messages.emplace_back(msg);
     json js_data;
     js_data["model"] = para.model;
     js_data["stream"] = para.stream;
@@ -130,6 +214,7 @@ void showLoadingIndicator(std::atomic<bool>& isRunning)
     const char* loadingSymbols = "|/-\\";
     int index = 0;
     while (isRunning) {
+        if (!g_isRunning) return;
         std::cout << "\r" << loadingSymbols[index++ % 4] << std::flush;
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
@@ -159,11 +244,15 @@ std::string CurlReqs::processChat(const std::string& text, const ReqsPara& para)
     if (para.multi) {
         postData = combineMessage(text, para.apiPara);
     }
+    reqs.setPostFields(postData.c_str());
 #ifdef _TEST_
     return postData;
 #endif
-    reqs.setPostFields(postData.c_str());
+
+    g_status = 0;
+    g_deltaContent = para.apiPara.stream;
     std::atomic<bool> isRunning(true);
+    g_isRunning.store(isRunning);
     std::thread loadingThread(showLoadingIndicator, std::ref(isRunning));
 
     std::string uri = "https://api.deepseek.com/chat/completions";
@@ -185,9 +274,12 @@ std::string CurlReqs::processChat(const std::string& text, const ReqsPara& para)
         }
         return std::string();
     }
-    if (para.multi && message.empty()) {
+    if (para.multi && message.empty() && !g_deltaContent) {
         CurlReqs::m_messages.pop_back();
         return "Server is busy, try again later!";
+    }
+    if (g_deltaContent) {
+        return std::string();
     }
 
     std::string content = "";
@@ -208,9 +300,9 @@ std::string CurlReqs::processChat(const std::string& text, const ReqsPara& para)
             }
         }
         if (para.apiPara.model.find("reasoner") != std::string::npos) {
-            std::string thinking = jsonResponse["choices"][0]["message"]["reasoning_content"];
-            if (!thinking.empty()) {
-                content += "(\n" + Markdown::Parse(thinking) + ")\n";
+            std::string think = jsonResponse["choices"][0]["message"]["reasoning_content"];
+            if (!think.empty()) {
+                content += "(\n" + Markdown::Parse(think) + ")\n";
             }
         }
         std::string json = jsonResponse["choices"][0]["message"]["content"];
