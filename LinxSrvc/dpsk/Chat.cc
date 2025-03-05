@@ -45,8 +45,7 @@ int main()
         }
         para.setModel(std::stoi(Configs::getConfig().getVariable("model")));
         para.apiPara.stream = Configs::getConfig().getVariable("stream") == "true";
-        if (para.apiPara.stream)
-        {
+        if (para.apiPara.stream) {
             std::thread task([]()->void {
                 CurlReqs creq;
                 std::string content;
@@ -57,7 +56,7 @@ int main()
                     }
                     msWait(10);
                 } while (creq.getContents(content));
-                std::cout << std::endl;
+                std::cout << content << std::endl;
                 });
             CurlReqs::processChat(text, para);
             task.join();

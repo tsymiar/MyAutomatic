@@ -57,7 +57,6 @@ class TerminalRenderer:
         rows = element.get("rows", [])
 
         # Convert all elements to strings and flatten data
-        all_cells = []
         headers = [str(h) for h in headers]
         rows = [[str(cell) for cell in row] for row in rows]
 
@@ -90,7 +89,7 @@ class TerminalRenderer:
 
             # Ensure minimum width for empty columns
             col_widths = [max(w, 1) for w in col_widths]
-        except Exception as e:
+        except Exception:
             col_widths = [15] * max_columns
 
         # Build table components

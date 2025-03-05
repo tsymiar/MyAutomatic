@@ -7,6 +7,7 @@
 #include <chrono>
 #include <iomanip>
 #include <mutex>
+#include <cstring>
 
 std::vector<std::string> CurlReqs::m_messages = std::vector<std::string>();
 volatile bool g_deltaContent = false;
@@ -79,8 +80,6 @@ bool CurlReqs::getContents(std::string& content)
 {
     std::lock_guard<std::mutex> lock(g_mtx);
     if (!m_content.empty()) {
-        if (g_isRunning)
-            g_isRunning = false;
         content = m_content.front();
         if (strncmp(content.c_str(), "DONE", 4) == 0) {
             content = content.substr(4, content.size() - 1);
@@ -105,7 +104,7 @@ std::string CurlReqs::getBalance()
 using json = nlohmann::json;
 static char g_status = 0;
 
-std::string extract_content(const std::string& stream)
+std::string extract_content(const std::string& stream, size_t len)
 {
     using namespace std;
     string content;
@@ -113,8 +112,9 @@ std::string extract_content(const std::string& stream)
     while ((pos = stream.find("data: ", pos)) != string::npos) {
         size_t new_line = stream.find("\n", pos);
         string _json = stream.substr(pos + 6, new_line - pos - 6);
-        if (_json.find("[DONE]") != string::npos)
-            return std::string("DONE""\n--------\n");
+        if (_json.find("[DONE]") != string::npos) {
+            return std::string("DONE\n--------\n");
+        }
         pos = new_line + 1;
         try {
             json j = json::parse(_json);
@@ -137,15 +137,20 @@ std::string extract_content(const std::string& stream)
                     j["choices"][0]["delta"]["content"].is_string()) {
                     chunk = j["choices"][0]["delta"]["content"];
                     if (g_status == 1) {
-                        content += "\n--------\n\033[1mAnswer\033[0m:\n";
+                        content += "\n\033[1m--------\033[0m\n";
                         g_status = 2;
                     }
                 }
                 content += chunk;
             }
         } catch (const json::exception& e) {
-            cerr << "JSON parse with error: " << e.what()
-                << "\nmessage was: " << _json << endl;
+            if (_json.size() < len && _json.find("choices") != std::string::npos) {
+                return std::string("\r\033[1mOK\033[0m");
+            } else {
+                cerr << "JSON parse with issue: " << e.what()
+                    << "\nmessage was: " << _json << endl;
+                return std::string("\r\033[1mNULL\033[0m\n--------\n");
+            }
         } catch (...) {
             cerr << "Unknown exception" << endl;
         }
@@ -155,17 +160,18 @@ std::string extract_content(const std::string& stream)
 
 size_t CurlReqs::writeCallback(void* contents, size_t size, size_t nmemb, void* userp)
 {
-    size_t msgLen = size * nmemb;
+    size_t len = size * nmemb;
     if (g_deltaContent) {
-        std::string message((char*)contents, msgLen);
+        std::string message((char*)contents, len);
         // std::cout << message << std::endl;
-        std::string content = extract_content(message);
+        std::string content = extract_content(message, len);
         std::lock_guard<std::mutex> lock(g_mtx);
         m_content.push(content);
+        g_isRunning = false;
     } else {
         ((std::string*)userp)->append((char*)contents, size * nmemb);
     }
-    return msgLen;
+    return len;
 }
 
 std::string combineMessage(const std::string& msg, ReqsPara::ApiPara para)
@@ -233,8 +239,8 @@ std::string CurlReqs::processChat(const std::string& text, const ReqsPara& para)
     if (env_value != nullptr) {
         // std::cout << "DPSK_API_KEY: " << env_value << std::endl;
     } else {
-        std::cout << "DPSK_API_KEY environment variable not found." << std::endl;
-        return std::string();
+        std::cout << "DPSK_API_KEY environment variable Not set, exit!" << std::endl;
+        exit(0);
     }
 
     std::string key = env_value;
@@ -250,6 +256,8 @@ std::string CurlReqs::processChat(const std::string& text, const ReqsPara& para)
 #endif
 
     g_status = 0;
+    std::queue<std::string> k{};
+    std::swap(m_content, k);
     g_deltaContent = para.apiPara.stream;
     std::atomic<bool> isRunning(true);
     g_isRunning.store(isRunning);
