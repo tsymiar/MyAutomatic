@@ -125,7 +125,7 @@ public:
         }
     }
 
-    static std::string Parse(const std::string& content)
+    static std::string Parse(const std::string& content, bool alpha = true)
     {
         Markdown text;
         std::vector<Block> blocks = text.parse_blocks(parse_formulas(easy_formulas(content)));
@@ -163,7 +163,18 @@ public:
                 }
                 break;
             case BlockType::Paragraph:
-                parsed << "\033[0;37m" << std::accumulate(std::next(block.contents.begin()), block.contents.end(), block.contents[0], [](std::string a, const std::string& b) { return std::move(a) + " " + b; }) << "\033[0m" << std::endl;
+                parsed << "\033[0;37m";
+                if (!block.contents.empty()) {
+                    parsed << block.contents[0];
+                    for (size_t i = 1; i < block.contents.size(); ++i) {
+                        parsed << "\n" << block.contents[i];
+                    }
+                }
+                parsed << "\033[0m";
+                if (alpha) {
+                    // parsed << "\033[0;37m" << std::accumulate(std::next(block.contents.begin()), block.contents.end(), block.contents[0], [](std::string a, const std::string& b) { return std::move(a) + " " + b; }) << "\033[0m";
+                    parsed << std::endl;
+                }
                 break;
             case BlockType::CodeBlock:
                 if (block.language == "cpp") {
@@ -183,7 +194,9 @@ public:
             default:
                 break;
             }
-            parsed << std::endl;
+            if (alpha) {
+                parsed << std::endl;
+            }
         }
         return parsed.str();
     }

@@ -26,31 +26,29 @@ add_compile_options(
     -pthread
 )
 
-find_package(OpenGL)
-find_package(glfw3)
-find_package(GLEW)
-find_package(PkgConfig)
-pkg_check_modules(EGL egl)
-find_package(X11)
-
-if(NOT OpenGL_FOUND OR NOT glfw3_FOUND OR NOT GLEW_FOUND OR NOT EGL_FOUND OR NOT X11_FOUND)
-    if(UNIX AND NOT APPLE)
-        execute_process(COMMAND which apt-get RESULT_VARIABLE APT_GET_FOUND)
-        if(APT_GET_FOUND EQUAL 0)
-            message(STATUS "Installing missing packages...")
-            execute_process(COMMAND 
-                sudo apt-get install -y
-                libglfw3-dev
-                libglew-dev
-                libegl1-mesa-dev
-                libx11-dev
-                libopengl-dev
-            )
+if(JETSON_TARGET)
+    find_package(OpenGL)
+    find_package(glfw3)
+    find_package(GLEW)
+    find_package(PkgConfig)
+    pkg_check_modules(EGL egl)
+    find_package(X11)
+    if(NOT OpenGL_FOUND OR NOT glfw3_FOUND OR NOT GLEW_FOUND OR NOT EGL_FOUND OR NOT X11_FOUND)
+        if(UNIX AND NOT APPLE)
+            execute_process(COMMAND which apt-get RESULT_VARIABLE APT_GET_FOUND)
+            if(APT_GET_FOUND EQUAL 0)
+                message(STATUS "Installing missing packages...")
+                execute_process(COMMAND
+                    sudo apt-get install -y
+                    libglfw3-dev
+                    libglew-dev
+                    libegl1-mesa-dev
+                    libx11-dev
+                    libopengl-dev
+                )
+            endif()
         endif()
     endif()
-endif()
-
-if(JETSON_TARGET)
     add_definitions(-DUSE_JETSON_MULTIMEDIA_API)
     # Jetson Multimedia API
     set(NVIDIA_LIB_DIR "/usr/lib/aarch64-linux-gnu/nvidia")
@@ -63,6 +61,14 @@ if(JETSON_TARGET)
     find_library(V4L2_NVARGUS_LIB v4l2_nvargus PATHS ${V4L2_PLUGINS_DIR} REQUIRED)
     find_library(GST_NVCODEC_LIB gstnvcodec PATHS ${GST_PLUGINS_DIR} REQUIRED)
     find_library(NVTRANSFORM_LIB nvbufsurftransform PATHS ${NVIDIA_LIB_DIR} REQUIRED)
+    find_program(VCGENCMD vcgencmd)
+    if(VCGENCMD)
+        message(STATUS "This is a Raspberry Pi")
+        list(APPEND EXTRA_LIBRARIES GLEW::GLEW glfw)
+        if(TARGET OpenGL::GL)
+            set(OpenGL_LIBRARIES OpenGL::GL)
+        endif()
+    endif()
     include_directories(
         /etc/alternatives/cuda/targets/aarch64-linux/include
         /usr/include/gstreamer-1.0
@@ -84,12 +90,19 @@ if(JETSON_TARGET)
         v4l2
         gstreamer-1.0
         v4l2_nvvideocodec
+        EGL
         GLEW::GLEW
         OpenGL::GL
         glfw
+        ${X11_LIBRARIES}
     )
 else()
     # FFmpeg
+    find_package(SDL2 REQUIRED)
+    if (NOT SDL2_FOUND)
+        message("## SDL2 Not found, skip [${PROJECT_NAME}] building")
+        return()
+    endif()
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(AVCODEC libavcodec)
     pkg_check_modules(AVFORMAT libavformat)
@@ -111,43 +124,19 @@ else()
         ${AVUTIL_INCLUDE_DIRS}
         ${SWSCALE_INCLUDE_DIRS}
     )
-    set(EXTRA_LIBRARIES pthread
+    set(EXTRA_LIBRARIES
+        pthread SDL2
         ${AVCODEC_LIBRARIES}
         ${AVFORMAT_LIBRARIES}
         ${AVUTIL_LIBRARIES}
         ${SWSCALE_LIBRARIES}
     )
-    if(TARGET OpenGL::GL)
-        set(OpenGL_LIBRARIES OpenGL::GL)
-    endif()
-    find_program(VCGENCMD vcgencmd)
-    if(VCGENCMD)
-        message(STATUS "This is a Raspberry Pi")
-        list(APPEND EXTRA_LIBRARIES GLEW::GLEW glfw)
-    else()
-        if (NOT GLEW_LIBRARY)
-            message("## GLEW not found, skip [${PROJECT_NAME}] building")
-            return()
-        endif()
-    endif()
 endif()
 
 file(GLOB SRC_FILE_LIST "*[^.h]*.c*[^.txt]*" "*.hpp" "*.c")
 add_executable(${PROJECT_NAME} ${SRC_FILE_LIST})
 
-target_include_directories(${PROJECT_NAME} PRIVATE
-    ${OpenGL_INCLUDE_DIRS}
-    ${glfw3_INCLUDE_DIRS}
-    ${GLEW_INCLUDE_DIRS}
-    ${EGL_INCLUDE_DIRS}
-)
-
 target_link_libraries(${PROJECT_NAME}
-    ${EGL_LIBRARIES}
-    ${X11_LIBRARIES}
-    ${OpenGL_LIBRARIES}
-    ${glfw3_LIBRARIES}
-    ${GLEW_LIBRARIES}
     ${EXTRA_LIBRARIES}
 )
 
