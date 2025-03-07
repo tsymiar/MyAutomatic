@@ -107,7 +107,7 @@ static char g_status = 0;
 std::string extract_content(const std::string& stream, size_t len)
 {
     using namespace std;
-    string content;
+    string content = "";
     size_t pos = 0;
     while ((pos = stream.find("data: ", pos)) != string::npos) {
         size_t new_line = stream.find("\n", pos);
@@ -141,7 +141,7 @@ std::string extract_content(const std::string& stream, size_t len)
                         g_status = 2;
                     }
                 }
-                content += chunk;
+                content += chunk; // Markdown::Parse(chunk, false);
             }
         } catch (const json::exception& e) {
             if (_json.size() < len && _json.find("choices") != std::string::npos) {
@@ -165,9 +165,11 @@ size_t CurlReqs::writeCallback(void* contents, size_t size, size_t nmemb, void* 
         std::string message((char*)contents, len);
         // std::cout << message << std::endl;
         std::string content = extract_content(message, len);
-        std::lock_guard<std::mutex> lock(g_mtx);
-        m_content.push(content);
-        g_isRunning = false;
+        {
+            std::lock_guard<std::mutex> lock(g_mtx);
+            m_content.push(content);
+            g_isRunning = false;
+        }
     } else {
         ((std::string*)userp)->append((char*)contents, size * nmemb);
     }
@@ -294,7 +296,7 @@ std::string CurlReqs::processChat(const std::string& text, const ReqsPara& para)
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - start);
     double seconds = duration.count() / 1000000.0;
     std::stringstream ss;
-    ss << "\r[Think total " << std::fixed << std::setprecision(2) << seconds << "s.]" << std::endl;
+    ss << "\r[Thought total " << std::fixed << std::setprecision(2) << seconds << "s.]" << std::endl;
     content = ss.str();
 
     try {

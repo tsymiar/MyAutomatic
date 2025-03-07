@@ -3,11 +3,11 @@
 #include <queue>
 #include <stdexcept>
 #include <thread>
+#ifdef USE_JETSON_MULTIMEDIA_API
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#ifdef USE_JETSON_MULTIMEDIA_API
 #include <sys/utsname.h>
 // Jetson Multimedia API headers
 #include <sys/ioctl.h>
@@ -29,6 +29,7 @@ bool isJetsonPlatform()
     return std::string(buf.nodename).find("jetson") != std::string::npos;
 }
 #else
+#include <SDL2/SDL.h>
 // FFmpeg headers
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -38,15 +39,16 @@ extern "C" {
 #endif
 
 // Global parameters
-GLuint textureID = 0;
 int video_width = 0;
 int video_height = 0;
 std::queue<uint8_t*> frame_queue{};
 std::mutex queue_mutex{};
+
+#ifdef USE_JETSON_MULTIMEDIA_API
+GLuint textureID = 0;
 EGLDisplay eglDpy = EGL_NO_DISPLAY;
 EGLContext eglCtx = EGL_NO_CONTEXT;
 
-#ifdef USE_JETSON_MULTIMEDIA_API
 class JetsonDecoder {
 public:
     explicit JetsonDecoder(const char* filename) : m_vfd(-1)
@@ -217,6 +219,14 @@ void convertNV12toRGB(NvBufSurface* src, uint8_t* dst)
     NvBufSurfaceDestroy(dstSurface);
 }
 
+void updateTexture(uint8_t* data)
+{
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
+        video_width, video_height, 0,
+        GL_RGB, GL_UNSIGNED_BYTE, data);
+}
+
 #else
 struct FFmpegDecoder {
     AVFormatContext* fmt_ctx = nullptr;
@@ -297,20 +307,13 @@ void videoDecodeThread(const char* filename)
 #endif
 }
 
-void updateTexture(uint8_t* data)
-{
-    glBindTexture(GL_TEXTURE_2D, textureID);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
-        video_width, video_height, 0,
-        GL_RGB, GL_UNSIGNED_BYTE, data);
-}
-
 int main(int argc, char** argv)
 {
     if (argc < 2) {
         std::cerr << "Usage: " << argv[0] << " <video file path>" << std::endl;
         return -1;
     }
+#ifdef USE_JETSON_MULTIMEDIA_API
     putenv((char*)"DISPLAY=:0");
     const char* env = getenv("DISPLAY") ? getenv("DISPLAY") : ":0.0";
     Display* display = XOpenDisplay(env);
@@ -388,7 +391,7 @@ int main(int argc, char** argv)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
     // Start the video decoding thread
-    std::thread decoderThread(videoDecodeThread, argv[1]);
+    std::thread mmediaThread(videoDecodeThread, argv[1]);
 
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT);
@@ -413,7 +416,8 @@ int main(int argc, char** argv)
         glfwPollEvents();
     }
 
-    decoderThread.join();
+    mmediaThread.join();
+
     glfwTerminate();
 
     if (eglCtx != EGL_NO_CONTEXT) {
@@ -422,5 +426,71 @@ int main(int argc, char** argv)
     if (eglDpy != EGL_NO_DISPLAY) {
         eglTerminate(eglDpy);
     }
+#else
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+        std::cerr << "SDL init fail: " << SDL_GetError() << std::endl;
+        return -1;
+    }
+
+    SDL_Window* window = SDL_CreateWindow("Video Player",
+        SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+        1280, 720, SDL_WINDOW_RESIZABLE);
+    if (!window) {
+        std::cerr << "Create window fail: " << SDL_GetError() << std::endl;
+        SDL_Quit();
+        return -1;
+    }
+
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    if (!renderer) {
+        std::cerr << "Create renderer fail: " << SDL_GetError() << std::endl;
+        SDL_DestroyWindow(window);
+        SDL_Quit();
+        return -1;
+    }
+
+    // Start the video decoding thread
+    std::thread ffmpegThread(videoDecodeThread, argv[1]);
+
+    bool quit = false;
+    SDL_Event event;
+    SDL_Texture* texture = nullptr;
+
+    while (!quit) {
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                quit = true;
+            }
+        }
+
+        if (!frame_queue.empty()) {
+            std::lock_guard<std::mutex> lock(queue_mutex);
+            uint8_t* frame = frame_queue.front();
+
+            if (!texture) {
+                texture = SDL_CreateTexture(renderer,
+                    SDL_PIXELFORMAT_RGB24,
+                    SDL_TEXTUREACCESS_STREAMING,
+                    video_width, video_height);
+            }
+
+            SDL_UpdateTexture(texture, nullptr, frame, video_width * 3);
+            SDL_RenderClear(renderer);
+            SDL_RenderCopy(renderer, texture, nullptr, nullptr);
+            SDL_RenderPresent(renderer);
+
+            delete[] frame;
+            frame_queue.pop();
+        }
+        SDL_Delay(10);
+    }
+
+    if (texture) SDL_DestroyTexture(texture);
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
+
+    ffmpegThread.join();
+#endif
     return 0;
 }

@@ -54,7 +54,7 @@ int main()
                         std::cout << content;
                         content = "";
                     }
-                    msWait(10);
+                    msWait(50);
                 } while (creq.getContents(content));
                 std::cout << content << std::endl;
                 });
