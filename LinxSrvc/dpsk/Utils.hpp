@@ -588,7 +588,6 @@ private:
         return val;
     }
 public:
-public:
     static Configs& getConfig()
     {
         static Configs config("params.txt");

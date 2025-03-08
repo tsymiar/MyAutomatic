@@ -49,7 +49,7 @@ public:
 
 public:
     static std::vector<std::string> m_messages;
-    static std::queue<std::string> m_content;
+    static std::queue<std::string> m_answer;
 
 private:
     CURL* m_curl = nullptr;
