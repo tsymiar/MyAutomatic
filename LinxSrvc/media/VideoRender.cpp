@@ -4,10 +4,10 @@
 #include <stdexcept>
 #include <thread>
 #ifdef USE_JETSON_MULTIMEDIA_API
+#include <gbm.h>
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
+#include <GLES2/gl2.h>
 #include <sys/utsname.h>
 // Jetson Multimedia API headers
 #include <sys/ioctl.h>
@@ -20,7 +20,12 @@
 #include <NvBuffer.h>
 #include <linux/videodev2.h> // V4L2
 #include <unistd.h>
+// GBM
 #include <sys/mman.h>
+#include <drm/drm_fourcc.h>
+#include <xf86drm.h>
+#include <xf86drmMode.h>
+
 // Jetson Multimedia API helper functions
 bool isJetsonPlatform()
 {
@@ -41,13 +46,215 @@ extern "C" {
 // Global parameters
 int video_width = 0;
 int video_height = 0;
-std::queue<uint8_t*> frame_queue{};
+std::queue<uint8_t*> g_frame_queue{};
 std::mutex queue_mutex{};
 
 #ifdef USE_JETSON_MULTIMEDIA_API
+
+struct drm_context {
+    int fd = -1;
+    drmModeRes* res = nullptr;
+    drmModeConnector* conn = nullptr;
+    uint32_t crtc_id = 0;
+    drmModeModeInfo mode{};
+    gbm_device* gbm_dev = nullptr;
+    gbm_surface* gbm_surf = nullptr;
+} g_drm;
+
 GLuint textureID = 0;
 EGLDisplay eglDpy = EGL_NO_DISPLAY;
 EGLContext eglCtx = EGL_NO_CONTEXT;
+EGLSurface eglSurf = EGL_NO_SURFACE;
+
+void init_drm()
+{
+    for (int i = 0; i < 2; ++i) {  // card0 card1
+        std::string dev_path = "/dev/dri/card" + std::to_string(i);
+        g_drm.fd = open(dev_path.c_str(), O_RDWR | O_CLOEXEC);
+        if (g_drm.fd >= 0) {
+            std::cout << "Opened DRM device: " << dev_path << std::endl;
+            break;
+        }
+    }
+
+    if (g_drm.fd < 0) {
+        throw std::runtime_error("Failed to open any DRM device: "
+            + std::string(strerror(errno)));
+    }
+    g_drm.res = drmModeGetResources(g_drm.fd);
+    if (!g_drm.res) {
+        close(g_drm.fd);
+        throw std::runtime_error("drmModeGetResources failed");
+    }
+    // seek valid connector
+    bool connector_found = false;
+    for (int i = 0; i < g_drm.res->count_connectors; ++i) {
+        g_drm.conn = drmModeGetConnector(g_drm.fd, g_drm.res->connectors[i]);
+        if (!g_drm.conn) continue;
+
+        std::cout << "Checking connector " << g_drm.conn->connector_id
+            << " (Type: " << g_drm.conn->connector_type
+            << ", Status: " << (g_drm.conn->connection == DRM_MODE_CONNECTED
+                ? "Connected" : "Disconnected")
+            << ")\n";
+
+        // check connect
+        if (g_drm.conn->connection == DRM_MODE_CONNECTED
+            && g_drm.conn->count_modes > 0) {
+            // select best mode
+            bool preferred_found = false;
+            for (int m = 0; m < g_drm.conn->count_modes; ++m) {
+                if (g_drm.conn->modes[m].type & DRM_MODE_TYPE_PREFERRED) {
+                    g_drm.mode = g_drm.conn->modes[m];
+                    preferred_found = true;
+                    std::cout << "Selected preferred mode: "
+                        << g_drm.mode.hdisplay << "x" << g_drm.mode.vdisplay
+                        << "@" << g_drm.mode.vrefresh << "Hz\n";
+                    break;
+                }
+            }
+
+            // select largest plex if not preferred
+            if (!preferred_found) {
+                uint32_t max_area = 0;
+                for (int m = 0; m < g_drm.conn->count_modes; ++m) {
+                    const uint32_t area = g_drm.conn->modes[m].hdisplay
+                        * g_drm.conn->modes[m].vdisplay;
+                    if (area > max_area) {
+                        max_area = area;
+                        g_drm.mode = g_drm.conn->modes[m];
+                    }
+                }
+                std::cout << "Selected largest mode: "
+                    << g_drm.mode.hdisplay << "x" << g_drm.mode.vdisplay
+                    << "@" << g_drm.mode.vrefresh << "Hz\n";
+            }
+
+            // get CRTC
+            if (g_drm.conn->encoder_id) {
+                drmModeEncoder* enc = drmModeGetEncoder(g_drm.fd, g_drm.conn->encoder_id);
+                if (enc) {
+                    g_drm.crtc_id = enc->crtc_id;
+                    drmModeFreeEncoder(enc);
+                }
+            }
+
+            if (!g_drm.crtc_id) {
+                // select first useful CRTC
+                g_drm.crtc_id = g_drm.res->crtcs[0];
+            }
+
+            connector_found = true;
+            break;
+        }
+
+        drmModeFreeConnector(g_drm.conn);
+        g_drm.conn = nullptr;
+    }
+
+    if (!connector_found) {
+        close(g_drm.fd);
+        throw std::runtime_error("No active connector with valid modes found");
+    }
+    // create GBM device
+    g_drm.gbm_dev = gbm_create_device(g_drm.fd);
+    if (!g_drm.gbm_dev) {
+        close(g_drm.fd);
+        throw std::runtime_error("Failed to create GBM device");
+    }
+
+    std::cout << "DRM initialization successful!\n"
+        << "Resolution: " << g_drm.mode.hdisplay << "x" << g_drm.mode.vdisplay << "\n"
+        << "Refresh Rate: " << g_drm.mode.vrefresh << "Hz\n";
+}
+void cleanup_drm()
+{
+    if (g_drm.conn) {
+        drmModeFreeConnector(g_drm.conn);
+        g_drm.conn = nullptr;
+    }
+    if (g_drm.res != nullptr) {
+        drmModeFreeResources(g_drm.res);
+        g_drm.res = nullptr;
+    }
+    if (g_drm.gbm_dev) {
+        gbm_device_destroy(g_drm.gbm_dev);
+        g_drm.gbm_dev = nullptr;
+    }
+    if (g_drm.fd >= 0) {
+        close(g_drm.fd);
+        g_drm.fd = -1;
+    }
+}
+void init_egl()
+{
+    // get EGL display
+    eglDpy = eglGetPlatformDisplay(EGL_PLATFORM_GBM_KHR, g_drm.gbm_dev, NULL);
+    if (eglDpy == EGL_NO_DISPLAY) {
+        std::cerr << "EGL Error: Failed to get display ("
+            << eglGetError() << ")" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    EGLint major, minor;
+    if (!eglInitialize(eglDpy, &major, &minor)) {
+        std::cerr << "EGL Error: Initialize failed ("
+            << eglGetError() << ")" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    std::cout << "EGL Version: " << major << "." << minor << std::endl;
+
+    // config EGL attributes
+    EGLint config_attribs[] = {
+        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+        EGL_RED_SIZE, 8,
+        EGL_GREEN_SIZE, 8,
+        EGL_BLUE_SIZE, 8,
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        EGL_NONE
+    };
+
+    EGLConfig cfg;
+    EGLint count;
+    eglChooseConfig(eglDpy, config_attribs, &cfg, 1, &count);
+
+    // create GBM surface
+    g_drm.gbm_surf = gbm_surface_create(g_drm.gbm_dev,
+        g_drm.mode.hdisplay, g_drm.mode.vdisplay,
+        GBM_FORMAT_XRGB8888, GBM_BO_USE_RENDERING);
+
+    // create EGL surface
+    eglSurf = eglCreatePlatformWindowSurface(eglDpy, cfg, g_drm.gbm_surf, NULL);
+
+    // create EGL context
+    EGLint ctx_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
+    eglCtx = eglCreateContext(eglDpy, cfg, EGL_NO_CONTEXT, ctx_attribs);
+
+    eglMakeCurrent(eglDpy, eglSurf, eglSurf, eglCtx);
+
+    // init GL texture
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+}
+void render_frame()
+{
+    struct gbm_bo* bo = gbm_surface_lock_front_buffer(g_drm.gbm_surf);
+    uint32_t handle = gbm_bo_get_handle(bo).u32;
+    uint32_t pitch = gbm_bo_get_stride(bo);
+
+    // create DRM framebuffer
+    uint32_t fb;
+    drmModeAddFB(g_drm.fd, g_drm.mode.hdisplay, g_drm.mode.vdisplay,
+        24, 32, pitch, handle, &fb);
+
+    // set CRTC
+    drmModeSetCrtc(g_drm.fd, g_drm.crtc_id, fb,
+        0, 0, &g_drm.conn->connector_id, 1, &g_drm.mode);
+
+    // swap buffer
+    eglSwapBuffers(eglDpy, eglSurf);
+    gbm_surface_release_buffer(g_drm.gbm_surf, bo);
+}
 
 class JetsonDecoder {
 public:
@@ -175,7 +382,11 @@ void convertNV12toRGB(NvBufSurface* src, uint8_t* dst)
 {
     // Make sure the current context is released
     if (eglDpy != EGL_NO_DISPLAY && eglCtx != EGL_NO_CONTEXT) {
-        eglMakeCurrent(eglDpy, EGL_NO_SURFACE, EGL_NO_SURFACE, eglCtx);
+        if (!eglMakeCurrent(eglDpy, eglSurf, eglSurf, eglCtx)) {
+            std::cerr << "Failed to make EGL context current: "
+                << eglGetError() << std::endl;
+            return;
+        }
     }
     // Configure transformation parameters
     NvBufSurfTransformRect src_rect = { 0, 0, src->surfaceList[0].width, src->surfaceList[0].height };
@@ -269,7 +480,7 @@ void convertYUVtoRGB(AVFrame* frame, uint8_t* dst)
 }
 #endif
 
-void videoDecodeThread(const char* filename)
+void videoDecodeRender(const char* filename)
 {
 #ifdef USE_JETSON_MULTIMEDIA_API
     if (!isJetsonPlatform()) {
@@ -284,7 +495,7 @@ void videoDecodeThread(const char* filename)
         convertNV12toRGB(buffer, rgb);
 
         std::lock_guard<std::mutex> lock(queue_mutex);
-        frame_queue.push(rgb);
+        g_frame_queue.push(rgb);
     }
 #else
     FFmpegDecoder decoder(filename);
@@ -298,7 +509,7 @@ void videoDecodeThread(const char* filename)
                 convertYUVtoRGB(frame, rgb);
 
                 std::lock_guard<std::mutex> lock(queue_mutex);
-                frame_queue.push(rgb);
+                g_frame_queue.push(rgb);
             }
             av_frame_free(&frame);
         }
@@ -314,111 +525,39 @@ int main(int argc, char** argv)
         return -1;
     }
 #ifdef USE_JETSON_MULTIMEDIA_API
-    putenv((char*)"DISPLAY=:0");
-    const char* env = getenv("DISPLAY") ? getenv("DISPLAY") : ":0.0";
-    Display* display = XOpenDisplay(env);
-    if (!display) {
-        std::cerr << "ERROR: XOpenDisplay(" << env << ") failed." << std::endl;
-        exit(1);
+    try {
+        init_drm();
+    } catch (const std::exception& e) {
+        std::cerr << "DRM setup fail: " << e.what() << std::endl;
+        std::cerr << "Perhaps:\n"
+            << "1. Monitor disconnect\n"
+            << "2. No valid display mode\n"
+            << "3. Permission denied(" << getenv("USER") << ")\n";
+        cleanup_drm();
+        exit(EXIT_FAILURE);
     }
-    // EGL setup
-    eglDpy = eglGetDisplay(display);
-    if (eglDpy == EGL_NO_DISPLAY) {
-        std::cerr << "Failed to get EGL display: " << eglGetError() << std::endl;
-        return -1;
-    }
-    EGLint major, minor;
-    if (!eglInitialize(eglDpy, &major, &minor)) {
-        std::cerr << "EGL initialization failed with error: " << eglGetError() << std::endl;
-        return -1;
-    }
-
-    EGLint configAttribs[] = {
-        EGL_SURFACE_TYPE, EGL_PBUFFER_BIT,
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-        EGL_RED_SIZE, 8,
-        EGL_GREEN_SIZE, 8,
-        EGL_BLUE_SIZE, 8,
-        EGL_NONE
-    };
-    EGLConfig eglConfig;
-    EGLint numConfigs;
-    if (!eglChooseConfig(eglDpy, configAttribs, &eglConfig, 1, &numConfigs)) {
-        std::cerr << "Failed to choose EGL config: " << eglGetError() << std::endl;
-        return -1;
-    }
-    // EGL context
-    EGLint contextAttribs[] = {
-        EGL_CONTEXT_CLIENT_VERSION, 2,
-        EGL_NONE
-    };
-    eglCtx = eglCreateContext(eglDpy, eglConfig, EGL_NO_CONTEXT, contextAttribs);
-    if (eglCtx == EGL_NO_CONTEXT) {
-        std::cerr << "Failed to create EGL context: " << eglGetError() << std::endl;
-        return -1;
-    }
-
-    EGLint pbufferAttribs[] = {
-        EGL_WIDTH, 1280,
-        EGL_HEIGHT, 720,
-        EGL_NONE
-    };
-    EGLSurface eglSurf = eglCreatePbufferSurface(eglDpy, eglConfig, pbufferAttribs);
-    if (eglSurf == EGL_NO_SURFACE) {
-        std::cerr << "Failed to create EGL surface: " << eglGetError() << std::endl;
-        return -1;
-    }
-
-    if (!eglMakeCurrent(eglDpy, eglSurf, eglSurf, eglCtx)) {
-        std::cerr << "Failed to make context current: " << eglGetError() << std::endl;
-        return -1;
-    }
-
-    glfwInit();
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-    glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
-
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "Video Player", NULL, NULL);
-    if (!window) {
-        std::cerr << "Failed to create GLFW window" << std::endl;
-        return -1;
-    }
-    glfwMakeContextCurrent(window);
-    glewInit();
-
-    glGenTextures(1, &textureID);
-    glBindTexture(GL_TEXTURE_2D, textureID);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    init_egl();
 
     // Start the video decoding thread
-    std::thread mmediaThread(videoDecodeThread, argv[1]);
+    std::thread mmediaThread(videoDecodeRender, argv[1]);
 
-    while (!glfwWindowShouldClose(window)) {
+    while (true) {
         glClear(GL_COLOR_BUFFER_BIT);
 
-        if (!frame_queue.empty()) {
+        if (!g_frame_queue.empty()) {
             std::lock_guard<std::mutex> lock(queue_mutex);
-            uint8_t* frame = frame_queue.front();
-            frame_queue.pop();
-
+            uint8_t* frame = g_frame_queue.front();
+            g_frame_queue.pop();
             updateTexture(frame);
             delete[] frame;
-
-            glBegin(GL_QUADS);
-            glTexCoord2f(0, 1); glVertex2f(-1, -1);
-            glTexCoord2f(1, 1); glVertex2f(1, -1);
-            glTexCoord2f(1, 0); glVertex2f(1, 1);
-            glTexCoord2f(0, 0); glVertex2f(-1, 1);
-            glEnd();
+            // render to texture
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         }
-
-        glfwSwapBuffers(window);
-        glfwPollEvents();
+        // submit to screen
+        render_frame();
     }
 
     mmediaThread.join();
-
-    glfwTerminate();
 
     if (eglCtx != EGL_NO_CONTEXT) {
         eglDestroyContext(eglDpy, eglCtx);
@@ -432,7 +571,7 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    SDL_Window* window = SDL_CreateWindow("Video Player",
+    SDL_Window* window = SDL_CreateWindow("Video Render",
         SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
         1280, 720, SDL_WINDOW_RESIZABLE);
     if (!window) {
@@ -450,7 +589,7 @@ int main(int argc, char** argv)
     }
 
     // Start the video decoding thread
-    std::thread ffmpegThread(videoDecodeThread, argv[1]);
+    std::thread ffmpegThread(videoDecodeRender, argv[1]);
 
     bool quit = false;
     SDL_Event event;
@@ -463,9 +602,9 @@ int main(int argc, char** argv)
             }
         }
 
-        if (!frame_queue.empty()) {
+        if (!g_frame_queue.empty()) {
             std::lock_guard<std::mutex> lock(queue_mutex);
-            uint8_t* frame = frame_queue.front();
+            uint8_t* frame = g_frame_queue.front();
 
             if (!texture) {
                 texture = SDL_CreateTexture(renderer,
@@ -480,7 +619,7 @@ int main(int argc, char** argv)
             SDL_RenderPresent(renderer);
 
             delete[] frame;
-            frame_queue.pop();
+            g_frame_queue.pop();
         }
         SDL_Delay(10);
     }
