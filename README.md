@@ -19,7 +19,7 @@ LinxSrvc
 
 * Brief
 
-    Building all executes by `./build.sh all -j8` command. Using `./build.sh test` to test, deleting caches use `./build.sh clean`.
+    Building all executes by `./build.sh all -j` command. Using `./build.sh test` to test, deleting caches use `./build.sh clean`.
 
     Once when generates _SUCCESS_, some binary files will shown in the _bin_ / _gen_ directories, such as:
 
@@ -36,7 +36,7 @@ LinxSrvc
 
     [_gen_]
 
-     _`gn1` / `webevent_server` / `dpsk_chat` / `analyzing`_
+     _`gn1` / `webevent_server` / `dpsk_chat` / `video_render` / `analyzing`_
 
 * Description
 
@@ -57,8 +57,6 @@ LinxSrvc
       [_`IM.exe`_](https://raw.githubusercontent.com/tsymiar/MyAutomatic/auto-dev/LinxSrvc/IM/IM.cc) is a `instant-messaging` chat room demo, use it by register, login, send command and _a small amount of quantity_ messages.
 
       `client.exe` is a client peer implement of an _online chat room_ menus like below.
-
-      <img src="WinNTKline/image/client.jpg" title="IMClientDialog" width="40%" />
 
   * kaics.exe
 
@@ -84,11 +82,19 @@ LinxSrvc
 
       a mini chat tool using _`DeepSeek`_ api to answer questions.
 
+      <img src="WinNTKline/image/dpsk.jpg" title="DeepSeek" onclick="javascript:location.href='www.deepseek.com'" width="70%" height="auto" />
+
+  * video_render
+
+      a video decode demo using `ffmpeg`/`multimedia`(Jetson Orin Nano).
+
   * analyzing
 
       a code tool to compare differences between tow same-named files, or different directories.
 
-      Not only thus tools, check `sometools`.
+      <img src="WinNTKline/image/diff.png" title="analyzing" width="50%" height="auto" />
+
+      Not only these tools, check `sometools`.
 
 QtGames
 -------
@@ -116,6 +122,7 @@ QtGames
 
 | TestUtils |
 |:--------:|
+
 > A testcases to test interface of _KlineUtil_ .
 
 -------
