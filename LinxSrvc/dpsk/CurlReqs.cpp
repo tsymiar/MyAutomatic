@@ -12,8 +12,9 @@
 std::vector<std::string> CurlReqs::m_messages = std::vector<std::string>();
 volatile bool g_deltaContent = false;
 static std::mutex g_mtx{};
-std::queue<std::string> CurlReqs::m_content = std::queue<std::string>();
+std::queue<std::string> CurlReqs::m_answer = std::queue<std::string>();
 std::atomic<bool> g_isRunning{};
+std::queue<std::string> m_assistant = std::queue<std::string>();
 
 CurlReqs::CurlReqs() : m_curl(curl_easy_init()), m_headers(nullptr)
 { }
@@ -57,7 +58,6 @@ bool CurlReqs::performRequest(const std::string& url, std::string& response)
         std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
         return false;
     }
-
     return true;
 }
 
@@ -79,13 +79,13 @@ void CurlReqs::setPostFields(const char* data, bool json)
 bool CurlReqs::getContents(std::string& content)
 {
     std::lock_guard<std::mutex> lock(g_mtx);
-    if (!m_content.empty()) {
-        content = m_content.front();
+    if (!m_answer.empty()) {
+        content = m_answer.front();
         if (strncmp(content.c_str(), "DONE", 4) == 0) {
             content = content.substr(4, content.size() - 1);
             return false;
         }
-        m_content.pop();
+        m_answer.pop();
     }
     return true;
 }
@@ -142,6 +142,7 @@ std::string extract_content(const std::string& stream, size_t len)
                     }
                 }
                 content += chunk; // Markdown::Parse(chunk, false);
+                m_assistant.push(chunk);
             }
         } catch (const json::exception& e) {
             if (_json.size() < len && _json.find("choices") != std::string::npos) {
@@ -167,7 +168,7 @@ size_t CurlReqs::writeCallback(void* contents, size_t size, size_t nmemb, void* 
         std::string content = extract_content(message, len);
         {
             std::lock_guard<std::mutex> lock(g_mtx);
-            m_content.push(content);
+            m_answer.push(content);
             g_isRunning = false;
         }
     } else {
@@ -189,8 +190,8 @@ std::string combineMessage(const std::string& msg, ReqsPara::ApiPara para)
     js_data["top_p"] = para.top;
     js_data["messages"][0] = { {"role", "system"}, {"content", para.system_msg} };
     if (para.model.find("reasoner") != std::string::npos) {
-        json js_msg;
-        js_msg["role"] = "user";
+        json js_mssg;
+        js_mssg["role"] = "user";
         std::string content = "";
         for (size_t i = 0; i < CurlReqs::m_messages.size(); i++) {
             content += CurlReqs::m_messages[i];
@@ -202,15 +203,26 @@ std::string combineMessage(const std::string& msg, ReqsPara::ApiPara para)
         if (!para.file_content.empty()) {
             content += (",```" + para.file_content + "```");
         }
-        js_msg["content"] = content;
-        js_data["messages"][1] = js_msg;
+        js_mssg["content"] = content;
+        js_data["messages"][1] = js_mssg;
     } else {
         for (size_t i = 0; i < CurlReqs::m_messages.size(); i++) {
-            json js_msg;
-            js_msg["content"] = CurlReqs::m_messages[i];
-            js_msg["role"] = "user";
-            js_data["messages"].push_back(js_msg);
+            json js_mssg;
+            js_mssg["content"] = CurlReqs::m_messages[i];
+            js_mssg["role"] = "user";
+            js_data["messages"].push_back(js_mssg);
         }
+    }
+    std::string content = "";
+    while (!m_assistant.empty()) {
+        content += m_assistant.front();
+        m_assistant.pop();
+    }
+    if (!content.empty()) {
+        json js_mssg{};
+        js_mssg["role"] = "assistant";
+        js_mssg["content"] = content;
+        // js_data["messages"].push_back(js_mssg);
     }
     std::string message = js_data.dump();
     // std::cout << "json: " << message << std::endl;
@@ -259,7 +271,7 @@ std::string CurlReqs::processChat(const std::string& text, const ReqsPara& para)
 
     g_status = 0;
     std::queue<std::string> k{};
-    std::swap(m_content, k);
+    std::swap(m_answer, k);
     g_deltaContent = para.apiPara.stream;
     std::atomic<bool> isRunning(true);
     g_isRunning.store(isRunning);

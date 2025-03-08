@@ -115,7 +115,7 @@ else()
             libsdl2-dev
         )
     endif()
-    pkg_check_modules(SDL2)
+    find_package(SDL2)
     if (NOT SDL2_FOUND)
         message("## SDL2 Not found, skip [${PROJECT_NAME}] building")
         return()
