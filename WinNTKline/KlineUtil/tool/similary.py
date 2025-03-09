@@ -11,61 +11,48 @@ import re
 init(autoreset=True)
 
 # 注释处理配置（支持多种编程语言）
-COMMENT_PATTERNS = {
-    ".py": [
-        (r"#.*$", re.MULTILINE),  # 行注释
-        (r"(\'\'\'(.*?)\'\'\'|\"\"\"(.*?)\"\"\")", re.DOTALL),  # 块注释
+COMMENT_TYPES = {
+    "line": [
+        (r"#.*$", re.MULTILINE),  # Python, Perl, Ruby等
+        (r"//.*$", re.MULTILINE),  # C/C++/Java/JavaScript等
     ],
-    ".java": [
-        (r"//.*$", re.MULTILINE),
-        (r"/\*.*?\*/", re.DOTALL),
-    ],
-    ".js": [
-        (r"//.*$", re.MULTILINE),
-        (r"/\*.*?\*/", re.DOTALL),
-    ],
-    ".cpp": [
-        (r"//.*$", re.MULTILINE),
-        (r"/\*.*?\*/", re.DOTALL),
-    ],
-    ".c": [
-        (r"//.*$", re.MULTILINE),
-        (r"/\*.*?\*/", re.DOTALL),
-    ],
-    ".rs": [
-        (r"//.*$", re.MULTILINE),
-        (r"/\*.*?\*/", re.DOTALL),
-    ],
-    ".swift": [
-        (r"//.*$", re.MULTILINE),
-        (r"/\*.*?\*/", re.DOTALL),
-    ],
-    ".kt": [
-        (r"//.*$", re.MULTILINE),
-        (r"/\*.*?\*/", re.DOTALL),
-    ],
-    ".ts": [
-        (r"//.*$", re.MULTILINE),
-        (r"/\*.*?\*/", re.DOTALL),
-    ],
-    ".css": [
-        (r"/\*.*?\*/", re.DOTALL),
-    ],
-    ".scss": [
-        (r"//.*$", re.MULTILINE),
-        (r"/\*.*?\*/", re.DOTALL),
-    ],
-    ".less": [
-        (r"//.*$", re.MULTILINE),
-        (r"/\*.*?\*/", re.DOTALL),
-    ],
-    ".html": [
-        (r"<!--.*?-->", re.DOTALL),
-    ],
-    ".xml": [
-        (r"<!--.*?-->", re.DOTALL),
+    "block": [
+        (r"(\'\'\'(.*?)\'\'\'|\"\"\"(.*?)\"\"\")", re.DOTALL),  # Python
+        (r"/\*.*?\*/", re.DOTALL),  # C/C++/Java/JavaScript等
+        (r"<!--.*?-->", re.DOTALL),  # HTML/XML
     ],
 }
+
+# 按文件扩展名映射注释类型
+COMMENT_PATTERNS = {
+    ext: (COMMENT_TYPES["line"] + COMMENT_TYPES["block"])
+    for ext in [
+        ".py",
+        ".java",
+        ".js",
+        ".cpp",
+        ".c",
+        ".rs",
+        ".swift",
+        ".kt",
+        ".ts",
+        ".css",
+        ".scss",
+        ".less",
+        ".html",
+        ".xml",
+    ]
+}
+# 特殊处理纯文本类型
+COMMENT_PATTERNS.update(
+    {
+        ".txt": [],
+        ".md": [],
+        ".json": [],
+        ".yml": [],
+        ".yaml": [],
+    }
+)
 
 
 class EmptyStyle:
@@ -83,19 +70,27 @@ def is_text_file(file_path):
     return os.path.splitext(file_path)[1].lower() in text_exts
 
 
-def strip_comments(file_path, code):
-    """高级注释去除方法，支持跨行处理"""
+# 定义类型别名
+LineList = list[str]
+
+
+def strip_comments(file_path: str, code: str) -> LineList:
+    """
+    Args:
+        file_path: 文件路径，用于确定文件类型
+        code: 源代码内容
+
+    Returns:
+        去除注释后的有效代码行列表
+    """
     file_ext = os.path.splitext(file_path)[1].lower()
     patterns = COMMENT_PATTERNS.get(file_ext, [])
 
+    # 应用所有匹配的注释模式
     for pattern, flags in patterns:
         code = re.sub(pattern, "", code, flags=flags)
 
-    # 处理通用情况
-    code = re.sub(r"//.*$", "", code, flags=re.MULTILINE)
-    code = re.sub(r"/\*.*?\*/", "", code, flags=re.DOTALL)
-    code = re.sub(r"<!--.*?-->", "", code, flags=re.DOTALL)
-
+    # 返回非空且去除右侧空格的代码行
     return [line.rstrip() for line in code.splitlines() if line.rstrip()]
 
 
