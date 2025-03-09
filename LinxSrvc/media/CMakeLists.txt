@@ -104,6 +104,7 @@ else()
     pkg_check_modules(AVFORMAT libavformat)
     pkg_check_modules(AVUTIL libavutil)
     pkg_check_modules(SWSCALE libswscale)
+    pkg_check_modules(SWRESAMPLE libswresample)
     execute_process(COMMAND which apt-get RESULT_VARIABLE APT_GET_FOUND)
     if(APT_GET_FOUND EQUAL 0)
         execute_process(COMMAND 
@@ -111,7 +112,9 @@ else()
             ffmpeg
             libavcodec-dev
             libavformat-dev
+            libavutil-dev
             libswscale-dev
+            libswresample-dev
             libsdl2-dev
         )
     endif()
@@ -125,6 +128,7 @@ else()
         ${AVFORMAT_INCLUDE_DIRS}
         ${AVUTIL_INCLUDE_DIRS}
         ${SWSCALE_INCLUDE_DIRS}
+        ${SWRESAMPLE_INCLUDE_DIRS}
         ${SDL2_INCLUDE_DIRS}
     )
     link_directories(${AVCODEC_LIBRARY_DIRS})
@@ -134,6 +138,7 @@ else()
         ${AVFORMAT_LIBRARIES}
         ${AVUTIL_LIBRARIES}
         ${SWSCALE_LIBRARIES}
+        ${SWRESAMPLE_LIBRARIES}
         ${SDL2_LIBRARIES}
         Threads::Threads
     )
