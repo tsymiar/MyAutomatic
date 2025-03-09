@@ -115,7 +115,7 @@ def read_file(file_path):
 
 def build_index(directory, ignore_dirs, ignore_files):
     """带目录和文件忽略功能的文件索引构建"""
-    index = {}
+    index = defaultdict(list)
     ignore_dirs = set(ignore_dirs)
     ignore_files = set(ignore_files)
 
@@ -132,7 +132,7 @@ def build_index(directory, ignore_dirs, ignore_files):
                 continue
             path = os.path.join(root, f)
             rel_path = os.path.relpath(path, directory)
-            index[rel_path] = path
+            index[f].append(rel_path)
 
     return index
 
@@ -210,31 +210,51 @@ def dir_compare(dir1, dir2, show_diff, ignore_dirs, ignore_files):
     """更新目录对比统计"""
     index1 = build_index(dir1, ignore_dirs, ignore_files)
     index2 = build_index(dir2, ignore_dirs, ignore_files)
-    common_files = set(index1.keys()) & set(index2.keys())
 
     total = defaultdict(int)
     details = []
+    unmatched = {"source": [], "target": []}  # 未匹配文件存储
 
-    for rel_path in common_files:
-        res = file_compare(index1[rel_path], index2[rel_path], dir1, show_diff)
-        total["common"] += res["common"]
-        total["orig1"] += res["orig1"]
-        total["orig2"] += res["orig2"]
-        total["valid1"] += res["valid1"]
-        total["valid2"] += res["valid2"]
-        details.append(res)
+    # 获取所有文件名集合
+    all_files = set(index1.keys()).union(set(index2.keys()))
+
+    for filename in all_files:
+        paths1 = index1.get(filename, [])
+        paths2 = index2.get(filename, [])
+
+        # 未匹配文件处理
+        if not paths2 and paths1:
+            unmatched["source"].extend([os.path.join(dir1, p) for p in paths1])
+        if not paths1 and paths2:
+            unmatched["target"].extend([os.path.join(dir2, p) for p in paths2])
+
+        for rel_path1 in paths1:
+            full_path1 = os.path.join(dir1, rel_path1)
+            for rel_path2 in paths2:
+                full_path2 = os.path.join(dir2, rel_path2)
+                res = file_compare(
+                    full_path1, full_path2, os.path.dirname(full_path1), show_diff
+                )
+                res["file_name"] = f"{rel_path1} ↔ {rel_path2}"
+                details.append(res)
+                total["common"] += res["common"]
+                total["valid1"] += res["valid1"]
+                total["valid2"] += res["valid2"]
+                total["orig1"] += res["orig1"]
+                total["orig2"] += res["orig2"]
 
     denominator = max(total["valid1"], total["valid2"]) or 1
     total["ratio"] = total["common"] / denominator
-    return total, details
+
+    return total, details, unmatched  # 返回未匹配文件信息
 
 
-def print_results(total, details, use_color=True):
+def print_results(total, details, unmatched, use_color=True):
     """增强版结果显示"""
     color = lambda c: getattr(Fore, c.upper()) if use_color else ""
 
     # 文件列表
-    print(f"\n{color('cyan')}=== 文件详情 ({len(details)} 个) ===")
+    print(f"\n{color('cyan')}=== 匹配文件详情 ({len(details)} 个) ===")
     for info in sorted(details, key=lambda x: x["ratio"], reverse=True):
         ratio = info["ratio"]
         color_code = "GREEN" if ratio > 0.7 else "YELLOW" if ratio > 0.3 else "RED"
@@ -247,9 +267,30 @@ def print_results(total, details, use_color=True):
         )
         print(line)
 
+    # 未匹配文件
+    print(f"\n{color('cyan')}=== 未匹配文件 ===")
+
+    if unmatched["source"]:
+        print(f"\n{color('yellow')}▏ 源目录独有文件 ({len(unmatched['source'])} 个):")
+        for path in unmatched["source"]:
+            print(
+                f"  {color('magenta')}• {os.path.relpath(path, os.path.dirname(path))}"
+            )
+
+    if unmatched["target"]:
+        print(f"\n{color('yellow')}▏ 目标目录独有文件 ({len(unmatched['target'])} 个):")
+        for path in unmatched["target"]:
+            print(
+                f"  {color('magenta')}• {os.path.relpath(path, os.path.dirname(path))}"
+            )
+
+    # 统计摘要
+    print(f"\n{color('cyan')}=== 统计摘要 ===")
+    print(f"{color('green')}▏ 匹配文件对: {len(details)} 对")
+    print(f"{color('yellow')}▏ 源目录独有: {len(unmatched['source'])} 个")
+    print(f"{color('yellow')}▏ 目标目录独有: {len(unmatched['target'])} 个")
     # 综合分析
     print(f"\n{color('cyan')}=== 综合分析 ===")
-    print(f"{color('green')}▏ 匹配文件数: {len(details)}")
     print(f"{color('green')}▏ 重复总行数: {total['common']}")
     print(f"{color('magenta')}▏ 总原始行数: {total['orig1']} → 有效 {total['valid1']}")
     print(f"{color('magenta')}▏ 总目标行数: {total['orig2']} → 有效 {total['valid2']}")
@@ -306,7 +347,7 @@ def main():
 
         # 目录对比模式
         elif os.path.isdir(args.source) and os.path.isdir(args.target):
-            total, details = dir_compare(
+            total, details, unmatched = dir_compare(  # 接收返回值
                 args.source,
                 args.target,
                 args.diff,
@@ -320,7 +361,8 @@ def main():
                         print(f"\n{color('cyan')}--- {file_info['file_name']} ---")
                         print(file_info["diff"])
 
-            print_results(total, details, use_color)
+            # 传递unmatched参数
+            print_results(total, details, unmatched, use_color)
 
         else:
             print(f"{color('red')}错误：需要两个文件或两个目录")

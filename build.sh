@@ -61,7 +61,7 @@ else
             if [ -d "$built/build" ]; then rm -rvf "$built/build"; fi;
         done
     fi
-    if [ $status != 1 ]; then make "$@"; fi;
+    if [ $status != 1 ]; then make "$@" --no-print-directory; fi;
     if [ "$1" == "clean" ]
     then
         shopt -s nullglob
