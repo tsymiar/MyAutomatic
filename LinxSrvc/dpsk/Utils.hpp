@@ -9,6 +9,8 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <stack>
+#include <unordered_map>
 
 // using namespace std::string_literals; // C++14 or later for "s" suffix
 
@@ -559,6 +561,127 @@ private:
             output.replace(seg.start, seg.tail - seg.start + 1, converted);
         }
 
+        return output;
+    }
+
+private:
+    const std::unordered_map<std::string, std::string> kStyleMap = {
+        {"###", "\033[1;37m"},
+        {"**", "\033[1m"}, {"//", "\033[3m"}, {"__", "\033[4m"},
+        {"~~", "\033[9m"}, {"==", "\033[7m"}, {"reset", "\033[0m"}
+    };
+    std::string value;
+    std::vector<std::string> symbols_sorted;
+    std::vector<std::string> style_stack;
+    bool is_escape = false;
+
+    void sort_symbols()
+    {
+        for (const auto& pair : kStyleMap) {
+            if (pair.first != "reset") {
+                symbols_sorted.push_back(pair.first);
+            }
+        }
+        std::sort(symbols_sorted.begin(), symbols_sorted.end(),
+            [](const std::string& a, const std::string& b) {
+                return a.size() > b.size();
+            });
+    }
+
+    void reset_styles()
+    {
+        value.clear();
+        style_stack.clear();
+        is_escape = false;
+    }
+
+    std::string get_active_styles() const
+    {
+        std::string styles;
+        for (const auto& style : style_stack) {
+            styles += kStyleMap.at(style);
+        }
+        return styles;
+    }
+
+    std::string process_buffer(bool is_end = false)
+    {
+        std::string output;
+        size_t pos = 0;
+
+        while (pos < value.size()) {
+            if (is_escape) {
+                is_escape = false;
+                pos++;
+                continue;
+            }
+
+            if (value[pos] == '\\' && pos + 1 < value.size()) {
+                value.erase(pos, 1);
+                pos++;
+                continue;
+            }
+
+            bool symbol_matched = false;
+            for (const auto& symbol : symbols_sorted) {
+                size_t symbol_len = symbol.size();
+                if (pos + symbol_len > value.size()) continue;
+
+                std::string segment = value.substr(pos, symbol_len);
+                if (segment == symbol) {
+                    if (!style_stack.empty() && style_stack.back() == symbol) {
+                        style_stack.pop_back();
+                        value.replace(pos, symbol_len, kStyleMap.at("reset") + get_active_styles());
+                        pos += (kStyleMap.at("reset") + get_active_styles()).size();
+                    } else {
+                        style_stack.push_back(symbol);
+                        value.replace(pos, symbol_len, kStyleMap.at(symbol));
+                        pos += kStyleMap.at(symbol).size();
+                    }
+                    symbol_matched = true;
+                    break;
+                }
+            }
+
+            if (!symbol_matched) {
+                output += value[pos];
+                pos++;
+            }
+        }
+
+        size_t newline_pos = value.find('\n');
+        if (newline_pos != std::string::npos) {
+            std::string current_line = value.substr(0, newline_pos);
+            value = value.substr(newline_pos + 1);
+
+            std::string reset_then_reactivate = kStyleMap.at("reset") + get_active_styles();
+            output = current_line + reset_then_reactivate + "\n";
+
+        } else if (is_end) {
+            output = value + kStyleMap.at("reset");
+            value.clear();
+            reset_styles();
+        }
+
+        return output;
+    }
+
+public:
+    Markdown()
+    {
+        sort_symbols();
+    }
+
+    std::string process_chunk(const std::string& chunk)
+    {
+        value += chunk;
+        return process_buffer();
+    }
+
+    std::string flush()
+    {
+        std::string output = process_buffer(true);
+        reset_styles();
         return output;
     }
 };

@@ -51,7 +51,7 @@ int main()
                 std::string content;
                 do {
                     if (!content.empty()) {
-                        std::cout << content;
+                        std::cout << content << std::flush;
                         content = "";
                     }
                     msWait(50);

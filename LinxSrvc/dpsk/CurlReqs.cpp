@@ -109,6 +109,7 @@ std::string extract_content(const std::string& stream, size_t len)
     using namespace std;
     string content = "";
     size_t pos = 0;
+    Markdown mk;
     while ((pos = stream.find("data: ", pos)) != string::npos) {
         size_t new_line = stream.find("\n", pos);
         string _json = stream.substr(pos + 6, new_line - pos - 6);
@@ -141,8 +142,9 @@ std::string extract_content(const std::string& stream, size_t len)
                         g_status = 2;
                     }
                 }
-                content += chunk; // Markdown::Parse(chunk, false);
+                content += mk.process_chunk(chunk);
                 m_assistant.push(chunk);
+                mk.flush();
             }
         } catch (const json::exception& e) {
             if (_json.size() < len && _json.find("choices") != std::string::npos) {
