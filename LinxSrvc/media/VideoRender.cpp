@@ -353,10 +353,10 @@ private:
             off_t seek_pos = lseek(vi_fd, 0, SEEK_SET);
             if (seek_pos < 0) throw std::runtime_error("Failed to seek file");
 
-            size_t bytes_need = std::min(static_cast<size_t>(qbuf.m.planes[0].length), static_cast<size_t>(file_size - seek_pos));
+            ssize_t bytes_need = std::min(static_cast<ssize_t>(qbuf.m.planes[0].length), static_cast<ssize_t>(file_size - seek_pos));
             if (bytes_need == 0) break;  // No more data to read
 
-            size_t total = 0;
+            ssize_t total = 0;
             while (total < bytes_need) {
                 if (total > qbuf.m.planes[0].length)
                     throw std::runtime_error("Beyond buffer size");
