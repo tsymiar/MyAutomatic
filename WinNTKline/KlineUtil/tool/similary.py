@@ -6,7 +6,7 @@ from colorama import Fore, init
 from collections import defaultdict
 import re
 
-
+Style = None
 # 初始化颜色支持
 init(autoreset=True)
 

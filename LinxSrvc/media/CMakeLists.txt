@@ -24,6 +24,7 @@ add_compile_options(
     -fPIC
     -ggdb
     -pthread
+    # -fsanitize=address
 )
 
 if(JETSON_TARGET)
