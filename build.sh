@@ -4,7 +4,6 @@ PWD=$(pwd)
 if [ "$1" == "test" ]
 then
     cd "${PWD}/LinxSrvc/test";
-    # rm -rvf build/*;
     if [ ! $(whereis lcov | awk '{print $2}') ]
     then
         if [ -d lcov ] && [ $(ls lcov/* | wc -l) -le 0 ]
@@ -80,8 +79,7 @@ else
                     if [ -f "./Makefile" ]; then
                         make clean
                     fi
-                else
-                    rm -rvf -- GeneratedFiles* ./*.stash ./*.user* ./*.qtvscr ./*.TMP
+                    rm -rvf -- GeneratedFiles* ./.*.stash ./*.user* ./*.qtvscr ./*.TMP
                 fi
             fi
             ARR_SUB=(Debug */*Debug MFC cache build ./*.o .vs)
