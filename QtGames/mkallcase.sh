@@ -2,7 +2,7 @@
 if [ -f "Makefile" ]; then
 	make clean
 fi
-sudo apt install libpng++-dev freeglut3-dev libsdl2-dev libsdl2-image-dev libsdl2-ttf-dev -y
+sudo apt install qt5-qmake libpng++-dev freeglut3-dev libsdl2-dev libsdl2-image-dev libsdl2-ttf-dev -y
 qmake -o Makefile QtGames.pro
 for ui in $(ls -- *.ui)
 do
