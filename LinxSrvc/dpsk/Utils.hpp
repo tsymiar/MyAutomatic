@@ -566,19 +566,25 @@ private:
 
 private:
     const std::unordered_map<std::string, std::string> kStyleMap = {
-        {"###", "\033[1;37m"},
-        {"**", "\033[1m"}, {"//", "\033[3m"}, {"__", "\033[4m"},
-        {"~~", "\033[9m"}, {"==", "\033[7m"}, {"reset", "\033[0m"}
+        {"---", "\033[1;44m"}, {"###", "\033[52m"},
+        {"**", "\033[1m"}, {"\\\\", "\033[3m"}, {"__", "\033[4m"},
+        {"~~", "\033[9m"}, {"==", "\033[7m"}, {"```", ""},
+        {"null", "\033[0m"}
     };
-    std::string value;
+    std::string value = "";
     std::vector<std::string> symbols_sorted;
     std::vector<std::string> style_stack;
     bool is_escape = false;
 
+    bool waiting4lang = false;
+    size_t lang_start_pos = 0;
+    std::string lang_buff = "";
+
     void sort_symbols()
     {
+        symbols_sorted.clear();
         for (const auto& pair : kStyleMap) {
-            if (pair.first != "reset") {
+            if (pair.first != "null") {
                 symbols_sorted.push_back(pair.first);
             }
         }
@@ -588,11 +594,13 @@ private:
             });
     }
 
-    void reset_styles()
+    void del_styles()
     {
         value.clear();
         style_stack.clear();
         is_escape = false;
+        waiting4lang = false;
+        lang_buff.clear();
     }
 
     std::string get_active_styles() const
@@ -604,12 +612,43 @@ private:
         return styles;
     }
 
-    std::string process_buffer(bool is_end = false)
+    void process_language_spec(size_t& pos)
+    {
+        if (value[pos] == '\n' || pos == value.size() - 1) {
+            if (pos == value.size() - 1 && value[pos] != '\n') {
+                lang_buff += value[pos];
+                pos++;
+            }
+
+            std::string lang = lang_buff;
+            if (lang == "cpp") lang = "C++";
+            std::string replacement = "\033[33m[" + lang + "]\033[0m" + get_active_styles();
+
+            size_t replace_len = pos - lang_start_pos - (value[pos] == '\n' ? 0 : 1);
+            value.replace(lang_start_pos, replace_len, replacement);
+
+            pos = lang_start_pos + replacement.size();
+            if (value[pos] == '\n') pos++;
+
+            waiting4lang = false;
+            lang_buff.clear();
+        } else {
+            lang_buff += value[pos];
+            pos++;
+        }
+    }
+
+    std::string process_lines(bool is_end = false)
     {
         std::string output;
         size_t pos = 0;
 
         while (pos < value.size()) {
+            if (waiting4lang) {
+                process_language_spec(pos);
+                continue;
+            }
+
             if (is_escape) {
                 is_escape = false;
                 pos++;
@@ -631,12 +670,18 @@ private:
                 if (segment == symbol) {
                     if (!style_stack.empty() && style_stack.back() == symbol) {
                         style_stack.pop_back();
-                        value.replace(pos, symbol_len, kStyleMap.at("reset") + get_active_styles());
-                        pos += (kStyleMap.at("reset") + get_active_styles()).size();
+                        value.replace(pos, symbol_len, kStyleMap.at("null") + get_active_styles());
+                        pos += (kStyleMap.at("null") + get_active_styles()).size();
                     } else {
                         style_stack.push_back(symbol);
                         value.replace(pos, symbol_len, kStyleMap.at(symbol));
                         pos += kStyleMap.at(symbol).size();
+
+                        if (symbol == "```") {
+                            waiting4lang = true;
+                            lang_start_pos = pos;
+                            lang_buff.clear();
+                        }
                     }
                     symbol_matched = true;
                     break;
@@ -649,18 +694,27 @@ private:
             }
         }
 
+        if (is_end && waiting4lang) {
+            std::string lang = lang_buff;
+            if (lang == "cpp") lang = "C++";
+            std::string replacement = "\033[33m" + lang + "\033[0m" + get_active_styles();
+            value.replace(lang_start_pos, lang_buff.size(), replacement);
+            output += value.substr(0, lang_start_pos + replacement.size()) + kStyleMap.at("null");
+            value.clear();
+            del_styles();
+            return output;
+        }
+
         size_t newline_pos = value.find('\n');
         if (newline_pos != std::string::npos) {
             std::string current_line = value.substr(0, newline_pos);
             value = value.substr(newline_pos + 1);
-
-            std::string reset_then_reactivate = kStyleMap.at("reset") + get_active_styles();
+            std::string reset_then_reactivate = kStyleMap.at("null") + get_active_styles();
             output = current_line + reset_then_reactivate + "\n";
-
         } else if (is_end) {
-            output = value + kStyleMap.at("reset");
+            output = value + kStyleMap.at("null");
             value.clear();
-            reset_styles();
+            del_styles();
         }
 
         return output;
@@ -675,13 +729,13 @@ public:
     std::string process_chunk(const std::string& chunk)
     {
         value += chunk;
-        return process_buffer();
+        return process_lines();
     }
 
     std::string flush()
     {
-        std::string output = process_buffer(true);
-        reset_styles();
+        std::string output = process_lines(true);
+        del_styles();
         return output;
     }
 };
