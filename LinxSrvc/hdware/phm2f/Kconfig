@@ -1,0 +1,5 @@
+config PHY_MEM
+tristate "phy_mem"
+help
+    phy_mem driver
+default y
