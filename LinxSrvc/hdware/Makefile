@@ -21,6 +21,12 @@ virtex:
 chstest:
 	@gcc -g -DDRIVER test.c -o $(GEN)/chstest
 	@echo "-- Built: \033[1m$@\033[0m"
+phm2f:
+	@if [ -d $(BUILD) ]; then make -C phy_mem KNLDIR=$(BUILD); fi;
+	@echo "-- Built: \033[1m$@\033[0m"
+phm2f_test:
+	@gcc -g -DDRIVER test_phm2f.c -o $(GEN)/test_phm2f
+	@echo "-- Built: \033[1m$@\033[0m"
 image:
 	@gcc -g -DSNAP test.c linuxsnap.c -o $(GEN)/imagesnap.exe
 	@echo "-- Built: \033[1m$@\033[0m"
@@ -38,6 +44,8 @@ ifneq ($(OS), )
 	@make chsdev
 	@make virtex
 	@make chstest
+	@make phm2f
+	@make phm2f_test
 ifeq ($(OS), Linux)
 	@make image
 	@make video
