@@ -18,6 +18,10 @@ chsdev:
 virtex:
 	@if [ -d $(BUILD) ]; then make -C virtex KNLDIR=$(BUILD); fi;
 	@echo "-- Built: \033[1m$@\033[0m"
+rdma:
+	@gcc -g ./rdma/server.c -lrdmacm -libverbs -o $(GEN)/rdma_server.exe
+	@gcc -g ./rdma/client.c -lrdmacm -libverbs -o $(GEN)/rdma_client.exe
+	@echo "-- Built: \033[1m$@\033[0m"
 chstest:
 	@gcc -g -DDRIVER test.c -o $(GEN)/chstest
 	@echo "-- Built: \033[1m$@\033[0m"
@@ -25,7 +29,7 @@ phm2f:
 	@if [ -d $(BUILD) ]; then make -C phy_mem KNLDIR=$(BUILD); fi;
 	@echo "-- Built: \033[1m$@\033[0m"
 phm2f_test:
-	@gcc -g -DDRIVER test_phm2f.c -o $(GEN)/test_phm2f
+	@gcc -g test_phm2f.c -o $(GEN)/test_phm2f
 	@echo "-- Built: \033[1m$@\033[0m"
 image:
 	@gcc -g -DSNAP test.c linuxsnap.c -o $(GEN)/imagesnap.exe
@@ -44,6 +48,7 @@ ifneq ($(OS), )
 	@make chsdev
 	@make virtex
 	@make chstest
+	@make rdma
 	@make phm2f
 	@make phm2f_test
 ifeq ($(OS), Linux)
@@ -53,10 +58,12 @@ endif
 endif
 	@make pipefifo
 clean:
-	@rm -rvf $(GEN)/chigpio* $(GEN)/mes909* $(GEN)/dirtyhack*
-	@rm -rvf $(GEN)/chstest* $(GEN)/VideoCapture*
-	@rm -rvf $(GEN)/imagesnap* $(GEN)/pipefifo*
+	@rm -rvf $(GEN)/chigpio* $(GEN)/mes909* $(GEN)/dirtyhack* $(GEN)/chstest*
+	@rm -rvf $(GEN)/VideoCapture* $(GEN)/imagesnap* $(GEN)/pipefifo*
+	@rm -rvf $(GEN)/rdma_*.exe
+	@rm -rvf $(GEN)/test_*
 ifeq ($(shell uname), Linux)
 	@make -C chsdev clean
 	@make -C virtex clean
+	@make -C phm2f clean
 endif
