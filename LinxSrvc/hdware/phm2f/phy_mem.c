@@ -19,6 +19,7 @@ struct chunk_params;
 #define IOCTL_SET_PHY_ADDR   _IOW(IOCTL_MAGIC, 1, struct phy_addr_params)
 #define IOCTL_SET_OUTPUT_FD  _IOW(IOCTL_MAGIC, 2, int)
 #define IOCTL_WRITE_CHUNK    _IOW(IOCTL_MAGIC, 3, struct chunk_params)
+#define IOCTL_CLOSE_FILE     _IO(IOCTL_MAGIC, 4)
 
 // IOCTL parameter structures
 struct phy_addr_params {
@@ -130,11 +131,19 @@ static long device_ioctl(struct file* file, unsigned int cmd, unsigned long arg)
 
         pos = params.file_offset;
         written = kernel_write(priv->output_file,
-                               priv->vaddr + params.mem_offset,
-                               params.chunk_size,
-                               &pos);
+            priv->vaddr + params.mem_offset,
+            params.chunk_size,
+            &pos);
         if (written != params.chunk_size) {
             status = -EIO;
+        }
+        break;
+    }
+
+    case IOCTL_CLOSE_FILE: {
+        if (priv->output_file) {
+            filp_close(priv->output_file, NULL);
+            priv->output_file = NULL;
         }
         break;
     }
