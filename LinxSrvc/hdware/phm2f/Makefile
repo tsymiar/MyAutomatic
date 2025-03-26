@@ -4,11 +4,12 @@ ifeq ($(KERNELRELEASE),)
 	KNLDIR ?= /lib/modules/$(shell uname -r)/build
 endif
 ARM_LINUX_KERNEL := ${KNLDIR}
+KO = $(PWD)/../../kos
 default:
 	@make -C $(ARM_LINUX_KERNEL) M=$(PWD) modules
-	sudo insmod phy_mem.ko
+	@if ! lsmod | grep -q phy_mem; then sudo insmod phy_mem.ko; fi;
+	@if [ -d $(KO) ]; then cp phy_mem.ko $(KO); fi;
+	@echo "-- Built: \033[1mphy_mem\033[0m"
 clean:
 	@if [ -d $(ARM_LINUX_KERNEL) ]; then make -C $(ARM_LINUX_KERNEL) M=$(PWD) clean; fi;
-ifeq ($(shell lsmod | grep phy_mem | awk '{print $1}'), phy_mem)
-	@rmmod phy_mem
-endif
+	@if lsmod | grep -q phy_mem; then sudo rmmod phy_mem; fi;

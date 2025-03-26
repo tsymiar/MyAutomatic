@@ -149,7 +149,7 @@ static ssize_t virtex_dev_write(struct file* flip, const char* buf, size_t len, 
         return -EFAULT;
     }
 #endif
-    printk("virtex_dev_write [val=%d,bus=%p,phy=%p,size=%llu].\n",
+    printk("virtex_dev_write [val=%d,bus=0x%llx,phy=0x%llx,size=%llu].\n",
         g_msg_user.msg.reg.val, g_msg_user.msg.bar.busAddr, g_msg_user.msg.bar.phyAddr, g_msg_user.msg.bar.winSize);
     return sizeof(ST_UsrMsg);
 }
