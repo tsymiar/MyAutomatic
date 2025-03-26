@@ -5,6 +5,7 @@
 #include <linux/cdev.h>
 #include <linux/device.h>
 #include <linux/uaccess.h>
+#include <linux/version.h>
 
 #define DEVICE_NUMBER 1 //设备数量
 #define DEVICE_SNAME "stachardevice" //静态名称
@@ -99,10 +100,14 @@ static int device_init(void)
         printk("devNo = (%d", majNo);
         printk(", %d)\n", minNo);
     }
-    cdev.owner = THIS_MODULE;
     cdev_init(&cdev, &chs_dev_ops); //初始化cdev
     cdev_add(&cdev, devNo, DEVICE_NUMBER); //注册到内核
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 26)
+    cdev.owner = THIS_MODULE;
     class = class_create(THIS_MODULE, DEVICE_CLASS_NAME); //注册类
+#else
+    class = class_create(DEVICE_CLASS_NAME); //注册类
+#endif
     device = device_create(class, NULL, devNo, NULL, DEVICE_NODE_NAME); //注册设备
     return 0;
 }

@@ -6,10 +6,15 @@ endif
 ARM_LINUX_KERNEL := ${KNLDIR}
 KO = $(PWD)/../../kos
 default:
-	@make -C $(ARM_LINUX_KERNEL) M=$(PWD) modules
-	@if ! lsmod | grep -q chsdev; then sudo insmod chsdev.ko; fi;
-	@if [ -d $(KO)  ]; then cp chsdev.ko $(KO) ; fi;
-	@echo "-- Built: \033[1mchsdev\033[0m"
+	@if [ -d $(ARM_LINUX_KERNEL) ]; then \
+		make -C $(ARM_LINUX_KERNEL) M=$(PWD) modules && \
+		lsmod | grep -q chsdev || sudo insmod chsdev.ko && \
+		[ -d $(KO) ] && cp chsdev.ko $(KO) && \
+		echo "-- Built: \033[1mchsdev\033[0m" || \
+		echo "Warning: chsdev build break"; \
+	else \
+		echo "$(ARM_LINUX_KERNEL) doesn't exist"; \
+	fi;
 clean:
 	@if [ -d $(ARM_LINUX_KERNEL) ]; then make -C $(ARM_LINUX_KERNEL) M=$(PWD) clean; fi;
 	@if lsmod | grep -q chsdev; then sudo rmmod chsdev; fi;

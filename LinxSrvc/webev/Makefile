@@ -13,7 +13,7 @@ $(BUILD_PATH)/Makefile:
 		\cp $(BUILD_PATH)/$(TARGET) $(EXECUTABLE); \
 		else rm -fr $(BUILD_PATH)/* ; fi;
 
- make-all:
+make-all:
 	@make $(BUILD_PATH)/Makefile
 
 .PHONY: build
