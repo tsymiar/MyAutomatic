@@ -55,6 +55,7 @@ else
         if [ ! -d bin ]; then mkdir bin; fi;
         if [ ! -d gen ]; then mkdir gen; fi;
         if [ ! -d out ]; then mkdir out; fi;
+        if [ ! -d kos ]; then mkdir kos; fi;
     else
         for built in "${folders[@]}"; do
             if [ -d "$built/build" ]; then rm -rvf "$built/build"; fi;
@@ -77,7 +78,7 @@ else
                 which qmake >/dev/null 2>&1
                 if [ $? -eq 0 ]; then
                     if [ -f "./Makefile" ]; then
-                        make clean
+                        make clean || true
                     fi
                     rm -rvf -- GeneratedFiles* ./.*.stash ./*.user* ./*.qtvscr ./*.TMP
                 fi

@@ -4,11 +4,12 @@ ifeq ($(KERNELRELEASE),)
 	KNLDIR ?= /lib/modules/$(shell uname -r)/build
 endif
 ARM_LINUX_KERNEL := ${KNLDIR}
+KO = $(PWD)/../../kos
 default:
 	@make -C $(ARM_LINUX_KERNEL) M=$(PWD) modules
-	sudo insmod chsdev.ko
+	@if ! lsmod | grep -q chsdev; then sudo insmod chsdev.ko; fi;
+	@if [ -d $(KO)  ]; then cp chsdev.ko $(KO) ; fi;
+	@echo "-- Built: \033[1mchsdev\033[0m"
 clean:
 	@if [ -d $(ARM_LINUX_KERNEL) ]; then make -C $(ARM_LINUX_KERNEL) M=$(PWD) clean; fi;
-ifeq ($(shell lsmod | grep chsdev | awk '{print $1}'), chsdev)
-	@rmmod chsdev
-endif
+	@if lsmod | grep -q chsdev; then sudo rmmod chsdev; fi;

@@ -1,5 +1,6 @@
 PWD = $(shell pwd)
 GEN = $(PWD)/../bin
+KO = $(PWD)/../kos
 OS = $(shell uname -s)
 #BUILD = ${PWD}/../../../kernel/linux
 BUILD = /lib/modules/$(shell uname -r)/build
@@ -14,11 +15,9 @@ dirty:
 	@echo "-- Built: \033[1m$@\033[0m"
 chsdev:
 	@if [ -d $(BUILD) ]; then make -C chsdev KNLDIR=$(BUILD); fi;
-	@echo "-- Built: \033[1m$@\033[0m"
 virtex:
 	@if [ -d $(BUILD) ]; then make -C virtex KNLDIR=$(BUILD); fi;
-	@echo "-- Built: \033[1m$@\033[0m"
-rdma:
+RDMA:
 	@gcc -g ./rdma/server.c -lrdmacm -libverbs -o $(GEN)/rdma_server.exe
 	@gcc -g ./rdma/client.c -lrdmacm -libverbs -o $(GEN)/rdma_client.exe
 	@echo "-- Built: \033[1m$@\033[0m"
@@ -27,7 +26,6 @@ chstest:
 	@echo "-- Built: \033[1m$@\033[0m"
 phm2f:
 	@if [ -d $(BUILD) ]; then make -C phy_mem KNLDIR=$(BUILD); fi;
-	@echo "-- Built: \033[1m$@\033[0m"
 phm2f_test:
 	@gcc -g test_phm2f.c -o $(GEN)/test_phm2f
 	@echo "-- Built: \033[1m$@\033[0m"
@@ -45,17 +43,20 @@ all:
 	@make mes909
 	@make dirty
 ifneq ($(OS), )
-	@make chsdev
-	@make virtex
+	@echo Making $(OS) drivers
+	@make -C chsdev
+	@make -C virtex
+	@make RDMA
+	@make -C phm2f
 	@make chstest
-	@make rdma
-	@make phm2f
 	@make phm2f_test
 ifeq ($(OS), Linux)
+	@echo Making image/video
 	@make image
 	@make video
 endif
 endif
+	@echo Making tools
 	@make pipefifo
 clean:
 	@rm -rvf $(GEN)/chigpio* $(GEN)/mes909* $(GEN)/dirtyhack* $(GEN)/chstest*
@@ -67,3 +68,4 @@ ifeq ($(shell uname), Linux)
 	@make -C virtex clean
 	@make -C phm2f clean
 endif
+	@rm -rvf $(KO)
