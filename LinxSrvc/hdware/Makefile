@@ -18,6 +18,10 @@ chsdev:
 virtex:
 	@if [ -d $(BUILD) ]; then make -C virtex KNLDIR=$(BUILD); fi;
 RDMA:
+	@if command -v apt >/dev/null 2>&1; then \
+		echo "fetch RDMA dependencies..."; \
+		sudo apt install -y rdma-core librdmacm-dev ibverbs-utils; \
+	fi;
 	@gcc -g ./rdma/server.c -lrdmacm -libverbs -o $(GEN)/rdma_server.exe
 	@gcc -g ./rdma/client.c -lrdmacm -libverbs -o $(GEN)/rdma_client.exe
 	@echo "-- Built: \033[1m$@\033[0m"
