@@ -1,0 +1,24 @@
+#!/usr/bin/expect -f
+
+set IP [lindex $argv 0]
+set USER [lindex $argv 1]
+set PWD xxxxx
+#set PWD [lindex $argv 2]
+
+set timeout 1
+spawn ssh ${USER}@${IP}
+expect {
+    "yes/no" {
+        send "yes\n"
+        expect "*assword:" { send "${PWD}\n" }
+    }
+    "*assword:" { send "${PWD}\n" }
+    timeout  {   send_error "User 'root' login timeout.\n";  exit 1;  }
+}
+
+expect "#"
+send "ssh ubuntu@192.168.137.7\r"
+expect "#"
+send "ubuntu\r"
+#expect eof
+interact
