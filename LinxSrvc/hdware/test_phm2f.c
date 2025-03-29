@@ -4,22 +4,27 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <sys/time.h>
+#include <stdint.h>
 
 #define DEVICE_NAME "/dev/phy_mem_drv"
 #define IOCTL_MAGIC 0x1234
 
 #define IOCTL_SET_PHY_ADDR   _IOW(IOCTL_MAGIC, 1, struct phy_addr_params)
-#define IOCTL_SET_OUTPUT_FD  _IOW(IOCTL_MAGIC, 2, int)
+#define IOCTL_ADD_USER_FD    _IOW(IOCTL_MAGIC, 2, int)
 #define IOCTL_WRITE_CHUNK    _IOW(IOCTL_MAGIC, 3, struct chunk_params)
-#define IOCTL_CLOSE_FILE     _IO(IOCTL_MAGIC, 4)
+#define IOCTL_CLOSE_FILE     _IOW(IOCTL_MAGIC, 4, int)
+#define IOCTL_SYNC_FILE      _IOW(IOCTL_MAGIC, 5, int)
 #define CHUNK_SIZE (1024 * 1024)
 
+typedef uint64_t phys_addr_t;
+
 struct phy_addr_params {
-    unsigned long phys_addr;
-    size_t total_size;
+    phys_addr_t phys_addr;
+    unsigned long total_size;
 };
 
 struct chunk_params {
+    int usr_id;
     size_t mem_offset;
     size_t chunk_size;
     size_t file_offset;
@@ -34,28 +39,33 @@ static unsigned long getUsecTime()
 
 int main(int argc, char* argv[])
 {
-    if (argc < 4) {
-        fprintf(stderr, "Usage: %s <filename> <hex phy_addr> <hex total_size> [hex chunk_size]\n", argv[0]);
+    if (argc < 3) {
+        fprintf(stderr, "Usage: %s <hex phys_addr> <hex total_size> [hex chunk_size] [max files]\n", argv[0]);
         return -1;
     }
 
-    const char* filename = argv[1];
-    unsigned long phy_addr = strtoul(argv[2], NULL, 16);
-    size_t total_size = strtoul(argv[3], NULL, 16);
-    size_t chunk_size = CHUNK_SIZE;
-    if (argc > 4) {
-        chunk_size = strtoul(argv[4], NULL, 16);
-        if (chunk_size == 0 || chunk_size > total_size) {
-            fprintf(stderr, "Invalid chunk size: %lx.\n", chunk_size);
+    struct phy_addr_params phy_params;
+    phy_params.phys_addr = strtoul(argv[1], NULL, 16);
+    phy_params.total_size = strtoul(argv[2], NULL, 16);
+    if (phy_params.phys_addr == 0 || phy_params.total_size == 0) {
+        fprintf(stderr, "物理地址或总大小不合法: %lu, %lu.\n", phy_params.phys_addr, phy_params.total_size);
+        return -1;
+    }
+
+    unsigned long chunk_size = CHUNK_SIZE;
+    if (argc > 3) {
+        chunk_size = strtoul(argv[3], NULL, 16);
+        if (chunk_size == 0 || chunk_size > phy_params.total_size) {
+            fprintf(stderr, "单次写入长度不合法: %lu.\n", chunk_size);
             return -1;
         }
     }
+    int maxfiles = 1;
+    if (argc > 4) {
+        maxfiles = strtoul(argv[4], NULL, 10);
+    }
 
-    int dev_fd, out_fd;
-    struct phy_addr_params phy_params = { phy_addr, total_size };
-    struct chunk_params chunk_params;
-
-    dev_fd = open(DEVICE_NAME, O_RDWR);
+    int dev_fd = open(DEVICE_NAME, O_RDWR);
     if (dev_fd < 0) {
         perror("打开设备节点("DEVICE_NAME")失败");
         return -1;
@@ -67,41 +77,55 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    out_fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-    if (out_fd < 0) {
-        perror("打开输出文件失败");
-        close(dev_fd);
-        return -1;
+    for (int i = 0; i < maxfiles; i++) {
+        char filename[128];
+        snprintf(filename, sizeof(filename), "file%d.bin", i);
+        int fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+        if (fd < 0) {
+            perror("打开输出文件失败");
+            close(dev_fd);
+            return -1;
+        }
+        if (ioctl(dev_fd, IOCTL_ADD_USER_FD, &fd) < 0) {
+            perror("设置文件句柄失败");
+            close(dev_fd);
+            return -1;
+        }
+        close(fd);
     }
 
-    if (ioctl(dev_fd, IOCTL_SET_OUTPUT_FD, &out_fd) < 0) {
-        perror("设置文件句柄失败");
-        close(out_fd);
-        close(dev_fd);
-        return -1;
-    }
-    close(out_fd); // 不再需要文件句柄
-
+    int fids[maxfiles];
     unsigned long start = getUsecTime();
-    for (size_t offset = 0; offset < phy_params.total_size; offset += chunk_size) {
-        chunk_params.mem_offset = offset;
-        chunk_params.file_offset = offset;
-        chunk_params.chunk_size = (phy_params.total_size - offset) < chunk_size ?
-            (phy_params.total_size - offset) : chunk_size;
-
-        if (ioctl(dev_fd, IOCTL_WRITE_CHUNK, &chunk_params) < 0) {
-            perror("写入数据块失败");
-            break;
+    for (int i = 0; i < maxfiles; i++) {
+        for (size_t offset = 0; offset < phy_params.total_size; offset += chunk_size) {
+            struct chunk_params chunk_params;
+            chunk_params.mem_offset = offset;
+            chunk_params.file_offset = offset;
+            chunk_params.chunk_size = (phy_params.total_size - offset) < chunk_size ?
+                (phy_params.total_size - offset) : chunk_size;
+            if (ioctl(dev_fd, IOCTL_WRITE_CHUNK, &chunk_params) < 0) {
+                perror("写入数据块失败");
+                break;
+            }
+            fids[i] = chunk_params.usr_id;
         }
     }
     printf("%lu 字节已写入，速度为 %.3f M/s.\n",
         phy_params.total_size,
         (phy_params.total_size * 1.f) / (getUsecTime() - start) * 0x100000 / 1000000.f);
 
-    if (ioctl(dev_fd, IOCTL_CLOSE_FILE) < 0) {
-        perror("关闭文件句柄失败");
-        close(dev_fd);
-        return -1;
+
+    for (int i = 0; i < maxfiles; i++) {
+        if (ioctl(dev_fd, IOCTL_SYNC_FILE, &fids[i]) < 0) {
+            perror("文件刷盘失败");
+            close(dev_fd);
+            return -1;
+        }
+        if (ioctl(dev_fd, IOCTL_CLOSE_FILE, &fids[i]) < 0) {
+            perror("文件关闭失败");
+            close(dev_fd);
+            return -1;
+        }
     }
     close(dev_fd);
     return 0;
