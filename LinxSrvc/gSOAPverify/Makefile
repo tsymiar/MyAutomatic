@@ -19,7 +19,7 @@ gSOAPverify:
 #	bash -c '`command -v apt >/dev/null 2>&1 || { echo >&2 "-";}` == "-"'
 #	if [ ! -d "/usr/include/mysql" ]; then if [ `command -v apt` == "" ]; then sudo yum install mariadb-devel -y; else sudo apt-get install libmysql++-dev -y; fi; fi;
 	@echo "### To install mysql develop library\n### \033[1mREHL:\033[0m 'sudo yum install mariadb-devel -y';\n### \033[1mDebain:\033[0m 'sudo apt install libmysql++-dev -y';"
-	@[ ! -d ${GEN} ] && mkdir ${GEN} || echo -- [$(realpath ${GEN})]
+	@[ ! -d ${GEN} ] && mkdir ${GEN} || echo -- [$(abspath $(dirname${GEN})) exist]
 ifneq ($(shell if [ ! -d /usr/lib/mysql ] && [ `ls /usr/lib/*/libmysql*.so | wc -l` -le 0 ]; then echo false; fi;), false)
 	@g++ $(FLAG) -c ./sql/sqlDbReq.cc $(SQL)
 	@g++ $(FLAG) -I.. -c ./main/mainSoap.cc $(PTHD)
@@ -49,7 +49,7 @@ install:
 	@ln -sf ../init.d/gSOAPverify ./S77_SOAP
 	@cp -R ./readme/* /var/www/html
 clean:
-	@rm -f ./*.o ./core.* $(GEN)/*.a $(GEN)/*.out $(GEN)/core.* $(PRJ)/*.o
+	@rm -f ./*.o ./core.* $(GEN)/*.a $(GEN)/*.out $(GEN)/core.* $(PRJ)/*.o $(GEN)/gSOAPverify
 clear:
 	@rm -f ./*.o ./core.* $(PRJ)/*.o `ls *.o | egrep -v soapC.o stdsoap2.o soapServer.o`
 	rm -rvf $(GEN) $(OBJ)

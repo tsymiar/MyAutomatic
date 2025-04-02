@@ -14,7 +14,7 @@ $(BUILD_PATH)/Makefile:
 		else rm -fr $(BUILD_PATH)/* ; fi;
 
 make-all:
-	@make $(BUILD_PATH)/Makefile
+	@make $(abspath $(BUILD_PATH))/Makefile
 
 .PHONY: build
 build:clean make-all
