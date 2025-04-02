@@ -4,7 +4,6 @@ ifeq ($(KERNELRELEASE),)
 	KNLDIR ?= /lib/modules/$(shell uname -r)/build
 endif
 ARM_LINUX_KERNEL := ${KNLDIR}
-KO = $(PWD)/../../kos
 default:
 	@if [ -d $(ARM_LINUX_KERNEL) ]; then \
 		make -C $(ARM_LINUX_KERNEL) M=$(PWD) modules && \
