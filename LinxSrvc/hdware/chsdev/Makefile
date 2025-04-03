@@ -7,12 +7,17 @@ ARM_LINUX_KERNEL := ${KNLDIR}
 default:
 	@if [ -d $(ARM_LINUX_KERNEL) ]; then \
 		make -C $(ARM_LINUX_KERNEL) M=$(PWD) modules && \
-		lsmod | grep -q chsdev || sudo insmod chsdev.ko && \
+		lsmod | grep -q chsdev || { \
+			if [ "$$(id -u)" -ne 0 ]; then \
+				echo "Warning: Must be superuser."; \
+			fi; \
+			sudo insmod chsdev.ko; \
+		} && \
 		[ -d $(KO) ] && cp chsdev.ko $(KO) && \
 		echo "-- Built: \033[1mchsdev\033[0m" || \
-		echo "Warning: chsdev build break"; \
+		echo "Warning: chsdev build break!"; \
 	else \
-		echo "$(ARM_LINUX_KERNEL) doesn't exist"; \
+		echo "$(ARM_LINUX_KERNEL) doesn't exist!"; \
 	fi;
 clean:
 	@if [ -d $(ARM_LINUX_KERNEL) ]; then make -C $(ARM_LINUX_KERNEL) M=$(PWD) clean; fi;

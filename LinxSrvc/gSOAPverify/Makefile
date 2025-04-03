@@ -19,7 +19,7 @@ gSOAPverify:
 #	bash -c '`command -v apt >/dev/null 2>&1 || { echo >&2 "-";}` == "-"'
 #	if [ ! -d "/usr/include/mysql" ]; then if [ `command -v apt` == "" ]; then sudo yum install mariadb-devel -y; else sudo apt-get install libmysql++-dev -y; fi; fi;
 	@echo "### To install mysql develop library\n### \033[1mREHL:\033[0m 'sudo yum install mariadb-devel -y';\n### \033[1mDebain:\033[0m 'sudo apt install libmysql++-dev -y';"
-	@[ ! -d ${GEN} ] && mkdir ${GEN} || echo -- [$(abspath $(dirname${GEN})) exist]
+	@[ ! -d ${GEN} ] && mkdir ${GEN} || echo -- [$(abspath ${GEN})] exists!
 ifneq ($(shell if [ ! -d /usr/lib/mysql ] && [ `ls /usr/lib/*/libmysql*.so | wc -l` -le 0 ]; then echo false; fi;), false)
 	@g++ $(FLAG) -c ./sql/sqlDbReq.cc $(SQL)
 	@g++ $(FLAG) -I.. -c ./main/mainSoap.cc $(PTHD)
@@ -33,7 +33,7 @@ endif
 	@mkdir -p $(PRJ)
 	@mv $(CUR)/../*.o ${OBJ}
 	@mv ./*.o $(PRJ)
-	@echo make gSOAPverify SUCCESS
+	@echo -- make gSOAPverify SUCCESS
 all:
 	@if [ `ps -fe | grep gSOAPverify | grep -v grep` -eq 0 ]; then killall -9 gSOAPverify; else echo "making gSOAPverify."; fi;
 	make clear

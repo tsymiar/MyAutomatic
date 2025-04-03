@@ -5,7 +5,7 @@ MAKEFILE_DIR_PATSUBST:=$(patsubst %/,%,$(patsubst %..,%,$(patsubst %/,%,$(dir $(
 TARGET:=$(notdir $(MAKEFILE_DIR_PATSUBST))ent_server
 EXECUTABLE:=$(PROJECT_BASE)/../gen/$(TARGET)
 
-$(BUILD_PATH)/Makefile:
+$(abspath $(BUILD_PATH))/Makefile:
 	@if [ ! -d $(BUILD_PATH) ]; then mkdir -p $(BUILD_PATH); else rm -fr $(BUILD_PATH)/*; fi;
 	@cd $(BUILD_PATH) && cmake $(PROJECT_BASE)/../$(notdir $(MAKEFILE_DIR_PATSUBST)) -DAPPOINT_EVENT=/usr/local && cd -
 	@$(MAKE_COMMAND) -C $(BUILD_PATH) && \
