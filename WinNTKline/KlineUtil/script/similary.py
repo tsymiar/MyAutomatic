@@ -114,7 +114,7 @@ def build_index(directory, ignore_dirs, ignore_files):
     ignore_dirs = set(ignore_dirs)
     ignore_files = set(ignore_files)
 
-    for root, dirs, files in os.walk(directory, topdown=True):
+    for root, dirs, files in os.walk(directory, True):
         # 过滤忽略目录
         dirs[:] = [d for d in dirs if d not in ignore_dirs]
 
@@ -133,11 +133,25 @@ def build_index(directory, ignore_dirs, ignore_files):
 
 
 def generate_diff(file1, file2):
-    """生成带行号的彩色差异对比"""
-    lines1, _ = read_file(file1)
-    lines2, _ = read_file(file2)
+    """生成带原始行号的彩色差异对比"""
+    lines1, orig1 = read_file(file1)
+    lines2, orig2 = read_file(file2)
     differ = difflib.SequenceMatcher(None, lines1, lines2)
     diff = []
+
+    # 计算原始行号映射
+    def calculate_original_line_map(lines, orig_count):
+        line_map = []
+        current_line = 1
+        for line in lines:
+            while current_line <= orig_count and not line.strip():
+                current_line += 1
+            line_map.append(current_line)
+            current_line += 1
+        return line_map
+
+    line_map1 = calculate_original_line_map(lines1, orig1)
+    line_map2 = calculate_original_line_map(lines2, orig2)
 
     for tag, i1, i2, j1, j2 in differ.get_opcodes():
         if tag == "equal":
@@ -145,15 +159,15 @@ def generate_diff(file1, file2):
 
         if tag == "delete":
             for ln in range(i1, i2):
-                diff.append(f"{Fore.RED}- [{ln+1:04}] {lines1[ln]}")
+                diff.append(f"{Fore.RED}- [{line_map1[ln]:04}] {lines1[ln]}")
         elif tag == "insert":
             for ln in range(j1, j2):
-                diff.append(f"{Fore.GREEN}+ [{ln+1:04}] {lines2[ln]}")
+                diff.append(f"{Fore.GREEN}+ [{line_map2[ln]:04}] {lines2[ln]}")
         elif tag == "replace":
             for ln in range(i1, i2):
-                diff.append(f"{Fore.RED}- [{ln+1:04}] {lines1[ln]}")
+                diff.append(f"{Fore.RED}- [{line_map1[ln]:04}] {lines1[ln]}")
             for ln in range(j1, j2):
-                diff.append(f"{Fore.GREEN}+ [{ln+1:04}] {lines2[ln]}")
+                diff.append(f"{Fore.GREEN}+ [{line_map2[ln]:04}] {lines2[ln]}")
 
     return "\n".join(diff)
 
@@ -209,6 +223,7 @@ def dir_compare(dir1, dir2, show_diff, ignore_dirs, ignore_files):
     total = defaultdict(int)
     details = []
     unmatched = {"source": [], "target": []}  # 未匹配文件存储
+    processed_pairs = set()  # 文件对已处理
 
     # 获取所有文件名集合
     all_files = set(index1.keys()).union(set(index2.keys()))
@@ -218,15 +233,19 @@ def dir_compare(dir1, dir2, show_diff, ignore_dirs, ignore_files):
         paths2 = index2.get(filename, [])
 
         # 未匹配文件处理
-        if not paths2 and paths1:
+        if not paths2:
             unmatched["source"].extend([os.path.join(dir1, p) for p in paths1])
-        if not paths1 and paths2:
+        if not paths1:
             unmatched["target"].extend([os.path.join(dir2, p) for p in paths2])
 
         for rel_path1 in paths1:
             full_path1 = os.path.join(dir1, rel_path1)
             for rel_path2 in paths2:
                 full_path2 = os.path.join(dir2, rel_path2)
+                sorted_pair = tuple(sorted([full_path1, full_path2]))
+                if sorted_pair in processed_pairs:
+                    continue
+                processed_pairs.add(sorted_pair)
                 res = file_compare(
                     full_path1, full_path2, os.path.dirname(full_path1), show_diff
                 )
@@ -237,6 +256,10 @@ def dir_compare(dir1, dir2, show_diff, ignore_dirs, ignore_files):
                 total["valid2"] += res["valid2"]
                 total["orig1"] += res["orig1"]
                 total["orig2"] += res["orig2"]
+
+    # 确保未匹配文件列表唯一
+    unmatched["source"] = list(set(unmatched["source"]))
+    unmatched["target"] = list(set(unmatched["target"]))
 
     denominator = max(total["valid1"], total["valid2"]) or 1
     total["ratio"] = total["common"] / denominator
@@ -291,8 +314,8 @@ def print_results(total, details, unmatched, use_color=True):
     print(f"{color('magenta')}▏ 总目标行数: {total['orig2']} → 有效 {total['valid2']}")
     print(f"{color('yellow')}▏ 综合重复率: {total['ratio']:.2%} (基于有效行数)")
 
-
-def main():
+def parse_arguments():
+    """解析命令行参数"""
     parser = argparse.ArgumentParser(description="高级代码相似性分析工具")
     parser.add_argument("source", help="源文件或目录路径")
     parser.add_argument("target", help="目标文件或目录路径")
@@ -301,16 +324,27 @@ def main():
         "--ignore-dirs",
         nargs="+",
         default=[],
-        help="要忽略的目录列表，如：venv node_modules",
+        help="要忽略的目录列表（多个目录用空格分隔），如：--ignore-dirs venv modules",
     )
     parser.add_argument(
         "--ignore-files",
         nargs="+",
         default=[],
-        help="要忽略的文件模式，如：*.tmp *.bak",
+        help="要忽略的文件模式（多个模式用空格分隔），如：--ignore-files *.tmp *.bak",
     )
     parser.add_argument("--no-color", action="store_true", help="禁用颜色输出")
+
     args = parser.parse_args()
+
+    # 确保忽略目录和文件模式列表中没有空值
+    args.ignore_dirs = [d.strip() for d in args.ignore_dirs if d.strip()]
+    args.ignore_files = [f.strip() for f in args.ignore_files if f.strip()]
+
+    return args
+
+
+def main():
+    args = parse_arguments()
 
     try:
         use_color = not args.no_color

@@ -248,7 +248,7 @@ class MarkdownProcessor:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Terminal Markdown/HTML Renderer")
-    parser.add_argument("file", help="Input file path")
+    parser.add_argument("file", help="Markdown(.md) file path")
     args = parser.parse_args()
 
     try:

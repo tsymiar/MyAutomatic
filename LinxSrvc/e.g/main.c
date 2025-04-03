@@ -2,6 +2,6 @@
 
 int main(int argc, char* argv[])
 {
-    printf("This is a sample build project!\n");
+    printf("This is a test file!\n");
     return 0;
 }
