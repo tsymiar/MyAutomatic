@@ -377,10 +377,9 @@
     <None Include="..\KlineUtil\cfg\ips.ini" />
     <None Include="..\KlineUtil\ClassDiagram.cd" />
     <None Include="..\KlineUtil\com\plus1second" />
-    <None Include="..\KlineUtil\tool\blobstxt.sh" />
     <None Include="..\KlineUtil\tool\call.bat" />
-    <None Include="..\KlineUtil\tool\MarketKline.py" />
-    <None Include="..\KlineUtil\tool\reptile.py" />
+    <None Include="..\KlineUtil\script\matkline.py" />
+    <None Include="..\KlineUtil\script\webload.py" />
     <None Include="..\KlineUtil\service\BareBonesBrowserLaunch.java" />
     <None Include="..\KlineUtil\service\Client.java" />
     <None Include="packages.config" />

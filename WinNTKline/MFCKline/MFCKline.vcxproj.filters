@@ -304,10 +304,7 @@
     <None Include="..\KlineUtil\tool\call.bat">
       <Filter>配置脚本</Filter>
     </None>
-    <None Include="..\KlineUtil\tool\blobstxt.sh">
-      <Filter>配置脚本</Filter>
-    </None>
-    <None Include="..\KlineUtil\tool\reptile.py">
+    <None Include="..\KlineUtil\script\webload.py">
       <Filter>配置脚本</Filter>
     </None>
     <None Include="packages.config" />
@@ -326,7 +323,7 @@
     <None Include="..\..\clean.bat">
       <Filter>配置脚本</Filter>
     </None>
-    <None Include="..\KlineUtil\tool\MarketKline.py">
+    <None Include="..\KlineUtil\script\matkline.py">
       <Filter>配置脚本</Filter>
     </None>
   </ItemGroup>
