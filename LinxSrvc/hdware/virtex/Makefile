@@ -7,12 +7,17 @@ ARM_LINUX_KERNEL := ${KNLDIR}
 default:
 	@if [ -d $(ARM_LINUX_KERNEL) ]; then \
 		make -C $(ARM_LINUX_KERNEL) M=$(PWD) modules && \
-		lsmod | grep -q virtexdrv || sudo insmod virtexdrv.ko && \
+		lsmod | grep -q virtexdrv || { \
+			if [ "$$(id -u)" -ne 0 ]; then \
+				echo "Warning: Must be superuser."; \
+			fi; \
+			sudo insmod virtexdrv.ko; \
+		} && \
 		[ -d $(KO) ] && cp virtexdrv.ko $(KO) && \
 		echo "-- Built: \033[1mvirtexdrv\033[0m" || \
-		echo "Warning: chsdev build break"; \
+		echo "Warning: chsdev build break!"; \
 	else \
-		echo "$(ARM_LINUX_KERNEL) doesn't exist"; \
+		echo "$(ARM_LINUX_KERNEL) doesn't exist!"; \
 	fi;
 clean:
 	@if [ -d $(ARM_LINUX_KERNEL) ]; then make -C $(ARM_LINUX_KERNEL) M=$(PWD) clean; fi;

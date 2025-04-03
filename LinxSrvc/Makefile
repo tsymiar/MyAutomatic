@@ -11,7 +11,7 @@ all:
 	@echo Making CMakeLists
 	@make cmake
 cmake:
-	@ if [ ! -d build ]; then mkdir -p build; else echo deleting built files; rm -rf build/*; fi;
+	@ if [ ! -d build ]; then mkdir -p build; else echo Deleting built files; rm -rf build/*; fi;
 	@ cd build && cmake .. && make -j4 && cd -
 clean:
 	@make -C gSOAPverify clean

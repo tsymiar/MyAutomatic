@@ -24,7 +24,7 @@ virtex:
 	@if [ -d $(BUILD) ]; then make -C virtex KNLDIR=$(BUILD); fi;
 	$(call Built,$@)
 RDMA:
-	make -C rdma all || true
+	@make -C rdma all || true
 	$(call Built,$@)
 chstest:
 	@gcc -g -DDRIVER test.c -o $(GEN)/chstest
@@ -46,11 +46,11 @@ all:
 	@make mes909
 	@make dirty
 ifneq ($(OS), )
-	@echo Making $(OS) drivers
+	@echo Making $(OS) driver
 	@make -C chsdev
 	@make -C virtex
 	@make RDMA
-	@make -C phm2f
+	@make -C phm2f || true
 	@make chstest
 ifeq ($(OS), Linux)
 	@echo Making image/video
