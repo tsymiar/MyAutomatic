@@ -8,6 +8,7 @@ import web
 import logging
 import traceback
 import parser
+import os
 
 logging.basicConfig(level=logging.INFO,  
                     format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',  
@@ -24,7 +25,7 @@ class Handle(object):
             timestamp = data.timestamp
             nonce = data.nonce
             echostr = data.echostr
-            token = "15c86a1edac263a4"
+            token = os.getenv("WECHAT_TOKEN", "15cxxxxxxxx")
 
             list = [token, timestamp, nonce]
             list.sort()

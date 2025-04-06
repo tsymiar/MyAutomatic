@@ -3,14 +3,14 @@ if (isset($_GET['file'])) {
     $name = $_GET['file'];
     if($name == NULL || name == "")
         $name = self::get_filename("./tempory");
-    $fpath = "./tempory/".$name;
-    $file_pathinfo = pathinfo($fpath);
-    $file_name = $file_pathinfo['basename'];
-    $handle = fopen($fpath,"rb");
+    $file_path = "./tempory/".$name;
+    $file_info = pathinfo($file_path);
+    $file_name = $file_info['basename'];
+    $handle = fopen($file_path,"rb");
     if (FALSE === $handle){
-        exit("ERROR: open local file(".$fpath.").");
+        exit("ERROR: open local file(".$file_path.").");
     }
-    $file_size = filesize($fpath);
+    $file_size = filesize($file_path);
 
     header("Content-type:application/octet-stream");
     header("Accept-ranges:bytes");

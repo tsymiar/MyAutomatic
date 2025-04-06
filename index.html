@@ -2,7 +2,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>UTILS</title>
+    <title>utils</title>
     <script language="JavaScript">
         var CryptoJS = CryptoJS || function (u, p) {
             var d = {}, l = d.lib = {}, s = function () { }, t = l.Base = { extend: function (a) { s.prototype = this; var c = new s; a && c.mixIn(a); c.hasOwnProperty("init") || (c.init = function () { c.$super.init.apply(this, arguments) }); c.init.prototype = c; c.$super = this; return c }, create: function () { var a = this.extend(); a.init.apply(a, arguments); return a }, init: function () { }, mixIn: function (a) { for (var c in a) a.hasOwnProperty(c) && (this[c] = a[c]); a.hasOwnProperty("toString") && (this.toString = a.toString) }, clone: function () { return this.init.prototype.extend(this) } },
@@ -2108,7 +2108,7 @@
         }
         //上传失败
         function uploadFailed(evt) {
-            alert("上传请求错误！");
+            alert("Request" + evt + "onerror: " + evt.target.status);
         }
         //取消上传
         function cancelUploadFile(xhr) {
@@ -2788,7 +2788,7 @@
                 }
                 let o = {
                     'M+': date.getMonth() + 1,
-                    'd+': date.getDay(),
+                    'd+': date.getDate(),
                     'h+': date.getHours(),
                     'm+': date.getMinutes(),
                     's+': date.getSeconds()
@@ -2847,7 +2847,7 @@
                 }
                 var time = $("#time_max10").val();
                 var value = formatDate(time, fmt);
-                $("#date_time_in").val(value);
+                $("#date_time_put").val(value);
             }
             let eventTimeout = 0;
             function clockFunc() {
@@ -2876,13 +2876,16 @@
                 getLocalTime();
             }
             function getTimestamp() {
-                var value = $("#date_time_in").val();
+                var value = $("#date_time_put").val();
                 if (value.length == 0) {
                     $("#time_date_out").html("input date in format 'yyyy-MM-dd hh:mm:ss.xxx'!");
                     return;
                 }
                 var date = new Date(value);
                 var timestamp = date.getTime();
+                if (timestamp % 1000 === 0) {
+                    timestamp = Math.floor(timestamp / 1000);
+                }
                 $("#time_date_out").html(timestamp);
             }
         </script>
@@ -2895,7 +2898,7 @@
             <br><input id="time_max10" placeholder="timestamp">
             <input type="button" value="to localtime" onclick="getLocalTime()">
             <br><label id="time_date_1">&nbsp;</label>
-            <br><input id="date_time_in" placeholder="yyyy-MM-dd hh:mm:ss.xxx">
+            <br><input id="date_time_put" placeholder="yyyy-MM-dd hh:mm:ss.xxx">
             <button onclick="getTimestamp()">to timestamp</button>
             <br><label id="time_date_out">&nbsp;</label>
         </div>
@@ -3036,7 +3039,7 @@
                 throw new Error('bad Hex.');
             }
             function hex2rgb() {
-                let rgb_val = $("#color_hex_in").val();
+                let rgb_val = $("#color_hex_put").val();
                 rgb_val = rgb_val.replace(/^\s+|\s+$/g, "");
                 if (rgb_val.indexOf("#") !== -1 && rgb_val.charAt(0) === "#") {
                     rgb_val = rgb_val.substring(1);
@@ -3060,7 +3063,7 @@
             }
             function autofill() {
                 $("#rslt_rgb_color").css("background", "RGB(255,255,255)");
-                $("#color_hex_in").val($("#color_hex_rslt").html());
+                $("#color_hex_put").val($("#color_hex_rslt").html());
                 $("#color_rgb_rslt").html("");
             }
             function rgb2hex() {
@@ -3115,7 +3118,7 @@
         <br>
         <label id="color_hex_rslt"></label>
         <br><br>
-        <label for="color_hex_in"></label>#<input id="color_hex_in" style="width: 80px"><button
+        <label for="color_hex_put"></label>#<input id="color_hex_put" style="width: 80px"><button
             onclick="autofill()">⬅</button>
         <br>
         &nbsp;&nbsp;<button onclick="hex2rgb()">Hex to RGB</button>

@@ -230,14 +230,14 @@ class FileLoad extends HandleBase{
             if($name == "")
                 $name = self::get_filename("./tempory");
             $ret = array();
-            $ret["href"] = '<a href="trans/getfile.php?file='.$name.'">';
+            $ret["href"] = '<a href="trans/loadfile.php?file='.$name.'">';
             exit(User::errReport(0, 200, NULL, $ret));
         } else {
             exit(User::errReport(0, 404));
         }
         echo User::errReport(0, 200);
         Header("HTTP/1.1 303 See Other"); 
-        Header("Location: getfile.php?file=".$fpath);
+        Header("Location: loadfile.php?file=".$fpath);
         $file_pathinfo = pathinfo($fpath);
         $file_name = $file_pathinfo['basename'];
         //$file_extension = $file_pathinfo['extension'];

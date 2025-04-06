@@ -4,14 +4,15 @@
 import urllib
 import time
 import json
+import os
 
 class Basic:
     def __init__(self):
         self.__accessToken = ''
         self.__leftTime = 0
     def __real_get_access_token(self):
-        appId = "wxd1cxxxxxxxxxxxxx"
-        appSecret = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        appId = os.getenv("WECHAT_APPID", "wxd1cxxxxxxxxxxxxx")
+        appSecret = os.getenv("WECHAT_APPSECRET", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
         postUrl = ("https://api.weixin.qq.com/cgi-bin/token?grant_type="
         "client_credential&appid=%s&secret=%s" % (appId, appSecret))
         urlResp = urllib.urlopen(postUrl)
