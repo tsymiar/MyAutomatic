@@ -2064,7 +2064,7 @@
 <body>
     <script language="JavaScript">
         //上传方法
-        function UpladFile(elem, url) {
+        function UploadFile(elem, url) {
             //获取文件blob
             var fileObj = document.getElementById(elem).files[0];
             var fileName = document.getElementById(elem).value;
@@ -2108,7 +2108,7 @@
         }
         //上传失败
         function uploadFailed(evt) {
-            alert("Request" + evt + "onerror: " + evt.target.status);
+            alert("Request onerror(" + evt.target.status + "): " + evt);
         }
         //取消上传
         function cancelUploadFile(xhr) {
@@ -2498,7 +2498,7 @@
         }
         var up_xhr = null;
         function checkAction() {
-            up_xhr = UpladFile("file", $("#upload_url").val());
+            up_xhr = UploadFile("file", $("#upload_url").val());
         }
         function cancelUpload() {
             if (up_xhr) cancelUploadFile(up_xhr);
@@ -3128,6 +3128,205 @@
             ondblclick="copyRslt()"></label>
         <br>
         &nbsp;&nbsp;<font id="hint" size="2" face="times"></font>
+    </div>
+    <br>
+    <div class="clazz_pop_div" id="id_pop_div"></div>
+    <script>
+        function setCookie(name, value, day) {
+            var date = new Date();
+            date.setDate(date.getDate() + day);
+            document.cookie = name + '=' + value
+                + ';expires=' + date + ';path=/MyAutomatic;domain=' + window.location.hostname;
+        }
+        function pop_window_hide() {
+            $('#ly').remove();
+            setPopDivNoScroll("clazz_pop_div", "id_pop_div", false);
+            setCookie("pop_state", "hide");
+        }
+        function setPopDivNoScroll(clazz_pop_div, id_pop_div, display, text, top, left, width, height, top_id, btm_elem) {
+            var div_pop = "";
+            try {
+                div_pop = document.getElementById(id_pop_div);
+            } catch (e) {
+                console.log("get " + id_pop_div + " element error\n" + e);
+                return;
+            }
+            if (display) {
+                pop_window_hide();
+            }
+            var winNode = $("#" + id_pop_div);
+            width = (width === null || width === undefined || width === 0) ? 170 : width;
+            if (text) {
+                if (text.length < 60) {
+                    height = 70;
+                }
+                if (text.length > 290) {
+                    // text = text.substring(0,290) + " ...";
+                }
+            }
+            height = (height === null || height === undefined || height === 0) ? 160 : height;
+            top = (top === null || top === undefined || top === 0) ? 100 : (top > height ? top - height : top);
+            if (top + height > $(window).height()) {
+                top = (top - height - 100);
+            }
+            if (top_id) {
+                top = ($("#" + top_id).get(0).getBoundingClientRect().top);
+            }
+            var css = {
+                'left': '30%',
+                'top': top + 'px',
+                'z-index': '3',
+                'border': '1px solid #ff6600',
+                'background-color': "#fff",
+                'margin': '100px auto',
+                'padding': 0,
+                'display': 'none',
+                'text-align': 'right',
+                'width': width + 'px',
+                'height': height + 'px'
+            };
+            div_pop.style.setProperty('position', 'absolute', 'important');
+            winNode.css(css);
+            if (left) {
+                winNode.css({ left: left });
+            }
+            winNode.on('click', '');
+            div_pop.style.display = 'block';
+            winNode.after('<div id="ly" style="position:fixed; top:0; left:0; z-index:2; width:100%; height:100%; background:#f5f5f5; filter:alpha(opacity=70); opacity:0.7;display: none;"></div>');
+            winNode.html(
+                '<div class="title" style="text-align: center;"><label>提示！</label><span class="hide" style="float: right;" title="关闭" onclick="pop_window_hide()">✖</span></div>' +
+                '<div id="content" style="word-wrap:break-word;margin: 3% 0 0 0;">' + text + '</div>'
+            );
+            $('#ly').show();
+            $("#content").css({
+                'overflow': 'auto',
+                'width': (width - 1) + 'px',
+                'height': (height - 50) + 'px'
+            });
+            if (display && typeof (display) === "boolean") {
+                var clazz = $('.' + clazz_pop_div);
+                winNode.get(0).offsetHeight += 30;
+                var scrollTop = $(window).scrollTop();
+                var winWidth = $(window).width(), winHeight = $(window).height();
+                var objLeft = (winWidth - clazz.width()) / 2;
+                var objTop = /*(winHeight - clazz.height()) / 2*/ top + scrollTop;
+                winNode.css({
+                    left: objLeft + 'px',
+                    top: objTop + 'px'
+                });
+                $(window).scroll(function () {
+                    winWidth = $(window).width();
+                    winHeight = $(window).height();
+                    scrollTop = $(document).scrollTop();
+                    objLeft = (winWidth - clazz.width()) / 2;
+                    objTop = top + scrollTop;
+                    winNode.css({
+                        left: objLeft + 'px',
+                        top: objTop + 'px',
+                        'display': 'block'
+                    });
+                });
+                if (btm_elem) {
+                    var btm_elem_top = $("#" + btm_elem).offset().top + 27;
+                    var pop_div_elem = $("#main_pop_div");
+                    var pop_div_height = pop_div_elem.height();
+                    if (pop_div_elem.offset().top + pop_div_height - btm_elem_top < 25) {
+                        pop_div_elem.height(pop_div_height + 25);
+                    }
+                }
+                setCookie("pop_state", "show");
+            } else if (display === "move") {
+                //by hooyes
+                (function (document) {
+                    $fn.Drag = function () {
+                        var M = false;
+                        var Rx, Ry;
+                        var cursorY = 0;
+                        var offset;
+                        var t = $(this);
+                        t.mousedown(function (event) {
+                            offset = winNode.offset();
+                            cursorY = event.pageY;
+                            Rx = event.pageX - (parseInt(t.css("left")) || 0);
+                            Ry = cursorY - (parseInt(t.css("top")) || 0);
+                            if (cursorY <= (offset.top + 20) && cursorY > offset.top) {
+                                t.css("position", "absolute").fadeTo(20, 0.8);
+                            }
+                            M = true;
+                        }).mouseup(function () {
+                            t.fadeTo(20, 1);
+                            M = false;
+                        });
+                        t.mouseleave(function (event) {
+                            Rx = event.pageX - (parseInt(t.css("left")) || 0);
+                            Ry = cursorY - (parseInt(t.css("top")) || 0);
+                            M = false;
+                        });
+                        $(document).mousemove(function (event) {
+                            offset = winNode.offset();
+                            cursorY = event.pageY;
+                            var judge = offset.left + winNode.width() - 40;
+                            if (cursorY <= (offset.top + 20) && cursorY > offset.top && event.pageX < judge) {
+                                t.css('cursor', 'move');
+                                if (M) {
+                                    t.css({
+                                        top: cursorY - Ry,
+                                        left: event.pageX - Rx
+                                    });
+                                }
+                            } else {
+                                t.css('cursor', 'default');
+                            }
+                        });
+                    };
+                })(document);
+                $(document).ready(function () {
+                    winNode.Drag();
+                });
+                $(window).scroll(function () {
+                    winNode.css({ 'display': 'block' });
+                });
+            } else {
+                div_pop.style.display = 'none';
+                $('#ly').css({ 'display': 'none' });
+                $(window).scroll(function () {
+                    winNode.hide();
+                });
+            }
+        }
+        function click2Submit() {
+            $("#id_pop_div").html("");
+            if ($("#requser").val() == "aaa" && $("#reqpswd").val() == "123") {
+                window.location.href = "./login.html";
+            } else {
+                var rsp_text = "<div style='color:red'>用户名或密码错误！</div>";
+                setPopDivNoScroll("clazz_pop_div", "id_pop_div", true, rsp_text, document.body.scrollWidth * 2 / 5, $(document).height() / 2);
+            }
+        }
+    </script>
+    <div class="row">
+        <div class="eightcol last">
+            <form id="main-form" action="javascript:void(0);" method="post" enctype="multipart/form-data">
+                <table>
+                    <tr>
+                        <td><label style="width: 64px;">用户</label></td>
+                        <td><input id="requser" name="user[name]" data-ideal="required username" type="text" title="" /></td>
+                    </tr>
+                    <tr>
+                        <td><label>密码</label></td>
+                        <td><input id="reqpswd" name="user[pass]" data-ideal="required passwd" type="password" title="" /></td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        </td>
+                        <td>
+                            <input type="reset" value="重置">
+                            <button id="request" onclick='click2Submit()'>提交</button>
+                        </td>
+                    <tr>
+                </table>
+            </form>
+        </div>
     </div>
     <br><br>
 </body>
