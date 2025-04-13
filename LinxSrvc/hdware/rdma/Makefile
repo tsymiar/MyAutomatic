@@ -5,7 +5,7 @@ all: rdma_server.exe rdma_client.exe
 		echo "Fetching RDMA dependencies..."; \
 		{ \
 			if [ "$$(id -u)" -ne 0 ]; then \
-				echo "Warning: Must be superuser to install."; \
+				echo -e "\033[33mWarning\033[0m: Must be superuser to install."; \
 			fi; \
 			sudo apt install -y rdma-core librdmacm-dev ibverbs-utils; \
 		} \
