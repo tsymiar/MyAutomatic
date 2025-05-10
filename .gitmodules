@@ -1,6 +1,12 @@
-[submodule "LinxSrvc/test/googletest"]
-	path = LinxSrvc/test/googletest
+[submodule "LinxSrvc/3rd/rdma-core"]
+	path = LinxSrvc/3rd/rdma-core
+	url = https://github.com/linux-rdma/rdma-core.git
+[submodule "LinxSrvc/3rd/json"]
+	path = LinxSrvc/3rd/json
+	url = https://github.com/nlohmann/json.git
+[submodule "LinxSrvc/3rd/googletest"]
+	path = LinxSrvc/3rd/googletest
 	url = https://github.com/google/googletest.git
-[submodule "LinxSrvc/test/lcov"]
-	path = LinxSrvc/test/lcov
+[submodule "LinxSrvc/3rd/lcov"]
+	path = LinxSrvc/3rd/lcov
 	url = https://github.com/linux-test-project/lcov.git
