@@ -9,13 +9,13 @@ default:
 		make -C $(ARM_LINUX_KERNEL) M=$(PWD) modules && \
 		lsmod | grep -q virtexdrv || { \
 			if [ "$$(id -u)" -ne 0 ]; then \
-				echo -e "\033[33mWarning\033[0m: Must be superuser."; \
+				echo "\033[33mWarning\033[0m: Must be superuser."; \
 			fi; \
 			sudo insmod virtexdrv.ko; \
 		} && \
 		[ -d $(KO) ] && cp virtexdrv.ko $(KO) && \
 		echo "-- Built: \033[1mvirtexdrv\033[0m" || \
-		echo -e "\033[33mWarning\033[0m: chsdev build break!"; \
+		echo "\033[33mWarning\033[0m: chsdev build break!"; \
 	else \
 		echo "$(ARM_LINUX_KERNEL) doesn't exist!"; \
 	fi;

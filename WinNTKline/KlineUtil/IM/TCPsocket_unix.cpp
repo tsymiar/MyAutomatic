@@ -9,6 +9,8 @@
 #include <string.h> // strerror
 #include <arpa/inet.h> // inet_ntoa
 #include <signal.h> // signal
+#include <thread> // std::thread
+#include <chrono> // std::chrono
 
 typedef int (*CALLBACK) (uint8_t*, uint32_t);
 typedef int SOCKET;
@@ -32,10 +34,12 @@ struct Sockets {
     struct sockaddr_in local;
 };
 
-CALLBACK g_callback = nullptr;
 const int BuffSize = 1024;
+CALLBACK g_callback = nullptr;
 static int g_fld = -1;
-bool g_status = false;
+volatile bool g_status = false;
+volatile size_t g_rcvdBytes = 0;
+static auto g_lastTime = std::chrono::high_resolution_clock::now();
 
 Sockets setup(short port);
 
@@ -104,6 +108,21 @@ Sockets setup(short port)
 
     signal(SIGINT, sigHandle);
 
+    std::thread task(
+        []() ->void {
+            while (g_status) {
+                auto current = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<double> interval = current - g_lastTime;
+                if (interval.count() >= 1.0) {
+                    printf("Speed: %.2f bytes/sec\n", g_rcvdBytes / interval.count());
+                    g_rcvdBytes = 0;
+                    g_lastTime = current;
+                }
+                usleep(1000);
+            }
+        }
+    );
+
     return socks;
 }
 
@@ -141,6 +160,8 @@ int start(const Sockets& socks, CALLBACK callback)
 #endif
                 int length = BuffSize;
                 uint8_t buff[BuffSize];
+                auto start_time = std::chrono::high_resolution_clock::now();
+                size_t total_bytes = 0;
                 do {
                     ssize_t size = 0;
                     ssize_t last = size;
@@ -160,6 +181,8 @@ int start(const Sockets& socks, CALLBACK callback)
                             printf("deal callback is null!\n");
                             return -1;
                         }
+                        total_bytes += size;
+                        g_rcvdBytes += size;
                     } else if (size < 0) {
                         if (errno == EINTR || errno == EWOULDBLOCK) {
                             printf("(slow system call): %u\n", ntohl((u_long)inet_addr(inet_ntoa(socks.local.sin_addr))));
@@ -172,6 +195,8 @@ int start(const Sockets& socks, CALLBACK callback)
                         break;
                     }
                 } while (length > 0);
+                std::chrono::duration<double> elapsed = std::chrono::high_resolution_clock::now() - start_time;
+                printf("Total received: %zu bytes in %.2f seconds (%.2f bytes/sec).\n", total_bytes, elapsed.count(), total_bytes / elapsed.count());
             }
             sockMax = (sockMax > (int)sockNew ? sockMax : sockNew);
         }

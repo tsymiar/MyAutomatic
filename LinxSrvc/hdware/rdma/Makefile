@@ -1,20 +1,36 @@
 CFLAGS = -g -Wall -lrdmacm -libverbs
 ABS_GEN = $(abspath $(GEN))
-all: rdma_server.exe rdma_client.exe
+RDMA=$(shell echo $(shell pwd) | awk -F '/' '{print $$NF}')
+FILES := $(shell find . -maxdepth 1 -type f -name "*.c")
+TARGETS := $(patsubst %.c,%,$(notdir $(FILES)))
+
+define FILE_TARGET
+$(RDMA)_$(1):
+	@$(CC) $(2) $(CFLAGS) -o $(ABS_GEN)/$(RDMA)_$(1).exe
+endef
+
+$(foreach file,$(FILES), \
+	$(eval $(call FILE_TARGET,$(basename $(notdir $(file))),$(file))) \
+)
+
+all: $(RDMA)_env $(addprefix $(RDMA)_,$(TARGETS))
+	@echo "All targets processed: $(addprefix $(RDMA)_,$(TARGETS))"
+
+.PHONY: all $(addprefix $(RDMA)_,$(TARGETS))
+
+%.o: %.c
+	$(CC) $(CFLAGS) -o $@ $< $(CFLAGS)
+
+$(RDMA)_env:
 	@if command -v apt >/dev/null 2>&1; then \
 		echo "Fetching RDMA dependencies..."; \
 		{ \
 			if [ "$$(id -u)" -ne 0 ]; then \
-				echo -e "\033[33mWarning\033[0m: Must be superuser to install."; \
+				echo "\033[33mWarning\033[0m: Must be superuser to continue."; \
 			fi; \
-			sudo apt install -y rdma-core librdmacm-dev ibverbs-utils; \
+			$(shell pwd)/set_sw-rxe.sh | true; \
 		} \
 	fi;
-%.o: %.c
-	$(CC) $(CFLAGS) -o $@ $< $(CFLAGS)
-rdma_server.exe:
-	$(CC) server.c $(CFLAGS) -o $(ABS_GEN)/$@
-rdma_client.exe:
-	$(CC) client.c $(CFLAGS) -o $(ABS_GEN)/$@
+
 clean:
-	@rm -rvf $(ABS_GEN)/rdma_*.exe *.o
+	@rm -rvf $(ABS_GEN)/$(RDMA)_*.exe *.o
