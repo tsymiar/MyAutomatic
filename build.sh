@@ -3,7 +3,7 @@ echo "-------- Begin '$(uname)' building ... --------"
 PWD=$(pwd)
 if [ "$1" == "test" ]
 then
-    cd "${PWD}/LinxSrvc/test";
+    cd "${PWD}/LinxSrvc/3rd";
     if [ ! $(whereis lcov | awk '{print $2}') ]
     then
         if [ -d lcov ] && [ $(ls lcov/* | wc -l) -le 0 ]
@@ -20,7 +20,7 @@ then
         git clone https://github.com/google/googletest.git
         git pull origin main
     fi
-    ./test.sh
+    cd ../test && ./test.sh
 else
     if [[ "$1" == "Qt"* ]]; then
         if [ -d "$1" ]; then
