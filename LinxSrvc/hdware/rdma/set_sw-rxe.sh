@@ -1,10 +1,10 @@
 #!/bin/bash
-sudo apt update
-sudo apt install -y build-essential cmake gcc g++ libudev-dev libnl-3-dev libnl-route-3-dev ninja-build pkg-config valgrind python3-dev cython3 python3-docutils pandoc
-sudo apt install -y git g++ pkg-config libnl-3-dev libnl-route-3-dev \
+sudo apt-get update
+sudo apt-get install -y build-essential cmake gcc g++ libudev-dev libnl-3-dev libnl-route-3-dev ninja-build pkg-config valgrind python3-dev cython3 python3-docutils pandoc
+sudo apt-get install -y git g++ pkg-config libnl-3-dev libnl-route-3-dev \
   libsystemd-dev flex bison libudev-dev libpci-dev libcap-ng-dev \
   libcmocka-dev libssl-dev libnuma-dev
-sudo apt install -y rdma-core
+sudo apt-get install -y rdma-core
 cd ../../3rd
 if [ ! -d "rdma-core" ]; then mkdir rdma-core; fi;
 cd rdma-core
@@ -13,8 +13,9 @@ then
   git submodule update --init --recursive
   git pull
 fi
-git checkout v57.0 -b v57.0
-mkdir build || cd build
+git checkout v57.0 -b v57.0 | true
+if [ -d "build" ]; then rm -rf build/*; else mkdir build; fi
+cd build
 cmake -GNinja \
   -DCMAKE_INSTALL_PREFIX=/usr \
   -DCMAKE_BUILD_TYPE=Release \

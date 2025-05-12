@@ -30,8 +30,8 @@ typedef int SOCKET;
 // #define SAVE_DATA
 
 struct Sockets {
-    SOCKET sock;
-    struct sockaddr_in local;
+    SOCKET sock = INVALID_SOCKET;
+    struct sockaddr_in local = { 0 };
 };
 
 const int BuffSize = 1024;
@@ -109,19 +109,25 @@ Sockets setup(short port)
     signal(SIGINT, sigHandle);
 
     std::thread task(
-        []() ->void {
+        []() {
             while (g_status) {
-                auto current = std::chrono::high_resolution_clock::now();
-                std::chrono::duration<double> interval = current - g_lastTime;
+                using namespace std::chrono;
+                auto current = high_resolution_clock::now();
+                static auto lastTime = g_lastTime;
+                static size_t lastBytes = 0;
+
+                duration<double> interval = current - lastTime;
                 if (interval.count() >= 1.0) {
-                    printf("Speed: %.2f bytes/sec\n", g_rcvdBytes / interval.count());
-                    g_rcvdBytes = 0;
-                    g_lastTime = current;
+                    size_t bytesReceived = g_rcvdBytes - lastBytes;
+                    printf("Speed: %.2f bytes/sec\n", bytesReceived / interval.count());
+                    lastBytes = g_rcvdBytes;
+                    lastTime = current;
                 }
-                usleep(1000);
+                std::this_thread::sleep_for(milliseconds(1));
             }
         }
     );
+    task.detach();
 
     return socks;
 }
