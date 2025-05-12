@@ -75,23 +75,45 @@ LineList = list[str]
 
 
 def strip_comments(file_path: str, code: str) -> LineList:
-    """
-    Args:
-        file_path: 文件路径，用于确定文件类型
-        code: 源代码内容
-
-    Returns:
-        去除注释后的有效代码行列表
-    """
     file_ext = os.path.splitext(file_path)[1].lower()
     patterns = COMMENT_PATTERNS.get(file_ext, [])
 
-    # 应用所有匹配的注释模式
-    for pattern, flags in patterns:
-        code = re.sub(pattern, "", code, flags=flags)
+    def is_within_string(line, index):
+        """判断注释符是否在字符串内"""
+        in_single_quote = False
+        in_double_quote = False
+        escape = False
 
-    # 返回非空且去除右侧空格的代码行
-    return [line.rstrip() for line in code.splitlines() if line.rstrip()]
+        for i, char in enumerate(line):
+            if i >= index:
+                break
+            if char == "\\":
+                escape = not escape
+            elif char == "'" and not escape and not in_double_quote:
+                in_single_quote = not in_single_quote
+            elif char == '"' and not escape and not in_single_quote:
+                in_double_quote = not in_double_quote
+            else:
+                escape = False
+
+        return in_single_quote or in_double_quote
+
+    lines = code.splitlines()
+    stripped_lines = []
+
+    for line in lines:
+        modified_line = line
+        for pattern, flags in patterns:
+            matches = list(re.finditer(pattern, modified_line, flags))
+            for match in reversed(matches):
+                if not is_within_string(modified_line, match.start()):
+                    modified_line = (
+                        modified_line[: match.start()] + modified_line[match.end() :]
+                    )
+        if modified_line.strip():
+            stripped_lines.append(modified_line.rstrip())
+
+    return stripped_lines
 
 
 def read_file(file_path):
@@ -322,15 +344,15 @@ def parse_arguments():
     parser.add_argument("--diff", action="store_true", help="显示差异详情")
     parser.add_argument(
         "--ignore-dirs",
-        nargs="+",
+        type=lambda x: [d.strip() for d in x.split(",") if d.strip()],
         default=[],
-        help="要忽略的目录列表（多个目录用空格分隔），如：--ignore-dirs venv modules",
+        help="要忽略的目录列表（多个目录用逗号分隔），如：--ignore-dirs venv,modules",
     )
     parser.add_argument(
         "--ignore-files",
-        nargs="+",
+        type=lambda x: [f.strip() for f in x.split(",") if f.strip()],
         default=[],
-        help="要忽略的文件模式（多个模式用空格分隔），如：--ignore-files *.tmp *.bak",
+        help="要忽略的文件模式列表（多个模式用逗号分隔），如：--ignore-files *.tmp,*.bak",
     )
     parser.add_argument("--no-color", action="store_true", help="禁用颜色输出")
 
