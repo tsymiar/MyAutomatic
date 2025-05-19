@@ -31,9 +31,9 @@ typedef struct StVirtex {
 
 typedef struct StUsrMsg {
     struct StUsrMsg* next;
-    union stMsg {
+    union {
         DdrBar bar;
-        Virtex reg;
+        Virtex tex;
     } msg;
     uint64_t intSize;
     uint32_t notify;
@@ -46,77 +46,70 @@ typedef struct Queue {
     ST_UsrMsg* tail;
 } Queue;
 
-void init_queue(Queue* q)
+// 队列初始化
+static inline void init_queue(Queue* q)
 {
     q->head = q->tail = NULL;
 }
 
-void deinit_queue(Queue* q)
+// 队列释放
+static void deinit_queue(Queue* q)
 {
     ST_UsrMsg* cr = q->head;
-    while (cr != NULL) {
+    while (cr) {
         ST_UsrMsg* next = cr->next;
         kfree(cr);
         cr = next;
     }
-    q->tail = q->head = NULL;
+    q->head = q->tail = NULL;
 }
 
-int queue_size(Queue* q)
+// 队列长度
+static int queue_size(Queue* q)
 {
-    ST_UsrMsg* cr = q->head;
     int cnt = 0;
-    while (cr != NULL) {
-        cr = cr->next;
+    ST_UsrMsg* cr = q->head;
+    for (; cr; cr = cr->next)
         cnt++;
-    }
     return cnt;
 }
 
-ST_UsrMsg* msg_front(Queue* q)
+// 获取队首元素
+static ST_UsrMsg* msg_front(Queue* q)
 {
-    ST_UsrMsg* msg = NULL;
-    if (q != NULL && q->head != NULL) {
-        msg = q->head;
-    }
-    return msg;
+    return (q && q->head) ? q->head : NULL;
 }
 
-void msg_pop(Queue* q)
+// 弹出队首
+static void msg_pop(Queue* q)
 {
-    if (q == NULL || q->head == NULL) {
-        return;
-    }
-    if (q->head->next == NULL) {
-        kfree(q->head);
-        q->head = q->tail = NULL;
-    } else {
-        ST_UsrMsg* next = q->head->next;
-        kfree(q->head);
-        q->head = next;
-    }
+    ST_UsrMsg* next = NULL;
+    if (!q || !q->head) return;
+    next = q->head->next;
+    kfree(q->head);
+    q->head = next;
+    if (!q->head) q->tail = NULL;
 }
 
-void msg_push(Queue* q, ST_UsrMsg msg)
+// 入队
+static void msg_push(Queue* q, ST_UsrMsg msg)
 {
-    ST_UsrMsg* st = (ST_UsrMsg*)kmalloc(sizeof(ST_UsrMsg), GFP_ATOMIC);
-    if (st != NULL) {
-        memset(st, 0, sizeof(ST_UsrMsg));
-        st->msg = msg.msg;
-        st->next = NULL;
-    }
-    if (q->tail == NULL) {
+    ST_UsrMsg* st = kmalloc(sizeof(ST_UsrMsg), GFP_ATOMIC);
+    if (!st) return;
+    *st = msg;
+    st->next = NULL;
+    if (!q->tail)
         q->head = q->tail = st;
-    } else {
+    else {
         q->tail->next = st;
         q->tail = st;
     }
 }
 
-struct cdev g_cdev;
-struct class* g_class;
-struct device* g_device;
-dev_t g_devno;
+static struct cdev g_cdev;
+static struct class* g_class;
+static struct device* g_device;
+static dev_t g_devno;
 static int g_majno = 0x123, g_minno;
 static Queue g_queue;
 static ST_UsrMsg g_msg_user;
@@ -129,28 +122,33 @@ module_param(g_minno, int, S_IRUSR); //次设备号
 
 static ssize_t virtex_dev_read(struct file* flip, char* buf, size_t len, loff_t* off)
 {
-    if (flip->f_flags & O_NONBLOCK) {
-    } else {
+    ST_UsrMsg* msg = NULL;
+    if (!(flip->f_flags & O_NONBLOCK)) {
         // wait_event_interruptible(select_waitq, ev_ok);
     }
 #ifdef KNL_TO_USR
-    if (copy_to_user(buf, &g_msg_user, sizeof(ST_UsrMsg))) {
+    if (copy_to_user(buf, &g_msg_user, sizeof(ST_UsrMsg)))
         return -EFAULT;
-    }
 #endif
-    printk("virtex_dev_read [%08x, %lu].\n", flip->f_flags, len);
+    if (queue_size(&g_queue) > 0) {
+        msg = msg_front(&g_queue);
+        if (msg) {
+            msg_pop(&g_queue);
+        }
+    }
+    printk("virtex_dev_read [%08x, %lu, %d].\n", flip->f_flags, len, msg ? msg->notify : 0);
     return sizeof(ST_UsrMsg);
 }
 
 static ssize_t virtex_dev_write(struct file* flip, const char* buf, size_t len, loff_t* off)
 {
 #ifdef USR_TO_KNL
-    if (copy_from_user(&g_msg_user, buf, sizeof(ST_UsrMsg))) {
+    if (copy_from_user(&g_msg_user, buf, sizeof(ST_UsrMsg)))
         return -EFAULT;
-    }
 #endif
     printk("virtex_dev_write [val=%d,bus=0x%llx,phy=0x%llx,size=%llu].\n",
-        g_msg_user.msg.reg.val, g_msg_user.msg.bar.busAddr, g_msg_user.msg.bar.phyAddr, g_msg_user.msg.bar.winSize);
+        g_msg_user.msg.tex.val, g_msg_user.msg.bar.busAddr, g_msg_user.msg.bar.phyAddr, g_msg_user.msg.bar.winSize);
+    msg_push(&g_queue, g_msg_user);
     return sizeof(ST_UsrMsg);
 }
 
@@ -166,158 +164,143 @@ static int virtex_dev_close(struct inode* inode, struct file* file)
     return 0;
 }
 
+// 设置notify
 static void set_notify(uint32_t* notify, char last)
 {
-    uint64_t status = 0;
-    if (last) {
-        status = 1;
-    }
-    (*notify) |= ((status << 31) | g_msg_user.chan);
+    uint32_t status = last ? 1 : 0;
+    *notify |= ((status << 31) | g_msg_user.chan);
 }
 
+// 设置通道
 static void set_chan(uint32_t* chan)
 {
-    uint64_t value = 0;
-    uint32_t offset = *chan;
-    while ((offset = offset >> 1) != 0) {
+    uint32_t value = 0, offset = *chan;
+    while ((offset >>= 1) != 0)
         value++;
-    }
-    (*chan) = value;
+    *chan = value;
 }
 
+// poll/select支持
 static unsigned int virtex_dev_select_poll(struct file* flip, struct poll_table_struct* wait)
 {
     unsigned int mask = 0;
     poll_wait(flip, &select_waitq, wait);
-    if (ev_ok) {
-        mask = POLLIN | POLLRDNORM;
-    }
-    if (g_msg_user.chan && g_ddrOk > 0 && g_msg_user.ddrOk == 0) {
-        mask = POLLOUT;
-    }
+    if (ev_ok)
+        mask |= POLLIN | POLLRDNORM;
+    if (g_msg_user.chan && g_ddrOk > 0 && g_msg_user.ddrOk == 0)
+        mask |= POLLOUT;
     printk("virtex_dev_select_poll:%d mask=%08x\n", __LINE__, mask);
     return mask;
 }
 
-int virtex_dev_mmap(struct file* flip, struct vm_area_struct* vm)
+static int virtex_dev_mmap(struct file* flip, struct vm_area_struct* vm)
 {
     printk("virtex_dev_mmap:%d flag=%08x\n", __LINE__, flip->f_flags);
     return 0;
 }
 
-long virtex_dev_ioctl(struct file* flip, unsigned int cmd, unsigned long arg)
+static long virtex_dev_ioctl(struct file* flip, unsigned int cmd, unsigned long arg)
 {
     unsigned long value = 0;
     uint32_t notify = 0;
-    Virtex reg;
-    memset(&reg, 0, sizeof(Virtex));
+    Virtex virt = { 0 };
     switch (cmd) {
     case _IO('V', 0x10): // virtex_get_write_notify
         set_notify(&notify, 0);
-        if (copy_to_user(*(void**)(&arg), (void*)&notify, sizeof(uint32_t))) {
+        if (copy_to_user((void __user*)arg, &notify, sizeof(uint32_t)))
             return -EFAULT;
-        }
         printk("virtex_dev_ioctl:%d 0x%08x, notify=0x%x\n", __LINE__, cmd, notify);
         break;
     case _IO('V', 0x11): // virtex_get_read_notify
-        if (copy_from_user(&reg, *(void**)(&arg), sizeof(Virtex))) {
+        if (copy_from_user(&virt, (void __user*)arg, sizeof(Virtex)))
             return -EFAULT;
-        }
-        printk("virtex_dev_ioctl:%d 0x%08x, offset=0x%x, value=0x%x\n", __LINE__, cmd, reg.offset, reg.val);
+        printk("virtex_dev_ioctl:%d 0x%08x, offset=0x%x, value=0x%x\n", __LINE__, cmd, virt.offset, virt.val);
         break;
     case _IO('V', 0x12): // virtex_get_data_bar
         break;
     case _IO('V', 0x13): // write_reg
-        if (copy_from_user(&reg, *(void**)(&arg), sizeof(Virtex))) {
+        if (copy_from_user(&virt, (void __user*)arg, sizeof(Virtex)))
             return -EFAULT;
-        }
-        switch (reg.offset) {
+        switch (virt.offset) {
         case 0x4:
         case 0x1004:
-            printk("virtex_dev_ioctl:%d 0x%08x, 0x%08x, 0x%08x, soft reset\n", __LINE__, cmd, reg.offset, reg.val);
+            printk("virtex_dev_ioctl:%d 0x%08x, 0x%08x, 0x%08x, soft reset\n", __LINE__, cmd, virt.offset, virt.val);
             break;
         case 0x1010: /*DDR open*/
-            g_msg_user.ddrOk = reg.val;
-            if (g_msg_user.ddrOk > 0) {
+            g_msg_user.ddrOk = virt.val;
+            if (g_msg_user.ddrOk > 0)
                 g_ddrOk++;
-            }
-            printk("virtex_dev_ioctl:%d 0x%08x, 0x%08x, ddr is ok=0x%08x\n", __LINE__, cmd, reg.offset, g_msg_user.ddrOk);
+            printk("virtex_dev_ioctl:%d 0x%08x, 0x%08x, ddr is ok=0x%08x\n", __LINE__, cmd, virt.offset, g_msg_user.ddrOk);
             break;
         case 0x1014: /*single channel enable*/
-            g_msg_user.chan = reg.val;
+            g_msg_user.chan = virt.val;
             set_chan(&g_msg_user.chan);
-            printk("virtex_dev_ioctl:%d 0x%08x, 0x%08x, set chan=0x%08x\n", __LINE__, cmd, reg.offset, g_msg_user.chan);
+            printk("virtex_dev_ioctl:%d 0x%08x, 0x%08x, set chan=0x%08x\n", __LINE__, cmd, virt.offset, g_msg_user.chan);
             break;
         case 0x100c:
-            g_msg_user.intSize |= (uint64_t)reg.val >> 16;
-            printk("virtex_dev_ioctl:%d 0x%08x, offset=0x%x, low_size=0x%llx\n", __LINE__, cmd, reg.offset, g_msg_user.intSize);
+            g_msg_user.intSize |= (uint64_t)virt.val >> 16;
+            printk("virtex_dev_ioctl:%d 0x%08x, offset=0x%x, low_size=0x%llx\n", __LINE__, cmd, virt.offset, g_msg_user.intSize);
             break;
         case 0x10fc:
-            g_msg_user.intSize |= (uint64_t)reg.val << 14;
-            printk("virtex_dev_ioctl:%d 0x%08x, offset=0x%x, high_size=0x%llx\n", __LINE__, cmd, reg.offset, g_msg_user.intSize);
+            g_msg_user.intSize |= (uint64_t)virt.val << 14;
+            printk("virtex_dev_ioctl:%d 0x%08x, offset=0x%x, high_size=0x%llx\n", __LINE__, cmd, virt.offset, g_msg_user.intSize);
             break;
         case 0x105c:
         case 0x1050: // simulator data register enable
-            printk("virtex_dev_ioctl:%d 0x%08x, offset=0x%x, value=0x%x\n", __LINE__, cmd, reg.offset, reg.val);
+            printk("virtex_dev_ioctl:%d 0x%08x, offset=0x%x, value=0x%x\n", __LINE__, cmd, virt.offset, virt.val);
             break;
         default:
-            printk("virtex_dev_ioctl:%d 0x%08x, 0x%08x, 0x%08x, not impl\n", __LINE__, cmd, reg.offset, reg.val);
+            printk("virtex_dev_ioctl:%d 0x%08x, 0x%08x, 0x%08x, not impl\n", __LINE__, cmd, virt.offset, virt.val);
             break;
         }
         break;
     case _IO('V', 0x14): // read_reg
-        if (copy_from_user(&reg, *(void**)(&arg), sizeof(Virtex))) {
+        if (copy_from_user(&virt, (void __user*)arg, sizeof(Virtex)))
             return -EFAULT;
-        }
-        switch (reg.offset) {
+        switch (virt.offset) {
         case 0:
         case 0x1000: // version
             value = 0x12345;
-            if (copy_to_user(*(void**)(&arg), (void*)&value, sizeof(uint32_t))) {
+            if (copy_to_user((void __user*)arg, &value, sizeof(uint32_t)))
                 return -EFAULT;
-            }
             printk("virtex_dev_ioctl:%d 0x%08x, 0x00001000, version=%08lx\n", __LINE__, cmd, arg);
             break;
         case 0x100: // dma ok
             printk("virtex_dev_ioctl:%d 0x%08x, 0x00000100, fifo pop\n", __LINE__, cmd);
             break;
         case 0x118: // interrupt size;
-            reg.val = g_msg_user.intSize;
-            if (copy_to_user(*(void**)(&arg), (void*)&reg, sizeof(Virtex))) {
+            virt.val = g_msg_user.intSize;
+            if (copy_to_user((void __user*)arg, &virt, sizeof(Virtex)))
                 return -EFAULT;
-            }
-            printk("virtex_dev_ioctl:%d 0x%08x, offset=0x%x, size=0x%x\n", __LINE__, cmd, reg.offset, reg.val);
+            printk("virtex_dev_ioctl:%d 0x%08x, offset=0x%x, size=0x%x\n", __LINE__, cmd, virt.offset, virt.val);
             break;
         case 0x104: // status
             value = 0x1;
-            if (copy_to_user(*(void**)(&arg), (void*)&value, sizeof(uint32_t))) {
+            if (copy_to_user((void __user*)arg, &value, sizeof(uint32_t)))
                 return -EFAULT;
-            }
             printk("virtex_dev_ioctl:%d 0x%08x, 0x00000104, status=%08lx\n", __LINE__, cmd, arg);
             break;
         case 0x10c: // debug
             value = 0xff;
-            if (copy_to_user(*(void**)(&arg), (void*)&value, sizeof(uint32_t))) {
+            if (copy_to_user((void __user*)arg, &value, sizeof(uint32_t)))
                 return -EFAULT;
-            }
             printk("virtex_dev_ioctl:%d 0x%08x, 0x0000010c, debug=%08lx\n", __LINE__, cmd, arg);
             break;
         default:
-            printk("virtex_dev_ioctl:%d 0x%08x, 0x%08x, not deal\n", __LINE__, cmd, reg.offset);
+            printk("virtex_dev_ioctl:%d 0x%08x, 0x%08x, not deal\n", __LINE__, cmd, virt.offset);
             break;
         }
         break;
     default:
-        if (copy_from_user(&value, *(void**)(&arg), sizeof(unsigned long))) {
+        if (copy_from_user(&value, (void __user*)arg, sizeof(unsigned long)))
             return -EFAULT;
-        }
         printk("virtex_dev_ioctl:%d 0x%08x, 0x%lx\n", __LINE__, cmd, value);
         break;
     }
     return 0;
 }
 
-struct file_operations virtex_dev_ops = {
+static const struct file_operations virtex_dev_ops = {
     .owner = THIS_MODULE,
     .read = virtex_dev_read,
     .write = virtex_dev_write,
@@ -325,9 +308,10 @@ struct file_operations virtex_dev_ops = {
     .release = virtex_dev_close,
     .unlocked_ioctl = virtex_dev_ioctl,
     .poll = virtex_dev_select_poll,
-    .mmap = virtex_dev_mmap };
+    .mmap = virtex_dev_mmap,
+};
 
-static int device_init(void)
+static int __init device_init(void)
 {
     int stat;
     if (g_majno) //传入了主设备号用静态的方法
@@ -335,25 +319,23 @@ static int device_init(void)
         printk("devno = %d:%d.\n", g_majno, g_minno);                        //主设备号
         g_devno = MKDEV(g_majno, g_minno);                                   //主次设备号合成一个dev_t类型
         stat = register_chrdev_region(g_devno, DEVICE_NUMBER, DEVICE_SNAME); //静态分配
-        if (stat < 0) {
+        if (stat < 0)
             printk("register_virtex_dev_region error!\n");
-        } else {
+        else
             printk("register_virtex_dev_region ok!\n");
-        }
     } else //没有传入主设备号用动态的方法
     {
         stat = alloc_chrdev_region(&g_devno, DEVICE_MINOR_NUMBER, DEVICE_NUMBER, DEVICE_DNAME); //动态分配
-        if (stat < 0) {
+        if (stat < 0)
             printk("alloc_virtex_dev_region error!\n");
-        } else {
+        else
             printk("alloc_virtex_dev_region ok!\n");
-        }
         g_majno = MAJOR(g_devno); //从dev_t中分离出主设备号
         g_minno = MINOR(g_devno); //从dev_t中分离出次设备号
         printk("majno = %d, minno = %d\n", g_majno, g_minno);
     }
-    g_cdev.owner = THIS_MODULE;
     cdev_init(&g_cdev, &virtex_dev_ops);                                       //初始化cdev
+    g_cdev.owner = THIS_MODULE;
     cdev_add(&g_cdev, g_devno, DEVICE_NUMBER);                                //注册到内核
     g_class = class_create(THIS_MODULE, DEVICE_CLASS_NAME);                   //注册类
     g_device = device_create(g_class, NULL, g_devno, NULL, DEVICE_NODE_NAME); //注册设备
@@ -361,7 +343,7 @@ static int device_init(void)
     return 0;
 }
 
-static void device_exit(void)
+static void __exit device_exit(void)
 {
     deinit_queue(&g_queue);
     unregister_chrdev_region(MKDEV(g_majno, g_minno), DEVICE_NUMBER); //申请几个注销几个

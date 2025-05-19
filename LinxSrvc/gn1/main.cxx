@@ -23,6 +23,9 @@ struct option { const char* _1; void* _2; void* _3; char _4; };
 #include <string>
 #include <thread>
 #include <vector>
+#ifdef OpenMP
+#include <omp.h>
+#endif
 
 #if (defined _WIN32) && (!defined __GNUC__)
 static const unsigned __int64 epoch = ((unsigned __int64)116444736000000000ULL);
@@ -38,7 +41,7 @@ static void gettimeofday(struct timeval* tp, struct timezone* tzp)
     tp->tv_sec = (long)((ularge.QuadPart - epoch) / 10000000L);
     tp->tv_usec = (long)(system_time.wMilliseconds * 1000);
 }
-static void uSleep(unsigned long usec)
+static void waitUs(unsigned long usec)
 {
     HANDLE timer;
     LARGE_INTEGER interval;
@@ -75,30 +78,15 @@ union Number {
     uint64_t _64v;
 };
 
-void parse_args(int argc, char** argv);
 void usage_exit(const char* argv0 = "");
-uint64_t gettime4usec();
+uint64_t size2bytes(const std::string& value);
+void parse_args(int argc, char** argv);
+void msleep(unsigned long ms);
 bool isSmallEndian();
 void byteSwap16(uint16_t* val);
 void byteSwap321(uint32_t* val);
 void byteSwap32(uint32_t* val);
-uint64_t size2bytes(const std::string& value);
-void msleep(unsigned long ms);
-
-template<class T>
-std::vector<T> string2vector(const std::string& str, const char* split = ",")
-{
-    std::vector<T> vec;
-    char* s = const_cast<char*>(str.c_str());
-    char* p = strtok(s, split);
-    T a;
-    while (p != nullptr) {
-        sscanf(p, "%lx", &a);
-        vec.push_back(a);
-        p = strtok(nullptr, split);
-    }
-    return vec;
-}
+uint64_t gettime4usec();
 
 int main(int argc, char* argv[])
 {
@@ -220,6 +208,21 @@ int main(int argc, char* argv[])
         (g_runtime.total * 1.f) / (gettime4usec() - start) * 0x100000 / 1000000.f);
 }
 
+template<class T>
+std::vector<T> string2vector(const std::string& str, const char* split = ",")
+{
+    std::vector<T> vec;
+    char* s = const_cast<char*>(str.c_str());
+    char* p = strtok(s, split);
+    T a;
+    while (p != nullptr) {
+        sscanf(p, "%lx", &a);
+        vec.push_back(a);
+        p = strtok(nullptr, split);
+    }
+    return vec;
+}
+
 uint64_t gettime4usec()
 {
     struct timeval tv;
@@ -271,28 +274,32 @@ void byteSwap32(uint32_t* val)
 uint64_t size2bytes(const std::string& value)
 {
     uint64_t u64_size = 0;
-    for (size_t i = 0; i < value.size(); ++i) {
-        if (value[i] >= '0' && value[i] <= '9') {
-            u64_size = u64_size * 10 + value[i] - '0';
-        } else if (value[i] == 'T') {
-            u64_size = u64_size * 1024 * 1024 * 1024 * 1024;
-        } else if (value[i] == 'G') {
-            u64_size *= 1024 * 1024 * 1024;
-        } else if (value[i] == 'M') {
-            u64_size *= 1024 * 1024;
-        } else if (value[i] == 'K') {
-            u64_size *= 1024;
-        } else {
-            continue;
-        }
+    size_t pos = value.find_first_of("KMGTP");
+    std::string num_part = value.substr(0, pos);
+    std::string unit_part = (pos != std::string::npos) ? value.substr(pos, 1) : "";
+    double dsize = 0;
+    try {
+        dsize = std::stod(num_part);
+    } catch (...) {
+        dsize = 0;
     }
+    if (unit_part == "T") {
+        dsize *= 1024 * 1024 * 1024 * 1024ULL;
+    } else if (unit_part == "G") {
+        dsize *= 1024 * 1024 * 1024ULL;
+    } else if (unit_part == "M") {
+        dsize *= 1024 * 1024ULL;
+    } else if (unit_part == "K") {
+        dsize *= 1024ULL;
+    }
+    u64_size = static_cast<uint64_t>(dsize);
     return u64_size;
 }
 
 void usage_exit(const char* argv0)
 {
     fprintf(stderr,
-        "\nUsage: %s [option] ARGUMENT\n"
+        "\nUsage: %s [options] ARGUMENT\n"
         "\n"
         "-f | --file      FILENAME        Name of the file to save, required.\n"
         "-n | --total     SIZE(K/M/G)     Number of total size to write, required.\n"
@@ -379,7 +386,7 @@ void parse_args(int argc, char** argv)
 void msleep(unsigned long ms)
 {
 #if (defined _WIN32) && (!defined __GNUC__)
-    uSleep(1000 * ms);
+    waitUs(1000 * ms);
 #else
     struct timespec ts = {
         .tv_sec = static_cast<long>(ms / 1000),

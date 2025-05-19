@@ -8,25 +8,35 @@ sudo apt-get install -y rdma-core
 cd ../../3rd
 if [ ! -d "rdma-core" ]; then mkdir rdma-core; fi;
 cd rdma-core
-if [ $(ls ./* | wc -l) -le 1 ]
+if [ $(ls . | wc -l) -le 1 ]
 then
   git submodule update --init --recursive
-  git pull
 fi
-git checkout v57.0 -b v57.0 | true
-if [ -d "build" ]; then rm -rf build/*; else mkdir build; fi
+if [ "$(git status | grep v57.0)" == "" ]; then
+  git config pull.rebase false
+  git checkout v57.0
+else
+  echo "-- pulled v57.0"
+fi
+if [ -d "build" ]; then rm -rf build/*; else mkdir build; fi;
 cd build
 cmake -GNinja \
   -DCMAKE_INSTALL_PREFIX=/usr \
   -DCMAKE_BUILD_TYPE=Release \
   -DNO_PYVERBS=1 \
   -DNO_MAN_PAGES=1 \
-  ..
-ninja && sudo ninja install
+  ..;
+if [ -f "build.ninja" ]; then
+  ninja && sudo ninja install
+fi
 cd -
+echo -- Checking RXE
 lsmod | grep -E 'rdma_rxe|ib_core'
+echo -- Setting RXE
 eth0=$(ip -brief link | awk '{print $1}' | grep en)
 sudo rdma link add rxe0 type rxe netdev $eth0
-sudo ifconfig $eth0 mtu 9000
+echo -- Setting RXE MTU
+sudo ifconfig $eth0 mtu 9000 up
 sudo ip link set rxe0 up
 ibv_devinfo
+exit 0

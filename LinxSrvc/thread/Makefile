@@ -7,8 +7,12 @@ pthdtest:
 	@gcc -g pthdtest.c pthdpool.o -pthread -o $(GEN)/pthdtest.exe
 	@if [ -d $(OBJ) ]; then mv *.o $(OBJ); fi;
 	@echo "-- Built: \033[1m$@\033[0m"
+socktest:
+	@g++ -g -std=c++11 ../../WinNTKline/KlineUtil/IM/TCPsocket_unix.cpp -lpthread -o $(GEN)/socket_test.exe
+	@echo "-- Built: \033[1m$@\033[0m"
 all:
 	@make pthdpool
 	@make pthdtest
+	@make socktest
 clean:
 	@rm -vf *.o $(OBJ)/pthdpool.o $(GEN)/pthdtest.exe
