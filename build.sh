@@ -4,21 +4,21 @@ PWD=$(pwd)
 if [ "$1" == "test" ]
 then
     cd "${PWD}/LinxSrvc/3rd";
+    git submodule update --init --recursive
     if [ ! $(whereis lcov | awk '{print $2}') ]
     then
-        if [ -d lcov ] && [ $(ls lcov/* | wc -l) -le 0 ]
-        then
-            git submodule update --init --recursive
-            git pull origin main
-        else
-            mkdir lcov
+        if [ ! -d "lcov" ]; then
+            git clone https://github.com/linux-test-project/lcov.git
         fi
-        cd lcov && make install && cd -
+        cd lcov
+        git pull origin main --rebase=false
+        make -j4 && sudo make install
+        cd -
     fi
-    if [ $(ls googletest/* | wc -l) -le 0 ]
+    if [ $(ls googletest | wc -l) -le 0 ]
     then
         git clone https://github.com/google/googletest.git
-        git pull origin main
+        git pull origin main --rebase=false
     fi
     cd ../test && ./test.sh
 else
