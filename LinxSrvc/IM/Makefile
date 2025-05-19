@@ -6,7 +6,7 @@ default_target: all
 .SUFFIXES: .hpux_make_needs_suffix_list
 $(VERBOSE)MAKESILENT = -s
 #$(VERBOSE).SILENT:
-all: IM Kai client socket_test
+all: IM Kai client
 EXP =
 CUR = `pwd`
 GEN = $(CUR)/../bin
@@ -37,9 +37,6 @@ Kai:Kai.o
 	@echo "-- Built: \033[1;32m$@\033[0m"
 client:
 	@$(CXX) $(FLAG) -I$(IMLOCAL) $(CLIENTFILES) $(PTHD) -o $(GEN)/client.exe
-	@echo "-- Built: \033[1;32m$@\033[0m"
-socket_test:
-	@$(CXX) $(FLAG) $(IMLOCAL)/TCPsocket_unix.cpp $(PTHD) -o $(GEN)/socket_test.exe
 	@echo "-- Built: \033[1;32m$@\033[0m"
 clean/fast:
 	@if [ -d "$(GEN)/../lib" ]; then rm -rvf $(GEN)/../lib; fi;

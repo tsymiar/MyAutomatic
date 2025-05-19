@@ -6,7 +6,7 @@ endif
 ARM_LINUX_KERNEL := ${KNLDIR}
 default:
 	@if [ -d $(ARM_LINUX_KERNEL) ]; then \
-		make -C $(ARM_LINUX_KERNEL) M=$(PWD) modules && \
+		make -C $(ARM_LINUX_KERNEL) M=$(PWD) modules -Wno-unused-function && \
 		lsmod | grep -q virtexdrv || { \
 			if [ "$$(id -u)" -ne 0 ]; then \
 				echo "\033[33mWarning\033[0m: Must be superuser."; \

@@ -24,7 +24,8 @@ virtex:
 	@if [ -d $(BUILD) ]; then make -C virtex KNLDIR=$(BUILD); fi;
 	$(call Built,$@)
 RDMA:
-	@make -C rdma all || true
+	@make -C rdma env
+	@make -C rdma all -j4
 	$(call Built,$@)
 chstest:
 	@gcc -g -DDRIVER test.c -o $(GEN)/chstest
