@@ -124,7 +124,7 @@
     </ResourceCompile>
     <PostBuildEvent>
       <Command>
-        copy "$(ProjectDir)..\KlineUtil\tool\call.bat" "$(TargetDir)"
+        copy "$(ProjectDir)..\KlineUtil\built\call.bat" "$(TargetDir)"
         set TARGET='$(TargetDir)'
         echo '%TARGET:~0,3%'
         cmd @echo off

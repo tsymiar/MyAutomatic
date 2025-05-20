@@ -152,7 +152,7 @@
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>
-        copy "$(ProjectDir)..\KlineUtil\tool\call.bat" "$(TargetDir)"
+        copy "$(ProjectDir)..\KlineUtil\built\call.bat" "$(TargetDir)"
         set TARGET='$(TargetDir)'
         echo '%TARGET:~0,3%'
         cmd @echo off
@@ -377,7 +377,7 @@
     <None Include="..\KlineUtil\cfg\ips.ini" />
     <None Include="..\KlineUtil\ClassDiagram.cd" />
     <None Include="..\KlineUtil\com\plus1second" />
-    <None Include="..\KlineUtil\tool\call.bat" />
+    <None Include="..\KlineUtil\built\call.bat" />
     <None Include="..\KlineUtil\script\matkline.py" />
     <None Include="..\KlineUtil\script\webload.py" />
     <None Include="..\KlineUtil\service\BareBonesBrowserLaunch.java" />

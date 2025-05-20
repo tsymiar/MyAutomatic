@@ -301,7 +301,7 @@
     <None Include="..\KlineUtil\cfg\ips.ini">
       <Filter>配置脚本</Filter>
     </None>
-    <None Include="..\KlineUtil\tool\call.bat">
+    <None Include="..\KlineUtil\built\call.bat">
       <Filter>配置脚本</Filter>
     </None>
     <None Include="..\KlineUtil\script\webload.py">
