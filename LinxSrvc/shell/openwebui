@@ -1,0 +1,6 @@
+ID=$(docker ps | grep open-webui | awk '{print $1}')
+if [ "$ID" != "" ]; then
+    docker restart $ID
+else
+    docker run --sysctl net.ipv6.conf.all.disable_ipv6=1 -d -e WEBUI_NAME="JetsonLLM" -p 8083:8080 --add-host=host.docker.internal:host-gateway -v ~/shenyrion/software/openwebui/backend:/app/backend --name open-webui --restart always ghcr.io/open-webui/open-webui:main
+fi
