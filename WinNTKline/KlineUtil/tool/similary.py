@@ -7,10 +7,8 @@ from collections import defaultdict
 import re
 
 Style = None
-# 初始化颜色支持
 init(autoreset=True)
 
-# 注释处理配置（支持多种编程语言）
 COMMENT_TYPES = {
     "line": [
         (r"#.*$", re.MULTILINE),  # Python, Perl, Ruby等
@@ -22,146 +20,180 @@ COMMENT_TYPES = {
         (r"<!--.*?-->", re.DOTALL),  # HTML/XML
     ],
 }
-
-# 按文件扩展名映射注释类型
 COMMENT_PATTERNS = {
     ext: (COMMENT_TYPES["line"] + COMMENT_TYPES["block"])
     for ext in [
-        ".py",
-        ".java",
-        ".js",
-        ".cpp",
-        ".c",
-        ".rs",
-        ".swift",
-        ".kt",
-        ".ts",
-        ".css",
-        ".scss",
-        ".less",
-        ".html",
-        ".xml",
+        ".py", ".java", ".js", ".cpp", ".c", ".rs", ".swift", ".kt", ".ts",
+        ".css", ".scss", ".less", ".html", ".xml",
     ]
 }
-# 特殊处理纯文本类型
-COMMENT_PATTERNS.update(
-    {
-        ".txt": [],
-        ".md": [],
-        ".json": [],
-        ".yml": [],
-        ".yaml": [],
-    }
-)
-
+COMMENT_PATTERNS.update({".txt": [], ".md": [], ".json": [], ".yml": [], ".yaml": []})
 
 class EmptyStyle:
-    """用于禁用颜色的空样式类"""
-
     def __getattr__(self, name):
         return ""
 
-
 def is_text_file(file_path):
-    """判断是否为支持的文本文件类型"""
-    text_exts = set(COMMENT_PATTERNS.keys()).union(
-        {".txt", ".md", ".json", ".yml", ".yaml"}
-    )
-    return os.path.splitext(file_path)[1].lower() in text_exts
-
-
-# 定义类型别名
-LineList = list[str]
-
-
-def strip_comments(file_path: str, code: str) -> LineList:
+    # 只需初始化一次，避免每次调用都创建集合
+    if not hasattr(is_text_file, "_text_exts"):
+        is_text_file._text_exts = set(COMMENT_PATTERNS.keys()).union(
+            {".txt", ".md", ".json", ".yml", ".yaml"}
+        )
+    text_exts = is_text_file._text_exts
     file_ext = os.path.splitext(file_path)[1].lower()
-    patterns = COMMENT_PATTERNS.get(file_ext, [])
+    return file_ext in text_exts, file_ext
 
-    def is_within_string(line, index):
-        """判断注释符是否在字符串内"""
-        in_single_quote = False
-        in_double_quote = False
-        escape = False
+def delete_initial_block_comment(source):
+    """
+    删除文件开头的块注释（如C/Java的/* ... */），支持字符串或行列表输入。
+    """
+    if isinstance(source, str):
+        lines = source.splitlines()
+    else:
+        lines = list(source)
 
-        for i, char in enumerate(line):
-            if i >= index:
+    block_start = -1
+    block_end = -1
+    in_block_comment = False
+
+    for index, line in enumerate(lines):
+        if not in_block_comment:
+            if line.strip().startswith('/*'):
+                block_start = index
+                in_block_comment = True
+        else:
+            if '*/' in line:
+                block_end = index
                 break
-            if char == "\\":
-                escape = not escape
-            elif char == "'" and not escape and not in_double_quote:
-                in_single_quote = not in_single_quote
-            elif char == '"' and not escape and not in_single_quote:
-                in_double_quote = not in_double_quote
-            else:
-                escape = False
 
-        return in_single_quote or in_double_quote
+    if block_start != -1 and block_end != -1:
+        lines = lines[:block_start] + lines[block_end+1:]
 
-    lines = code.splitlines()
-    stripped_lines = []
+    return lines if isinstance(source, list) else "\n".join(lines)
 
-    for line in lines:
-        modified_line = line
+def strip_comments(file_ext, code):
+    
+    patterns = COMMENT_PATTERNS.get(file_ext, [])
+    if isinstance(code, str):
+        code_lines = code.splitlines()
+    else:
+        code_lines = list(code)
+
+    code_lines = delete_initial_block_comment(code_lines)
+
+    line_marker = [True] * len(code_lines)
+
+    # 字符串匹配，避免处理字符串内的内容
+    string_patterns = [
+        (r"'[^'\\]*(?:\\.[^'\\]*)*'", 0),   # 单引号字符串，支持转义
+        (r'"[^"\\]*(?:\\.[^"\\]*)*"', 0)    # 双引号字符串，支持转义
+    ]
+
+    for line_index, line in enumerate(code_lines):
+        string_matches = []
+        for pattern, _ in string_patterns:
+            for match in re.finditer(pattern, line):
+                string_matches.append((match.start(), match.end()))
+
+        # 记录非字符串区域
+        non_string_ranges = []
+        if not string_matches:
+            non_string_ranges.append((0, len(line)))
+        else:
+            prev_end = 0
+            for start, end in sorted(string_matches):
+                if start > prev_end:
+                    non_string_ranges.append((prev_end, start))
+                prev_end = max(prev_end, end)
+            if prev_end < len(line):
+                non_string_ranges.append((prev_end, len(line)))
+
+        # 在非字符串区域中查找注释
         for pattern, flags in patterns:
-            matches = list(re.finditer(pattern, modified_line, flags))
-            for match in reversed(matches):
-                if not is_within_string(modified_line, match.start()):
-                    modified_line = (
-                        modified_line[: match.start()] + modified_line[match.end() :]
-                    )
-        if modified_line.strip():
-            stripped_lines.append(modified_line.rstrip())
+            for match in re.finditer(pattern, line, flags=flags):
+                start_pos = match.start()
+                end_pos = match.end()
+                for range_start, range_end in non_string_ranges:
+                    if range_start <= start_pos < end_pos <= range_end:
+                        line_marker[line_index] = False
+                        break
 
-    return stripped_lines
+    # 单行注释二次检查
+    single_line_comment_pattern = re.compile(r'^\s*//.*$', re.MULTILINE)
+    for i, line in enumerate(code_lines):
+        if single_line_comment_pattern.match(line):
+            line_marker[i] = False
 
+    processed = []
+    line_mapping = []
+    in_block_comment = False
 
-def read_file(file_path):
-    """读取文件并返回有效代码行和原始行数"""
+    for i, (line, keep) in enumerate(zip(code_lines, line_marker)):
+        if in_block_comment:
+            if '*/' in line:
+                end_pos = line.find('*/') + 2
+                line = line[end_pos:].strip()
+                in_block_comment = False
+            else:
+                continue
+
+        if '/*' in line and '*/' not in line:
+            start_pos = line.find('/*')
+            line = line[:start_pos].strip()
+            in_block_comment = True
+
+        if '/*' in line and '*/' in line:
+            start_pos = line.find('/*')
+            end_pos = line.find('*/') + 2
+            line = (line[:start_pos] + line[end_pos:]).strip()
+
+        if keep and line.strip():
+            processed.append(line.rstrip())
+            line_mapping.append(i + 1)
+
+    return processed
+
+def read_file(file_path, cache={}):
+    if file_path in cache:
+        return cache[file_path]
     try:
-        if not is_text_file(file_path):
+        is_text, file_ext = is_text_file(file_path)
+        if not is_text:
+            cache[file_path] = ([], 0)
             return [], 0
         with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
             content = f.read()
-        original_lines = content.count("\n") + 1  # 准确统计原始行数
-        return strip_comments(file_path, content), original_lines
+        original_lines = content.count("\n") + 1
+        lines = (strip_comments(file_ext, content), original_lines)
+        cache[file_path] = lines
+        return lines
     except Exception as e:
         print(f"{Fore.RED}文件读取错误 {os.path.basename(file_path)}: {str(e)}")
+        cache[file_path] = ([], 0)
         return [], 0
 
-
 def build_index(directory, ignore_dirs, ignore_files):
-    """带目录和文件忽略功能的文件索引构建"""
     index = defaultdict(list)
     ignore_dirs = set(ignore_dirs)
     ignore_files = set(ignore_files)
-
     for root, dirs, files in os.walk(directory, True):
-        # 过滤忽略目录
         dirs[:] = [d for d in dirs if d not in ignore_dirs]
-
         for f in files:
-            # 跳过非文本文件
-            if not is_text_file(f):
+            is_text, _ = is_text_file(f)
+            if not is_text:
                 continue
-            # 检查文件是否匹配忽略模式
             if any(fnmatch.fnmatch(f, pattern) for pattern in ignore_files):
                 continue
             path = os.path.join(root, f)
             rel_path = os.path.relpath(path, directory)
             index[f].append(rel_path)
-
     return index
 
-
 def generate_diff(file1, file2):
-    """生成带原始行号的彩色差异对比"""
     lines1, orig1 = read_file(file1)
     lines2, orig2 = read_file(file2)
     differ = difflib.SequenceMatcher(None, lines1, lines2)
     diff = []
-
-    # 计算原始行号映射
     def calculate_original_line_map(lines, orig_count):
         line_map = []
         current_line = 1
@@ -171,14 +203,11 @@ def generate_diff(file1, file2):
             line_map.append(current_line)
             current_line += 1
         return line_map
-
     line_map1 = calculate_original_line_map(lines1, orig1)
     line_map2 = calculate_original_line_map(lines2, orig2)
-
     for tag, i1, i2, j1, j2 in differ.get_opcodes():
         if tag == "equal":
             continue
-
         if tag == "delete":
             for ln in range(i1, i2):
                 diff.append(f"{Fore.RED}- [{line_map1[ln]:04}] {lines1[ln]}")
@@ -190,41 +219,25 @@ def generate_diff(file1, file2):
                 diff.append(f"{Fore.RED}- [{line_map1[ln]:04}] {lines1[ln]}")
             for ln in range(j1, j2):
                 diff.append(f"{Fore.GREEN}+ [{line_map2[ln]:04}] {lines2[ln]}")
-
     return "\n".join(diff)
 
-
 def calculate_similarity(lines1, lines2, orig1, orig2):
-    """使用有效行数计算相似度"""
-    valid1 = len(lines1)
-    valid2 = len(lines2)
-
-    counter = defaultdict(int)
-    for line in lines1:
-        counter[line] += 1
-
-    common = 0
-    for line in lines2:
-        if counter.get(line, 0) > 0:
-            common += 1
-            counter[line] -= 1
-
-    denominator = max(valid1, valid2) or 1
+    set1 = set(lines1)
+    set2 = set(lines2)
+    common = len(set1 & set2)
+    denominator = max(len(set1), len(set2)) or 1
     return {
         "ratio": common / denominator,
         "common": common,
         "orig1": orig1,
         "orig2": orig2,
-        "valid1": valid1,
-        "valid2": valid2,
+        "valid1": len(set1),
+        "valid2": len(set2),
     }
 
-
 def file_compare(file1, file2, base_dir, show_diff):
-    """更新文件比较逻辑"""
     lines1, orig1 = read_file(file1)
     lines2, orig2 = read_file(file2)
-
     result = calculate_similarity(lines1, lines2, orig1, orig2)
     result.update(
         {
@@ -236,30 +249,21 @@ def file_compare(file1, file2, base_dir, show_diff):
     )
     return result
 
-
 def dir_compare(dir1, dir2, show_diff, ignore_dirs, ignore_files):
-    """更新目录对比统计"""
     index1 = build_index(dir1, ignore_dirs, ignore_files)
     index2 = build_index(dir2, ignore_dirs, ignore_files)
-
     total = defaultdict(int)
     details = []
-    unmatched = {"source": [], "target": []}  # 未匹配文件存储
-    processed_pairs = set()  # 文件对已处理
-
-    # 获取所有文件名集合
+    unmatched = {"source": [], "target": []}
+    processed_pairs = set()
     all_files = set(index1.keys()).union(set(index2.keys()))
-
     for filename in all_files:
         paths1 = index1.get(filename, [])
         paths2 = index2.get(filename, [])
-
-        # 未匹配文件处理
         if not paths2:
             unmatched["source"].extend([os.path.join(dir1, p) for p in paths1])
         if not paths1:
             unmatched["target"].extend([os.path.join(dir2, p) for p in paths2])
-
         for rel_path1 in paths1:
             full_path1 = os.path.join(dir1, rel_path1)
             for rel_path2 in paths2:
@@ -278,34 +282,15 @@ def dir_compare(dir1, dir2, show_diff, ignore_dirs, ignore_files):
                 total["valid2"] += res["valid2"]
                 total["orig1"] += res["orig1"]
                 total["orig2"] += res["orig2"]
-
-    # 确保未匹配文件列表唯一
     unmatched["source"] = list(set(unmatched["source"]))
     unmatched["target"] = list(set(unmatched["target"]))
-
     denominator = max(total["valid1"], total["valid2"]) or 1
     total["ratio"] = total["common"] / denominator
-
-    return total, details, unmatched  # 返回未匹配文件信息
-
+    return total, details, unmatched
 
 def print_results(total, details, unmatched, use_color=True):
     """增强版结果显示"""
     color = lambda c: getattr(Fore, c.upper()) if use_color else ""
-
-    # 文件列表
-    print(f"\n{color('cyan')}=== 匹配文件详情 ({len(details)} 个) ===")
-    for info in sorted(details, key=lambda x: x["ratio"], reverse=True):
-        ratio = info["ratio"]
-        color_code = "GREEN" if ratio > 0.7 else "YELLOW" if ratio > 0.3 else "RED"
-
-        line = (
-            f"{color(color_code)}▏ {info['file_name']:55} "
-            f"相似度: {ratio:.1%} "
-            f"(原始: {info['orig1']:4}→{info['valid1']:4} | "
-            f"目标: {info['orig2']:4}→{info['valid2']:4})"
-        )
-        print(line)
 
     # 未匹配文件
     print(f"\n{color('cyan')}=== 未匹配文件 ===")
@@ -323,6 +308,20 @@ def print_results(total, details, unmatched, use_color=True):
             print(
                 f"  {color('magenta')}• {os.path.relpath(path, os.path.dirname(path))}"
             )
+
+    # 文件列表
+    print(f"\n{color('cyan')}=== 匹配文件详情 ({len(details)} 个) ===")
+    for info in sorted(details, key=lambda x: x["ratio"], reverse=True):
+        ratio = info["ratio"]
+        color_code = "GREEN" if ratio > 0.7 else "YELLOW" if ratio > 0.3 else "RED"
+
+        line = (
+            f"{color(color_code)}▏ {info['file_name']:55} "
+            f"相似度: {ratio:.1%} "
+            f"(原始: {info['orig1']:4}→{info['valid1']:4} | "
+            f"目标: {info['orig2']:4}→{info['valid2']:4})"
+        )
+        print(line)
 
     # 统计摘要
     print(f"\n{color('cyan')}=== 统计摘要 ===")
