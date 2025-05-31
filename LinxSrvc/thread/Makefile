@@ -8,11 +8,12 @@ pthdtest:
 	@if [ -d $(OBJ) ]; then mv *.o $(OBJ); fi;
 	@echo "-- Built: \033[1m$@\033[0m"
 socktest:
-	@g++ -g -std=c++11 ../../WinNTKline/KlineUtil/IM/TCPsocket_unix.cpp -lpthread -o $(GEN)/socket_test.exe
+	@g++ -g -std=c++11 socktest.cpp -lpthread -Wno-vla-cxx-extension -o $(GEN)/socket_server
+	@g++ -g -std=c++11 socktest.cpp -lpthread -DCLIENT -Wno-vla-cxx-extension -o $(GEN)/socket_client
 	@echo "-- Built: \033[1m$@\033[0m"
 all:
 	@make pthdpool
 	@make pthdtest
 	@make socktest
 clean:
-	@rm -vf *.o $(OBJ)/pthdpool.o $(GEN)/pthdtest.exe
+	@rm -vrf *.o $(OBJ)/pthdpool.o $(GEN)/pthdtest.exe* $(GEN)/socket_*
