@@ -72,7 +72,9 @@ def delete_initial_block_comment(source):
     return lines if isinstance(source, list) else "\n".join(lines)
 
 def strip_comments(file_ext, code):
-    
+    """
+    删除代码注释
+    """
     patterns = COMMENT_PATTERNS.get(file_ext, [])
     if isinstance(code, str):
         code_lines = code.splitlines()
@@ -81,79 +83,85 @@ def strip_comments(file_ext, code):
 
     code_lines = delete_initial_block_comment(code_lines)
 
-    line_marker = [True] * len(code_lines)
-
-    # 字符串匹配，避免处理字符串内的内容
-    string_patterns = [
-        (r"'[^'\\]*(?:\\.[^'\\]*)*'", 0),   # 单引号字符串，支持转义
-        (r'"[^"\\]*(?:\\.[^"\\]*)*"', 0)    # 双引号字符串，支持转义
-    ]
-
-    for line_index, line in enumerate(code_lines):
-        string_matches = []
+    def get_string_ranges(line):
+        string_patterns = [
+            (r"'[^'\\]*(?:\\.[^'\\]*)*'", 0),
+            (r'"[^"\\]*(?:\\.[^"\\]*)*"', 0)
+        ]
+        ranges = []
         for pattern, _ in string_patterns:
             for match in re.finditer(pattern, line):
-                string_matches.append((match.start(), match.end()))
+                ranges.append((match.start(), match.end()))
+        return sorted(ranges)
 
-        # 记录非字符串区域
-        non_string_ranges = []
-        if not string_matches:
-            non_string_ranges.append((0, len(line)))
-        else:
-            prev_end = 0
-            for start, end in sorted(string_matches):
-                if start > prev_end:
-                    non_string_ranges.append((prev_end, start))
-                prev_end = max(prev_end, end)
-            if prev_end < len(line):
-                non_string_ranges.append((prev_end, len(line)))
+    def non_string_ranges(line, string_ranges):
+        if not string_ranges:
+            return [(0, len(line))]
+        result = []
+        prev_end = 0
+        for start, end in string_ranges:
+            if start > prev_end:
+                result.append((prev_end, start))
+            prev_end = max(prev_end, end)
+        if prev_end < len(line):
+            result.append((prev_end, len(line)))
+        return result
 
-        # 在非字符串区域中查找注释
-        for pattern, flags in patterns:
-            for match in re.finditer(pattern, line, flags=flags):
-                start_pos = match.start()
-                end_pos = match.end()
-                for range_start, range_end in non_string_ranges:
-                    if range_start <= start_pos < end_pos <= range_end:
-                        line_marker[line_index] = False
-                        break
+    def is_comment_in_non_string(line, pattern, flags, non_str_ranges):
+        for match in re.finditer(pattern, line, flags=flags):
+            start_pos, end_pos = match.start(), match.end()
+            for range_start, range_end in non_str_ranges:
+                if range_start <= start_pos < end_pos <= range_end:
+                    return True
+        return False
 
-    # 单行注释二次检查
-    single_line_comment_pattern = re.compile(r'^\s*//.*$', re.MULTILINE)
-    for i, line in enumerate(code_lines):
-        if single_line_comment_pattern.match(line):
-            line_marker[i] = False
+    def mark_comment_lines(code_lines, patterns):
+        line_marker = [True] * len(code_lines)
+        for idx, line in enumerate(code_lines):
+            string_ranges = get_string_ranges(line)
+            non_str_ranges = non_string_ranges(line, string_ranges)
+            for pattern, flags in patterns:
+                if is_comment_in_non_string(line, pattern, flags, non_str_ranges):
+                    line_marker[idx] = False
+                    break
+        return line_marker
 
-    processed = []
-    line_mapping = []
-    in_block_comment = False
+    def remove_single_line_comments(code_lines, line_marker):
+        single_line_comment_pattern = re.compile(r'^\s*//.*$', re.MULTILINE)
+        for i, line in enumerate(code_lines):
+            if single_line_comment_pattern.match(line):
+                line_marker[i] = False
 
-    for i, (line, keep) in enumerate(zip(code_lines, line_marker)):
-        if in_block_comment:
-            if '*/' in line:
+    def process_block_comments(code_lines, line_marker):
+        processed = []
+        in_block_comment = False
+        for i, (line, keep) in enumerate(zip(code_lines, line_marker)):
+            if in_block_comment:
+                if '*/' in line:
+                    end_pos = line.find('*/') + 2
+                    line = line[end_pos:].strip()
+                    in_block_comment = False
+                else:
+                    continue
+            if '/*' in line and '*/' not in line:
+                start_pos = line.find('/*')
+                line = line[:start_pos].strip()
+                in_block_comment = True
+            if '/*' in line and '*/' in line:
+                start_pos = line.find('/*')
                 end_pos = line.find('*/') + 2
-                line = line[end_pos:].strip()
-                in_block_comment = False
-            else:
-                continue
+                line = (line[:start_pos] + line[end_pos:]).strip()
+            if keep and line.strip():
+                processed.append(line.rstrip())
+        return processed
 
-        if '/*' in line and '*/' not in line:
-            start_pos = line.find('/*')
-            line = line[:start_pos].strip()
-            in_block_comment = True
+    line_marker = mark_comment_lines(code_lines, patterns)
+    remove_single_line_comments(code_lines, line_marker)
+    return process_block_comments(code_lines, line_marker)
 
-        if '/*' in line and '*/' in line:
-            start_pos = line.find('/*')
-            end_pos = line.find('*/') + 2
-            line = (line[:start_pos] + line[end_pos:]).strip()
-
-        if keep and line.strip():
-            processed.append(line.rstrip())
-            line_mapping.append(i + 1)
-
-    return processed
-
-def read_file(file_path, cache={}):
+def read_file(file_path, cache=None):
+    if cache is None:
+        cache = {}
     if file_path in cache:
         return cache[file_path]
     try:

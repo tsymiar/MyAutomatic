@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef unsigned char *POINTER;
+typedef unsigned char* POINTER;
 typedef unsigned short int uint2_t;
 typedef unsigned long int uint4_t;
 
@@ -15,8 +15,7 @@ typedef unsigned long int uint4_t;
 #define strcpy_s strcpy
 #endif
 
-typedef struct
-{
+typedef struct {
     uint4_t state[4];
     uint4_t count[2];
     unsigned char buffer[64];
@@ -64,7 +63,7 @@ void md5_round(unsigned int x[]) //MD5核心算法,共64轮
     FF(c, d, a, b, x[14], 17, 0xa679438e); /**//* 15 */
     FF(b, c, d, a, x[15], 22, 0x49b40821); /**//* 16 */
 
-                                           /**//* Round 2 */
+    /**//* Round 2 */
     GG(a, b, c, d, x[1], 5, 0xf61e2562);   /**//* 17 */
     GG(d, a, b, c, x[6], 9, 0xc040b340);   /**//* 18 */
     GG(c, d, a, b, x[11], 14, 0x265e5a51); /**//* 19 */
@@ -82,7 +81,7 @@ void md5_round(unsigned int x[]) //MD5核心算法,共64轮
     GG(c, d, a, b, x[7], 14, 0x676f02d9);  /**//* 31 */
     GG(b, c, d, a, x[12], 20, 0x8d2a4c8a); /**//* 32 */
 
-                                           /**//* Round 3 */
+    /**//* Round 3 */
     HH(a, b, c, d, x[5], 4, 0xfffa3942);   /**//* 33 */
     HH(d, a, b, c, x[8], 11, 0x8771f681);  /**//* 34 */
     HH(c, d, a, b, x[11], 16, 0x6d9d6122); /**//* 35 */
@@ -100,7 +99,7 @@ void md5_round(unsigned int x[]) //MD5核心算法,共64轮
     HH(c, d, a, b, x[15], 16, 0x1fa27cf8); /**//* 47 */
     HH(b, c, d, a, x[2], 23, 0xc4ac5665);  /**//* 48 */
 
-                                           /**//* Round 4 */
+    /**//* Round 4 */
     II(a, b, c, d, x[0], 6, 0xf4292244);   /**//* 49 */
     II(d, a, b, c, x[7], 10, 0x432aff97);  /**//* 50 */
     II(c, d, a, b, x[14], 15, 0xab9423a7); /**//* 51 */
@@ -119,7 +118,7 @@ void md5_round(unsigned int x[]) //MD5核心算法,共64轮
     II(b, c, d, a, x[9], 21, 0xeb86d391);  /**//* 64 */
 }
 
-void encode(unsigned char *output, uint4_t *input, unsigned int len)
+void encode(unsigned char* output, uint4_t* input, unsigned int len)
 {
     unsigned int i, j;
 
@@ -131,7 +130,7 @@ void encode(unsigned char *output, uint4_t *input, unsigned int len)
     }
 }
 
-void decode(uint4_t *output, unsigned char *input, unsigned int len)
+void decode(uint4_t* output, unsigned char* input, unsigned int len)
 {
     unsigned int i, j;
 
@@ -162,7 +161,7 @@ void md5_trans(uint4_t st[4], unsigned char block[64])
     FF(c, d, a, b, x[14], 17, 0xa679438e); /**//* 15 */
     FF(b, c, d, a, x[15], 22, 0x49b40821); /**//* 16 */
 
-                                           /**//* Round 2 */
+    /**//* Round 2 */
     GG(a, b, c, d, x[1], 5, 0xf61e2562);   /**//* 17 */
     GG(d, a, b, c, x[6], 9, 0xc040b340);   /**//* 18 */
     GG(c, d, a, b, x[11], 14, 0x265e5a51); /**//* 19 */
@@ -180,7 +179,7 @@ void md5_trans(uint4_t st[4], unsigned char block[64])
     GG(c, d, a, b, x[7], 14, 0x676f02d9);  /**//* 31 */
     GG(b, c, d, a, x[12], 20, 0x8d2a4c8a); /**//* 32 */
 
-                                           /**//* Round 3 */
+    /**//* Round 3 */
     HH(a, b, c, d, x[5], 4, 0xfffa3942);   /**//* 33 */
     HH(d, a, b, c, x[8], 11, 0x8771f681);  /**//* 34 */
     HH(c, d, a, b, x[11], 16, 0x6d9d6122); /**//* 35 */
@@ -198,7 +197,7 @@ void md5_trans(uint4_t st[4], unsigned char block[64])
     HH(c, d, a, b, x[15], 16, 0x1fa27cf8); /**//* 47 */
     HH(b, c, d, a, x[2], 23, 0xc4ac5665);  /**//* 48 */
 
-                                           /**//* Round 4 */
+    /**//* Round 4 */
     II(a, b, c, d, x[0], 6, 0xf4292244);   /**//* 49 */
     II(d, a, b, c, x[7], 10, 0x432aff97);  /**//* 50 */
     II(c, d, a, b, x[14], 15, 0xab9423a7); /**//* 51 */
@@ -223,7 +222,7 @@ void md5_trans(uint4_t st[4], unsigned char block[64])
     memset((POINTER)x, 0, sizeof(x));
 }
 
-void md5_init(MD5_CTX *context)
+void md5_init(MD5_CTX* context)
 {
     context->count[0] = context->count[1] = 0;
     context->state[0] = 0x67452301;
@@ -232,7 +231,7 @@ void md5_init(MD5_CTX *context)
     context->state[3] = 0x10325476;
 }
 
-void md5_update(MD5_CTX *context, unsigned char *input, unsigned int inputLen)
+void md5_update(MD5_CTX* context, unsigned char* input, unsigned int inputLen)
 {
     unsigned int i, index, partLen;
 
@@ -257,7 +256,7 @@ void md5_update(MD5_CTX *context, unsigned char *input, unsigned int inputLen)
     memcpy((POINTER)&context->buffer[index], (POINTER)&input[i], inputLen - i);
 }
 
-void md5_final(unsigned char digest[16], MD5_CTX *context)
+void md5_final(unsigned char digest[16], MD5_CTX* context)
 {
     unsigned char bits[8];
     unsigned int index, padLen;
@@ -286,7 +285,11 @@ void open_md5_file(FILE* fp, char dst[])
 {
     unsigned i, len, flen[2], x[16];
     fseek(fp, 0, SEEK_END);  //文件指针转到文件末尾
-    if ((len = ftell(fp)) == -1) { printf("Sorry! Can not calculate files which larger than 2 GB!\n"); fclose(fp); /*continue;*/ }  //ftell函数返回long,最大为2GB,超出返回-1
+    if ((len = ftell(fp)) == -1) {
+        printf("Sorry! Can not calculate files which larger than 2 GB!\n");
+        fclose(fp);
+        return; // 立即返回，避免后续使用已关闭的 fp
+    }  //ftell函数返回long,最大为2GB,超出返回-1
     rewind(fp);  //文件指针复位到文件头
     A = 0x67452301, B = 0xefcdab89, C = 0x98badcfe, D = 0x10325476; //初始化链接变量
     flen[1] = len / 0x20000000;     //flen单位是bit
@@ -311,20 +314,24 @@ void open_md5_file(FILE* fp, char dst[])
     printf("MD5Code: %s\n", dst);
 }
 
-void md5_to_hex(char *input, char *output)
+void md5_to_hex(char* md5, char* hex)
 {
+    if (md5 == NULL) {
+        if (hex) hex[0] = '\0';
+        return;
+    }
     MD5_CTX context;
-    unsigned int len = strlen(input);
+    unsigned int len = strnlen(md5, 1024); // Limit to 1024 to avoid over-read
     md5_init(&context);
-    md5_update(&context, (unsigned char *)input, len);
-    md5_final((unsigned char *)output, &context);
+    md5_update(&context, (unsigned char*)md5, len);
+    md5_final((unsigned char*)hex, &context);
 }
 
 /*从32字节的MD5字符串的中间截取16个字符*/
-char* get_Hash(char *md5, int len, char *dst)
+char* get_Hash(char* md5, int len, char* dst)
 {
-    char *in = md5;
-    char *out = dst;
+    char* in = md5;
+    char* out = dst;
     int m = 16;
     //int len = strlen(md5);  
     if (m > len) m = len - 8;
@@ -353,7 +360,7 @@ void hex_to_ascii(unsigned char* hex, char* ascii)
 
 int ascii_to_hex(char* ascii, char* hex)
 {
-    int len = strlen(ascii);
+    int len = strnlen(ascii, 1024); // Limit to 1024 to avoid over-read
     int idx, ii = 0;
     for (idx = 0; idx < len; idx += 2) {
         unsigned char high = ascii[idx];
@@ -386,7 +393,7 @@ char* get_md5_hex()
     printf("请输入要计算MD5值的字符串: ");
     gets_s(encrypt);
     encrypt[255] = '\0';
-    size_t len = strlen(encrypt);
+    size_t len = strnlen(encrypt, sizeof(encrypt));
     if (encrypt[len - 1] == '\n')
         encrypt[len - 1] = '\0';
     printf("计算值: ");
@@ -414,13 +421,13 @@ void test_f_md5()
 {
     char filename[216]; //文件名
     char md5[128];
-    FILE *fp = NULL;
+    FILE* fp = NULL;
     while (1) {
         printf("Input file: ");
         gets_s(filename);  //用get函数,避免scanf以空格分割数据
-                           //支持文件拖曳,但会多出双引号,该句处理多余的双引号
+        //支持文件拖曳,但会多出双引号,该句处理多余的双引号
         filename[215] = '\0';
-        size_t len = strlen(filename);
+        size_t len = strnlen(filename, sizeof(filename));
         if (filename[0] == 34)
             filename[len - 1] = 0, strcpy_s(filename, filename + 1);
         if (filename[len - 1] == 0xA)
