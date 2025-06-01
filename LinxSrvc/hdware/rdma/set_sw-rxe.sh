@@ -34,9 +34,9 @@ echo -- Checking RXE
 lsmod | grep -E 'rdma_rxe|ib_core'
 echo -- Setting RXE
 eth0=$(ip -brief link | awk '{print $1}' | grep en)
-sudo rdma link add rxe0 type rxe netdev $eth0
+sudo rdma link add rxe0 type rxe netdev "$eth0"
 echo -- Setting RXE MTU
-sudo ifconfig $eth0 mtu 9000 up
+sudo ifconfig "$eth0" mtu 9000 up
 sudo ip link set rxe0 up
 ibv_devinfo
 exit 0

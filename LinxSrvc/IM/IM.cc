@@ -564,9 +564,9 @@ type_thread_func monitor(void* arg)
                         *length = total = 48;
                         break;
                     case USERNAME:
-                        char mark[sizeof(g_usrMsg)];
-                        snprintf(mark, (18 + FiledSize * 2), "User: %s(--%s--);", g_usrMsg.usr, g_usrMsg.sign);
-                        mark[(18 + FiledSize * 2 - 1)] = '\0';
+                        char mark[(sizeof(g_usrMsg) > 18 + FiledSize * 2 ? sizeof(g_usrMsg) : 18 + FiledSize * 2)];
+                        snprintf(mark, sizeof(mark), "User: %s(--%s--);", g_usrMsg.usr, g_usrMsg.sign);
+                        mark[sizeof(mark) - 1] = '\0';
                         snprintf((sd_bufs + offset), sizeof(mark), "%s", mark);
                         *length = total = offset + sizeof(mark);
                         break;
@@ -1010,7 +1010,7 @@ type_thread_func monitor(void* arg)
                         if ((c - 32 > 0) && ((c - 32) % 8 == 0)
                             && (sd_bufs[c] == '0' || sd_bufs[c] == '\0' || sd_bufs[c] == '\x20'))
                             fprintf(stdout, " ");
-                        if ((c == 0 || c == '0') && j < 4)
+                        if (c == '0' && j < 4)
                             j++;
                         else
                             j = 0;
@@ -1292,14 +1292,28 @@ void func_waitpid(int signo)
             break;
         }
 #else
-        ssize_t len = read(g_filedes[0], &sock, sizeof(sock));
-        if (len < 0 || len != sizeof(sock)) {
-            fprintf(stderr, "Beyond filed size: %zd\n", len);
+        ssize_t total_ = 0;
+        char* sock_ = reinterpret_cast<char*>(&sock);
+        while (total_ < (ssize_t)sizeof(sock)) {
+            ssize_t len = read(g_filedes[0], sock_ + total_, sizeof(sock) - total_);
+            if (len < 0) {
+                fprintf(stderr, "Read error: %s\n", strerror(errno));
+                break;
+            }
+            if (len == 0) {
+                fprintf(stderr, "Read EOF: expected %zu, got %zd\n", sizeof(sock), total_);
+                break;
+            }
+            total_ += len;
+        }
+        if (total_ != (ssize_t)sizeof(sock)) {
+            fprintf(stderr, "Read size mismatch: expected %zu, got %zd\n", sizeof(sock), total_);
             break;
         }
         // if (len == 0) continue;
 #endif
         if (sock > 0) {
+            memset(msg, 0, sizeof(msg));
             memset(msg + 1, 0xf, 1);
             snprintf(msg + 2, 8, "%x", NE_VAL(-1));
             memcpy(msg + 8, "Fail: something wrong with peer !!!", 36);
@@ -1309,7 +1323,7 @@ void func_waitpid(int signo)
             } else {
                 fprintf(stderr, "Error(%zd) message to client - %s.\n", val, msg + 8);
             }
-            memset(msg, 0, 64);
+            memset(msg, 0, sizeof(msg));
         }
         snprintf(msg, 64, "Signal(%d): child process %d exit just now, sock=%d.\n", signo, pid, sock);
         write(STDERR_FILENO, msg, sizeof(msg));

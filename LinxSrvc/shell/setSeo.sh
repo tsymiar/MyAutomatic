@@ -1,3 +1,4 @@
+#!/bin/bash
 expect<<EOF
 set timeout 1
 spawn ./8927.sh

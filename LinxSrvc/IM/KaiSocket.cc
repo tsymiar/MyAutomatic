@@ -755,7 +755,7 @@ ssize_t KaiSocket::consume(Message& msg)
         } catch (const std::exception& e) {
             std::cerr << __FUNCTION__ << ": segmentation fault: " << e.what() << std::endl;
         }
-        if (size > 0) {
+        if (size >= 1) {
             m_msgQue->pop_front();
         }
     } while (msgQ == nullptr);
