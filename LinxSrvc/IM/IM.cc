@@ -1010,7 +1010,7 @@ type_thread_func monitor(void* arg)
                         if ((c - 32 > 0) && ((c - 32) % 8 == 0)
                             && (sd_bufs[c] == '0' || sd_bufs[c] == '\0' || sd_bufs[c] == '\x20'))
                             fprintf(stdout, " ");
-                        if (c == '0' && j < 4)
+                        if (j < 4)
                             j++;
                         else
                             j = 0;
@@ -1292,41 +1292,44 @@ void func_waitpid(int signo)
             break;
         }
 #else
-        ssize_t total_ = 0;
-        char* sock_ = reinterpret_cast<char*>(&sock);
-        while (total_ < (ssize_t)sizeof(sock)) {
-            ssize_t len = read(g_filedes[0], sock_ + total_, sizeof(sock) - total_);
+        ssize_t total = 0;
+        char* sock_0 = reinterpret_cast<char*>(&sock);
+        while (total < (ssize_t)sizeof(sock)) {
+            ssize_t len = read(g_filedes[0], sock_0 + total, sizeof(sock) - total);
             if (len < 0) {
                 fprintf(stderr, "Read error: %s\n", strerror(errno));
                 break;
             }
             if (len == 0) {
-                fprintf(stderr, "Read EOF: expected %zu, got %zd\n", sizeof(sock), total_);
+                fprintf(stderr, "Read EOF: expects %zu, got %zd!\n", sizeof(sock), total);
                 break;
             }
-            total_ += len;
+            if (total + len > (ssize_t)sizeof(sock)) {
+                fprintf(stderr, "Buffer overflow prevented: expects %zu, got %zd!\n", sizeof(sock), total + len);
+                break;
+            }
+            total += len;
         }
-        if (total_ != (ssize_t)sizeof(sock)) {
-            fprintf(stderr, "Read size mismatch: expected %zu, got %zd\n", sizeof(sock), total_);
+        if (total != (ssize_t)sizeof(sock)) {
+            fprintf(stderr, "Read size mismatch: expects %zu, got %zd!\n", sizeof(sock), total);
             break;
         }
-        // if (len == 0) continue;
 #endif
         if (sock > 0) {
             memset(msg, 0, sizeof(msg));
             memset(msg + 1, 0xf, 1);
             snprintf(msg + 2, 8, "%x", NE_VAL(-1));
-            memcpy(msg + 8, "Fail: something wrong with peer !!!", 36);
+            memcpy(msg + 8, "Maybe something wrong with peer !!!", 36);
             ssize_t val = send(sock, msg, 64, 0);
             if (val < 0) {
-                fprintf(stderr, "Error sending message to client: %s\n", strerror(errno));
+                fprintf(stderr, "Sending message with error: %s\n", strerror(errno));
             } else {
-                fprintf(stderr, "Error(%zd) message to client - %s.\n", val, msg + 8);
+                fprintf(stderr, "Sent (%zd) messages to client - %s.\n", val, msg + 8);
             }
             memset(msg, 0, sizeof(msg));
         }
         snprintf(msg, 64, "Signal(%d): child process %d exit just now, sock=%d.\n", signo, pid, sock);
-        write(STDERR_FILENO, msg, sizeof(msg));
+        ::write(STDERR_FILENO, msg, sizeof(msg));
     }
 #endif
 }

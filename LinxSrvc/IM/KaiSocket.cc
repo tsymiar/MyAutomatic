@@ -752,11 +752,9 @@ ssize_t KaiSocket::consume(Message& msg)
             }
             msg.head = msgQ->head; // fixme memmove_avx_unaligned_erms
             memmove(&msg.data, &msgQ->data, sizeof(Message::Payload));
+            m_msgQue->pop_front();
         } catch (const std::exception& e) {
             std::cerr << __FUNCTION__ << ": segmentation fault: " << e.what() << std::endl;
-        }
-        if (size >= 1) {
-            m_msgQue->pop_front();
         }
     } while (msgQ == nullptr);
     // if 1: success, 0: nothing
