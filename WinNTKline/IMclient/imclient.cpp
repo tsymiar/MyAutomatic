@@ -22,6 +22,7 @@ parseRcvMsg(void* lprcv)
             continue;
         memset(rcv_buf, 0, 256);
         int size = recv(client->sock, rcv_buf, 256, 0);
+        SetRecvState(RCV_ERR);
         if (size == 2 && (rcv_buf[1] == '\0')) {
             Sleep(1);
             continue;
@@ -50,14 +51,13 @@ parseRcvMsg(void* lprcv)
                     fprintf(stdout, "%c", (unsigned char)rcv_buf[c]);
             }
 #ifndef _WIN32
-            if (ui_val > 15)
+            if (ui_val > 0xf)
                 ui_val = GETIMAGE;
-            if (msg->uiCmdMsg != 0 && msg->uiCmdMsg < 16)
+            if (msg->uiCmdMsg != 0 && msg->uiCmdMsg < 0x10)
 #endif
                 fprintf(stdout, "\n");
             SetRecvState(RCV_TCP);
         } else {
-            SetRecvState(RCV_ERR);
             if (g_printed >= 0) {
 #ifdef _WIN32
                 fprintf(stdout, "\rReceiving...");
@@ -141,6 +141,7 @@ parseRcvMsg(void* lprcv)
         }
         if (ui_val == 0xf) {
             SetRecvState(RCV_SCC);
+            continue;
         }
         LeaveCriticalSection(&wrcon);
         if (size <= 0 || (msg->value[0] == 'e' && msg->value[1] == '8')) {
@@ -230,8 +231,10 @@ StMsgContent* ParseChatData(StMsgContent& content)
     }
     default:
     {
-        if (content.value[0] == 0x0) {
-            MessageBox(0, const_cast<char*>("content.value is null."), const_cast<char*>("message"), MB_OK);
+        if (content.uiCmdMsg > EXITGROUP && content.value[0] == 0x0) {
+            char msg[64];
+            snprintf(msg, 64, "Message[%x] content is null.", content.uiCmdMsg);
+            MessageBox(0, const_cast<char*>(msg), const_cast<char*>("message"), MB_OK);
             return &content;
         }
     }
@@ -318,7 +321,6 @@ int main(int argc, char* argv[])
             msg.extraMsg.cmd[0] = msg.uiCmdMsg = NETNDT;
         }
         if (received > RCV_ERR) {
-            SetRecvState(RCV_ERR);
             if (SendClientMessage(ParseChatData(msg)) < 0) {
                 fprintf(stdout, "Error while set chatting message.\n");
                 return -1;
