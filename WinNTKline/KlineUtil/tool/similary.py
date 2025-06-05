@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 import os
 import difflib
 import argparse
@@ -71,10 +73,146 @@ def delete_initial_block_comment(source):
 
     return lines if isinstance(source, list) else "\n".join(lines)
 
-def strip_comments(file_ext, code):
+def deal_comments_by_state_machine(lines, file_ext):
     """
-    删除代码注释
+    使用状态机精确移除注释，保留字符串内的注释符号，并跟踪原始行号。
+    返回: (处理后的代码行列表, 对应的原始行号列表)
     """
+    if file_ext in ['.txt', '.md', '.json', '.yml', '.yaml']:
+        return code.splitlines()  # 非代码文件直接返回
+    lines = []
+    if isinstance(code, str):
+        lines = code.splitlines()
+    else:
+        lines = list(code)
+    # 根据文件扩展名确定注释规则
+    c_family_comment = {'line': ['//'], 'block': [('/*', '*/')]}
+    comment_rules = {
+        '.py': {'line': ['#'], 'block': []},
+        '.java': c_family_comment,
+        '.js': c_family_comment,
+        '.c': c_family_comment,
+        '.cpp': c_family_comment,
+        '.rs': c_family_comment,
+        '.swift': c_family_comment,
+        '.kt': c_family_comment,
+        '.ts': c_family_comment,
+        '.css': {'line': [], 'block': [('/*', '*/')]},
+        '.scss': c_family_comment,
+        '.less': c_family_comment,
+        '.html': {'line': [], 'block': [('<!--', '-->')]},
+        '.xml': {'line': [], 'block': [('<!--', '-->')]},
+    }
+    rules = comment_rules.get(file_ext, {'line': [], 'block': []})
+    line_comment = rules['line'][0] if rules['line'] else None
+    block_comment = rules['block'][0] if rules['block'] else None
+
+    state = 'NORMAL'  # 状态: NORMAL, BLOCK_COMMENT, LINE_COMMENT, STRING_DOUBLE, STRING_SINGLE
+    current_block_end = None
+    striped_lines = []      # 处理后的代码行
+    original_line_nums = []  # 对应的原始行号
+    current_line = []
+    escape = False
+    
+    # 当前处理的行号（从0开始）
+    current_line_num = 0
+    
+    for line_idx, line in enumerate(lines):
+        i = 0
+        n = len(line)
+        current_line_num = line_idx  # 记录当前原始行号
+        
+        # 标记当前行是否产生了有效输出
+        line_has_output = False
+        
+        while i < n:
+            char = line[i]
+            next_chars = line[i:i+2]  # 用于检查多字符注释符号
+
+            if state == 'NORMAL':
+                # 检查块注释开始
+                if block_comment and next_chars == block_comment[0]:
+                    state = 'BLOCK_COMMENT'
+                    current_block_end = block_comment[1]
+                    i += len(block_comment[0])
+                    continue
+                # 检查行注释开始
+                elif line_comment and line.startswith(line_comment, i):
+                    state = 'LINE_COMMENT'
+                    i += len(line_comment)
+                    break  # 跳过行剩余部分
+                # 处理字符串
+                elif char == '"':
+                    state = 'STRING_DOUBLE'
+                    current_line.append(char)
+                    line_has_output = True
+                elif char == "'":
+                    state = 'STRING_SINGLE'
+                    current_line.append(char)
+                    line_has_output = True
+                # 普通字符
+                else:
+                    if not char.isspace() or current_line or line_has_output:
+                        current_line.append(char)
+                        line_has_output = True
+                    if char == '\\':  # 处理转义字符
+                        escape = True
+                    else:
+                        escape = False
+
+            elif state == 'BLOCK_COMMENT':
+                # 检查块注释结束
+                if next_chars == current_block_end:
+                    state = 'NORMAL'
+                    i += len(current_block_end)
+                    continue
+                # 否则跳过注释内容
+
+            elif state in ('STRING_DOUBLE', 'STRING_SINGLE'):
+                current_line.append(char)
+                line_has_output = True
+                # 检查字符串结束（忽略转义后的引号）
+                if not escape and (
+                    (state == 'STRING_DOUBLE' and char == '"') or 
+                    (state == 'STRING_SINGLE' and char == "'")
+                ):
+                    state = 'NORMAL'
+                # 更新转义状态
+                escape = (char == '\\' and not escape)
+
+            i += 1  # 移动到下一个字符
+
+        # 行结束处理
+        if state == 'LINE_COMMENT':
+            state = 'NORMAL'  # 行注释结束
+            if current_line:
+                # 添加当前行输出并记录原始行号
+                striped_lines.append(''.join(current_line))
+                original_line_nums.append(current_line_num)
+                current_line = []
+        elif state in ('STRING_DOUBLE', 'STRING_SINGLE'):
+            # 字符串跨行时保留换行符
+            current_line.append('\n')
+            # 不立即结束行，继续到下一行
+        elif state == 'NORMAL' and current_line:
+            # 添加当前行输出并记录原始行号
+            striped_lines.append(''.join(current_line))
+            original_line_nums.append(current_line_num)
+            current_line = []
+        # BLOCK_COMMENT 状态继续到下一行，不添加内容
+        elif line_has_output and not current_line:
+            # 处理特殊情况：整行都是空格但被标记为有输出
+            striped_lines.append('')
+            original_line_nums.append(current_line_num)
+
+    # 处理文件末尾剩余内容
+    if current_line:
+        striped_lines.append(''.join(current_line))
+        original_line_nums.append(current_line_num)
+
+    return striped_lines, original_line_nums
+
+def deal_comments_by_line_marker(file_ext, code):
     patterns = COMMENT_PATTERNS.get(file_ext, [])
     if isinstance(code, str):
         code_lines = code.splitlines()
@@ -126,7 +264,7 @@ def strip_comments(file_ext, code):
                     break
         return line_marker
 
-    def remove_single_line_comments(code_lines, line_marker):
+    def deal_single_line_comments(code_lines, line_marker):
         single_line_comment_pattern = re.compile(r'^\s*//.*$', re.MULTILINE)
         for i, line in enumerate(code_lines):
             if single_line_comment_pattern.match(line):
@@ -156,10 +294,17 @@ def strip_comments(file_ext, code):
         return processed
 
     line_marker = mark_comment_lines(code_lines, patterns)
-    remove_single_line_comments(code_lines, line_marker)
+    deal_single_line_comments(code_lines, line_marker)
     return process_block_comments(code_lines, line_marker)
 
-def read_file(file_path, cache=None):
+def strip_comments(file_ext, code, use_state_machine=False):
+    if not use_state_machine:
+        striped_lines = deal_comments_by_line_marker(file_ext, code)
+    else:
+        striped_lines, original_lines = deal_comments_by_state_machine(code, file_ext)
+    return striped_lines
+
+def parse_file(file_path, cache=None):
     if cache is None:
         cache = {}
     if file_path in cache:
@@ -198,8 +343,8 @@ def build_index(directory, ignore_dirs, ignore_files):
     return index
 
 def generate_diff(file1, file2):
-    lines1, orig1 = read_file(file1)
-    lines2, orig2 = read_file(file2)
+    lines1, orig1 = parse_file(file1)
+    lines2, orig2 = parse_file(file2)
     differ = difflib.SequenceMatcher(None, lines1, lines2)
     diff = []
     def calculate_original_line_map(lines, orig_count):
@@ -244,8 +389,8 @@ def calculate_similarity(lines1, lines2, orig1, orig2):
     }
 
 def file_compare(file1, file2, base_dir, show_diff):
-    lines1, orig1 = read_file(file1)
-    lines2, orig2 = read_file(file2)
+    lines1, orig1 = parse_file(file1)
+    lines2, orig2 = parse_file(file2)
     result = calculate_similarity(lines1, lines2, orig1, orig2)
     result.update(
         {
