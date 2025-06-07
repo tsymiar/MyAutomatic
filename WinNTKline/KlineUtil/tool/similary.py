@@ -73,13 +73,13 @@ def delete_initial_block_comment(source):
 
     return lines if isinstance(source, list) else "\n".join(lines)
 
-def deal_comments_by_state_machine(lines, file_ext):
+def deal_comments_by_state_machine(code, file_ext):
     """
     使用状态机精确移除注释，保留字符串内的注释符号，并跟踪原始行号。
     返回: (处理后的代码行列表, 对应的原始行号列表)
     """
     if file_ext in ['.txt', '.md', '.json', '.yml', '.yaml']:
-        return code.splitlines()  # 非代码文件直接返回
+        return code.splitlines()  # 非代码文件直接返回原始行
     lines = []
     if isinstance(code, str):
         lines = code.splitlines()
@@ -113,10 +113,8 @@ def deal_comments_by_state_machine(lines, file_ext):
     original_line_nums = []  # 对应的原始行号
     current_line = []
     escape = False
-    
-    # 当前处理的行号（从0开始）
     current_line_num = 0
-    
+
     for line_idx, line in enumerate(lines):
         i = 0
         n = len(line)
@@ -173,7 +171,7 @@ def deal_comments_by_state_machine(lines, file_ext):
                 line_has_output = True
                 # 检查字符串结束（忽略转义后的引号）
                 if not escape and (
-                    (state == 'STRING_DOUBLE' and char == '"') or 
+                    (state == 'STRING_DOUBLE' and char == '"') or
                     (state == 'STRING_SINGLE' and char == "'")
                 ):
                     state = 'NORMAL'
@@ -291,20 +289,23 @@ def deal_comments_by_line_marker(file_ext, code):
                 line = (line[:start_pos] + line[end_pos:]).strip()
             if keep and line.strip():
                 processed.append(line.rstrip())
+        i = 0
         return processed
 
     line_marker = mark_comment_lines(code_lines, patterns)
     deal_single_line_comments(code_lines, line_marker)
     return process_block_comments(code_lines, line_marker)
 
-def strip_comments(file_ext, code, use_state_machine=False):
+def strip_comments(file_ext, code, use_state_machine):
     if not use_state_machine:
         striped_lines = deal_comments_by_line_marker(file_ext, code)
     else:
         striped_lines, original_lines = deal_comments_by_state_machine(code, file_ext)
+        original_lines = [str(i + 1) for i in original_lines]
+        print([f"{line}  # Original line: {orig}" for line, orig in zip(striped_lines, original_lines)])
     return striped_lines
 
-def parse_file(file_path, cache=None):
+def parse_file(file_path, use_state_machine, cache=None):
     if cache is None:
         cache = {}
     if file_path in cache:
@@ -317,7 +318,7 @@ def parse_file(file_path, cache=None):
         with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
             content = f.read()
         original_lines = content.count("\n") + 1
-        lines = (strip_comments(file_ext, content), original_lines)
+        lines = (strip_comments(file_ext, content, use_state_machine), original_lines)
         cache[file_path] = lines
         return lines
     except Exception as e:
@@ -342,9 +343,9 @@ def build_index(directory, ignore_dirs, ignore_files):
             index[f].append(rel_path)
     return index
 
-def generate_diff(file1, file2):
-    lines1, orig1 = parse_file(file1)
-    lines2, orig2 = parse_file(file2)
+def generate_diff(file1, file2, use_state_machine):
+    lines1, orig1 = parse_file(file1, use_state_machine)
+    lines2, orig2 = parse_file(file2, use_state_machine)
     differ = difflib.SequenceMatcher(None, lines1, lines2)
     diff = []
     def calculate_original_line_map(lines, orig_count):
@@ -388,13 +389,13 @@ def calculate_similarity(lines1, lines2, orig1, orig2):
         "valid2": len(set2),
     }
 
-def file_compare(file1, file2, base_dir, show_diff):
-    lines1, orig1 = parse_file(file1)
-    lines2, orig2 = parse_file(file2)
+def file_compare(file1, file2, base_dir, show_diff, use_state_machine=False):
+    lines1, orig1 = parse_file(file1, use_state_machine)
+    lines2, orig2 = parse_file(file2, use_state_machine)
     result = calculate_similarity(lines1, lines2, orig1, orig2)
     result.update(
         {
-            "diff": generate_diff(file1, file2) if show_diff else "",
+            "diff": generate_diff(file1, file2, use_state_machine) if show_diff else "",
             "file_name": os.path.relpath(file1, base_dir),
             "path1": file1,
             "path2": file2,
@@ -441,9 +442,25 @@ def dir_compare(dir1, dir2, show_diff, ignore_dirs, ignore_files):
     total["ratio"] = total["common"] / denominator
     return total, details, unmatched
 
-def print_results(total, details, unmatched, use_color=True):
+def print_summary(total, details, unmatched, color):
+    """简化版结果显示"""
+    print(f"\n{color('cyan')}=== 统计摘要 ===")
+    print(f"{color('green')}▏ 匹配文件对: {len(details)} 对")
+    print(f"{color('yellow')}▏ 源目录独有: {len(unmatched['source'])} 个")
+    print(f"{color('yellow')}▏ 目标目录独有: {len(unmatched['target'])} 个")
+    print(f"\n{color('cyan')}=== 综合分析 ===")
+    print(f"{color('green')}▏ 重复总行数: {total['common']}")
+    print(f"{color('magenta')}▏ 总原始行数: {total['orig1']} → 有效 {total['valid1']}")
+    print(f"{color('magenta')}▏ 总目标行数: {total['orig2']} → 有效 {total['valid2']}")
+    print(f"{color('yellow')}▏ 综合重复率: {total['ratio']:.2%} (基于有效行数)")
+
+def print_detail(total, details, unmatched, show_detail, use_color=True):
     """增强版结果显示"""
     color = lambda c: getattr(Fore, c.upper()) if use_color else ""
+
+    if not show_detail:
+        print_summary(total, details, unmatched, color)
+        return
 
     # 未匹配文件
     print(f"\n{color('cyan')}=== 未匹配文件 ===")
@@ -476,24 +493,15 @@ def print_results(total, details, unmatched, use_color=True):
         )
         print(line)
 
-    # 统计摘要
-    print(f"\n{color('cyan')}=== 统计摘要 ===")
-    print(f"{color('green')}▏ 匹配文件对: {len(details)} 对")
-    print(f"{color('yellow')}▏ 源目录独有: {len(unmatched['source'])} 个")
-    print(f"{color('yellow')}▏ 目标目录独有: {len(unmatched['target'])} 个")
-    # 综合分析
-    print(f"\n{color('cyan')}=== 综合分析 ===")
-    print(f"{color('green')}▏ 重复总行数: {total['common']}")
-    print(f"{color('magenta')}▏ 总原始行数: {total['orig1']} → 有效 {total['valid1']}")
-    print(f"{color('magenta')}▏ 总目标行数: {total['orig2']} → 有效 {total['valid2']}")
-    print(f"{color('yellow')}▏ 综合重复率: {total['ratio']:.2%} (基于有效行数)")
+    print_summary(total, details, unmatched, color)
 
 def parse_arguments():
     """解析命令行参数"""
     parser = argparse.ArgumentParser(description="高级代码相似性分析工具")
     parser.add_argument("source", help="源文件或目录路径")
     parser.add_argument("target", help="目标文件或目录路径")
-    parser.add_argument("--diff", action="store_true", help="显示差异详情")
+    parser.add_argument("--diff", action="store_true", help="显示代码差异详情")
+    parser.add_argument("--detail", action="store_true", help="显示文件差异详情")
     parser.add_argument(
         "--ignore-dirs",
         type=lambda x: [d.strip() for d in x.split(",") if d.strip()],
@@ -565,7 +573,7 @@ def main():
                         print(file_info["diff"])
 
             # 传递unmatched参数
-            print_results(total, details, unmatched, use_color)
+            print_detail(total, details, unmatched, args.detail, use_color)
 
         else:
             print(f"{color('red')}错误：需要两个文件或两个目录")
