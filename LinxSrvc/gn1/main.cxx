@@ -23,6 +23,7 @@ struct option { const char* _1; void* _2; void* _3; char _4; };
 #include <string>
 #include <thread>
 #include <vector>
+#include <algorithm>
 #ifdef OpenMP
 #include <omp.h>
 #endif
@@ -60,6 +61,14 @@ struct Runtime {
     uint64_t total;
 };
 
+struct FrameField {
+    std::string name;
+    int length;  // size of the field in bytes
+    bool is_size; // is this field a size field?
+    bool has_fixed_value; // is this field a fixed value?
+    uint64_t fixed_value; // constant value if has_fixed_value is true
+};
+
 namespace {
     const char* g_file = "test";
     uint64_t g_total = 1048576;
@@ -68,6 +77,9 @@ namespace {
     int g_endian = 0;
     int g_interval = 1;
     std::vector<uint64_t> g_begins;
+    std::string g_frame_desc; // frame header description
+    std::vector<FrameField> g_frame_fields; // parsed frame fields
+    size_t g_header_len = 0; // total length of the frame header fields
     Runtime g_runtime = {};
 };
 
@@ -84,9 +96,12 @@ void parse_args(int argc, char** argv);
 void msleep(unsigned long ms);
 bool isSmallEndian();
 void byteSwap16(uint16_t* val);
-void byteSwap321(uint32_t* val);
 void byteSwap32(uint32_t* val);
+void byteSwap64(uint64_t* val);
 uint64_t gettime4usec();
+std::vector<std::string> split_string(const std::string& s, char delimiter);
+std::vector<FrameField> parse_frame_fields(const std::string& frame_desc);
+void write_field_value(FILE* fp, uint64_t value, int length);
 
 int main(int argc, char* argv[])
 {
@@ -99,6 +114,15 @@ int main(int argc, char* argv[])
     }
     parse_args(argc, argv);
 #endif
+
+    // 解析帧头描述
+    if (!g_frame_desc.empty()) {
+        g_frame_fields = parse_frame_fields(g_frame_desc);
+        for (const auto& field : g_frame_fields) {
+            g_header_len += field.length;
+        }
+    }
+
     std::thread task(
         [&]()->void {
             while (true) {
@@ -150,19 +174,40 @@ int main(int argc, char* argv[])
         values.push_back(0);
         length++;
     }
-    g_runtime.total = g_total * length;
-    if (g_total < size) {
-        fprintf(stderr, "Total size must upper than unit size, actually: %lu < %zu.\n", g_total, size);
+
+    // calculate frame size
+    size_t payload_len = length * size; // incremental numbers part
+    size_t frame_len = g_header_len + payload_len; // total frame length
+    if (g_total < frame_len) {
+        fprintf(stderr, "Total size must be at least one frame (%zu bytes), actually: %lu.\n",
+            frame_len, g_total);
         usage_exit(argv[0]);
-    } else {
-        g_runtime.kmg = true;
     }
-    uint64_t count = g_total / size;
+
+    // total frame count
+    uint64_t frame_count = g_total / frame_len;
+    g_runtime.total = frame_count * frame_len;
+    g_runtime.kmg = true;
+
     uint64_t start = gettime4usec();
     int status = 0;
-#pragma omp parallel for // Parallelize the outer loop
-    for (uint64_t j = 0; j < count; j++) {
-        // #pragma omp parallel for private(i) reduction(+:length)
+
+    for (uint64_t frame_idx = 0; frame_idx < frame_count; frame_idx++) {
+        // write frame header
+        if (!g_frame_fields.empty()) {
+            for (const auto& field : g_frame_fields) {
+                uint64_t value = 0;
+                if (field.is_size) {
+                    value = frame_len; // dynamic size of the frame
+                } else if (field.has_fixed_value) {
+                    value = field.fixed_value;
+                }
+                write_field_value(fp, value, field.length);
+                g_runtime.bytes += field.length;
+            }
+        }
+
+        // write incremental values
         for (size_t i = 0; i < length; i++) {
             Number number{};
             number._64v = values[i];
@@ -172,23 +217,15 @@ int main(int argc, char* argv[])
                         byteSwap16(reinterpret_cast<uint16_t*>(&number._16v));
                         break;
                         case sizeof(uint64_t) :
-#ifdef __GNUC__
-                            number._64v = __builtin_bswap64(reinterpret_cast<uint64_t>(number._64v));
-#else
-                            if (small) {
-                                number._64v = htonll(number._64v);
-                            } else {
-                                number._64v = ntohll(number._64v);
-                            }
-#endif
-                        break;
-                        case sizeof(uint32_t) :
-                        default:
-                            byteSwap32(reinterpret_cast<uint32_t*>(&number._32v));
+                            byteSwap64(reinterpret_cast<uint64_t*>(&number._64v));
                             break;
+                            case sizeof(uint32_t) :
+                            default:
+                                byteSwap32(reinterpret_cast<uint32_t*>(&number._32v));
+                                break;
                 }
             }
-            int64_t wroteSize = fwrite(&number, size, 1, fp);
+            size_t wroteSize = fwrite(&number, size, 1, fp);
             if (wroteSize != 1) {
                 fprintf(stderr, "fwrite(file=%s) failed: %s\n", g_file, strerror(errno));
                 status = -2;
@@ -201,11 +238,114 @@ int main(int argc, char* argv[])
                 values[i] -= g_interval;
             }
         }
+        if (status < 0) break;
     }
+
     fclose(fp);
     if (status < 0) return status;
-    fprintf(stdout, "\n%lu bytes write done, average speed %.3f M/s.\n", static_cast<uint64_t>(length * count * size),
-        (g_runtime.total * 1.f) / (gettime4usec() - start) * 0x100000 / 1000000.f);
+    uint64_t total_bytes = frame_count * frame_len;
+    uint64_t elapsed = gettime4usec() - start;
+    double speed = (elapsed > 0) ? (total_bytes * 1.0 / elapsed) * 1000000.0 / (1024 * 1024) : 0;
+    fprintf(stdout, "\n%lu bytes write done, average speed %.3f MB/s.\n",
+        total_bytes, speed);
+    return 0;
+}
+
+// divide a string by a delimiter
+std::vector<std::string> split_string(const std::string& s, char delimiter)
+{
+    std::vector<std::string> tokens;
+    size_t start = 0;
+    size_t end = s.find(delimiter);
+    while (end != std::string::npos) {
+        tokens.push_back(s.substr(start, end - start));
+        start = end + 1;
+        end = s.find(delimiter, start);
+    }
+    tokens.push_back(s.substr(start));
+    return tokens;
+}
+
+// parse command line arguments
+std::vector<FrameField> parse_frame_fields(const std::string& frame_desc)
+{
+    std::vector<FrameField> fields;
+    std::vector<std::string> field_descs = split_string(frame_desc, ',');
+    for (const auto& desc : field_descs) {
+        FrameField field;
+        size_t pos1 = desc.find(':');
+        if (pos1 == std::string::npos) {
+            fprintf(stderr, "Invalid frame field: %s\n", desc.c_str());
+            continue;
+        }
+        field.name = desc.substr(0, pos1);
+        std::string rest = desc.substr(pos1 + 1);
+        size_t pos2 = rest.find('=');
+        if (pos2 != std::string::npos) {
+            std::string len_str = rest.substr(0, pos2);
+            std::string value_str = rest.substr(pos2 + 1);
+            try {
+                field.length = std::stoi(len_str);
+            } catch (...) {
+                field.length = 0;
+            }
+            if (value_str.substr(0, 2) == "0x") {
+                field.fixed_value = std::stoull(value_str.substr(2), nullptr, 16);
+            } else {
+                field.fixed_value = std::stoull(value_str);
+            }
+            field.has_fixed_value = true;
+        } else {
+            try {
+                field.length = std::stoi(rest);
+            } catch (...) {
+                field.length = 0;
+            }
+            field.has_fixed_value = false;
+            field.fixed_value = 0;
+        }
+        field.is_size = (field.name == "size");
+        if (field.length <= 0) {
+            fprintf(stderr, "Invalid field length: %d for field '%s'\n", field.length, field.name.c_str());
+            continue;
+        }
+        fields.push_back(field);
+    }
+    return fields;
+}
+
+// write a field value to the file
+void write_field_value(FILE* fp, uint64_t value, int length)
+{
+    // check if value exceeds the maximum for the given length
+    uint64_t max_value = (length == 8) ? 0xFFFFFFFFFFFFFFFFULL : (1ULL << (length * 8)) - 1;
+    if (value > max_value) {
+        value = value & max_value; // Truncate the overflow part
+    }
+
+    bool need_swap = (g_endian == 1) != isSmallEndian();
+    if (length == 1) {
+        uint8_t v = static_cast<uint8_t>(value);
+        fwrite(&v, 1, 1, fp);
+    } else if (length == 2) {
+        uint16_t v = static_cast<uint16_t>(value);
+        if (need_swap) byteSwap16(&v);
+        fwrite(&v, 1, 2, fp);
+    } else if (length == 4) {
+        uint32_t v = static_cast<uint32_t>(value);
+        if (need_swap) byteSwap32(&v);
+        fwrite(&v, 1, 4, fp);
+    } else if (length == 8) {
+        uint64_t v = static_cast<uint64_t>(value);
+        if (need_swap) byteSwap64(&v);
+        fwrite(&v, 1, 8, fp);
+    } else {
+        // Unsupported length, write byte by byte
+        for (int i = 0; i < length; i++) {
+            uint8_t byte = (value >> (i * 8)) & 0xFF;
+            fwrite(&byte, 1, 1, fp);
+        }
+    }
 }
 
 template<class T>
@@ -237,7 +377,7 @@ bool isSmallEndian()
         char c;
     } v;
     v.i = 1;
-    return (!(v.c == 1));
+    return (v.c == 1);
 }
 
 void byteSwap16(uint16_t* val)
@@ -247,28 +387,26 @@ void byteSwap16(uint16_t* val)
     *val = (v1 | v0);
 }
 
-void byteSwap321(uint32_t* val)
-{
-    uint32_t v3 = ((uint32_t)(*val) & 0xff000000) >> 24;
-    uint32_t v2 = ((uint32_t)(*val) & 0x00ff0000) >> 8;
-    uint32_t v1 = ((uint32_t)(*val) & 0x0000ff00) << 8;
-    uint32_t v0 = ((uint32_t)(*val) & 0x000000ff) << 24;
-    *val = (uint32_t)(v0 | v1 | v2 | v3);
-}
-
-void byteSwap24(uint32_t* val)
-{
-    uint32_t v1 = ((uint32_t)(*val) & 0xff) << 16;
-    uint32_t v0 = ((uint32_t)(*val) & 0xff0000) >> 16;
-    *val = (uint32_t)(v0 | v1);
-}
-
 void byteSwap32(uint32_t* val)
 {
     uint32_t v = *val;
-    *val = (((v & 0xff00) << 24)
-        | ((v & 0xff00) << 8) | ((v & 0xff0000) >> 8)
-        | ((v >> 24) & 0xff));
+    *val = (((v & 0x000000FF) << 24) |
+        ((v & 0x0000FF00) << 8) |
+        ((v & 0x00FF0000) >> 8) |
+        ((v & 0xFF000000) >> 24));
+}
+
+void byteSwap64(uint64_t* val)
+{
+    uint64_t v = *val;
+    *val = (((v & 0x00000000000000FFULL) << 56) |
+        ((v & 0x000000000000FF00ULL) << 40) |
+        ((v & 0x0000000000FF0000ULL) << 24) |
+        ((v & 0x00000000FF000000ULL) << 8) |
+        ((v & 0x000000FF00000000ULL) >> 8) |
+        ((v & 0x0000FF0000000000ULL) >> 24) |
+        ((v & 0x00FF000000000000ULL) >> 40) |
+        ((v & 0xFF00000000000000ULL) >> 56));
 }
 
 uint64_t size2bytes(const std::string& value)
@@ -309,6 +447,8 @@ void usage_exit(const char* argv0)
         "-i | --interval  VALUE           Interval value between next number. (default: 1)\n"
         "-s | --start     HEX             Start number value 0x123. (default: 0x0)\n"
         "                                 Multi-channels if separate by ','. (eg.: 0x0,0x321,0xff)\n"
+        "-F | --frame     DESC            Frame header description (eg: \"magic:2=0xAA55,size:2,seq:1\")\n"
+        "                                 Fields: name:length[=fixed_value], 'size' field will be auto-filled\n"
         "\n",
         argv0
     );
@@ -325,12 +465,13 @@ void parse_args(int argc, char** argv)
             { "endian",   no_argument,       NULL, 'e' },
             { "interval", no_argument,       NULL, 'i' },
             { "start",    no_argument,       NULL, 's' },
+            { "frame",    no_argument,       NULL, 'F' },
             { 0 }
     };
     while (1) {
         int idx;
         char* tail;
-        int c = getopt_long(argc, argv, "f:n:b:d:e:i:s:", opts, &idx);
+        int c = getopt_long(argc, argv, "f:n:b:d:e:i:s:F:", opts, &idx);
         if (c == -1) break;
 
         switch (c) {
@@ -364,6 +505,9 @@ void parse_args(int argc, char** argv)
             break;
         case 's':
             g_begins = string2vector<uint64_t>(optarg);
+            break;
+        case 'F':
+            g_frame_desc = optarg;
             break;
         case '?':
             usage_exit(argv[0]);
