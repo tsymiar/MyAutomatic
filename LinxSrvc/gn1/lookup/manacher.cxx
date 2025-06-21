@@ -56,7 +56,7 @@ std::pair<size_t, std::vector<uint8_t>> ManacherFileProcessor::findLongestPalind
     const std::string& filePath)
 {
     std::ifstream file(filePath, std::ios::binary);
-    if (!file) throw std::runtime_error("File open failed");
+    if (!file) throw std::runtime_error("File open failed!");
 
     std::vector<uint8_t> buffer(chunkSize_);
     size_t overlapSize = 100;
@@ -84,4 +84,31 @@ std::pair<size_t, std::vector<uint8_t>> ManacherFileProcessor::findLongestPalind
     }
 
     return { maxPos_, maxData_ };
+}
+
+// 模拟数据库查找函数（实际项目中应替换为真实数据库接口）
+static const uint64_t* db_lookup(const uint64_t* val, size_t len, uint64_t dst) {
+    
+    return nullptr;
+}
+
+const uint64_t* ManacherFileProcessor::find_uint64(const uint64_t* val, size_t len, uint64_t dst, bool mem) {
+    // 1. 先从内存或数据库查找
+    if (mem) {
+        for (size_t i = 0; i < len; ++i) {
+            if (val[i] == dst) return &val[i];
+        }
+    } else {
+        const uint64_t* dbResult = db_lookup(val, len, dst);
+        if (dbResult) return dbResult;
+    }
+    // 2. 二分查找（假设val已排序）
+    size_t first = 0, last = len;
+    while (first < last) {
+        size_t mid = first + (last - first) / 2;
+        if (val[mid] == dst) return &val[mid];
+        else if (val[mid] < dst) first = mid + 1;
+        else last = mid;
+    }
+    return nullptr;
 }
