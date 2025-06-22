@@ -7,15 +7,16 @@ class ManacherFileProcessor {
 public:
     ManacherFileProcessor(size_t chunkSize);
 
-    // 预处理数据，将每个字符之间插入特殊分隔符
-    void preprocessData(const std::vector<uint8_t>& input, std::vector<uint8_t>& output);
+    // Preprocess data by inserting a special separator between each character
+    void preprocessData(const std::vector<uint8_t>& src, std::vector<uint8_t>& dst);
 
-    // 处理每个块
+    // Process each chunk
     void processChunk(const std::vector<uint8_t>& chunk, size_t fileOffset);
 
-    // 查找指定uint64_t数据，未找到返回nullptr
+    // Find the specified uint64_t data, return nullptr if not found
     const uint64_t* find_uint64(const uint64_t* val, size_t len, uint64_t dst, bool mem = true);
-    // 查找最长回文
+
+    // Find the longest palindrome
     std::pair<size_t, std::vector<uint8_t>> findLongestPalindrome(const std::string& filePath);
 
 private:

@@ -7,13 +7,13 @@ ManacherFileProcessor::ManacherFileProcessor(size_t chunkSize)
     : maxLen_(0), maxPos_(0), chunkSize_(chunkSize)
 { }
 
-void ManacherFileProcessor::preprocessData(const std::vector<uint8_t>& input, std::vector<uint8_t>& output)
+void ManacherFileProcessor::preprocessData(const std::vector<uint8_t>& src, std::vector<uint8_t>& dst)
 {
-    output.clear();
-    output.push_back(0xFF); // Start with a sentinel value
-    for (auto c : input) {
-        output.push_back(c);
-        output.push_back(0xFF);
+    dst.clear();
+    dst.push_back(0xFF); // Start with a sentinel value
+    for (auto c : src) {
+        dst.push_back(c);
+        dst.push_back(0xFF);
     }
 }
 
@@ -86,14 +86,16 @@ std::pair<size_t, std::vector<uint8_t>> ManacherFileProcessor::findLongestPalind
     return { maxPos_, maxData_ };
 }
 
-// 模拟数据库查找函数（实际项目中应替换为真实数据库接口）
-static const uint64_t* db_lookup(const uint64_t* val, size_t len, uint64_t dst) {
-    
+// Simulated database lookup function (should be replaced with a real database interface in production)
+static const uint64_t* db_lookup(const uint64_t* val, size_t len, uint64_t dst)
+{
+
     return nullptr;
 }
 
-const uint64_t* ManacherFileProcessor::find_uint64(const uint64_t* val, size_t len, uint64_t dst, bool mem) {
-    // 1. 先从内存或数据库查找
+const uint64_t* ManacherFileProcessor::find_uint64(const uint64_t* val, size_t len, uint64_t dst, bool mem)
+{
+    // 1. First, search in memory or database
     if (mem) {
         for (size_t i = 0; i < len; ++i) {
             if (val[i] == dst) return &val[i];
@@ -102,7 +104,7 @@ const uint64_t* ManacherFileProcessor::find_uint64(const uint64_t* val, size_t l
         const uint64_t* dbResult = db_lookup(val, len, dst);
         if (dbResult) return dbResult;
     }
-    // 2. 二分查找（假设val已排序）
+    // 2. Binary search (assuming val is sorted)
     size_t first = 0, last = len;
     while (first < last) {
         size_t mid = first + (last - first) / 2;
@@ -112,3 +114,4 @@ const uint64_t* ManacherFileProcessor::find_uint64(const uint64_t* val, size_t l
     }
     return nullptr;
 }
+// If a pattern is provided, perform KMP search
