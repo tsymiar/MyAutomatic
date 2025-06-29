@@ -3,13 +3,12 @@
 **/*/.*
 **/*/[Mm]odule*
 **/*/*.mod.*
-#temp
+#user
 **/*.tmp
 *.xx*
 *.user
 .vs*
-#test
-test/lcov
+*.suo
 #target
 bin
 gen
