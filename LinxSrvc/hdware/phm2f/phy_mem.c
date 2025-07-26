@@ -11,6 +11,7 @@
 #include <linux/kref.h>
 #include <linux/mutex.h>
 #include <linux/list.h>
+#include <linux/version.h>
 
 #define DEVICE_NAME "phy_mem_drv"
 #define IOCTL_MAGIC 0x1234
@@ -60,7 +61,7 @@ struct phy_mem_private {
 
 static int major_number;
 static struct class* dev_class;
-static struct device* g_dev;
+static struct device* device;
 
 // Resource release function
 static void release_private(struct kref* kref)
@@ -317,18 +318,21 @@ static int __init phy_mem_drv_init(void)
     major_number = register_chrdev(0, DEVICE_NAME, &fops);
     if (major_number < 0)
         return major_number;
-
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 0, 0)
+    dev_class = class_create(DEVICE_NAME);
+#else
     dev_class = class_create(THIS_MODULE, DEVICE_NAME);
+#endif
     if (IS_ERR(dev_class)) {
         unregister_chrdev(major_number, DEVICE_NAME);
         return PTR_ERR(dev_class);
     }
 
-    g_dev = device_create(dev_class, NULL, MKDEV(major_number, 0), NULL, DEVICE_NAME);
-    if (IS_ERR(g_dev)) {
+    device = device_create(dev_class, NULL, MKDEV(major_number, 0), NULL, DEVICE_NAME);
+    if (IS_ERR(device)) {
         class_destroy(dev_class);
         unregister_chrdev(major_number, DEVICE_NAME);
-        return PTR_ERR(g_dev);
+        return PTR_ERR(device);
     }
 
     pr_info("Multi-file physical memory driver loaded\n");

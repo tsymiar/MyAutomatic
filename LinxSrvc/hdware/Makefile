@@ -8,6 +8,8 @@ define Built
   @echo "-- Built: \033[1m$1\033[0m"
 endef
 export GEN KO Built OS
+null:
+	@echo "\033[7;41m$(shell uname -a)\033[0m"
 chigpio:
 	@gcc -g -DGPIO test.c -o $(GEN)/chigpio
 	$(call Built,$@)
@@ -43,23 +45,24 @@ pipefifo:
 	@gcc -g -DPIPE_FIFO test.c -o $(GEN)/pipefifo
 	$(call Built,$@)
 all:
+	@make null
 	@make chigpio
 	@make mes909
 	@make dirty
 ifneq ($(OS), )
-	@echo Making $(OS) driver
+	@echo "\033[4;3mMaking $(OS) driver\033[0m"
 	@make -C chsdev
 	@make -C virtex
 	@make RDMA
 	@make -C phm2f || true
 	@make chstest
 ifeq ($(OS), Linux)
-	@echo Making image/video
+	@echo "\033[4;3mMaking image/video\033[0m"
 	@make image
 	@make video
 endif
 endif
-	@echo Making tools
+	@echo "\033[4;3mMaking tools\033[0m"
 	@make pipefifo
 clean:
 	@rm -rvf $(GEN)/chigpio* $(GEN)/mes909* $(GEN)/dirtyhack* $(GEN)/chstest*

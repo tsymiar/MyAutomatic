@@ -98,6 +98,29 @@ if(JETSON_TARGET)
         dl
     )
 else()
+    execute_process(
+        COMMAND uname -r
+        OUTPUT_VARIABLE KERNEL_VERSION_RAW
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    message(STATUS "Raw kernel version: ${KERNEL_VERSION_RAW}")
+    string(REGEX MATCH "^([0-9]+)\\.([0-9]+)\\.([0-9]+)" _ ${KERNEL_VERSION_RAW})
+    set(KERNEL_MAJOR ${CMAKE_MATCH_1})
+    set(KERNEL_MINOR ${CMAKE_MATCH_2})
+    set(KERNEL_PATCH ${CMAKE_MATCH_3})
+    set(TARGET_MAJOR 6)
+    set(TARGET_MINOR 0)
+    set(TARGET_PATCH 0)
+    if(
+        (KERNEL_MAJOR GREATER TARGET_MAJOR) OR
+        (KERNEL_MAJOR EQUAL TARGET_MAJOR AND KERNEL_MINOR GREATER TARGET_MINOR) OR
+        (KERNEL_MAJOR EQUAL TARGET_MAJOR AND KERNEL_MINOR EQUAL TARGET_MINOR AND KERNEL_PATCH GREATER_EQUAL TARGET_PATCH)
+    )        
+        message(WARNING "❌ Current kernel version >= ${TARGET_MAJOR}.${TARGET_MINOR}.${TARGET_PATCH}")
+        RETURN(${PROJECT_NAME})
+    else()
+        message(STATUS "✅ Building with supports target kernel V:${TARGET_MAJOR}.${TARGET_MINOR}.${TARGET_PATCH}")
+    endif()
     # FFmpeg
     find_package(Threads REQUIRED)
     find_package(PkgConfig REQUIRED)
@@ -133,6 +156,11 @@ else()
         ${SDL2_INCLUDE_DIRS}
     )
     link_directories(${AVCODEC_LIBRARY_DIRS})
+
+    list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+    find_package(FFmpeg REQUIRED)
+    include_directories(${FFmpeg_INCLUDE_DIRS})
+
     set(EXTRA_LIBRARIES
         ${CMAKE_THREAD_LIBS_INIT}
         ${AVCODEC_LIBRARIES}
@@ -142,6 +170,7 @@ else()
         ${SWRESAMPLE_LIBRARIES}
         ${SDL2_LIBRARIES}
         Threads::Threads
+        ${FFmpeg_LIBRARIES}
     )
 endif()
 

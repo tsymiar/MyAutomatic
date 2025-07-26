@@ -27,7 +27,7 @@ env:
 		echo "Fetching RDMA dependencies..."; \
 		{ \
 			if [ "$$(id -u)" -ne 0 ]; then \
-				echo "\033[33mWarning\033[0m: Must be superuser to continue."; \
+				echo "\033[1;33mWarning\033[0m: Must be superuser to continue."; \
 			fi; \
 			$(shell pwd)/set_sw-rxe.sh; \
 		} \
