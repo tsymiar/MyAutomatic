@@ -7,6 +7,7 @@
 #include <linux/uaccess.h>
 #include <linux/slab.h>
 #include <linux/poll.h>
+#include <linux/version.h>
 
 #define DEVICE_NUMBER 1                     //设备数量
 #define DEVICE_SNAME "stachardevice"        //静态名称
@@ -337,7 +338,12 @@ static int __init device_init(void)
     cdev_init(&g_cdev, &virtex_dev_ops);                                       //初始化cdev
     g_cdev.owner = THIS_MODULE;
     cdev_add(&g_cdev, g_devno, DEVICE_NUMBER);                                //注册到内核
-    g_class = class_create(THIS_MODULE, DEVICE_CLASS_NAME);                   //注册类
+    //注册类
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 0, 0)
+    g_class = class_create(DEVICE_CLASS_NAME);
+#else
+    g_class = class_create(THIS_MODULE, DEVICE_CLASS_NAME);
+#endif
     g_device = device_create(g_class, NULL, g_devno, NULL, DEVICE_NODE_NAME); //注册设备
     init_queue(&g_queue);
     return 0;

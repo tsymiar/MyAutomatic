@@ -1,14 +1,14 @@
 all:
-	@echo Making IM.exe client.exe etc.
+	@echo "\033[4;3mMaking IM.exe client.exe etc.\033[0m"
 	@make -C IM
-	@echo Making hdware thread etc.
+	@echo "\033[4;3mMaking hdware thread etc.\033[0m"
 	@make -C hdware all
 	@make -C thread all
-	@echo Making webserver
+	@echo "\033[4;3mMaking webserver\033[0m"
 	@make -C webev build
-	@echo Making gSOAPverify
+	@echo "\033[4;3mMaking gSOAPverify\033[0m"
 	@make -C gSOAPverify || true
-	@echo Making CMakeLists
+	@echo "\033[4;3mMaking CMakeLists\033[0m"
 	@make cmake
 cmake:
 	@ if [ ! -d build ]; then mkdir -p build; else echo Deleting built files; rm -rf build/*; fi;
