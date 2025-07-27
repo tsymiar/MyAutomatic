@@ -109,19 +109,22 @@ else()
     set(KERNEL_MINOR ${CMAKE_MATCH_2})
     set(KERNEL_PATCH ${CMAKE_MATCH_3})
     set(TARGET_MAJOR 6)
-    set(TARGET_MINOR 0)
+    set(TARGET_MINOR 8)
     set(TARGET_PATCH 0)
     if(
         (KERNEL_MAJOR GREATER TARGET_MAJOR) OR
         (KERNEL_MAJOR EQUAL TARGET_MAJOR AND KERNEL_MINOR GREATER TARGET_MINOR) OR
         (KERNEL_MAJOR EQUAL TARGET_MAJOR AND KERNEL_MINOR EQUAL TARGET_MINOR AND KERNEL_PATCH GREATER_EQUAL TARGET_PATCH)
-    )        
-        message(WARNING "❌ Current kernel version >= ${TARGET_MAJOR}.${TARGET_MINOR}.${TARGET_PATCH}")
-        RETURN(${PROJECT_NAME})
+    )
+        if(NOT APPLE AND NOT CMAKESYSTEMNAME MATCHES "Darwin")
+            message(WARNING "❌ Current kernel >= ${TARGET_MAJOR}.${TARGET_MINOR}.${TARGET_PATCH}, mocking unsupported features")
+            set(EXTRA_SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/mock/mock.c)
+            RETURN(${PROJECT_NAME})
+        endif()
     else()
-        message(STATUS "✅ Building with supports target kernel V:${TARGET_MAJOR}.${TARGET_MINOR}.${TARGET_PATCH}")
+        message(STATUS "✅ Building with target kernel < V:${TARGET_MAJOR}.${TARGET_MINOR}.${TARGET_PATCH}")
     endif()
-    # FFmpeg
+    # FFmpeg, SDL2 dependencies
     find_package(Threads REQUIRED)
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(AVCODEC libavcodec)
@@ -129,10 +132,19 @@ else()
     pkg_check_modules(AVUTIL libavutil)
     pkg_check_modules(SWSCALE libswscale)
     pkg_check_modules(SWRESAMPLE libswresample)
+    execute_process(COMMAND which ffmpeg RESULT_VARIABLE FFMPEG_FOUND)
     execute_process(COMMAND which apt-get RESULT_VARIABLE APT_GET_FOUND)
-    if(APT_GET_FOUND EQUAL 0)
+    execute_process(COMMAND which yum RESULT_VARIABLE YUM_FOUND)
+    if(NOT FFMPEG_FOUND EQUAL 0)
+        if(APT_GET_FOUND EQUAL 0)
+            set(PACKAGE_MANAGER "apt-get")
+        elseif(YUM_FOUND EQUAL 0)
+            set(PACKAGE_MANAGER "yum")
+        else()
+            message(FATAL_ERROR "No package manager(apt-get|yum) found, please manually install missing dependencies")
+        endif()
         execute_process(COMMAND 
-            sudo apt-get install -y
+            sudo ${PACKAGE_MANAGER} install -y
             ffmpeg
             libavcodec-dev
             libavformat-dev
@@ -175,7 +187,7 @@ else()
 endif()
 
 file(GLOB SRC_FILE_LIST "*[^.h]*.c*[^.txt]*" "*.hpp" "*.c")
-add_executable(${PROJECT_NAME} ${SRC_FILE_LIST})
+add_executable(${PROJECT_NAME} ${SRC_FILE_LIST} ${EXTRA_SRC_FILES})
 
 target_link_libraries(${PROJECT_NAME}
     ${EXTRA_LIBRARIES}

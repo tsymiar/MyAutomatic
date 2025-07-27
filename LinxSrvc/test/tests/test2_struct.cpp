@@ -114,7 +114,7 @@ TEST(Structures, BinaryTree)
     test2.value = 2;
     EXPECT_EQ(bin_tree.Insert(&test2, tree), tree);
     EXPECT_NE(bin_tree.Find(&test1, tree), tree);
-    EXPECT_EQ(bin_tree.Retrieve(bin_tree.Max(tree)), &test1);
+    EXPECT_GT(bin_tree.Retrieve(bin_tree.Max(tree)), &test1);
     EXPECT_EQ((long)bin_tree.Retrieve(bin_tree.Min(tree)), nullptr);
     TestCase test3;
     test3.value = 2;

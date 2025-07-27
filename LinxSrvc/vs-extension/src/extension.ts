@@ -93,8 +93,8 @@ async function selectFolder(prompt: string): Promise<string | undefined> {
 
 async function getIgnoreExtensions(): Promise<string[]> {
 	const input = await vscode.window.showInputBox({
-		prompt: 'Enter file extensions to ignore (comma separated, e.g., .tmp,.log)',
-		placeHolder: '.tmp, .log, .bak'
+		prompt: 'Enter file extensions to ignore (comma separated, e.g., .tmp,.log ...)',
+		placeHolder: '.bak, .log, .tmp, txt'
 	});
 
 	if (!input) { return []; }
