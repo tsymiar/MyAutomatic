@@ -57,12 +57,12 @@ ifneq ($(OS), )
 	@make -C phm2f || true
 	@make chstest
 ifeq ($(OS), Linux)
-	@echo "\033[4;3mMaking image/video\033[0m"
+	@echo "\033[4;3mMaking v4l2 tools\033[0m"
 	@make image
 	@make video
 endif
 endif
-	@echo "\033[4;3mMaking tools\033[0m"
+	@echo "\033[4;3mMaking pipe/fifo\033[0m"
 	@make pipefifo
 clean:
 	@rm -rvf $(GEN)/chigpio* $(GEN)/mes909* $(GEN)/dirtyhack* $(GEN)/chstest*
