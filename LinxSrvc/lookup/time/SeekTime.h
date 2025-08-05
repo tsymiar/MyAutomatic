@@ -19,7 +19,7 @@ public:
 
 private:
     SeekTimeContent parseFileFrame(SelectOffset position, int64_t timestamp, uint64_t minpos = 0);
-    std::vector<SeekTimeContent> sortFramebyTime(SelectOffset selectOffset, int64_t timestamp, SeekTimeContent& fileinfo);
+    std::vector<SeekTimeContent> sortFramebyTime(SelectOffset selectOffset, uint64_t timestamp, SeekTimeContent& fileinfo);
 
 private:
     std::map<std::string, std::vector<SelectTime> > m_seekTimeMap{};

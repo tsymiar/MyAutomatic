@@ -65,7 +65,7 @@ int TimeDBMgr::queryTimeOffset(SelectValue seek, std::vector<SeekTimeValue>& see
     if (fileid != 0)
         fileid1 = fileid;
     char sql[SQL_LEN] = { 0 };
-    sprintf(sql, "select %s,%s,%s,%s from %s where %s>=%ld and %s<=%ld and %s=%d ",
+    sprintf(sql, "select %s,%s,%s,%s from %s where %s>=%lu and %s<=%lu and %s=%d ",
         FIELD_TIME,
         FIELD_OFFSET,
         FIELD_SIZE,
@@ -102,10 +102,10 @@ void TimeDBMgr::setDetailByFileName(const std::string& fileName, const FileTimeD
     printf("sql:[%s](%d)\n", sql.c_str(), __LINE__);
 }
 
-void TimeDBMgr::insertContentNoDuplex(const SeekTimeContent* content)
+void TimeDBMgr::insertContentNoDuplex(SeekTimeContent* content)
 {
     int fileid = 0;
-    if (fileid == 0 || getFileIdbyName(m_filename, fileid) < 0) {
+    if (getFileIdbyName(m_filename, fileid) < 0) {
         printf("File ID is 0, cannot insert content!\n");
         std::string sql = "INSERT INTO " TABLE_FILE_MAPPING " (" FIELD_FILENAME "," FIELD_FIRST_OFFSET "," FIELD_LAST_OFFSET "," FIELD_FIRST_TIME "," FIELD_LAST_TIME
             ") SELECT '" +
@@ -123,11 +123,12 @@ void TimeDBMgr::insertContentNoDuplex(const SeekTimeContent* content)
         FIELD_FILEID);
     ssql += sql;
 
-    sprintf(sql, "SELECT %ld,%lu,%lu,%d WHERE NOT EXISTS",
+    sprintf(sql, "SELECT %lu,%lu,%lu,%d WHERE NOT EXISTS",
         content->value.timestamp,
         content->value.offset,
         content->value.size,
-        content->fileid);
+        fileid);
+    content->fileid = fileid;
     ssql += sql;
 
     sprintf(sql, "(SELECT 1 FROM %s WHERE %s = %lu);",
@@ -151,5 +152,6 @@ int TimeDBMgr::getFileIdbyName(const std::string& filename, int& fileid)
         FIELD_FILENAME,
         filename.c_str());
     printf("sql:[%s](%d)\n", sql, __LINE__);
+    fileid = 0;
     return 0;
 }

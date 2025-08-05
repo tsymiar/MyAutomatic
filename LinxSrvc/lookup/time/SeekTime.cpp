@@ -24,9 +24,13 @@ SeekTime::~SeekTime()
 
 int SeekTime::init(const std::string& dbName)
 {
+    if (m_dbMgr != NULL) {
+        delete m_dbMgr;
+        m_dbMgr = NULL;
+    }
     m_dbMgr = new(std::nothrow) TimeDBMgr();
-    if (m_dbMgr != NULL || m_dbMgr->connect(dbName) != 0) {
-        ERROR("connect(%s) failed!\n", dbName.c_str());
+    if (m_dbMgr == NULL || m_dbMgr->connect(dbName) != 0) {
+        ERROR("connect(%s) failed: %s\n", dbName.c_str(), strerror(errno));
         return -1;
     }
     m_dbMgr->create();
@@ -257,7 +261,8 @@ int SeekTime::seekFileDataTime(std::vector<SeekTimeContent>& fileinfos)
     for (auto it : m_seekTimeMap) {
         for (auto at : it.second) {
             SeekTimeContent fileinfo{};
-            strncpy(fileinfo.fileName, it.first.c_str(), MAX_PATH_LEN);
+            strncpy(fileinfo.fileName, it.first.c_str(), MAX_PATH_LEN - 1);
+            fileinfo.fileName[MAX_PATH_LEN - 1] = '\0';
             printf("--- '%s', selecting time=%lu\n", fileinfo.fileName, at.average());
             // check first if time is in database
             if (getTimefromDatabase(m_dbMgr, at, fileinfo, fileinfos)) {
@@ -319,11 +324,11 @@ int SeekTime::seekFileDataTime(std::vector<SeekTimeContent>& fileinfos)
             }
         }
     }
-    printf("--- parse file frame cost %.3fs\n", (getUsecTime() - beginTime) * 1.f / 1000000.0f);
+    printf("--- Parse file frame cost %.3fs\n", (getUsecTime() - beginTime) * 1.f / 1000000.0f);
     return status;
 }
 
-std::vector<SeekTimeContent> SeekTime::sortFramebyTime(SelectOffset selectOffset, int64_t timestamp, SeekTimeContent& fileinfo)
+std::vector<SeekTimeContent> SeekTime::sortFramebyTime(SelectOffset selectOffset, uint64_t timestamp, SeekTimeContent& fileinfo)
 {
     std::vector<SeekTimeContent> seekTimes{};
     {
@@ -335,16 +340,15 @@ std::vector<SeekTimeContent> SeekTime::sortFramebyTime(SelectOffset selectOffset
         uint64_t fileSize = ftell(m_file);
         uint64_t position = selectOffset.average();
         fseek(m_file, position, SEEK_SET);
-        uint32_t windSize = 0x100000;
-        uint8_t buffer[windSize]; // 1MB
-        memset(buffer, 0, sizeof(buffer));
+        uint8_t frmBuff[0x100000]; // 1MB
+        memset(frmBuff, 0, sizeof(frmBuff));
         size_t bytes = 0;
         int current = 0;
         bool once = true;
-        while ((bytes = fread(buffer, 1, sizeof(buffer), m_file)) > 0) {
+        while ((bytes = fread(frmBuff, 1, sizeof(frmBuff), m_file)) > 0) {
             for (size_t i = 0; i <= bytes - sizeof(uint64_t); i++) {
-                if (*(uint64_t*)(buffer + i) == CONST_FRAME_HEAD) {
-                    UserFileFrameHeader* header = (UserFileFrameHeader*)(buffer + i);
+                if (*(uint64_t*)(frmBuff + i) == CONST_FRAME_HEAD) {
+                    UserFileFrameHeader* header = (UserFileFrameHeader*)(frmBuff + i);
                     comidx.value.offset = position + i;
                     comidx.value.size = header->len;
                     comidx.value.timestamp = header->timestamp;
@@ -361,7 +365,7 @@ std::vector<SeekTimeContent> SeekTime::sortFramebyTime(SelectOffset selectOffset
                 break;
             }
             current++;
-            printf("--- %d last 0x%x parsed, seek at 0x%lx.\n", current, windSize, position);
+            printf("--- %d last 1MB parsed, seek at 0x%lx.\n", current, position);
             fseek(m_file, position, SEEK_SET);
         }
         fseek(m_file, 0, SEEK_SET);
