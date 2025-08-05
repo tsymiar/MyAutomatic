@@ -1374,8 +1374,12 @@ bool sock_was_valid(const type_socket sock, bool rd, long ms)
     }
 
     if (status < 0) {
-        if (errno != 0)
+        if (errno != 0) {
             std::cerr << "select error: " << strerror(errno) << std::endl;
+        } else {
+            std::cerr << "select returned an error with no errno set." << std::endl;
+        }
+        exit(0);
     } else if (status == 0) {
         std::cout << "select timeout (" << timeout.tv_sec << ":" << timeout.tv_usec << ")" << std::endl;
     } else {

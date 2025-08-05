@@ -119,7 +119,7 @@ def deal_comments_by_state_machine(code, file_ext):
         i = 0
         n = len(line)
         current_line_num = line_idx  # 记录当前原始行号
-        
+
         # 标记当前行是否产生了有效输出
         line_has_output = False
         
@@ -289,7 +289,7 @@ def deal_comments_by_line_marker(file_ext, code):
                 line = (line[:start_pos] + line[end_pos:]).strip()
             if keep and line.strip():
                 processed.append(line.rstrip())
-        i = 0
+            i = 0
         return processed
 
     line_marker = mark_comment_lines(code_lines, patterns)
