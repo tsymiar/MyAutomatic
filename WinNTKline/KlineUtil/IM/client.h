@@ -47,7 +47,7 @@ typedef struct WSADATA {
 #define gets_s(c,v) fgets(c,v,stdin)
 #define TRUE true
 #ifndef scanf_s
-#define scanf_s(x, y, ...) scanf((x), (y))
+#define scanf_s(...) scanf(__VA_ARGS__)
 #ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wformat"
 #pragma GCC diagnostic ignored "-Wformat-extra-args"
@@ -135,7 +135,7 @@ typedef struct CLIENT {
     sockaddr_in srvaddr;
     CRITICAL_SECTION wrcon;
     char url[64];
-    int flag = 0;
+    bool flag = false;
     volatile int status = 0;
     void* Dlg;
     void(*fp2p)(void*);
@@ -284,8 +284,8 @@ int p2pMessage(unsigned char* userName, int UserIP, unsigned int UserPort, char 
 #ifdef _WIN32
 int SetClientDlg(void* Wnd);
 #endif
-int IsChatActive();
-void SetChatActive(int flag);
+bool isChatActive();
+void setChatActive(bool flag = true);
 int GetRecvState();
-void SetRecvState(int state);
+void SetRecvState(RCV_STATE state);
 #endif

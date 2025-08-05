@@ -150,7 +150,7 @@ parseRcvMsg(void* lprcv)
             char title[32];
             snprintf(title, 32, "%s:%d", inet_ntoa(client->srvaddr.sin_addr), client->srvaddr.sin_port);
             MessageBox(0, detail, title, MB_OK);
-            SetChatActive(size);
+            setChatActive();
             closesocket(client->sock);
 #ifdef _WIN32
             return;
@@ -284,7 +284,8 @@ int main(int argc, char* argv[])
     int comm = 1;
 #endif
     while (1) {
-        if (IsChatActive() < 0) {
+        if (!isChatActive()) {
+            fprintf(stderr, "Chat is NOT active, exiting...\n");
             return CloseChat();
         }
         StMsgContent msg;
@@ -300,13 +301,21 @@ int main(int argc, char* argv[])
             comm = CHATWITH;
         }
         msg.extraMsg.cmd[0] = msg.uiCmdMsg = comm;
-        while (IsChatActive() == 0) { ; }
+        while (isChatActive()) { ; }
         comm++;
 #else
         unsigned int comm = 0;
         if (received >= RCV_SCC) {
             fprintf(stdout, "Select a command [0x1 - 0xd] >: ");
-            if (scanf("%x", &comm) <= 0) {
+            char val[32] = { 0 };
+            if (!fgets(val, sizeof(val), stdin)) {
+                fprintf(stdout, "fgets error, exit.\n");
+                break;
+            }
+            if (val[0] == '\n') {
+                continue;
+            }
+            if (sscanf(val, "%x", &comm) <= 0) {
                 fprintf(stdout, "Command not in integer format, exit.\n");
                 break;
             }

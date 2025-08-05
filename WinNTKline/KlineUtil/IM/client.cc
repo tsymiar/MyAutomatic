@@ -16,9 +16,9 @@ runtime(void* param)
     InitializeCriticalSection(&section);
     StClient* g_client = reinterpret_cast<StClient*>(param);
     while (1) {
-        char rcv_buf[256];
-        if (g_client->flag == 0)
+        if (!g_client->flag)
             continue;
+        char rcv_buf[256];
         memset(rcv_buf, 0, 256);
         int len = recv(g_client->sock, rcv_buf, 256, 0);
         EnterCriticalSection(&section);
@@ -33,7 +33,7 @@ runtime(void* param)
             snprintf(title, 32, "%s:%d", inet_ntoa(g_client->srvaddr.sin_addr), g_client->srvaddr.sin_port);
             MessageBox(0, detail, title, MB_OK);
             if (len == -1) {
-                g_client->flag = -1;
+                g_client->flag = false;
                 closesocket(g_client->sock);
 #ifdef _WIN32
                 return -1;
@@ -138,7 +138,7 @@ void* Chat_Msg(void* func)
 #endif
 {
     if (connect(g_client.sock, (struct sockaddr*)&g_client.srvaddr, sizeof(g_client.srvaddr)) == SOCKET_ERROR) {
-        std::cerr << "call connect() fail " << "[" <<
+        std::cerr << "call connect() fail: " << "[" <<
             GetLastErrorToString(WSAGetLastError()).c_str()
             << "] " << std::endl;
         WSACleanup();
@@ -149,7 +149,6 @@ void* Chat_Msg(void* func)
 #endif // _WIN32
     }
     Pthreadt threads;
-    g_client.flag = 1;
     _beginthreadex(NULL, 0, (_beginthreadex_proc_type)func, &g_client, 0, &threads);
     return 0;
 }
@@ -173,9 +172,10 @@ int StartChat(int error,
 #ifndef _WIN32
                 return (void*)0;
 #endif
-            };
+                };
         }
     }
+    setChatActive();
     Pthreadt threads;
     return (int)_beginthreadex(NULL, 0, (_beginthreadex_proc_type)Chat_Msg, (void*)func, 0, &threads);
 }
@@ -211,7 +211,7 @@ int SetClientDlg(void* Wnd)
 #endif
 int SendClientMessage(StMsgContent* msg, bool ignore)
 {
-    if (g_client.flag < 0) {
+    if (!g_client.flag) {
         MessageBox(0, const_cast<char*>("Connection status error, will exit!"), const_cast<char*>("Quit"), MB_OK);
         return (g_client.error = -1);
     }
@@ -245,7 +245,7 @@ RecvThreadProc(void* PrimaryUDP)
     P2P_NETWORK* P2Psock = reinterpret_cast<P2P_NETWORK*>(PrimaryUDP);
     int len = sizeof(P2Psock->addr);
     for (;;) {
-        if (g_client.flag == 0 || P2Psock->socket == 0)
+        if (!g_client.flag || P2Psock->socket == 0)
             continue;
         char rcvbuf[256];
         memset(rcvbuf, 0, 256);
@@ -267,7 +267,6 @@ RecvThreadProc(void* PrimaryUDP)
             }
             continue;
         } else {
-            g_client.flag = 2;
             in_addr peer;
 #ifdef _WIN32
             peer.S_un.S_addr = P2Psock->addr.sin_addr.S_un.S_addr;
@@ -317,7 +316,7 @@ int p2pMessage(unsigned char* userName, int UserIP, unsigned int UserPort, char 
         std::cout << "socket binding failure!" << std::endl;
         return 0;
     }
-    if (g_client.flag != 2) {
+    if (g_client.flag) {
         //没有接收到目标主机的回应，认为目标主机的端口
         //映射没有打开，那么发送请求到服务器要求“打洞”。
         StMsgContent MessageHost;
@@ -365,7 +364,7 @@ int p2pMessage(unsigned char* userName, int UserIP, unsigned int UserPort, char 
         g_client.count++;
         //等待接收消息线程修改标志
         for (int i = 0; i < 10; i++) {
-            if (g_client.flag >= 0 && g_client.flag < 2)
+            if (g_client.flag)
                 Sleep(300);
             else
                 return -1;
@@ -374,12 +373,12 @@ int p2pMessage(unsigned char* userName, int UserIP, unsigned int UserPort, char 
     return 0;
 }
 
-int IsChatActive()
+bool isChatActive()
 {
     return g_client.flag;
 }
 
-void SetChatActive(int flag)
+void setChatActive(bool flag)
 {
     g_client.flag = flag;
 }
@@ -389,7 +388,7 @@ int GetRecvState()
     return g_client.status;
 }
 
-void SetRecvState(int state)
+void SetRecvState(RCV_STATE state)
 {
     g_client.status = state;
 }
