@@ -122,7 +122,7 @@ def deal_comments_by_state_machine(code, file_ext):
 
         # 标记当前行是否产生了有效输出
         line_has_output = False
-        
+
         while i < n:
             char = line[i]
             next_chars = line[i:i+2]  # 用于检查多字符注释符号

@@ -12,7 +12,7 @@ public:
     int queryTimeOffset(SelectValue seek, std::vector<SeekTimeValue>& offsets, const std::string& file, int fileid = 0);
     int queryTimeDetail(FileTimeDetails& detail);
     void setDetailByFileName(const std::string& fileName, const FileTimeDetails& detail);
-    void insertContentNoDuplex(const SeekTimeContent* content);
+    void insertContentNoDuplex(SeekTimeContent* content);
 private:
     std::string m_filename{};
     bool m_connected = false;
