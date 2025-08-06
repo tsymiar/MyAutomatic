@@ -8,6 +8,7 @@
 #include <linux/slab.h>
 #include <linux/poll.h>
 #include <linux/version.h>
+#include <linux/interrupt.h>
 
 #define DEVICE_NUMBER 1                     //设备数量
 #define DEVICE_SNAME "stachardevice"        //静态名称
@@ -25,7 +26,7 @@ typedef struct tagDdrBar {
     phys_addr_t winSize;
 } DdrBar;
 
-typedef struct StVirtex {
+typedef struct tagVirtex {
     uint32_t offset; // register offset
     uint32_t val;    // register val
 } Virtex;
@@ -48,31 +49,31 @@ typedef struct Queue {
 } Queue;
 
 // 队列初始化
-static inline void init_queue(Queue* q)
+static inline void mq_init(Queue* q)
 {
     q->head = q->tail = NULL;
 }
 
 // 队列释放
-static void deinit_queue(Queue* q)
+static void mq_deinit(Queue* q)
 {
-    ST_UsrMsg* cr = q->head;
-    while (cr) {
-        ST_UsrMsg* next = cr->next;
-        kfree(cr);
-        cr = next;
+    ST_UsrMsg* msg = q->head;
+    while (msg) {
+        ST_UsrMsg* next = msg->next;
+        kfree(msg);
+        msg = next;
     }
     q->head = q->tail = NULL;
 }
 
 // 队列长度
-static int queue_size(Queue* q)
+static int mq_size(Queue* q)
 {
-    int cnt = 0;
-    ST_UsrMsg* cr = q->head;
-    for (; cr; cr = cr->next)
-        cnt++;
-    return cnt;
+    int sz = 0;
+    ST_UsrMsg* msg = q->head;
+    for (; msg; msg = msg->next)
+        sz++;
+    return sz;
 }
 
 // 获取队首元素
@@ -108,18 +109,39 @@ static void msg_push(Queue* q, ST_UsrMsg msg)
 }
 
 static struct cdev g_cdev;
-static struct class* g_class;
-static struct device* g_device;
-static dev_t g_devno;
-static int g_majno = 0x123, g_minno;
+static struct class* g_class = NULL;
+static struct device* g_device = NULL;
+static dev_t g_devNo;
+static int g_majId = 0x123, g_minid;
 static Queue g_queue;
 static ST_UsrMsg g_msg_user;
 static volatile int ev_ok = 0;
 static volatile int g_ddrOk = 0;
+static struct tasklet_struct virtex_tasklet;
 static DECLARE_WAIT_QUEUE_HEAD(select_waitq);
 
-module_param(g_majno, int, S_IRUSR); //主设备号
-module_param(g_minno, int, S_IRUSR); //次设备号
+module_param(g_majId, int, S_IRUSR); //主设备号
+module_param(g_minid, int, S_IRUSR); //次设备号
+
+enum {
+    VIRTEX_SOFTIRQ = 0x30,
+};
+
+// 设置中断
+static void set_notify(uint32_t* notify, char last)
+{
+    uint32_t status = last ? 1 : 0;
+    *notify |= ((status << 31) | g_msg_user.chan);
+}
+
+// 设置通道
+static void set_chan(uint32_t* chan)
+{
+    uint32_t value = 0, offset = *chan;
+    while ((offset >>= 1) != 0)
+        value++;
+    *chan = value;
+}
 
 static ssize_t virtex_dev_read(struct file* flip, char* buf, size_t len, loff_t* off)
 {
@@ -131,7 +153,7 @@ static ssize_t virtex_dev_read(struct file* flip, char* buf, size_t len, loff_t*
     if (copy_to_user(buf, &g_msg_user, sizeof(ST_UsrMsg)))
         return -EFAULT;
 #endif
-    if (queue_size(&g_queue) > 0) {
+    if (mq_size(&g_queue) > 0) {
         msg = msg_front(&g_queue);
         if (msg) {
             msg_pop(&g_queue);
@@ -163,22 +185,6 @@ static int virtex_dev_close(struct inode* inode, struct file* file)
 {
     printk("virtex_dev_close!\n");
     return 0;
-}
-
-// 设置notify
-static void set_notify(uint32_t* notify, char last)
-{
-    uint32_t status = last ? 1 : 0;
-    *notify |= ((status << 31) | g_msg_user.chan);
-}
-
-// 设置通道
-static void set_chan(uint32_t* chan)
-{
-    uint32_t value = 0, offset = *chan;
-    while ((offset >>= 1) != 0)
-        value++;
-    *chan = value;
 }
 
 // poll/select支持
@@ -312,54 +318,76 @@ static const struct file_operations virtex_dev_ops = {
     .mmap = virtex_dev_mmap,
 };
 
+// 软中断处理
+static void virtex_tasklet_func(unsigned long data)
+{
+    ev_ok = 1;
+    wake_up_interruptible(&select_waitq);
+    printk("virtex_tasklet_func: softirq triggered, ev_ok=%d\n", ev_ok);
+}
+
+// 触发软中断
+void virtex_softirq_raise(void)
+{
+    tasklet_schedule(&virtex_tasklet);
+}
+EXPORT_SYMBOL(virtex_softirq_raise);
+
 static int __init device_init(void)
 {
-    int stat;
-    if (g_majno) //传入了主设备号用静态的方法
+    int stat = -1;
+    if (g_majId) //传入了主设备号用静态的方法
     {
-        printk("devno = %d:%d.\n", g_majno, g_minno);                        //主设备号
-        g_devno = MKDEV(g_majno, g_minno);                                   //主次设备号合成一个dev_t类型
-        stat = register_chrdev_region(g_devno, DEVICE_NUMBER, DEVICE_SNAME); //静态分配
+        printk("devno = %d:%d.\n", g_majId, g_minid);                        //主设备号
+        g_devNo = MKDEV(g_majId, g_minid);                                   //主次设备号合成一个dev_t类型
+        stat = register_chrdev_region(g_devNo, DEVICE_NUMBER, DEVICE_SNAME); //静态分配
         if (stat < 0)
             printk("register_virtex_dev_region error!\n");
         else
             printk("register_virtex_dev_region ok!\n");
     } else //没有传入主设备号用动态的方法
     {
-        stat = alloc_chrdev_region(&g_devno, DEVICE_MINOR_NUMBER, DEVICE_NUMBER, DEVICE_DNAME); //动态分配
+        stat = alloc_chrdev_region(&g_devNo, DEVICE_MINOR_NUMBER, DEVICE_NUMBER, DEVICE_DNAME); //动态分配
         if (stat < 0)
             printk("alloc_virtex_dev_region error!\n");
         else
             printk("alloc_virtex_dev_region ok!\n");
-        g_majno = MAJOR(g_devno); //从dev_t中分离出主设备号
-        g_minno = MINOR(g_devno); //从dev_t中分离出次设备号
-        printk("majno = %d, minno = %d\n", g_majno, g_minno);
+        g_majId = MAJOR(g_devNo); //从dev_t中分离出主设备号
+        g_minid = MINOR(g_devNo); //从dev_t中分离出次设备号
+        printk("majno = %d, minno = %d\n", g_majId, g_minid);
     }
-    cdev_init(&g_cdev, &virtex_dev_ops);                                       //初始化cdev
+    cdev_init(&g_cdev, &virtex_dev_ops);                                      //初始化cdev
     g_cdev.owner = THIS_MODULE;
-    cdev_add(&g_cdev, g_devno, DEVICE_NUMBER);                                //注册到内核
+    cdev_add(&g_cdev, g_devNo, DEVICE_NUMBER);                                //注册到内核
     //注册类
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 0, 0)
     g_class = class_create(DEVICE_CLASS_NAME);
 #else
     g_class = class_create(THIS_MODULE, DEVICE_CLASS_NAME);
 #endif
-    g_device = device_create(g_class, NULL, g_devno, NULL, DEVICE_NODE_NAME); //注册设备
-    init_queue(&g_queue);
+    g_device = device_create(g_class, NULL, g_devNo, NULL, DEVICE_NODE_NAME); //注册设备
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,10,0)
+    tasklet_init(&virtex_tasklet, virtex_tasklet_func, 0);
+#else
+    DECLARE_TASKLET(virtex_tasklet, virtex_tasklet_func, 0);
+#endif
+    mq_init(&g_queue);
+    printk("virtex tasklet init ok, ddrOk=%d\n", g_ddrOk);
     return 0;
 }
 
 static void __exit device_exit(void)
 {
-    deinit_queue(&g_queue);
-    unregister_chrdev_region(MKDEV(g_majno, g_minno), DEVICE_NUMBER); //申请几个注销几个
-    cdev_del(&g_cdev);                                                //注销cdev
-    device_destroy(g_class, g_devno);                                 //注销设备
-    class_destroy(g_class);                                           //注销类
+    unregister_chrdev_region(MKDEV(g_majId, g_minid), DEVICE_NUMBER); //申请几个注销几个
     printk("unregister_virtex_dev_region ok!\n");
+    cdev_del(&g_cdev);                                                //注销cdev
+    device_destroy(g_class, g_devNo);                                 //注销设备
+    class_destroy(g_class);                                           //注销类
+    mq_deinit(&g_queue);
+    printk("virtex device exit ok!\n");
 }
 
-module_init(device_init);
+module_init(device_init); // late_initcall
 module_exit(device_exit);
 
 MODULE_LICENSE("GPL");

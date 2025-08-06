@@ -70,7 +70,7 @@ int SetupChat(StSock* sock)
 #endif // _WIN32
     }
     InitializeCriticalSection(&g_client.wrcon);
-    static char ipaddr[16];
+    char ipaddr[16];
     memset(ipaddr, 0, 16);
     if (sock == NULL || sock->IP[0] == '\0' || sock->IP[0] < 0) {
         fprintf_s(stdout, "Current OS is %d bit.\nEnter server IP: ", (int)(sizeof(void*) * 8));
