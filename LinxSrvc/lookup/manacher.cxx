@@ -89,7 +89,6 @@ std::pair<size_t, std::vector<uint8_t>> ManacherFileProcessor::findLongestPalind
 // Simulated database lookup function (should be replaced with a real database interface in production)
 static const uint64_t* db_lookup(const uint64_t* val, size_t len, uint64_t dst)
 {
-
     return nullptr;
 }
 
@@ -101,8 +100,7 @@ const uint64_t* ManacherFileProcessor::find_uint64(const uint64_t* val, size_t l
             if (val[i] == dst) return &val[i];
         }
     } else {
-        const uint64_t* dbResult = db_lookup(val, len, dst);
-        if (dbResult) return dbResult;
+        return db_lookup(val, len, dst);
     }
     // 2. Binary search (assuming val is sorted)
     size_t first = 0, last = len;

@@ -261,8 +261,7 @@ int SeekTime::seekFileDataTime(std::vector<SeekTimeContent>& fileinfos)
     for (auto it : m_seekTimeMap) {
         for (auto at : it.second) {
             SeekTimeContent fileinfo{};
-            strncpy(fileinfo.fileName, it.first.c_str(), MAX_PATH_LEN - 1);
-            fileinfo.fileName[MAX_PATH_LEN - 1] = '\0';
+            snprintf(fileinfo.fileName, MAX_PATH_LEN, "%s", it.first.c_str());
             printf("--- '%s', selecting time=%lu\n", fileinfo.fileName, at.average());
             // check first if time is in database
             if (getTimefromDatabase(m_dbMgr, at, fileinfo, fileinfos)) {
@@ -313,7 +312,7 @@ int SeekTime::seekFileDataTime(std::vector<SeekTimeContent>& fileinfos)
                 fileinfo = parseFileFrame(selectOffset, at.average(), m_timeDetail.offset.first);
             }
             if (fileinfo.found) {
-                strncpy(fileinfo.fileName, it.first.c_str(), MAX_PATH_LEN);
+                snprintf(fileinfo.fileName, MAX_PATH_LEN, "%s", it.first.c_str());
                 fileinfo.param = at.average();
                 fileinfos.emplace_back(fileinfo);
             } else {

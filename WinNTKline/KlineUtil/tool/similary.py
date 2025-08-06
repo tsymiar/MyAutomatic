@@ -271,7 +271,7 @@ def deal_comments_by_line_marker(file_ext, code):
     def process_block_comments(code_lines, line_marker):
         processed = []
         in_block_comment = False
-        for i, (line, keep) in enumerate(zip(code_lines, line_marker)):
+        for _, (line, keep) in enumerate(zip(code_lines, line_marker)):
             if in_block_comment:
                 if '*/' in line:
                     end_pos = line.find('*/') + 2
@@ -289,7 +289,6 @@ def deal_comments_by_line_marker(file_ext, code):
                 line = (line[:start_pos] + line[end_pos:]).strip()
             if keep and line.strip():
                 processed.append(line.rstrip())
-            i = 0
         return processed
 
     line_marker = mark_comment_lines(code_lines, patterns)
