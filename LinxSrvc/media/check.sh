@@ -1,5 +1,6 @@
 #!/bin/bash
 # Desc: Set the environment for the video decoder
+set -e
 export DISPLAY=:0
 xhost +local:
 # Set the permission for the video decoder
