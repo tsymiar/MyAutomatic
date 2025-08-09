@@ -16,11 +16,12 @@
 #define FIELD_FILESIGN "FileSign"
 
 const uint32_t SQL_LEN = 1024;
+#define PR_SQL(sql) printf("sql:[%s](%s %d)\n", sql, __func__, __LINE__)
 
 int TimeDBMgr::connect(const std::string& db)
 {
     // connect to the database
-    printf("Connecting to database: %s\n", db.c_str());
+    printf("Connecting to database: %s.\n", db.c_str());
     m_connected = true; // Simulate a successful connection
     return 0;
 }
@@ -42,15 +43,15 @@ void TimeDBMgr::create()
     char sql[SQL_LEN];
     sprintf(sql, "create table %s(id integer primary key autoincrement, %s integer, %s integer, %s integer, %s integer)",
         TABLE_SEEK_TIME, FIELD_TIME, FIELD_OFFSET, FIELD_SIZE, FIELD_FILEID);
-    printf("sql:[%s](%d)\n", sql, __LINE__);
+    PR_SQL(sql);
     sprintf(sql, "create index if not exists id on %s(%s)", TABLE_SEEK_TIME, FIELD_TIME);
-    printf("sql:[%s](%d)\n", sql, __LINE__);
+    PR_SQL(sql);
     sprintf(sql, "create table %s(id integer primary key autoincrement, %s char(128), %s integer, %s integer, %s integer, %s integer, %s char(16))",
         TABLE_FILE_MAPPING, FIELD_FILENAME,
         FIELD_FIRST_OFFSET, FIELD_LAST_OFFSET,
         FIELD_FIRST_TIME, FIELD_LAST_TIME,
         FIELD_FILESIGN);
-    printf("sql:[%s](%d)\n", sql, __LINE__);
+    PR_SQL(sql);
 }
 
 int TimeDBMgr::queryTimeOffset(SelectValue seek, std::vector<SeekTimeValue>& seekOffsets, const std::string& file, int fileid)
@@ -77,7 +78,7 @@ int TimeDBMgr::queryTimeOffset(SelectValue seek, std::vector<SeekTimeValue>& see
         seek.last,
         FIELD_FILEID,
         fileid1);
-    printf("sql:[%s](%d)\n", sql, __LINE__);
+    PR_SQL(sql);
 
     return 0;
 }
@@ -86,35 +87,36 @@ int TimeDBMgr::queryTimeDetail(FileTimeDetails& detail)
 {
     detail.time.first = detail.time.last = -1;
     detail.offset.first = detail.offset.last = 0;
-    std::string sql = "select " FIELD_FIRST_OFFSET "," FIELD_LAST_OFFSET "," FIELD_FIRST_TIME "," FIELD_LAST_TIME
+    std::string ssql = "select " FIELD_FIRST_OFFSET "," FIELD_LAST_OFFSET "," FIELD_FIRST_TIME "," FIELD_LAST_TIME
         " from " TABLE_FILE_MAPPING
         " limit 1;";
-    printf("sql:[%s](%d)\n", sql.c_str(), __LINE__);
+    PR_SQL(ssql.c_str());
     return 0;
 }
 
 void TimeDBMgr::setDetailByFileName(const std::string& fileName, const FileTimeDetails& detail)
 {
-    std::string sql = "UPDATE " TABLE_FILE_MAPPING " SET " FIELD_FIRST_OFFSET "=" + std::to_string(detail.offset.first) +
+    std::string ssql = "UPDATE " TABLE_FILE_MAPPING " SET " FIELD_FIRST_OFFSET "=" + std::to_string(detail.offset.first) +
         ", " FIELD_LAST_OFFSET "=" + std::to_string(detail.offset.last) +
         ", " FIELD_FIRST_TIME "=" + std::to_string(detail.time.first) +
         ", " FIELD_LAST_TIME "=" + std::to_string(detail.time.last);
-    printf("sql:[%s](%d)\n", sql.c_str(), __LINE__);
+    PR_SQL(ssql.c_str());
 }
 
 void TimeDBMgr::insertContentNoDuplex(SeekTimeContent* content)
 {
     int fileid = 0;
+    std::string ssql = "";
     if (getFileIdbyName(m_filename, fileid) < 0) {
         printf("File ID is 0, cannot insert content!\n");
-        std::string sql = "INSERT INTO " TABLE_FILE_MAPPING " (" FIELD_FILENAME "," FIELD_FIRST_OFFSET "," FIELD_LAST_OFFSET "," FIELD_FIRST_TIME "," FIELD_LAST_TIME
+        ssql = "INSERT INTO " TABLE_FILE_MAPPING " (" FIELD_FILENAME "," FIELD_FIRST_OFFSET "," FIELD_LAST_OFFSET "," FIELD_FIRST_TIME "," FIELD_LAST_TIME
             ") SELECT '" +
             m_filename + "',0,0,-1,-1 WHERE NOT EXISTS (SELECT 1 FROM " TABLE_FILE_MAPPING " WHERE " FIELD_FILENAME " = '" +
             m_filename + "');";
-        printf("sql:[%s](%d)\n", sql.c_str(), __LINE__);
+        PR_SQL(ssql.c_str());
     }
+    ssql = "";
     char sql[SQL_LEN] = { 0 };
-    std::string ssql = "";
     sprintf(sql, "insert into %s(%s,%s,%s,%s)",
         TABLE_SEEK_TIME,
         FIELD_TIME,
@@ -136,7 +138,7 @@ void TimeDBMgr::insertContentNoDuplex(SeekTimeContent* content)
         FIELD_OFFSET,
         content->value.offset);
     ssql += sql;
-    printf("sql:[%s](%d)\n", ssql.c_str(), __LINE__);
+    PR_SQL(ssql.c_str());
 }
 
 int TimeDBMgr::getFileIdbyName(const std::string& filename, int& fileid)
@@ -151,7 +153,7 @@ int TimeDBMgr::getFileIdbyName(const std::string& filename, int& fileid)
         TABLE_FILE_MAPPING,
         FIELD_FILENAME,
         filename.c_str());
-    printf("sql:[%s](%d)\n", sql, __LINE__);
+    PR_SQL(sql);
     fileid = 0;
     return 0;
 }

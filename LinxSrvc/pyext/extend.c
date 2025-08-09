@@ -5,7 +5,7 @@ extern void sudoku();
 static PyObject* game(PyObject* self, PyObject* args)
 {
     sudoku();
-    fprintf(stdout, "%s", "Backtrace finished");
+    fprintf(stdout, "%s", "Backtrace finished.\n");
     return Py_None;
 }
 

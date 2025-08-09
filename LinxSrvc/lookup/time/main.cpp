@@ -21,6 +21,7 @@ int main(int argc, char* argv[])
         uint64_t first = atoll(stTimes[1].c_str()) - 500;
         uint64_t last = atoll(stTimes[1].c_str()) + 500;
         SelectTime time = { first, last };
+        time.fix();
         times.push_back(time);
     }
     seekTime.setFilesTime(times, file);
