@@ -10,12 +10,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/socket.h>
-#include <sys/ioctl.h>
 #include <sys/time.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <net/if.h>
-#include <netdb.h>
 #include <queue>
 #include <mutex>
 #include <thread>
@@ -24,12 +21,16 @@
 using namespace std;
 
 struct RuntimeState {
-    float fMBps = 0;
-    float fKBps = 0;
+    float fBps = 0;
     float progress = 0;
-    bool server = false;
+    bool bserv = false;
     bool running = true;
-    bool save2file = false;
+    bool dealFile = false;
+    bool bytcp = false;
+    FILE* filep = NULL;
+    int fileno = -1;
+    int sock = -1;
+    int port = 8899;
 } g_state;
 
 struct Message {
@@ -44,8 +45,8 @@ struct Message {
     }
 };
 
-mutex g_mutex;
-queue<Message*> g_msgQue;
+mutex g_mutex{};
+queue<Message*> g_msgQue{};
 const int MaxQueueSize = 1000;
 
 uint64_t getUsecTime()
@@ -92,21 +93,37 @@ void wait(unsigned int tms)
     nanosleep(&ts, NULL);
 }
 
+void signal_exit(int s)
+{
+    if (g_state.dealFile && g_state.filep != NULL) {
+        fclose(g_state.filep);
+        g_state.filep = NULL;
+    }
+    if (g_state.running) {
+        g_state.running = false;
+    }
+    if (g_state.sock != -1) {
+        close(g_state.sock);
+        g_state.sock = -1;
+    }
+    cout << "ctrl-c, socket close, SIG=" << s << "." << endl;
+    exit(0);
+}
+
 int server(int argc, char* argv[])
 {
-    g_state.server = true;
-    int port = 8899;
+    const char* file = "./test.dat";
+    g_state.bserv = true;
     if (argc > 1) {
-        port = atoi(argv[1]);
+        g_state.port = atoi(argv[1]);
     } else {
-        cout << "Usage: " << argv[0] << " <listen port> <TCP(1)/UDP(0)> <pkgsize(default 1024)> [filename]" << endl;
+        cout << "Usage: " << argv[0] << " <listen port> <TCP(1)/UDP(0)> [pkgsize(default 1024)] [filename]" << endl;
         return -1;
     }
-    bool bytcp = false;
     if (argc > 2) {
-        bytcp = atoi(argv[2]);
+        g_state.bytcp = atoi(argv[2]);
     } else {
-        cout << "Usage: " << argv[0] << " <listen port> <TCP(1)/UDP(0)> <pkgsize(default 1024)> [save filename]" << endl;
+        cout << "Usage: " << argv[0] << " <listen port> <TCP(1)/UDP(0)> [pkgsize(default 1024)] [save filename]" << endl;
         return -1;
     }
     int pkgsize = 1024;
@@ -118,10 +135,11 @@ int server(int argc, char* argv[])
         }
     }
     if (argc > 4) {
-        g_state.save2file = true;
+        g_state.dealFile = true;
+        file = argv[4];
     }
     int vsock = -1;
-    if (bytcp) {
+    if (g_state.bytcp) {
         if ((vsock = socket(AF_INET, SOCK_STREAM, 0)) == ~0) {
             perror("socket");
             return -4;
@@ -129,18 +147,20 @@ int server(int argc, char* argv[])
     } else {
         vsock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     }
-    cout << "socket create by " << (bytcp ? "tcp" : "udp") << " ok." << endl;
+    g_state.sock = vsock;
+    cout << "server start by " << (g_state.bytcp ? "TCP" : "UDP") << ", pkgsize:" << pkgsize <<
+        (g_state.dealFile ? ", write to '" + string(file) + "'" : "") << " ok." << endl;
     struct sockaddr_in local;
     local.sin_family = AF_INET;
-    local.sin_port = htons(port);
+    local.sin_port = htons(g_state.port);
     local.sin_addr.s_addr = htonl(INADDR_ANY);
     if (::bind(vsock, (struct sockaddr*)&local, sizeof(local)) < 0) {
         close(vsock);
         perror("bind");
         return -5;
     }
-    cout << "socket bind port " << port << " ok." << endl;
-    if (bytcp) {
+    cout << "socket bind port " << g_state.port << " ok." << endl;
+    if (g_state.bytcp) {
         if (listen(vsock, 50) < 0) {
             close(vsock);
             perror("listen");
@@ -150,51 +170,65 @@ int server(int argc, char* argv[])
     cout << "socket listen INADDR_ANY(" << vsock << ")." << endl;
     uint64_t start = getUsecTime();
     uint64_t total = 0;
-    fd_set fds;
-    FD_ZERO(&fds);
-    uint64_t curlen = 0;
+    uint64_t calclen = 0;
     timeval timeout = { 0, 3000 };
     socklen_t locsize = sizeof(local);
     unsigned char message[pkgsize];
-    FILE* pfile = NULL;
-    if (g_state.save2file) {
-        if ((pfile = fopen("./test.dat", "wb+")) == NULL) {
+    if (g_state.dealFile) {
+        if ((g_state.filep = fopen(file, "wb+")) == NULL) {
             fprintf(stderr, "recv fopen error: %s.\n", strerror(errno));
             return -1;
         }
     }
+    char ip[16];
+    fd_set fds;
+    FD_ZERO(&fds);
     while (g_state.running) {
-        if (bytcp) {
+        if (g_state.bytcp) {
             int csock = accept(vsock, (struct sockaddr*)&local, &locsize);
             if (csock < 0) {
                 close(csock);
                 perror("accept");
                 return -7;
             }
-            char addr[16];
-            inet_ntop(AF_INET, (void*)&local.sin_addr, addr, 16);
-            cout << "socket accept from " << addr << ":" << ntohs(local.sin_port) << ", waiting message..." << endl;
+            inet_ntop(AF_INET, (void*)&local.sin_addr, ip, 16);
+            cout << "socket accept from " << ip << ":" << ntohs(local.sin_port) << ", waiting message..." << endl;
             while (true) {
-                int rcvlen = ::recv(csock, (char*)message, pkgsize, 0);
-                if (rcvlen > 0) {
-                    curlen += rcvlen;
-                    total += rcvlen;
-                    if (getUsecTime() - start > 1000000ULL) {
-                        g_state.fKBps = (curlen * 1.f) / (getUsecTime() - start) * 1048576 / 1000.f;
-                        start = getUsecTime();
-                        curlen = 0;
+                FD_SET(csock, &fds);
+                if (select((int)(csock + 1), &fds, NULL, NULL, &timeout) > 0) {
+                    if (FD_ISSET(csock, &fds) > 0) {
+                        ssize_t rcvlen = ::recv(csock, (char*)message, pkgsize, 0);
+                        if (rcvlen > 0) {
+                            calclen += rcvlen;
+                            total += rcvlen;
+                            if (getUsecTime() - start > 1000000ULL) {
+                                g_state.fBps = (calclen * 1.f) / (getUsecTime() - start) * 1000000.f;
+                                start = getUsecTime();
+                                calclen = 0;
+                            }
+                            if (g_state.dealFile && g_state.filep != NULL) {
+                                int i_write_count = fwrite(message, rcvlen, sizeof(char), g_state.filep);
+                                if (i_write_count != sizeof(char)) {
+                                    fprintf(stderr, "recv data write failed: %s, write(count=%d,size=%zd).\n", strerror(errno), i_write_count, rcvlen);
+                                    fclose(g_state.filep);
+                                    g_state.filep = NULL;
+                                }
+                                if (rcvlen < 0x10000) {
+                                    fsync(fileno(g_state.filep));
+                                }
+                            }
+                        } else if (rcvlen == 0) {
+                            cout << "\nrcvd total size: " << total << endl;
+                            close(csock);
+                            cout << "lose connection(" << csock << ")" << endl;
+                            total = 0;
+                            break;
+                        } else {
+                            close(csock);
+                            perror("recv");
+                            break;
+                        }
                     }
-                    // TODO something to catch the message message
-                } else if (rcvlen == 0) {
-                    cout << "\nrcvd total size: " << total << endl;
-                    close(csock);
-                    cout << "lose connection(" << csock << ")" << endl;
-                    total = 0;
-                    break;
-                } else {
-                    close(csock);
-                    perror("recv");
-                    break;
                 }
             }
         } else {
@@ -205,44 +239,30 @@ int server(int argc, char* argv[])
                     if ((rcvlen = ::recvfrom(vsock, (char*)message, pkgsize, 0, (struct sockaddr*)&local, &locsize)) < 0) {
                         continue;
                     }
-                    curlen += rcvlen;
+                    calclen += rcvlen;
                     if (getUsecTime() - start > 1000000ULL) {
-                        g_state.fKBps = (curlen * 1.f) / (getUsecTime() - start) * 1048576 / 1000.f;
+                        g_state.fBps = (calclen * 1.f) / (getUsecTime() - start) * 1000000.f;
                         start = getUsecTime();
-                        curlen = 0;
+                        calclen = 0;
                     }
-                    if (g_state.save2file && pfile != NULL) {
-                        int i_write_count = fwrite(message, sizeof(char), pkgsize, pfile);
-                        if (i_write_count != pkgsize) {
-                            fprintf(stderr, "recv fwrite failed(write_count=%d,reallen=%d).\n", i_write_count, pkgsize);
-                            fclose(pfile);
-                            pfile = NULL;
-                        }
-                    } else {
-                        for (int i = 0; i < rcvlen; i++) {
-                            if ((i % 32 == 0) && (i > 0))
-                                printf("\n");
-                            printf("%02x ", message[i]);
-                        }
-                        printf("\nrecvfrom [%d] size %ld ok.\n", vsock, rcvlen);
+                    for (int i = 0; i < rcvlen; i++) {
+                        if ((i % 32 == 0) && (i > 0))
+                            printf("\n");
+                        printf("%02x ", message[i]);
                     }
+                    printf("\nrecv[%d] size %zd ok.\n", vsock, rcvlen);
                 }
             }
         }
     }
-    if (g_state.save2file && pfile != NULL) {
-        fclose(pfile);
-        pfile = NULL;
-    }
-    if (vsock > 0)
-        close(vsock);
+    signal_exit(0);
     cout << "server exit." << endl;
     return 0;
 }
 
 void usage(const char* prog)
 {
-    cout << "Usage: " << prog << " <IP> <server port> [TCP(1)/UDP(0, default)] [package size(64B, default)] [save filename] [thread count]" << endl;
+    cout << "Usage: " << prog << " <IP> <server port> [TCP(1)/UDP(0, default)] [package size(64B, default)] [filename] [thread count]" << endl;
 }
 
 int client(int argc, char* argv[])
@@ -251,11 +271,10 @@ int client(int argc, char* argv[])
     struct sockaddr_in local;
     local.sin_family = AF_INET;
     const char* ip = "192.168.197.140";
-    int port = 8899;
-    int size = 1024;
+    int capsize = 1024;
     const char* file = "./test";
-    bool bytcp = false;
     size_t thrds = 1;
+    g_state.bserv = false;
     vector<bool> vecstat(0);
     if (argc > 1) {
         ip = argv[1];
@@ -265,22 +284,27 @@ int client(int argc, char* argv[])
     }
     local.sin_addr.s_addr = inet_addr(ip);
     if (argc > 2) {
-        port = atoi(argv[2]);
+        g_state.port = atoi(argv[2]);
     } else {
         usage(argv[0]);
         return -1;
     }
-    local.sin_port = htons(port);
+    local.sin_port = htons(g_state.port);
     if (argc > 3) {
-        bytcp = atoi(argv[3]);
+        g_state.bytcp = atoi(argv[3]);
     }
     if (argc > 4) {
-        size = atoi(argv[4]);
-        if (size > 0x400000) {
-            size = 0x400000;
-            cout << "message size too big, fixed to 4M." << endl;
+        capsize = atoi(argv[4]);
+        if (capsize > 0x400000) {
+            capsize = 0x400000;
+            cout << "message capsize too big, fixed to 4M." << endl;
         }
     }
+    if (argc > 5) {
+        file = argv[5];
+        g_state.dealFile = true;
+    }
+    cout << "client start by " << (g_state.bytcp ? "TCP" : "UDP") << " send-to " << ip << ":" << g_state.port << " capsize=" << capsize << (g_state.dealFile ? ", file=" + string(file) : "") << " ok." << endl;
     if (argc > 6) {
         thrds = atoi(argv[6]);
         thread works[thrds];
@@ -330,7 +354,7 @@ int client(int argc, char* argv[])
             }
         }
     }
-    if (bytcp) {
+    if (g_state.bytcp) {
         vsock = socket(PF_INET, SOCK_STREAM, 0);
         if (vsock == -1) {
             perror("socket");
@@ -344,47 +368,43 @@ int client(int argc, char* argv[])
     } else {
         vsock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     }
-    char message[size];
-    if (argc < 5) {
+    char message[capsize];
+    if (argc <= 5) {
         cout << "type message to send:" << endl;
         while (cin >> message) {
             int len = strnlen(message, sizeof(message) - 1) + 1;
             message[sizeof(message) - 1] = '\0'; // Ensure null-termination
-            if (bytcp) {
-                ::sendto(vsock, (const char*)message, len, 0, (struct sockaddr*)&local, sizeof(local));
-            } else {
+            if (g_state.bytcp) {
                 int bytes = send(vsock, (const char*)message, len, 0);
                 if (bytes < 0) {
                     perror("send");
                     continue;
                 }
+            } else {
+                ::sendto(vsock, (const char*)message, len, 0, (struct sockaddr*)&local, sizeof(local));
             }
             cout << "sent [" << message << "] to " << ip << endl;
         }
     } else {
-        file = argv[5];
-        cout << "client start send-to " << ip << ":" << port << " message=" << size << ", file=" << file << (bytcp ? ", sending by TCP." : ", send by UDP.") << endl;
-        FILE* fp = fopen(file, "rb");
-        if (fp != NULL) {
+        g_state.fileno = open(file, O_RDONLY, 0666);
+        if (g_state.fileno != -1) {
             uint64_t sentLen = 0;
-            fseek(fp, 0, SEEK_END);
-            long total = ftell(fp);
-            fseek(fp, 0, SEEK_SET);
-            uint64_t begin = getUsecTime();
-            uint64_t current = begin;
-            uint64_t size = 0;
-            g_state.server = false;
-            while (!feof(fp)) {
-                size_t nrSize = fread(message, 1, sizeof(message), fp);
-                if (nrSize != sizeof(message)) {
-                    fprintf(stdout, "read last size=%zu, expect=%zu: %s\n", nrSize, sizeof(message), strerror(errno));
+            long total = lseek(g_state.fileno, 0, SEEK_END);
+            lseek(g_state.fileno, 0, SEEK_SET);
+            uint64_t start = getUsecTime();
+            uint64_t current = start;
+            uint64_t calcsize = 0;
+            ssize_t rdsize = 0;
+            while ((rdsize = read(g_state.fileno, message, sizeof(message))) > 0) {
+                if (rdsize != sizeof(message)) {
+                    fprintf(stdout, "read last size=%zu, expect=%zu: %s\n", rdsize, sizeof(message), strerror(errno));
                 }
-                if (bytcp) {
+                if (g_state.bytcp) {
                     if (thrds > 1) {
                         Message msg;
                         msg.sock = vsock;
+                        msg.size = rdsize;
                         msg.addr = message;
-                        msg.size = nrSize;
                         do {
                             if (queueSize() < MaxQueueSize) {
                                 queuePush(&msg);
@@ -394,25 +414,25 @@ int client(int argc, char* argv[])
                             }
                         } while (true);
                     } else {
-                        int bytes = send(vsock, (const char*)message, nrSize, 0);
+                        int bytes = send(vsock, (const char*)message, rdsize, 0);
                         if (bytes < 0) {
                             perror("send");
                             continue;
                         }
                         sentLen += bytes;
-                        size += bytes;
+                        calcsize += bytes;
                         if (getUsecTime() - current > 1000000ULL) {
-                            g_state.fMBps = (size * 1.f) / (getUsecTime() - current) * 1048576 / 1000000.f;
+                            g_state.fBps = (calcsize * 1.f) / (getUsecTime() - current) * 1000000.f;
                             g_state.progress = sentLen * 1.00f / total;
                             current = getUsecTime();
-                            size = 0;
+                            calcsize = 0;
                         }
                     }
                 } else {
-                    sentLen += ::sendto(vsock, (const char*)message, nrSize, 0, (struct sockaddr*)&local, sizeof(local));
+                    sentLen += ::sendto(vsock, (const char*)message, rdsize, 0, (struct sockaddr*)&local, sizeof(local));
                 }
             }
-            while (bytcp && thrds > 1) {
+            while (g_state.bytcp && thrds > 1) {
                 bool status = true;
                 for (size_t i = 0; i < vecstat.size(); i++) {
                     status &= vecstat[i];
@@ -422,8 +442,8 @@ int client(int argc, char* argv[])
                     break;
                 }
             }
-            fprintf(stdout, "send over, average speed is %.3f MB/s\n", (sentLen * 1.f) / (getUsecTime() - begin) * 1048576 / 1000000.f);
-            close(fileno(fp));
+            fprintf(stdout, "sent %.3fM over, average speed is %.3f MB/s\n", sentLen * 1.0f / 1048576, (sentLen * 1.f) / (getUsecTime() - start) * 1048576 / 1000000.f);
+            close(g_state.fileno);
         } else {
             perror("open");
         }
@@ -436,19 +456,33 @@ int main(int argc, char* argv[])
 {
     thread task(
         [&]() -> void {
-            float bps = 0;
+            float lastValue = 0;
+            string lastUnit = "";
             while (g_state.running) {
-                if (g_state.server) {
-                    if (bps != g_state.fKBps) {
-                        fprintf(stdout, "recv speed %.3f KB/s\r", g_state.fKBps);
+                float value = 0;
+                string unit = "B/s";
+                if (g_state.fBps >= 1000000 && ((int)g_state.fBps) % 1000000 > 0) {
+                    value = g_state.fBps / 1000000.f;
+                    unit = "MB/s";
+                } else if (g_state.fBps >= 1000 && ((int)g_state.fBps) % 1000 > 0) {
+                    value = g_state.fBps / 1000.f;
+                    unit = "KB/s";
+                } else {
+                    value = g_state.fBps;
+                }
+                if (g_state.bserv) {
+                    if (lastValue != value || lastUnit != unit) {
+                        fprintf(stdout, "recvd speed %.3f %s\r", value, unit.c_str());
                         fflush(stdout);
-                        bps = g_state.fKBps;
+                        lastValue = value;
+                        lastUnit = unit;
                     }
                 } else {
-                    if (bps != g_state.fMBps) {
-                        fprintf(stdout, "send %3.3f%% speed %.3f MB/s\r", g_state.progress * 100, g_state.fMBps);
+                    if (lastValue != value || lastUnit != unit) {
+                        fprintf(stdout, "sent %3.3f%% speed %.3f %s\r", g_state.progress * 100, value, unit.c_str());
                         fflush(stdout);
-                        bps = g_state.fMBps;
+                        lastValue = value;
+                        lastUnit = unit;
                     }
                 }
                 wait(10);
@@ -457,6 +491,7 @@ int main(int argc, char* argv[])
     if (task.joinable()) {
         task.detach();
     }
+    signal(SIGINT, signal_exit);
     int status = 0;
 #ifndef CLIENT
     status = server(argc, argv);

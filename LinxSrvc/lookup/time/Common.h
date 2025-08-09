@@ -60,6 +60,25 @@ struct SelectValue {
     {
         return ((first == v.first) && (last == v.last));
     }
+    SelectValue& operator = (const SelectValue& v)
+    {
+        this->first = v.first > 0 ? v.first : 0;
+        this->last = v.last > 0 ? v.last : 0;
+        return *this;
+    }
+    void fix()
+    {
+        if (int64_t(this->first) < 0) {
+            this->first = 0;
+        } else
+            if (this->first > this->last) {
+                uint64_t value = this->first;
+                this->first = this->last;
+                this->last = value;
+            } else if (this->first != 0 && this->last == 0) {
+                this->last = this->first;
+            }
+    }
 };
 
 typedef SelectValue SelectTime;
