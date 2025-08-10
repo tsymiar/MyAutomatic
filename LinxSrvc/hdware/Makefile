@@ -50,7 +50,7 @@ all:
 	@make mes909
 	@make dirty
 ifneq ($(OS), )
-	@echo "\033[4;3mMaking $(OS) driver\033[0m"
+	@echo "\033[4;3mMaking $(OS) drivers\033[0m"
 	@make -C chsdev
 	@make -C virtex
 	@make RDMA

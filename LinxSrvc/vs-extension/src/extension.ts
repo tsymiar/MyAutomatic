@@ -92,27 +92,27 @@ async function selectFolder(prompt: string): Promise<string | undefined> {
 }
 
 async function getIgnoreExtensions(): Promise<string[]> {
-	const input = await vscode.window.showInputBox({
-		prompt: 'Enter file extensions to ignore (comma separated, e.g., .tmp,.log ...)',
-		placeHolder: '.bak, .log, .tmp, txt'
+	const ignore = await vscode.window.showInputBox({
+		prompt: 'Enter file extensions to ignore (comma separated, e.g., .txt,.log ...)',
+		placeHolder: '.bak, .log, .tmp, .txt, .md, .o, .a, .so, .ko, .exe, .out, .dll, .lib, .bz2, .gz, .wps, .pdf, .png, .jpg, .jpeg, .tiff, .vsix',
 	});
 
-	if (!input) { return []; }
+	if (!ignore) { return []; }
 
-	return input.split(',')
-		.map(ext => ext.trim())
-		.filter(ext => ext !== '')
-		.map(ext => ext.startsWith('.') ? ext : `.${ext}`);
+	return ignore.split(',')
+		.map((ext: string) => ext.trim())
+		.filter((ext: string) => ext !== '')
+		.map((ext: string) => ext.startsWith('.') ? ext : `.${ext}`);
 }
 
 async function checkPythonInstallation(outChannel: vscode.OutputChannel): Promise<void> {
 	return new Promise((resolve, reject) => {
 		const pythonCommand = os.platform() === 'win32' ? 'python' : 'python3';
 
-		cp.exec(`${pythonCommand} --version`, (error, stdout, stderr) => {
+		cp.exec(`${pythonCommand} --version`, (error: any, stdout: any, stderr: any) => {
 			if (error) {
 				outChannel.appendLine('Python check failed. Trying python3...');
-				cp.exec('python3 --version', (error3) => {
+				cp.exec('python3 --version', (error3: any) => {
 					if (error3) {
 						outChannel.appendLine('Python not found. Please install Python and add it to PATH.');
 						reject(new Error('Python not found. Please install Python and add it to PATH.'));
@@ -164,20 +164,20 @@ async function runFolderComparison(
 		let output = '';
 		let errorOutput = '';
 
-		pythonProcess.stdout.on('data', (data) => {
+		pythonProcess.stdout.on('data', (data: any) => {
 			const dataStr = data.toString();
 			output += dataStr;
 			outChannel.append(`\n ${dataStr}`);
 		});
 
 
-		pythonProcess.stderr.on('data', (data) => {
+		pythonProcess.stderr.on('data', (data: any) => {
 			const dataStr = data.toString();
 			errorOutput += dataStr;
 			outChannel.append(`[STDERR] ${dataStr}`);
 		});
 
-		pythonProcess.on('close', (code) => {
+		pythonProcess.on('close', (code: number) => {
 			const duration = (Date.now() - startTime) / 1000;
 			outChannel.appendLine(`\nProcess completed in ${duration.toFixed(2)} seconds with exit code ${code}`);
 
@@ -230,7 +230,7 @@ async function runFolderComparison(
 			}
 		});
 
-		pythonProcess.on('error', (err) => {
+		pythonProcess.on('error', (err: any) => {
 			reject(new Error(`Failed to start Python process: ${err.message}`));
 		});
 	});
