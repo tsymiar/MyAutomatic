@@ -1,0 +1,5 @@
+*.vsix
+node_*
+package*
+!.gitignore
+out
