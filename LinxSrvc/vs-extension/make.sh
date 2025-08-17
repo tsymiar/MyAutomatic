@@ -1,6 +1,6 @@
 #!/bin/bash
 if [ "${1}" == "clean" ]; then
-    rm -rvf out node_modules *.vsix
+    rm -rvf out ./*.vsix node_modules
     exit 0
 fi
 if command -v vsce >/dev/null 2>&1; then

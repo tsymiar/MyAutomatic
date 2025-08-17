@@ -14,7 +14,7 @@
 #include <linux/version.h>
 
 #define DEVICE_NAME "phy_mem_drv"
-#define IOCTL_MAGIC 0x1234
+#define IOCTL_MAGIC 0x12347379
 #define MAX_FILE_ID 256  // Maximum number of file handles supported
 
 struct phy_addr_params;

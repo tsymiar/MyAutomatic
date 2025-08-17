@@ -47,7 +47,7 @@ typedef struct WSADATA {
 #define gets_s(c,v) fgets(c,v,stdin)
 #define TRUE true
 #ifndef scanf_s
-#define scanf_s(...) scanf(__VA_ARGS__)
+#define scanf_s(x, ...) scanf(x, __VA_ARGS__)
 #ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wformat"
 #pragma GCC diagnostic ignored "-Wformat-extra-args"

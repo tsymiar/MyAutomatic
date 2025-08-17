@@ -1,7 +1,6 @@
 #include "manacher.h"
 #include <algorithm>
 #include <stdexcept>
-#include <cstdint>
 
 ManacherFileProcessor::ManacherFileProcessor(size_t chunkSize)
     : maxLen_(0), maxPos_(0), chunkSize_(chunkSize)

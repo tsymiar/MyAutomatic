@@ -138,42 +138,42 @@ int server(int argc, char* argv[])
         g_state.dealFile = true;
         file = argv[4];
     }
-    int vsock = -1;
+    int ssock = -1;
     if (g_state.bytcp) {
-        if ((vsock = socket(AF_INET, SOCK_STREAM, 0)) == ~0) {
+        if ((ssock = socket(AF_INET, SOCK_STREAM, 0)) == ~0) {
             perror("socket");
             return -4;
         }
     } else {
-        vsock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+        ssock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     }
-    g_state.sock = vsock;
+    g_state.sock = ssock;
     cout << "server start by " << (g_state.bytcp ? "TCP" : "UDP") << ", pkgsize:" << pkgsize <<
         (g_state.dealFile ? ", write to '" + string(file) + "'" : "") << " ok." << endl;
     struct sockaddr_in local;
     local.sin_family = AF_INET;
     local.sin_port = htons(g_state.port);
     local.sin_addr.s_addr = htonl(INADDR_ANY);
-    if (::bind(vsock, (struct sockaddr*)&local, sizeof(local)) < 0) {
-        close(vsock);
+    if (::bind(ssock, (struct sockaddr*)&local, sizeof(local)) < 0) {
+        close(ssock);
         perror("bind");
         return -5;
     }
     cout << "socket bind port " << g_state.port << " ok." << endl;
     if (g_state.bytcp) {
-        if (listen(vsock, 50) < 0) {
-            close(vsock);
+        if (listen(ssock, 50) < 0) {
+            close(ssock);
             perror("listen");
             return -6;
         }
     }
-    cout << "socket listen INADDR_ANY(" << vsock << ")." << endl;
+    cout << "socket listen INADDR_ANY(" << ssock << ")." << endl;
     uint64_t start = getUsecTime();
     uint64_t total = 0;
     uint64_t calclen = 0;
     timeval timeout = { 0, 3000 };
     socklen_t locsize = sizeof(local);
-    unsigned char message[pkgsize];
+    unsigned char msgbuf[pkgsize];
     if (g_state.dealFile) {
         if ((g_state.filep = fopen(file, "wb+")) == NULL) {
             fprintf(stderr, "recv fopen error: %s.\n", strerror(errno));
@@ -185,7 +185,7 @@ int server(int argc, char* argv[])
     FD_ZERO(&fds);
     while (g_state.running) {
         if (g_state.bytcp) {
-            int csock = accept(vsock, (struct sockaddr*)&local, &locsize);
+            int csock = accept(ssock, (struct sockaddr*)&local, &locsize);
             if (csock < 0) {
                 close(csock);
                 perror("accept");
@@ -197,7 +197,7 @@ int server(int argc, char* argv[])
                 FD_SET(csock, &fds);
                 if (select((int)(csock + 1), &fds, NULL, NULL, &timeout) > 0) {
                     if (FD_ISSET(csock, &fds) > 0) {
-                        ssize_t rcvlen = ::recv(csock, (char*)message, pkgsize, 0);
+                        ssize_t rcvlen = ::recv(csock, (char*)msgbuf, pkgsize, 0);
                         if (rcvlen > 0) {
                             calclen += rcvlen;
                             total += rcvlen;
@@ -207,7 +207,7 @@ int server(int argc, char* argv[])
                                 calclen = 0;
                             }
                             if (g_state.dealFile && g_state.filep != NULL) {
-                                int i_write_count = fwrite(message, rcvlen, sizeof(char), g_state.filep);
+                                int i_write_count = fwrite(msgbuf, rcvlen, sizeof(char), g_state.filep);
                                 if (i_write_count != sizeof(char)) {
                                     fprintf(stderr, "recv data write failed: %s, write(count=%d,size=%zd).\n", strerror(errno), i_write_count, rcvlen);
                                     fclose(g_state.filep);
@@ -232,11 +232,11 @@ int server(int argc, char* argv[])
                 }
             }
         } else {
-            FD_SET(vsock, &fds);
-            if (select((int)(vsock + 1), &fds, NULL, NULL, &timeout) > 0) {
-                if (FD_ISSET(vsock, &fds) > 0) {
+            FD_SET(ssock, &fds);
+            if (select((int)(ssock + 1), &fds, NULL, NULL, &timeout) > 0) {
+                if (FD_ISSET(ssock, &fds) > 0) {
                     ssize_t rcvlen = 0;
-                    if ((rcvlen = ::recvfrom(vsock, (char*)message, pkgsize, 0, (struct sockaddr*)&local, &locsize)) < 0) {
+                    if ((rcvlen = ::recvfrom(ssock, (char*)msgbuf, pkgsize, 0, (struct sockaddr*)&local, &locsize)) < 0) {
                         continue;
                     }
                     calclen += rcvlen;
@@ -248,9 +248,9 @@ int server(int argc, char* argv[])
                     for (int i = 0; i < rcvlen; i++) {
                         if ((i % 32 == 0) && (i > 0))
                             printf("\n");
-                        printf("%02x ", message[i]);
+                        printf("%02x ", msgbuf[i]);
                     }
-                    printf("\nrecv[%d] size %zd ok.\n", vsock, rcvlen);
+                    printf("\nrecv[%d] size %zd ok.\n", ssock, rcvlen);
                 }
             }
         }
@@ -267,15 +267,16 @@ void usage(const char* prog)
 
 int client(int argc, char* argv[])
 {
-    int vsock = -1;
+    int ssock = -1;
     struct sockaddr_in local;
     local.sin_family = AF_INET;
     const char* ip = "192.168.197.140";
-    int capsize = 1024;
+    int caplen = 1024;
     const char* file = "./test";
     size_t thrds = 1;
     g_state.bserv = false;
     vector<bool> vecstat(0);
+    char msgbuf[caplen];
     if (argc > 1) {
         ip = argv[1];
     } else {
@@ -294,17 +295,17 @@ int client(int argc, char* argv[])
         g_state.bytcp = atoi(argv[3]);
     }
     if (argc > 4) {
-        capsize = atoi(argv[4]);
-        if (capsize > 0x400000) {
-            capsize = 0x400000;
-            cout << "message capsize too big, fixed to 4M." << endl;
+        caplen = atoi(argv[4]);
+        if (caplen > 0x400000) {
+            caplen = 0x400000;
+            cout << "message caplen too big, fixed to 4M." << endl;
         }
     }
     if (argc > 5) {
         file = argv[5];
         g_state.dealFile = true;
     }
-    cout << "client start by " << (g_state.bytcp ? "TCP" : "UDP") << " send-to " << ip << ":" << g_state.port << " capsize=" << capsize << (g_state.dealFile ? ", file=" + string(file) : "") << " ok." << endl;
+    cout << "client start by " << (g_state.bytcp ? "TCP" : "UDP") << " send-to " << ip << ":" << g_state.port << " caplen=" << caplen << (g_state.dealFile ? ", file=" + string(file) : "") << " ok." << endl;
     if (argc > 6) {
         thrds = atoi(argv[6]);
         thread works[thrds];
@@ -355,35 +356,34 @@ int client(int argc, char* argv[])
         }
     }
     if (g_state.bytcp) {
-        vsock = socket(PF_INET, SOCK_STREAM, 0);
-        if (vsock == -1) {
+        ssock = socket(PF_INET, SOCK_STREAM, 0);
+        if (ssock == -1) {
             perror("socket");
             return -1;
         }
-        int ret = connect(vsock, (struct sockaddr*)&local, sizeof(local));
+        int ret = connect(ssock, (struct sockaddr*)&local, sizeof(local));
         if (ret == -1) {
             perror("connect");
             return -1;
         }
     } else {
-        vsock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+        ssock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     }
-    char message[capsize];
     if (argc <= 5) {
         cout << "type message to send:" << endl;
-        while (cin >> message) {
-            int len = strnlen(message, sizeof(message) - 1) + 1;
-            message[sizeof(message) - 1] = '\0'; // Ensure null-termination
+        while (cin >> msgbuf) {
+            int len = strnlen(msgbuf, sizeof(msgbuf) - 1) + 1;
+            msgbuf[sizeof(msgbuf) - 1] = '\0'; // Ensure null-termination
             if (g_state.bytcp) {
-                int bytes = send(vsock, (const char*)message, len, 0);
+                int bytes = send(ssock, (const char*)msgbuf, len, 0);
                 if (bytes < 0) {
                     perror("send");
                     continue;
                 }
             } else {
-                ::sendto(vsock, (const char*)message, len, 0, (struct sockaddr*)&local, sizeof(local));
+                ::sendto(ssock, (const char*)msgbuf, len, 0, (struct sockaddr*)&local, sizeof(local));
             }
-            cout << "sent [" << message << "] to " << ip << endl;
+            cout << "sent [" << msgbuf << "] to " << ip << endl;
         }
     } else {
         g_state.fileno = open(file, O_RDONLY, 0666);
@@ -395,16 +395,17 @@ int client(int argc, char* argv[])
             uint64_t current = start;
             uint64_t calcsize = 0;
             ssize_t rdsize = 0;
-            while ((rdsize = read(g_state.fileno, message, sizeof(message))) > 0) {
-                if (rdsize != sizeof(message)) {
-                    fprintf(stdout, "read last size=%zu, expect=%zu: %s\n", rdsize, sizeof(message), strerror(errno));
+            ssize_t msglen = sizeof(msgbuf) > caplen ? caplen : sizeof(msgbuf);
+            while ((rdsize = read(g_state.fileno, msgbuf, msglen)) > 0) {
+                if (rdsize != msglen) {
+                    fprintf(stdout, "read last size=%zd, expect=%zu: %s\n", rdsize, msglen, strerror(errno));
                 }
                 if (g_state.bytcp) {
                     if (thrds > 1) {
                         Message msg;
-                        msg.sock = vsock;
+                        msg.sock = ssock;
                         msg.size = rdsize;
-                        msg.addr = message;
+                        msg.addr = msgbuf;
                         do {
                             if (queueSize() < MaxQueueSize) {
                                 queuePush(&msg);
@@ -414,7 +415,7 @@ int client(int argc, char* argv[])
                             }
                         } while (true);
                     } else {
-                        int bytes = send(vsock, (const char*)message, rdsize, 0);
+                        int bytes = send(ssock, (const char*)msgbuf, rdsize, 0);
                         if (bytes < 0) {
                             perror("send");
                             continue;
@@ -429,7 +430,7 @@ int client(int argc, char* argv[])
                         }
                     }
                 } else {
-                    sentLen += ::sendto(vsock, (const char*)message, rdsize, 0, (struct sockaddr*)&local, sizeof(local));
+                    sentLen += ::sendto(ssock, (const char*)msgbuf, rdsize, 0, (struct sockaddr*)&local, sizeof(local));
                 }
             }
             while (g_state.bytcp && thrds > 1) {
@@ -448,7 +449,7 @@ int client(int argc, char* argv[])
             perror("open");
         }
     }
-    close(vsock);
+    close(ssock);
     return 0;
 }
 

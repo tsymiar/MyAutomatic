@@ -17,6 +17,7 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
+#include <sys/prctl.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <signal.h>
@@ -80,7 +81,7 @@ pthread_mutexattr_t attr;
 
 #define __ "./"
 #define _0_ "_0"
-#define IMAGE_BLOB "image"
+#define IMAGE_BLOB "imgfile"
 #define GET_IMG_EXE IMAGE_BLOB"snap.exe"
 #define PRINT_RECV(msg, cmd, rtn, chk, usr, flg, idx, txt) do { \
     fprintf(stdout, "----------------------------------------------------------------\\ \
@@ -285,9 +286,18 @@ int main(int argc, char* argv[])
     if (pipe(g_filedes) < 0) {
         fprintf(stderr, "Make pipe channel fail: %s\n", strerror(errno));
     }
-    if (fork() == 0) {
+    if (fork() > 0) {
+        fprintf(stdout, "Main child process %d established.\n", getpid());
+    } else {
         signal(SIGPIPE, pipesig_handler);
+        prctl(PR_SET_NAME, "inst_mssg", 0, 0, 0);
         inst_mssg(argc, argv);
+        setsid();
+        chdir("/");
+        umask(0);
+        close(STDIN_FILENO);
+        close(STDOUT_FILENO);
+        close(STDERR_FILENO);
     }
 #endif
     return 0;
@@ -1042,7 +1052,7 @@ comm_err0:
     }
 #endif
     return 0;
-}
+    }
 
 int inst_mssg(int argc, char* argv[])
 {
@@ -1207,14 +1217,14 @@ int inst_mssg(int argc, char* argv[])
         fprintf(stdout, "thread %d\t0x%08x\n", threadCnt, *(uint32_t*)&threadid);
         threadCnt++;
         SLEEP(99);
-    } while (!aim2exit);
+        } while (!aim2exit);
     fprintf(stdout, ">>> Executing thread count = %d.\n", threadCnt);
 #ifdef THREAD_PER_CONN
     while (true)
         SLEEP(9);
 #endif
     return 0;
-}
+    }
 
 template<typename T> int set_n_get_mem(T * shmem, int ndx, int rw)
 {

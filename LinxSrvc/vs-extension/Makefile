@@ -1,4 +1,7 @@
 all:
-	@ ./build.sh
+	@ ./make.sh
+
 clean:
-	@ ./build.sh clean
+	@ ./make.sh clean
+
+.PHONY: all clean

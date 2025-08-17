@@ -247,7 +247,7 @@ int main_server(int argc, char** argv)
 
 int api__trans(struct soap* soap, char* msg, char* rtn[])
 {
-    String_ str;
+    String_s ss;
     struct PARAM {
         char key[16];
         char value[16];
@@ -255,7 +255,7 @@ int api__trans(struct soap* soap, char* msg, char* rtn[])
     static int j = 0;
     struct PARAM params[8];
     char* text[8] = { msg };
-    int neq = str.char_count_(*text, '=');
+    int neq = ss.char_count_(*text, '=');
     if (neq < 0 || msg == NULL) {
         memcpy(text[0], "request uri error!", 19);
         return -1;
@@ -274,7 +274,7 @@ int api__trans(struct soap* soap, char* msg, char* rtn[])
     while (token != NULL) {
         tmp[j] = token;
         if (strstr(tmp[j], "=") != NULL) {
-            str.strcut_((unsigned char*)tmp[j], '=', params[j].key, params[j].value);
+            ss.strcut_((unsigned char*)tmp[j], '=', params[j].key, params[j].value);
             j++;
         }
         token = strtok(NULL, "&");

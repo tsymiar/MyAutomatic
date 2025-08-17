@@ -7,7 +7,7 @@
 #include <stdint.h>
 
 #define DEVICE_NAME "/dev/phy_mem_drv"
-#define IOCTL_MAGIC 0x1234
+#define IOCTL_MAGIC 0x12347379
 
 #define IOCTL_SET_PHY_ADDR   _IOW(IOCTL_MAGIC, 1, struct phy_addr_params)
 #define IOCTL_ADD_USER_FD    _IOW(IOCTL_MAGIC, 2, int)

@@ -120,7 +120,7 @@
     <ClInclude Include="..\KlineUtil\mygl\texture.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\KlineUtil\netwk\Simulation.h">
+    <ClInclude Include="..\KlineUtil\Ftdc\Simulation.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\KlineUtil\opencv\opencv2\opencv_modules.hpp">
@@ -150,10 +150,10 @@
     <ClInclude Include="..\KlineUtil\opencv\CvimgMat.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\KlineUtil\netwk\CTPclient.h">
+    <ClInclude Include="..\KlineUtil\Ftdc\CTPclient.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\KlineUtil\netwk\ChannelCollector.h">
+    <ClInclude Include="..\KlineUtil\Ftdc\ChannelCollector.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\KlineUtil\mygl\bitmap.h">
@@ -233,10 +233,10 @@
     <ClCompile Include="..\KlineUtil\mygl\bitmap.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\KlineUtil\netwk\ChannelCollector.cpp">
+    <ClCompile Include="..\KlineUtil\Ftdc\ChannelCollector.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\KlineUtil\netwk\CTPclient.cpp">
+    <ClCompile Include="..\KlineUtil\Ftdc\CTPclient.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\KlineUtil\opencv\CvimgMat.cc">
@@ -260,7 +260,7 @@
     <ClCompile Include="..\KlineUtil\mygl\OGLKview.cc">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\KlineUtil\netwk\Simulation.cpp">
+    <ClCompile Include="..\KlineUtil\Ftdc\Simulation.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\KlineUtil\test\Testcase.cpp">

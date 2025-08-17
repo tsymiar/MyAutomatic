@@ -12,7 +12,7 @@
 #ifdef _STRING_
 #include <string>
 //未使用STL的string类时
-typedef std::string String_;
+typedef std::string String_s;
 #define c_str_ c_str
 #define size_ size
 #define trim_ trim
@@ -50,28 +50,28 @@ inline unsigned char* avoid_str_err(unsigned char* str, unsigned int len)
 
 using namespace std;
 
-class String_ {
-    friend ostream& operator<<(ostream&, const String_&);
-    friend istream& operator >> (istream&, String_&);
+class String_s {
+    friend ostream& operator<<(ostream&, const String_s&);
+    friend istream& operator >> (istream&, String_s&);
 public:
-    String_(const char* str = nullptr);//赋值兼默认构造函数（char）
-    String_(const String_& other);     //赋值构造函数（String_）
-    ~String_(void) { if (m_data) delete[] m_data; }
-    String_& operator=(const String_& other);
-    String_/*&*/ operator+(const String_& other);
-    String_ operator+=(const String_& other);
-    bool operator==(const String_&);
+    String_s(const char* str = nullptr);//赋值兼默认构造函数（char）
+    String_s(const String_s& other);     //赋值构造函数（String_）
+    ~String_s(void) { if (m_data) delete[] m_data; }
+    String_s& operator=(const String_s& other);
+    String_s/*&*/ operator+(const String_s& other);
+    String_s operator+=(const String_s& other);
+    bool operator==(const String_s&);
     char& operator[](unsigned int) const;
     char* c_str_() const { return m_data; }
     size_t size_();
-    String_ trim_();
+    String_s trim_();
     template<typename T> bool equals_(T object);
-    int indexOf_(String_ str);
-    String_ replace_(char old, char dst);
+    int indexOf_(String_s str);
+    String_s replace_(char old, char dst);
     char charAt_(size_t z);
-    String_ reverse_();
-    String_ toLowerCase_();
-    String_ toUpperCase_();
+    String_s reverse_();
+    String_s toLowerCase_();
+    String_s toUpperCase_();
     static char* itoa_(int num, char* str, int radix);
     static int memcmp_(const void* ptr1, const void* ptr2, int size);
     static char* strcpy_(char* dest, const char* src, int len = 1024);
@@ -89,7 +89,7 @@ private:
     char* m_data;
 };
 //inline执行时直接语句替换
-inline String_::String_(const char* str)
+inline String_s::String_s(const char* str)
 {
     if (!str)
         m_data = 0;
@@ -99,7 +99,7 @@ inline String_::String_(const char* str)
     }
 }
 
-inline String_::String_(const String_& other)
+inline String_s::String_s(const String_s& other)
 {//类的成员函数内可以访问同种对象的私有成员（同种类为友元关系的类）
     if (!other.m_data)
         m_data = 0;
@@ -109,7 +109,7 @@ inline String_::String_(const String_& other)
     }
 }
 
-inline String_& String_::operator=(const String_& other)
+inline String_s& String_s::operator=(const String_s& other)
 {
     if (this != &other) {
         delete[] m_data;
@@ -123,9 +123,9 @@ inline String_& String_::operator=(const String_& other)
     return *this;
 }
 
-inline String_ /*&*/ String_::operator+(const String_& other)
+inline String_s /*&*/ String_s::operator+(const String_s& other)
 {
-    String_ new_string;
+    String_s new_string;
     if (!other.m_data)
         new_string = *this;
     else if (!m_data)
@@ -138,7 +138,7 @@ inline String_ /*&*/ String_::operator+(const String_& other)
     return new_string;
 }
 
-inline String_ String_::operator+=(const String_& other)
+inline String_s String_s::operator+=(const String_s& other)
 {
     char* head = m_data;
     m_data = new char[this->size_() + strlen_(other.m_data) + 1];
@@ -147,14 +147,14 @@ inline String_ String_::operator+=(const String_& other)
     return *this;
 }
 
-inline bool String_::operator==(const String_& s)
+inline bool String_s::operator==(const String_s& s)
 {
     if (strlen_(s.m_data) != strlen_(m_data))
         return false;
     return memcmp_(m_data, s.m_data, (int)s.strlen_(m_data)) ? false : true;
 }
 
-inline char& String_::operator[](unsigned int e) const
+inline char& String_s::operator[](unsigned int e) const
 {
     if (e <= strlen_(m_data))
         return m_data[e];
@@ -164,13 +164,13 @@ inline char& String_::operator[](unsigned int e) const
     }
 }
 
-inline ostream& operator<<(ostream& os, const String_& str)
+inline ostream& operator<<(ostream& os, const String_s& str)
 {
     os << str.m_data;
     return os;
 }
 
-inline istream& operator >> (istream& input, String_& s)
+inline istream& operator >> (istream& input, String_s& s)
 {
     char buf[255]; // 存储输入流
     input >> setw(255) >> buf;
@@ -178,7 +178,7 @@ inline istream& operator >> (istream& input, String_& s)
     return input; // 支持连续使用>>运算符
 }
 
-size_t String_::size_()
+size_t String_s::size_()
 {
     if (!m_data)
         return 0;
@@ -190,7 +190,7 @@ size_t String_::size_()
         return strlen_(m_data);
 }
 
-inline String_ String_::trim_()
+inline String_s String_s::trim_()
 {
     unsigned int i = 0, j = 0, k = 0;
     size_t len = strlen_(m_data);
@@ -214,16 +214,16 @@ inline String_ String_::trim_()
 }
 
 template<typename T>
-inline bool String_::equals_(T object)
+inline bool String_s::equals_(T object)
 {
     char* str = (char*)object;
-    if (String_(str) == *this) {
+    if (String_s(str) == *this) {
         return true;
     }
     return false;
 }
 
-inline int String_::indexOf_(String_ str)
+inline int String_s::indexOf_(String_s str)
 {
     size_t len = strlen_(m_data);
     for (unsigned int i = 0; i < len; i++) {
@@ -234,23 +234,23 @@ inline int String_::indexOf_(String_ str)
     return -1;
 }
 
-inline String_ String_::replace_(char old, char dst)
+inline String_s String_s::replace_(char old, char dst)
 {
     size_t len = strlen_(m_data);
-    char* str = new char[len + 1];
-    strcpy_(str, m_data, len);
+    char* tmp = new char[len + 1];
+    strcpy_(tmp, m_data, len);
     for (unsigned int i = 0; i < len; i++) {
         if (m_data[i] == old) {
-            str[i] = dst;
+            tmp[i] = dst;
         }
     }
-    str[len] = '\0';
-    String_ res(str);
-    delete[] str;
-    return res;
+    tmp[len] = '\0';
+    String_s str(tmp);
+    delete[] tmp;
+    return str;
 }
 
-inline char String_::charAt_(size_t z)
+inline char String_s::charAt_(size_t z)
 {
     if (z > strlen_(m_data)) {
         return 0;
@@ -259,23 +259,23 @@ inline char String_::charAt_(size_t z)
     }
 }
 
-inline String_ String_::reverse_()
+inline String_s String_s::reverse_()
 {
     size_t len = strlen_(m_data);
-    char* str = new char[len + 1];
-    strcpy_(str, m_data, len);
+    char* tmp = new char[len + 1];
+    strcpy_(tmp, m_data, len);
     for (unsigned int i = 0; i < len / 2; i++) {
-        char t = str[i];
-        str[i] = str[len - i - 1]; str[len - i - 1] = t;
+        char t = tmp[i];
+        tmp[i] = tmp[len - i - 1]; tmp[len - i - 1] = t;
     }
-    str[len] = '\0';
-    String_ res(str);
-    delete[] str;
-    return res;
+    tmp[len] = '\0';
+    String_s str(tmp);
+    delete[] tmp;
+    return str;
 }
 
 // 字符串逆序输出
-inline char* String_::reverse_(char* src, char* cst)
+inline char* String_s::reverse_(char* src, char* cst)
 {
     size_t len = strlen_(src);
     char* dest = (char*)malloc(len + 1);//为\0分配一个空间
@@ -290,41 +290,41 @@ inline char* String_::reverse_(char* src, char* cst)
     return cst;
 }
 
-inline String_ String_::toLowerCase_()
+inline String_s String_s::toLowerCase_()
 {
     size_t len = strlen_(m_data);
-    char* str = new char[len + 1];
-    strcpy_(str, m_data, len);
+    char* tmp = new char[len + 1];
+    strcpy_(tmp, m_data, len);
     for (unsigned int i = 0; i < len; i++) {
         char up = m_data[i];
         if (up >= 65 && up <= 90) {
-            str[i] = m_data[i] + 32;
+            tmp[i] = m_data[i] + 32;
         }
     }
-    str[len] = '\0';
-    String_ res(str);
-    delete[] str;
-    return res;
+    tmp[len] = '\0';
+    String_s str(tmp);
+    delete[] tmp;
+    return str;
 }
 
-inline String_ String_::toUpperCase_()
+inline String_s String_s::toUpperCase_()
 {
     size_t len = strlen_(m_data);
-    char* str = new char[len + 1];
-    strcpy_(str, m_data, len);
+    char* tmp = new char[len + 1];
+    strcpy_(tmp, m_data, len);
     for (unsigned int i = 0; i < len; i++) {
         char low = m_data[i];
         if (low >= 97 && low <= 122) {
-            str[i] = m_data[i] - 32;
+            tmp[i] = m_data[i] - 32;
         }
     }
-    str[len] = '\0';
-    String_ res(str);
-    delete[] str;
-    return res;
+    tmp[len] = '\0';
+    String_s str(tmp);
+    delete[] tmp;
+    return str;
 }
 
-inline char* String_::itoa_(int num, char* str, int radix)
+inline char* String_s::itoa_(int num, char* str, int radix)
 {
     if (num == 0) {
         str[0] = '0'; str[1] = '\0';
@@ -357,7 +357,7 @@ inline char* String_::itoa_(int num, char* str, int radix)
     return str;
 }
 
-inline int String_::memcmp_(const void* ptr1, const void* ptr2, int size)
+inline int String_s::memcmp_(const void* ptr1, const void* ptr2, int size)
 {
     if (!size)
         return(0);
@@ -368,7 +368,7 @@ inline int String_::memcmp_(const void* ptr1, const void* ptr2, int size)
     return(*((unsigned char*)ptr1) - *((unsigned char*)ptr2));
 }
 //字符串拷贝
-inline char* String_::strcpy_(char* dest, const char* src, int len)
+inline char* String_s::strcpy_(char* dest, const char* src, int len)
 {
     assert((dest != NULL) && (src != NULL));
     int available = len;
@@ -378,7 +378,7 @@ inline char* String_::strcpy_(char* dest, const char* src, int len)
     return strDestCopy; //返回字符串以支持链式表达式
 }
 //计算字符个数（字符串长度）
-inline size_t String_::strlen_(const char* str)
+inline size_t String_s::strlen_(const char* str)
 {
     if (str == NULL)
         throw "buffer is empty";
@@ -387,7 +387,7 @@ inline size_t String_::strlen_(const char* str)
     return (size_t)(tmp - str);
 }
 //字符串拼接
-inline char* /*__cdecl*/ String_::strcat_(char* destination, const char* source)
+inline char* /*__cdecl*/ String_s::strcat_(char* destination, const char* source)
 {
     if ((destination == NULL) || (source == NULL))
         throw "buffer is empty";
@@ -398,7 +398,7 @@ inline char* /*__cdecl*/ String_::strcat_(char* destination, const char* source)
     return(destination);
 }
 //截取字符串src内字符ch左右两边的子串，ch不保留。
-inline int String_::strcut_(unsigned char* src, char ch, char* left, char* right)
+inline int String_s::strcut_(unsigned char* src, char ch, char* left, char* right)
 {
     char s1[16];
     char s2[16];
@@ -421,7 +421,7 @@ inline int String_::strcut_(unsigned char* src, char ch, char* left, char* right
     return i;
 }
 //从第pos位开始截取src的len个字符。
-inline unsigned char* String_::strsub_(unsigned char* src, int pos, int len)
+inline unsigned char* String_s::strsub_(unsigned char* src, int pos, int len)
 {
     //定义一个字符指针，指向传递进来的ch地址
     unsigned char* pch = src;
@@ -441,7 +441,7 @@ inline unsigned char* String_::strsub_(unsigned char* src, int pos, int len)
     //该地址指向的内存必须在函数外释放(free)
 }
 
-inline int String_::char_count_(char* arr, char ch)
+inline int String_s::char_count_(char* arr, char ch)
 {
     if (arr == NULL) return -1;
     int i = 0;
@@ -465,7 +465,7 @@ inline int String_::char_count_(char* arr, char ch)
         a[i] = l[i]; // (char*)[const char* point]
     int s = char_count_array_(a, 'c', m);
 */
-inline int String_::char_count_array_(char** arr, char ch, int m)
+inline int String_s::char_count_array_(char** arr, char ch, int m)
 {
     if (arr == NULL) return -1;
     int i = 0;
@@ -490,7 +490,7 @@ inline int String_::char_count_array_(char** arr, char ch, int m)
   * b, 移动的位数
   * fore, 移动的方向(默认后移)
   **/
-inline char* String_::str_ch_move_(char* w, char ch, int d, bool f)
+inline char* String_s::str_ch_move_(char* w, char ch, int d, bool f)
 {
     int i = 0;
     char* t = w;
@@ -521,7 +521,7 @@ inline char* String_::str_ch_move_(char* w, char ch, int d, bool f)
 // m: 字符位置
 // d: 位数
 // fore: 默认后移
-inline char* String_::str_pos_move_(char* w, int m, int d, bool f)
+inline char* String_s::str_pos_move_(char* w, int m, int d, bool f)
 {
     int i = 0;
     m -= 1;
@@ -543,7 +543,7 @@ inline char* String_::str_pos_move_(char* w, int m, int d, bool f)
     return w;
 }
 //字符串整体环状移动
-inline char* String_::str_roll_move_(char* w, unsigned int m, bool f)
+inline char* String_s::str_roll_move_(char* w, unsigned int m, bool f)
 {
     size_t len = strlen_(w);
     if (m > size_t(len))
