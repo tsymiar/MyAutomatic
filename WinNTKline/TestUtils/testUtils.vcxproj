@@ -224,9 +224,9 @@
     <ClInclude Include="..\KlineUtil\html\cefWebKit.h" />
     <ClInclude Include="..\KlineUtil\mygl\House.h" />
     <ClInclude Include="..\KlineUtil\mygl\OGLKview.h" />
-    <ClInclude Include="..\KlineUtil\netwk\ChannelCollector.h" />
-    <ClInclude Include="..\KlineUtil\netwk\CTPclient.h" />
-    <ClInclude Include="..\KlineUtil\netwk\Simulation.h" />
+    <ClInclude Include="..\KlineUtil\Ftdc\ChannelCollector.h" />
+    <ClInclude Include="..\KlineUtil\Ftdc\CTPclient.h" />
+    <ClInclude Include="..\KlineUtil\Ftdc\Simulation.h" />
     <ClInclude Include="..\KlineUtil\opencv\CvimgMat.h" />
     <ClInclude Include="..\MFCKline\IMhideWndDlg.h" />
     <ClInclude Include="..\MFCKline\IMlogDlg.h" />
@@ -259,13 +259,13 @@
     <ClCompile Include="..\KlineUtil\mygl\OGLKview.cc">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\KlineUtil\netwk\ChannelCollector.cpp">
+    <ClCompile Include="..\KlineUtil\Ftdc\ChannelCollector.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\KlineUtil\netwk\CTPclient.cpp">
+    <ClCompile Include="..\KlineUtil\Ftdc\CTPclient.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\KlineUtil\netwk\Simulation.cpp">
+    <ClCompile Include="..\KlineUtil\Ftdc\Simulation.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\KlineUtil\opencv\CvimgMat.cc">

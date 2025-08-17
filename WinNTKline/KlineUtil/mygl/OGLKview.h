@@ -119,7 +119,7 @@ DLL_KVIEW_API
 #undef sprintf_s
 #define sprintf_s sprintf
 #endif
-#define _itoa_s String_ s;s.itoa_
+#define _itoa_s String_s s;s.itoa_
 #endif
 
 #ifdef __linux

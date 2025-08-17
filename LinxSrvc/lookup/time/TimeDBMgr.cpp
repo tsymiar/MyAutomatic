@@ -85,12 +85,12 @@ int TimeDBMgr::queryTimeOffset(SelectValue seek, std::vector<SeekTimeValue>& see
 
 int TimeDBMgr::queryTimeDetail(FileTimeDetails& detail)
 {
-    detail.time.first = detail.time.last = -1;
-    detail.offset.first = detail.offset.last = 0;
     std::string ssql = "select " FIELD_FIRST_OFFSET "," FIELD_LAST_OFFSET "," FIELD_FIRST_TIME "," FIELD_LAST_TIME
         " from " TABLE_FILE_MAPPING
         " limit 1;";
     PR_SQL(ssql.c_str());
+    detail.offset = { 0, 0 };
+    detail.time = { .first = 0x1, .last = 0x100000000 };
     return 0;
 }
 

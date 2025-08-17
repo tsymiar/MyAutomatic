@@ -36,7 +36,7 @@ phm2f:
 	@if [ -d $(BUILD) ]; then make -C phy_mem KNLDIR=$(BUILD); fi;
 	$(call Built,$@)
 image:
-	@gcc -g -DSNAP test.c linuxsnap.c -o $(GEN)/imagesnap.exe
+	@gcc -g -DSNAP test.c linuxsnap.c -o $(GEN)/imgfilesnap.exe
 	$(call Built,$@)
 video:
 	@gcc -g -DVIDEO test.c routine.c -lm -o $(GEN)/VideoCapture
@@ -66,7 +66,7 @@ endif
 	@make pipefifo
 clean:
 	@rm -rvf $(GEN)/chigpio* $(GEN)/mes909* $(GEN)/dirtyhack* $(GEN)/chstest*
-	@rm -rvf $(GEN)/VideoCapture* $(GEN)/imagesnap* $(GEN)/pipefifo*
+	@rm -rvf $(GEN)/VideoCapture* $(GEN)/imgfilesnap* $(GEN)/pipefifo*
 	@rm -rvf $(GEN)/rdma_*.exe
 	@rm -rvf $(GEN)/test_*
 ifeq ($(shell uname), Linux)

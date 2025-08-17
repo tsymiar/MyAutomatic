@@ -4,8 +4,8 @@
 #include "MFCKline.h"
 #include "LoginDlg.h"
 #include "RegistDlg.h"
-#include "netwk/CTPclient.h"
-#include "netwk/Simulation.h"
+#include "Ftdc/CTPclient.h"
+#include "Ftdc/Simulation.h"
 
 //应加到具体源文件中
 #include "../fix/ns2_soap_call.h"

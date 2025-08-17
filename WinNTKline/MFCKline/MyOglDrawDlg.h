@@ -3,13 +3,13 @@
 #include	"MFCKline.h"
 #include	"afxdialogex.h"
 #include	"MYGL/OGLKview.h"
-#include	"netwk/CTPclient.h"
+#include	"Ftdc/CTPclient.h"
 #include	"level2/Level2View.h"
 #include	"font/FontNehe.h"
 #include	"com/CommSet.h"
 #include	"dos/DOSCout.h"
 #include	"mygl/GlModel.h"
-#include	"netwk/Simulation.h"
+#include	"Ftdc/Simulation.h"
 #include	"elem/Screen-Sharing.h"
 
 #pragma comment(lib, "WS2_32.lib")

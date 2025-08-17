@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include <fstream>
+#include <cstdint>
 
 class ManacherFileProcessor {
 public:

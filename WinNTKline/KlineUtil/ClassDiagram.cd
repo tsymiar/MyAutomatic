@@ -118,7 +118,7 @@
     <Position X="9" Y="3.25" Width="1.25" />
     <TypeIdentifier>
       <HashCode>IGgAUoEQBgCgZAcggCRAaCcER0QESQiABS8QSIAACU4=</HashCode>
-      <FileName>netwk\ChannelCollector.h</FileName>
+      <FileName>Ftdc\ChannelCollector.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="CMFCKlineDlg" Collapsed="true">
@@ -153,14 +153,14 @@
     <Position X="8.5" Y="2.75" Width="1.25" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAAAAAQwAAAAAAACAAAAAAAAAAAEAAA=</HashCode>
-      <FileName>netwk\CTPclient.h</FileName>
+      <FileName>Ftdc\CTPclient.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="TradeChannel" Collapsed="true">
     <Position X="7.75" Y="3.25" Width="1.25" />
     <TypeIdentifier>
       <HashCode>AAARAABABhACIEAACIQAAUgAVAQIGAAACAQAAgAAQAg=</HashCode>
-      <FileName>netwk\ChannelCollector.h</FileName>
+      <FileName>Ftdc\ChannelCollector.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="CLoginDlg" Collapsed="true">

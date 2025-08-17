@@ -303,9 +303,9 @@
     <ClInclude Include="..\KlineUtil\mygl\House.h" />
     <ClInclude Include="..\KlineUtil\mygl\OGLKview.h" />
     <ClInclude Include="..\KlineUtil\mygl\texture.h" />
-    <ClInclude Include="..\KlineUtil\netwk\ChannelCollector.h" />
-    <ClInclude Include="..\KlineUtil\netwk\CTPclient.h" />
-    <ClInclude Include="..\KlineUtil\netwk\Simulation.h" />
+    <ClInclude Include="..\KlineUtil\Ftdc\ChannelCollector.h" />
+    <ClInclude Include="..\KlineUtil\Ftdc\CTPclient.h" />
+    <ClInclude Include="..\KlineUtil\Ftdc\Simulation.h" />
     <ClInclude Include="..\KlineUtil\opencv\CvimgMat.h" />
     <ClInclude Include="..\KlineUtil\opencv\opencv2\opencv_modules.hpp" />
     <ClInclude Include="..\KlineUtil\security\encoding.h" />
@@ -347,9 +347,9 @@
     <ClCompile Include="..\KlineUtil\mygl\House.cc" />
     <ClCompile Include="..\KlineUtil\mygl\OGLKview.cc" />
     <ClCompile Include="..\KlineUtil\mygl\texture.c" />
-    <ClCompile Include="..\KlineUtil\netwk\ChannelCollector.cpp" />
-    <ClCompile Include="..\KlineUtil\netwk\CTPclient.cpp" />
-    <ClCompile Include="..\KlineUtil\netwk\Simulation.cpp" />
+    <ClCompile Include="..\KlineUtil\Ftdc\ChannelCollector.cpp" />
+    <ClCompile Include="..\KlineUtil\Ftdc\CTPclient.cpp" />
+    <ClCompile Include="..\KlineUtil\Ftdc\Simulation.cpp" />
     <ClCompile Include="..\KlineUtil\opencv\CvimgMat.cc" />
     <ClCompile Include="..\KlineUtil\security\AES.cc" />
     <ClCompile Include="..\KlineUtil\security\encoding.cc" />

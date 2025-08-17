@@ -27,10 +27,10 @@
     <ClInclude Include="..\KlineUtil\mygl\OGLKview.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\KlineUtil\netwk\ChannelCollector.h">
+    <ClInclude Include="..\KlineUtil\Ftdc\ChannelCollector.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\KlineUtil\netwk\Simulation.h">
+    <ClInclude Include="..\KlineUtil\Ftdc\Simulation.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\KlineUtil\html\cefWebKit.h">
@@ -51,7 +51,7 @@
     <ClInclude Include="..\KlineUtil\elem\Screen-Sharing.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\KlineUtil\netwk\CTPclient.h">
+    <ClInclude Include="..\KlineUtil\Ftdc\CTPclient.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\KlineUtil\level2\Level2View.h">
@@ -92,13 +92,13 @@
     <ClCompile Include="..\KlineUtil\dos\DOSCout.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\KlineUtil\netwk\ChannelCollector.cpp">
+    <ClCompile Include="..\KlineUtil\Ftdc\ChannelCollector.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\KlineUtil\mygl\OGLKview.cc">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\KlineUtil\netwk\Simulation.cpp">
+    <ClCompile Include="..\KlineUtil\Ftdc\Simulation.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\KlineUtil\html\cefWebKit.cpp">
@@ -116,7 +116,7 @@
     <ClCompile Include="testUtils.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\KlineUtil\netwk\CTPclient.cpp">
+    <ClCompile Include="..\KlineUtil\Ftdc\CTPclient.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\KlineUtil\elem\Screen-Sharing.cpp">
