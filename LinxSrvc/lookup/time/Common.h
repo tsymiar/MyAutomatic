@@ -6,13 +6,10 @@
 #include <iostream>
 
 #define MIN_FRAME_LEN 0x10
-
 #define CONST_FRAME_HEAD (0x1234567890abcdefULL) //
-
 #ifndef MAX_PATH_LEN
 #define MAX_PATH_LEN 522 // 128*4+(4+1)*2
 #endif
-
 #define ERROR(fmt, ...) fprintf(stderr, fmt, ##__VA_ARGS__)
 
 struct UserFileFrameHeader {

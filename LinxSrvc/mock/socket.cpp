@@ -398,7 +398,7 @@ int client(int argc, char* argv[])
             ssize_t msglen = sizeof(msgbuf) > caplen ? caplen : sizeof(msgbuf);
             while ((rdsize = read(g_state.fileno, msgbuf, msglen)) > 0) {
                 if (rdsize != msglen) {
-                    fprintf(stdout, "read last size=%zd, expect=%zu: %s\n", rdsize, msglen, strerror(errno));
+                    fprintf(stdout, "read last size=%zd, expect=%zd: error: %s\n", rdsize, msglen, strerror(errno));
                 }
                 if (g_state.bytcp) {
                     if (thrds > 1) {
