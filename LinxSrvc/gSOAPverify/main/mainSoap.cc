@@ -239,9 +239,9 @@ int main_server(int argc, char** argv)
         }
         pthread_mutex_destroy(&queue_lock);
         pthread_cond_destroy(&queue_cond);
+        // 分离运行时环境
+        soap_done(&Soap);
     }
-    // 分离运行时环境
-    soap_done(&Soap);
     return 0;
 }
 
