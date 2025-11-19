@@ -3,14 +3,14 @@
 #include <vector>
 #include <map>
 #include <stdint.h>
-#include "Common.h"
+#include "common.h"
 
-class TimeDBMgr; // Forward declaration
+class TimeDbMgr; // Forward declaration
 
-class SeekTime {
+class TimeSeek {
 public:
-    SeekTime();
-    virtual ~SeekTime();
+    TimeSeek();
+    virtual ~TimeSeek();
 
     int init(const std::string& dbName = "./seekTime.db");
     void uninit();
@@ -23,7 +23,7 @@ private:
 
 private:
     std::map<std::string, std::vector<SelectTime> > m_seekTimeMap{};
-    TimeDBMgr* m_dbMgr = NULL;
+    TimeDbMgr* m_dbMgr = NULL;
     FileTimeDetails m_timeDetail{ {1, 0x100000000}, {0, 0x100000000} };
     uint32_t m_windSize = 0x100000;
     uint32_t m_maxFrameSize = 0x100000;

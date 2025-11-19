@@ -1,43 +1,42 @@
-#include "SeekTime.h"
+#include "TimeSeek.h"
 #include <algorithm>
 #include <string.h>
 #include <stdio.h>
 #include <sys/time.h>
 #include <fstream>
 #include <iostream>
-#include "Common.h"
-#include "TimeDBMgr.h"
+#include "common.h"
+#include "logging.h"
+#include "TimeDbMgr.h"
 
 using namespace std;
 
-SeekTime::SeekTime()
-{
-    m_dbMgr = NULL;
-}
+TimeSeek::TimeSeek() : m_dbMgr(NULL)
+{ }
 
-SeekTime::~SeekTime()
+TimeSeek::~TimeSeek()
 {
     if (!m_hasDeinit) {
         uninit();
     }
 }
 
-int SeekTime::init(const std::string& dbName)
+int TimeSeek::init(const std::string& dbName)
 {
     if (m_dbMgr != NULL) {
         delete m_dbMgr;
         m_dbMgr = NULL;
     }
-    m_dbMgr = new(std::nothrow) TimeDBMgr();
+    m_dbMgr = new(std::nothrow) TimeDbMgr();
     if (m_dbMgr == NULL || m_dbMgr->connect(dbName) != 0) {
-        ERROR("connect(%s) failed: %s\n", dbName.c_str(), strerror(errno));
+        LOG_ERR("connect(%s) failed: %s.", dbName.c_str(), strerror(errno));
         return -1;
     }
     m_dbMgr->create();
     return 0;
 }
 
-void SeekTime::uninit()
+void TimeSeek::uninit()
 {
     if (m_dbMgr != NULL) {
         if (m_dbMgr->connected()) {
@@ -50,23 +49,14 @@ void SeekTime::uninit()
     m_hasDeinit = true;
 }
 
-uint64_t getUsecTime()
-{
-    uint64_t usec = 0;
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    usec = tv.tv_sec * 1000000ULL + tv.tv_usec;
-    return usec;
-}
-
-void SeekTime::setFilesTime(const std::vector<SelectTime>& times, const std::string& file)
+void TimeSeek::setFilesTime(const std::vector<SelectTime>& times, const std::string& file)
 {
     if (!file.empty()) {
         m_seekTimeMap[file] = times;
     }
 }
 
-static SeekTimeContent parseFrameFirst(FILE* file, TimeDBMgr* dbMgr, int position = 0, long int targetHeader = CONST_FRAME_HEAD, uint32_t windSize = 1024)
+static SeekTimeContent parseFrameFirst(FILE* file, TimeDbMgr* dbMgr, int position = 0, long int targetHeader = CONST_FRAME_HEAD, uint32_t windSize = 1024)
 {
     if (file == NULL) {
         return {};
@@ -146,7 +136,7 @@ static SeekTimeContent parseFrameBack(FILE* file, uint32_t windSize)
     return {};
 }
 
-SeekTimeContent SeekTime::parseFileFrame(SelectOffset position, int64_t timestamp, uint64_t minpos)
+SeekTimeContent TimeSeek::parseFileFrame(SelectOffset position, int64_t timestamp, uint64_t minpos)
 {
     if (m_file == NULL) {
         return {};
@@ -200,7 +190,7 @@ SeekTimeContent SeekTime::parseFileFrame(SelectOffset position, int64_t timestam
             current++;
             printf("--- read 0x%xB at %d, offset [%lu, %lu], time=%lu.\n", m_windSize, current, position.first, position.last, comidx.value.timestamp);
         }
-        if ((!firstSeek && equal_cnt >= 1) || (position.last - position.first <= MIN_FRAME_LEN)) {
+        if ((!firstSeek && equal_cnt >= 1) || (position.last - position.first <= MIN_FRAME_SIZE)) {
             if (llabs(lastValue.timestamp - timestamp) > llabs(firstValue.timestamp - timestamp))
                 comidx.value = firstValue;
             else
@@ -223,7 +213,7 @@ bool compareByTime(const SeekTimeContent& x, const SeekTimeContent& y)
     return x.value.timestamp < y.value.timestamp;
 }
 
-bool getTimefromDatabase(TimeDBMgr* dbMgr, SelectValue selectValue, SeekTimeContent& fileinfo, std::vector<SeekTimeContent>& fileinfos)
+bool getTimefromDatabase(TimeDbMgr* dbMgr, SelectValue selectValue, SeekTimeContent& fileinfo, std::vector<SeekTimeContent>& fileinfos)
 {
     std::vector<SeekTimeValue> seekOffsets{};
     if (dbMgr->queryTimeOffset(selectValue, seekOffsets, fileinfo.fileName) == 0) {
@@ -236,7 +226,10 @@ bool getTimefromDatabase(TimeDBMgr* dbMgr, SelectValue selectValue, SeekTimeCont
                     v = i;
                 }
                 delta = llabs(selectValue.average() - seekOffsets[i].timestamp);
-                SeekTimeValue value = { seekOffsets[i].timestamp, seekOffsets[i].offset, seekOffsets[i].size };
+                SeekTimeValue value;
+                value.timestamp = seekOffsets[i].timestamp;
+                value.offset = seekOffsets[i].offset;
+                value.size = seekOffsets[i].size;
                 printf("found value=[%lu, %lu, %lu]\n", value.timestamp, value.offset, value.size);
             }
             for (size_t i = v - 1; i < size; i++) {
@@ -247,14 +240,14 @@ bool getTimefromDatabase(TimeDBMgr* dbMgr, SelectValue selectValue, SeekTimeCont
             fileinfo.param = selectValue.average();
             fileinfos.emplace_back(fileinfo);
         } else {
-            ERROR("Not find file time from %lu to %lu\n", selectValue.first, selectValue.last);
+            LOG_ERR("Not find file time from %lu to %lu.", selectValue.first, selectValue.last);
         }
         return true;
     }
     return false;
 }
 
-int SeekTime::seekFileDataTime(std::vector<SeekTimeContent>& fileinfos)
+int TimeSeek::seekFileDataTime(std::vector<SeekTimeContent>& fileinfos)
 {
     int status = 0;
     uint64_t beginTime = getUsecTime();
@@ -316,7 +309,7 @@ int SeekTime::seekFileDataTime(std::vector<SeekTimeContent>& fileinfos)
                 fileinfo.param = at.average();
                 fileinfos.emplace_back(fileinfo);
             } else {
-                ERROR("Not found timestamp: %lu from '%s'\n", at.average(), it.first.c_str());
+                LOG_ERR("Not found timestamp: %lu from '%s'.", at.average(), it.first.c_str());
             }
             if (m_file != NULL) {
                 fclose(m_file);
@@ -327,7 +320,7 @@ int SeekTime::seekFileDataTime(std::vector<SeekTimeContent>& fileinfos)
     return status;
 }
 
-std::vector<SeekTimeContent> SeekTime::sortFramebyTime(SelectOffset selectOffset, uint64_t timestamp, SeekTimeContent& fileinfo)
+std::vector<SeekTimeContent> TimeSeek::sortFramebyTime(SelectOffset selectOffset, uint64_t timestamp, SeekTimeContent& fileinfo)
 {
     std::vector<SeekTimeContent> seekTimes{};
     {
@@ -386,7 +379,7 @@ std::vector<SeekTimeContent> SeekTime::sortFramebyTime(SelectOffset selectOffset
     } else if (seekTimes.size() == 1) {
         fileinfo = seekTimes[0];
     } else {
-        ERROR("Not found timestamp: %lu from '%s'\n", timestamp, fileinfo.fileName);
+        LOG_ERR("Not found timestamp: %lu from '%s'.", timestamp, fileinfo.fileName);
     }
     return seekTimes;
 }
