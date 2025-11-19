@@ -51,11 +51,12 @@ CMakeSettings.json
 *cmake-build-*
 */build
 build
-*.idea
+trunk
 vs
 **/.vs*
-!.vsconfig
-*Debug
 test.txt
+!.vsconfig
+*.idea
 *.so.*
-.venv
+*env*
+*Debug
