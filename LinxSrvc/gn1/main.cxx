@@ -399,6 +399,9 @@ void byteSwap32(uint32_t* val)
 void byteSwap64(uint64_t* val)
 {
     uint64_t v = *val;
+#ifdef __builtin_bswap64 
+    *val = __builtin_bswap64(v);
+#else
     *val = (((v & 0x00000000000000FFULL) << 56) |
         ((v & 0x000000000000FF00ULL) << 40) |
         ((v & 0x0000000000FF0000ULL) << 24) |
@@ -407,6 +410,7 @@ void byteSwap64(uint64_t* val)
         ((v & 0x0000FF0000000000ULL) >> 24) |
         ((v & 0x00FF000000000000ULL) >> 40) |
         ((v & 0xFF00000000000000ULL) >> 56));
+#endif
 }
 
 uint64_t size2bytes(const std::string& value)
