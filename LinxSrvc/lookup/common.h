@@ -4,13 +4,36 @@
 #include <vector>
 #include <fstream>
 #include <iostream>
+#include <sys/time.h>
 
-#define MIN_FRAME_LEN 0x10
-#define CONST_FRAME_HEAD (0x1234567890abcdefULL) //
 #ifndef MAX_PATH_LEN
-#define MAX_PATH_LEN 522 // 128*4+(4+1)*2
+#define MAX_PATH_LEN 256
 #endif
-#define ERROR(fmt, ...) fprintf(stderr, fmt, ##__VA_ARGS__)
+
+#define DELETE(x) do { \
+        if (x) {       \
+            delete x;  \
+            x = NULL;  \
+        }              \
+    } while (0)
+
+#define MIN_JUDGE_FRAME_SIZE (0x40)
+#define MIN_FRAME_SIZE 0x10
+#define PROJECT_FILE_OFFSET (80)
+#define CONST_FRAME_HEAD (0x1234567890abcdefULL)
+#define SEEK_FRAME_HEAD (0x1122334455667788ULL)
+
+struct ProjectFrame {
+    uint64_t syncHead;
+    uint64_t utctime;
+    uint64_t size;
+    ProjectFrame()
+    {
+        syncHead = SEEK_FRAME_HEAD;
+        utctime = 0;
+        size = 0;
+    }
+};
 
 struct UserFileFrameHeader {
     uint64_t header;
@@ -31,14 +54,19 @@ struct SeekTimeValue {
     uint64_t timestamp;
     uint64_t offset;
     uint64_t size;
+    SeekTimeValue()
+    {
+        timestamp = offset = size = 0;
+    }
 };
 
 #pragma pack(push)
 #pragma pack(4)
 typedef struct tagSeekTimeContent {
     char fileName[MAX_PATH_LEN];
-    uint32_t fileid;
+    uint32_t fileid = 1;
     uint64_t totalSize;
+    int32_t duration;
     SeekTimeValue value;
     bool found;
     uint64_t param;
@@ -87,6 +115,33 @@ struct FileTimeDetails {
     FileDataTime time;
     FileDataOffset offset;
 };
+
+static uint64_t getUsecTime()
+{
+    uint64_t usec = 0;
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    usec = tv.tv_sec * 1000000ULL + tv.tv_usec;
+    return usec;
+}
+
+static void* memset16(void* ptr, uint16_t value, size_t num_pairs)
+{
+#ifdef BIG_ENDIAN
+    uint8_t* p = (uint8_t*)ptr;
+#else
+    uint16_t* p = (uint16_t*)ptr;
+#endif
+    for (size_t i = 0; i < num_pairs / 2; i++) {
+#ifdef BIG_ENDIAN
+        p[2 * i] = (value >> 8) & 0xFF;
+        p[2 * i + 1] = value & 0xFF;
+#else
+        p[i] = value;
+#endif
+    }
+    return ptr;
+}
 
 static std::string getFileAsString(const std::string& filename)
 {
@@ -149,7 +204,7 @@ static std::string getVariable(const std::string& src, const std::string& key)
     return val;
 }
 
-static void stringToVector(std::string str, std::vector<std::string>& vec)
+static void stringToVec(std::string str, std::vector<std::string>& vec)
 {
     vec.clear();
     std::string tmp = "";

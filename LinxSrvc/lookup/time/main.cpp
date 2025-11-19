@@ -1,5 +1,5 @@
-#include "SeekTime.h"
-#include "Common.h"
+#include "TimeSeek.h"
+#include "common.h"
 
 int main(int argc, char* argv[])
 {
@@ -7,7 +7,7 @@ int main(int argc, char* argv[])
     if (argc > 1) {
         file = argv[1];
     }
-    SeekTime seekTime;
+    TimeSeek seekTime;
     seekTime.init(file + ".db");
     std::vector<SelectTime> times;
     std::vector<std::string> cfgs = splitLines(getFileAsString("./time.cfg"));
@@ -17,7 +17,7 @@ int main(int argc, char* argv[])
     }
     for (int i = 0; i < cfgs.size(); i++) {
         std::vector<std::string> stTimes{};
-        stringToVector(cfgs[i], stTimes);
+        stringToVec(cfgs[i], stTimes);
         uint64_t first = atoll(stTimes[1].c_str()) - 500;
         uint64_t last = atoll(stTimes[1].c_str()) + 500;
         SelectTime time = { first, last };

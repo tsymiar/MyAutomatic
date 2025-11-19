@@ -1,9 +1,6 @@
-#pragma once
-#include <string>
-#include <vector>
-#include "Common.h"
+#include "sql/DBComm.h"
 
-class TimeDBMgr {
+class TimeDbMgr {
 public:
     int connect(const std::string& db);
     void create();
