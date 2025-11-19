@@ -174,12 +174,6 @@ int server(int argc, char* argv[])
     timeval timeout = { 0, 3000 };
     socklen_t locsize = sizeof(local);
     unsigned char msgbuf[pkgsize];
-    if (g_state.dealFile) {
-        if ((g_state.filep = fopen(file, "wb+")) == NULL) {
-            fprintf(stderr, "recv fopen error: %s.\n", strerror(errno));
-            return -1;
-        }
-    }
     char ip[16];
     fd_set fds;
     FD_ZERO(&fds);
@@ -190,6 +184,12 @@ int server(int argc, char* argv[])
                 close(csock);
                 perror("accept");
                 return -7;
+            }
+            if (g_state.dealFile) {
+                if ((g_state.filep = fopen(file, "wb+")) == NULL) {
+                    fprintf(stderr, "recv fopen error: %s.\n", strerror(errno));
+                    return -1;
+                }
             }
             inet_ntop(AF_INET, (void*)&local.sin_addr, ip, 16);
             cout << "socket accept from " << ip << ":" << ntohs(local.sin_port) << ", waiting message..." << endl;
@@ -218,6 +218,9 @@ int server(int argc, char* argv[])
                                 }
                             }
                         } else if (rcvlen == 0) {
+                            sync();
+                            fclose(g_state.filep);
+                            g_state.filep = NULL;
                             cout << "\nrcvd total size: " << total << endl;
                             close(csock);
                             cout << "lose connection(" << csock << ")" << endl;
