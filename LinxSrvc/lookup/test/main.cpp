@@ -14,7 +14,7 @@ int main(int argc, char* argv[])
     if (argc > 1) {
         fileName = argv[1];
     } else {
-        printf("------- Usage:\n\t%s [data file]\n\tconfig file is ./%s.csv\n", argv[0], argv[1]);
+        printf("Usage:\n\t%s [data file]\n\tconfig file is ./%s.csv\n", argv[0], argv[1]);
         return 0;
     }
     TimeSeek seekTime;
@@ -23,13 +23,13 @@ int main(int argc, char* argv[])
 #ifndef TIMESEEK
     seekTime.getFileTime(fileName, time);
 #endif
-    printf("------- getFileTime start=%ld, last=%ld\n", time.first, time.last);
+    printf("getFileTime start=%ld, last=%ld\n", time.first, time.last);
     std::vector<SelectTime> times;
     size_t pos = fileName.rfind('.');
     string csvpre = fileName.substr(0, pos);
     std::vector<std::string> cfgs = splitLines(getFileAsString(csvpre + ".csv"));
     if (cfgs.size() == 0) {
-        printf("------- Error read config file!\n");
+        printf("Error read config file!\n");
         return 0;
     }
     time = {};
@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
         printf("Not found seek times!\n");
     } else
         for (auto content : vecContent) {
-            printf("---------filename[%s], len=%ld, offset=%ld, time=%ld\n", content.fileName, content.value.size, content.value.offset, content.value.timestamp);
+            printf("filename[%s], len=%ld, offset=%ld, time=%ld\n", content.fileName, content.value.size, content.value.offset, content.value.timestamp);
         }
     seekTime.uninit();
 }

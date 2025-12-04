@@ -1,4 +1,4 @@
-#module
+## Ignore patterns for build artifacts and temporary files
 **/*/.*
 **/*/*.ko
 **/*/[Mm]odule*
@@ -7,12 +7,14 @@
 **/*.tmp*
 **/build
 **/dist
-#user
+**/lcov
+#object files
 *.xx*
 *.user
-.vs*
 *.suo
-#built
+*.o
+.vs*
+#targets
 bin
 gen
 out

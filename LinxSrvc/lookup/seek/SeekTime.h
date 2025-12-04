@@ -24,12 +24,12 @@ extern "C"
         SelectTime getTimeDuration(std::vector<std::string> files);
 
     private:
-        int findFileFragmentDetail(FILE* file, FileDataFrame& startframe, FileDataFrame& tailframe);
+        int findFileFragmentDetail(FILE* file, FileFrameData& startframe, FileFrameData& tailframe);
 
     private:
         std::map<std::string, std::vector<SelectTime> > m_seekTimeMap{};
         SeekDbMgr* m_dbMgr = NULL;
-        FileDataFrame m_dataFrame{};
+        FileFrameData m_dataFrame{};
         uint32_t m_windSize = 0x10000;
         uint32_t m_maxFrameSize = 0x100000;
         FILE* m_pfile = NULL;

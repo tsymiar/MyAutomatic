@@ -20,13 +20,19 @@
 
 using namespace std;
 
+enum TCPUDP {
+    TCP = 1,
+    UDP = 0,
+    MCAST = 2
+};
+
 struct RuntimeState {
     float fBps = 0;
     float progress = 0;
     bool bserv = false;
     bool running = true;
     bool dealFile = false;
-    bool bytcp = false;
+    TCPUDP how = TCP;
     FILE* filep = NULL;
     int fileno = -1;
     int sock = -1;
@@ -67,17 +73,17 @@ void queuePush(Message* msg)
 int queuePop(Message* msg)
 {
     lock_guard<mutex> guard(g_mutex);
-    Message* m = g_msgQue.front();
-    if (g_msgQue.size() > 0 && msg != nullptr) {
-        *msg = *m;
-        g_msgQue.pop();
-        return 0;
-    } else {
+    if (g_msgQue.size() == 0 || msg == nullptr) {
         if (g_msgQue.size() > 0) {
+            // still pop to avoid leak if someone queued bad message pointer (keeps original behavior)
             g_msgQue.pop();
         }
         return -1;
     }
+    Message* m = g_msgQue.front();
+    *msg = *m;
+    g_msgQue.pop();
+    return 0;
 }
 
 size_t queueSize()
@@ -89,7 +95,7 @@ void wait(unsigned int tms)
 {
     struct timespec ts;
     ts.tv_sec = 0;
-    ts.tv_nsec = 1000000 * tms; // 10 milliseconds
+    ts.tv_nsec = 1000000 * tms; // 1 millisecond * tms
     nanosleep(&ts, NULL);
 }
 
@@ -110,22 +116,25 @@ void signal_exit(int s)
     exit(0);
 }
 
+static bool is_multicast_addr(const char* ip)
+{
+    in_addr_t a = inet_addr(ip);
+    if (a == INADDR_NONE) return false;
+    uint32_t h = ntohl(a);
+    return (h >= 0xE0000000 && h <= 0xEFFFFFFF); // 224.0.0.0 - 239.255.255.255
+}
+
 int server(int argc, char* argv[])
 {
     const char* file = "./test.dat";
+    const char* mgroup = NULL;
     g_state.bserv = true;
-    if (argc > 1) {
-        g_state.port = atoi(argv[1]);
-    } else {
-        cout << "Usage: " << argv[0] << " <listen port> <TCP(1)/UDP(0)> [pkgsize(default 1024)] [filename]" << endl;
+    if (argc < 2) {
+        cout << "Usage: " << argv[0] << " <listen port> [TCP(1)/UDP(0)/MCAST(2)] [pkgsize] [save filename(0 if no save)] [mcast_group]" << endl;
         return -1;
     }
-    if (argc > 2) {
-        g_state.bytcp = atoi(argv[2]);
-    } else {
-        cout << "Usage: " << argv[0] << " <listen port> <TCP(1)/UDP(0)> [pkgsize(default 1024)] [save filename]" << endl;
-        return -1;
-    }
+    g_state.port = atoi(argv[1]);
+    g_state.how = (argc > 2) ? static_cast<TCPUDP>(atoi(argv[2])) : TCP;
     int pkgsize = 1024;
     if (argc > 3) {
         pkgsize = atoi(argv[3]);
@@ -135,21 +144,37 @@ int server(int argc, char* argv[])
         }
     }
     if (argc > 4) {
-        g_state.dealFile = true;
         file = argv[4];
+        if (file[0] != '0') {
+            g_state.dealFile = true;
+        }
+    }
+    if (argc > 5) {
+        mgroup = argv[5];
     }
     int ssock = -1;
-    if (g_state.bytcp) {
+    if (g_state.how == TCP) {
         if ((ssock = socket(AF_INET, SOCK_STREAM, 0)) == ~0) {
             perror("socket");
             return -4;
         }
     } else {
         ssock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+        if (ssock < 0) {
+            perror("socket");
+            return -4;
+        }
+        // Allow multiple listeners on same machine/port (needed for multicast)
+        int reuse = 1;
+        if (setsockopt(ssock, SOL_SOCKET, SO_REUSEADDR, (const void*)&reuse, sizeof(reuse)) < 0) {
+            perror("setsockopt SO_REUSEADDR");
+            // non-fatal
+        }
     }
     g_state.sock = ssock;
-    cout << "server start by " << (g_state.bytcp ? "TCP" : "UDP") << ", pkgsize:" << pkgsize <<
-        (g_state.dealFile ? ", write to '" + string(file) + "'" : "") << " ok." << endl;
+    cout << "server start by " << (g_state.how == TCP ? "TCP" : (g_state.how == MCAST ? "MCAST" : "UDP"))
+        << ", pkgsize:" << pkgsize << (g_state.dealFile ? ", write to '" + string(file) + "'" : "")
+        << (mgroup ? (", join multicast '" + string(mgroup) + "'") : "") << " ok." << endl;
     struct sockaddr_in local;
     local.sin_family = AF_INET;
     local.sin_port = htons(g_state.port);
@@ -159,8 +184,23 @@ int server(int argc, char* argv[])
         perror("bind");
         return -5;
     }
+
+    // If multicast group specified and IPv4 multicast, join the group
+    if (g_state.how == MCAST && mgroup != NULL && is_multicast_addr(mgroup)) {
+        struct ip_mreq mreq;
+        memset(&mreq, 0, sizeof(mreq));
+        mreq.imr_multiaddr.s_addr = inet_addr(mgroup);
+        mreq.imr_interface.s_addr = htonl(INADDR_ANY);
+        if (setsockopt(ssock, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq)) < 0) {
+            perror("setsockopt IP_ADD_MEMBERSHIP");
+            // proceed anyway
+        } else {
+            cout << "joined multicast group " << mgroup << endl;
+        }
+    }
+
     cout << "socket bind port " << g_state.port << " ok." << endl;
-    if (g_state.bytcp) {
+    if (g_state.how == TCP) {
         if (listen(ssock, 50) < 0) {
             close(ssock);
             perror("listen");
@@ -173,12 +213,13 @@ int server(int argc, char* argv[])
     uint64_t calclen = 0;
     timeval timeout = { 0, 3000 };
     socklen_t locsize = sizeof(local);
-    unsigned char msgbuf[pkgsize];
+    unsigned char* msgbuf = (unsigned char*)malloc(pkgsize ? pkgsize : 1024);
+    if (!msgbuf) msgbuf = (unsigned char*)malloc(1024);
     char ip[16];
     fd_set fds;
     FD_ZERO(&fds);
     while (g_state.running) {
-        if (g_state.bytcp) {
+        if (g_state.how == TCP) {
             int csock = accept(ssock, (struct sockaddr*)&local, &locsize);
             if (csock < 0) {
                 close(csock);
@@ -207,9 +248,9 @@ int server(int argc, char* argv[])
                                 calclen = 0;
                             }
                             if (g_state.dealFile && g_state.filep != NULL) {
-                                int i_write_count = fwrite(msgbuf, rcvlen, sizeof(char), g_state.filep);
-                                if (i_write_count != sizeof(char)) {
-                                    fprintf(stderr, "recv data write failed: %s, write(count=%d,size=%zd).\n", strerror(errno), i_write_count, rcvlen);
+                                size_t i_write_count = fwrite(msgbuf, 1, rcvlen, g_state.filep);
+                                if (i_write_count != (size_t)rcvlen) {
+                                    fprintf(stderr, "recv data write failed: %s, write(count=%zu,size=%zd).\n", strerror(errno), i_write_count, rcvlen);
                                     fclose(g_state.filep);
                                     g_state.filep = NULL;
                                 }
@@ -219,8 +260,10 @@ int server(int argc, char* argv[])
                             }
                         } else if (rcvlen == 0) {
                             sync();
-                            fclose(g_state.filep);
-                            g_state.filep = NULL;
+                            if (g_state.filep) {
+                                fclose(g_state.filep);
+                                g_state.filep = NULL;
+                            }
                             cout << "\nrcvd total size: " << total << endl;
                             close(csock);
                             cout << "lose connection(" << csock << ")" << endl;
@@ -239,7 +282,9 @@ int server(int argc, char* argv[])
             if (select((int)(ssock + 1), &fds, NULL, NULL, &timeout) > 0) {
                 if (FD_ISSET(ssock, &fds) > 0) {
                     ssize_t rcvlen = 0;
-                    if ((rcvlen = ::recvfrom(ssock, (char*)msgbuf, pkgsize, 0, (struct sockaddr*)&local, &locsize)) < 0) {
+                    struct sockaddr_in loc;
+                    socklen_t loclen = sizeof(loc);
+                    if ((rcvlen = ::recvfrom(ssock, (char*)msgbuf, pkgsize, 0, (struct sockaddr*)&loc, &loclen)) < 0) {
                         continue;
                     }
                     calclen += rcvlen;
@@ -248,7 +293,9 @@ int server(int argc, char* argv[])
                         start = getUsecTime();
                         calclen = 0;
                     }
-                    for (int i = 0; i < rcvlen; i++) {
+                    inet_ntop(AF_INET, (void*)&loc.sin_addr, ip, sizeof(ip));
+                    printf("recv from %s:%d size=%zd\n", ip, ntohs(loc.sin_port), rcvlen);
+                    for (int i = 0; i < (int)rcvlen; i++) {
                         if ((i % 32 == 0) && (i > 0))
                             printf("\n");
                         printf("%02x ", msgbuf[i]);
@@ -258,6 +305,7 @@ int server(int argc, char* argv[])
             }
         }
     }
+    free(msgbuf);
     signal_exit(0);
     cout << "server exit." << endl;
     return 0;
@@ -265,7 +313,7 @@ int server(int argc, char* argv[])
 
 void usage(const char* prog)
 {
-    cout << "Usage: " << prog << " <IP> <server port> [TCP(1)/UDP(0, default)] [package size(64B, default)] [filename] [thread count]" << endl;
+    cout << "Usage: " << prog << " <IP> <server port> [TCP(1, default)/UDP(0)] [package size(64B, default)] [send filename] [thread count]" << endl;
 }
 
 int client(int argc, char* argv[])
@@ -279,7 +327,7 @@ int client(int argc, char* argv[])
     size_t thrds = 1;
     g_state.bserv = false;
     vector<bool> vecstat(0);
-    char msgbuf[caplen];
+    char msgbuf[1024];
     if (argc > 1) {
         ip = argv[1];
     } else {
@@ -295,7 +343,7 @@ int client(int argc, char* argv[])
     }
     local.sin_port = htons(g_state.port);
     if (argc > 3) {
-        g_state.bytcp = atoi(argv[3]);
+        g_state.how = static_cast<TCPUDP>(atoi(argv[3]));
     }
     if (argc > 4) {
         caplen = atoi(argv[4]);
@@ -308,10 +356,11 @@ int client(int argc, char* argv[])
         file = argv[5];
         g_state.dealFile = true;
     }
-    cout << "client start by " << (g_state.bytcp ? "TCP" : "UDP") << " send-to " << ip << ":" << g_state.port << " caplen=" << caplen << (g_state.dealFile ? ", file=" + string(file) : "") << " ok." << endl;
+    cout << "client start by " << (g_state.how == TCP ? "TCP" : (g_state.how == MCAST ? "MCAST" : "UDP")) << " send-to " << ip << ":" << g_state.port << " caplen=" << caplen << (g_state.dealFile ? ", file=" + string(file) : "") << " ok." << endl;
+    bool is_mcast = is_multicast_addr(ip);
     if (argc > 6) {
         thrds = atoi(argv[6]);
-        thread works[thrds];
+        thread* works = new thread[thrds];
         vecstat.resize(thrds);
         for (size_t i = 0; i < vecstat.size(); i++) {
             vecstat[i] = false;
@@ -357,8 +406,9 @@ int client(int argc, char* argv[])
                 cout << "work thread[" << i << "] not able to join main thread!" << endl;
             }
         }
+        delete[] works;
     }
-    if (g_state.bytcp) {
+    if (g_state.how == TCP) {
         ssock = socket(PF_INET, SOCK_STREAM, 0);
         if (ssock == -1) {
             perror("socket");
@@ -371,13 +421,27 @@ int client(int argc, char* argv[])
         }
     } else {
         ssock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+        if (ssock < 0) {
+            perror("socket");
+            return -1;
+        }
+        // If sending to multicast group, set TTL and optionally enable loopback if desired
+        if (is_mcast) {
+            unsigned char ttl = 32; // Set multicast TTL to 32
+            if (setsockopt(ssock, IPPROTO_IP, IP_MULTICAST_TTL, &ttl, sizeof(ttl)) < 0) {
+                perror("setsockopt IP_MULTICAST_TTL");
+            }
+            // Ensure sender's packets are allowed to loop back - optional, leave default
+            // unsigned char loop = 1;
+            // setsockopt(ssock, IPPROTO_IP, IP_MULTICAST_LOOP, &loop, sizeof(loop));
+        }
     }
     if (argc <= 5) {
         cout << "type message to send:" << endl;
         while (cin >> msgbuf) {
             int len = strnlen(msgbuf, sizeof(msgbuf) - 1) + 1;
             msgbuf[sizeof(msgbuf) - 1] = '\0'; // Ensure null-termination
-            if (g_state.bytcp) {
+            if (g_state.how == TCP) {
                 int bytes = send(ssock, (const char*)msgbuf, len, 0);
                 if (bytes < 0) {
                     perror("send");
@@ -403,7 +467,7 @@ int client(int argc, char* argv[])
                 if (rdsize != msglen) {
                     fprintf(stdout, "read last size=%zd, expect=%zd: error: %s\n", rdsize, msglen, strerror(errno));
                 }
-                if (g_state.bytcp) {
+                if (g_state.how == TCP) {
                     if (thrds > 1) {
                         Message msg;
                         msg.sock = ssock;
@@ -436,7 +500,7 @@ int client(int argc, char* argv[])
                     sentLen += ::sendto(ssock, (const char*)msgbuf, rdsize, 0, (struct sockaddr*)&local, sizeof(local));
                 }
             }
-            while (g_state.bytcp && thrds > 1) {
+            while (g_state.how == TCP && thrds > 1) {
                 bool status = true;
                 for (size_t i = 0; i < vecstat.size(); i++) {
                     status &= vecstat[i];

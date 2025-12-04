@@ -1,6 +1,5 @@
 #pragma once
 #include <stdint.h>
-#include <string>
 #include <cstring>
 #include "common.h"
 
@@ -15,7 +14,7 @@ struct SelectFileOffset {
     {
         return (this->tail + this->head) / 2;
     }
-    const int64_t fragmentLen()
+    const int64_t length()
     {
         return (this->tail - this->head);
     }
@@ -29,7 +28,7 @@ struct SelectFileOffset {
     }
 };
 
-struct FileDataFrame {
+struct FileFrameData {
     uint32_t id;
     char fileName[128];
     struct {
@@ -39,7 +38,7 @@ struct FileDataFrame {
     SelectFileTime ftime;
     SelectFileOffset offset;
     char fileSign[128];
-    FileDataFrame()
+    FileFrameData()
     {
         id = target.timestamp = target.offset = 0;
         memset(fileSign, 0, sizeof(fileSign));

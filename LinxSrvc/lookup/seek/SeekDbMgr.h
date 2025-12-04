@@ -31,14 +31,14 @@ public:
 	virtual int getTargetFragmentByTime(int64_t time, int32_t duration, SeekTimeContent* content);
 
 	virtual int getTimeOffsetByFileName(const std::string& filename, const SelectValue timeValue,
-		FileDataFrame& firstframe, FileDataFrame& lastframe);
+		FileFrameData& firstframe, FileFrameData& lastframe);
 
-	virtual int insertFileIdbyName(FileDataFrame* frame);
+	virtual int insertFileIdbyName(FileFrameData* frame);
 
 	virtual int queryFileIdbyName(const std::string& filename, uint32_t& fileid);
 
 	virtual int queryFileTime(const std::string& filename, SelectTime& time);
 
 private:
-	std::mutex m_lock;
+	std::mutex m_lock{};
 };

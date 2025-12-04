@@ -24,6 +24,8 @@ static char chsDat[1024];
 module_param(majNo, int, S_IRUSR);   //主设备号
 module_param(minNo, int, S_IRUSR);   //次设备号
 
+long chs_dev_ioctl(struct file*, unsigned int, unsigned long);
+
 static ssize_t chs_dev_read(struct file* flip, char* buf, size_t len, loff_t* off)
 {
     if (copy_to_user(buf, chsDat, sizeof(int))) {

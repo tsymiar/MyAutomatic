@@ -41,7 +41,7 @@ if(JETSON_TARGET)
         if(UNIX AND NOT APPLE)
             execute_process(COMMAND which apt-get RESULT_VARIABLE APT_GET_FOUND)
             if(APT_GET_FOUND EQUAL 0)
-                message(STATUS "Installing missing packages...")
+                message(STATUS "Start install missing OpenGL/EGL development packages by apt...")
                 execute_process(COMMAND
                     sudo apt-get install -y
                     libegl1-mesa-dev
