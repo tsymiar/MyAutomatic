@@ -127,6 +127,8 @@ enum {
     VIRTEX_SOFTIRQ = 0x30,
 };
 
+void virtex_softirq_raise(void);
+
 // 设置中断
 static void set_notify(uint32_t* notify, char last)
 {

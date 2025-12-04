@@ -163,13 +163,13 @@ int SeekDbMgr::createTable()
     return 0;
 }
 
-int SeekDbMgr::insertFileIdbyName(FileDataFrame* frame)
+int SeekDbMgr::insertFileIdbyName(FileFrameData* frame)
 {
     int ret = queryFileIdbyName(frame->fileName, frame->id);
     if (ret == 0) {
-        LOG_WRN("file already exist in %s, update values. ", TABLE_FILE_MAPPING);
+        LOG_WRN("file already exist in %s, update detail values.", TABLE_FILE_MAPPING);
         char csql[SQL_LEN] = { 0 };
-        sprintf(csql, "update %s set %s=%lld,%s=%lld,%s=%lld,%s=%lld where %s=%d",
+        sprintf(csql, "update %s set %s=%lld,%s=%lld,%s=%lld,%s=%lld where %s=%d ",
             TABLE_FILE_MAPPING,
             FIELD_FIRST_OFFSET,
             frame->offset.head,
@@ -237,7 +237,7 @@ int SeekDbMgr::addIndexNoDuplex(void* pIndex)
 
     int ret = queryFileIdbyName(content->fileName, content->fileid);
     if (ret != 0) {
-        LOG_WRN("file not exist in TblFileIdMapping");
+        LOG_WRN("file '%s' not exist in " TABLE_FILE_MAPPING, content->fileName);
         return ret;
     }
     sprintf(sql, "insert into %s(%s,%s,%s,%s,%s)",
@@ -295,7 +295,7 @@ int SeekDbMgr::getTargetFragmentByTime(int64_t time, int32_t duration,
     }
 
     if (row <= 0) {
-        LOG_WRN("queryTable(sql=%s) error: row[%d] is not greater than 0 ",
+        LOG_WRN("queryTable(sql=%s) error: row[%d] is not greater than 0!",
             sqlStatement.c_str(), row);
         freeTable(ppResult);
         return -1;
@@ -330,7 +330,7 @@ int SeekDbMgr::queryFileIdbyName(const std::string& filename, uint32_t& fileid)
         return ret;
     }
     if (row <= 0) {
-        LOG_WRN("queryTable(sql=%s) error: row[%d] is not greater than 0 ",
+        LOG_WRN("queryTable(sql=%s) error: row[%d] is not greater than 0!",
             sqlStatement.c_str(), row);
         freeTable(ppResult);
         return -1;
@@ -342,12 +342,12 @@ int SeekDbMgr::queryFileIdbyName(const std::string& filename, uint32_t& fileid)
 }
 
 int SeekDbMgr::getTimeOffsetByFileName(const std::string& filename, const SelectValue timeValue,
-    FileDataFrame& firstframe, FileDataFrame& lastframe)
+    FileFrameData& firstframe, FileFrameData& lastframe)
 {
     uint32_t fileid = 0;
     int ret = queryFileIdbyName(filename, fileid);
     if (ret != 0) {
-        LOG_ERR("error find filename[%s] in dataBase failed!", filename.c_str());
+        LOG_ERR("error find filename [%s] in dataBase!", filename.c_str());
         return ret;
     }
     char sql[SQL_LEN] = { 0 };
@@ -369,7 +369,7 @@ int SeekDbMgr::getTimeOffsetByFileName(const std::string& filename, const Select
         }
 
         if (row <= 0) {
-            LOG_WRN("queryTable(sql=%s) error: row[%d] is not greater than 0 ",
+            LOG_WRN("queryTable(sql=%s) error: row[%d] is not greater than 0!",
                 sqlStatement.c_str(), row);
             freeTable(ppResult);
             return -1;
@@ -393,7 +393,7 @@ int SeekDbMgr::getTimeOffsetByFileName(const std::string& filename, const Select
         }
 
         if (row <= 0) {
-            LOG_WRN("queryTable(sql=%s) error: row[%d] is not greater than 0 ",
+            LOG_WRN("queryTable(sql=%s) error: row[%d] is not greater than 0!",
                 sqlStatement1.c_str(), row);
             freeTable(ppResult);
             return -2;
@@ -423,7 +423,7 @@ int SeekDbMgr::getTimeOffsetByFileName(const std::string& filename, const Select
         }
 
         if (row <= 0) {
-            LOG_WRN("queryTable(sql=%s) error: row[%d] is not greater than 0 ",
+            LOG_WRN("queryTable(sql=%s) error: row[%d] is not greater than 0!",
                 sqlStatement3.c_str(), row);
             freeTable(ppResult);
             return -3;
@@ -450,7 +450,7 @@ int SeekDbMgr::getTimeOffsetByFileName(const std::string& filename, const Select
         }
 
         if (row <= 0) {
-            LOG_WRN("queryTable(sql=%s) error: row[%d] is not greater than 0 ",
+            LOG_WRN("queryTable(sql=%s) error: row[%d] is not greater than 0!",
                 sqlStatement4.c_str(), row);
             freeTable(ppResult);
             return -4;
@@ -488,7 +488,7 @@ int SeekDbMgr::queryFileTime(const string& filename, SelectTime& time)
         return ret;
     }
     if (row <= 0) {
-        LOG_WRN("queryTable(sql=%s) error: row[%d] is not greater than 0 ",
+        LOG_WRN("queryTable(sql=%s) error: row[%d] is not greater than 0!",
             sqlStatement.c_str(), row);
         freeTable(ppResult);
         return -1;
