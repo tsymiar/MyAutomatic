@@ -135,7 +135,7 @@ else()
     execute_process(COMMAND which ffmpeg RESULT_VARIABLE FFMPEG_FOUND)
     execute_process(COMMAND which apt-get RESULT_VARIABLE APT_GET_FOUND)
     execute_process(COMMAND which yum RESULT_VARIABLE YUM_FOUND)
-    if(NOT FFMPEG_FOUND EQUAL 0)
+    if(NOT FFMPEG_FOUND EQUAL 1)
         if(APT_GET_FOUND EQUAL 0)
             set(PACKAGE_MANAGER "apt-get")
         elseif(YUM_FOUND EQUAL 0)
@@ -159,6 +159,11 @@ else()
         message("## SDL2 Not found, skip [${PROJECT_NAME}] building")
         return()
     endif()
+
+    link_directories(${AVCODEC_LIBRARY_DIRS})
+    list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+    find_package(FFmpeg REQUIRED)
+
     include_directories(
         ${AVCODEC_INCLUDE_DIRS}
         ${AVFORMAT_INCLUDE_DIRS}
@@ -166,13 +171,8 @@ else()
         ${SWSCALE_INCLUDE_DIRS}
         ${SWRESAMPLE_INCLUDE_DIRS}
         ${SDL2_INCLUDE_DIRS}
+        ${FFmpeg_INCLUDE_DIRS}
     )
-    link_directories(${AVCODEC_LIBRARY_DIRS})
-
-    list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-    find_package(FFmpeg REQUIRED)
-    include_directories(${FFmpeg_INCLUDE_DIRS})
-
     set(EXTRA_LIBRARIES
         ${CMAKE_THREAD_LIBS_INIT}
         ${AVCODEC_LIBRARIES}
