@@ -30,7 +30,7 @@ struct SelectFileOffset {
 
 struct FileFrameData {
     uint32_t id;
-    char fileName[128];
+    char fileName[MAX_NAME_LEN];
     struct {
         int64_t timestamp;
         int64_t offset;

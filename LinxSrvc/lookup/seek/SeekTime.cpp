@@ -81,7 +81,7 @@ int SeekTime::findFileFragmentDetail(FILE* file, FileFrameData& startframe, File
     fseek(file, curpos, SEEK_SET);
 
     SeekTimeContent comidx{};
-    memcpy(comidx.fileName, startframe.fileName, sizeof(startframe.fileName));
+    memcpy(comidx.fileName, startframe.fileName, MAX_NAME_LEN);
 
     uint8_t buffer[m_windSize];
     uint32_t buffSize = m_windSize > cursize ? cursize : m_windSize;
@@ -337,25 +337,25 @@ int SeekTime::seekFileDataTime(uint32_t duration, std::vector<SeekTimeContent>& 
         }
         for (SelectTime& seekTime : vecFileTime.second) {
             SeekTimeContent fileinfo{};
-            strncpy(fileinfo.fileName, vecFileTime.first.c_str(), MAX_PATH_LEN);
+            snprintf(fileinfo.fileName, MAX_NAME_LEN, "%s", vecFileTime.first.c_str());
             LOG_INF("'%s', selecting time=%lld ...", fileinfo.fileName, seekTime.average());
 
             // First check the database TblFileIdMapping for a record of this file; if not found, insert a record
             uint32_t fileId = 0;
             FileFrameData startframe{};
             FileFrameData tailframe{};
-            strncpy(startframe.fileName, vecFileTime.first.c_str(), 128);
-            strncpy(tailframe.fileName, vecFileTime.first.c_str(), 128);
+            snprintf(startframe.fileName, MAX_NAME_LEN, "%s", vecFileTime.first.c_str());
+            snprintf(tailframe.fileName, MAX_NAME_LEN, "%s", vecFileTime.first.c_str());
             startframe.target.timestamp = seekTime.first;
             tailframe.target.timestamp = seekTime.last;
             FileFrameData fileMapping{};
             if (m_dbMgr->queryFileIdbyName(vecFileTime.first, fileId) != 0) {
                 SeekTimeContent headIdx{};
                 SeekTimeContent tailIdx{};
-                strncpy(fileMapping.fileName, vecFileTime.first.c_str(), 128);
+                snprintf(fileMapping.fileName, MAX_NAME_LEN, "%s", vecFileTime.first.c_str());
                 bool find = getFirstFrame(m_pfile, m_windSize, headIdx, offset);
                 if (find) {
-                    memcpy(headIdx.fileName, vecFileTime.first.c_str(), vecFileTime.first.size());
+                    snprintf(headIdx.fileName, MAX_NAME_LEN, "%s", vecFileTime.first.c_str());
                     fileMapping.offset.head = headIdx.value.offset;
                     fileMapping.ftime.first = headIdx.value.timestamp;
                     LOG_INF("getFirstFrame offset=%lld len=%lld timestamp=%lld fileid=%u", headIdx.value.offset, headIdx.value.size, headIdx.value.timestamp, headIdx.fileid);
@@ -371,7 +371,7 @@ int SeekTime::seekFileDataTime(uint32_t duration, std::vector<SeekTimeContent>& 
                 }
                 find = getTailFrame(m_pfile, m_windSize, tailIdx);
                 if (find) {
-                    memcpy(tailIdx.fileName, vecFileTime.first.c_str(), vecFileTime.first.size());
+                    snprintf(tailIdx.fileName, MAX_NAME_LEN, "%s", vecFileTime.first.c_str());
                     /* Insert file information into TblFileIdMapping table */
                     fileMapping.offset.tail = tailIdx.value.offset;
                     fileMapping.ftime.last = tailIdx.value.timestamp;

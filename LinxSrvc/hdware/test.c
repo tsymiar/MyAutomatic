@@ -8,9 +8,11 @@
 #elif defined(VIDEO) || defined(SNAP)
 #include "test.h"
 #elif defined(DRIVER)
-#include "stdio.h"
-#include "fcntl.h"
-#include "unistd.h"
+#include <stdio.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <string.h>
+#include <sys/stat.h>
 #else
 #error compile command unsupported
 #endif
@@ -44,22 +46,33 @@ int main(int argc, char** argv)
 #define SizeOfBuf 1024
     int fd = open(DEV_NODE, O_RDWR, S_IRUSR | S_IWUSR);
     if (fd < 0) {
-        perror("open ["DEV_NODE"] fail");
+        perror("open [" DEV_NODE "] fail");
     } else {
         char msg[SizeOfBuf];
-        ssize_t len = read(fd, msg, sizeof(msg));
-        if (len > SizeOfBuf || len < 0) {
-            perror("beyond read size");
+        ssize_t len = read(fd, msg, SizeOfBuf - 1);
+        if (len < 0) {
+            perror("read fail");
+            close(fd);
             return -1;
         }
         msg[SizeOfBuf - 1] = '\0';
         printf("Default chars is [%s].\n", msg);
         printf("Please input a string written to chars device: ");
-        scanf("%1023s", msg);
-        write(fd, msg, sizeof(msg));
-        len = read(fd, msg, sizeof(msg));
-        if (len > SizeOfBuf || len < 0) {
-            perror("beyond read size");
+        if (scanf("%1023s", msg) != 1) {
+            fprintf(stderr, "scanf error\n");
+            close(fd);
+            return -1;
+        }
+        ssize_t wlen = write(fd, msg, strlen(msg));
+        if (wlen < 0) {
+            perror("write fail");
+            close(fd);
+            return -1;
+        }
+        ssize_t rlen = read(fd, msg, SizeOfBuf - 1);
+        if (rlen < 0) {
+            perror("read fail");
+            close(fd);
             return -1;
         }
         msg[SizeOfBuf - 1] = '\0';

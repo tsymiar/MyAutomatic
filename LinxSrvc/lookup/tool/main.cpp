@@ -6,6 +6,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/time.h>
+#include <time.h>
 #include <sys/stat.h>
 #include <vector>
 #include <thread>
@@ -108,7 +109,10 @@ int main(int argc, char* argv[])
     std::thread progress(
         [&](uint64_t total) -> void {
             while (g_current <= total) {
-                usleep(100000);
+                struct timespec ts;
+                ts.tv_sec = 0;
+                ts.tv_nsec = 100000000; // 100 ms
+                nanosleep(&ts, NULL);
                 fprintf(stdout, "\rprogress: %.2f %% ", g_current * 100.f / total);
                 fflush(stdout);
             }
@@ -135,13 +139,17 @@ int main(int argc, char* argv[])
             header.size = rand0 * size;
             header.utctime = getMsecTime() - startOfDayTime;
             if (g_current == 0) {
-                char time[128] = { 0 };
-                sprintf(time, "%ld\n", header.utctime);
-                int64_t wroteSize = fwrite(&time, strlen(time), 1, tmf);
-                if (wroteSize != 1) {
-                    fprintf(stderr, "fwrite(fileName=%s) failed!\n", timefile);
+                char time[64] = { 0 };
+                int len = snprintf(time, sizeof(time), "%ld\n", header.utctime);
+                if (len < 0) {
+                    fprintf(stderr, "snprintf failed\n");
                 } else {
-                    printf("fwrite(fileName=%s) utctime=%ld success!\n", timefile, header.utctime);
+                    size_t wroteSize = fwrite(time, 1, (size_t)len, tmf);
+                    if (wroteSize != (size_t)len) {
+                        fprintf(stderr, "fwrite(fileName=%s) failed!\n", timefile);
+                    } else {
+                        printf("fwrite(fileName=%s) utctime=%ld success!\n", timefile, header.utctime);
+                    }
                 }
             }
             int64_t wroteSize = fwrite(&header, sizeof(ProjectFrame), 1, pdat);
@@ -191,17 +199,21 @@ int main(int argc, char* argv[])
     double speed = (g_current * 1.0f) * 1000 / (1048576 * delta * 1.0f);
     fprintf(stdout, "\n%lu bytes number written done, average speed was %.3f MB/s.\n", g_current, speed);
     if (g_addRandFrame) {
-        printf("--- frame size %zu, written 0x%lx frames\n", (sizeof(ProjectFrame)* idx), (idx - 1));
+        printf("--- frame size %zu, written 0x%lx frames\n", (sizeof(ProjectFrame) * idx), (idx - 1));
     }
 
-    char time[128] = { 0 };
-    sprintf(time, "%ld\n", header.utctime);
+    char time[64] = { 0 };
+    ssize_t slen = snprintf(time, sizeof(time), "%ld\n", header.utctime);
     if (tmf != NULL) {
-        int64_t wroteSize = fwrite(&time, strlen(time), 1, tmf);
-        if (wroteSize != 1) {
-            fprintf(stderr, "fwrite(fileName=%s) failed!\n", timefile);
+        if (slen < 0) {
+            fprintf(stderr, "snprintf failed\n");
         } else {
-            printf("fwrite(fileName=%s) utctime=%ld success!\n", timefile, header.utctime);
+            size_t wroteSize = fwrite(time, 1, slen, tmf);
+            if (wroteSize != slen) {
+                fprintf(stderr, "fwrite(fileName=%s) failed!\n", timefile);
+            } else {
+                printf("fwrite(fileName=%s) utctime=%ld success!\n", timefile, header.utctime);
+            }
         }
         fclose(tmf);
     }
@@ -250,29 +262,38 @@ uint64_t getMsecTime()
 
 void makeDirExist(const char* dir)
 {
-    char szTmpPath[260];
+    if (dir == NULL) {
+        fprintf(stderr, "dir is null.\n");
+        return;
+    }
     char szPath[260];
-
-    memset(szPath, 0, sizeof(szPath));
-    sprintf(szPath, "%s", dir);
-
-    int len = strlen(szPath);
-    int index = 1;
-    while (index < len) {
-        if ((szPath[index] == '/') || (szPath[index] == '\\')) {
-            memset(szTmpPath, 0, sizeof(szTmpPath));
-            strncpy(szTmpPath, szPath, index);
-            umask(0);
+    char szMkDir[260];
+    size_t szPos = 1;
+    /* safe copy with truncation protection: use snprintf to ensure NUL-termination and avoid buffer overflow */
+    snprintf(szPath, sizeof(szPath), "%s", dir);
+    size_t len = strnlen(szPath, sizeof(szPath) - 1);
+    while (szPos < len) {
+        if ((szPath[szPos] == '/') || (szPath[szPos] == '\\')) {
+            /* ensure substring fits into szMkDir (leave room for NUL) */
+            if (szPos >= sizeof(szMkDir)) {
+                szPos++;
+                continue;
+            }
+            /* copy exactly szPos bytes and explicitly NUL-terminate */
+            memcpy(szMkDir, szPath, szPos);
+            szMkDir[szPos] = '\0';
+            /* set restrictive umask so group/other have no permissions (CWE-732) */
+            umask(0077);
 #ifdef _WIN32
-            mkdir(szTmpPath);
+            mkdir(szMkDir);
 #else
-            mkdir(szTmpPath, 0755);
+            mkdir(szMkDir, 0755);
 #endif
-            if (memcmp(szTmpPath, ".", 2) != 0) {
-                fprintf(stdout, "mkdir [%s] successfully.\n", szTmpPath);
+            if (memcmp(szMkDir, ".", 2) != 0) {
+                // fprintf(stdout, "mkdir [%s] successfully.\n", szMkDir);
             }
         }
-        index++;
+        szPos++;
     }
 }
 

@@ -299,7 +299,7 @@ int main(int argc, char* argv[])
         inst_mssg(argc, argv);
         setsid();
         chdir("/");
-        umask(0);
+        umask(0077);
         close(STDIN_FILENO);
         close(STDOUT_FILENO);
         close(STDERR_FILENO);
@@ -952,7 +952,7 @@ type_thread_func monitor(void* arg)
                                 total += 10;
                                 break;
                             default:
-                                snprintf((sd_bufs + offset), 15, "Unknown error.");
+                                snprintf((sd_bufs + offset), 33, "Unknown error while JOIN_ZONE.");
                                 break;
                             }
                         } else {
@@ -1006,7 +1006,10 @@ type_thread_func monitor(void* arg)
                             }//for MAX_MEMBERS_PER_GROUP
                         }//else val_rtn < 0
                     } break;
-                    default: break;
+                    default:
+                        snprintf((sd_bufs + offset), 24, "Unknown command [%c].", sd_bufs[1]);
+                        *length = total = 48;
+                        break;
                     }
                     if ((memcmp(g_usrMsg.chk, "P2P", 4) != 0) &&
                         (send(cur_sock, sd_bufs, total, 0) < 0)) {
@@ -1100,9 +1103,8 @@ int inst_mssg(int argc, char* argv[])
     _beginthreadex(nullptr, 0, (_beginthreadex_proc_type)commands, nullptr, 0, &threadid);
     WSADATA wsaData;
     if (WSAStartup(0x202, &wsaData) == SOCKET_ERROR) {
-        std::cerr << "WSAStartup failed with error " << WSAGetLastError() << std::endl;
+        std::cerr << "WSAStartup failed with error [" << WSAGetLastError() << "](" << errno << "): " << strerror(errno) << std::endl;
         WSACleanup();
-        std::cerr << "ERROR(" << errno << "): " << strerror(errno) << std::endl;
         return -1;
     }
 #else
@@ -1135,7 +1137,7 @@ int inst_mssg(int argc, char* argv[])
 #else
         < 0) {
 #endif
-        std::cerr << "ERROR(" << errno << "): " << strerror(errno) << std::endl;
+        std::cerr << "ERROR(" << errno << ") bindport [" << srvPort << "]: " << strerror(errno) << std::endl;
         exit(-1);
     }
     if (listen(listen_socket, 50)
@@ -1146,7 +1148,7 @@ int inst_mssg(int argc, char* argv[])
 #else
         < 0) {
 #endif
-        std::cerr << "ERROR(" << errno << "): " << strerror(errno) << std::endl;
+        std::cerr << "ERROR(" << errno << ") listen [" << srvPort << "]: " << strerror(errno) << std::endl;
         exit(-1);
     }
     int threadCnt = 0;
@@ -1174,7 +1176,7 @@ int inst_mssg(int argc, char* argv[])
 #else
             < 0) {
 #endif // use socklen
-            std::cerr << "ERROR(" << errno << "," << socklen << "): " << strerror(errno) << std::endl;
+            std::cerr << "ERROR(" << errno << ") accept [" << socklen << "]: " << strerror(errno) << std::endl;
             return -1;
         } else {
             char IPdotDec[16];
@@ -1206,7 +1208,7 @@ int inst_mssg(int argc, char* argv[])
 #elif !defined SOCK_CONN_TEST || defined SOCK_CONN_TEST
         type_socket msg_socket = accept(listen_socket, (struct sockaddr*)&fromAddr, &socklen);
         if (msg_socket < 0) {
-            std::cerr << "ERROR(" << errno << "): " << strerror(errno) << std::endl;
+            std::cerr << "ERROR(" << errno << ") accept [" << listen_socket << "]: " << strerror(errno) << std::endl;
             return -1;
         } else {
             int PID = 0;
@@ -1309,24 +1311,51 @@ void func_waitpid(int signo)
 #else
         ssize_t total = 0;
         char* sock_0 = reinterpret_cast<char*>(&sock);
-        while (total < (ssize_t)sizeof(sock)) {
-            ssize_t len = read(g_filedes[0], sock_0 + total, sizeof(sock) - total);
-            if (len < 0) {
-                fprintf(stderr, "Read error: %s\n", strerror(errno));
-                break;
+        const ssize_t expect = sizeof(sock);
+        while (total < expect && total >= 0) {
+            ssize_t len = read(g_filedes[0], sock_0 + total, expect - total);
+            if (len > 0) {
+                if (total + len > expect) {
+                    fprintf(stderr, "Buffer overflow prevented: expects %zd, got %zd!\n", expect, total + len);
+                    break;
+                }
+                total += len;
+                continue;
             }
             if (len == 0) {
-                fprintf(stderr, "Read EOF: expects %zu, got %zd!\n", sizeof(sock), total);
+                fprintf(stderr, "Read EOF: expects %zd, got %zd!\n", expect, total);
                 break;
             }
-            if (total + len > (ssize_t)sizeof(sock)) {
-                fprintf(stderr, "Buffer overflow prevented: expects %zu, got %zd!\n", sizeof(sock), total + len);
-                break;
+            // len < 0: handle transient errors specially
+            if (errno == EINTR) {
+                // interrupted by signal, retry read
+                continue;
             }
-            total += len;
+            if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                // no data available right now; wait briefly for readability
+                fd_set rfds;
+                FD_ZERO(&rfds);
+                FD_SET(g_filedes[0], &rfds);
+                timeval tv;
+                tv.tv_sec = 1;
+                tv.tv_usec = 0;
+                int sel = select(g_filedes[0] + 1, &rfds, NULL, NULL, &tv);
+                if (sel > 0) {
+                    // socket ready, retry read
+                    continue;
+                } else if (sel == 0) {
+                    fprintf(stderr, "Read timeout on pipe: expects %zd, got %zd!\n", expect, total);
+                    break;
+                } else {
+                    // select error; fall through to error reporting
+                }
+            }
+            // fatal read error
+            fprintf(stderr, "Read error: %s\n", strerror(errno));
+            break;
         }
-        if (total != (ssize_t)sizeof(sock)) {
-            fprintf(stderr, "Read size mismatch: expects %zu, got %zd!\n", sizeof(sock), total);
+        if (total != expect) {
+            fprintf(stderr, "Read size mismatch: expects %zd, got %zd!\n", expect, total);
             break;
         }
 #endif

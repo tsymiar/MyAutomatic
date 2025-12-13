@@ -347,29 +347,77 @@ private:
             void* ptr = mmap(NULL, qbuf.m.planes[0].length,
                 PROT_READ | PROT_WRITE, MAP_SHARED,
                 m_vfd, qbuf.m.planes[0].m.mem_offset);
+            if (ptr == MAP_FAILED)
+                throw std::runtime_error("mmap failed for buffer");
 
             off_t file_size = lseek(vi_fd, 0, SEEK_END);
-            if (file_size < 0) throw std::runtime_error("Failed to get file size");
-            off_t seek_pos = lseek(vi_fd, 0, SEEK_SET);
-            if (seek_pos < 0) throw std::runtime_error("Failed to seek file");
-
-            ssize_t bytes_need = std::min(static_cast<ssize_t>(qbuf.m.planes[0].length), static_cast<ssize_t>(file_size - seek_pos));
-            if (bytes_need == 0) break;  // No more data to read
-
-            ssize_t total = 0;
-            while (total < bytes_need) {
-                if (total > qbuf.m.planes[0].length)
-                    throw std::runtime_error("Beyond buffer size");
-                ssize_t bytes = read(vi_fd, static_cast<uint8_t*>(ptr) + total, bytes_need - total);
-                if (bytes < 0)
-                    throw std::runtime_error("Read file failed");
-                if (bytes == 0)
-                    break;  // EOF reached
-                total += bytes;
+            if (file_size < 0) {
+                munmap(ptr, qbuf.m.planes[0].length);
+                throw std::runtime_error("Failed to get file size");
+            }
+            if (lseek(vi_fd, 0, SEEK_SET) < 0) {
+                munmap(ptr, qbuf.m.planes[0].length);
+                throw std::runtime_error("Failed to seek file");
+            }
+            // compute how many bytes remain in the file from current offset
+            off_t current_pos = lseek(vi_fd, 0, SEEK_CUR);
+            if (current_pos < 0) {
+                munmap(ptr, qbuf.m.planes[0].length);
+                throw std::runtime_error("Failed to get current file position");
+            }
+            ssize_t buf_len = static_cast<ssize_t>(qbuf.m.planes[0].length);
+            ssize_t bytes_available = static_cast<ssize_t>(file_size - current_pos);
+            ssize_t bytes_need = std::min(buf_len, bytes_available);
+            if (bytes_need <= 0) {
+                // nothing to read for this buffer
+                munmap(ptr, qbuf.m.planes[0].length);
+                break;
             }
 
-            if (ioctl(m_vfd, VIDIOC_QBUF, &qbuf) < 0)
+            ssize_t total = 0;
+            {
+                // cache mapped length and use safe signed/unsigned conversions
+                size_t map_len = static_cast<size_t>(qbuf.m.planes[0].length);
+                ssize_t local_buf_len = static_cast<ssize_t>(map_len);
+                while (total < bytes_need) {
+                    ssize_t to_read = bytes_need - total;
+                    // ensure we never request more than the remaining buffer space
+                    if (to_read > (local_buf_len - total)) to_read = local_buf_len - total;
+                    if (to_read <= 0) {
+                        munmap(ptr, map_len);
+                        throw std::runtime_error("No space left in buffer");
+                    }
+                    // perform read with EINTR handling and allow partial reads
+                    ssize_t bytes = 0;
+                    while (true) {
+                        bytes = ::read(vi_fd, static_cast<uint8_t*>(ptr) + total, static_cast<size_t>(to_read));
+                        if (bytes < 0) {
+                            if (errno == EINTR) continue; // retry on interruption
+                            munmap(ptr, map_len);
+                            throw std::runtime_error("Read file failed");
+                        }
+                        break;
+                    }
+                    if (bytes == 0) {
+                        // EOF reached
+                        break;
+                    }
+                    total += bytes;
+                    if (total > local_buf_len) {
+                        munmap(ptr, map_len);
+                        throw std::runtime_error("Beyond buffer size after read");
+                    }
+                }
+            }
+
+            // set bytesused for the plane before queuing
+            qbuf.m.planes[0].bytesused = static_cast<__u32>(total);
+
+            if (ioctl(m_vfd, VIDIOC_QBUF, &qbuf) < 0) {
+                munmap(ptr, qbuf.m.planes[0].length);
                 throw std::runtime_error("Queue buffer failed");
+            }
+            // keep mapping for the duration of buffer use (do not munmap here)
         }
         close(vi_fd);
     }

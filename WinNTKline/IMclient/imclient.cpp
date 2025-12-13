@@ -306,7 +306,7 @@ int main(int argc, char* argv[])
 #else
         unsigned int comm = 0;
         if (received >= RCV_SCC) {
-            fprintf(stdout, "Select a command [0x1 - 0xd] >: ");
+            fprintf(stdout, "Select a command [0x1 - 0xf] >: ");
             char val[32] = { 0 };
             if (!fgets(val, sizeof(val), stdin)) {
                 fprintf(stdout, "fgets error, exit.\n");
