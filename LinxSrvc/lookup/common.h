@@ -6,8 +6,8 @@
 #include <iostream>
 #include <sys/time.h>
 
-#ifndef MAX_PATH_LEN
-#define MAX_PATH_LEN 256
+#ifndef MAX_NAME_LEN
+#define MAX_NAME_LEN 128
 #endif
 
 #define DELETE(x) do { \
@@ -63,7 +63,7 @@ struct SeekTimeValue {
 #pragma pack(push)
 #pragma pack(4)
 typedef struct tagSeekTimeContent {
-    char fileName[MAX_PATH_LEN];
+    char fileName[MAX_NAME_LEN];
     uint32_t fileid = 1;
     uint64_t totalSize;
     int32_t duration;
