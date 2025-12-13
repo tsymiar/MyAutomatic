@@ -15,8 +15,6 @@
 #error compile command unsupported
 #endif
 
-const int SizeOfBuf = 1024;
-
 int main(int argc, char** argv)
 {
 #ifdef GPIO
@@ -43,6 +41,7 @@ int main(int argc, char** argv)
     snap_image_test("image", 640, 480);
 #elif defined(DRIVER)
 #define DEV_NODE "/dev/chars-node"
+#define SizeOfBuf 1024
     int fd = open(DEV_NODE, O_RDWR, S_IRUSR | S_IWUSR);
     if (fd < 0) {
         perror("open ["DEV_NODE"] fail");

@@ -17,7 +17,6 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
-#include <sys/prctl.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <signal.h>
@@ -27,6 +26,12 @@
 #include <cstring>
 #include <cerrno>
 #include <thread>
+#if (! defined __APPLE__)
+#include <sys/prctl.h>
+#else
+#define PR_SET_NAME 15
+#define prctl(_1, arg, _2, _3, _4) pthread_setname_np(arg)
+#endif
 #endif
 #define NE_VAL(a) (((~((a) & 0x0f)) | ((a) & 0xf0)) & 0xff)
 #define DEFAULT_PORT 8877

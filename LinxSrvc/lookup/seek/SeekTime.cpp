@@ -180,7 +180,6 @@ int SeekTime::findFileFragmentDetail(FILE* file, FileFrameData& startframe, File
         if (tailpos != 0) {
             m_dbMgr->addIndexNoDuplex(&comidx);
         }
-
         found = true;
     }
     while (!found) {
@@ -232,7 +231,7 @@ int SeekTime::findFileFragmentDetail(FILE* file, FileFrameData& startframe, File
         lastsize = cursize;
         count++;
     }
-    return 0;
+    return (found ? 0 : -1);
 }
 
 /* Find first frame information of the file */
@@ -287,11 +286,10 @@ bool getTailFrame(FILE* file, uint32_t winsize, SeekTimeContent& tailIdx)
     uint8_t buffer[winsize];
     uint64_t position = filesize - winsize > 0 ? (filesize - winsize) : 0;
     uint64_t buffSize = position > 0 ? winsize : filesize;
-    size_t bytes = 0;
     bool find = false;
     do {
         fseek(file, position, SEEK_SET);
-        bytes = fread(buffer, 1, buffSize, file);
+        size_t bytes = fread(buffer, 1, buffSize, file);
         if (bytes > 0) {
             for (size_t i = bytes - sizeof(key_size_t); i > 0; i--) {
                 if (*(key_size_t*)(buffer + i) == SEEK_FRAME_HEAD) {
@@ -318,7 +316,7 @@ bool getTailFrame(FILE* file, uint32_t winsize, SeekTimeContent& tailIdx)
         }
         if (position >= bytes) {
             position = position - bytes;
-            bytes; // unchanged
+            // bytes unchanged
         } else {
             buffSize = position;
             position = 0;

@@ -87,8 +87,8 @@ int main(int argc, char* argv[])
     size_t pos = fileName.rfind('.');
     std::string csvpre = fileName.substr(0, pos);
     sprintf(timefile, "%s.csv", csvpre.c_str());
-    FILE* ptm = fopen(timefile, "wb+");
-    if (ptm == NULL) {
+    FILE* tmf = fopen(timefile, "wb+");
+    if (tmf == NULL) {
         fprintf(stderr, "fwrite open failed: %s.\n", timefile);
         return -1;
     }
@@ -99,7 +99,7 @@ int main(int argc, char* argv[])
     }
     size_t len = g_vecStart.size();
     if (len != 1) {
-        printf(" g_vecStart.size()=%ld not allow, only allow one member", len);
+        printf(" g_vecStart.size()=%zu not allow, only allow one member", len);
         return -1;
     };
     uint64_t value;
@@ -137,7 +137,7 @@ int main(int argc, char* argv[])
             if (g_current == 0) {
                 char time[128] = { 0 };
                 sprintf(time, "%ld\n", header.utctime);
-                int64_t wroteSize = fwrite(&time, strlen(time), 1, ptm);
+                int64_t wroteSize = fwrite(&time, strlen(time), 1, tmf);
                 if (wroteSize != 1) {
                     fprintf(stderr, "fwrite(fileName=%s) failed!\n", timefile);
                 } else {
@@ -191,19 +191,19 @@ int main(int argc, char* argv[])
     double speed = (g_current * 1.0f) * 1000 / (1048576 * delta * 1.0f);
     fprintf(stdout, "\n%lu bytes number written done, average speed was %.3f MB/s.\n", g_current, speed);
     if (g_addRandFrame) {
-        printf("--- frame size %lu, written 0x%lx frames\n", (sizeof(ProjectFrame) * idx), (idx - 1));
+        printf("--- frame size %zu, written 0x%lx frames\n", (sizeof(ProjectFrame)* idx), (idx - 1));
     }
 
     char time[128] = { 0 };
     sprintf(time, "%ld\n", header.utctime);
-    int64_t wroteSize = fwrite(&time, strlen(time), 1, ptm);
-    if (wroteSize != 1) {
-        fprintf(stderr, "fwrite(fileName=%s) failed!\n", timefile);
-    } else {
-        printf("fwrite(fileName=%s) utctime=%ld success!\n", timefile, header.utctime);
-    }
-    if (ptm != NULL) {
-        fclose(ptm);
+    if (tmf != NULL) {
+        int64_t wroteSize = fwrite(&time, strlen(time), 1, tmf);
+        if (wroteSize != 1) {
+            fprintf(stderr, "fwrite(fileName=%s) failed!\n", timefile);
+        } else {
+            printf("fwrite(fileName=%s) utctime=%ld success!\n", timefile, header.utctime);
+        }
+        fclose(tmf);
     }
 }
 
@@ -299,11 +299,10 @@ uint64_t sizeConvert(const std::string& sizeVal)
 void conStringToVec(std::string str, std::vector<uint32_t>& vec)
 {
     vec.clear();
-    uint32_t tmp = 0;
     while (!str.empty()) {
         std::string::size_type pos = str.find(",");
         std::string val = str.substr(0, pos);
-        tmp = strtol(val.c_str(), NULL, 16);
+        uint32_t tmp = strtol(val.c_str(), NULL, 16);
         vec.push_back(tmp);
         if (pos == std::string::npos) {
             break;
@@ -335,9 +334,7 @@ void usageExit(int exitcode, char** argv)
 
 void parseArgs(int argc, char** argv)
 {
-    char* tail;
-    int c;
-    int index;
+    char* tail = NULL;
     static struct option opts[] =
     {
         {"file", required_argument, NULL, 'f'},
@@ -351,8 +348,9 @@ void parseArgs(int argc, char** argv)
         {0} };
 
     while (1) {
+        int idx = 0;
         std::string chans = "";
-        c = getopt_long(argc, argv, "f:t:e:s:i:d:b:F:", opts, &index);
+        int c = getopt_long(argc, argv, "f:t:e:s:i:d:b:F:", opts, &idx);
         if (c == -1)
             break;
 
