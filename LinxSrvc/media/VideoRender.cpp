@@ -449,7 +449,7 @@ struct FFmpegDecoder {
         avformat_open_input(&fmt_ctx, filename, nullptr, nullptr);
         avformat_find_stream_info(fmt_ctx, nullptr);
 
-        for (unsigned i = 0; i < fmt_ctx->nb_streams; i++) {
+        for (unsigned i = 0; fmt_ctx != NULL && i < fmt_ctx->nb_streams; i++) {
             if (fmt_ctx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
                 video_stream = i;
                 const AVCodec* codec = avcodec_find_decoder(

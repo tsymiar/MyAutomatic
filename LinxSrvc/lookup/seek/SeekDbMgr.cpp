@@ -147,7 +147,7 @@ int SeekDbMgr::createTable()
         LOG_ERR("executeSql(sql=%s) error: 0x%08X!", sqlCreateIndex.c_str(), ret);
     }
 
-    memset(sql, SQL_LEN, 0);
+    memset(sql, 0, SQL_LEN);
     sprintf(sql, "create table %s(id integer primary key autoincrement, %s char(128), %s integer, %s integer, %s large integer, %s large integer, %s char(16))",
         TABLE_FILE_MAPPING, FIELD_FILENAME,
         FIELD_FIRST_OFFSET, FIELD_LAST_OFFSET,
@@ -169,7 +169,7 @@ int SeekDbMgr::insertFileIdbyName(FileFrameData* frame)
     if (ret == 0) {
         LOG_WRN("file already exist in %s, update detail values.", TABLE_FILE_MAPPING);
         char csql[SQL_LEN] = { 0 };
-        sprintf(csql, "update %s set %s=%lld,%s=%lld,%s=%lld,%s=%lld where %s=%d ",
+        sprintf(csql, "update %s set %s=%ld,%s=%ld,%s=%lu,%s=%lu where %s=%u",
             TABLE_FILE_MAPPING,
             FIELD_FIRST_OFFSET,
             frame->offset.head,
@@ -204,8 +204,8 @@ int SeekDbMgr::insertFileIdbyName(FileFrameData* frame)
     string sqlStatement = "";
     sqlStatement += sql;
 
-    memset(sql, SQL_LEN, 0);
-    sprintf(sql, "VALUES ('%s',%lld,%lld,%lld,%lld,'%s')",
+    memset(sql, 0, SQL_LEN);
+    sprintf(sql, "VALUES ('%s',%ld,%ld,%lu,%lu,'%s')",
         frame->fileName,
         frame->offset.head,
         frame->offset.tail,
@@ -271,7 +271,7 @@ int SeekDbMgr::getTargetFragmentByTime(int64_t time, int32_t duration,
     SeekTimeContent* content)
 {
     char sql[SQL_LEN] = { 0 };
-    sprintf(sql, "select %s,%s,%s from %s where %s=%u and %s=%lld and %s=%u limit 1",
+    sprintf(sql, "select %s,%s,%s from %s where %s=%u and %s=%ld and %s=%d limit 1",
         FIELD_TIMESTAMP,
         FIELD_OFFSET,
         FIELD_SIZE,
@@ -301,9 +301,8 @@ int SeekDbMgr::getTargetFragmentByTime(int64_t time, int32_t duration,
         return -1;
     }
 
-    int index = column;
-    content->value.offset = atoll(ppResult[index + 1]);
-    content->value.size += atoll(ppResult[index + 2]);
+    content->value.offset = atoll(ppResult[column + 1]);
+    content->value.size += atoll(ppResult[column + 2]);
     content->duration = duration;
     content->value.timestamp = time;
     content->found = true;
@@ -350,12 +349,11 @@ int SeekDbMgr::getTimeOffsetByFileName(const std::string& filename, const Select
         LOG_ERR("error find filename [%s] in dataBase!", filename.c_str());
         return ret;
     }
+
     char sql[SQL_LEN] = { 0 };
     int row = 0;
     int column = 0;
-    char** ppResult;
-    int index = 0;
-
+    char** ppResult = nullptr;
     /* seek left */
     {
         sprintf(sql, "select %s,%s,%s from %s where %s=%u and %s<=%lld and %s<0 order by %s desc limit 1",
@@ -375,9 +373,8 @@ int SeekDbMgr::getTimeOffsetByFileName(const std::string& filename, const Select
             return -1;
         }
         if (row == 1) {
-            index = column;
-            firstframe.ftime.first = atoll(ppResult[index]);
-            firstframe.offset.head = atoll(ppResult[index + 1]);
+            firstframe.ftime.first = atoll(ppResult[column]);
+            firstframe.offset.head = atoll(ppResult[column + 1]);
         }
         freeTable(ppResult);
 
@@ -399,9 +396,8 @@ int SeekDbMgr::getTimeOffsetByFileName(const std::string& filename, const Select
             return -2;
         }
         if (row == 1) {
-            index = column;
-            firstframe.ftime.last = atoll(ppResult[index]);
-            firstframe.offset.tail = atoll(ppResult[index + 1]);
+            firstframe.ftime.last = atoll(ppResult[column]);
+            firstframe.offset.tail = atoll(ppResult[column + 1]);
         }
         firstframe.id = fileid;
         freeTable(ppResult);
@@ -429,9 +425,8 @@ int SeekDbMgr::getTimeOffsetByFileName(const std::string& filename, const Select
             return -3;
         }
         if (row == 1) {
-            index = column;
-            lastframe.ftime.first = atoll(ppResult[index]);
-            lastframe.offset.head = atoll(ppResult[index + 1]);
+            lastframe.ftime.first = atoll(ppResult[column]);
+            lastframe.offset.head = atoll(ppResult[column + 1]);
         }
         freeTable(ppResult);
 
@@ -456,9 +451,8 @@ int SeekDbMgr::getTimeOffsetByFileName(const std::string& filename, const Select
             return -4;
         }
         if (row == 1) {
-            index = column;
-            lastframe.ftime.last = atoll(ppResult[index]);
-            lastframe.offset.tail = atoll(ppResult[index + 1]);
+            lastframe.ftime.last = atoll(ppResult[column]);
+            lastframe.offset.tail = atoll(ppResult[column + 1]);
         }
 
         lastframe.id = fileid;
