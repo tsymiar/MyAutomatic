@@ -208,8 +208,8 @@ int main(int argc, char* argv[])
         if (slen < 0) {
             fprintf(stderr, "snprintf failed\n");
         } else {
-            size_t wroteSize = fwrite(time, 1, slen, tmf);
-            if (wroteSize != slen) {
+            ssize_t wrote = fwrite(time, 1, slen, tmf);
+            if (wrote != slen) {
                 fprintf(stderr, "fwrite(fileName=%s) failed!\n", timefile);
             } else {
                 printf("fwrite(fileName=%s) utctime=%ld success!\n", timefile, header.utctime);

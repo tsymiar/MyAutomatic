@@ -7,6 +7,7 @@ import fnmatch
 from colorama import Fore, init
 from collections import defaultdict
 import re
+import json, builtins, atexit
 
 Style = None
 init(autoreset=True)
@@ -514,6 +515,7 @@ def parse_arguments():
         help="要忽略的文件模式列表（多个模式用逗号分隔），如：--ignore-files *.tmp,*.bak",
     )
     parser.add_argument("--no-color", action="store_true", help="禁用颜色输出")
+    parser.add_argument("--json", action="store_true", help="按json格式打印")
 
     args = parser.parse_args()
 
@@ -523,6 +525,37 @@ def parse_arguments():
 
     return args
 
+def _on_json_output_exit():
+    _orig_file_compare = globals().get('file_compare')
+    _orig_dir_compare = globals().get('dir_compare')
+    _orig_print = builtins.print
+    _json_store = {'type': None, 'data': None}
+
+    def _wrap_file_compare(file1, file2, base_dir, show_diff, use_state_machine=False):
+        res = _orig_file_compare(file1, file2, base_dir, show_diff, use_state_machine)
+        _json_store['type'] = 'file'
+        _json_store['data'] = res
+        return res
+
+    def _wrap_dir_compare(dir1, dir2, show_diff, ignore_dirs, ignore_files):
+        res = _orig_dir_compare(dir1, dir2, show_diff, ignore_dirs, ignore_files)
+        _json_store['type'] = 'dir'
+        total, details, unmatched = res
+        _json_store['data'] = {'total': total, 'details': details, 'unmatched': unmatched}
+        return res
+
+    globals()['file_compare'] = _wrap_file_compare
+    globals()['dir_compare'] = _wrap_dir_compare
+
+    def _noop_print(*a, **kw): pass
+    builtins.print = _noop_print
+
+    def _print_json_at_exit():
+        builtins.print = _orig_print
+        data = _json_store['data'] if _json_store['type'] else {}
+        _orig_print(json.dumps(data, ensure_ascii=False, indent=2))
+
+    atexit.register(_print_json_at_exit)
 
 def main():
     args = parse_arguments()
@@ -534,9 +567,11 @@ def main():
             global Style
             Fore = EmptyStyle()
             Style = EmptyStyle()
-
         # 统一颜色处理函数
         color = lambda c: getattr(Fore, c.upper()) if use_color else ""
+
+        if args.json:
+            _on_json_output_exit()
 
         # 文件对比模式
         if os.path.isfile(args.source) and os.path.isfile(args.target):
