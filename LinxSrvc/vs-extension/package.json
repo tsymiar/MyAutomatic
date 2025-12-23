@@ -10,16 +10,13 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [
-    "onCommand:similarity.compareFolders",
-    "onCommand:similarity.openResults"
-  ],
+  "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
         "command": "similarity.compareFolders",
-        "title": "Compare Two Directories"
+        "title": "Compare Selected Directories"
       },
       {
         "command": "similarity.openResults",
