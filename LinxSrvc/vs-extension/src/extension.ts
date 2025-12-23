@@ -4,8 +4,8 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as os from 'os';
 import {
-    parseComparisonResult, FolderComparisonResult
-} from './parseText';
+    parseComparisonResult, ComparisonFolderResults
+} from './parse_text';
 
 export const QUICK_COMPARE_COMMAND = 'similarity.quickCompare';
 
@@ -261,7 +261,7 @@ async function runFolderComparison(
     target: string,
     ignoreExt: string[],
     outChannel: vscode.OutputChannel
-): Promise<FolderComparisonResult> {
+): Promise<ComparisonFolderResults> {
     return new Promise((resolve, reject) => {
         const pythonCommand = os.platform() === 'win32' ? 'python' : 'python3';
         const scriptPath = path.join(context.extensionPath, 'scripts', 'similarity.py');
@@ -312,6 +312,7 @@ async function runFolderComparison(
                 return;
             }
 
+            let outJson = null;
             try {
                 // 清理 JSON 字符串
                 let cleanOutput = output.replace(/[\x00-\x1F]/g, '');
@@ -336,22 +337,24 @@ async function runFolderComparison(
                         cleanOutput = `{
                             "source": "${jsonOut.source}",
                             "target": "${jsonOut.target}",
-                            "unique_source_files": ${JSON.stringify(jsonOut.unique_source_files)},
-                            "unique_target_files": ${JSON.stringify(jsonOut.unique_target_files)},
-                            "common_files": [${commonFiles.slice(0, -2)}],
-                            "different_files": ${JSON.stringify(jsonOut.different_files)}
+                            "source_unique": ${JSON.stringify(jsonOut.source_unique)},
+                            "target_unique": ${JSON.stringify(jsonOut.target_unique)},
+                            "different_files": ${JSON.stringify(jsonOut.different_files)},
+                            "matched_files": ${JSON.stringify(jsonOut.matched_files)},
+                            "common_files": [${commonFiles.slice(0, -2)}]
                         }`;
                     }
                 }
                 // 尝试解析 JSON
-                const result = JSON.parse(cleanOutput) as FolderComparisonResult;
+                outJson = cleanOutput;
+                const result = JSON.parse(cleanOutput) as ComparisonFolderResults;
                 outChannel.appendLine(`Parsed JSON output: ${JSON.stringify(result, null, 2)}`);
                 if (result && result.source && result.target) {
                     resolve(result);
                 }
             } catch (e) {
                 outChannel.appendLine(`Raw output from Python:\n${output}`);
-                reject(new Error(`Failed to parse JSON output: ${e}\nCleaned output: ${outChannel}`));
+                reject(new Error(`Failed to parse JSON output: ${e}\nCleaned output: ${outJson}`));
             }
         });
 
@@ -361,13 +364,13 @@ async function runFolderComparison(
     });
 }
 
-function showComparisonResults(result: FolderComparisonResult, outChannel: vscode.OutputChannel) {
+function showComparisonResults(result: ComparisonFolderResults, outChannel: vscode.OutputChannel) {
     outChannel.appendLine('\n=== Comparison Results ===');
-    outChannel.appendLine(`Unique source: ${result.unique_source_files.length}`);
-    outChannel.appendLine(`Unique target: ${result.unique_target_files.length}`);
-    outChannel.appendLine(`Common files: ${result.common_files.length}`);
-    outChannel.appendLine(`Different files: ${result.different_files.length}`);
-
+    outChannel.appendLine(`Source unique: ${result.source_unique.length ?? 0}`);
+    outChannel.appendLine(`Target unique: ${result.target_unique.length ?? 0}`);
+    outChannel.appendLine(`Differences: ${result.different_files.length ?? 0}`);
+    outChannel.appendLine(`Matched files: ${result.matched_files.length ?? 0}`);
+    outChannel.appendLine(`Common files: ${result.common_files.length ?? 0}`);
     // 创建Web视图显示详细结果
     const panel = vscode.window.createWebviewPanel(
         'folderComparisonResults',
@@ -379,12 +382,14 @@ function showComparisonResults(result: FolderComparisonResult, outChannel: vscod
     panel.webview.html = getWebviewContent(result);
 
     vscode.window.showInformationMessage(
-        `Comparison completed. Unique: ${result.unique_source_files.length + result.unique_target_files.length}, ` +
-        `Different: ${result.different_files.length}, Common: ${result.common_files.length}`
+        `Comparison completed. Unique: ${result.source_unique.length ?? result.target_unique.length ?? 0}, ` +
+        `Matched: ${result.matched_files.length ?? 0}, ` +
+        `Different: ${result.different_files.length ?? 0}, ` +
+        `Common: ${result.common_files.length ?? 0}`
     );
 }
 
-function getWebviewContent(result: FolderComparisonResult): string {
+function getWebviewContent(result: ComparisonFolderResults): string {
     const maxDisplayLen = 80;
     const escapeHtml = (str: string) => {
         if (!str) return '';
@@ -422,7 +427,7 @@ function getWebviewContent(result: FolderComparisonResult): string {
             .details { margin-top: 20px; }
             .details h3 { margin-top: 0; color: #c0c000; }
             table { width: 100%; border-collapse: collapse; color: #000; }
-            th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #666; color: #000; max-width: 0; }
+            th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #666; color: #444000ff; max-width: 0; }
             th { background-color: #f2f2f2; }
             tr:hover { background-color: #f5f5f5; }
             li { color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -433,38 +438,38 @@ function getWebviewContent(result: FolderComparisonResult): string {
             <h2>Comparison Summary</h2>
             <div class="summary-grid">
                 <div class="summary-item unique1">
-                    <div class="count">${result.unique_source_files.length} unique</div>
+                    <div class="count">${result.source_unique.length ?? 0} unique</div>
                     <div><br><span title="${escapeHtml(result.source)}" class="path">${escapeHtml(shorten(result.source))}</span></div>
                 </div>
                 <div class="summary-item unique2">
-                    <div class="count">${result.unique_target_files.length} unique</div>
+                    <div class="count">${result.target_unique.length ?? 0} unique</div>
                     <div><br><span title="${escapeHtml(result.target)}" class="path">${escapeHtml(shorten(result.target))}</span></div>
                 </div>
                 <div class="summary-item common">
-                    <div class="count">${result.common_files.length}</div>
+                    <div class="count">${result.common_files.length ?? 0}</div>
                     <div>Common Files</div>
                 </div>
                 <div class="summary-item different">
-                    <div class="count">${result.different_files.length}</div>
+                    <div class="count">${result.different_files.length ?? 0}</div>
                     <div>Different Files</div>
                 </div>
             </div>
         </div>
         <div class="details">
-            <h3>unique source files</h3>
+            <h3>Source Unique</h3>
             <ul>
                 ${
-                    result.unique_source_files.map(file => {
+                    result.source_unique.map(file => {
                         const full = escapeHtml(file);
                         const disp = escapeHtml(shorten(file));
                         return `<li title="${full}">${disp}</li>`;
                     }).join('') || '<li>None</li>'
                 }
             </ul>
-            <h3>unique target files</h3>
+            <h3>Target Unique</h3>
             <ul>
                 ${
-                    result.unique_target_files.map(file => {
+                    result.target_unique.map(file => {
                         const full = escapeHtml(file);
                         const disp = escapeHtml(shorten(file));
                         return `<li title="${full}">${disp}</li>`;
@@ -476,16 +481,18 @@ function getWebviewContent(result: FolderComparisonResult): string {
                 <thead>
                     <tr>
                         <th>File</th>
-                        <th>Line</th>
+                        <th>Ratio(%)</th>
+                        <th>Size</th>
                         <th>Hash</th>
                     </tr>
                 </thead>
                 <tbody>
                     ${result.different_files.map(file => `
                         <tr>
-                            <td>${file.file}</td>
-                            <td>${formatBytes(file.line)}</td>
-                            <td>${file.hash.substring(0, 8)}...</td>
+                            <td>${file.detail.file}</td>
+                            <td>${file.detail.ratio}</td>
+                            <td>${formatSize(file.size)}</td>
+                            <td>${file.hash?.substring(0, 8)}...</td>
                         </tr>
                     `).join('') || '<tr><td colspan="5">No differences found</td></tr>'}
                 </tbody>
@@ -511,7 +518,7 @@ function getWebviewContent(result: FolderComparisonResult): string {
     `;
 }
 
-function formatBytes(bytes: number): string {
+function formatSize(bytes: number): string {
     if (bytes === 0) { return '0 Bytes'; }
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
