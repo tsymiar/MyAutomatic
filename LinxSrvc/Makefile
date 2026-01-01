@@ -12,8 +12,8 @@ all:
 	@echo "\033[4;3mMaking CMake targets\033[0m"
 	@make cmake
 	@echo "\033[4;3mMaking extensions\033[0m"
+	@make -C pyex all
 	@make -C vs-extension all
-	@make -C pyext all
 cmake:
 	@ if [ ! -d build ]; then mkdir -p build; else echo Deleting built files; rm -rf build/*; fi;
 	@ cd build && cmake .. && make -j4 && cd -
@@ -23,7 +23,7 @@ clean:
 	@make -C thread clean
 	@make -C hdware clean
 	@make -C IM clean
-	@make -C pyext clean
+	@make -C pyex clean
 	@make -C vs-extension clean
 	@ if [ -d "$(pwd)../lib" ]; then rm -rvf $(pwd)../lib; fi;
 	@ rm -rvf bin/*.exe* ./*.o */.vs vs

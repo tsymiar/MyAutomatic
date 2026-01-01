@@ -76,140 +76,191 @@ def delete_initial_block_comment(source):
 
 def deal_comments_by_state_machine(code, file_ext):
     """
-    使用状态机精确移除注释，保留字符串内的注释符号，并跟踪原始行号。
-    返回: (处理后的代码行列表, 对应的原始行号列表)
+    简化版状态机：逐行处理，支持行注释和块注释（跨行），保留字符串内的注释符号。
+    返回 (处理后的代码行列表, 对应的原始行号列表[0-based])
     """
-    if file_ext in ['.txt', '.md', '.json', '.yml', '.yaml']:
-        return code.splitlines()  # 非代码文件直接返回原始行
-    lines = []
-    if isinstance(code, str):
-        lines = code.splitlines()
-    else:
-        lines = list(code)
-    # 根据文件扩展名确定注释规则
-    c_family_comment = {'line': ['//'], 'block': [('/*', '*/')]}
+    non_code_exts = {".txt", ".md", ".json", ".yml", ".yaml"}
+    if file_ext in non_code_exts:
+        lines = code.splitlines() if isinstance(code, str) else list(code)
+        return lines, list(range(len(lines)))
+
+    lines = code.splitlines() if isinstance(code, str) else list(code)
+
+    # 简化的注释规则
     comment_rules = {
-        '.py': {'line': ['#'], 'block': []},
-        '.java': c_family_comment,
-        '.js': c_family_comment,
-        '.c': c_family_comment,
-        '.cpp': c_family_comment,
-        '.rs': c_family_comment,
-        '.swift': c_family_comment,
-        '.kt': c_family_comment,
-        '.ts': c_family_comment,
-        '.css': {'line': [], 'block': [('/*', '*/')]},
-        '.scss': c_family_comment,
-        '.less': c_family_comment,
-        '.html': {'line': [], 'block': [('<!--', '-->')]},
-        '.xml': {'line': [], 'block': [('<!--', '-->')]},
+        ".py": (["#"], []),
+        ".java": (["//"], [("/*", "*/")]),
+        ".js": (["//"], [("/*", "*/")]),
+        ".c": (["//"], [("/*", "*/")]),
+        ".cpp": (["//"], [("/*", "*/")]),
+        ".rs": (["//"], [("/*", "*/")]),
+        ".swift": (["//"], [("/*", "*/")]),
+        ".kt": (["//"], [("/*", "*/")]),
+        ".ts": (["//"], [("/*", "*/")]),
+        ".css": ([], [("/*", "*/")]),
+        ".scss": (["//"], [("/*", "*/")]),
+        ".less": (["//"], [("/*", "*/")]),
+        ".html": ([], [("<!--", "-->")]),
+        ".xml": ([], [("<!--", "-->")]),
     }
-    rules = comment_rules.get(file_ext, {'line': [], 'block': []})
-    line_comment = rules['line'][0] if rules['line'] else None
-    block_comment = rules['block'][0] if rules['block'] else None
+    line_comments, block_comments = comment_rules.get(file_ext, (["//"], [("/*", "*/")]))
 
-    state = 'NORMAL'  # 状态: NORMAL, BLOCK_COMMENT, LINE_COMMENT, STRING_DOUBLE, STRING_SINGLE
-    current_block_end = None
-    striped_lines = []      # 处理后的代码行
-    original_line_nums = []  # 对应的原始行号
-    current_line = []
-    escape = False
-    current_line_num = 0
+    in_block = False
+    block_end = None
+    in_string = False
+    string_delim = None
 
-    for line_idx, line in enumerate(lines):
+    out_lines = []
+    out_orig_idxs = []
+
+    for idx, line in enumerate(lines):
         i = 0
         n = len(line)
-        current_line_num = line_idx  # 记录当前原始行号
-
-        # 标记当前行是否产生了有效输出
-        line_has_output = False
+        buf = []
 
         while i < n:
-            char = line[i]
-            next_chars = line[i:i+2]  # 用于检查多字符注释符号
-
-            if state == 'NORMAL':
-                # 检查块注释开始
-                if block_comment and next_chars == block_comment[0]:
-                    state = 'BLOCK_COMMENT'
-                    current_block_end = block_comment[1]
-                    i += len(block_comment[0])
+            # handle block comment spanning lines
+            if in_block:
+                if block_end and line.startswith(block_end, i):
+                    in_block = False
+                    i += len(block_end)
                     continue
-                # 检查行注释开始
-                elif line_comment and line.startswith(line_comment, i):
-                    state = 'LINE_COMMENT'
-                    i += len(line_comment)
-                    break  # 跳过行剩余部分
-                # 处理字符串
-                elif char == '"':
-                    state = 'STRING_DOUBLE'
-                    current_line.append(char)
-                    line_has_output = True
-                elif char == "'":
-                    state = 'STRING_SINGLE'
-                    current_line.append(char)
-                    line_has_output = True
-                # 普通字符
-                else:
-                    if not char.isspace() or current_line or line_has_output:
-                        current_line.append(char)
-                        line_has_output = True
-                    if char == '\\':  # 处理转义字符
-                        escape = True
-                    else:
-                        escape = False
+                i += 1
+                continue
 
-            elif state == 'BLOCK_COMMENT':
-                # 检查块注释结束
-                if next_chars == current_block_end:
-                    state = 'NORMAL'
-                    i += len(current_block_end)
-                    continue
-                # 否则跳过注释内容
+            ch = line[i]
 
-            elif state in ('STRING_DOUBLE', 'STRING_SINGLE'):
-                current_line.append(char)
-                line_has_output = True
-                # 检查字符串结束（忽略转义后的引号）
-                if not escape and (
-                    (state == 'STRING_DOUBLE' and char == '"') or
-                    (state == 'STRING_SINGLE' and char == "'")
-                ):
-                    state = 'NORMAL'
-                # 更新转义状态
-                escape = (char == '\\' and not escape)
+            # string handling
+            if in_string:
+                buf.append(ch)
+                if ch == "\\":
+                    # preserve escape and next char if any
+                    if i + 1 < n:
+                        buf.append(line[i + 1])
+                        i += 2
+                        continue
+                elif ch == string_delim:
+                    in_string = False
+                    string_delim = None
+                i += 1
+                continue
 
-            i += 1  # 移动到下一个字符
+            # check block comment start
+            started_block = False
+            for bs, be in block_comments:
+                if line.startswith(bs, i):
+                    in_block = True
+                    block_end = be
+                    i += len(bs)
+                    started_block = True
+                    break
+            if started_block:
+                continue
 
-        # 行结束处理
-        if state == 'LINE_COMMENT':
-            state = 'NORMAL'  # 行注释结束
-            if current_line:
-                # 添加当前行输出并记录原始行号
-                striped_lines.append(''.join(current_line))
-                original_line_nums.append(current_line_num)
-                current_line = []
-        elif state in ('STRING_DOUBLE', 'STRING_SINGLE'):
-            # 字符串跨行时保留换行符
-            current_line.append('\n')
-            # 不立即结束行，继续到下一行
-        elif state == 'NORMAL' and current_line:
-            # 添加当前行输出并记录原始行号
-            striped_lines.append(''.join(current_line))
-            original_line_nums.append(current_line_num)
-            current_line = []
-        # BLOCK_COMMENT 状态继续到下一行，不添加内容
-        elif line_has_output and not current_line:
-            # 处理特殊情况：整行都是空格但被标记为有输出
-            striped_lines.append('')
-            original_line_nums.append(current_line_num)
+            # check line comment start
+            line_comment_found = False
+            for lc in line_comments:
+                if lc and line.startswith(lc, i):
+                    line_comment_found = True
+                    break
+            if line_comment_found:
+                break  # ignore rest of line
 
-    # 处理文件末尾剩余内容
-    if current_line:
-        striped_lines.append(''.join(current_line))
-        original_line_nums.append(current_line_num)
+            # check string start
+            if ch == '"' or ch == "'":
+                in_string = True
+                string_delim = ch
+                buf.append(ch)
+                i += 1
+                continue
 
-    return striped_lines, original_line_nums
+            # normal char
+            buf.append(ch)
+            i += 1
+
+        out_text = "".join(buf).rstrip()
+        if out_text:
+            out_lines.append(out_text)
+            out_orig_idxs.append(idx)
+    return out_lines, out_orig_idxs
+
+def _get_string_ranges(line):
+    string_patterns = [
+        (r"'[^'\\]*(?:\\.[^'\\]*)*'", 0),
+        (r'"[^"\\]*(?:\\.[^"\\]*)*"', 0),
+    ]
+    ranges = []
+    for pattern, _ in string_patterns:
+        for match in re.finditer(pattern, line):
+            ranges.append((match.start(), match.end()))
+    return sorted(ranges)
+
+
+def _non_string_ranges(line, string_ranges):
+    if not string_ranges:
+        return [(0, len(line))]
+    result = []
+    prev_end = 0
+    for start, end in string_ranges:
+        if start > prev_end:
+            result.append((prev_end, start))
+        prev_end = max(prev_end, end)
+    if prev_end < len(line):
+        result.append((prev_end, len(line)))
+    return result
+
+
+def _is_comment_in_non_string(line, pattern, flags, non_str_ranges):
+    for match in re.finditer(pattern, line, flags=flags):
+        start_pos, end_pos = match.start(), match.end()
+        for range_start, range_end in non_str_ranges:
+            if range_start <= start_pos < end_pos <= range_end:
+                return True
+    return False
+
+
+def _mark_comment_lines(code_lines, patterns):
+    line_marker = [True] * len(code_lines)
+    for idx, line in enumerate(code_lines):
+        string_ranges = _get_string_ranges(line)
+        non_str_ranges = _non_string_ranges(line, string_ranges)
+        for pattern, flags in patterns:
+            if _is_comment_in_non_string(line, pattern, flags, non_str_ranges):
+                line_marker[idx] = False
+                break
+    return line_marker
+
+
+def _deal_single_line_comments(code_lines, line_marker):
+    single_line_comment_pattern = re.compile(r'^\s*//.*$', re.MULTILINE)
+    for i, line in enumerate(code_lines):
+        if single_line_comment_pattern.match(line):
+            line_marker[i] = False
+
+
+def _process_block_comments(code_lines, line_marker):
+    processed = []
+    in_block_comment = False
+    for _, (line, keep) in enumerate(zip(code_lines, line_marker)):
+        if in_block_comment:
+            if '*/' in line:
+                end_pos = line.find('*/') + 2
+                line = line[end_pos:].strip()
+                in_block_comment = False
+            else:
+                continue
+        if '/*' in line and '*/' not in line:
+            start_pos = line.find('/*')
+            line = line[:start_pos].strip()
+            in_block_comment = True
+        if '/*' in line and '*/' in line:
+            start_pos = line.find('/*')
+            end_pos = line.find('*/') + 2
+            line = (line[:start_pos] + line[end_pos:]).strip()
+        if keep and line.strip():
+            processed.append(line.rstrip())
+    return processed
+
 
 def deal_comments_by_line_marker(file_ext, code):
     patterns = COMMENT_PATTERNS.get(file_ext, [])
@@ -220,81 +271,9 @@ def deal_comments_by_line_marker(file_ext, code):
 
     code_lines = delete_initial_block_comment(code_lines)
 
-    def get_string_ranges(line):
-        string_patterns = [
-            (r"'[^'\\]*(?:\\.[^'\\]*)*'", 0),
-            (r'"[^"\\]*(?:\\.[^"\\]*)*"', 0)
-        ]
-        ranges = []
-        for pattern, _ in string_patterns:
-            for match in re.finditer(pattern, line):
-                ranges.append((match.start(), match.end()))
-        return sorted(ranges)
-
-    def non_string_ranges(line, string_ranges):
-        if not string_ranges:
-            return [(0, len(line))]
-        result = []
-        prev_end = 0
-        for start, end in string_ranges:
-            if start > prev_end:
-                result.append((prev_end, start))
-            prev_end = max(prev_end, end)
-        if prev_end < len(line):
-            result.append((prev_end, len(line)))
-        return result
-
-    def is_comment_in_non_string(line, pattern, flags, non_str_ranges):
-        for match in re.finditer(pattern, line, flags=flags):
-            start_pos, end_pos = match.start(), match.end()
-            for range_start, range_end in non_str_ranges:
-                if range_start <= start_pos < end_pos <= range_end:
-                    return True
-        return False
-
-    def mark_comment_lines(code_lines, patterns):
-        line_marker = [True] * len(code_lines)
-        for idx, line in enumerate(code_lines):
-            string_ranges = get_string_ranges(line)
-            non_str_ranges = non_string_ranges(line, string_ranges)
-            for pattern, flags in patterns:
-                if is_comment_in_non_string(line, pattern, flags, non_str_ranges):
-                    line_marker[idx] = False
-                    break
-        return line_marker
-
-    def deal_single_line_comments(code_lines, line_marker):
-        single_line_comment_pattern = re.compile(r'^\s*//.*$', re.MULTILINE)
-        for i, line in enumerate(code_lines):
-            if single_line_comment_pattern.match(line):
-                line_marker[i] = False
-
-    def process_block_comments(code_lines, line_marker):
-        processed = []
-        in_block_comment = False
-        for _, (line, keep) in enumerate(zip(code_lines, line_marker)):
-            if in_block_comment:
-                if '*/' in line:
-                    end_pos = line.find('*/') + 2
-                    line = line[end_pos:].strip()
-                    in_block_comment = False
-                else:
-                    continue
-            if '/*' in line and '*/' not in line:
-                start_pos = line.find('/*')
-                line = line[:start_pos].strip()
-                in_block_comment = True
-            if '/*' in line and '*/' in line:
-                start_pos = line.find('/*')
-                end_pos = line.find('*/') + 2
-                line = (line[:start_pos] + line[end_pos:]).strip()
-            if keep and line.strip():
-                processed.append(line.rstrip())
-        return processed
-
-    line_marker = mark_comment_lines(code_lines, patterns)
-    deal_single_line_comments(code_lines, line_marker)
-    return process_block_comments(code_lines, line_marker)
+    line_marker = _mark_comment_lines(code_lines, patterns)
+    _deal_single_line_comments(code_lines, line_marker)
+    return _process_block_comments(code_lines, line_marker)
 
 def strip_comments(file_ext, code, use_state_machine):
     if not use_state_machine:
@@ -531,8 +510,16 @@ def _on_json_output_exit():
     _orig_print = builtins.print
     _json_store = {'type': None, 'data': None}
 
+    def _round_ratio_val(r):
+        try:
+            return round(float(r) * 100, 3)
+        except Exception:
+            return r
+
     def _wrap_file_compare(file1, file2, base_dir, show_diff, use_state_machine=False):
         res = _orig_file_compare(file1, file2, base_dir, show_diff, use_state_machine)
+        if 'ratio' in res:
+            res['ratio'] = _round_ratio_val(res['ratio'])
         _json_store['type'] = 'file'
         _json_store['data'] = res
         return res
@@ -541,6 +528,26 @@ def _on_json_output_exit():
         res = _orig_dir_compare(dir1, dir2, show_diff, ignore_dirs, ignore_files)
         _json_store['type'] = 'dir'
         total, details, unmatched = res
+
+        if 'ratio' in total:
+            total['ratio'] = _round_ratio_val(total['ratio'])
+        for info in details:
+            if 'ratio' in info:
+                # Avoid multiplying twice: if ratio already > 1 assume it's percent and just round
+                try:
+                    val = float(info['ratio'])
+                    if val <= 1:
+                        info['ratio'] = _round_ratio_val(val)
+                    else:
+                        info['ratio'] = round(val, 3)
+                except Exception:
+                    pass
+            fn = info.get('file_name', '')
+            if '↔' in fn:
+                left, right = [s.strip() for s in fn.split('↔', 1)]
+                longer = left if len(left) >= len(right) else right
+                info['file_name'] = f"{longer}"
+
         _json_store['data'] = {'total': total, 'details': details, 'unmatched': unmatched}
         return res
 

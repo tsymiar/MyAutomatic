@@ -130,8 +130,8 @@ void* parseMessage(void* msg)
             }
             for (int c = 0; c < atoi(payload + 4); c++) {
                 char user[25];
-                user[24] = '\0';
                 memcpy(user, payload + 32 + 8 * c, 8);
+                user[24] = '\0';
                 len = strlen(user);
                 if (len <= 0)
                     break;
@@ -142,9 +142,10 @@ void* parseMessage(void* msg)
         } else if (payload[1] == NETNDT || payload[1] == PEER2P) {
             char msg[128];
             if (payload[2] != '0') {
-                sprintf_s(msg, 128, "'%s': %s", title, payload + 32);
+                sprintf_s(msg, sizeof(msg), "'%s': %s", title, payload + 32);
             } else {
-                strncpy(msg, title, strlen(title));
+                title[127] = '\0';
+                sprintf_s(msg, sizeof(msg), "%.*s", (int)(sizeof(msg) - 1), title);
             }
             MessageBox(NULL, msg, "---Message---", MB_OK);
         } else if (payload[1] == USERGROUP && payload[3] == '\0') {
@@ -164,6 +165,7 @@ void* parseMessage(void* msg)
             char group[24];
             for (int c = 0; c < atoi(payload + 4); c++) {
                 memcpy(group, payload + 32 + 8 * c, 8);
+                memset(group + 8, '\0', 1);
                 len = strlen(group);
                 if (len <= 0)
                     break;

@@ -1,3 +1,4 @@
+#pragma GCC diagnostic ignored "-Wpedantic"
 #define NULL 0
 struct SwsContext { };
 enum AVPixelFormat { A };
