@@ -7,7 +7,7 @@ else if [ ! -d "build" ]
         mkdir build;
     fi
 fi
-# build && genhtml
+# build && lcov gen html
 cd build
 cmake ..
 make -j
