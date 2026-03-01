@@ -6,6 +6,11 @@ sudo apt-get install -y git g++ pkg-config libnl-3-dev libnl-route-3-dev \
   libcmocka-dev libssl-dev libnuma-dev
 sudo apt-get install -y rdma-core
 cd ../../3rd
+ln -s rxe-dev/include/linux/compiler-gcc5.h rxe-dev/include/linux/compiler-gcc8.h
+set container=rockylinux:8
+sudo apt-get install -y containerd.io
+docker run  -v ../3rd:/mnt:rw -it --rm $container \
+    bash -c "yum install -y git gcc gcc-c++ make cmake3 libudev-devel numactl-devel libnl3-devel openssl-devel libcap-ng-devel; if [ ! -f /usr/bin/cmake ]; then ln -s /usr/bin/cmake3 /usr/bin/cmake; fi; ls /mnt; cd /mnt/rxe-dev; make clean; make -j \$(nproc); make install;"
 if [ ! -d "rdma-core" ]; then mkdir rdma-core; fi;
 cd rdma-core
 if [ $(ls . | wc -l) -le 1 ]

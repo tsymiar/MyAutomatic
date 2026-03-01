@@ -1,3 +1,6 @@
+[submodule "LinxSrvc/3rd/rxe-dev"]
+	path = LinxSrvc/3rd/rxe-dev
+	url = https://github.com/SoftRoCE/rxe-dev.git
 [submodule "LinxSrvc/3rd/rdma-core"]
 	path = LinxSrvc/3rd/rdma-core
 	url = https://github.com/linux-rdma/rdma-core.git
