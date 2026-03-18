@@ -1,0 +1,3 @@
+[submodule ".llama-tools/llama.cpp-to-hf"]
+	path = .llama-tools/llama.cpp-to-hf
+	url = https://github.com/ggerganov/llama.cpp-to-hf.git
