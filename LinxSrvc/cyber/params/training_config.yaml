@@ -1,0 +1,67 @@
+# 数据配置
+data:
+  train_path: "data/processed/train.txt"      # 训练数据文件
+  val_path: "data/processed/check.txt"        # 验证数据文件
+  max_seq_length: 1024
+  num_workers: 4
+  data_format: "sharegpt"                     # 可选: "raw", "sharegpt", "alpaca"
+  # 若使用 sharegpt 格式，需要指定角色映射
+  sharegpt:
+    human_role: "human"
+    assistant_role: "gpt"
+
+# 模型配置
+model:
+  # 方式1: 本地模型路径（优先）
+  local_model_path: "~/.ollama/models/manifests/registry.ollama.ai/library/deepseek-r1/8b-0528-qwen3-q4_K_M"
+  # 方式2: HuggingFace模型名称（当local_model_path不存在时使用）
+  model_name: "deepseek-ai/DeepSeek-R1-Distill-Llama-8B"
+  # 分词器路径（默认与模型相同）
+  tokenizer_path: null
+  # 是否使用4bit量化（节省显存）
+  load_in_4bit: false
+  # 是否使用DeepSeek官方实现（仅当需要特定DeepSeek模型时开启）
+  use_deepseek: false
+  # DeepSeek参数（use_deepseek=true时生效）
+  params:
+    vocab_size: 102400
+    hidden_size: 4096
+    num_hidden_layers: 32
+    num_attention_heads: 32
+    intermediate_size: 11008
+    max_position_embeddings: 4096
+    rope_theta: 10000.0
+    tie_word_embeddings: false
+
+# 训练配置
+training:
+  epochs: 10
+  batch_size: 2                # 根据显存调整
+  val_batch_size: 4
+  gradient_accumulation_steps: 1  # 梯度累积步数
+  fp16: true                   # 混合精度
+  bf16: false                  # 如果显卡支持bfloat16可开启
+  grad_clip: 1.0
+  out_dir: "outputs"
+  save_interval: 1
+  early_stop_patience: 3
+  lr: 2e-4                      # LoRA常用学习率
+  weight_decay: 0.01
+  use_lora: true                # 启用LoRA微调
+  distributed: false            # 是否启用分布式训练
+
+# LoRA配置
+lora:
+  r: 16
+  lora_alpha: 32
+  target_modules: ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
+  lora_dropout: 0.05
+
+# 学习率调度
+scheduler:
+  type: "linear"
+  warmup_steps: 100
+
+# 日志配置
+logging:
+  log_dir: "outputs/logs"

@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>LinxSrvc 深度架构分析</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#060a16;--cd:#141a2e;--ch:#1a2240;--bdr:#253050;--t1:#e8ecf4;--t2:#8b96b0;--t3:#5a6480;--bl:#3b82f6;--bl2:#60a5fa;--gn:#10b981;--gn2:#34d399;--yl:#f59e0b;--rd:#ef4444;--rd2:#fca5a5;--pp:#8b5cf6;--pp2:#a78bfa;--or:#f97316;--pk:#ec4899;--cy:#06b6d4;--te:#14b8a6;--sf:"Inter",system-ui,sans-serif;--mn:"JetBrains Mono",Consolas,monospace}
+*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth;font-size:16px}
+body{font-family:var(--sf);background:var(--bg);color:var(--t1);line-height:1.65}
+body::after{content:"";position:fixed;inset:0;background:radial-gradient(80% 50% at 50% -10%,rgba(59,130,246,.1),transparent),radial-gradient(40% 30% at 90% 90%,rgba(139,92,246,.06),transparent);pointer-events:none;z-index:0}
+.ct{max-width:1200px;margin:0 auto;padding:0 1.2rem;position:relative;z-index:1}
+h1,h2,h3,h4{font-weight:700;line-height:1.25}
+h1{font-size:clamp(1.5rem,4vw,2.6rem)}h2{font-size:clamp(1.1rem,2.8vw,1.4rem)}h3{font-size:clamp(.9rem,2.2vw,1.1rem)}h4{font-size:.82rem;color:var(--bl2)}
+nav{position:fixed;top:0;left:0;right:0;background:rgba(6,10,22,.94);backdrop-filter:blur(14px);border-bottom:1px solid rgba(37,48,80,.7);z-index:1000}
+.nv{max-width:1200px;margin:0 auto;padding:0 1.2rem;display:flex;align-items:center;gap:.6rem}
+.lg{font-weight:900;font-size:1rem;background:linear-gradient(135deg,var(--bl2),var(--pp));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.lk{display:flex;gap:.12rem;overflow-x:auto;scrollbar-width:none;padding:.38rem 0}.lk::-webkit-scrollbar{display:none}
+.lk a{font-size:.6rem;padding:.15rem .35rem;border-radius:4px;color:var(--t2);white-space:nowrap;transition:all .15s;border:1px solid transparent;text-decoration:none}
+.lk a:hover{color:var(--bl2);background:rgba(59,130,246,.08);border-color:rgba(59,130,246,.15)}
+.hero{padding:7rem 0 2.5rem;text-align:center}
+.badge{display:inline-flex;padding:.2rem .6rem;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.15);border-radius:20px;font-size:.62rem;color:var(--bl2);margin-bottom:.7rem}
+.ht{background:linear-gradient(135deg,var(--bl2),var(--pp),var(--pk));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.4rem}
+.hd{color:var(--t2);max-width:680px;margin:0 auto 1rem;font-size:clamp(.78rem,1.6vw,.92rem)}
+.hs{display:flex;justify-content:center;gap:1rem;flex-wrap:wrap}
+.hh{font-size:1.4rem;font-weight:800;background:linear-gradient(135deg,var(--gn),var(--cy));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hl{font-size:.55rem;color:var(--t3);text-transform:uppercase;letter-spacing:.1em}
+section{padding:1.8rem 0}
+.st{margin-bottom:.9rem;display:flex;align-items:center;gap:.5rem}.st h2{display:inline-flex;align-items:center;gap:.3rem}.st::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--bdr),transparent)}
+.tg{font-family:var(--mn);font-size:.5rem;padding:.08rem .28rem;background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.25);border-radius:3px;color:var(--pp)}
+.cd{background:var(--cd);border:1px solid var(--bdr);border-radius:9px;padding:1.1rem;transition:all .2s}.cd:hover{background:var(--ch);transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,0,0,.25)}
+.cd2{background:rgba(0,0,0,.22);border:1px solid var(--bdr);border-radius:7px;padding:.65rem;margin-top:.5rem;overflow-x:auto}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem}
+@media(max-width:700px){.g2,.g3{grid-template-columns:1fr}}
+.tags{display:flex;flex-wrap:wrap;gap:.22rem;margin-top:.45rem}
+.t{font-size:.54rem;padding:.08rem .35rem;border-radius:4px;font-family:var(--mn)}.tp{background:rgba(139,92,246,.1);color:var(--pp);border:1px solid rgba(139,92,246,.2)}.tb{background:rgba(59,130,246,.1);color:var(--bl2);border:1px solid rgba(59,130,246,.2)}.tg2{background:rgba(16,185,129,.1);color:var(--gn);border:1px solid rgba(16,185,129,.2)}.ty{background:rgba(245,158,11,.1);color:var(--yl);border:1px solid rgba(245,158,11,.2)}.tc{background:rgba(6,182,212,.1);color:var(--cy);border:1px solid rgba(6,182,212,.2)}.to{background:rgba(249,115,22,.1);color:var(--or);border:1px solid rgba(249,115,22,.2)}.tr{background:rgba(239,68,68,.1);color:var(--rd);border:1px solid rgba(239,68,68,.2)}.tk{background:rgba(236,72,153,.1);color:var(--pk);border:1px solid rgba(236,72,153,.2)}.tz{background:rgba(20,184,166,.1);color:var(--te);border:1px solid rgba(20,184,166,.2)}
+.n{display:inline-flex;flex-direction:column;align-items:center;border-radius:6px;padding:.35rem .5rem;text-align:center;font-size:.55rem;min-width:50px;margin:.12rem;transition:all .15s;cursor:default}.n:hover{transform:scale(1.06)}
+.lb{font-weight:600;font-size:.56rem;margin-bottom:.05rem;white-space:nowrap}.ln{font-size:.44rem;opacity:.7;white-space:nowrap}
+.c1{background:linear-gradient(135deg,rgba(139,92,246,.2),rgba(59,130,246,.2));border:2px solid var(--pp);color:var(--t1);width:auto!important;padding:.3rem .7rem!important}
+.m1{background:rgba(236,72,153,.1);border:1px solid var(--pk);color:#f9a8d4}.s1{background:rgba(59,130,246,.1);border:1px solid var(--bl);color:#93c5fd}
+.g1{background:rgba(16,185,129,.1);border:1px solid var(--gn);color:#6ee7b7}.x1{background:rgba(245,158,11,.1);border:1px solid var(--yl);color:#fcd34d}
+.e1{background:rgba(100,116,139,.06);border:1px dashed var(--t3);color:var(--t3)}.i1{background:rgba(6,182,212,.1);border:1px solid var(--cy);color:#67e8f9}
+.o1{background:rgba(249,115,22,.1);border:1px solid var(--or);color:#fdba74}.r1{background:rgba(239,68,68,.1);border:1px solid var(--rd);color:#fca5a5}
+.y1{background:rgba(250,204,21,.1);border:1px solid #ca8a04;color:#fde047}.z1{background:rgba(20,184,166,.1);border:1px solid var(--te);color:#5eead4}
+.w1{background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.22);color:#93c5fd}
+.rw{display:flex;align-items:flex-start;justify-content:center;gap:.25rem;margin-bottom:.25rem;flex-wrap:wrap}
+.ag{border:1px dashed rgba(59,130,246,.18);border-radius:6px;padding:.35rem;margin:.1rem;position:relative;flex:1;min-width:90px}
+.al{position:absolute;top:-5px;left:6px;font-size:.48rem;font-family:var(--mn);color:var(--t3);background:var(--bg);padding:0 .1rem;z-index:2}
+.ao{display:flex;flex-wrap:wrap;gap:.12rem;justify-content:center;flex-direction:column;align-items:center;padding-top:.08rem}
+.dv{width:55%;margin:.2rem auto;height:1px;background:linear-gradient(90deg,transparent,var(--bdr),transparent)}
+.av{color:var(--bl);font-size:.7rem;text-align:center;opacity:.3;margin:-1px 0}
+.fc{display:flex;flex-direction:column;align-items:center;gap:0;padding:.35rem 0}
+.fd{display:flex;align-items:center;gap:.5rem;padding:.35rem .6rem;background:var(--cd);border:1px solid var(--bdr);border-radius:6px;min-width:160px;max-width:380px;width:100%}
+.dm{width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,var(--bl),var(--pp));color:#fff;font-weight:700;font-size:.5rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.dx{font-size:.65rem;color:var(--t2)}
+table{width:100%;border-collapse:collapse;margin:.45rem 0;font-size:.68rem}th{background:rgba(59,130,246,.06);color:var(--bl2);padding:.38rem .5rem;text-align:left;font-weight:600;border-bottom:2px solid var(--bl)}td{padding:.35rem .5rem;border-bottom:1px solid rgba(37,48,80,.4);color:var(--t2)}tr:hover{background:rgba(59,130,246,.04)}
+pre{background:rgba(0,0,0,.25);border:1px solid var(--bdr);border-radius:7px;padding:.65rem;overflow-x:auto;margin:.45rem 0;font-size:.6rem;line-height:1.38;font-family:var(--mn)}
+.rg{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:.65rem}
+.rc{padding:.6rem;border-radius:6px;background:var(--cd);border-left:3px solid}.rh{border-left-color:var(--rd)}.rm{border-left-color:var(--yl)}.rl{border-left-color:var(--gn)}
+.rc h4{color:var(--t1);margin-bottom:.12rem;display:flex;align-items:center;gap:.3rem;font-size:.8rem}.rc p{font-size:.66rem;color:var(--t2)}
+.sr{font-size:.44rem;padding:.04rem .25rem;border-radius:3px;text-transform:uppercase;font-weight:700}.sh2{background:rgba(239,68,68,.15);color:var(--rd2)}.sm{background:rgba(245,158,11,.15);color:var(--yl)}.sl{background:rgba(16,185,129,.15);color:var(--gn2)}
+footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-align:center;color:var(--t3);font-size:.65rem}
+</style>
+</head>
+<body>
+<nav><div class="nv">
+<div class="lg">🏗️ LinxSrvc</div>
+<div class="lk">
+<a href="#ov">概览</a><a href="#cy">Cyber</a><a href="#im">IM</a><a href="#lk">Lookup</a><a href="#wb">Webev</a><a href="#gs">gSOAP</a><a href="#dp">dpsk</a><a href="#hd">HDware</a><a href="#th">Thread</a><a href="#md">Media</a><a href="#vs">VSExtn</a><a href="#qt">Trade</a><a href="#bf">构建</a><a href="#fl">数据流</a><a href="#pt">模式</a><a href="#rk">风险</a>
+</div>
+</div></nav>
+
+<div class="hero"><div class="ct">
+<div class="badge">📐 深度架构分析 · 2026-04-05</div>
+<h1 class="ht">LinxSrvc 项目架构全景</h1>
+<p class="hd">混合语言（C/C++/Python）大型服务端框架，集成网络通信、硬件交互、ML 训练、Web 服务、数据库查询与量化交易。CMake 构建，跨 Linux/macOS/Windows。</p>
+<div class="hs">
+<div class="st2"><div class="hh">16+</div><div class="hl">子模块</div></div>
+<div class="st2"><div class="hh">3</div><div class="hl">编程语言</div></div>
+<div class="st2"><div class="hh">3</div><div class="hl">目标平台</div></div>
+<div class="st2"><div class="hh">9+</div><div class="hl">外部依赖</div></div>
+</div>
+</div></div>
+
+<section id="ov"><div class="ct">
+<div class="st"><h2>📋 项目概览</h2><span class="tg">Overview</span></div>
+<div class="g2" style="margin-bottom:.7rem">
+<div class="cd"><h4>🔧 技术栈</h4>
+<div class="tags"><span class="t tb">C/C++11-17</span><span class="t ty">Python 3</span><span class="t tp">PyTorch</span><span class="t tc">Sockets</span><span class="t tg2">SQLite</span><span class="t to">cURL</span><span class="t tk">TypeScript</span><span class="t tc">FFmpeg</span><span class="t tp">OpenMP</span></div></div>
+<div class="cd"><h4>🏢 架构特性</h4>
+<div class="tags"><span class="t tg2">高内聚模块化</span><span class="t tb">跨平台</span><span class="t ty">事件驱动</span><span class="t ty">线程池</span><span class="t tr">硬件亲和</span><span class="t tc">AI 原生</span><span class="t tk">SOAP/Web</span></div></div>
+</div>
+<div class="cd"><div class="cd2">
+<div style="text-align:center;margin-bottom:.4rem"><div class="n c1"><div class="lb" style="font-size:.72rem">LinxSrvc 构建系统</div><div class="ln">Makefile + CMakeLists.txt 聚合所有子目录</div></div></div>
+<div class="rw">
+<div class="ag"><div class="al">AI / ML 层</div><div class="ao">
+<div class="n m1"><div class="lb">🧠 cyber</div><div class="ln">LLM 训练</div></div>
+<div class="n x1"><div class="lb">🤖 dpsk</div><div class="ln">DeepSeek API</div></div>
+<div class="n m1"><div class="lb">📈 trade</div><div class="ln">量化策略</div></div>
+</div></div>
+<div class="ag"><div class="al">网络 / 服务层</div><div class="ao">
+<div class="n s1"><div class="lb">📡 IM</div><div class="ln">KaiSocket</div></div>
+<div class="n s1"><div class="lb">🌐 webev</div><div class="ln">Web 服务器</div></div>
+<div class="n x1"><div class="lb">🔄 gSOAP</div><div class="ln">SOAP 验证</div></div>
+<div class="n s1"><div class="lb">🔍 lookup</div><div class="ln">查找服务</div></div>
+</div></div>
+<div class="ag"><div class="al">基础设施层</div><div class="ao">
+<div class="n i1"><div class="lb">⚡ hdware</div><div class="ln">硬件驱动</div></div>
+<div class="n o1"><div class="lb">🧵 thread</div><div class="ln">线程池</div></div>
+<div class="n z1"><div class="lb">🎬 media</div><div class="ln">音视频</div></div>
+</div></div>
+<div class="ag"><div class="al">工具 / 其他</div><div class="ao">
+<div class="n y1"><div class="lb">🔌 VSExtn</div><div class="ln">VSCode 扩展</div></div>
+<div class="n y1"><div class="lb">🐍 pyex</div><div class="ln">C 扩展</div></div>
+<div class="n z1"><div class="lb">🔧 gn1</div><div class="ln">生成器</div></div>
+<div class="n z1"><div class="lb">📊 diff</div><div class="ln">差分分析</div></div>
+</div></div>
+</div>
+</div></div>
+<div class="cd" style="margin-top:.7rem"><h3>📁 目录结构</h3>
+<pre>LinxSrvc/
+├── 3rd/               # 第三方 (googletest, lcov, rdma-core)
+├── CMakeLists.txt     # 顶层 CMake → e.g, media, dpsk, gn1, diff, lookup, mock
+├── Makefile           # 总控 Makefile (→ build/, webev, hdware, IM, thread, gSOAPverify)
+├── cyber/             # LLM 训练/推理 (Python/PyTorch)
+├── dpsk/              # DeepSeek API 客户端 (C++/cURL)
+├── gSOAPverify/       # SOAP Web 服务验证 (gSOAP)
+├── hdware/            # 硬件驱动 (字符设备/FPGA/RDMA/4G)
+├── IM/                # KaiSocket 网络通信库 (C++)
+├── include/           # 公共头文件 (String, Structures)
+├── lookup/            # SQLite 多维度查找 (time/seek/tool)
+├── media/             # FFmpeg 音视频处理
+├── thread/            # 纯 C 线程池 (pthdpool)
+├── trade/             # 量化交易策略 (Python)
+├── webev/             # 事件驱动 Web 服务器 (epoll)
+├── vs-extension/      # VSCode 扩展 (TypeScript + Python)
+├── pyex/              # Python C 扩展
+└── e.g/ diff/ gn1/ mock/ test/ shell/</pre>
+</div>
+</div></section>
+
+<section id="cy"><div class="ct">
+<div class="st"><h2>🧠 Cyber — LLM 训练与推理</h2><span class="tg">Python / ML</span></div>
+<div class="cd"><div class="cd2">
+<div style="text-align:center;margin-bottom:.4rem"><div class="n c1" style="width:auto;padding:.3rem .8rem"><div class="lb" style="font-size:.68rem">cyber/ — 大语言模型全链路</div><div class="ln">数据准备 → 训练 → 量化 → 推理 → 评估</div></div></div>
+<div class="rw">
+<div class="ag"><div class="al">数据层</div><div class="ao">
+<div class="n e1"><div class="lb">📂 raw/</div><div class="ln">原始数据</div></div>
+<div class="n g1"><div class="lb">prepare_data.py</div><div class="ln">数据预处理</div></div>
+<div class="n i1"><div class="lb">📂 processed/</div><div class="ln">处理后数据</div></div>
+<div class="n g1"><div class="lb">utils/data_utils.py</div><div class="ln">数据集处理</div></div>
+</div></div>
+<div class="ag"><div class="al">模型层</div><div class="ao">
+<div class="n e1"><div class="lb">base_model/</div><div class="ln">基座模型</div></div>
+<div class="n x1"><div class="lb">训练配置</div><div class="ln">YAML 参数</div></div>
+<div class="n e1"><div class="lb">adapters/</div><div class="ln">LoRA 权重</div></div>
+<div class="n g1"><div class="lb">utils/model_utils.py</div><div class="ln">模型加载/组合</div></div>
+</div></div>
+<div class="ag"><div class="al">训练引擎</div><div class="ao">
+<div class="n m1"><div class="lb">llm_train.py</div><div class="ln">训练循环</div></div>
+<div class="n m1"><div class="lb">inference.py</div><div class="ln">推理服务</div></div>
+<div class="n m1"><div class="lb">ollama_to_hf.py</div><div class="ln">模型格式转换</div></div>
+<div class="n e1"><div class="lb">📂 output/llm_result/</div><div class="ln">训练输出</div></div>
+</div></div>
+</div>
+<div class="dv"></div>
+<div class="rw" style="justify-content:center"><div class="n c1" style="min-width:180px"><div class="lb">📊 TensorBoard / eval_results.json</div><div class="ln">训练监控与评估结果</div></div></div>
+</div></div>
+<table style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现</th></tr></thead><tbody>
+<tr><td>量化</td><td>4bit 量化 + LoRA 高效微调</td></tr>
+<tr><td>回调</td><td>EarlyStopping + 学习率衰减 + 检查点保存</td></tr>
+<tr><td>可视化</td><td>TensorBoard 实时监控</td></tr>
+<tr><td>模型组合</td><td>基础模型 + 适配器自动组合加载</td></tr>
+</tbody></table>
+<div class="tags" style="margin-top:.4rem"><span class="t tp">PyTorch</span><span class="t tp">Transformers</span><span class="t tp">PEFT/LoRA</span><span class="t tg2">4bit</span><span class="t ty">EarlyStopping</span><span class="t tc">TensorBoard</span><span class="t tp">Ollama</span><span class="t tp">HuggingFace</span></div>
+</div></section>
+
+<section id="im"><div class="ct">
+<div class="st"><h2>📡 IM — KaiSocket 网络通信库</h2><span class="tg">C++ / Network</span></div>
+<div class="cd"><div class="cd2">
+<div style="text-align:center;margin-bottom:.3rem"><div class="n s1"><div class="lb" style="font-size:.72rem">KaiSocket</div><div class="ln">核心网络通信库 · 单例模式</div></div></div>
+<div class="av">▼</div>
+<div class="rw" style="justify-content:center">
+<div class="n s1"><div class="lb">Initialize()</div><div class="ln">端口/IP</div></div>
+<div class="n s1"><div class="lb">registerCallback()</div><div class="ln">注册回调</div></div>
+<div class="n s1"><div class="lb">start()/connect()</div><div class="ln">启动连接</div></div>
+</div>
+<div class="av">▼</div>
+<div class="rw" style="justify-content:center">
+<div class="ag"><div class="al">协议层</div><div class="ao">
+<div class="n e1"><div class="lb">📦 消息头</div><div class="ln">协议结构</div></div>
+<div class="n e1"><div class="lb">📦 消息体</div><div class="ln">Payload</div></div>
+</div></div>
+<div class="ag"><div class="al">并发安全</div><div class="ao">
+<div class="n x1"><div class="lb">🔒 mutex</div></div>
+<div class="n x1"><div class="lb">thread-safe</div><div class="ln">线程安全</div></div>
+</div></div>
+<div class="ag"><div class="al">通信架构</div><div class="ao">
+<div class="n g1"><div class="lb">📤 Publisher(topic)</div><div class="ln">发布消息</div></div>
+<div class="n i1"><div class="lb">📥 CallbackHandler</div><div class="ln">处理回调</div></div>
+</div></div>
+</div>
+</div></div>
+<table style="margin-top:.6rem"><thead><tr><th>特性</th><th>详情</th></tr></thead><tbody>
+<tr><td>跨平台</td><td>WinSock2 + BSD Sockets + epoll 自动适配</td></tr>
+<tr><td>Pub/Sub</td><td>topic 驱动，Publisher → CallbackHandler</td></tr>
+<tr><td>安全</td><td>std::mutex 保护共享状态</td></tr>
+<tr><td>测试</td><td>KaiTest.cxx — Publish/Subscribe/Callback 全流程验证</td></tr>
+</tbody></table>
+<div class="tags" style="margin-top:.4rem"><span class="t tb">BSD Sockets</span><span class="t tb">epoll</span><span class="t tb">WinSock2</span><span class="t tg2">单例</span><span class="t tc">Pub/Sub</span></div>
+</div></section>
+
+<section id="lk"><div class="ct">
+<div class="st"><h2>🔍 Lookup — SQLite 多维度查找</h2><span class="tg">C++ / SQLite</span></div>
+<div class="cd"><div class="cd2">
+<div style="text-align:center;margin-bottom:.3rem"><div class="n g1"><div class="lb" style="font-size:.72rem">Lookup 查找服务</div><div class="ln">seek/ · time/ · tool/ 三模块协同</div></div></div>
+<div class="rw">
+<div class="ag"><div class="al">seek/ 查询层</div><div class="ao">
+<div class="n x1"><div class="lb">SeekApi.h</div><div class="ln">API 接口</div></div>
+<div class="n x1"><div class="lb">SeekApi.cpp</div><div class="ln">API 实现</div></div>
+<div class="n m1"><div class="lb">SeekDbMgr.cpp</div><div class="ln">数据库管理</div></div>
+<div class="n i1"><div class="lb">DBbase.h/.cpp</div><div class="ln">数据库基类</div></div>
+</div></div>
+<div class="ag"><div class="al">time/ 时间引擎</div><div class="ao">
+<div class="n tc"><div class="lb">SeekTime.cpp</div><div class="ln">时间索引</div></div>
+<div class="n tc"><div class="lb">TimeManager.cpp</div><div class="ln">时间管理</div></div>
+<div class="n e1"><div class="lb">TimeData*</div><div class="ln">数据结构</div></div>
+<div class="n e1"><div class="lb">TimeSql.h</div><div class="ln">SQL 操作</div></div>
+<div class="n m1"><div class="lb">SQLiteTool.cpp</div><div class="ln">SQLite 工具</div></div>
+</div></div>
+<div class="ag"><div class="al">tool/ 工具层</div><div class="ao">
+<div class="n z1"><div class="lb">LookupTool.cpp</div><div class="ln">查找工具</div></div>
+<div class="n z1"><div class="lb">LookupTool.h</div><div class="ln">工具定义</div></div>
+<div class="n e1"><div class="lb">kmp.c</div><div class="ln">KMP 算法</div></div>
+<div class="n e1"><div class="lb">manacher.cxx</div><div class="ln">回文算法</div></div>
+</div></div>
+</div>
+<div class="dv"></div>
+<div class="fc">
+<div class="fd" style="background:rgba(59,130,246,.06)"><div class="dm">1</div><div><div class="lb" style="font-size:.6rem">connectDB() 打开数据库</div></div></div>
+<div class="dx">↓</div>
+<div class="fd" style="background:rgba(139,92,246,.06)"><div class="dm">2</div><div><div class="lb" style="font-size:.6rem">SELECT / INSERT 构建查询</div></div></div>
+<div class="dx">↓</div>
+<div class="fd" style="background:rgba(16,185,129,.06)"><div class="dm">3</div><div><div class="lb" style="font-size:.6rem">queryTable() 返回结果集</div></div></div>
+<div class="dx">↓</div>
+<div class="fd" style="background:rgba(249,115,22,.06)"><div class="dm">4</div><div><div class="lb" style="font-size:.6rem">freeTable() / disconnectDB() 释放</div></div></div>
+</div>
+</div></div>
+<table style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现</th></tr></thead><tbody>
+<tr><td>线程安全</td><td>std::mutex 保护数据库操作</td></tr>
+<tr><td>查询引擎</td><td>SeekApi + SeekTime 双引擎</td></tr>
+<tr><td>时间索引</td><td>TimeManager/TimeData 高效时间范围查询</td></tr>
+<tr><td>算法</td><td>KMP 字符串匹配、Manacher 回文检测</td></tr>
+<tr><td>数据库基类</td><td>DBbase 封装 SQLite API（connect/execute/free）</td></tr>
+</tbody></table>
+<div class="tags" style="margin-top:.4rem"><span class="t tg2">SQLite3</span><span class="t tc">thread-safe</span><span class="t tc">时间索引</span><span class="t ty">KMP</span><span class="t tp">Manacher</span></div>
+</div></section>
+
+<section id="wb"><div class="ct">
+<div class="st"><h2>🌐 Webev — 事件驱动 Web 服务器</h2><span class="tg">C++ / epoll</span></div>
+<div class="cd"><div class="cd2">
+<div style="text-align:center;margin-bottom:.3rem"><div class="n s1"><div class="lb" style="font-size:.72rem">Webev</div><div class="ln">epoll/kqueue 事件驱动 HTTP 服务器</div></div></div>
+<div class="rw" style="justify-content:center">
+<div class="n s1"><div class="lb">🚪 ListenFd(port)</div><div class="ln">监听端口</div></div>
+<div class="n s1"><div class="lb">⚡ epoll/kqueue</div><div class="ln">事件循环</div></div>
+<div class="n g1"><div class="lb">💻 RequestClient</div><div class="ln">客户端请求</div></div>
+</div>
+<div class="av">▼</div>
+<div class="rw">
+<div class="ag"><div class="al">入口层</div><div class="ao">
+<div class="n x1"><div class="lb">WebMain.cpp</div><div class="ln">参数解析 + 模式选择</div></div>
+<div class="n x1"><div class="lb">WebevApi.h</div><div class="ln">API 定义</div></div>
+</div></div>
+<div class="ag"><div class="al">业务逻辑</div><div class="ao">
+<div class="n m1"><div class="lb">WebevApi.cpp</div><div class="ln">请求处理 + 响应生成</div></div>
+<div class="n i1"><div class="lb">Utils.cpp</div><div class="ln">辅助函数</div></div>
+</div></div>
+<div class="ag"><div class="al">运行模式</div><div class="ao">
+<div class="n g1"><div class="lb">Server(port)</div><div class="ln">服务模式</div></div>
+<div class="n y1"><div class="lb">Client(url)</div><div class="ln">客户端模式</div></div>
+</div></div>
+</div>
+</div></div>
+<table style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现</th></tr></thead><tbody>
+<tr><td>事件循环</td><td>epoll（Linux）/ kqueue（macOS）</td></tr>
+<tr><td>模式</td><td>Server 独立端口 / Client 模式</td></tr>
+<tr><td>启动</td><td>./WebMain [port] 或 ./WebMain [http://url]</td></tr>
+</tbody></table>
+<div class="tags" style="margin-top:.4rem"><span class="t tb">epoll</span><span class="t tb">kqueue</span><span class="t tc">Reactor</span><span class="t tg2">非阻塞</span></div>
+</div></section>
+
+<section id="gs"><div class="ct">
+<div class="st"><h2>🔄 gSOAPverify — SOAP Web 服务验证</h2><span class="tg">gSOAP / MySQL</span></div>
+<div class="cd"><div class="cd2">
+<div style="text-align:center;margin-bottom:.3rem"><div class="n x1"><div class="lb" style="font-size:.72rem">gSOAPverify</div><div class="ln">SOAP 客户端验证与集成</div></div></div>
+<div class="rw">
+<div class="ag"><div class="al">代码生成层</div><div class="ao">
+<div class="n e1"><div class="lb">.h 头文件</div><div class="ln">WSDL 定义</div></div>
+<div class="n e1"><div class="lb">wsdl2h</div><div class="ln">WSDL → 头文件</div></div>
+<div class="n x1"><div class="lb">soapcpp2</div><div class="ln">头文件 → 源码</div></div>
+<div class="n e1"><div class="lb">soap/*</div><div class="ln">生成的代理/存根</div></div>
+</div></div>
+<div class="ag"><div class="al">数据/业务层</div><div class="ao">
+<div class="n m1"><div class="lb">mainSoap.cc</div><div class="ln">完整流程示例</div></div>
+<div class="n x1"><div class="lb">sql/</div><div class="ln">MySQL 封装</div></div>
+<div class="n i1"><div class="lb">sys/status.cc</div><div class="ln">服务状态</div></div>
+</div></div>
+<div class="ag"><div class="al">操作流程</div><div class="ao">
+<div class="n g1"><div class="lb">🔐 登录</div></div>
+<div class="n y1"><div class="lb">📊 查询状态</div></div>
+<div class="n o1"><div class="lb">💸 发起交易</div></div>
+<div class="n r1"><div class="lb">🔌 关闭</div></div>
+</div></div>
+</div>
+</div></div>
+<table style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现</th></tr></thead><tbody>
+<tr><td>代码生成</td><td>WSDL → wsdl2h → soapcpp2 → 代理/存根</td></tr>
+<tr><td>数据库</td><td>SQL API 封装 MySQL 访问</td></tr>
+<tr><td>流程示例</td><td>登录 → 查询状态 → 交易 → 关闭</td></tr>
+</tbody></table>
+<div class="tags" style="margin-top:.4rem"><span class="t tk">gSOAP</span><span class="t tk">WSDL</span><span class="t tk">SOAP</span><span class="t tg2">MySQL</span></div>
+</div></section>
+
+<section id="dp"><div class="ct">
+<div class="st"><h2>🤖 dpsk — DeepSeek API 客户端</h2><span class="tg">C++ / cURL</span></div>
+<div class="cd"><div class="cd2">
+<div style="text-align:center;margin-bottom:.3rem"><div class="n x1"><div class="lb" style="font-size:.72rem">DeepSeek API 客户端</div><div class="ln">cURL 封装 + JSON 交互</div></div></div>
+<div class="rw">
+<div class="ag"><div class="al">请求构建</div><div class="ao">
+<div class="n y1"><div class="lb">processChat()</div><div class="ln">聊天请求</div></div>
+<div class="n y1"><div class="lb">getBalance()</div><div class="ln">余额查询</div></div>
+</div></div>
+<div class="ag"><div class="al">请求参数</div><div class="ao">
+<div class="n e1"><div class="lb">model</div><div class="ln">deepseek-chat/coder</div></div>
+<div class="n e1"><div class="lb">stream</div><div class="ln">流式开关</div></div>
+<div class="n e1"><div class="lb">temperature</div><div class="ln">创造性控制</div></div>
+<div class="n e1"><div class="lb">max_tokens</div><div class="ln">输出长度</div></div>
+</div></div>
+<div class="ag"><div class="al">网络层</div><div class="ao">
+<div class="n g1"><div class="lb">CurlBase</div><div class="ln">cURL 基类</div></div>
+<div class="n m1"><div class="lb">performRequest()</div><div class="ln">POST 请求</div></div>
+<div class="n e1"><div class="lb">回调函数</div><div class="ln">响应数据收集</div></div>
+</div></div>
+</div>
+</div></div>
+<table style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现</th></tr></thead><tbody>
+<tr><td>流式响应</td><td>stream=true，回调函数分块接收</td></tr>
+<tr><td>模型选择</td><td>deepseek-chat / deepseek-coder / deepseek-reasoner</td></tr>
+<tr><td>参数配置</td><td>temperature / max_tokens / web_search</td></tr>
+<tr><td>门面模式</td><td>processChat() 简化复杂 API 调用</td></tr>
+</tbody></table>
+<div class="tags" style="margin-top:.4rem"><span class="t to">cURL</span><span class="t to">OpenSSL</span><span class="t tg2">REST API</span><span class="t tg2">JSON</span><span class="t ty">流式</span></div>
+</div></section>
+
+<section id="hd"><div class="ct">
+<div class="st"><h2>⚡ HDware — 硬件驱动与交互</h2><span class="tg">C/C++ / 硬件</span></div>
+<div class="cd"><div class="cd2">
+<div style="text-align:center;margin-bottom:.3rem"><div class="n i1"><div class="lb" style="font-size:.72rem">HDware 硬件接口</div><div class="ln">字符设备 · FPGA · RDMA · 串口 · 4G网络</div></div></div>
+<div class="rw">
+<div class="ag"><div class="al">设备驱动</div><div class="ao">
+<div class="n e1"><div class="lb">📂 charDev/</div><div class="ln">字符设备接口</div></div>
+<div class="n e1"><div class="lb">📂 serialPort/</div><div class="ln">串口通信</div></div>
+<div class="n e1"><div class="lb">📂 uart/</div><div class="ln">UART 通信</div></div>
+<div class="n e1"><div class="lb">📂 FPGA/</div><div class="ln">FPGA 接口</div></div>
+</div></div>
+<div class="ag"><div class="al">网络硬件</div><div class="ao">
+<div class="n i1"><div class="lb">🔌 RDMA</div><div class="ln">远程直接内存访问</div></div>
+<div class="n i1"><div class="lb">📡 4GNetwork/</div><div class="ln">4G 网络模块</div></div>
+</div></div>
+<div class="ag"><div class="al">控制/工具</div><div class="ao">
+<div class="n g1"><div class="lb">📂 control/</div><div class="ln">硬件控制</div></div>
+<div class="n y1"><div class="lb">📂 tools/</div><div class="ln">测试/调试工具</div></div>
+<div class="n m1"><div class="lb">hdwareAPI.h</div><div class="ln">统一硬件 API</div></div>
+<div class="n x1"><div class="lb">Makefile</div><div class="ln">构建脚本</div></div>
+</div></div>
+<div class="ag"><div class="al">数据流向</div><div class="ao">
+<div class="n e1"><div class="lb">🔧 硬件设备</div></div>
+<div class="dx">↓</div>
+<div class="n i1"><div class="lb">📡 硬件驱动</div></div>
+<div class="dx">↓</div>
+<div class="n m1"><div class="lb">📋 硬件API</div></div>
+<div class="dx">↓</div>
+<div class="n x1"><div class="lb">💻 应用程序</div></div>
+</div></div>
+</div>
+</div></div>
+<table style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现</th></tr></thead><tbody>
+<tr><td>硬件支持</td><td>字符设备、FPGA、串口、UART</td></tr>
+<tr><td>网络硬件</td><td>RDMA 高速传输、4G 网络</td></tr>
+<tr><td>开发辅助</td><td>完整的测试/调试工具集</td></tr>
+<tr><td>统一接口</td><td>hdwareAPI.h 封装所有硬件操作</td></tr>
+</tbody></table>
+<div class="tags" style="margin-top:.4rem"><span class="t tc">字符设备</span><span class="t tc">FPGA</span><span class="t tc">串口</span><span class="t tc">RDMA</span><span class="t i1">4G</span><span class="t tc">UART</span></div>
+</div></section>
+
+<section id="th"><div class="ct">
+<div class="st"><h2>🧵 Thread — 纯 C 线程池</h2><span class="tg">C / 并发</span></div>
+<div class="cd"><div class="cd2">
+<div style="text-align:center;margin-bottom:.3rem"><div class="n o1"><div class="lb" style="font-size:.72rem">线程池 (Pure C)</div><div class="ln">线程池 · 任务队列 · 同步机制</div></div></div>
+<div class="rw">
+<div class="ag"><div class="al">线程池核心</div><div class="ao">
+<div class="n o1"><div class="lb">pthdpool.c</div><div class="ln">池管理实现</div></div>
+<div class="n o1"><div class="lb">pthdpool.h</div><div class="ln">API 定义</div></div>
+</div></div>
+<div class="ag"><div class="al">任务管理</div><div class="ao">
+<div class="n y1"><div class="lb">任务队列</div><div class="ln">FIFO 队列</div></div>
+<div class="n y1"><div class="lb">worker threads</div><div class="ln">工作线程</div></div>
+</div></div>
+<div class="ag"><div class="al">同步机制</div><div class="ao">
+<div class="n e1"><div class="lb">pthread_mutex</div></div>
+<div class="n e1"><div class="lb">条件变量</div></div>
+<div class="n y1"><div class="lb">信号量</div></div>
+</div></div>
+</div>
+<div class="dv"></div>
+<div class="fc">
+<div class="fd" style="background:rgba(249,115,22,.06)"><div class="dm">1</div><div><div class="lb" style="font-size:.6rem">pthdpool_create(workers) 创建线程池</div></div></div>
+<div class="dx">↓</div>
+<div class="fd" style="background:rgba(245,158,11,.06)"><div class="dm">2</div><div><div class="lb" style="font-size:.6rem">pthdpool_add_task(pool, task_fn, arg) 入队任务</div></div></div>
+<div class="dx">↓</div>
+<div class="fd" style="background:rgba(16,185,129,.06)"><div class="dm">3</div><div><div class="lb" style="font-size:.6rem">空闲线程取任务 → task_fn(arg) 执行</div></div></div>
+<div class="dx">↓</div>
+<div class="fd" style="background:rgba(139,92,246,.06)"><div class="dm">4</div><div><div class="lb" style="font-size:.6rem">pthdpool_destroy(pool) 安全关闭</div></div></div>
+</div>
+</div></div>
+<table style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现</th></tr></thead><tbody>
+<tr><td>语言</td><td>纯 C（无 C++/STL 依赖）</td></tr>
+<tr><td>线程模型</td><td>固定数量 worker 线程，预创建</td></tr>
+<tr><td>同步</td><td>pthread_mutex + 条件变量 + 信号量</td></tr>
+<tr><td>任务队列</td><td>FIFO 队列，线程安全入队/出队</td></tr>
+</tbody></table>
+<div class="tags" style="margin-top:.4rem"><span class="t o1">pthread</span><span class="t o1">互斥锁</span><span class="t o1">条件变量</span><span class="t o1">信号量</span></div>
+</div></section>
+
+<section id="md"><div class="ct">
+<div class="st"><h2>🎬 Media — FFmpeg 音视频处理</h2><span class="tg">C / FFmpeg</span></div>
+<div class="cd"><div class="cd2">
+<div style="text-align:center;margin-bottom:.3rem"><div class="n z1"><div class="lb" style="font-size:.72rem">Media 音视频处理</div><div class="ln">FFmpeg C API 封装</div></div></div>
+<div class="rw">
+<div class="ag"><div class="al">核心处理</div><div class="ao">
+<div class="n z1"><div class="lb">MediaCore.cpp</div><div class="ln">音频处理</div></div>
+<div class="n z1"><div class="lb">MediaVideo.cpp</div><div class="ln">视频处理</div></div>
+</div></div>
+<div class="ag"><div class="al">音频分析</div><div class="ao">
+<div class="n i1"><div class="lb">🎵 频谱分析</div></div>
+<div class="n i1"><div class="lb">🎵 波形分析</div></div>
+<div class="n i1"><div class="lb">🎵 节奏检测</div></div>
+<div class="n i1"><div class="lb">🎵 特征提取</div></div>
+</div></div>
+<div class="ag"><div class="al">构建配置</div><div class="ao">
+<div class="n x1"><div class="lb">CMakeLists.txt</div><div class="ln">构建配置</div></div>
+<div class="n e1"><div class="lb">FindFFmpeg.cmake</div><div class="ln">查找 FFmpeg</div></div>
+</div></div>
+</div>
+<div class="dv"></div>
+<div class="fc">
+<div class="fd" style="background:rgba(20,184,166,.06)"><div class="dm">1</div><div><div class="lb" style="font-size:.6rem">打开输入文件 (avformat_open_input)</div></div></div>
+<div class="dx">↓</div>
+<div class="fd" style="background:rgba(59,130,246,.06)"><div class="dm">2</div><div><div class="lb" style="font-size:.6rem">解码 (avcodec_send_packet / recv_frame)</div></div></div>
+<div class="dx">↓</div>
+<div class="fd" style="background:rgba(139,92,246,.06)"><div class="dm">3</div><div><div class="lb" style="font-size:.6rem">处理 (频谱/波形分析、滤镜)</div></div></div>
+<div class="dx">↓</div>
+<div class="fd" style="background:rgba(16,185,129,.06)"><div class="dm">4</div><div><div class="lb" style="font-size:.6rem">编码输出 (avcodec_send_frame)</div></div></div>
+</div>
+</div></div>
+<table style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现</th></tr></thead><tbody>
+<tr><td>音频分析</td><td>频谱、波形、节奏检测、特征提取</td></tr>
+<tr><td>视频处理</td><td>基于 FFmpeg libav* 系列 API</td></tr>
+<tr><td>构建</td><td>CMake + FindFFmpeg.cmake 自动查找库</td></tr>
+</tbody></table>
+<div class="tags" style="margin-top:.4rem"><span class="t tz">FFmpeg</span><span class="t tz">libavcodec</span><span class="t tz">libavformat</span><span class="t tz">libavfilter</span></div>
+</div></section>
+
+<section id="qt"><div class="ct">
+<div class="st"><h2>📈 Trade — 量化交易策略</h2><span class="tg">Python / 金融</span></div>
+<div class="cd"><div class="cd2">
+<div style="text-align:center;margin-bottom:.3rem"><div class="n m1"><div class="lb" style="font-size:.72rem">Trade 交易策略</div><div class="ln">数据获取 → 特征工程 → 策略执行 → 回测</div></div></div>
+<div class="rw">
+<div class="ag"><div class="al">数据层</div><div class="ao">
+<div class="n y1"><div class="lb">数据获取</div><div class="ln">金融数据源</div></div>
+<div class="n i1"><div class="lb">数据清洗</div><div class="ln">NaN/异常值</div></div>
+<div class="n g1"><div class="lb">特征工程</div><div class="ln">技术指标</div></div>
+</div></div>
+<div class="ag"><div class="al">策略引擎</div><div class="ao">
+<div class="n m1"><div class="lb">均线交叉</div><div class="ln">MA Crossover</div></div>
+<div class="n m1"><div class="lb">动量策略</div><div class="ln">Momentum</div></div>
+<div class="n m1"><div class="lb">均值回归</div><div class="ln">Mean Reversion</div></div>
+</div></div>
+<div class="ag"><div class="al">风控/回测</div><div class="ao">
+<div class="n r1"><div class="lb">止损/止盈</div></div>
+<div class="n y1"><div class="lb">仓位管理</div></div>
+<div class="n g1"><div class="lb">回测引擎</div><div class="ln">历史验证</div></div>
+</div></div>
+<div class="ag"><div class="al">输出/可视化</div><div class="ao">
+<div class="n i1"><div class="lb">📊 交易信号</div></div>
+<div class="n i1"><div class="lb">📈 收益率</div></div>
+<div class="n i1"><div class="lb">📉 最大回撤</div></div>
+</div></div>
+</div>
+</div></div>
+<table style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现</th></tr></thead><tbody>
+<tr><td>策略类型</td><td>均线交叉、动量、均值回归</td></tr>
+<tr><td>风控</td><td>止损/止盈、仓位管理</td></tr>
+<tr><td>回测</td><td>历史数据回测引擎</td></tr>
+<tr><td>可视化</td><td>交易信号、收益率曲线、最大回撤</td></tr>
+</tbody></table>
+<div class="tags" style="margin-top:.4rem"><span class="t tp">pandas</span><span class="t tp">numpy</span><span class="t tg2">Matplotlib</span><span class="t tg2">回测</span><span class="t tg2">策略</span></div>
+</div></section>
+
+<section id="lk"><div class="ct">
+<div class="st"><h2>🔍 Lookup — 多维度 SQLite 查找服务</h2><span class="tg">C++ / SQLite</span></div>
+<div class="cd"><div class="cd2">
+<div style="text-align:center;margin-bottom:.3rem"><div class="n s1"><div class="lb" style="font-size:.72rem">Lookup 查找引擎</div><div class="ln">时间定位 · 索引查询 · 数据检索</div></div></div>
+<div class="rw">
+<div class="ag"><div class="al">时间定位</div><div class="ao">
+<div class="n g1"><div class="lb">timeLocator</div><div class="ln">时间维度查找</div></div>
+<div class="n e1"><div class="lb">timestamp index</div><div class="ln">时间戳索引</div></div>
+</div></div>
+<div class="ag"><div class="al">seek 查询</div><div class="ao">
+<div class="n y1"><div class="lb">seeker</div><div class="ln">索引查询器</div></div>
+<div class="n e1"><div class="lb">SQL index</div><div class="ln">B-Tree 索引</div></div>
+</div></div>
+<div class="ag"><div class="al">工具层</div><div class="ao">
+<div class="n m1"><div class="lb">tool</div><div class="ln">查询工具集</div></div>
+<div class="n e1"><div class="lb">db schema</div><div class="ln">数据库模式</div></div>
+</div></div>
+</div>
+<div class="dv"></div>
+<div class="fc">
+<div class="fd" style="background:rgba(16,185,129,.06)"><div class="dm">1</div><div><div class="lb" style="font-size:.6rem">接收查询请求 (时间/关键字/工具)</div></div></div>
+<div class="dx">↓</div>
+<div class="fd" style="background:rgba(59,130,246,.06)"><div class="dm">2</div><div><div class="lb" style="font-size:.6rem">选择索引策略 (B-Tree/时间戳)</div></div></div>
+<div class="dx">↓</div>
+<div class="fd" style="background:rgba(139,92,246,.06)"><div class="dm">3</div><div><div class="lb" style="font-size:.6rem">执行 SQLite 查询</div></div></div>
+<div class="dx">↓</div>
+<div class="fd" style="background:rgba(249,115,22,.06)"><div class="dm">4</div><div><div class="lb" style="font-size:.6rem">返回结果集</div></div></div>
+</div>
+</div></div>
+<table style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现</th></tr></thead><tbody>
+<tr><td>数据库</td><td>SQLite — 轻量级嵌入式 DB</td></tr>
+<tr><td>查找维度</td><td>时间、索引查询、工具集</td></tr>
+<tr><td>索引</td><td>B-Tree 索引 + 时间戳索引</td></tr>
+</tbody></table>
+<div class="tags" style="margin-top:.4rem"><span class="t tg2">SQLite</span><span class="t tb">B-Tree</span><span class="t tg2">timeLocator</span><span class="t to">seeker</span></div>
+</div></section>
+
+<section id="wb"><div class="ct">
+<div class="st"><h2>🌐 Webev — 事件驱动 Web 服务器</h2><span class="tg">C / epoll</span></div>
+<div class="cd"><div class="cd2">
+<div style="text-align:center;margin-bottom:.3rem"><div class="n s1"><div class="lb" style="font-size:.72rem">Webev Web Server</div><div class="ln">事件驱动 · epoll 多路复用 · 高并发</div></div></div>
+<div class="rw">
+<div class="ag"><div class="al">事件循环</div><div class="ao">
+<div class="n s1"><div class="lb">epoll_create()</div><div class="ln">创建实例</div></div>
+<div class="n s1"><div class="lb">epoll_wait()</div><div class="ln">等待事件</div></div>
+<div class="n s1"><div class="lb">事件分发</div><div class="ln">回调处理</div></div>
+</div></div>
+<div class="ag"><div class="al">请求处理</div><div class="ao">
+<div class="n g1"><div class="lb">路由表</div><div class="ln">URL → Handler</div></div>
+<div class="n g1"><div class="lb">请求解析</div><div class="ln">HTTP 解析</div></div>
+<div class="n g1"><div class="lb">响应构建</div><div class="ln">HTTP 响应</div></div>
+</div></div>
+<div class="ag"><div class="al">连接管理</div><div class="ao">
+<div class="n x1"><div class="lb">listen()</div><div class="ln">监听端口</div></div>
+<div class="n x1"><div class="lb">accept()</div><div class="ln">接受连接</div></div>
+<div class="n x1"><div class="lb">close()</div><div class="ln">断开清理</div></div>
+</div></div>
+</div>
+</div></div>
+</div></section>
+
+<section id="gs"><div class="ct">
+<div class="st"><h2>🔄 gSOAPverify — SOAP Web 服务验证</h2><span class="tg">C++ / gSOAP</span></div>
+<div class="cd"><div class="cd2">
+<div style="text-align:center;margin-bottom:.3rem"><div class="n x1"><div class="lb" style="font-size:.72rem">gSOAPverify</div><div class="ln">SOAP/XML Web 服务 · 验证与测试</div></div></div>
+<div class="rw">
+<div class="ag"><div class="al">服务框架</div><div class="ao">
+<div class="n e1"><div class="lb">WSDL</div><div class="ln">服务描述</div></div>
+<div class="n x1"><div class="lb">soapcpp2</div><div class="ln">代码生成</div></div>
+<div class="n x1"><div class="lb">stdsoap2.h</div><div class="ln">SOAP 运行时</div></div>
+</div></div>
+<div class="ag"><div class="al">验证逻辑</div><div class="ao">
+<div class="n g1"><div class="lb">服务接口</div><div class="ln">Web Method</div></div>
+<div class="n g1"><div class="lb">参数校验</div><div class="ln">输入验证</div></div>
+<div class="n g1"><div class="lb">响应生成</div><div class="ln">XML 序列化</div></div>
+</div></div>
+<div class="ag"><div class="al">客户端</div><div class="ao">
+<div class="n i1"><div class="lb">SoapClient</div><div class="ln">调用端</div></div>
+<div class="n e1"><div class="lb">XML 解析</div><div class="ln">响应解析</div></div>
+</div></div>
+</div>
+</div></div>
+</div></section>
+
+<section id="vs"><div class="ct">
+<div class="st"><h2>🔌 VS Extension — VSCode 扩展工具</h2><span class="tg">TypeScript / Python</span></div>
+<div class="cd"><div class="cd2">
+<div style="text-align:center;margin-bottom:.3rem"><div class="n y1"><div class="lb" style="font-size:.72rem">VSCode Extension</div><div class="ln">TS 扩展 + Python 辅助脚本</div></div></div>
+<div class="rw">
+<div class="ag"><div class="al">扩展核心</div><div class="ao">
+<div class="n y1"><div class="lb">src/extension.ts</div><div class="ln">扩展入口</div></div>
+<div class="n y1"><div class="lb">package.json</div><div class="ln">扩展配置</div></div>
+</div></div>
+<div class="ag"><div class="al">用户界面</div><div class="ao">
+<div class="n e1"><div class="lb">Command Palette</div><div class="ln">命令注册</div></div>
+<div class="n e1"><div class="lb">Sidebar View</div><div class="ln">侧边栏视图</div></div>
+</div></div>
+<div class="ag"><div class="al">辅助工具</div><div class="ao">
+<div class="n g1"><div class="lb">Python scripts</div><div class="ln">后端脚本</div></div>
+<div class="n e1"><div class="lb">JSON config</div><div class="ln">配置模板</div></div>
+</div></div>
+</div>
+</div></div>
+</div></section>
+
+<section id="vs"><div class="ct">
+<div class="st"><h2>🔌 VS Extension — VSCode 扩展工具</h2><span class="tg">TypeScript / 工具</span></div>
+<div class="cd"><div class="cd2">
+<div style="text-align:center;margin-bottom:.3rem"><div class="n y1"><div class="lb" style="font-size:.72rem">VSCode Extension</div><div class="ln">开发辅助、代码生成、调试工具</div></div></div>
+<div class="rw">
+<div class="ag"><div class="al">扩展核心</div><div class="ao">
+<div class="n e1"><div class="lb">package.json</div><div class="ln">扩展配置</div></div>
+<div class="n e1"><div class="lb">tsconfig.json</div><div class="ln">TypeScript 配置</div></div>
+</div></div>
+<div class="ag"><div class="al">用户界面</div><div class="ao">
+<div class="n y1"><div class="lb">命令面板</div><div class="ln">Command Palette</div></div>
+<div class="n y1"><div class="lb">活动栏</div><div class="ln">Activity Bar</div></div>
+</div></div>
+<div class="ag"><div class="al">辅助脚本</div><div class="ao">
+<div class="n g1"><div class="lb">Python 脚本</div><div class="ln">后端工具</div></div>
+<div class="n m1"><div class="lb">构建辅助</div><div class="ln">自动化</div></div>
+</div></div>
+</div>
+</div></div>
+</div></section>
+
+<section id="bf"><div class="ct">
+<div class="st"><h2>🔨 构建系统</h2><span class="tg">CMake / Make</span></div>
+<div class="cd"><div class="cd2">
+<div style="text-align:center;margin-bottom:.3rem"><div class="n x1"><div class="lb" style="font-size:.72rem">混合构建系统</div><div class="ln">CMake 主目录 + Makefile 子模块</div></div></div>
+<div class="rw">
+<div class="ag"><div class="al">CMake 构建</div><div class="ao">
+<div class="n x1"><div class="lb">CMakeLists.txt</div><div class="ln">顶层配置</div></div>
+<div class="n m1"><div class="lb">media/dpsk/lookup</div><div class="ln">CMake 子模块</div></div>
+<div class="n g1"><div class="lb">test/</div><div class="ln">GoogleTest</div></div>
+</div></div>
+<div class="ag"><div class="al">Make 构建</div><div class="ao">
+<div class="n x1"><div class="lb">Makefile</div><div class="ln">webev/hdware/IM</div></div>
+<div class="n g1"><div class="lb">Makefile</div><div class="ln">thread/gSOAPverify</div></div>
+</div></div>
+</div>
+</div></div>
+</div></section>
+
+<section id="fl"><div class="ct">
+<div class="st"><h2>🔄 数据流与交互</h2></div>
+<div class="cd"><div class="cd2">
+<div class="fc">
+<div class="fd" style="background:rgba(236,72,153,.06)"><div class="dm" style="background:linear-gradient(135deg,var(--pk),var(--pp))">1</div><div><div class="lb" style="font-size:.6rem">🌐 客户端 → IM (KaiSocket) / Webev (HTTP)</div></div></div>
+<div class="dx">↓</div>
+<div class="fd" style="background:rgba(59,130,246,.06)"><div class="dm">2</div><div><div class="lb" style="font-size:.6rem">📡 请求解析 → 路由分发</div></div></div>
+<div class="dx">↓</div>
+<div class="fd" style="background:rgba(16,185,129,.06)"><div class="dm">3</div><div><div class="lb" style="font-size:.6rem">🧵 thread/ 线程池分配 Worker</div></div></div>
+<div class="dx">↓</div>
+<div class="fd" style="background:rgba(139,92,246,.06)"><div class="dm">4</div><div><div class="lb" style="font-size:.6rem">🧠 cyber/dpsk AI 推理 或 ⚡ hdware 硬件交互 或 🔍 lookup 查询</div></div></div>
+<div class="dx">↓</div>
+<div class="fd" style="background:rgba(249,115,22,.06)"><div class="dm">5</div><div><div class="lb" style="font-size:.6rem">📨 结果 → 响应返回</div></div></div>
+</div>
+</div></div>
+</div></section>
+
+<section id="pt"><div class="ct">
+<div class="st"><h2>🏗️ 架构模式总结</h2></div>
+<div class="cd"><div class="cd2">
+<div class="tags">
+<span class="t tg2">单例模式</span><span class="t tb">Reactor 模式</span><span class="t to">Pub/Sub</span>
+<span class="t m1">门面模式</span><span class="t g1">适配器模式</span><span class="t x1">工厂方法</span>
+</div>
+<table style="margin-top:.4rem">
+<thead><tr><th>模式</th><th>应用位置</th><th>作用</th></tr></thead><tbody>
+<tr><td><span class="n g1"><div class="lb" style="font-size:.6rem">单例</div></span></td><td>KaiSocket</td><td>确保全局唯一网络实例</td></tr>
+<tr><td><span class="n s1"><div class="lb" style="font-size:.6rem">Reactor</div></span></td><td>Webev epoll</td><td>高并发事件驱动</td></tr>
+<tr><td><span class="n x1"><div class="lb" style="font-size:.6rem">Pub/Sub</div></span></td><td>KaiSocket 订阅</td><td>消息路由与分发</td></tr>
+<tr><td><span class="n m1"><div class="lb" style="font-size:.6rem">门面</div></span></td><td>cyber/dpsk</td><td>简化复杂 AI API</td></tr>
+<tr><td><span class="n i1"><div class="lb" style="font-size:.6rem">适配器</div></span></td><td>hdware</td><td>统一硬件接口</td></tr>
+<tr><td><span class="n o1"><div class="lb" style="font-size:.6rem">池化</div></span></td><td>thread/ + 模型缓存</td><td>复用资源，减少开销</td></tr>
+</tbody></table>
+</div></div>
+</div></section>
+
+<section id="rk"><div class="ct">
+<div class="st"><h2>⚠️ 风险与优化建议</h2></div>
+<div class="cd"><div class="cd2">
+<div class="rw">
+<div class="ag"><div class="al">🔴 高风险</div><div class="ao">
+<div class="n r1"><div class="lb">多构建系统</div><div class="ln">CMake + Make 维护成本高</div></div>
+<div class="n r1"><div class="lb">依赖链长</div><div class="ln">3rd/ 依赖编译复杂</div></div>
+</div></div>
+<div class="ag"><div class="al">🟡 中风险</div><div class="ao">
+<div class="n y1"><div class="lb">跨平台差异</div><div class="ln">Linux/macOS/Windows 行为不一致</div></div>
+<div class="n y1"><div class="lb">内存管理</div><div class="ln">C++ 裸指针 + 手动释放</div></div>
+</div></div>
+<div class="ag"><div class="al">💡 优化建议</div><div class="ao">
+<div class="n g1"><div class="lb">统一 CMake</div><div class="ln">合并为单一构建系统</div></div>
+<div class="n g1"><div class="lb">智能指针</div><div class="ln">unique_ptr/shared_ptr 替代裸指针</div></div>
+<div class="n g1"><div class="lb">CI/CD</div><div class="ln">自动化构建 + 测试管道</div></div>
+</div></div>
+</div>
+</div></div>
+</div></section>
+
+<footer>
+<div class="ct">LinxSrvc 架构分析 · 生成时间 2026-04-05 · 基于 Markdown 分析文档</div>
+</footer>
+
+</body>
+</html>
