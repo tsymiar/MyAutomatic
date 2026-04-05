@@ -540,8 +540,8 @@ def _on_json_output_exit():
                         info['ratio'] = _round_ratio_val(val)
                     else:
                         info['ratio'] = round(val, 3)
-                except Exception:
-                    pass
+                except Exception as e:
+                    print(f"Error processing ratio: {e}")
             fn = info.get('file_name', '')
             if '↔' in fn:
                 left, right = [s.strip() for s in fn.split('↔', 1)]
