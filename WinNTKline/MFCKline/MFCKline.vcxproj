@@ -378,8 +378,8 @@
     <None Include="..\KlineUtil\ClassDiagram.cd" />
     <None Include="..\KlineUtil\com\plus1second" />
     <None Include="..\KlineUtil\built\call.bat" />
-    <None Include="..\KlineUtil\script\matkline.py" />
-    <None Include="..\KlineUtil\script\webload.py" />
+    <None Include="..\..\toolset\matkline.py" />
+    <None Include="..\..\toolset\webload.py" />
     <None Include="..\KlineUtil\service\BareBonesBrowserLaunch.java" />
     <None Include="..\KlineUtil\service\Client.java" />
     <None Include="packages.config" />

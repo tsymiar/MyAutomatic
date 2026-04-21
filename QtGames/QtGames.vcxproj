@@ -152,7 +152,7 @@
     <ClInclude Include="OglImgShow.h" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\WinNTKline\image\qtlogo.ico" />
+    <Image Include=".\qtlogo.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -304,7 +304,7 @@
     <None Include="..\KlineUtil\built\call.bat">
       <Filter>配置脚本</Filter>
     </None>
-    <None Include="..\KlineUtil\script\webload.py">
+    <None Include="..\..\toolset\webload.py">
       <Filter>配置脚本</Filter>
     </None>
     <None Include="packages.config" />
@@ -323,7 +323,7 @@
     <None Include="..\..\clean.bat">
       <Filter>配置脚本</Filter>
     </None>
-    <None Include="..\KlineUtil\script\matkline.py">
+    <None Include="..\..\toolset\matkline.py">
       <Filter>配置脚本</Filter>
     </None>
   </ItemGroup>
