@@ -91,6 +91,7 @@ python scripts/ollama_to_hf.py \
    - 无扩展名（sha256 命名）：读取文件头自动识别格式
 2. 从 Hugging Face 加载 tokenizer
 3. 执行模型转换并保存到输出目录
+4. 完整转换模式下加载模型结构并转换权重，简化转换模式下仅保存 tokenizer 和配置
 
 ## 注意事项
 

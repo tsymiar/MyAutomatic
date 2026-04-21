@@ -7,7 +7,10 @@ import logging
 import argparse
 from pathlib import Path
 import subprocess
-from transformers import AutoTokenizer, AutoConfig
+
+# 注意: transformers 库在函数内部导入以加快启动速度
+# 这些导入作为依赖说明保留
+# from transformers import AutoTokenizer, AutoConfig  # noqa: F401
 
 # 添加项目根目录到路径
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -15,7 +18,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 def setup_logging(verbose=False):
     """设置日志"""
-    level = logging.DEBUG if verbose  else logging.INFO
+    level = logging.DEBUG if verbose else logging.INFO
     logging.basicConfig(
         level=level,
         format='%(asctime)s - %(levelname)s - %(message)s'
@@ -25,17 +28,17 @@ def setup_logging(verbose=False):
 def run_command(cmd, cwd=None, capture_output=True):
     """
     运行 shell 命令
-    
+
     Args:
         cmd: 命令列表
         cwd: 工作目录
         capture_output: 是否捕获输出
-    
+
     Returns:
         (returncode, stdout, stderr)
     """
     logging.debug(f"执行命令: {' '.join(cmd)}")
-    
+
     result = subprocess.run(
         cmd,
         cwd=cwd,
@@ -43,48 +46,47 @@ def run_command(cmd, cwd=None, capture_output=True):
         text=True,
         check=False
     )
-    
+
     if result.stdout and logging.getLogger().level <= logging.DEBUG:
         for line in result.stdout.split('\n'):
             if line.strip():
                 logging.debug(f"  {line}")
-    
+
     if result.stderr and logging.getLogger().level <= logging.DEBUG:
         for line in result.stderr.split('\n'):
             if line.strip():
                 logging.debug(f"  [stderr] {line}")
-    
+
     return result.returncode, result.stdout, result.stderr
 
 
 def install_llama_cpp_converter():
-
     # 安装 llama.cpp-to-hf 转换工具
     tools_dir = Path("./.llama-tools")
     converter_dir = tools_dir / "llama.cpp-to-hf"
-    
+
     # 检查是否已安装
     if converter_dir.exists():
         logging.info(f"llama.cpp-to-hf 已安装在: {converter_dir}")
         return converter_dir
-    
+
     try:
         logging.info("开始安装 llama.cpp-to-hf 工具...")
         tools_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # 克隆仓库
         repo_url = "https://github.com/ggerganov/llama.cpp"
         returncode, stdout, stderr = run_command(
             ["git", "clone", repo_url, str(converter_dir)]
         )
-        
+
         if returncode != 0:
             logging.error(f"克隆仓库失败: {stderr}")
             return None
-        
+
         logging.info(f"llama.cpp-to-hf 已安装到: {converter_dir}")
         return converter_dir
-        
+
     except Exception as e:
         logging.error(f"安装失败: {e}")
         return None
@@ -114,7 +116,7 @@ def find_ollama_model_files(ollama_model_name):
         ollama_roots.append(home / "Library" / "Application Support" / "ollama" / "models")
 
     # 处理模型名称，移除 tag (如 "llama2:7b" -> "llama2")
-    base_model_name = ollama_model_name.split(":")[0]
+    # base_model_name = ollama_model_name.split(":")[0]
 
     # 查找 Ollama 模型根目录
     ollama_root = None
@@ -125,10 +127,9 @@ def find_ollama_model_files(ollama_model_name):
             break
 
     if ollama_root is None:
-        raise FileNotFoundError(
-            f"找不到 Ollama 模型存储目录。已尝试的位置:\n"
-            + "\n".join(f"  - {root}" for root in ollama_roots)
-        )
+        error_msg = "找不到 Ollama 模型存储目录。已尝试的位置:\n"
+        error_msg += "\n".join(f"  - {root}" for root in ollama_roots)
+        raise FileNotFoundError(error_msg)
 
     # Ollama 使用 manifest 文件存储模型信息
     manifest_dir = ollama_root / "manifests"
@@ -193,12 +194,11 @@ def find_ollama_model_files(ollama_model_name):
         except Exception as e:
             logging.debug(f"ollama list 命令失败: {e}")
 
-        raise FileNotFoundError(
-            f"找不到 Ollama 模型 '{ollama_model_name}'。\n"
-            f"请确保已使用 'ollama pull {ollama_model_name}' 下载模型。\n"
-            f"已尝试的 manifest 路径:\n"
-            + "\n".join(f"  - {p}" for p in possible_manifest_paths)
-        )
+        error_msg = f"找不到 Ollama 模型 '{ollama_model_name}'。\n"
+        error_msg += f"请确保已使用 'ollama pull {ollama_model_name}' 下载模型。\n"
+        error_msg += "已尝试的 manifest 路径:\n"
+        error_msg += "\n".join(f"  - {p}" for p in possible_manifest_paths)
+        raise FileNotFoundError(error_msg)
 
     # 读取 manifest 文件获取 blob 引用
     try:
@@ -238,7 +238,7 @@ def find_ollama_model_files(ollama_model_name):
                                 # 无扩展名，尝试检测格式
                                 try:
                                     file_format = detect_model_format(blob_path)
-                                except:
+                                except Exception:
                                     file_format = "gguf"  # 默认假设为 GGUF
 
                             return {"format": file_format, "files": [blob_path], "manifest": manifest_path}
@@ -318,7 +318,7 @@ def find_ollama_model_files(ollama_model_name):
             # 无扩展名，尝试检测格式
             try:
                 file_format = detect_model_format(latest_file)
-            except:
+            except Exception:
                 file_format = "gguf"  # 默认假设为 GGUF
 
         logging.info(f"找到 {len(all_model_files)} 个模型文件，使用最新的: {latest_file}")
@@ -365,7 +365,7 @@ def find_model_files_in_path(model_dir):
 def convert_gguf_to_hf_complete(gguf_path, output_path, hf_model_name=None, tokenizer_name=None, force_install=False):
     """
     使用 llama.cpp-to-hf 工具将 GGUF 格式模型完整转换为 Hugging Face 格式
-    
+
     Args:
         gguf_path: GGUF 模型文件路径
         output_path: 输出目录路径
@@ -375,21 +375,21 @@ def convert_gguf_to_hf_complete(gguf_path, output_path, hf_model_name=None, toke
     """
     try:
         from transformers import AutoTokenizer
-        
+
         logging.info("开始完整转换 GGUF 模型...")
-        
+
         # 安装转换工具
         converter_dir = install_llama_cpp_converter()
         if converter_dir is None:
             raise RuntimeError("无法安装 llama.cpp-to-hf 工具")
-        
+
         # 如果没有指定 tokenizer 名称，尝试从模型名称推断
         if tokenizer_name is None:
             if hf_model_name:
                 tokenizer_name = hf_model_name
             else:
                 raise ValueError("需要指定 Hugging Face 模型名称以加载 tokenizer")
-        
+
         # 加载并保存 tokenizer
         logging.info(f"从 Hugging Face 加载 tokenizer: {tokenizer_name}")
         try:
@@ -401,47 +401,54 @@ def convert_gguf_to_hf_complete(gguf_path, output_path, hf_model_name=None, toke
         except Exception as e:
             logging.error(f"无法加载 tokenizer: {e}")
             raise
-        
+
         # 使用 llama.cpp-to-hf 进行转换
-        logging.info(f"使用 llama.cpp-to-hf 转换模型权重...")
-        
+        logging.info("使用 llama.cpp-to-hf 转换模型权重...")
+
         # 检查转换脚本
         convert_script = converter_dir / "convert.py"
         if not convert_script.exists():
             logging.error(f"转换脚本不存在: {convert_script}")
             raise RuntimeError("llama.cpp-to-hf 工具安装不完整")
-        
+
         # 执行转换
         returncode, stdout, stderr = run_command(
             ["python", str(convert_script), str(gguf_path), str(output_path)]
         )
-        
+
         if returncode != 0:
             logging.error(f"转换失败: {stderr}")
             raise RuntimeError(f"llama.cpp-to-hf 转换失败，返回码: {returncode}")
-        
+
         # 验证转换结果
         converted_files = list(output_path.glob("*.safetensors")) + list(output_path.glob("*.bin"))
         if not converted_files:
             logging.warning("未找到转换后的模型权重文件")
         else:
             logging.info(f"转换完成，生成的模型文件: {[f.name for f in converted_files]}")
-        
+
         logging.info(f"完整转换成功！输出目录: {output_path}")
-        
+
     except Exception as e:
         logging.error(f"GGUF 完整转换失败: {e}")
         raise
 
 
-def convert_gguf_to_hf(gguf_path, output_path, hf_model_name=None, tokenizer_name=None, use_full_conversion=True, force_install=False):
+def convert_gguf_to_hf(
+    gguf_path,
+    output_path,
+    hf_model_name=None,
+    tokenizer_name=None,
+    use_full_conversion=True,
+    force_install=False
+):
     """
     将 GGUF 格式模型转换为 Hugging Face 格式
-    
+
     Args:
         gguf_path: GGUF 模型文件路径
         output_path: 输出目录路径
-        hf_model_name: 对应的 Hugging Face 模型名称 (用于加载 tokenizer)
+        hf_model_name: 对应的 Hugging Face 模型名称（用于加载 tokenizer）
         tokenizer_name: 指定的 tokenizer 名称
         use_full_conversion: 是否使用完整转换（默认 True）
         force_install: 强制重新安装转换工具
@@ -458,14 +465,14 @@ def convert_gguf_to_hf(gguf_path, output_path, hf_model_name=None, tokenizer_nam
             logging.info("使用简化转换模式...")
             from transformers import AutoTokenizer
             from llama_cpp import Llama
-            
+
             # 如果没有指定 tokenizer 名称，尝试从模型名称推断
             if tokenizer_name is None:
                 if hf_model_name:
                     tokenizer_name = hf_model_name
                 else:
                     raise ValueError("需要指定 Hugging Face 模型名称以加载 tokenizer")
-            
+
             # 加载 tokenizer
             logging.info(f"从 Hugging Face 加载 tokenizer: {tokenizer_name}")
             try:
@@ -473,7 +480,7 @@ def convert_gguf_to_hf(gguf_path, output_path, hf_model_name=None, tokenizer_nam
             except Exception as e:
                 logging.error(f"无法加载 tokenizer: {e}")
                 raise
-            
+
             # 加载 GGUF 模型
             logging.info(f"加载 GGUF 模型: {gguf_path}")
             llm = Llama(
@@ -481,7 +488,7 @@ def convert_gguf_to_hf(gguf_path, output_path, hf_model_name=None, tokenizer_nam
                 n_gpu_layers=-1,
                 verbose=False
             )
-            
+
             # 获取模型配置
             model_config = {
                 "architectures": ["LlamaForCausalLM"],
@@ -494,90 +501,139 @@ def convert_gguf_to_hf(gguf_path, output_path, hf_model_name=None, tokenizer_nam
                 "torch_dtype": "float16",
                 "transformers_version": "4.36.0"
             }
-            
+
             logging.info(f"模型配置: {model_config}")
-            
+
             # 保存 tokenizer
             output_path = Path(output_path)
             output_path.mkdir(parents=True, exist_ok=True)
-            
+
             logging.info(f"保存 tokenizer 到: {output_path}")
             tokenizer.save_pretrained(str(output_path))
-            
+
             # 保存配置文件
             import json
             config_path = output_path / "config.json"
             with open(config_path, 'w', encoding='utf-8') as f:
                 json.dump(model_config, f, indent=2)
-            
+
             logging.info(f"配置文件已保存到: {config_path}")
             logging.warning("简化模式未转换模型权重文件。使用 --full-conversion 进行完整转换。")
-        
+
     except ImportError:
         raise RuntimeError(
             "GGUF 转换需要 llama-cpp-python 库。\n"
             "请运行: pip install llama-cpp-python\n"
-            "或者: CMAKE_ARGS=\"-DGGML_CUDA=on\" pip install llama-cpp-python (支持 CUDA)"
+            "或者: CMAKE_ARGS=\"-DGGML_CUDA=on\" pip install "
+            "llama-cpp-python (支持 CUDA)"
         )
     except Exception as e:
         logging.error(f"GGUF 转换失败: {e}")
         raise
 
 
-def convert_safetensors_to_hf(model_files, output_path, hf_model_name=None, tokenizer_name=None):
+def convert_safetensors_to_hf(
+    model_files,
+    output_path,
+    hf_model_name=None,
+    tokenizer_name=None,
+    use_full_conversion=True
+):
     """
     将 SafeTensors 格式模型转换为 Hugging Face 格式
-    
+
     Args:
         model_files: SafeTensors 模型文件列表
         output_path: 输出目录路径
         hf_model_name: 对应的 Hugging Face 模型名称
         tokenizer_name: 指定的 tokenizer 名称
+        use_full_conversion: 是否使用完整转换（加载模型结构）
     """
     try:
-        from transformers import AutoModelForCausalLM, AutoTokenizer
-        
+        from transformers import AutoModelForCausalLM, AutoTokenizer, AutoConfig
+
         logging.info("开始转换 SafeTensors 模型...")
-        
+
         # 确定使用的 tokenizer
         if tokenizer_name is None:
             tokenizer_name = hf_model_name
         if tokenizer_name is None:
             raise ValueError("需要指定 Hugging Face 模型名称以加载 tokenizer")
-        
+
         # 加载 tokenizer
         logging.info(f"从 Hugging Face 加载 tokenizer: {tokenizer_name}")
         tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, trust_remote_code=True)
-        
-        # 加载模型配置
-        if hf_model_name:
-            logging.info(f"从 Hugging Face 加载模型配置: {hf_model_name}")
-            config = AutoConfig.from_pretrained(hf_model_name, trust_remote_code=True)
-        else:
-            # 如果没有指定 HF 模型名称，尝试从模型文件推断
-            logging.warning("未指定 Hugging Face 模型名称，尝试从模型文件加载配置...")
-            model_path = model_files[0].parent
-            config = AutoConfig.from_pretrained(str(model_path), trust_remote_code=True)
-        
+
         # 创建输出目录
         output_path = Path(output_path)
         output_path.mkdir(parents=True, exist_ok=True)
-        
-        # 复制模型文件
-        logging.info(f"复制模型文件到: {output_path}")
-        for model_file in model_files:
+
+        # 根据转换模式选择不同的处理方式
+        if use_full_conversion and hf_model_name:
+            # 完整转换模式：加载模型结构和配置
+            logging.info(f"从 Hugging Face 加载模型配置: {hf_model_name}")
+            config = AutoConfig.from_pretrained(hf_model_name, trust_remote_code=True)
+
+            # 加载模型结构（不加载权重，仅获取配置）
+            logging.info("加载模型结构...")
+            try:
+                model = AutoModelForCausalLM.from_pretrained(
+                    hf_model_name,
+                    config=config,
+                    trust_remote_code=True,
+                    low_cpu_mem_usage=True  # 减少内存占用
+                )
+                logging.info(f"模型配置: {model.config.to_dict()}")
+            except Exception as e:
+                logging.warning(f"无法加载模型结构: {e}，使用基础配置")
+                model = None
+
+            # 复制模型文件
+            logging.info(f"复制模型文件到: {output_path}")
             import shutil
-            dest = output_path / model_file.name
-            shutil.copy2(str(model_file), str(dest))
-            logging.info(f"已复制: {model_file.name}")
-        
-        # 保存 tokenizer 和配置
-        logging.info("保存 tokenizer 和配置...")
-        tokenizer.save_pretrained(str(output_path))
-        config.save_pretrained(str(output_path))
-        
+            for model_file in model_files:
+                dest = output_path / model_file.name
+                shutil.copy2(str(model_file), str(dest))
+                logging.info(f"已复制: {model_file.name}")
+
+            # 保存 tokenizer、配置和模型结构
+            logging.info("保存 tokenizer 和配置...")
+            tokenizer.save_pretrained(str(output_path))
+            config.save_pretrained(str(output_path))
+
+            if model is not None:
+                # 保存模型配置
+                model.config.save_pretrained(str(output_path))
+                logging.info(f"模型配置已保存到: {output_path}")
+        else:
+            # 简化模式：仅复制文件并保存基础配置
+            logging.info("使用简化转换模式，仅复制文件...")
+
+            # 加载模型配置（如果可用）
+            if hf_model_name:
+                logging.info(f"从 Hugging Face 加载模型配置: {hf_model_name}")
+                config = AutoConfig.from_pretrained(hf_model_name, trust_remote_code=True)
+            else:
+                # 如果没有指定 HF 模型名称，尝试从模型文件推断
+                logging.warning("未指定 Hugging Face 模型名称，尝试从模型文件加载配置...")
+                model_path = model_files[0].parent
+                config = AutoConfig.from_pretrained(str(model_path), trust_remote_code=True)
+
+            # 复制模型文件
+            logging.info(f"复制模型文件到: {output_path}")
+            import shutil
+            for model_file in model_files:
+                dest = output_path / model_file.name
+                shutil.copy2(str(model_file), str(dest))
+                logging.info(f"已复制: {model_file.name}")
+
+            # 保存 tokenizer 和配置
+            logging.info("保存 tokenizer 和配置...")
+            tokenizer.save_pretrained(str(output_path))
+            config.save_pretrained(str(output_path))
+
         logging.info(f"转换完成！输出目录: {output_path}")
-        
+
     except Exception as e:
         logging.error(f"SafeTensors 转换失败: {e}")
         raise
@@ -646,7 +702,8 @@ def convert_ollama_model(
                 model_files,
                 output_path,
                 hf_model_name=hf_model_name,
-                tokenizer_name=tokenizer_name
+                tokenizer_name=tokenizer_name,
+                use_full_conversion=use_full_conversion
             )
         else:
             raise ValueError(f"不支持的模型格式: {model_format}")
@@ -713,7 +770,7 @@ def detect_model_format(model_file_path):
                     return "bin"
 
                 # 默认假设为 GGUF（Ollama blob 最常见）
-                logging.warning(f"无法明确检测文件格式，假设为 GGUF 格式")
+                logging.warning("无法明确检测文件格式，假设为 GGUF 格式")
                 return "gguf"
 
         except Exception as e:
