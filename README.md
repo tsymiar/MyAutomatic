@@ -92,7 +92,7 @@ LinxSrvc
 
         A mini chat tool using the _`DeepSeek`_ API to answer questions, which is one of the most popular question answering systems. Modify _params.txt_ to set key-value pairs, such as model, stream, etc.
 
-        <img src="WinNTKline/image/dpsk.jpg" title="DeepSeek" onclick="javascript:location.href='https://www.deepseek.com'" width="70%" height="auto" />
+        <img src="assets/dpsk.jpg" title="DeepSeek" onclick="javascript:location.href='https://www.deepseek.com'" width="70%" height="auto" />
 
     * video_render
 
@@ -106,7 +106,7 @@ LinxSrvc
 
         A code tool to compare differences between two same-named files or different directories.
 
-        <img src="WinNTKline/image/diff.png" title="analyzing" width="50%" height="auto" />
+        <img src="assets/diff.png" title="analyzing" width="50%" height="auto" />
 
     * trans_server | trans_client
 
@@ -151,4 +151,4 @@ QtGames
 
 #### _**I**mpact of the program has built in [`Market`]:_
 
-<img src="WinNTKline/image/impact.png" title="impact" height="80%" width="80%" align="middle" />
+<img src="assets/impact.png" title="impact" height="80%" width="80%" align="middle" />
