@@ -18,7 +18,7 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>../WinNTKline/image/qtlogo.ico</normaloff>../WinNTKline/image/qtlogo.ico</iconset>
+    <normaloff>./qtlogo.ico</normaloff>./qtlogo.ico</iconset>
   </property>
   <property name="autoFillBackground">
    <bool>false</bool>
