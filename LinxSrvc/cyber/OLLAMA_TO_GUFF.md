@@ -30,6 +30,7 @@ python scripts/ollama_to_hf.py \
 ```
 
 支持以下文件格式：
+
 - `.gguf` - GGUF 格式模型
 - `.safetensors` - SafeTensors 格式模型
 - `.bin` - PyTorch Bin 格式模型

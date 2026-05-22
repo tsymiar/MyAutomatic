@@ -28,7 +28,7 @@ namespace
 
 void usageExit(int exitcode, char** argv);
 void parseArgs(int argc, char** argv);
-bool isSmallEndian();
+bool isBigEndian();
 void byteSwap16(uint16_t* val);
 void byteSwap32(uint32_t* val);
 void byteSwap24(uint32_t* val);
@@ -52,10 +52,10 @@ int main(int argc, char* argv[])
     }
     parseArgs(argc, argv);
     size_t size = sizeof(uint32_t);
-    bool small = isSmallEndian();
-    bool byteswap = !small;
+    bool big = isBigEndian();
+    bool byteswap = !big;
     if (g_endian == 0) {
-        byteswap = small;
+        byteswap = big;
     }
     switch (g_bits) {
     case 8:
@@ -238,7 +238,7 @@ void byteSwap24(uint32_t* val)
     *val = (((v & 0xff) << 16) | ((v & 0xff0000) >> 16)) & 0xffffff;
 }
 
-bool isSmallEndian()
+bool isBigEndian()
 {
     union {
         int n;
