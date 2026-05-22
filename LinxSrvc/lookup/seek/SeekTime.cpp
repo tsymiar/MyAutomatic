@@ -108,6 +108,7 @@ int SeekTime::findFileFragmentDetail(FILE* file, FileFrameData& startframe, File
     while (!found) {
         bytes = fread(buffer, 1, buffSize, file);
         LOG_DBG("000 fread bytes=%u buffer size=%u.", bytes, buffSize);
+        if (bytes < sizeof(key_size_t)) break;
         for (size_t i = 0; i < (bytes - sizeof(key_size_t)); i++) {
             if (*(key_size_t*)(buffer + i) == SEEK_FRAME_HEAD) {
                 StruFrameHeader* header = (StruFrameHeader*)(buffer + i);
@@ -185,6 +186,7 @@ int SeekTime::findFileFragmentDetail(FILE* file, FileFrameData& startframe, File
     while (!found) {
         bytes = fread(buffer, 1, buffSize, file);
         LOG_DBG("fread %u bytes, buffsize=%u.", bytes, buffSize);
+        if (bytes < sizeof(key_size_t)) break;
         for (size_t i = 0; i < bytes - sizeof(key_size_t); i++) {
             if (*(key_size_t*)(buffer + i) == SEEK_FRAME_HEAD) {
                 StruFrameHeader* header = (StruFrameHeader*)(buffer + i);
@@ -247,6 +249,7 @@ bool getFirstFrame(FILE* file, uint32_t winsize, SeekTimeContent& headIdx, uint3
     int current = 0;
     bool find = false;
     while ((bytes = fread(buffer, 1, buffSize, file)) > 0) {
+        if (bytes < sizeof(key_size_t)) break;
         for (size_t i = 0; i < bytes - sizeof(key_size_t); i++) {
             if (*(key_size_t*)(buffer + i) == SEEK_FRAME_HEAD) {
                 StruFrameHeader* header = (StruFrameHeader*)(buffer + i);
@@ -266,6 +269,7 @@ bool getFirstFrame(FILE* file, uint32_t winsize, SeekTimeContent& headIdx, uint3
         if (find) {
             break;
         }
+        if (bytes < sizeof(key_size_t)) break;
         position += (bytes - sizeof(key_size_t));
         if ((filesize - position) <= sizeof(key_size_t)) {
             LOG_WRN("expected frame structure is not found in this file. filesize=%lld.", filesize);
@@ -291,6 +295,7 @@ bool getTailFrame(FILE* file, uint32_t winsize, SeekTimeContent& tailIdx)
         fseek(file, position, SEEK_SET);
         size_t bytes = fread(buffer, 1, buffSize, file);
         if (bytes > 0) {
+            if (bytes < sizeof(key_size_t)) break;
             for (size_t i = bytes - sizeof(key_size_t); i > 0; i--) {
                 if (*(key_size_t*)(buffer + i) == SEEK_FRAME_HEAD) {
                     StruFrameHeader* header = (StruFrameHeader*)(buffer + i);

@@ -24,6 +24,8 @@ struct option { const char* _1; void* _2; void* _3; char _4; };
 #include <thread>
 #include <vector>
 #include <algorithm>
+#include <atomic>
+#include <cstdio>
 #ifdef OpenMP
 #include <omp.h>
 #endif
@@ -46,7 +48,7 @@ static void waitUs(unsigned long usec)
 {
     HANDLE timer;
     LARGE_INTEGER interval;
-    interval.QuadPart = -long(10 * usec);
+    interval.QuadPart = -(LONGLONG)(usec * 10);
     timer = CreateWaitableTimer(NULL, TRUE, NULL);
     SetWaitableTimer(timer, &interval, 0, NULL, NULL, 0);
     WaitForSingleObject(timer, INFINITE);
@@ -57,7 +59,7 @@ static void waitUs(unsigned long usec)
 struct Runtime {
     bool kmg;
     float prog;
-    uint64_t bytes;
+    std::atomic<uint64_t> bytes{ 0 };
     uint64_t total;
 };
 
@@ -130,7 +132,7 @@ int main(int argc, char* argv[])
                 if (!g_runtime.kmg) {
                     continue;
                 }
-                g_runtime.prog = g_runtime.bytes * 100.f / g_runtime.total;
+                g_runtime.prog = g_runtime.bytes.load() * 100.f / g_runtime.total;
                 fprintf(stdout, "\r%.3f %%", g_runtime.prog);
                 fflush(stdout);
                 if (g_runtime.prog >= 100.0f) {
@@ -169,7 +171,7 @@ int main(int argc, char* argv[])
         return -1;
     }
     size_t length = g_begins.size();
-    std::vector<uint64_t> values = g_begins;
+    std::vector<uint64_t>& values = g_begins;
     if (length == 0) {
         values.push_back(0);
         length++;
@@ -203,7 +205,7 @@ int main(int argc, char* argv[])
                     value = field.fixed_value;
                 }
                 write_field_value(fp, value, field.length);
-                g_runtime.bytes += field.length;
+                g_runtime.bytes.fetch_add(field.length);
             }
         }
 
@@ -231,7 +233,7 @@ int main(int argc, char* argv[])
                 status = -2;
                 break;
             }
-            g_runtime.bytes += size;
+            g_runtime.bytes.fetch_add(size);
             if (!g_decrease) {
                 values[i] += g_interval;
             } else {

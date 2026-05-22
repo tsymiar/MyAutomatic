@@ -3,17 +3,22 @@
 """将本地 Ollama 模型转换为 Hugging Face 格式"""
 import os
 import sys
+import re
+import json
+import shutil
 import logging
 import argparse
-from pathlib import Path
 import subprocess
+from pathlib import Path
 
-# 注意: transformers 库在函数内部导入以加快启动速度
-# 这些导入作为依赖说明保留
-# from transformers import AutoTokenizer, AutoConfig  # noqa: F401
+# 注意: transformers 库在函数内部按需导入以加快启动速度
+# 各函数在需要时通过 from transformers import ... 延迟加载
 
 # 添加项目根目录到路径
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# 全局常量: sha256 格式文件名正则 (64位十六进制)
+SHA256_PATTERN = re.compile(r'^[a-f0-9]{64}$')
 
 
 def setup_logging(verbose=False):
@@ -115,9 +120,6 @@ def find_ollama_model_files(ollama_model_name):
     if sys.platform == "darwin":
         ollama_roots.append(home / "Library" / "Application Support" / "ollama" / "models")
 
-    # 处理模型名称，移除 tag (如 "llama2:7b" -> "llama2")
-    # base_model_name = ollama_model_name.split(":")[0]
-
     # 查找 Ollama 模型根目录
     ollama_root = None
     for root_dir in ollama_roots:
@@ -202,7 +204,6 @@ def find_ollama_model_files(ollama_model_name):
 
     # 读取 manifest 文件获取 blob 引用
     try:
-        import json
         with open(manifest_path, 'r') as f:
             manifest = json.load(f)
 
@@ -288,11 +289,8 @@ def find_ollama_model_files(ollama_model_name):
                     # 搜索 sha256 命名的文件（无扩展名）
                     sha256_files = []
                     for f in subdir.iterdir():
-                        if f.is_file() and not f.suffix:
-                            # 检查文件名是否为 64 位十六进制字符串
-                            import re
-                            if re.match(r'^[a-f0-9]{64}$', f.name.lower()):
-                                sha256_files.append(f)
+                        if f.is_file() and not f.suffix and SHA256_PATTERN.match(f.name.lower()):
+                            sha256_files.append(f)
 
                     all_model_files.extend(gguf_files + safetensors_files + bin_files + pt_files + sha256_files)
         else:
@@ -302,8 +300,7 @@ def find_ollama_model_files(ollama_model_name):
                     # 提取 sha256 部分
                     sha256_part = blob_file.name[7:]  # 移除 "sha256-" 前缀
                     # 检查是否为有效的 sha256
-                    import re
-                    if re.match(r'^[a-f0-9]{64}$', sha256_part.lower()):
+                    if SHA256_PATTERN.match(sha256_part.lower()):
                         all_model_files.append(blob_file)
 
     if all_model_files:
@@ -512,7 +509,6 @@ def convert_gguf_to_hf(
             tokenizer.save_pretrained(str(output_path))
 
             # 保存配置文件
-            import json
             config_path = output_path / "config.json"
             with open(config_path, 'w', encoding='utf-8') as f:
                 json.dump(model_config, f, indent=2)
@@ -587,27 +583,10 @@ def convert_safetensors_to_hf(
             except Exception as e:
                 logging.warning(f"无法加载模型结构: {e}，使用基础配置")
                 model = None
-
-            # 复制模型文件
-            logging.info(f"复制模型文件到: {output_path}")
-            import shutil
-            for model_file in model_files:
-                dest = output_path / model_file.name
-                shutil.copy2(str(model_file), str(dest))
-                logging.info(f"已复制: {model_file.name}")
-
-            # 保存 tokenizer、配置和模型结构
-            logging.info("保存 tokenizer 和配置...")
-            tokenizer.save_pretrained(str(output_path))
-            config.save_pretrained(str(output_path))
-
-            if model is not None:
-                # 保存模型配置
-                model.config.save_pretrained(str(output_path))
-                logging.info(f"模型配置已保存到: {output_path}")
         else:
             # 简化模式：仅复制文件并保存基础配置
             logging.info("使用简化转换模式，仅复制文件...")
+            model = None
 
             # 加载模型配置（如果可用）
             if hf_model_name:
@@ -619,18 +598,22 @@ def convert_safetensors_to_hf(
                 model_path = model_files[0].parent
                 config = AutoConfig.from_pretrained(str(model_path), trust_remote_code=True)
 
-            # 复制模型文件
-            logging.info(f"复制模型文件到: {output_path}")
-            import shutil
-            for model_file in model_files:
-                dest = output_path / model_file.name
-                shutil.copy2(str(model_file), str(dest))
-                logging.info(f"已复制: {model_file.name}")
+        # 复制模型文件（两种模式共用）
+        logging.info(f"复制模型文件到: {output_path}")
+        for model_file in model_files:
+            dest = output_path / model_file.name
+            shutil.copy2(str(model_file), str(dest))
+            logging.info(f"已复制: {model_file.name}")
 
-            # 保存 tokenizer 和配置
-            logging.info("保存 tokenizer 和配置...")
-            tokenizer.save_pretrained(str(output_path))
-            config.save_pretrained(str(output_path))
+        # 保存 tokenizer 和配置
+        logging.info("保存 tokenizer 和配置...")
+        tokenizer.save_pretrained(str(output_path))
+        config.save_pretrained(str(output_path))
+
+        if model is not None:
+            # 完整转换模式额外保存模型配置
+            model.config.save_pretrained(str(output_path))
+            logging.info(f"模型配置已保存到: {output_path}")
 
         logging.info(f"转换完成！输出目录: {output_path}")
 
@@ -740,9 +723,7 @@ def detect_model_format(model_file_path):
     # 如果没有扩展名或扩展名不识别，检查文件名是否为 sha256 格式
     # sha256 格式: 64 个十六进制字符
     filename = model_file_path.name
-    import re
-    sha256_pattern = re.compile(r'^[a-f0-9]{64}$')
-    if sha256_pattern.match(filename):
+    if SHA256_PATTERN.match(filename):
         # 可能是 Ollama 的 blob 文件，尝试读取文件头判断格式
         logging.info(f"文件名 '{filename}' 符合 sha256 格式，尝试检测文件类型...")
 

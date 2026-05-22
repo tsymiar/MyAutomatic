@@ -9,8 +9,8 @@ class DBbase {
 public:
 	int connectDB(const std::string& dbName);
 	bool isConnected();
-	int queryTable(const std::string& sql, char*** pResult, int& row, int& column);
-	void freeTable(char** pResult);
+	int queryTable(const std::string& sql, char*** pppResult, int& row, int& column);
+	void freeTable(char** ppResult);
 	int executeSql(const std::string& sql);
 	bool isTableExist(const std::string& tableName);
 	void disconnectDB();

@@ -19,7 +19,7 @@ extern "C"
         void uninit();
         int seekFileDataTime(uint32_t duration, std::vector<SeekTimeContent>& fileinfos, uint32_t offset = PROJECT_FILE_OFFSET);
         void setFilesTime(const std::vector<SelectTime>& times, const std::string& file);
-        int getFileTime(const std::string& file, SelectTime& time, uint32_t offset = PROJECT_FILE_OFFSET);
+        int getFileTime(const std::string& sfile, SelectTime& time, uint32_t offset = PROJECT_FILE_OFFSET);
 
         SelectTime getTimeDuration(std::vector<std::string> files);
 

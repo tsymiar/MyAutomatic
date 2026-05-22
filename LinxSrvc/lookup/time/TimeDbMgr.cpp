@@ -11,8 +11,7 @@ int TimeDbMgr::connect(const std::string& db)
 
 bool TimeDbMgr::connected() const
 {
-    // check if connected to the database
-    return false;
+    return m_connected;
 }
 
 void TimeDbMgr::disconnect()

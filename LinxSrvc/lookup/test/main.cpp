@@ -10,7 +10,7 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
-    std::string fileName = "test.dat";
+    std::string fileName = "";
     if (argc > 1) {
         fileName = argv[1];
     } else {
@@ -22,8 +22,8 @@ int main(int argc, char* argv[])
     seekTime.init(fileName);
 #ifndef TIMESEEK
     seekTime.getFileTime(fileName, time);
-#endif
     printf("getFileTime start=%ld, last=%ld\n", time.first, time.last);
+#endif
     std::vector<SelectTime> times;
     size_t pos = fileName.rfind('.');
     string csvpre = fileName.substr(0, pos);

@@ -25,23 +25,25 @@ bool DBbase::isConnected()
     return (m_db != nullptr) ? true : false;
 }
 
-int DBbase::queryTable(const std::string& sql, char*** pResult, int& row, int& column)
+int DBbase::queryTable(const std::string& sql, char*** pppResult, int& row, int& column)
 {
     if (m_db == nullptr) {
         LOG_ERR("database is not connected!");
+        row = 0;
+        column = 0;
         return -1;
     }
-    *pResult = m_db->query(sql.c_str());
-    return 0;
+    *pppResult = m_db->query(sql.c_str(), row, column);
+    return (*pppResult != nullptr) ? 0 : (row > 0 ? 0 : -1);
 }
 
-void DBbase::freeTable(char** pResult)
+void DBbase::freeTable(char** ppResult)
 {
-    if (pResult == nullptr) {
+    if (ppResult == nullptr) {
         return;
     }
     if (m_db != nullptr) {
-        m_db->free(pResult);
+        m_db->free(ppResult);
     } else {
         LOG_WRN("attempt to free table result but database handle is null");
     }
@@ -59,25 +61,40 @@ int DBbase::executeSql(const std::string& sql)
 
 bool DBbase::isTableExist(const std::string& tableName)
 {
+#ifdef USE_SQLITE3
+    // 使用 sqlite3_mprintf 的 %q 格式化防止 SQL 注入
+    char* safeName = sqlite3_mprintf("%q", tableName.c_str());
+    if (!safeName) return false;
+
     char a_sql[256] = { 0 };
-    sprintf(a_sql, "select count(*) as cnt from sqlite_master where type='table' and name='%s'",
+    snprintf(a_sql, sizeof(a_sql),
+        "select count(*) as cnt from sqlite_master where type='table' and name='%s'",
+        safeName);
+    sqlite3_free(safeName);
+    string str_sql = a_sql;
+#else
+    // 非 SQLITE3 模式：直接拼接（仅用于调试输出）
+    char a_sql[256] = { 0 };
+    snprintf(a_sql, sizeof(a_sql),
+        "select count(*) as cnt from sqlite_master where type='table' and name='%s'",
         tableName.c_str());
     string str_sql = a_sql;
+#endif
 
-    char** pResult = nullptr;
+    char** ppResult = nullptr;
     int row = 0;
     int column = 0;
-    int i_ret = queryTable(str_sql, &pResult, row, column);
+    int i_ret = queryTable(str_sql, &ppResult, row, column);
     if (i_ret != 0) {
         return false;
     }
-    if (row != 1) {
+    if (row < 1) {
+        freeTable(ppResult);
         return false;
     }
-    if (atoi(pResult[column]) == 1) {
-        return true;
-    }
-    return false;
+    bool exists = (ppResult[0] != NULL && atoi(ppResult[0]) == 1);
+    freeTable(ppResult);
+    return exists;
 }
 
 void DBbase::disconnectDB()
@@ -92,32 +109,34 @@ void DBbase::disconnectDB()
 }
 
 SeekDbMgr::SeekDbMgr()
-{ }
+{}
 
 SeekDbMgr::~SeekDbMgr()
-{ }
+{}
 
 bool SeekDbMgr::isTableExist()
 {
     char a_sql[256] = { 0 };
-    sprintf(a_sql, "select count(*) as cnt from sqlite_master where type='table' and name='%s'",
+    // TABLE_SEEK_TIME 是宏常量，无需参数化；但仍用 snprintf 防溢出
+    snprintf(a_sql, sizeof(a_sql),
+        "select count(*) as cnt from sqlite_master where type='table' and name='%s'",
         TABLE_SEEK_TIME);
     string sqlStatement = a_sql;
 
-    char** pResult = nullptr;
+    char** ppResult = nullptr;
     int row = 0;
     int column = 0;
-    int i_ret = queryTable(sqlStatement, &pResult, row, column);
+    int i_ret = queryTable(sqlStatement, &ppResult, row, column);
     if (i_ret != 0) {
         return false;
     }
-    if (row != 1) {
+    if (row < 1) {
+        freeTable(ppResult);
         return false;
     }
-    if (atoi(pResult[column]) == 1) {
-        return true;
-    }
-    return false;
+    bool exists = (ppResult[0] != NULL && atoi(ppResult[0]) == 1);
+    freeTable(ppResult);
+    return exists;
 }
 
 int SeekDbMgr::createTable()
@@ -126,37 +145,37 @@ int SeekDbMgr::createTable()
         return 0;
     }
     char sql[SQL_LEN] = { 0 };
-    sprintf(sql, "create table %s(id integer primary key autoincrement, %s integer, %s large integer, %s integer, %s integer, %s integer)",
+    snprintf(sql, SQL_LEN, "create table %s(id integer primary key autoincrement, %s integer, %s large integer, %s integer, %s integer, %s integer)",
         TABLE_SEEK_TIME, FIELD_FILEID, FIELD_TIMESTAMP, FIELD_DURATION, FIELD_OFFSET, FIELD_SIZE);
     string sqlStatement = sql;
 
     printf("SQLITE:[ %s ]\n", sqlStatement.c_str());
     int ret = executeSql(sqlStatement);
     if (ret != 0) {
-        LOG_ERR("create table %s failed!(0x%08X).", TABLE_SEEK_TIME, ret);
+        LOG_ERR("create table %s failed(%d)!.", TABLE_SEEK_TIME, ret);
         return ret;
     }
 
     char tmpIndex[SQL_LEN] = { 0 };
-    sprintf(tmpIndex, "create index if not exists idIndex on %s(%s)",
+    snprintf(tmpIndex, SQL_LEN, "create index if not exists idIndex on %s(%s)",
         TABLE_SEEK_TIME, FIELD_TIMESTAMP);
     string sqlCreateIndex = tmpIndex;
     printf("SQLITE:[ %s ]\n", sqlCreateIndex.c_str());
     ret = executeSql(sqlCreateIndex);
     if (ret != 0) {
-        LOG_ERR("executeSql(sql=%s) error: 0x%08X!", sqlCreateIndex.c_str(), ret);
+        LOG_ERR("executeSql(sql=%s) error: %d!", sqlCreateIndex.c_str(), ret);
     }
 
     memset(sql, 0, SQL_LEN);
-    sprintf(sql, "create table %s(id integer primary key autoincrement, %s char(128), %s integer, %s integer, %s large integer, %s large integer, %s char(16))",
+    snprintf(sql, SQL_LEN, "create table %s(id integer primary key autoincrement, %s char(128), %s integer, %s integer, %s large integer, %s large integer, %s char(16))",
         TABLE_FILE_MAPPING, FIELD_FILENAME,
         FIELD_FIRST_OFFSET, FIELD_LAST_OFFSET,
-        FIELD_FIRST_TIME, FIELD_LAST_OFFSET,
+        FIELD_FIRST_TIME, FIELD_LAST_TIME,
         FIELD_FILESIGN);
     printf("SQLITE:[ %s ]\n", sql);
     ret = executeSql(std::string(sql));
     if (ret != 0) {
-        LOG_ERR("create table %s failed!(0x%08X).", TABLE_SEEK_TIME, ret);
+        LOG_ERR("create table %s failed(%d)!.", TABLE_SEEK_TIME, ret);
         return ret;
     }
 
@@ -169,56 +188,62 @@ int SeekDbMgr::insertFileIdbyName(FileFrameData* frame)
     if (ret == 0) {
         LOG_WRN("file already exist in %s, update detail values.", TABLE_FILE_MAPPING);
         char csql[SQL_LEN] = { 0 };
-        sprintf(csql, "update %s set %s=%ld,%s=%ld,%s=%lu,%s=%lu where %s=%u",
+        snprintf(csql, SQL_LEN, "update %s set %s=%ld,%s=%ld,%s=%lu,%s=%lu where %s=%u",
             TABLE_FILE_MAPPING,
-            FIELD_FIRST_OFFSET,
-            frame->offset.head,
-            FIELD_LAST_OFFSET,
-            frame->offset.tail,
-            FIELD_FIRST_TIME,
-            frame->ftime.first,
-            FIELD_LAST_OFFSET,
-            frame->ftime.last,
-            TABLE_INDEX,
-            frame->id);
+            FIELD_FIRST_OFFSET, frame->offset.head,
+            FIELD_LAST_OFFSET, frame->offset.tail,
+            FIELD_FIRST_TIME, frame->ftime.first,
+            FIELD_LAST_TIME, frame->ftime.last,
+            TABLE_INDEX, frame->id);
         std::string sql = csql;
         printf("SQLITE:[ %s ]\n", sql.c_str());
         ret = executeSql(sql);
         if (ret != 0) {
-            LOG_ERR("executeSql(sql=%s) error: 0x%08X!", sql.c_str(), ret);
+            LOG_ERR("executeSql(sql=%s) error: %d!", sql.c_str(), ret);
             return ret;
         }
         return 0;
     }
 
+#ifdef USE_SQLITE3
+    // 对文件名做安全转义，防 SQL 注入
+    char* safeName = sqlite3_mprintf("%q", frame->fileName);
+    char* safeSign = sqlite3_mprintf("%q", frame->fileSign);
+    if (!safeName || !safeSign) {
+        if (safeName) sqlite3_free(safeName);
+        if (safeSign) sqlite3_free(safeSign);
+        return -1;
+    }
     char sql[SQL_LEN] = { 0 };
-    sprintf(sql, "insert into %s(%s,%s,%s,%s,%s,%s)",
+    snprintf(sql, SQL_LEN,
+        "insert into %s(%s,%s,%s,%s,%s,%s) VALUES ('%s',%ld,%ld,%lu,%lu,'%s')",
         TABLE_FILE_MAPPING,
-        FIELD_FILENAME,
-        FIELD_FIRST_OFFSET,
-        FIELD_LAST_OFFSET,
-        FIELD_FIRST_TIME,
-        FIELD_LAST_OFFSET,
-        FIELD_FILESIGN);
-
-    string sqlStatement = "";
-    sqlStatement += sql;
-
-    memset(sql, 0, SQL_LEN);
-    sprintf(sql, "VALUES ('%s',%ld,%ld,%lu,%lu,'%s')",
+        FIELD_FILENAME, FIELD_FIRST_OFFSET, FIELD_LAST_OFFSET,
+        FIELD_FIRST_TIME, FIELD_LAST_TIME, FIELD_FILESIGN,
+        safeName,
+        frame->offset.head, frame->offset.tail,
+        frame->ftime.first, frame->ftime.last,
+        safeSign);
+    sqlite3_free(safeName);
+    sqlite3_free(safeSign);
+#else
+    char sql[SQL_LEN] = { 0 };
+    snprintf(sql, SQL_LEN,
+        "insert into %s(%s,%s,%s,%s,%s,%s) VALUES ('%s',%ld,%ld,%lu,%lu,'%s')",
+        TABLE_FILE_MAPPING,
+        FIELD_FILENAME, FIELD_FIRST_OFFSET, FIELD_LAST_OFFSET,
+        FIELD_FIRST_TIME, FIELD_LAST_TIME, FIELD_FILESIGN,
         frame->fileName,
-        frame->offset.head,
-        frame->offset.tail,
-        frame->ftime.first,
-        frame->ftime.last,
+        frame->offset.head, frame->offset.tail,
+        frame->ftime.first, frame->ftime.last,
         frame->fileSign);
+#endif
 
-    sqlStatement += sql;
-
+    string sqlStatement = sql;
     printf("SQLITE:[ %s ]\n", sqlStatement.c_str());
     ret = executeSql(sqlStatement);
     if (ret != 0) {
-        LOG_ERR("executeSql(sql=%s) error: 0x%08X!", sqlStatement.c_str(), ret);
+        LOG_ERR("executeSql(sql=%s) error: %d!", sqlStatement.c_str(), ret);
         return ret;
     }
     ret = queryFileIdbyName(frame->fileName, frame->id);
@@ -232,34 +257,25 @@ int SeekDbMgr::addIndexNoDuplex(void* pIndex)
 {
     std::lock_guard<std::mutex> lock(m_lock);
     SeekTimeContent* content = (SeekTimeContent*)pIndex;
-    string sqlStatement = "";
-    char sql[SQL_LEN] = { 0 };
 
     int ret = queryFileIdbyName(content->fileName, content->fileid);
     if (ret != 0) {
         LOG_WRN("file '%s' not exist in " TABLE_FILE_MAPPING, content->fileName);
         return ret;
     }
-    sprintf(sql, "insert into %s(%s,%s,%s,%s,%s)",
+    char sql[SQL_LEN] = { 0 };
+    snprintf(sql, SQL_LEN,
+        "insert into %s(%s,%s,%s,%s,%s) values (%u,%lld,%d,%lld,%lld)",
         TABLE_SEEK_TIME,
-        FIELD_FILEID,
-        FIELD_TIMESTAMP,
-        FIELD_DURATION,
-        FIELD_OFFSET,
-        FIELD_SIZE);
-    sqlStatement += sql;
+        FIELD_FILEID, FIELD_TIMESTAMP, FIELD_DURATION, FIELD_OFFSET, FIELD_SIZE,
+        content->fileid, content->value.timestamp, content->duration,
+        content->value.offset, content->value.size);
 
-    sprintf(sql, "values (%u,%lld,%d,%lld,%lld)",
-        content->fileid,
-        content->value.timestamp,
-        content->duration,
-        content->value.offset,
-        content->value.size);
-    sqlStatement += sql;
+    string sqlStatement = sql;
 
     ret = executeSql(sqlStatement);
     if (ret != 0) {
-        LOG_ERR("executeSql(sql=%s) error: 0x%08X!", sqlStatement.c_str(), ret);
+        LOG_ERR("executeSql(sql=%s) error: %d!", sqlStatement.c_str(), ret);
         return ret;
     }
     printf("SQLITE:[ %s ]\n", sqlStatement.c_str());
@@ -271,26 +287,21 @@ int SeekDbMgr::getTargetFragmentByTime(int64_t time, int32_t duration,
     SeekTimeContent* content)
 {
     char sql[SQL_LEN] = { 0 };
-    sprintf(sql, "select %s,%s,%s from %s where %s=%u and %s=%ld and %s=%d limit 1",
-        FIELD_TIMESTAMP,
-        FIELD_OFFSET,
-        FIELD_SIZE,
+    snprintf(sql, SQL_LEN, "select %s,%s,%s from %s where %s=%u and %s=%ld and %s=%d limit 1",
+        FIELD_TIMESTAMP, FIELD_OFFSET, FIELD_SIZE,
         TABLE_SEEK_TIME,
-        FIELD_FILEID,
-        content->fileid,
-        FIELD_TIMESTAMP,
-        time,
-        FIELD_DURATION,
-        duration);
+        FIELD_FILEID, content->fileid,
+        FIELD_TIMESTAMP, time,
+        FIELD_DURATION, duration);
     string sqlStatement = sql;
 
     int row = 0;
     int column = 0;
-    char** ppResult;
+    char** ppResult = nullptr;
     printf("SQLITE:[ %s ]\n", sqlStatement.c_str());
     int ret = queryTable(sqlStatement, &ppResult, row, column);
     if (ret != 0) {
-        LOG_ERR("queryTable(sql=%s) error: 0x%08X!", sqlStatement.c_str(), ret);
+        LOG_ERR("queryTable(sql=%s) error: %d!", sqlStatement.c_str(), ret);
         return ret;
     }
 
@@ -301,8 +312,14 @@ int SeekDbMgr::getTargetFragmentByTime(int64_t time, int32_t duration,
         return -1;
     }
 
-    content->value.offset = atoll(ppResult[column + 1]);
-    content->value.size += atoll(ppResult[column + 2]);
+    if (column < 3) {
+        LOG_ERR("queryTable(sql=%s) error: column[%d] is less than expected!",
+            sqlStatement.c_str(), column);
+        freeTable(ppResult);
+        return -2;
+    }
+    content->value.offset = atoll(ppResult[column - 2]);
+    content->value.size += atoll(ppResult[column - 1]);
     content->duration = duration;
     content->value.timestamp = time;
     content->found = true;
@@ -313,19 +330,26 @@ int SeekDbMgr::getTargetFragmentByTime(int64_t time, int32_t duration,
 
 int SeekDbMgr::queryFileIdbyName(const std::string& filename, uint32_t& fileid)
 {
+#ifdef USE_SQLITE3
+    char* safeName = sqlite3_mprintf("%q", filename.c_str());
+    if (!safeName) return -1;
     char sql[SQL_LEN] = { 0 };
-    sprintf(sql, "select id from %s where %s='%s' ",
-        TABLE_FILE_MAPPING,
-        FIELD_FILENAME,
-        filename.c_str());
+    snprintf(sql, SQL_LEN, "select id from %s where %s='%s'",
+        TABLE_FILE_MAPPING, FIELD_FILENAME, safeName);
+    sqlite3_free(safeName);
+#else
+    char sql[SQL_LEN] = { 0 };
+    snprintf(sql, SQL_LEN, "select id from %s where %s='%s'",
+        TABLE_FILE_MAPPING, FIELD_FILENAME, filename.c_str());
+#endif
     string sqlStatement = sql;
     int row = 0;
     int column = 0;
-    char** ppResult;
+    char** ppResult = nullptr;
     printf("SQLITE:[ %s ]\n", sqlStatement.c_str());
     int ret = queryTable(sqlStatement, &ppResult, row, column);
     if (ret != 0) {
-        LOG_ERR("queryTable(sql=%s) error: 0x%08X!", sqlStatement.c_str(), ret);
+        LOG_ERR("queryTable(sql=%s) error: %d!", sqlStatement.c_str(), ret);
         return ret;
     }
     if (row <= 0) {
@@ -334,7 +358,7 @@ int SeekDbMgr::queryFileIdbyName(const std::string& filename, uint32_t& fileid)
         freeTable(ppResult);
         return -1;
     }
-    fileid = atol(ppResult[column]);
+    fileid = atol(ppResult[0]);
 
     freeTable(ppResult);
     return 0;
@@ -356,7 +380,7 @@ int SeekDbMgr::getTimeOffsetByFileName(const std::string& filename, const Select
     char** ppResult = nullptr;
     /* seek left */
     {
-        sprintf(sql, "select %s,%s,%s from %s where %s=%u and %s<=%lld and %s<0 order by %s desc limit 1",
+        snprintf(sql, SQL_LEN, "select %s,%s,%s from %s where %s=%u and %s<=%lld and %s<0 order by %s desc limit 1",
             FIELD_TIMESTAMP, FIELD_OFFSET, FIELD_SIZE, TABLE_SEEK_TIME, FIELD_FILEID, fileid, FIELD_TIMESTAMP, timeValue.first, FIELD_DURATION, FIELD_TIMESTAMP);
         string sqlStatement = sql;
         printf("SQLITE:[ %s ]\n", sqlStatement.c_str());
@@ -373,19 +397,19 @@ int SeekDbMgr::getTimeOffsetByFileName(const std::string& filename, const Select
             return -1;
         }
         if (row == 1) {
-            firstframe.ftime.first = atoll(ppResult[column]);
-            firstframe.offset.head = atoll(ppResult[column + 1]);
+            firstframe.ftime.first = atoll(ppResult[0]);
+            firstframe.offset.head = atoll(ppResult[1]);
         }
         freeTable(ppResult);
 
-        memset(&sql, 0, SQL_LEN);
-        sprintf(sql, "select %s,%s,%s from %s where %s=%u and %s>=%lld and %s<0  order by %s asc limit 1",
+        memset(sql, 0, SQL_LEN);
+        snprintf(sql, SQL_LEN, "select %s,%s,%s from %s where %s=%u and %s>=%lld and %s<0  order by %s asc limit 1",
             FIELD_TIMESTAMP, FIELD_OFFSET, FIELD_SIZE, TABLE_SEEK_TIME, FIELD_FILEID, fileid, FIELD_TIMESTAMP, timeValue.first, FIELD_DURATION, FIELD_TIMESTAMP);
         string sqlStatement1 = sql;
         printf("SQLITE:[ %s ]\n", sqlStatement1.c_str());
         ret = queryTable(sqlStatement1, &ppResult, row, column);
         if (ret != 0) {
-            LOG_ERR("queryTable(sql=%s) error: 0x%08X!", sqlStatement1.c_str(), ret);
+            LOG_ERR("queryTable(sql=%s) error: %d!", sqlStatement1.c_str(), ret);
             return ret;
         }
 
@@ -396,8 +420,8 @@ int SeekDbMgr::getTimeOffsetByFileName(const std::string& filename, const Select
             return -2;
         }
         if (row == 1) {
-            firstframe.ftime.last = atoll(ppResult[column]);
-            firstframe.offset.tail = atoll(ppResult[column + 1]);
+            firstframe.ftime.last = atoll(ppResult[0]);
+            firstframe.offset.tail = atoll(ppResult[1]);
         }
         firstframe.id = fileid;
         freeTable(ppResult);
@@ -405,7 +429,7 @@ int SeekDbMgr::getTimeOffsetByFileName(const std::string& filename, const Select
 
     /* seek right */
     {
-        sprintf(sql, "select %s,%s,%s from %s where %s=%u and %s<=%lld and %s<0 order by %s desc limit 1",
+        snprintf(sql, SQL_LEN, "select %s,%s,%s from %s where %s=%u and %s<=%lld and %s<0 order by %s desc limit 1",
             FIELD_TIMESTAMP, FIELD_OFFSET, FIELD_SIZE, TABLE_SEEK_TIME, FIELD_FILEID, fileid, FIELD_TIMESTAMP, timeValue.last, FIELD_DURATION, FIELD_TIMESTAMP);
         string sqlStatement3 = sql;
 
@@ -414,7 +438,7 @@ int SeekDbMgr::getTimeOffsetByFileName(const std::string& filename, const Select
         printf("SQLITE:[ %s ]\n", sqlStatement3.c_str());
         ret = queryTable(sqlStatement3, &ppResult, row, column);
         if (ret != 0) {
-            LOG_ERR("queryTable(sql=%s) error: 0x%08X!", sqlStatement3.c_str(), ret);
+            LOG_ERR("queryTable(sql=%s) error: %d!", sqlStatement3.c_str(), ret);
             return ret;
         }
 
@@ -425,13 +449,13 @@ int SeekDbMgr::getTimeOffsetByFileName(const std::string& filename, const Select
             return -3;
         }
         if (row == 1) {
-            lastframe.ftime.first = atoll(ppResult[column]);
-            lastframe.offset.head = atoll(ppResult[column + 1]);
+            lastframe.ftime.first = atoll(ppResult[0]);
+            lastframe.offset.head = atoll(ppResult[1]);
         }
         freeTable(ppResult);
 
-        memset(&sql, 0, SQL_LEN);
-        sprintf(sql, "select %s,%s,%s from %s where %s=%u and %s>=%lld and %s<0 order by %s asc limit 1",
+        memset(sql, 0, SQL_LEN);
+        snprintf(sql, SQL_LEN, "select %s,%s,%s from %s where %s=%u and %s>=%lld and %s<0 order by %s asc limit 1",
             FIELD_TIMESTAMP, FIELD_OFFSET, FIELD_SIZE, TABLE_SEEK_TIME, FIELD_FILEID, fileid, FIELD_TIMESTAMP, timeValue.last, FIELD_DURATION, FIELD_TIMESTAMP);
         string sqlStatement4 = sql;
 
@@ -440,7 +464,7 @@ int SeekDbMgr::getTimeOffsetByFileName(const std::string& filename, const Select
         printf("SQLITE:[ %s ]\n", sqlStatement4.c_str());
         ret = queryTable(sqlStatement4, &ppResult, row, column);
         if (ret != 0) {
-            LOG_ERR("queryTable(sql=%s) error: 0x%08X!", sqlStatement4.c_str(), ret);
+            LOG_ERR("queryTable(sql=%s) error: %d!", sqlStatement4.c_str(), ret);
             return ret;
         }
 
@@ -451,8 +475,8 @@ int SeekDbMgr::getTimeOffsetByFileName(const std::string& filename, const Select
             return -4;
         }
         if (row == 1) {
-            lastframe.ftime.last = atoll(ppResult[column]);
-            lastframe.offset.tail = atoll(ppResult[column + 1]);
+            lastframe.ftime.last = atoll(ppResult[0]);
+            lastframe.offset.tail = atoll(ppResult[1]);
         }
 
         lastframe.id = fileid;
@@ -464,21 +488,28 @@ int SeekDbMgr::getTimeOffsetByFileName(const std::string& filename, const Select
 
 int SeekDbMgr::queryFileTime(const string& filename, SelectTime& time)
 {
+#ifdef USE_SQLITE3
+    char* safeName = sqlite3_mprintf("%q", filename.c_str());
+    if (!safeName) return -1;
     char sql[SQL_LEN] = { 0 };
-    sprintf(sql, "select %s,%s from %s where %s='%s' ",
-        FIELD_FIRST_TIME,
-        FIELD_LAST_OFFSET,
-        TABLE_FILE_MAPPING,
-        FIELD_FILENAME,
-        filename.c_str());
+    snprintf(sql, SQL_LEN, "select %s,%s from %s where %s='%s'",
+        FIELD_FIRST_TIME, FIELD_LAST_TIME,
+        TABLE_FILE_MAPPING, FIELD_FILENAME, safeName);
+    sqlite3_free(safeName);
+#else
+    char sql[SQL_LEN] = { 0 };
+    snprintf(sql, SQL_LEN, "select %s,%s from %s where %s='%s'",
+        FIELD_FIRST_TIME, FIELD_LAST_TIME,
+        TABLE_FILE_MAPPING, FIELD_FILENAME, filename.c_str());
+#endif
     string sqlStatement = sql;
     int row = 0;
     int column = 0;
-    char** ppResult;
+    char** ppResult = nullptr;
     printf("SQLITE:[ %s ]\n", sqlStatement.c_str());
     int ret = queryTable(sqlStatement, &ppResult, row, column);
     if (ret != 0) {
-        LOG_ERR("queryTable(sql=%s) error: 0x%08X!", sqlStatement.c_str(), ret);
+        LOG_ERR("queryTable(sql=%s) error: %d!", sqlStatement.c_str(), ret);
         return ret;
     }
     if (row <= 0) {
@@ -487,8 +518,8 @@ int SeekDbMgr::queryFileTime(const string& filename, SelectTime& time)
         freeTable(ppResult);
         return -1;
     }
-    time.first = atoll(ppResult[column]);
-    time.last = atoll(ppResult[column + 1]);
+    time.first = atoll(ppResult[0]);
+    time.last = atoll(ppResult[1]);
 
     freeTable(ppResult);
     return 0;
