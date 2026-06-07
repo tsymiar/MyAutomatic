@@ -71,7 +71,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 </div></nav>
 
 <div class="hero"><div class="ct">
-<div class="badge">📐 深度架构分析 · 2026-04-05</div>
+<div class="badge">📐 深度架构分析 · 2026-06-07</div>
 <h1 class="ht">LinxSrvc 项目架构全景</h1>
 <p class="hd">混合语言（C/C++/Python）大型服务端框架，集成网络通信、硬件交互、ML 训练、Web 服务、数据库查询与量化交易。CMake 构建，跨 Linux/macOS/Windows。</p>
 <div class="hs">
@@ -133,7 +133,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 ├── thread/            # 纯 C 线程池 (pthdpool)
 ├── trade/             # 量化交易策略 (Python)
 ├── webev/             # 事件驱动 Web 服务器 (epoll)
-├── vs-extension/      # VSCode 扩展 (TypeScript + Python)
+├── vs-extension/      # VSCode 文件夹比较扩展 (TS + Python, 相似度分析)
 ├── pyex/              # Python C 扩展
 └── e.g/ diff/ gn1/ mock/ test/ shell/</pre>
 </div>
@@ -252,8 +252,9 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <tr><td>时间索引</td><td>TimeManager/TimeData 高效时间范围查询</td></tr>
 <tr><td>算法</td><td>KMP 字符串匹配、Manacher 回文检测</td></tr>
 <tr><td>数据库基类</td><td>DBbase 封装 SQLite API（connect/execute/free）</td></tr>
+<tr><td>安全加固</td><td>snprintf 防溢出 · sqlite3_mprintf("%q") SQL 注入防护</td></tr>
 </tbody></table>
-<div class="tags" style="margin-top:.4rem"><span class="t tg2">SQLite3</span><span class="t tc">thread-safe</span><span class="t tc">时间索引</span><span class="t ty">KMP</span><span class="t tp">Manacher</span></div>
+<div class="tags" style="margin-top:.4rem"><span class="t tg2">SQLite3</span><span class="t tc">thread-safe</span><span class="t tc">时间索引</span><span class="t ty">KMP</span><span class="t tp">Manacher</span><span class="t tr">snprintf 防溢出</span><span class="t tr">SQL 注入防护</span></div>
 </div></section>
 
 <section id="wb"><div class="ct">
@@ -507,130 +508,51 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <div class="tags" style="margin-top:.4rem"><span class="t tp">pandas</span><span class="t tp">numpy</span><span class="t tg2">Matplotlib</span><span class="t tg2">回测</span><span class="t tg2">策略</span></div>
 </div></section>
 
-<section id="lk"><div class="ct">
-<div class="st"><h2>🔍 Lookup — 多维度 SQLite 查找服务</h2><span class="tg">C++ / SQLite</span></div>
+<section id="vs"><div class="ct">
+<div class="st"><h2>🔌 VS Extension — VSCode 文件夹比较扩展</h2><span class="tg">TypeScript / Python</span></div>
 <div class="cd"><div class="cd2">
-<div style="text-align:center;margin-bottom:.3rem"><div class="n s1"><div class="lb" style="font-size:.72rem">Lookup 查找引擎</div><div class="ln">时间定位 · 索引查询 · 数据检索</div></div></div>
+<div style="text-align:center;margin-bottom:.3rem"><div class="n y1"><div class="lb" style="font-size:.72rem">Files Comparison</div><div class="ln">VSCode 扩展 · 代码相似度分析 · 文件夹对比</div></div></div>
 <div class="rw">
-<div class="ag"><div class="al">时间定位</div><div class="ao">
-<div class="n g1"><div class="lb">timeLocator</div><div class="ln">时间维度查找</div></div>
-<div class="n e1"><div class="lb">timestamp index</div><div class="ln">时间戳索引</div></div>
+<div class="ag"><div class="al">TS 扩展核心</div><div class="ao">
+<div class="n y1"><div class="lb">extension.ts</div><div class="ln">入口 · 命令处理</div></div>
+<div class="n y1"><div class="lb">parse_text.ts</div><div class="ln">JSON 解析</div></div>
+<div class="n y1"><div class="lb">view_html.ts</div><div class="ln">Webview 模板</div></div>
+<div class="n e1"><div class="lb">package.json</div><div class="ln">命令 & 菜单</div></div>
 </div></div>
-<div class="ag"><div class="al">seek 查询</div><div class="ao">
-<div class="n y1"><div class="lb">seeker</div><div class="ln">索引查询器</div></div>
-<div class="n e1"><div class="lb">SQL index</div><div class="ln">B-Tree 索引</div></div>
+<div class="ag"><div class="al">Python 后端</div><div class="ao">
+<div class="n g1"><div class="lb">similarity.py</div><div class="ln">比较引擎</div></div>
+<div class="n i1"><div class="lb">双引擎去注释</div><div class="ln">状态机 + 行标记</div></div>
+<div class="n i1"><div class="lb">SequenceMatcher</div><div class="ln">行级 diff</div></div>
 </div></div>
-<div class="ag"><div class="al">工具层</div><div class="ao">
-<div class="n m1"><div class="lb">tool</div><div class="ln">查询工具集</div></div>
-<div class="n e1"><div class="lb">db schema</div><div class="ln">数据库模式</div></div>
+<div class="ag"><div class="al">用户交互</div><div class="ao">
+<div class="n m1"><div class="lb">右键菜单</div><div class="ln">单选 / Ctrl+多选</div></div>
+<div class="n m1"><div class="lb">快捷键</div><div class="ln">quickCompare</div></div>
+<div class="n e1"><div class="lb">Webview</div><div class="ln">深色结果面板</div></div>
+<div class="n e1"><div class="lb">Output Channel</div><div class="ln">实时进度</div></div>
 </div></div>
 </div>
 <div class="dv"></div>
 <div class="fc">
-<div class="fd" style="background:rgba(16,185,129,.06)"><div class="dm">1</div><div><div class="lb" style="font-size:.6rem">接收查询请求 (时间/关键字/工具)</div></div></div>
+<div class="fd" style="background:rgba(16,185,129,.06)"><div class="dm">1</div><div><div class="lb" style="font-size:.6rem">右键选中 1~N 个文件夹 → 1 个弹窗选第二个 / ≥2 个直接比较前两个</div></div></div>
 <div class="dx">↓</div>
-<div class="fd" style="background:rgba(59,130,246,.06)"><div class="dm">2</div><div><div class="lb" style="font-size:.6rem">选择索引策略 (B-Tree/时间戳)</div></div></div>
+<div class="fd" style="background:rgba(59,130,246,.06)"><div class="dm">2</div><div><div class="lb" style="font-size:.6rem">TS 扩展检测 Python 环境 → 收集忽略扩展名</div></div></div>
 <div class="dx">↓</div>
-<div class="fd" style="background:rgba(139,92,246,.06)"><div class="dm">3</div><div><div class="lb" style="font-size:.6rem">执行 SQLite 查询</div></div></div>
+<div class="fd" style="background:rgba(139,92,246,.06)"><div class="dm">3</div><div><div class="lb" style="font-size:.6rem">spawn Python similarity.py → 注释剥离 → 行级 diff</div></div></div>
 <div class="dx">↓</div>
-<div class="fd" style="background:rgba(249,115,22,.06)"><div class="dm">4</div><div><div class="lb" style="font-size:.6rem">返回结果集</div></div></div>
+<div class="fd" style="background:rgba(249,115,22,.06)"><div class="dm">4</div><div><div class="lb" style="font-size:.6rem">JSON 输出解析 → Webview 面板展示结果</div></div></div>
 </div>
 </div></div>
 <table style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现</th></tr></thead><tbody>
-<tr><td>数据库</td><td>SQLite — 轻量级嵌入式 DB</td></tr>
-<tr><td>查找维度</td><td>时间、索引查询、工具集</td></tr>
-<tr><td>索引</td><td>B-Tree 索引 + 时间戳索引</td></tr>
+<tr><td>命令入口</td><td>右键菜单（单选/多选）+ 快捷键 (quickCompare)</td></tr>
+<tr><td>多选支持</td><td>≥2 个文件夹直接比较前两个，1 个弹窗选第二个</td></tr>
+<tr><td>注释剥离</td><td>双引擎：状态机逐字符解析 + 行标记正则匹配</td></tr>
+<tr><td>语言支持</td><td>Python / C / C++ / Java / JS / TS / Rust / Swift / Kotlin / CSS / HTML / XML</td></tr>
+<tr><td>结果展示</td><td>Output Channel 实时进度 + Webview 深色面板</td></tr>
+<tr><td>模板分离</td><td>view_html.ts 独立管理 HTML/CSS，extension.ts 只构建数据</td></tr>
+<tr><td>忽略规则</td><td>扩展名 + 目录名 + 文件模式，三种维度</td></tr>
 </tbody></table>
-<div class="tags" style="margin-top:.4rem"><span class="t tg2">SQLite</span><span class="t tb">B-Tree</span><span class="t tg2">timeLocator</span><span class="t to">seeker</span></div>
-</div></section>
-
-<section id="wb"><div class="ct">
-<div class="st"><h2>🌐 Webev — 事件驱动 Web 服务器</h2><span class="tg">C / epoll</span></div>
-<div class="cd"><div class="cd2">
-<div style="text-align:center;margin-bottom:.3rem"><div class="n s1"><div class="lb" style="font-size:.72rem">Webev Web Server</div><div class="ln">事件驱动 · epoll 多路复用 · 高并发</div></div></div>
-<div class="rw">
-<div class="ag"><div class="al">事件循环</div><div class="ao">
-<div class="n s1"><div class="lb">epoll_create()</div><div class="ln">创建实例</div></div>
-<div class="n s1"><div class="lb">epoll_wait()</div><div class="ln">等待事件</div></div>
-<div class="n s1"><div class="lb">事件分发</div><div class="ln">回调处理</div></div>
-</div></div>
-<div class="ag"><div class="al">请求处理</div><div class="ao">
-<div class="n g1"><div class="lb">路由表</div><div class="ln">URL → Handler</div></div>
-<div class="n g1"><div class="lb">请求解析</div><div class="ln">HTTP 解析</div></div>
-<div class="n g1"><div class="lb">响应构建</div><div class="ln">HTTP 响应</div></div>
-</div></div>
-<div class="ag"><div class="al">连接管理</div><div class="ao">
-<div class="n x1"><div class="lb">listen()</div><div class="ln">监听端口</div></div>
-<div class="n x1"><div class="lb">accept()</div><div class="ln">接受连接</div></div>
-<div class="n x1"><div class="lb">close()</div><div class="ln">断开清理</div></div>
-</div></div>
-</div>
-</div></div>
-</div></section>
-
-<section id="gs"><div class="ct">
-<div class="st"><h2>🔄 gSOAPverify — SOAP Web 服务验证</h2><span class="tg">C++ / gSOAP</span></div>
-<div class="cd"><div class="cd2">
-<div style="text-align:center;margin-bottom:.3rem"><div class="n x1"><div class="lb" style="font-size:.72rem">gSOAPverify</div><div class="ln">SOAP/XML Web 服务 · 验证与测试</div></div></div>
-<div class="rw">
-<div class="ag"><div class="al">服务框架</div><div class="ao">
-<div class="n e1"><div class="lb">WSDL</div><div class="ln">服务描述</div></div>
-<div class="n x1"><div class="lb">soapcpp2</div><div class="ln">代码生成</div></div>
-<div class="n x1"><div class="lb">stdsoap2.h</div><div class="ln">SOAP 运行时</div></div>
-</div></div>
-<div class="ag"><div class="al">验证逻辑</div><div class="ao">
-<div class="n g1"><div class="lb">服务接口</div><div class="ln">Web Method</div></div>
-<div class="n g1"><div class="lb">参数校验</div><div class="ln">输入验证</div></div>
-<div class="n g1"><div class="lb">响应生成</div><div class="ln">XML 序列化</div></div>
-</div></div>
-<div class="ag"><div class="al">客户端</div><div class="ao">
-<div class="n i1"><div class="lb">SoapClient</div><div class="ln">调用端</div></div>
-<div class="n e1"><div class="lb">XML 解析</div><div class="ln">响应解析</div></div>
-</div></div>
-</div>
-</div></div>
-</div></section>
-
-<section id="vs"><div class="ct">
-<div class="st"><h2>🔌 VS Extension — VSCode 扩展工具</h2><span class="tg">TypeScript / Python</span></div>
-<div class="cd"><div class="cd2">
-<div style="text-align:center;margin-bottom:.3rem"><div class="n y1"><div class="lb" style="font-size:.72rem">VSCode Extension</div><div class="ln">TS 扩展 + Python 辅助脚本</div></div></div>
-<div class="rw">
-<div class="ag"><div class="al">扩展核心</div><div class="ao">
-<div class="n y1"><div class="lb">src/extension.ts</div><div class="ln">扩展入口</div></div>
-<div class="n y1"><div class="lb">package.json</div><div class="ln">扩展配置</div></div>
-</div></div>
-<div class="ag"><div class="al">用户界面</div><div class="ao">
-<div class="n e1"><div class="lb">Command Palette</div><div class="ln">命令注册</div></div>
-<div class="n e1"><div class="lb">Sidebar View</div><div class="ln">侧边栏视图</div></div>
-</div></div>
-<div class="ag"><div class="al">辅助工具</div><div class="ao">
-<div class="n g1"><div class="lb">Python scripts</div><div class="ln">后端脚本</div></div>
-<div class="n e1"><div class="lb">JSON config</div><div class="ln">配置模板</div></div>
-</div></div>
-</div>
-</div></div>
-</div></section>
-
-<section id="vs"><div class="ct">
-<div class="st"><h2>🔌 VS Extension — VSCode 扩展工具</h2><span class="tg">TypeScript / 工具</span></div>
-<div class="cd"><div class="cd2">
-<div style="text-align:center;margin-bottom:.3rem"><div class="n y1"><div class="lb" style="font-size:.72rem">VSCode Extension</div><div class="ln">开发辅助、代码生成、调试工具</div></div></div>
-<div class="rw">
-<div class="ag"><div class="al">扩展核心</div><div class="ao">
-<div class="n e1"><div class="lb">package.json</div><div class="ln">扩展配置</div></div>
-<div class="n e1"><div class="lb">tsconfig.json</div><div class="ln">TypeScript 配置</div></div>
-</div></div>
-<div class="ag"><div class="al">用户界面</div><div class="ao">
-<div class="n y1"><div class="lb">命令面板</div><div class="ln">Command Palette</div></div>
-<div class="n y1"><div class="lb">活动栏</div><div class="ln">Activity Bar</div></div>
-</div></div>
-<div class="ag"><div class="al">辅助脚本</div><div class="ao">
-<div class="n g1"><div class="lb">Python 脚本</div><div class="ln">后端工具</div></div>
-<div class="n m1"><div class="lb">构建辅助</div><div class="ln">自动化</div></div>
-</div></div>
-</div>
-</div></div>
+</tbody></table>
+<div class="tags" style="margin-top:.4rem"><span class="t ty">TypeScript</span><span class="t tp">Python 3</span><span class="t tp">difflib</span><span class="t tc">SequenceMatcher</span><span class="t tg2">VSCode API</span><span class="t tk">Webview</span><span class="t to">child_process</span></div>
 </div></section>
 
 <section id="bf"><div class="ct">
@@ -709,7 +631,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 </div></section>
 
 <footer>
-<div class="ct">LinxSrvc 架构分析 · 生成时间 2026-04-05 · 基于 Markdown 分析文档</div>
+<div class="ct">LinxSrvc 架构分析 · 更新于 2026-06-07 · 基于代码优化后的最新状态</div>
 </footer>
 
 </body>
