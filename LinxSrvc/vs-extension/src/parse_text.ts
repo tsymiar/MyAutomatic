@@ -43,39 +43,27 @@ export function parseComparisonResult(text: string, source: string, target: stri
 
   const lines = text.split('\n');
   let currentSection = '';
-  let unmatchedSection = false;
 
   for (let i = 0; i < lines.length; i++) {
     const rawLine = lines[i];
     const line = rawLine.trim();
 
-    // accumulate original lines for an optimized JSON-friendly formatted output
-    if (!(result as any).reportLines) {
-      (result as any).reportLines = [];
-    }
-    (result as any).reportLines.push(rawLine);
-
     // Detect section headers
     if (line.includes('=== 未匹配文件 ===')) {
       currentSection = 'unmatched';
-      unmatchedSection = true;
     } else if (line.includes('=== 匹配文件详情')) {
       currentSection = 'matched';
-      unmatchedSection = false;
     } else if (line.includes('=== 统计摘要 ===')) {
       currentSection = 'summary';
-      unmatchedSection = false;
     } else if (line.includes('=== 综合分析 ===')) {
       currentSection = 'analysis';
-      unmatchedSection = false;
     } else if (line.includes('=== Comparison Results ===')) {
       currentSection = 'comparison';
-      unmatchedSection = false;
     }
 
     switch (currentSection) {
       case 'unmatched':
-        parseUnmatchedSection(line, result, lines, i, unmatchedSection);
+        parseUnmatchedSection(line, result, lines, i);
         break;
       case 'matched':
         parseMatchedSection(line, result);
@@ -128,23 +116,19 @@ function parseMatchedSection(line: string, result: ComparisonFolderResults): voi
   }
 }
 
-function parseUnmatchedSection(line: string, result: ComparisonFolderResults, lines: string[], index: number, unmatchedSection: boolean): void {
-  // Check for source unique files section
+function parseUnmatchedSection(line: string, result: ComparisonFolderResults, lines: string[], index: number): void {
   if (line.includes('源目录独有文件')) {
     let j = 1;
-    while (index + j < lines.length && lines[index + j] && lines[index + j].includes('•')) {
+    while (index + j < lines.length && lines[index + j] != null && lines[index + j].includes('•')) {
       const fileName = lines[index + j].trim().replace('•', '').trim();
       if (fileName) {
         result.source_unique.push(fileName);
       }
       j++;
     }
-  }
-  
-  // Check for target unique files section
-  else if (line.includes('目标目录独有文件')) {
+  } else if (line.includes('目标目录独有文件')) {
     let j = 1;
-    while (index + j < lines.length && lines[index + j] && lines[index + j].includes('•')) {
+    while (index + j < lines.length && lines[index + j] != null && lines[index + j].includes('•')) {
       const fileName = lines[index + j].trim().replace('•', '').trim();
       if (fileName) {
         result.target_unique.push(fileName);

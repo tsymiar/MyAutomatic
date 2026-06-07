@@ -36,24 +36,18 @@ class EmptyStyle:
     def __getattr__(self, name):
         return ""
 
+_TEXT_EXTS = set(COMMENT_PATTERNS.keys()).union({".txt", ".md", ".json", ".yml", ".yaml"})
+
 def is_text_file(file_path):
-    # 只需初始化一次，避免每次调用都创建集合
-    if not hasattr(is_text_file, "_text_exts"):
-        is_text_file._text_exts = set(COMMENT_PATTERNS.keys()).union(
-            {".txt", ".md", ".json", ".yml", ".yaml"}
-        )
-    text_exts = is_text_file._text_exts
     file_ext = os.path.splitext(file_path)[1].lower()
-    return file_ext in text_exts, file_ext
+    return file_ext in _TEXT_EXTS, file_ext
 
 def delete_initial_block_comment(source):
     """
     删除文件开头的块注释（如C/Java的/* ... */），支持字符串或行列表输入。
     """
-    if isinstance(source, str):
-        lines = source.splitlines()
-    else:
-        lines = list(source)
+    is_str = isinstance(source, str)
+    lines = source.splitlines() if is_str else list(source)
 
     block_start = -1
     block_end = -1
@@ -70,9 +64,9 @@ def delete_initial_block_comment(source):
                 break
 
     if block_start != -1 and block_end != -1:
-        lines = lines[:block_start] + lines[block_end+1:]
+        lines = lines[:block_start] + lines[block_end + 1:]
 
-    return lines if isinstance(source, list) else "\n".join(lines)
+    return "\n".join(lines) if is_str else lines
 
 def deal_comments_by_state_machine(code, file_ext):
     """
@@ -327,15 +321,15 @@ def generate_diff(file1, file2, use_state_machine):
     lines2, orig2 = parse_file(file2, use_state_machine)
     differ = difflib.SequenceMatcher(None, lines1, lines2)
     diff = []
+
     def calculate_original_line_map(lines, orig_count):
         line_map = []
         current_line = 1
-        for line in lines:
-            while current_line <= orig_count and not line.strip():
-                current_line += 1
-            line_map.append(current_line)
+        for _ in lines:
+            line_map.append(min(current_line, orig_count))
             current_line += 1
         return line_map
+
     line_map1 = calculate_original_line_map(lines1, orig1)
     line_map2 = calculate_original_line_map(lines2, orig2)
     for tag, i1, i2, j1, j2 in differ.get_opcodes():
@@ -378,6 +372,9 @@ def file_compare(file1, file2, base_dir, show_diff, use_state_machine=False):
             "file_name": os.path.relpath(file1, base_dir),
             "path1": file1,
             "path2": file2,
+            "dup": result["common"],
+            "total1": result["orig1"],
+            "total2": result["orig2"],
         }
     )
     return result
@@ -544,9 +541,8 @@ def _on_json_output_exit():
                     print(f"Error processing ratio: {e}")
             fn = info.get('file_name', '')
             if '↔' in fn:
-                left, right = [s.strip() for s in fn.split('↔', 1)]
-                longer = left if len(left) >= len(right) else right
-                info['file_name'] = f"{longer}"
+                parts = [s.strip() for s in fn.split('↔', 1)]
+                info['file_name'] = f"{parts[0]} ↔ {parts[1]}"
 
         _json_store['data'] = {'total': total, 'details': details, 'unmatched': unmatched}
         return res
@@ -568,14 +564,10 @@ def main():
     args = parse_arguments()
 
     try:
-        use_color = not args.no_color
-        if args.no_color:
-            global Fore
-            global Style
-            Fore = EmptyStyle()
-            Style = EmptyStyle()
+        _fore = EmptyStyle() if args.no_color else Fore
+        _style = EmptyStyle() if args.no_color else Style
         # 统一颜色处理函数
-        color = lambda c: getattr(Fore, c.upper()) if use_color else ""
+        color = lambda c: getattr(_fore, c.upper()) if not args.no_color else ""
 
         if args.json:
             _on_json_output_exit()
@@ -614,7 +606,7 @@ def main():
                         print(file_info["diff"])
 
             # 传递unmatched参数
-            print_detail(total, details, unmatched, args.detail, use_color)
+            print_detail(total, details, unmatched, args.detail, not args.no_color)
 
         else:
             print(f"{color('red')}错误：需要两个文件或两个目录")

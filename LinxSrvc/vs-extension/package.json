@@ -2,7 +2,7 @@
   "name": "similarity",
   "displayName": "Files Comparison",
   "description": "Compare two folders using Python",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publisher": "tsymiar",
   "engines": {
     "vscode": "^1.75.0"

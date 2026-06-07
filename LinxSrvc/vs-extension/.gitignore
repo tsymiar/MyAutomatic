@@ -1,5 +1,6 @@
+package*.json
+!.gitignore
+__pycache__
 *.vsix
 node_*
-package*
-!.gitignore
 out
