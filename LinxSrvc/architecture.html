@@ -75,7 +75,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <h1 class="ht">LinxSrvc 项目架构全景</h1>
 <p class="hd">混合语言（C/C++/Python）大型服务端框架，集成网络通信、硬件交互、ML 训练、Web 服务、数据库查询与量化交易。CMake 构建，跨 Linux/macOS/Windows。</p>
 <div class="hs">
-<div class="st2"><div class="hh">16+</div><div class="hl">子模块</div></div>
+<div class="st2"><div class="hh">18+</div><div class="hl">子模块</div></div>
 <div class="st2"><div class="hh">3</div><div class="hl">编程语言</div></div>
 <div class="st2"><div class="hh">3</div><div class="hl">目标平台</div></div>
 <div class="st2"><div class="hh">9+</div><div class="hl">外部依赖</div></div>
@@ -119,23 +119,23 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 </div></div>
 <div class="cd" style="margin-top:.7rem"><h3>📁 目录结构</h3>
 <pre>LinxSrvc/
-├── 3rd/               # 第三方 (googletest, lcov, rdma-core)
-├── CMakeLists.txt     # 顶层 CMake → e.g, media, dpsk, gn1, diff, lookup, mock
-├── Makefile           # 总控 Makefile (→ build/, webev, hdware, IM, thread, gSOAPverify)
-├── cyber/             # LLM 训练/推理 (Python/PyTorch)
-├── dpsk/              # DeepSeek API 客户端 (C++/cURL)
-├── gSOAPverify/       # SOAP Web 服务验证 (gSOAP)
-├── hdware/            # 硬件驱动 (字符设备/FPGA/RDMA/4G)
-├── IM/                # KaiSocket 网络通信库 (C++)
-├── include/           # 公共头文件 (String, Structures)
-├── lookup/            # SQLite 多维度查找 (time/seek/tool)
-├── media/             # FFmpeg 音视频处理
-├── thread/            # 纯 C 线程池 (pthdpool)
-├── trade/             # 量化交易系统 (Python · 双均线+多周期共振+LSTM+期权)
-├── webev/             # 事件驱动 Web 服务器 (epoll)
-├── vs-extension/      # VSCode 文件夹比较扩展 (TS + Python, 相似度分析)
-├── pyex/              # Python C 扩展
-└── e.g/ diff/ gn1/ mock/ test/ shell/</pre>
+├── 3rd/               # 第三方 (googletest, lcov, rdma-core, llama.cpp-to-hf)
+├── CMakeLists.txt     # 顶层 CMake → media, dpsk, gn1, diff, lookup, mock, test
+├── Makefile           # 总控 Makefile → webev, hdware, IM, thread, gSOAPverify, pyex
+├── bin/               # 编译产物输出
+├── include/           # 公共头文件 (String_-inl.h, Structures.h)
+├── cyber/             # LLM 训练/推理 (Python/PyTorch + PEFT/LoRA)
+├── dpsk/              # DeepSeek API 客户端 (C++/cURL · 流式调用)
+├── gSOAPverify/       # 多线程 SOAP Web 服务 (gSOAP 2.8 + MySQL)
+├── hdware/            # 硬件驱动 (字符设备/FPGA/RDMA/UART/4G)
+├── IM/                # KaiSocket 网络通信库 (C++ · Pub/Sub · epoll)
+├── lookup/            # SQLite 多维度查找 (seek/time/tool · KMP/Manacher)
+├── media/             # FFmpeg 音视频处理 (Jetson 渲染)
+├── thread/            # 纯 C 线程池 (pthdpool · 固定 worker 数)
+├── trade/             # 量化交易 (Python · 双均线+LSTM+BS期权)
+├── webev/             # 事件驱动 Web 服务器 (epoll/kqueue · Reactor)
+├── vs-extension/      # VSCode 扩展 (TS+Python 文件夹相似度比较)
+├── dpsk/ diff/ gn1/ mock/ pyex/ shell/ test/ e.g/</pre>
 </div>
 </div></section>
 
@@ -291,35 +291,55 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 </div></section>
 
 <section id="gs"><div class="ct">
-<div class="st"><h2>🔄 gSOAPverify — SOAP Web 服务验证</h2><span class="tg">gSOAP / MySQL</span></div>
+<div class="st"><h2>🔄 gSOAPverify — 多线程 SOAP Web 服务</h2><span class="tg">gSOAP / MySQL / pthread</span></div>
 <div class="cd"><div class="cd2">
-<div style="text-align:center;margin-bottom:.3rem"><div class="n x1"><div class="lb" style="font-size:.72rem">gSOAPverify</div><div class="ln">SOAP 客户端验证与集成</div></div></div>
+<div style="text-align:center;margin-bottom:.3rem"><div class="n x1"><div class="lb" style="font-size:.72rem">gSOAPverify 服务架构</div><div class="ln">环形缓冲队列 + 线程池 + MySQL · 3 个 SOAP API</div></div></div>
 <div class="rw">
-<div class="ag"><div class="al">代码生成层</div><div class="ao">
-<div class="n e1"><div class="lb">.h 头文件</div><div class="ln">WSDL 定义</div></div>
+<div class="ag"><div class="al">SOAP 代码生成</div><div class="ao">
+<div class="n e1"><div class="lb">myweb.wsdl</div><div class="ln">WSDL 接口定义</div></div>
 <div class="n e1"><div class="lb">wsdl2h</div><div class="ln">WSDL → 头文件</div></div>
-<div class="n x1"><div class="lb">soapcpp2</div><div class="ln">头文件 → 源码</div></div>
-<div class="n e1"><div class="lb">soap/*</div><div class="ln">生成的代理/存根</div></div>
+<div class="n x1"><div class="lb">soapcpp2</div><div class="ln">头文件 → 存根/代理</div></div>
+<div class="n e1"><div class="lb">soapC.cpp · soapStub.h</div><div class="ln">序列化/反序列化</div></div>
 </div></div>
-<div class="ag"><div class="al">数据/业务层</div><div class="ao">
-<div class="n m1"><div class="lb">mainSoap.cc</div><div class="ln">完整流程示例</div></div>
-<div class="n x1"><div class="lb">sql/</div><div class="ln">MySQL 封装</div></div>
-<div class="n i1"><div class="lb">sys/status.cc</div><div class="ln">服务状态</div></div>
+<div class="ag"><div class="al">服务核心层</div><div class="ao">
+<div class="n m1"><div class="lb">mainSoap.cc</div><div class="ln">主循环 + 环形队列</div></div>
+<div class="n m1"><div class="lb">mainSoap.h</div><div class="ln">soap_socket_t 类型</div></div>
+<div class="n s1"><div class="lb">process_queue()</div><div class="ln">MAX_THR=8 工作线程</div></div>
+<div class="n s1"><div class="lb">enqueue / dequeue</div><div class="ln">MAX_QUEUE=1024 环缓</div></div>
 </div></div>
-<div class="ag"><div class="al">操作流程</div><div class="ao">
-<div class="n g1"><div class="lb">🔐 登录</div></div>
-<div class="n y1"><div class="lb">📊 查询状态</div></div>
-<div class="n o1"><div class="lb">💸 发起交易</div></div>
-<div class="n r1"><div class="lb">🔌 关闭</div></div>
+<div class="ag"><div class="al">数据与工具层</div><div class="ao">
+<div class="n g1"><div class="lb">sql/sqlDbReq.cc</div><div class="ln">MySQL 连接 + 查询</div></div>
+<div class="n i1"><div class="lb">sys/status.cc</div><div class="ln">CPU/内存/网卡监控</div></div>
+<div class="n g1"><div class="lb">watch_connect()</div><div class="ln">自动重连守护线程</div></div>
 </div></div>
+<div class="ag"><div class="al">3 个 SOAP API</div><div class="ao">
+<div class="n z1"><div class="lb">🔀 trans</div><div class="ln">通用数据转发</div></div>
+<div class="n tc"><div class="lb">📊 get-server-status</div><div class="ln">系统状态查询</div></div>
+<div class="n m1"><div class="lb">🔐 login-by-key</div><div class="ln">用户登录认证</div></div>
+</div></div>
+</div>
+<div class="dv"></div>
+<div class="fc">
+<div class="fd" style="background:rgba(59,130,246,.06)"><div class="dm">1</div><div><div class="lb" style="font-size:.6rem">soap_bind(port) → listen(BACKLOG=64)</div></div></div>
+<div class="dx">↓</div>
+<div class="fd" style="background:rgba(139,92,246,.06)"><div class="dm">2</div><div><div class="lb" style="font-size:.6rem">soap_accept() → enqueue(sock, ip) 入环形缓冲</div></div></div>
+<div class="dx">↓</div>
+<div class="fd" style="background:rgba(16,185,129,.06)"><div class="dm">3</div><div><div class="lb" style="font-size:.6rem">8 个工作线程 dequeue() → soap_serve() 处理</div></div></div>
+<div class="dx">↓</div>
+<div class="fd" style="background:rgba(249,115,22,.06)"><div class="dm">4</div><div><div class="lb" style="font-size:.6rem">SOAP 请求 → MySQL 查询/状态监控 → SOAP 响应</div></div></div>
 </div>
 </div></div>
 <table style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现</th></tr></thead><tbody>
-<tr><td>代码生成</td><td>WSDL → wsdl2h → soapcpp2 → 代理/存根</td></tr>
-<tr><td>数据库</td><td>SQL API 封装 MySQL 访问</td></tr>
-<tr><td>流程示例</td><td>登录 → 查询状态 → 交易 → 关闭</td></tr>
+<tr><td>并发模型</td><td>主线程 accept + 8 工作线程 (pthread) + 环形缓冲队列 (1024 槽位)</td></tr>
+<tr><td>API: trans</td><td><code>trans@key1=val1&amp;key2=val2</code> → 解析参数 → 转发处理</td></tr>
+<tr><td>API: get-server-status</td><td>req="1000" → 返回内存空闲百分比 (sysconf)</td></tr>
+<tr><td>API: login-by-key</td><td>usr + psw → MySQL 查询 → 返回 result{flag, idx, age, tell, email}</td></tr>
+<tr><td>数据库安全</td><td>snprintf 防溢出 · 密码从 MYAUTO_MYSQL_PSW 环境变量读取</td></tr>
+<tr><td>连接管理</td><td>watch_connect 守护线程 · MYSQL_OPT_RECONNECT · 最多重连 9 次</td></tr>
+<tr><td>跨平台兼容</td><td>soap_socket_t 解耦 SOAP 头文件 · AArch64 匿名 namespace 常量</td></tr>
+<tr><td>状态监控</td><td>getnameinfo/getaddrinfo (替代已弃用 API) · ETHTOOL 网线检测</td></tr>
 </tbody></table>
-<div class="tags" style="margin-top:.4rem"><span class="t tk">gSOAP</span><span class="t tk">WSDL</span><span class="t tk">SOAP</span><span class="t tg2">MySQL</span></div>
+<div class="tags" style="margin-top:.4rem"><span class="t tk">gSOAP 2.8</span><span class="t tk">WSDL</span><span class="t tk">SOAP/XML</span><span class="t tg2">MySQL 8</span><span class="t to">pthread</span><span class="t tr">环形缓冲</span><span class="t tp">线程池</span><span class="t g1">env 密码</span><span class="t tc">AArch64</span></div>
 </div></section>
 
 <section id="dp"><div class="ct">
@@ -614,6 +634,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <tr><td><span class="n m1"><div class="lb" style="font-size:.6rem">门面</div></span></td><td>cyber/dpsk</td><td>简化复杂 AI API</td></tr>
 <tr><td><span class="n i1"><div class="lb" style="font-size:.6rem">适配器</div></span></td><td>hdware</td><td>统一硬件接口</td></tr>
 <tr><td><span class="n o1"><div class="lb" style="font-size:.6rem">池化</div></span></td><td>thread/ + 模型缓存</td><td>复用资源，减少开销</td></tr>
+<tr><td><span class="n tr"><div class="lb" style="font-size:.6rem">生产者-消费者</div></span></td><td>gSOAPverify 环形缓冲</td><td>主线程 enqueue / 工作线程 dequeue</td></tr>
 </tbody></table>
 </div></div>
 </div></section>
@@ -627,13 +648,12 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <div class="n r1"><div class="lb">依赖链长</div><div class="ln">3rd/ 依赖编译复杂</div></div>
 </div></div>
 <div class="ag"><div class="al">🟡 中风险</div><div class="ao">
-<div class="n y1"><div class="lb">跨平台差异</div><div class="ln">Linux/macOS/Windows 行为不一致</div></div>
 <div class="n y1"><div class="lb">内存管理</div><div class="ln">C++ 裸指针 + 手动释放</div></div>
+<div class="n y1"><div class="lb">头文件顺序</div><div class="ln">SOAP 宏定义时序依赖</div></div>
 </div></div>
-<div class="ag"><div class="al">💡 优化建议</div><div class="ao">
-<div class="n g1"><div class="lb">统一 CMake</div><div class="ln">合并为单一构建系统</div></div>
-<div class="n g1"><div class="lb">智能指针</div><div class="ln">unique_ptr/shared_ptr 替代裸指针</div></div>
-<div class="n g1"><div class="lb">CI/CD</div><div class="ln">自动化构建 + 测试管道</div></div>
+<div class="ag"><div class="al">💚 已解决</div><div class="ao">
+<div class="n g1"><div class="lb">AArch64 兼容</div><div class="ln">匿名 namespace 常量</div></div>
+<div class="n g1"><div class="lb">SOAP 解耦</div><div class="ln">soap_socket_t typedef</div></div>
 </div></div>
 </div>
 </div></div>
