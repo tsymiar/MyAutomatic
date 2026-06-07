@@ -131,7 +131,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 ├── lookup/            # SQLite 多维度查找 (time/seek/tool)
 ├── media/             # FFmpeg 音视频处理
 ├── thread/            # 纯 C 线程池 (pthdpool)
-├── trade/             # 量化交易策略 (Python)
+├── trade/             # 量化交易系统 (Python · 双均线+多周期共振+LSTM+期权)
 ├── webev/             # 事件驱动 Web 服务器 (epoll)
 ├── vs-extension/      # VSCode 文件夹比较扩展 (TS + Python, 相似度分析)
 ├── pyex/              # Python C 扩展
@@ -473,39 +473,48 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 </div></section>
 
 <section id="qt"><div class="ct">
-<div class="st"><h2>📈 Trade — 量化交易策略</h2><span class="tg">Python / 金融</span></div>
+<div class="st"><h2>📈 Trade — 量化交易系统</h2><span class="tg">Python / 金融</span></div>
 <div class="cd"><div class="cd2">
-<div style="text-align:center;margin-bottom:.3rem"><div class="n m1"><div class="lb" style="font-size:.72rem">Trade 交易策略</div><div class="ln">数据获取 → 特征工程 → 策略执行 → 回测</div></div></div>
+<div style="text-align:center;margin-bottom:.3rem"><div class="n m1"><div class="lb" style="font-size:.72rem">Dual MA Trading System</div><div class="ln">行情网关 → 策略引擎 → 风控引擎 → 交易网关 → 券商</div></div></div>
 <div class="rw">
-<div class="ag"><div class="al">数据层</div><div class="ao">
-<div class="n y1"><div class="lb">数据获取</div><div class="ln">金融数据源</div></div>
-<div class="n i1"><div class="lb">数据清洗</div><div class="ln">NaN/异常值</div></div>
-<div class="n g1"><div class="lb">特征工程</div><div class="ln">技术指标</div></div>
+<div class="ag"><div class="al">数据与接口</div><div class="ao">
+<div class="n y1"><div class="lb">TushareAPI</div><div class="ln">行情源 (缓存+超时)</div></div>
+<div class="n y1"><div class="lb">CTPTradeAPI</div><div class="ln">CTP 期货交易</div></div>
+<div class="n y1"><div class="lb">HTSCAPI</div><div class="ln">华泰 REST 接口</div></div>
+<div class="n e1"><div class="lb">Account · Order · Signal</div><div class="ln">dataclass 数据模型</div></div>
 </div></div>
-<div class="ag"><div class="al">策略引擎</div><div class="ao">
-<div class="n m1"><div class="lb">均线交叉</div><div class="ln">MA Crossover</div></div>
-<div class="n m1"><div class="lb">动量策略</div><div class="ln">Momentum</div></div>
-<div class="n m1"><div class="lb">均值回归</div><div class="ln">Mean Reversion</div></div>
+<div class="ag"><div class="al">策略与分析</div><div class="ao">
+<div class="n m1"><div class="lb">MultiTimeframeAnalyzer</div><div class="ln">MA/RSI/MACD/KDJ/ATR/BB</div></div>
+<div class="n m1"><div class="lb">EnhancedDualMAStrategy</div><div class="ln">多周期共振信号</div></div>
+<div class="n tc"><div class="lb">Predictor (LSTM)</div><div class="ln">Keras 价格预测</div></div>
+<div class="n tc"><div class="lb">DerivativesEngine</div><div class="ln">BS 期权定价 · Greeks</div></div>
 </div></div>
-<div class="ag"><div class="al">风控/回测</div><div class="ao">
-<div class="n r1"><div class="lb">止损/止盈</div></div>
-<div class="n y1"><div class="lb">仓位管理</div></div>
-<div class="n g1"><div class="lb">回测引擎</div><div class="ln">历史验证</div></div>
+<div class="ag"><div class="al">风控与执行</div><div class="ao">
+<div class="n r1"><div class="lb">RiskManager</div><div class="ln">6 层风控 (黑名单/杠杆/ATR止损)</div></div>
+<div class="n r1"><div class="lb">BacktestEngine</div><div class="ln">Backtrader 回测 (Sharpe/DrawDown)</div></div>
+<div class="n i1"><div class="lb">AsyncDataUpdater</div><div class="ln">asyncio 并发数据更新</div></div>
 </div></div>
-<div class="ag"><div class="al">输出/可视化</div><div class="ao">
-<div class="n i1"><div class="lb">📊 交易信号</div></div>
-<div class="n i1"><div class="lb">📈 收益率</div></div>
-<div class="n i1"><div class="lb">📉 最大回撤</div></div>
+<div class="ag"><div class="al">监控与可视化</div><div class="ao">
+<div class="n g1"><div class="lb">📊 Dashboard (Rich)</div><div class="ln">终端实时面板</div></div>
+<div class="n g1"><div class="lb">📈 账户概览</div><div class="ln">总资产/仓位/盈亏</div></div>
+<div class="n g1"><div class="lb">📡 信号历史</div><div class="ln">最近 5 条信号</div></div>
 </div></div>
 </div>
 </div></div>
 <table style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现</th></tr></thead><tbody>
-<tr><td>策略类型</td><td>均线交叉、动量、均值回归</td></tr>
-<tr><td>风控</td><td>止损/止盈、仓位管理</td></tr>
-<tr><td>回测</td><td>历史数据回测引擎</td></tr>
-<tr><td>可视化</td><td>交易信号、收益率曲线、最大回撤</td></tr>
+<tr><td>行情接入</td><td>Tushare Pro REST API（缓存 + 超时控制）</td></tr>
+<tr><td>交易接口</td><td>CTP WebSocket（SimNow 仿真）/ 华泰 REST API（可切换）</td></tr>
+<tr><td>技术指标</td><td>MA5/MA20/MA60 · EMA · RSI · MACD · KDJ · ATR · 布林带（TA-Lib）</td></tr>
+<tr><td>多周期共振</td><td>15m/30m/1d 三周期，加权评分（MA排列+RSI+MACD+KDJ+布林带）</td></tr>
+<tr><td>风控层次</td><td>日亏损限制 · 杠杆上限 · 单品种仓位 · ATR 动态止损 · 日交易次数 · 黑名单</td></tr>
+<tr><td>仓位管理</td><td>风险预算 = 总资产 × 1% / ATR(14)，动态计算</td></tr>
+<tr><td>历史回测</td><td>Backtrader 集成：夏普比率 · 最大回撤 · 收益率 · 交易分析</td></tr>
+<tr><td>价格预测</td><td>LSTM 神经网络（TensorFlow/Keras），60 根K线OHLCV → 涨跌幅预测</td></tr>
+<tr><td>期权定价</td><td>Black-Scholes 公式 · Delta/Gamma/Theta/Vega/Rho 希腊值 · 隐含波动率（Newton-Raphson）</td></tr>
+<tr><td>可视化</td><td>Rich 终端面板：账户概览 · 持仓监控 · 信号历史 · 趋势评分</td></tr>
+<tr><td>并发更新</td><td>asyncio 异步并发获取多标的行情数据</td></tr>
 </tbody></table>
-<div class="tags" style="margin-top:.4rem"><span class="t tp">pandas</span><span class="t tp">numpy</span><span class="t tg2">Matplotlib</span><span class="t tg2">回测</span><span class="t tg2">策略</span></div>
+<div class="tags" style="margin-top:.4rem"><span class="t tp">pandas</span><span class="t tp">numpy</span><span class="t tp">TA-Lib</span><span class="t tp">Backtrader</span><span class="t tp">TensorFlow</span><span class="t tk">LSTM</span><span class="t tg2">Rich</span><span class="t tc">asyncio</span><span class="t to">CTP</span><span class="t to">Black-Scholes</span><span class="t tr">风控</span></div>
 </div></section>
 
 <section id="vs"><div class="ct">
@@ -520,9 +529,10 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <div class="n e1"><div class="lb">package.json</div><div class="ln">命令 & 菜单</div></div>
 </div></div>
 <div class="ag"><div class="al">Python 后端</div><div class="ao">
-<div class="n g1"><div class="lb">similarity.py</div><div class="ln">比较引擎</div></div>
-<div class="n i1"><div class="lb">双引擎去注释</div><div class="ln">状态机 + 行标记</div></div>
-<div class="n i1"><div class="lb">SequenceMatcher</div><div class="ln">行级 diff</div></div>
+<div class="n g1"><div class="lb">similarity.py</div><div class="ln">比较引擎 (22KB)</div></div>
+<div class="n i1"><div class="lb">双引擎去注释</div><div class="ln">状态机逐字符 + 行标记正则</div></div>
+<div class="n i1"><div class="lb">SequenceMatcher</div><div class="ln">行级 diff 评分</div></div>
+<div class="n i1"><div class="lb">JSON 输出模式</div><div class="ln">结构化结果解析</div></div>
 </div></div>
 <div class="ag"><div class="al">用户交互</div><div class="ao">
 <div class="n m1"><div class="lb">右键菜单</div><div class="ln">单选 / Ctrl+多选</div></div>
@@ -550,7 +560,6 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <tr><td>结果展示</td><td>Output Channel 实时进度 + Webview 深色面板</td></tr>
 <tr><td>模板分离</td><td>view_html.ts 独立管理 HTML/CSS，extension.ts 只构建数据</td></tr>
 <tr><td>忽略规则</td><td>扩展名 + 目录名 + 文件模式，三种维度</td></tr>
-</tbody></table>
 </tbody></table>
 <div class="tags" style="margin-top:.4rem"><span class="t ty">TypeScript</span><span class="t tp">Python 3</span><span class="t tp">difflib</span><span class="t tc">SequenceMatcher</span><span class="t tg2">VSCode API</span><span class="t tk">Webview</span><span class="t to">child_process</span></div>
 </div></section>
