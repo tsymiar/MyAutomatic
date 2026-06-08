@@ -1,16 +1,30 @@
 #!/bin/bash
-sudo apt-get update
-sudo apt-get install -y build-essential cmake gcc g++ libudev-dev libnl-3-dev libnl-route-3-dev ninja-build pkg-config valgrind python3-dev cython3 python3-docutils pandoc
-sudo apt-get install -y git g++ pkg-config libnl-3-dev libnl-route-3-dev \
-  libsystemd-dev flex bison libudev-dev libpci-dev libcap-ng-dev \
-  libcmocka-dev libssl-dev libnuma-dev
-sudo apt-get install -y rdma-core
+# ── helper: check if a dpkg package is properly installed ──
+pkg_ok() {
+    dpkg -s "$1" 2>/dev/null | grep -q '^Status: install ok installed'
+}
+# ── collect missing packages ──
+MISSING_PKGS=()
+needs() { for pkg in "$@"; do pkg_ok "$pkg" || MISSING_PKGS+=("$pkg"); done; }
+needs build-essential cmake gcc g++ libudev-dev libnl-3-dev libnl-route-3-dev \
+    ninja-build pkg-config valgrind python3-dev cython3 python3-docutils pandoc
+needs git libsystemd-dev flex bison libpci-dev libcap-ng-dev \
+    libcmocka-dev libssl-dev libnuma-dev
+needs rdma-core
+if [ ${#MISSING_PKGS[@]} -gt 0 ]; then
+    echo "==> Installing missing: ${MISSING_PKGS[*]}"
+    sudo apt-get update
+    sudo apt-get install -y "${MISSING_PKGS[@]}"
+else
+    echo "==> All apt packages are already installed, skipping."
+fi
 cd ../../3rd
-ln -s rxe-dev/include/linux/compiler-gcc5.h rxe-dev/include/linux/compiler-gcc8.h
-set container=rockylinux:8
-sudo apt-get install -y containerd.io
-docker run  -v "../3rd:/mnt:rw" -it --rm "$container" \
-    bash -c "yum install -y git gcc gcc-c++ make cmake3 libudev-devel numactl-devel libnl3-devel openssl-devel libcap-ng-devel; if [ ! -f /usr/bin/cmake ]; then ln -s /usr/bin/cmake3 /usr/bin/cmake; fi; ls /mnt; cd /mnt/rxe-dev; make clean; make -j \$(nproc); make install;"
+if [ ${MAKE_RXE} -eq 1 ]; then
+  needs containerd.io
+  docker run  -v "../3rd:/mnt:rw" -it --rm "rockylinux:8" \
+   bash -c  \
+    "yum install -y git gcc gcc-c++ make cmake3 findutils bc libudev-devel numactl-devel libnl3-devel openssl-devel libcap-ng-devel; if [ ! -f /usr/bin/cmake ]; then ln -s /usr/bin/cmake3 /usr/bin/cmake; fi; cd /mnt/rxe-dev; ls -al; make clean; cat include/linux/compiler-gcc5.h > include/linux/compiler-gcc8.h; make -j \$(nproc); make install;"
+fi
 if [ ! -d "rdma-core" ]; then mkdir rdma-core; fi;
 cd rdma-core
 if [ $(ls . | wc -l) -le 1 ]

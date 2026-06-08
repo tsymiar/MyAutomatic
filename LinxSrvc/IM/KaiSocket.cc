@@ -127,7 +127,7 @@ KaiSocket& KaiSocket::GetInstance()
 
 int KaiSocket::start()
 {
-    struct sockaddr_in local { };
+    struct sockaddr_in local {};
     unsigned short port = m_network.PORT;
     local.sin_port = htons(port);
     local.sin_family = AF_INET;
@@ -157,7 +157,7 @@ int KaiSocket::start()
         return -2;
     }
 
-    struct sockaddr_in lsn { };
+    struct sockaddr_in lsn {};
     auto listenLen = static_cast<socklen_t>(sizeof(lsn));
     getsockname(listen_socket, reinterpret_cast<struct sockaddr*>(&lsn), &listenLen);
     std::cout << "localhost listening [" << inet_ntoa(lsn.sin_addr) << ":" << port << "]." << std::endl;
@@ -187,7 +187,7 @@ int KaiSocket::start()
 #else
                 {
 #endif
-                    struct sockaddr_in client { };
+                    struct sockaddr_in client {};
                     auto len = static_cast<socklen_t>(sizeof(client));
                     SOCKET conn_sock = m_network.socket = ::accept(listen_socket, reinterpret_cast<struct sockaddr*>(&client), &len);
                     if ((int)conn_sock < 0) {
@@ -214,7 +214,7 @@ int KaiSocket::start()
                         time(&t);
                         struct tm* lt = localtime(&t);
                         char ipaddr[INET_ADDRSTRLEN];
-                        struct sockaddr_in peer { };
+                        struct sockaddr_in peer {};
                         auto peerLen = static_cast<socklen_t>(sizeof(peer));
                         g_thrNo_++;
                         bool set = true;
@@ -246,7 +246,7 @@ int KaiSocket::start()
 #ifdef USE_EPOLL
                 }
 #endif
-                }
+        }
     } // while
 }
 
@@ -364,11 +364,10 @@ ssize_t KaiSocket::recv(uint8_t* buff, size_t size)
     if (res != len) {
         std::cout << __FUNCTION__ << ": stream caught [" << res << "], expect size = " << len << std::endl;
     }
-    std::mutex mtxLck = {};
-    std::lock_guard<std::mutex> lock(mtxLck);
-    static uint64_t prsid;
+    std::lock_guard<std::mutex> lock(m_lock);
     // get ssid set to 'm_network', also repeat to server as a mark for search clients
     unsigned long long ssid = header.ssid;
+    static uint64_t prsid;
     for (auto& network : m_networks) {
         if (!m_network.run_01 || m_network.socket == 0)
             continue;
@@ -505,16 +504,14 @@ ssize_t KaiSocket::writes(Network& network, const uint8_t* data, size_t len)
     memset(buff, 0, left);
     memcpy(buff, data, left);
     while (left > 0) {
-        ssize_t wrote = 0;
-        if ((wrote = write(network.socket, reinterpret_cast<char*>(buff + wrote), left)) <= 0) {
-            if (wrote < 0) {
-                if (errno == EINTR) {
-                    wrote = 0; /* call write() again */
-                } else {
-                    handleNotify(network);
-                    delete[] buff;
-                    return -3; /* error */
-                }
+        ssize_t wrote = ::write(network.socket, reinterpret_cast<char*>(buff + (len - left)), left);
+        if (wrote <= 0) {
+            if (wrote < 0 && errno == EINTR) {
+                continue; /* interrupted, retry */
+            } else {
+                handleNotify(network);
+                delete[] buff;
+                return -3; /* error or peer closed */
             }
         }
         left -= wrote;
@@ -533,8 +530,7 @@ ssize_t KaiSocket::broadcast(const uint8_t* data, size_t len)
         std::cerr << __FUNCTION__ << ": no network is to send!" << std::endl;
         return -2;
     }
-    std::mutex mtxLck = {};
-    std::lock_guard<std::mutex> lock(mtxLck);
+    std::lock_guard<std::mutex> lock(m_lock);
     ssize_t bytes = 0;
     for (auto& network : m_networks) {
         ssize_t stat = writes(network, data, len);
@@ -729,8 +725,11 @@ int KaiSocket::produce(const Message& msg)
     std::lock_guard<std::mutex> lock(m_lock);
     size_t size = m_msgQue->size();
     if (msg.head.ssid != 0 || msg.head.etag == PRODUCER) {
-        // Message* mess = new(msg)Message();
-        m_msgQue->emplace_back(&msg);
+        Message* _msg = new(std::nothrow) Message(msg);
+        if (_msg != nullptr) {
+            *_msg = msg;
+            m_msgQue->emplace_back(_msg);
+        }
     }
     return static_cast<int>(m_msgQue->size() - size);
 }

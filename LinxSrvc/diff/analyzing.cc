@@ -1,11 +1,10 @@
 #include <iostream>
 #include <fstream>
-#include <sstream>
+#include <cstdio>
 #include <string>
 #include <vector>
 #include <map>
-#include <algorithm>
-#include <iomanip>
+#include <unordered_set>
 #include <filesystem>
 
 namespace fs = std::filesystem;
@@ -26,26 +25,22 @@ struct FileResult {
     std::string filename{};
 };
 
-class CodeAnalyzer {
+class FileAnalyzer {
     bool use_color_ = false;
     bool show_diff_ = false;
     std::vector<fs::path> exclude_paths_{};
 
     static bool is_text_file(const fs::path& path)
     {
-        static const std::vector<std::string> TEXT_EXTS = {
-            ".cpp", ".h", ".hpp", ".c", ".cc", ".py",
-            ".java", ".txt", ".md", ".json", ".xml"
+        static const std::unordered_set<std::string> TEXT_EXTS = {
+            ".cpp", ".h", ".hpp", ".c", ".cc", ".cxx", ".py",
+            ".java", ".txt", ".md", ".json", ".xml", ".yml", ".yaml",
+            ".cmake", ".toml", ".ini", ".cfg", ".log", ".sh", ".bat",
+            ".html", ".css", ".js", ".ts"
         };
-        const std::string ext = path.extension().string();
-        return std::any_of(TEXT_EXTS.begin(), TEXT_EXTS.end(),
-            [&ext](const auto& e) {
-                return std::equal(ext.rbegin(), ext.rend(),
-                    e.rbegin(), e.rend(),
-                    [](char a, char b) {
-                        return tolower(a) == tolower(b);
-                    });
-            });
+        std::string ext = path.extension().string();
+        for (auto& c : ext) c = static_cast<char>(tolower(static_cast<unsigned char>(c)));
+        return TEXT_EXTS.count(ext) > 0;
     }
 
     static std::vector<std::string> read_lines(const fs::path& path)
@@ -63,49 +58,37 @@ class CodeAnalyzer {
         return lines;
     }
 
-    // New function: Extract effective content
+    // Extract effective content: strip comments + whitespace in single pass
     static std::string get_effective_content(const std::string& line)
     {
-        std::string stripped_content;
-
-        // Remove comments first
+        std::string content;
+        content.reserve(line.size());
         bool in_block_comment = false;
         for (size_t i = 0; i < line.size(); ++i) {
+            char c = line[i];
             if (in_block_comment) {
-                if (line[i] == '*' && i + 1 < line.size() && line[i + 1] == '/') {
+                if (c == '*' && i + 1 < line.size() && line[i + 1] == '/') {
                     in_block_comment = false;
-                    i++; // Skip the closing '/'
+                    i++; // skip closing '/'
                 }
-                // Skip all characters within block comment
-            } else {
-                if (line[i] == '/' && i + 1 < line.size()) {
-                    if (line[i + 1] == '*') {
-                        in_block_comment = true;
-                        i++; // Skip the '*'
-                    } else if (line[i + 1] == '/') {
-                        // Skip to end of line for single-line comment
-                        break;
-                    } else {
-                        stripped_content.push_back(line[i]);
-                    }
-                } else {
-                    stripped_content.push_back(line[i]);
+                continue;
+            }
+            if (c == '/' && i + 1 < line.size()) {
+                if (line[i + 1] == '*') {
+                    in_block_comment = true;
+                    i++; // skip '*'
+                    continue;
                 }
+                if (line[i + 1] == '/') break; // line comment → discard rest
+            }
+            if (!std::isspace(static_cast<unsigned char>(c))) {
+                content.push_back(c);
             }
         }
-
-        // Now remove whitespace
-        std::string content;
-        for (char c : stripped_content) {
-            if (!std::isspace(c)) {
-                content += c;
-            }
-        }
-
         return content;
     }
 
-    std::string colorize(const std::string& text, const char* color) const
+    std::string colorize(const std::string& text, const std::string& color) const
     {
         return use_color_ ? (color + text + RESET) : text;
     }
@@ -120,9 +103,9 @@ class CodeAnalyzer {
         return false;
     }
 public:
-    CodeAnalyzer(bool use_color, bool show_diff, const std::vector<fs::path>& exclude_paths = {})
+    FileAnalyzer(bool use_color, bool show_diff, const std::vector<fs::path>& exclude_paths = {})
         : use_color_(use_color), show_diff_(show_diff), exclude_paths_(exclude_paths)
-    { }
+    {}
 
     FileResult compare_files(const fs::path& file1, const fs::path& file2) const
     {
@@ -150,8 +133,9 @@ public:
 
         size_t common = 0;
         for (const auto& [line, count] : counter1) {
-            if (counter2.count(line)) {
-                common += std::min(count, counter2[line]);
+            auto it = counter2.find(line);
+            if (it != counter2.end()) {
+                common += std::min(count, it->second);
             }
         }
 
@@ -202,10 +186,10 @@ public:
                     if (entry.is_regular_file() && is_text_file(entry.path()) && !is_excluded(entry.path())) {
                         try {
                             index[fs::relative(entry.path(), dir).string()] = entry.path();
-                        } catch (...) { } // Ignore path errors
+                        } catch (...) { }
                     }
                 }
-            } catch (...) { } // Ignore directory errors
+            } catch (...) { }
             return index;
             };
 
@@ -217,8 +201,9 @@ public:
         std::vector<FileResult> details;
 
         for (const auto& [rel_path, path1] : files1) {
-            if (files2.count(rel_path)) {
-                auto res = compare_files(path1, files2.at(rel_path));
+            auto it = files2.find(rel_path);
+            if (it != files2.end()) {
+                auto res = compare_files(path1, it->second);
                 total.duplicates += res.duplicates;
                 total.total1 += res.total1;
                 total.total2 += res.total2;
@@ -251,13 +236,13 @@ public:
 
         // Output file list
         std::cout << colorize("\n=== FILES ===", CYAN) << "\n";
+        char buf[64];
         for (const auto& res : details) {
-            const std::string color = res.ratio > 0.7 ? GREEN :
-                res.ratio > 0.3 ? YELLOW : RED;
-            std::ostringstream oss;
-            oss << std::setw(50) << std::left << res.filename
-                << " " << static_cast<int>(res.ratio * 100) << "%";
-            std::cout << colorize(oss.str(), color.c_str()) << "\n";
+            const std::string& color = res.ratio > 0.8 ? GREEN :
+                res.ratio > 0.4 ? YELLOW : RED;
+            snprintf(buf, sizeof(buf), "%-50s %d%%", res.filename.c_str(),
+                static_cast<int>(res.ratio * 100));
+            std::cout << colorize(buf, color) << "\n";
         }
 
         // Output summary
@@ -321,7 +306,7 @@ int main(int argc, char* argv[])
     }
 
     try {
-        CodeAnalyzer analyzer(use_color, show_diff, exclude_paths);
+        FileAnalyzer analyzer(use_color, show_diff, exclude_paths);
 
         if (fs::is_regular_file(source) && fs::is_regular_file(target)) {
             auto res = analyzer.compare_files(source, target);

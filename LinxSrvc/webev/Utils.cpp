@@ -40,7 +40,9 @@ bool ipIsValid(const char* ip)
             }
         } else if (*ip >= '0' && *ip <= '9') {
             value = value * 10 + *ip - '0';
-            if (last == '.' && *ip == '0' && *(ip + 2) == '0' && *(ip + 4) == '0') {
+            if (last == '.' && *ip == '0'
+                && *(ip + 1) != '\0' && *(ip + 2) == '0'
+                && *(ip + 3) != '\0' && *(ip + 4) == '0') {
                 return false;
             }
         } else {

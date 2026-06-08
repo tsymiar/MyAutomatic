@@ -35,7 +35,7 @@
 #endif
 #define NE_VAL(a) (((~((a) & 0x0f)) | ((a) & 0xf0)) & 0xff)
 #define DEFAULT_PORT 8877
-#define IPC_KEY 0x520905
+#define IPC_KEY 0x520607
 #define IPC_FLAG IPC_CREAT|IPC_EXCL //|SHM_R|SHM_W
 #define THREAD_NUM 8
 #define ACC_REC "accounts"
@@ -1092,6 +1092,16 @@ int inst_mssg(int argc, char* argv[])
 #endif
     aim2exit = 0;
     pthread_t threadid;
+    std::thread task;
+    struct TaskJohn {
+        std::thread& t;
+        TaskJohn(std::thread& t) : t(t) {}
+        ~TaskJohn()
+        {
+            if (t.joinable())
+                t.join();
+        }
+    } TaskJohn(task);
 #ifdef _WIN32
     SetConsoleTitle((
 #ifdef _UNICODE
@@ -1108,11 +1118,9 @@ int inst_mssg(int argc, char* argv[])
         return -1;
     }
 #else
-    std::thread task([&]() -> void {
+    task = std::thread([&]() -> void {
         commands(NULL);
         });
-    if (task.joinable())
-        task.detach();
 #endif
     struct sockaddr_in local;
     local.sin_family = AF_INET;
@@ -1244,20 +1252,33 @@ template<typename T> int set_n_get_mem(T * shmem, int ndx, int rw)
     if ((shmid = shmget(IPC_KEY, (MAX_ACTIVE * sizeof(T)), (0666 | IPC_FLAG))) < 0) {
         if (EEXIST == errno) {
             shmid = shmget(IPC_KEY, (MAX_ACTIVE * sizeof(T)), 0666);
-            share = reinterpret_cast<T*>(shmat(shmid, NULL, 0));
+            void* shmp = shmat(shmid, NULL, 0);
+            if (shmp == (void*)-1) {
+                fprintf(stderr, "shmat failed: %s\n", strerror(errno));
+                pthread_mutex_unlock(&mutex_allow);
+                return shmid;
+            }
+            share = reinterpret_cast<T*>(shmp);
         } else {
             fprintf(stderr, "fail to shmget.\n");
+            pthread_mutex_unlock(&mutex_allow);
             exit(-1);
         }
     } else {
-        share = reinterpret_cast<T*>(shmat(shmid, NULL, 0));
+        void* shmp = shmat(shmid, NULL, 0);
+        if (shmp == (void*)-1) {
+            fprintf(stderr, "shmat failed: %s\n", strerror(errno));
+            pthread_mutex_unlock(&mutex_allow);
+            return shmid;
+        }
+        share = reinterpret_cast<T*>(shmp);
     }
     if (rw >= 1) {
-        memmove(share + ndx * sizeof(T), shmem, sizeof(T));
+        memmove(reinterpret_cast<char*>(share) + ndx * sizeof(T), shmem, sizeof(T));
     } else if (rw == 0) {
-        memmove(shmem, (char*)share + (ndx * sizeof(T)), sizeof(T));
+        memmove(shmem, reinterpret_cast<char*>(share) + ndx * sizeof(T), sizeof(T));
     } else if (rw + 1 == 0) {
-        memset(share + ndx * sizeof(T), 0, sizeof(T));
+        memset(reinterpret_cast<char*>(share) + ndx * sizeof(T), 0, sizeof(T));
     } else {
         if (shmdt(share) == -1) {
             fprintf(stderr, "shmdt: detach segment fail.\n");
@@ -1265,6 +1286,11 @@ template<typename T> int set_n_get_mem(T * shmem, int ndx, int rw)
         if (shmctl(shmid, IPC_RMID, 0) == -1) {
             fprintf(stderr, "shmctl(IPC_RMID) fail.\n");
         }
+        pthread_mutex_unlock(&mutex_allow);
+        return shmid;
+    }
+    if (shmdt(share) == -1) {
+        fprintf(stderr, "shmdt: detach segment fail.\n");
     }
     pthread_mutex_unlock(&mutex_allow);
 #endif
@@ -1630,7 +1656,7 @@ int set_user_peer(const char user[FiledSize], const char ip[INET_ADDRSTRLEN], co
     const char* u = user;
     for (int i = 0; i < MAX_USERS; i++) {
         if (strcmp(u, users[i].usr) == 0) {
-            _CAS(&users[i].ntwrk.ip[0], *users[i].ntwrk.ip, *ip);
+            memcpy((char*)users[i].ntwrk.ip, ip, INET_ADDRSTRLEN);
             users[i].ntwrk.port = port;
             users[i].ntwrk.socket = sock;
             return i;

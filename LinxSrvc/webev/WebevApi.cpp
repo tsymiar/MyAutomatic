@@ -108,7 +108,7 @@ void ReadChunkCallback(struct evhttp_request* resp, void* base)
         fwrite(data, n, 1, stdout);
         size += n;
     }
-    g_msgRecv[base] = data;
+    g_msgRecv[base] = string(data);
     DEALRES_CALLBACK func = g_dealHooks["handleResponse"].callback;
     if (func != nullptr) {
         HookDetail detail;
@@ -187,7 +187,8 @@ void GenericHandler(struct evhttp_request* req_ptr, void* param)
                             break;
                         }
                         Message("server parse = %s:%u", ip.c_str(), port);
-                        char* post_data = (char*)EVBUFFER_DATA(req_ptr->input_buffer);
+                        size_t post_len = evbuffer_get_length(req_ptr->input_buffer);
+                        char* post_data = (char*)evbuffer_pullup(req_ptr->input_buffer, post_len);
                         Message("request post_data = %s", post_data);
                     }
                     if (*it == "flag") {
@@ -304,7 +305,7 @@ int HttpClient(HookDetail& detail)
     evhttp_add_header(output_headers, "Accept-Encoding", "gzip,deflate,br");
     evhttp_add_header(output_headers, "Accept-Language", "zh-CN,zh;q=0.8");
     evhttp_add_header(output_headers, "Cache-Control", "max-age=0");
-    if (g_extraOpts.empty()) {
+    if (!g_extraOpts.empty()) {
         for (auto head : g_extraOpts) {
             evhttp_add_header(output_headers, head.first.c_str(), head.second.c_str());
         }
@@ -466,7 +467,7 @@ void Response(struct evhttp_request* request, HookDetail message)
     evhttp_add_header(request->output_headers, "Access-Control-Max-Age", "1728000");
     evhttp_add_header(request->output_headers, "X-Xss-Protection", "1; mode=block");
     evhttp_add_header(request->output_headers, "Connection", "close");
-    if (g_extraOpts.empty()) {
+    if (!g_extraOpts.empty()) {
         for (auto head : g_extraOpts) {
             evhttp_add_header(request->output_headers, head.first.c_str(), head.second.c_str());
         }

@@ -1,6 +1,6 @@
 #!/bin/bash
 if [ "${1}" == "clean" ]; then
-    rm -rvf out ./*.vsix node_modules
+    rm -rvf out ./*.vsix node_modules scripts/__pycache__
     exit 0
 fi
 if command -v npm >/dev/null 2>&1; then
