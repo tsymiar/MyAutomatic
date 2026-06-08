@@ -57,12 +57,14 @@ public:
 #else
             char body[0];
 #endif
-        } __attribute__((packed)) data { };
+        } __attribute__((packed)) data {};
+#ifdef PLACEMENT_NEW
         void* operator new(size_t, const Message& msg)
         {
             static void* mss = (void*)(&msg);
             return mss;
         }
+#endif
     } __attribute__((packed));
 #pragma pack()
     typedef int(*KAI_SOCK_HOOK)(KaiSocket*);

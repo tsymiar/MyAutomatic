@@ -21,11 +21,15 @@ namespace {
     } g_ctx;
 
     // 注意: 密码从环境变量 MYAUTO_MYSQL_PSW 读取
-    // 若未设置则回退到编译时默认值
+    // 未设置报错并跳过连接，避免硬编码密码和泄露风险
     const char* get_sql_password()
     {
         const char* env = getenv("MYAUTO_MYSQL_PSW");
-        return (env != nullptr && env[0] != '\0') ? env : "Psw123$";
+        if (env == nullptr || env[0] == '\0') {
+            cerr << "Environment variable MYAUTO_MYSQL_PSW is not set." << endl;
+            return nullptr;
+        }
+        return env;
     }
 
     // ---------- 连接监控线程 ----------
@@ -35,9 +39,12 @@ namespace {
         mysql_options(&g_ctx.mysql, MYSQL_OPT_RECONNECT, &val);
         while (true) {
             if (mysql_ping(&g_ctx.mysql) != 0) {
-                if (!mysql_real_connect(&g_ctx.mysql,
+                const char* sql_psw = get_sql_password();
+                if (sql_psw == nullptr) {
+                    cerr << "Reconnect skipped: MySQL password not configured." << endl;
+                } else if (!mysql_real_connect(&g_ctx.mysql,
                     SQL_HOST, SQL_USER,
-                    get_sql_password(),
+                    sql_psw,
                     SQL_DB, SQL_PORT,
                     NULL, 0)
                     && g_ctx.reconnect < MAX_RECONNECT) {
@@ -223,13 +230,16 @@ int sqlQuery(struct queryParam& param, bool flag)
         const char* auth_psw = (param.user.psw && param.user.psw[0])
             ? param.user.psw : get_sql_password();
 
-        if (mysql_real_connect(&g_ctx.mysql, SQL_HOST,
+        if (auth_psw == nullptr) {
+            cerr << "MySQL password not configured and no SOAP password provided." << endl;
+        } else if (mysql_real_connect(&g_ctx.mysql, SQL_HOST,
             auth_user, auth_psw,
-            SQL_DB, SQL_PORT, NULL, 0) == NULL)
+            SQL_DB, SQL_PORT, NULL, 0) == NULL) {
             cerr << "Connect mysql fail: " << mysql_error(&g_ctx.mysql)
             << "!" << endl;
-        else
+        } else {
             g_ctx.connected = true;
+        }
 
         // 启动重连监控线程
         pthread_create(&g_ctx.watch_thread, NULL, watch_connect, NULL);
