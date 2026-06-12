@@ -19,7 +19,7 @@ else
     echo "==> All apt packages are already installed, skipping."
 fi
 cd ../../3rd
-if [ ${MAKE_RXE} -eq 1 ]; then
+if [ "${MAKE_RXE}" == "1" ]; then
   needs containerd.io
   docker run  -v "../3rd:/mnt:rw" -it --rm "rockylinux:8" \
    bash -c  \
