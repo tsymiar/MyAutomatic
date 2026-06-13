@@ -1,0 +1,1 @@
+../../../../WinNTKline/KlineUtil/com/qalgorithms.h

@@ -40,7 +40,8 @@ unix {
     QT += axcontainer
 }
 
-MYGL=../WinNTKline/KlineUtil/mygl
+MYGL=external/kline/mygl
+MYGL_ROOT=external/kline
 # DEFINES += K_line # compile without K-line, to NOTE this line & HEADERS SOURCES include {MYGL}.
 # DEFINES += _GLVBO_
 DEFINES += SHOW_OFFICE
@@ -54,42 +55,59 @@ LIBS += -lglut \
         -lSDL2_ttf
 
 INCLUDEPATH += /usr/include/qt5 /usr/include/GL \
-            $${MYGL}/.. $${MYGL} $${MYGL}/../font
+            $${MYGL_ROOT} $${MYGL} $${MYGL_ROOT}/font
 
 INCLUDEPATH += \
-    include/common \
-    include/wps \
+    app \
+    engine \
+    office \
+    third_party/wps_sdk/include/common \
+    third_party/wps_sdk/include/wps \
     ./wpsapi
 
 win32 {
     INCLUDEPATH += $$(libPNG) $$(ZLIB)
 }
 
-HEADERS = MainWindow.h OglMaterial.h OglImgShow.h \
-    $${MYGL}/SDL2tex.h $${MYGL}/OGLKview.h
+HEADERS = \
+    app/MainWindow.h \
+    engine/OglMaterial.h \
+    engine/OglImgShow.h \
+    external/kline/mygl/SDL2tex.h
 
-unix {
-    HEADERS += wpsapi/wpswindow.h \
-            OfficeWidget.h
+# OGLKview.h 仅 K_line 宏定义时引入
+contains(DEFINES, K_line) {
+    HEADERS += external/kline/mygl/OGLKview.h
 }
 
-SOURCES = main.cpp \
-    MainWindow.cpp OglMaterial.cpp OglImgShow.cpp \
-    $${MYGL}/OGLKview.cc
+unix {
+    HEADERS += office/wpswindow.h \
+            office/OfficeWidget.h
+}
+
+SOURCES = \
+    app/main.cpp \
+    app/MainWindow.cpp \
+    engine/OglMaterial.cpp \
+    engine/OglImgShow.cpp
+
+contains(DEFINES, K_line) {
+    SOURCES += external/kline/mygl/OGLKview.cc
+}
 
 unix {
-    SOURCES += wpsapi/wpswindow.cpp \
-        $${MYGL}/SDL2tex.cc \
-        OfficeWidget.cpp
+    SOURCES += office/wpswindow.cpp \
+        external/kline/mygl/SDL2tex.cc \
+        office/OfficeWidget.cpp
 }
 
 FORMS += \
-    mainwindow.ui
+    resources/ui/mainwindow.ui
 
 unix {
-    RC_ICONS = qtlogo.ico
+    RC_ICONS = resources/qtlogo.ico
     RESOURCES += \
-        qtlogo.qrc
+        resources/qtlogo.qrc
 }
 
 DISTFILES +=

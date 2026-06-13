@@ -1,11 +1,12 @@
 #include "OglMaterial.h"
+#include "SDL2tex.h"
 #include <QPainter>
 #include <QPen>
 
 #ifdef _WIN32
-#define IMAGE_PATH "..\\WinNTKline\\KlineUtil\\image\\"
+#define IMAGE_PATH "external\\kline\\image\\"
 #else
-#define IMAGE_PATH "../WinNTKline/KlineUtil/image/"
+#define IMAGE_PATH "external/kline/image/"
 #endif
 
 QOglMaterial::QOglMaterial(QWidget* parent)
@@ -193,13 +194,13 @@ void QOglMaterial::initializeGL()
 #endif
         char fileName[MAX_PATH];
         sprintf(fileName, "%sspabandari.bmp", IMAGE_PATH);
-        struct stCopyRect rect{ { 100,10,360,70 },{ 70,360,500,70 } };
+        struct stCopyRect rect { { 100, 10, 360, 70 }, { 70,360,500,70 } };
         SDL_GL_loadImage(fileName, rect);
         rect.src = { 128,160,360,256 };
         rect.dst = { 1,1,256,180 };
         SDL_GL_loadImage(fileName, rect);
         struct TextCfg cfg;
-        cfg.font = IMAGE_PATH"../font/Deng.ttf";
+        cfg.font = "external/kline/font/Deng.ttf";
         cfg.style = TTF_STYLE_NORMAL;
         cfg.color = { 255, 0, 0, 255 };
         cfg.rect = { { 0,0,300,60 }, {100,256,256,24} };

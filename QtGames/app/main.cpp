@@ -1,7 +1,9 @@
 #include "MainWindow.h"
-#include <QtWidgets/qmessagebox.h>
+#include <QMessageBox>
 #include <QApplication>
+#ifdef SHOW_OFFICE
 #include "OfficeWidget.h"
+#endif
 // #include <QtPlugin>
 // Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)
 

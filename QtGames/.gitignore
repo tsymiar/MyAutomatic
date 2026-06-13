@@ -1,11 +1,30 @@
+# Build outputs
 Makefile
 QtGames
-*.docx
-*.pro.use*
-.fuse_*
-qrc_*
+build/
+*.o
+*.obj
+*.exe
+
+# Qt generated files
 moc_*
 ui_*
-*.TMP
+qrc_*
+*.moc
+
+# CMake outputs
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+
+# IDE files
+*.pro.user*
+*.vcxproj.user
 *.qtvscr
+.fuse_*
 *.stash
+*.TMP
+
+# Documents
+*.docx

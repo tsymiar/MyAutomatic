@@ -4,12 +4,8 @@
 #include <QImage>
 #include <QPen>
 
-unsigned char* g_pixels = NULL;
-png_uint_32 width, height;
-int color_type;
-
 // 获取每一行所用的字节数，需凑足4的倍数
-int getRowBytes(int width)
+static int getRowBytes(int width)
 {
     int bytes = 0;
     if ((width * 3) % 4 == 0) {
@@ -20,6 +16,14 @@ int getRowBytes(int width)
     return bytes;
 }
 
+OglImgShow::~OglImgShow()
+{
+    if (m_pixels != nullptr) {
+        free(m_pixels);
+        m_pixels = nullptr;
+    }
+}
+
 int OglImgShow::setPixels(const char* filename)
 {
     png_structp png_ptr;
@@ -28,6 +32,12 @@ int OglImgShow::setPixels(const char* filename)
     FILE* fp = NULL;
 
     qDebug() << QString("lpng16( v%1 ), zlib( v%2 ), sdl( v%3 )").arg(PNG_LIBPNG_VER_STRING).arg(ZLIB_VERSION).arg(SDL_GetRevisionNumber());
+
+    // 释放旧像素数据
+    if (m_pixels != nullptr) {
+        free(m_pixels);
+        m_pixels = nullptr;
+    }
 
     if (filename == NULL) {
         qFatal("image is null");
@@ -59,34 +69,34 @@ int OglImgShow::setPixels(const char* filename)
     // 读取PNG文件
     png_read_png(png_ptr, info_ptr, PNG_TRANSFORM_EXPAND, 0);
     // 获取PNG图片信息数据
-    png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
+    png_get_IHDR(png_ptr, info_ptr, &m_width, &m_height, &bit_depth, &m_colour,
         NULL, NULL, NULL);
-    qDebug() << "[" << width << "*" << height << "]";
-    width = width / 2 + 520;
-    height = height / 2 + 234;
+    qDebug() << "[" << m_width << "*" << m_height << "]";
+    m_width = m_width / 2 + 520;
+    m_height = m_height / 2 + 234;
 
     png_bytep* row_pointers = png_get_rows(png_ptr, info_ptr);
     // 计算pixel大小
     unsigned int size = 0;
-    if (color_type == PNG_COLOR_TYPE_RGB) {
-        size = getRowBytes(width) * height;
-    } else if (color_type == PNG_COLOR_TYPE_RGBA) {
-        size = width * height * 4;
+    if (m_colour == PNG_COLOR_TYPE_RGB) {
+        size = getRowBytes(m_width) * m_height;
+    } else if (m_colour == PNG_COLOR_TYPE_RGBA) {
+        size = m_width * m_height * 4;
     } else {
         return EXIT_FAILURE;
     }
     // 申请堆空间
-    g_pixels = (unsigned char*)malloc(size);
-    if (g_pixels == NULL)
+    m_pixels = (unsigned char*)malloc(size);
+    if (m_pixels == NULL)
         return EXIT_FAILURE;
     unsigned int i;
-    for (i = 0; i < height; i++) {
+    for (i = 0; i < m_height; i++) {
         // 拷贝每行数据给pixel，
         // opengl原点在下方，拷贝时倒置
-        if (color_type == PNG_COLOR_TYPE_RGB) {
-            memcpy(g_pixels + getRowBytes(width) * i, row_pointers[height - i - 1], width * 3);
-        } else if (color_type == PNG_COLOR_TYPE_RGBA) {
-            memcpy(g_pixels + i * width * 4, row_pointers[height - i - 1], width * 4);
+        if (m_colour == PNG_COLOR_TYPE_RGB) {
+            memcpy(m_pixels + getRowBytes(m_width) * i, row_pointers[m_height - i - 1], m_width * 3);
+        } else if (m_colour == PNG_COLOR_TYPE_RGBA) {
+            memcpy(m_pixels + i * m_width * 4, row_pointers[m_height - i - 1], m_width * 4);
         }
     }
     png_destroy_read_struct(&png_ptr, &info_ptr, 0);
@@ -271,10 +281,10 @@ void OglImgShow::showPixels(png_uint_32 w, png_uint_32 h)
 {
     glDisable(GL_DEPTH_TEST);
     // 是否设置图片透明度
-    if (color_type == PNG_COLOR_TYPE_RGB) {
-        glDrawPixels(w, h, GL_RGB, GL_UNSIGNED_BYTE, g_pixels);
-    } else if (color_type == PNG_COLOR_TYPE_RGBA) {
-        glDrawPixels(w, h, GL_RGBA, GL_UNSIGNED_BYTE, g_pixels);
+    if (m_colour == PNG_COLOR_TYPE_RGB) {
+        glDrawPixels(w, h, GL_RGB, GL_UNSIGNED_BYTE, m_pixels);
+    } else if (m_colour == PNG_COLOR_TYPE_RGBA) {
+        glDrawPixels(w, h, GL_RGBA, GL_UNSIGNED_BYTE, m_pixels);
     }
     glFlush();
     glEnable(GL_DEPTH_TEST);
@@ -283,7 +293,7 @@ void OglImgShow::showPixels(png_uint_32 w, png_uint_32 h)
 void OglImgShow::showFullPixels()
 {
     glDisable(GL_DEPTH_TEST);
-    showPixels(width, height);
+    showPixels(m_width, m_height);
     glFlush();
     glEnable(GL_DEPTH_TEST);
 }

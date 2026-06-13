@@ -5,17 +5,15 @@
 #ifdef WIN32
 #include <QAxObject>
 
-class OfficeWidget : public QWidget
-{
+class OfficeWidget : public QWidget {
 #else
 #include "wpswindow.h"
 
-class OfficeWidget : public WPSMainWindow
-{
+class OfficeWidget : public WPSMainWindow {
     Q_OBJECT
 #endif
 public:
-    explicit OfficeWidget(QWidget *parent = 0);
+    explicit OfficeWidget(QWidget* parent = 0);
     ~OfficeWidget();
 
 signals:
@@ -23,7 +21,7 @@ signals:
 public slots:
 
 public:
-    void closeEvent(QCloseEvent *);
+    void closeEvent(QCloseEvent*);
 
     void showWidget();
     void test();
