@@ -1,62 +1,57 @@
-# Compiled Object files
+# Object & precompiled
 *.slo
 *.lo
 *.o
 *.obj
-
-# Precompiled Headers
 *.gch
 *.pch
 
-# Compiled Dynamic libraries
+# Libraries
 *.so
+*.so.*
 *.dylib
-#*.dll
-
-# Fortran module files
-*.mod
-
-# Compiled Static libraries
+*.dll
 *.lai
 *.la
 *.a
-#*.lib
+*.lib
+*.mod
 
 # Executables
 *.exe
 *.out
 *.app
 
-# Logs
+# Debug / IDE / logs
 *.tlog
 *.log
-
-# Patch database
-*.patch
-*-hard
-*.con
 *.idb
 *.ipch
+*.pdb
 *.suo
 *.db
-*.pdb
 *.merged
 *.recipe
 .DS_Store
 *.xcuserstate
-
-# Built files
-CMakeSettings.json
-*/GeneratedFiles
-*cmake-build-*
-*/build
-build
-trunk
-vs
-**/.vs*
-test.txt
+.idea/
+.vs/
 !.vsconfig
-*.idea
-*.so.*
-*env*
-*Debug
+
+# Build artifacts
+CMakeSettings.json
+**/GeneratedFiles/
+**/cmake-build-*/
+**/__pycache__/
+.codebuddy
+.vscode
+build/
+trunk/
+vs/
+test.txt
+*.con
+*.patch
+*-hard
+
+# Keep tracked .con files (e.g. config.con)
+!*.config.con

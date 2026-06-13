@@ -1,53 +1,58 @@
 @echo off
-set BATDIR=%~dp0
-echo locate: @ %BATDIR%
-echo[]
-echo cleaning lib
-rd /s /q lib
-echo cleaning built
-rd /s /q build
-echo cleaning LinxSrvc
-rd /s /q LinxSrvc\.vs
-rd /s /q LinxSrvc\bin
-rd /s /q LinxSrvc\gen
-rd /s /q LinxSrvc\out
-rd /s /q LinxSrvc\build
-echo cleaning out caches
-rd /s /q WinNTKline\.vs
-rd /s /q WinNTKline\cache
-rd /s /q WinNTKline\out
-rd /s /q WinNTKline\x64
-rd /s /q WinNTKline\x86
-rd /s /q WinNTKline\Debug
-rd /s /q WinNTKline\Release
-rd /s /q "WinNTKline\Generated Files"
-echo cleaning MFC
-rd /s /q WinNTKline\MFC
-rd /s /q "WinNTKline\MFCKline\Generated Files"
-set "RegExp=-*.con[^fig]"
+setlocal enabledelayedexpansion
+set "ROOT=%~dp0"
+echo Cleaning workspace at %ROOT%
+
+call :safe_rd lib
+call :safe_rd build
+
+echo --- LinxSrvc ---
+call :safe_rd LinxSrvc\.vs
+call :safe_rd LinxSrvc\bin
+call :safe_rd LinxSrvc\gen
+call :safe_rd LinxSrvc\out
+call :safe_rd LinxSrvc\build
+
+echo --- WinNTKline ---
+call :safe_rd WinNTKline\.vs
+call :safe_rd WinNTKline\cache
+call :safe_rd WinNTKline\out
+call :safe_rd WinNTKline\x64
+call :safe_rd WinNTKline\x86
+call :safe_rd WinNTKline\Debug
+call :safe_rd WinNTKline\Release
+call :safe_rd "WinNTKline\Generated Files"
+call :safe_rd WinNTKline\MFC
+call :safe_rd "WinNTKline\MFCKline\Generated Files"
+
+echo --- MFCKline .con cleanup ---
 for /R "WinNTKline\MFCKline\" %%f in (*.con) do (
-    setlocal enabledelayedexpansion
-    echo %%f | findstr /r /C:"%RegExp%" >nul 2>&1
-    if ERRORLEVEL 1 (
-        echo save %%f
+    echo %%f | findstr /r /C:"-.*\.con[^f]" >nul 2>&1
+    if errorlevel 1 (
+        echo   keep %%f
     ) else (
-        del /f /q %%f
+        del /f /q "%%f"
     )
-    endlocal
 )
-echo cleaning WPF
-rd /s /q WinNTKline\WPF
-echo cleaning WPFKline
-rd /s /q WinNTKline\WPFKline\WPFKline\.vs
-rd /s /q WinNTKline\WPFKline\WPFKline\obj
-echo cleaning Scadup
-rd /s /q WinNTKline\Scadup\x64
-echo cleaning TestUtils
-del /f /q WinNTKline\TestUtils\*.con
-echo cleaning QtGames
-:: https://download.qt.io/archive/qt/5.14/5.14.2/qt-opensource-windows-x86-5.14.2.exe
-rd /s /q QtGames\GeneratedFiles
-rd /s /q QtGames\build
-del /f /q QtGames\*.so
-del /f /q QtGames\*.stash
-echo ----- finish clean -----
+
+echo --- WPF / WPFKline ---
+call :safe_rd WinNTKline\WPF
+call :safe_rd WinNTKline\WPFKline\WPFKline\.vs
+call :safe_rd WinNTKline\WPFKline\WPFKline\obj
+
+echo --- Scadup / TestUtils ---
+call :safe_rd WinNTKline\Scadup\x64
+if exist WinNTKline\TestUtils\*.con del /f /q WinNTKline\TestUtils\*.con
+
+echo --- QtGames ---
+call :safe_rd QtGames\GeneratedFiles
+call :safe_rd QtGames\build
+if exist QtGames\*.so     del /f /q QtGames\*.so
+if exist QtGames\*.stash  del /f /q QtGames\*.stash
+
+echo ----- Clean finished -----
+goto :EOF
+
+:safe_rd
+if exist "%~1" rd /s /q "%~1" 2>nul
+goto :EOF

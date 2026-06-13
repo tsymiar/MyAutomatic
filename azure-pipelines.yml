@@ -1,21 +1,28 @@
-# C/C++ with GCC
+# C/C++ with GCC – CI pipeline
 
 trigger:
-- auto-dev
+  - auto-dev
 
 pool:
   vmImage: ubuntu-latest
 
 steps:
-- script: |
-    ./build.sh all -j
-  displayName: 'make exec'
-- script: |
-    ./build.sh QtGames/
-  displayName: 'build game'
-- script: |
-    ./build.sh test
-  displayName: 'make test-cov'
-- script: |
-    ./build.sh clean
-  displayName: 'clean all'
+  - script: |
+      set -e
+      ./build.sh all -j
+    displayName: 'Build LinxSrvc'
+
+  - script: |
+      set -e
+      ./build.sh QtGames/
+    displayName: 'Build QtGames'
+
+  - script: |
+      set -e
+      ./build.sh test
+    displayName: 'Test & coverage'
+
+  - script: |
+      ./build.sh clean
+    displayName: 'Clean workspace'
+    condition: always()
