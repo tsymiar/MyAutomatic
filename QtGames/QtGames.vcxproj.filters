@@ -25,47 +25,47 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="app\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MainWindow.cpp">
+    <ClCompile Include="app\MainWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="OglMaterial.cpp">
+    <ClCompile Include="engine\OglMaterial.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="OglImgShow.cpp">
+    <ClCompile Include="engine\OglImgShow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="OfficeWidget.cpp">
+    <ClCompile Include="office\OfficeWidget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="GeneratedFiles\qrc_mainwindow.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\WinNTKline\KlineUtil\mygl\SDL2tex.cc">
+    <ClCompile Include="external\kline\mygl\SDL2tex.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="MainWindow.h">
+    <CustomBuild Include="app\MainWindow.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
-    <CustomBuild Include="mainwindow.qrc">
+    <CustomBuild Include="resources\ui\mainwindow.qrc">
       <Filter>Resource Files</Filter>
     </CustomBuild>
-    <CustomBuild Include="mainwindow.ui">
+    <CustomBuild Include="resources\ui\mainwindow.ui">
       <Filter>Form Files</Filter>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="OglMaterial.h">
+    <ClInclude Include="engine\OglMaterial.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="OglImgShow.h">
+    <ClInclude Include="engine\OglImgShow.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="OfficeWidget.h">
+    <ClInclude Include="office\OfficeWidget.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GeneratedFiles\ui_mainwindow.h">
@@ -81,7 +81,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Image Include=".\qtlogo.ico">
+    <Image Include="resources\qtlogo.ico">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

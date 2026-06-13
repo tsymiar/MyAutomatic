@@ -14,7 +14,7 @@ public:
 protected:
     void keyPressEvent(QKeyEvent* e);
     void mouseDoubleClickEvent(QMouseEvent* e);
-    void mouseMoveEvent(QMouseEvent *e) override;
+    void mouseMoveEvent(QMouseEvent* e) override;
 private:
     bool light;
     bool fllscrn;

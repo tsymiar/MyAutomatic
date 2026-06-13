@@ -1,0 +1,1 @@
+../../../../WinNTKline/KlineUtil/com/Converts.h

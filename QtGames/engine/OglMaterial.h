@@ -1,14 +1,11 @@
 #pragma once
-#include <Qt>
+#include <QtGlobal>
 #ifdef K_line
 #include <QOglKview>
 #endif
-#if QT_VERSION >= 0x060800
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 #include <QOpenGLWidget>
-#ifdef _WIN32
-#include <QtOpenGLWidgets/qopenglwidget.h>
-#endif
-#elif QT_VERSION >= 0x050400
+#elif QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
 #ifdef _WIN32
 #pragma execution_character_set("utf-8")
 #endif
@@ -26,7 +23,6 @@
 #include <QTimer>
 #include <QDebug>
 #include "OglImgShow.h"
-#include "SDL2tex.h"
 
 #ifndef _PI_
 #define _PI_ 3.141592653589793f

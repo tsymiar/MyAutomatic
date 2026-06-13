@@ -1,5 +1,4 @@
 #include "MainWindow.h"
-#include <thread>
 #include <QThread>
 
 MainWindow::MainWindow(const char* title, bool fs)
@@ -19,20 +18,7 @@ MainWindow::MainWindow(const char* title, bool fs)
     if (fllscrn)
         showFullScreen();
     tick = new QTimer(this);
-#if (! defined _WIN32)
     connect(tick, SIGNAL(timeout()), this, SLOT(timeTrigger()));
-#else
-    std::thread task([&](MainWindow* m)-> void {
-        while (m != NULL)
-        {
-            m->timeTrigger();
-            QThread::msleep(4);
-        }
-        }, this);
-    if (task.joinable()) {
-        task.detach();
-    }
-#endif
     tick->start(100 / 24);
     setMouseTracking(true);
 }
@@ -133,7 +119,7 @@ void MainWindow::mouseDoubleClickEvent(QMouseEvent* e)
     QWidget::mouseDoubleClickEvent(e);
 }
 
-void MainWindow::mouseMoveEvent(QMouseEvent *e)
+void MainWindow::mouseMoveEvent(QMouseEvent* e)
 {
     setXloc(e->x());
     setYloc(e->y());

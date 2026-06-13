@@ -2,9 +2,8 @@
 #include <QCloseEvent>
 #include <QDebug>
 
-OfficeWidget::OfficeWidget(QWidget *)
-{
-}
+OfficeWidget::OfficeWidget(QWidget*)
+{}
 
 void OfficeWidget::showWidget()
 {
@@ -14,9 +13,7 @@ void OfficeWidget::showWidget()
 }
 
 OfficeWidget::~OfficeWidget()
-{
-    deleteLater();
-}
+{}
 
 void OfficeWidget::test()
 {
@@ -25,7 +22,7 @@ void OfficeWidget::test()
     qDebug() << ("OfficeWidget::getContent=") << getDocContent();
 }
 
-void OfficeWidget::closeEvent(QCloseEvent * event)
+void OfficeWidget::closeEvent(QCloseEvent* event)
 {
     if (event->type() == QEvent::Type::Close) {
         closeDoc();
