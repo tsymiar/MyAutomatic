@@ -1,3 +1,4 @@
+#!/bin/bash
 git config --global pack.threads "4"
 git config --global pack.packSizeLimit 2g
 git config --global fetch.parallel 8

@@ -273,6 +273,9 @@ int api__trans(struct soap* soap, char* msg, char* rtn[])
         char value[VAL_LEN];
     };
 
+    if (rtn == nullptr) {
+        return -1;
+    }
     if (msg == nullptr || msg[0] == '\0') {
         static char err_buf[] = "request uri empty!";
         *rtn = err_buf;
@@ -280,8 +283,15 @@ int api__trans(struct soap* soap, char* msg, char* rtn[])
     }
 
     // 拷贝 msg 避免 strtok 修改原始数据
-    char msg_copy[BUF_LEN] = { 0 };
-    strncpy(msg_copy, msg, BUF_LEN - 1);
+    char msg_copy[BUF_LEN];
+    size_t msg_len = strnlen(msg, BUF_LEN);
+    if (msg_len == BUF_LEN) {
+        static char err_buf[] = "request uri too long!";
+        *rtn = err_buf;
+        return -1;
+    }
+    memcpy(msg_copy, msg, msg_len);
+    msg_copy[msg_len] = '\0';
 
     int neq = ss.char_count_(msg_copy, '=');
     if (neq < 0) {

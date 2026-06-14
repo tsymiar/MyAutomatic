@@ -3,7 +3,7 @@
 test.py - 测试脚本
 已集成 Ollama 转换测试
 """
-import os
+# import os
 import sys
 import logging
 from pathlib import Path
@@ -45,7 +45,7 @@ def test_logging():
 def test_run_command():
     """测试命令执行"""
     print("测试 2: 命令执行")
-    returncode, stdout, stderr = run_command(["echo", "test"])
+    returncode, stdout, _ = run_command(["echo", "test"])
     assert returncode == 0, f"命令执行失败，返回码: {returncode}"
     assert "test" in stdout, f"输出不符合预期: {stdout}"
     print("✓ 命令执行测试通过\n")
@@ -119,7 +119,7 @@ def test_help_command():
     """测试帮助命令"""
     print("测试 6: 帮助命令")
     try:
-        returncode, stdout, stderr = run_command(
+        returncode, _, stderr = run_command(
             [sys.executable, str(cyber_dir / "scripts" / "ollama_to_hf.py"), "--help"]
         )
         if returncode == 0:
@@ -181,7 +181,7 @@ def run_all_tests():
     print(f"失败: {failed} 个")
     print(f"跳过: {skipped} 个")
     print()
-    
+
     if failed == 0:
         print("🎉 所有测试通过！")
         print("=" * 60)

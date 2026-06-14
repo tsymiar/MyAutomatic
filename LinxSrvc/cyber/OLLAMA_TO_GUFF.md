@@ -1,3 +1,5 @@
+OLLAMA_TO_GUFF
+
 # Ollama 模型转换工具
 
 将本地 Ollama 模型转换为 Hugging Face 格式，支持完整权重转换和简化配置转换。
