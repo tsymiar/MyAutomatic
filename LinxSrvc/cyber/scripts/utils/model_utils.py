@@ -65,21 +65,22 @@ def load_lora_model(base_model_path, lora_path=None, load_in_4bit=False):
 
     # 如果有 LoRA 权重，加载它们
     if lora_path is not None:
-        try:
-            model = PeftModel.from_pretrained(
-                model,
-                lora_path,
-                torch_dtype=model.dtype,
-                device_map="auto"
-            )
-            # 合并权重以提高推理速度
             try:
-                model = model.merge_and_unload()
-                model.eval()  # 合并后确保模型处于评估模式
-            except Exception:
-                # 如果合并失败，继续使用原始 PeftModel
-                pass
-        except Exception as e:
-            raise RuntimeError(f"加载 LoRA 权重失败: {e}")
-
+                model = PeftModel.from_pretrained(
+                    model,
+                    lora_path,
+                    torch_dtype=model.dtype,
+                    device_map="auto"
+                )
+                # 合并权重以提高推理速度
+                try:
+                    model = model.merge_and_unload()
+                    model.eval()  # 合并后确保模型处于评估模式
+                except ValueError:
+                    # 如果模型不支持合并，则继续使用原始 PEFT 模型
+                    model.eval()
+                except Exception as e:
+                    raise RuntimeError(f"合并 LoRA 权重失败: {e}")
+            except Exception as e:
+                raise RuntimeError(f"加载 LoRA 权重失败: {e}")
     return model, tokenizer

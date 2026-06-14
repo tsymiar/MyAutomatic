@@ -71,8 +71,8 @@ int detect_eth_cable(const char* ifname)
 
     struct ifreq ifr;
     memset(&ifr, 0, sizeof(ifr));
-    strncpy(ifr.ifr_name, ifname, IFNAMSIZ - 1);
-
+    *(char*)(ifname + IFNAMSIZ - 1) = '\0';
+    snprintf(ifr.ifr_name, IFNAMSIZ, "%s", ifname);
     struct ethtool_value ethval;
     ethval.cmd = ETHTOOL_GLINK_VAL;
     ifr.ifr_data = (caddr_t)&ethval;

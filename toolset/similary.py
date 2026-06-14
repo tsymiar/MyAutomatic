@@ -565,7 +565,6 @@ def main():
 
     try:
         _fore = EmptyStyle() if args.no_color else Fore
-        _style = EmptyStyle() if args.no_color else Style
         # 统一颜色处理函数
         color = lambda c: getattr(_fore, c.upper()) if not args.no_color else ""
 

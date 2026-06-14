@@ -20,6 +20,20 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # 全局常量: sha256 格式文件名正则 (64位十六进制)
 SHA256_PATTERN = re.compile(r'^[a-f0-9]{64}$')
 
+# 系统敏感目录列表 — 禁止 subprocess 传入这些路径
+_FORBIDDEN_PATH_PREFIXES = [
+    "/etc", "/boot", "/sys", "/proc", "/dev",
+]
+
+
+def _validate_safe_path(target):
+    """校验路径不指向系统敏感目录，防止意外操作"""
+    resolved = Path(target).resolve()
+    resolved_str = str(resolved)
+    for prefix in _FORBIDDEN_PATH_PREFIXES:
+        if resolved_str == prefix or resolved_str.startswith(prefix + os.sep):
+            raise ValueError(f"拒绝访问系统敏感路径: {target}")
+
 
 def setup_logging(verbose=False):
     """设置日志"""
@@ -32,16 +46,37 @@ def setup_logging(verbose=False):
 
 def run_command(cmd, cwd=None, capture_output=True):
     """
-    运行 shell 命令
+    运行 shell 命令（仅接受可信输入）
+
+    安全约束:
+    - cmd 必须为非空 list[str]，禁止传入用户可控字符串拼接的命令
+    - 使用 list 形式确保 shell=False，防止命令注入
+    - cwd 若提供则必须为已存在的目录
 
     Args:
-        cmd: 命令列表
-        cwd: 工作目录
+        cmd: 命令列表 (断言为非空 list of str)
+        cwd: 工作目录 (可选)
         capture_output: 是否捕获输出
 
     Returns:
         (returncode, stdout, stderr)
+
+    Raises:
+        ValueError: cmd 无效或 cwd 不安全
     """
+    # 输入校验: cmd 必须为非空字符串列表
+    if not isinstance(cmd, list) or len(cmd) == 0:
+        raise ValueError("cmd 必须为非空的字符串列表")
+    if not all(isinstance(arg, str) for arg in cmd):
+        raise ValueError("cmd 中所有元素必须为字符串")
+
+    # cwd 校验: 若提供则必须存在且为目录
+    if cwd is not None:
+        cwd_path = Path(cwd)
+        if not cwd_path.is_dir():
+            raise ValueError(f"cwd 不是有效目录: {cwd}")
+        _validate_safe_path(cwd_path)
+
     logging.debug(f"执行命令: {' '.join(cmd)}")
 
     result = subprocess.run(
@@ -49,7 +84,8 @@ def run_command(cmd, cwd=None, capture_output=True):
         cwd=cwd,
         capture_output=capture_output,
         text=True,
-        check=False
+        check=False,
+        shell=False
     )
 
     if result.stdout and logging.getLogger().level <= logging.DEBUG:
@@ -67,7 +103,9 @@ def run_command(cmd, cwd=None, capture_output=True):
 
 def install_llama_cpp_converter():
     # 安装 llama.cpp-to-hf 转换工具
-    tools_dir = Path("./.llama-tools")
+    # 使用脚本所在目录作为基准，避免 CWD 可控时指向恶意路径
+    script_dir = Path(__file__).resolve().parent
+    tools_dir = script_dir / ".llama-tools"
     converter_dir = tools_dir / "llama.cpp-to-hf"
 
     # 检查是否已安装
@@ -81,7 +119,7 @@ def install_llama_cpp_converter():
 
         # 克隆仓库
         repo_url = "https://github.com/ggerganov/llama.cpp"
-        returncode, stdout, stderr = run_command(
+        returncode, _, stderr = run_command(
             ["git", "clone", repo_url, str(converter_dir)]
         )
 
@@ -181,7 +219,7 @@ def find_ollama_model_files(ollama_model_name):
         # 尝试通过 ollama list 命令获取模型信息
         logging.info("未找到 manifest 文件，尝试通过 ollama 命令查找...")
         try:
-            returncode, stdout, stderr = run_command(["ollama", "list"], capture_output=True)
+            returncode, stdout, _ = run_command(["ollama", "list"], capture_output=True)
             if returncode == 0 and stdout:
                 # 解析 ollama list 输出
                 for line in stdout.split('\n'):
@@ -375,6 +413,12 @@ def convert_gguf_to_hf_complete(gguf_path, output_path, hf_model_name=None, toke
 
         logging.info("开始完整转换 GGUF 模型...")
 
+        # 路径安全性校验: 拒绝系统敏感路径
+        gguf_path = Path(gguf_path).resolve()
+        output_path = Path(output_path).resolve()
+        _validate_safe_path(gguf_path)
+        _validate_safe_path(output_path)
+
         # 安装转换工具
         converter_dir = install_llama_cpp_converter()
         if converter_dir is None:
@@ -409,7 +453,7 @@ def convert_gguf_to_hf_complete(gguf_path, output_path, hf_model_name=None, toke
             raise RuntimeError("llama.cpp-to-hf 工具安装不完整")
 
         # 执行转换
-        returncode, stdout, stderr = run_command(
+        returncode, _, stderr = run_command(
             ["python", str(convert_script), str(gguf_path), str(output_path)]
         )
 

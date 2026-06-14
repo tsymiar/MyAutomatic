@@ -1,7 +1,7 @@
 # data/dataset.py
 import json
 import os
-import torch
+# import torch
 from torch.utils.data import Dataset
 
 class ConversationDataset(Dataset):
@@ -13,18 +13,7 @@ class ConversationDataset(Dataset):
     - 'alpaca': Alpaca 格式，包含 instruction, input, output 字段
     """
     def __init__(self, file_path, tokenizer, max_length=1024, data_format='raw', sharegpt_config=None):
-        """
-        Args:
-            file_path: 数据文件路径
-            tokenizer: HuggingFace tokenizer
-            max_length: 最大序列长度
-            data_format: 数据格式 ('raw', 'sharegpt', 'alpaca')
-            sharegpt_config: ShareGPT 格式配置
-
-        Raises:
-            FileNotFoundError: 文件不存在
-            ValueError: 参数无效或数据格式错误
-        """
+        """加载聊天数据集，支持 raw/sharegpt/alpaca 三种格式"""
         # 参数验证
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"数据文件不存在: {file_path}")
@@ -190,7 +179,7 @@ class ConversationDataset(Dataset):
                 token_positions.append((part_start, part_end))
 
             # 将应该忽略的部分设为 -100
-            for i, (pos, should_label) in enumerate(zip(token_positions, label_parts)):
+            for _, (pos, should_label) in enumerate(zip(token_positions, label_parts)):
                 if not should_label:
                     start_pos, end_pos = pos
                     if start_pos < len(labels):
@@ -215,7 +204,7 @@ class ConversationDataset(Dataset):
 
         # 验证必需字段
         if 'instruction' not in example or 'output' not in example:
-            raise ValueError(f"Alpaca 格式缺少必需字段 'instruction' 或 'output'")
+            raise ValueError("Alpaca 格式缺少必需字段 'instruction' 或 'output'")
 
         instruction = example['instruction']
         input_text = example.get('input', '')

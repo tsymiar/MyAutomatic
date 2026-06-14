@@ -426,7 +426,7 @@ class MultiTimeframeAnalyzer:
 
             # 波动率指标
             atr = talib.ATR(high, low, close, timeperiod=14)
-            upper, middle, lower = talib.BBANDS(
+            upper, _, lower = talib.BBANDS(
                 close, timeperiod=20, nbdevup=2, nbdevdn=2, matype=0
             )
 
@@ -775,7 +775,7 @@ class EnhancedDualMAStrategy:
                 )
 
         self._signal_history.extend([
-            Signal(s.order.symbol, order.direction, order.price,
+            Signal(order.symbol, order.direction, order.price,
                    reason=f"trend_score={trend_score:.2f}")
             for order in orders
         ])
