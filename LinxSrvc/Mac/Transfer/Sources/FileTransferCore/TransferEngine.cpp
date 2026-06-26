@@ -152,7 +152,7 @@ void ClientSessionMgr::closeAllSockets()
 
 size_t ClientSessionMgr::size() const
 {
-    std::lock_guard<std::mutex> lock(const_cast<std::mutex&>(m_mutex));
+    std::lock_guard<std::mutex> lock(m_mutex);
     return m_sessions.size();
 }
 
@@ -161,7 +161,6 @@ size_t ClientSessionMgr::size() const
 TransferEngine::TransferEngine()
     : m_serverSock(-1)
     , m_clientSock(-1)
-    , m_currentSock(-1)
     , m_serverRunning(false)
     , m_connected(false)
     , m_running(false)
@@ -349,7 +348,6 @@ int TransferEngine::connectToServer(const std::string& ip, unsigned short port)
         return m_clientSock;
     }
 
-    m_currentSock.store(m_clientSock);
     m_serverIp = ip;
     m_serverPort = port;
     m_connected.store(true);
@@ -566,6 +564,10 @@ void TransferEngine::clientHandler(int sock, const std::string& clientIp, unsign
             }
             break;
         }
+        case CMD_RESPONSE:
+            // Server should never receive CMD_RESPONSE — protocol violation
+            LOG_WRN("%s unexpected CMD_RESPONSE (server does not request files)", statusPrefix.c_str());
+            break;
         default:
             LOG_WRN("%s unknown command 0x%04x", statusPrefix.c_str(), header.cmd);
             break;
@@ -749,9 +751,17 @@ int TransferEngine::requestFile(const std::string& ip, unsigned short port, cons
     fillHeader(header, CMD_REQUEST);
     header.fileNameLen = (uint32_t)fileName.size();
 
-    std::lock_guard<std::mutex> lock(m_sendMutex);
-    sendAll(m_clientSock, &header, sizeof(header));
-    sendAll(m_clientSock, fileName.c_str(), fileName.size());
+    {
+        std::lock_guard<std::mutex> lock(m_sendMutex);
+        if (sendAll(m_clientSock, &header, sizeof(header)) < 0) {
+            LOG_ERR("sendAll(header) failed: %s", strerror(errno));
+            return -1;
+        }
+        if (sendAll(m_clientSock, fileName.c_str(), fileName.size()) < 0) {
+            LOG_ERR("sendAll(filename) failed: %s", strerror(errno));
+            return -1;
+        }
+    }
 
     return 0;
 }

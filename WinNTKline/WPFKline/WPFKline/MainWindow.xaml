@@ -1,75 +1,490 @@
-﻿<Window x:Class="WPFKline.MainWindow"
+<Window x:Class="WPFKline.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="WPF K-line" Height="450" Width="700"
-    xmlns:ams="http://schemas.amcharts.com/stock/wpf/2009/xaml" Loaded="Window_Loaded">
-    <Grid Margin="10,0,10,0">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ams="http://schemas.amcharts.com/stock/wpf/2009/xaml"
+    Title="A股 K线图"
+    MinWidth="800" MinHeight="550"
+    Width="1000" Height="650"
+    Loaded="Window_Loaded"
+    Background="#F5F5F5">
+
+    <Window.Resources>
+        <!-- 工具按钮样式（浏览按钮用） -->
+        <Style x:Key="ToolButton" TargetType="Button">
+            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="Foreground" Value="#333333"/>
+            <Setter Property="BorderBrush" Value="#C0C0C0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="14,6"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="2">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#E8F0FE"/>
+                                <Setter Property="BorderBrush" Value="#1A73E8"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="#D2E3FC"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+    </Window.Resources>
+
+    <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="40" />
-            <RowDefinition />
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Orientation="Horizontal">
-            <Label Margin="0,5,0,5" Content="Local File:"></Label>
-            <TextBox Name="txtFilePath" Margin="0,5,0,5" Width="520" Height="22" KeyUp="txtFilePath_KeyUp"></TextBox>
-            <Button Name="btnOpenFile" Margin="5,5,0,5" Width="22" Content="..." Height="22" ToolTipService.ToolTip="打开文件" Click="btnOpenFile_Click">
-            </Button>
-        </StackPanel>
+        <!-- ===== 标题栏 ===== -->
+        <Border Grid.Row="0" Background="#FFFFFF" Padding="14,10"
+                BorderBrush="#E0E0E0" BorderThickness="0,0,0,1">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="📈 " FontSize="16" VerticalAlignment="Center"/>
+                <TextBlock x:Name="tbStockTitle" Text="A股 K线图"
+                           FontSize="15" FontWeight="Bold"
+                           Foreground="#1A73E8"
+                           VerticalAlignment="Center"/>
+                <TextBlock x:Name="tbStockSubtitle" Text=""
+                           FontSize="11"
+                           Foreground="#888888"
+                           VerticalAlignment="Center" Margin="14,0,0,0"/>
+            </StackPanel>
+        </Border>
 
-        <ams:StockChart Name="stockChart" Grid.Row="1">
+        <!-- ===== 工具栏 ===== -->
+        <Border Grid.Row="1" Background="#FFFFFF" Padding="12,6"
+                BorderBrush="#E0E0E0" BorderThickness="0,0,0,1">
+            <StackPanel>
+                <!-- 第一行：数据文件 -->
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                    <TextBlock Text="数据文件" VerticalAlignment="Center"
+                               Foreground="#555555" FontSize="12" Margin="0,0,10,0"/>
+                    <TextBox x:Name="txtFilePath"
+                             Width="420" Height="26"
+                             Background="#FFFFFF"
+                             Foreground="#333333"
+                             BorderBrush="#C0C0C0"
+                             BorderThickness="1"
+                             VerticalContentAlignment="Center"
+                             Padding="8,0"
+                             FontSize="12"
+                             KeyUp="txtFilePath_KeyUp"
+                             ToolTip="输入 .DAT 文件路径后按回车，或点击右侧按钮选择"/>
+                    <Button x:Name="btnOpenFile"
+                            Content="浏览..."
+                            Width="64" Height="26" Margin="8,0,0,0"
+                            Style="{StaticResource ToolButton}"
+                            Click="btnOpenFile_Click"/>
+                </StackPanel>
+                <!-- 第二行：自定义日期范围（手写迷你日历弹窗，兼容 .NET 3.5） -->
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="日期范围" VerticalAlignment="Center"
+                               Foreground="#555555" FontSize="12" Margin="0,0,10,0"/>
+
+                    <!-- 起始日期按钮 + 迷你日历弹窗 -->
+                    <Button x:Name="btnStartDate"
+                            Width="125" Height="26"
+                            Content="----"
+                            FontSize="11" Foreground="#333333"
+                            Background="#FFFFFF" BorderBrush="#C0C0C0"
+                            Cursor="Hand" Click="btnStartDate_Click"/>
+                    <Popup x:Name="popStartDate"
+                           PlacementTarget="{Binding ElementName=btnStartDate}"
+                           Placement="Bottom" StaysOpen="False"
+                           AllowsTransparency="True">
+                        <Border Background="#FFFFFF" BorderBrush="#C0C0C0"
+                                BorderThickness="1" CornerRadius="3" Padding="4">
+                            <StackPanel>
+                                <!-- 月份导航栏 -->
+                                <Border Background="#F5F5F5" Padding="2" CornerRadius="2">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Button Grid.Column="0" Content="&lt;&lt;" Width="20" Height="18"
+                                                FontSize="8" Padding="0" Cursor="Hand" ToolTip="上一年"
+                                                Click="calStart_PrevYear"/>
+                                        <Button Grid.Column="1" Content="&lt;" Width="18" Height="18"
+                                                FontSize="10" Padding="0" Cursor="Hand" ToolTip="上一月"
+                                                Click="calStart_PrevMonth"/>
+                                        <TextBlock x:Name="lblStartHeader" Grid.Column="2"
+                                                   Text="2020年1月" HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center" FontSize="11"
+                                                   Foreground="#333333"/>
+                                        <Button Grid.Column="3" Content="&gt;" Width="18" Height="18"
+                                                FontSize="10" Padding="0" Cursor="Hand" ToolTip="下一月"
+                                                Click="calStart_NextMonth"/>
+                                        <Button Grid.Column="4" Content="&gt;&gt;" Width="20" Height="18"
+                                                FontSize="8" Padding="0" Cursor="Hand" ToolTip="下一年"
+                                                Click="calStart_NextYear"/>
+                                    </Grid>
+                                </Border>
+                                <!-- 星期标题 -->
+                                <Grid Margin="0,2,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition/><ColumnDefinition/><ColumnDefinition/>
+                                        <ColumnDefinition/><ColumnDefinition/><ColumnDefinition/>
+                                        <ColumnDefinition/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="一" HorizontalAlignment="Center"
+                                               FontSize="9" Foreground="#888888"/>
+                                    <TextBlock Grid.Column="1" Text="二" HorizontalAlignment="Center"
+                                               FontSize="9" Foreground="#888888"/>
+                                    <TextBlock Grid.Column="2" Text="三" HorizontalAlignment="Center"
+                                               FontSize="9" Foreground="#888888"/>
+                                    <TextBlock Grid.Column="3" Text="四" HorizontalAlignment="Center"
+                                               FontSize="9" Foreground="#888888"/>
+                                    <TextBlock Grid.Column="4" Text="五" HorizontalAlignment="Center"
+                                               FontSize="9" Foreground="#888888"/>
+                                    <TextBlock Grid.Column="5" Text="六" HorizontalAlignment="Center"
+                                               FontSize="9" Foreground="#888888"/>
+                                    <TextBlock Grid.Column="6" Text="日" HorizontalAlignment="Center"
+                                               FontSize="9" Foreground="#888888"/>
+                                </Grid>
+                                <!-- 日期格子容器（代码动态填充） -->
+                                <Grid x:Name="gridStartDays" Width="182" Height="132"
+                                      Margin="0,1,0,0"/>
+                            </StackPanel>
+                        </Border>
+                    </Popup>
+
+                    <TextBlock Text="　至　" VerticalAlignment="Center"
+                               Foreground="#888888" FontSize="12" Margin="4,0"/>
+
+                    <!-- 结束日期按钮 + 迷你日历弹窗 -->
+                    <Button x:Name="btnEndDate"
+                            Width="125" Height="26"
+                            Content="----"
+                            FontSize="11" Foreground="#333333"
+                            Background="#FFFFFF" BorderBrush="#C0C0C0"
+                            Cursor="Hand" Click="btnEndDate_Click"/>
+                    <Popup x:Name="popEndDate"
+                           PlacementTarget="{Binding ElementName=btnEndDate}"
+                           Placement="Bottom" StaysOpen="False"
+                           AllowsTransparency="True">
+                        <Border Background="#FFFFFF" BorderBrush="#C0C0C0"
+                                BorderThickness="1" CornerRadius="3" Padding="4">
+                            <StackPanel>
+                                <!-- 月份导航栏 -->
+                                <Border Background="#F5F5F5" Padding="2" CornerRadius="2">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Button Grid.Column="0" Content="&lt;&lt;" Width="20" Height="18"
+                                                FontSize="8" Padding="0" Cursor="Hand" ToolTip="上一年"
+                                                Click="calEnd_PrevYear"/>
+                                        <Button Grid.Column="1" Content="&lt;" Width="18" Height="18"
+                                                FontSize="10" Padding="0" Cursor="Hand" ToolTip="上一月"
+                                                Click="calEnd_PrevMonth"/>
+                                        <TextBlock x:Name="lblEndHeader" Grid.Column="2"
+                                                   Text="2025年12月" HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center" FontSize="11"
+                                                   Foreground="#333333"/>
+                                        <Button Grid.Column="3" Content="&gt;" Width="18" Height="18"
+                                                FontSize="10" Padding="0" Cursor="Hand" ToolTip="下一月"
+                                                Click="calEnd_NextMonth"/>
+                                        <Button Grid.Column="4" Content="&gt;&gt;" Width="20" Height="18"
+                                                FontSize="8" Padding="0" Cursor="Hand" ToolTip="下一年"
+                                                Click="calEnd_NextYear"/>
+                                    </Grid>
+                                </Border>
+                                <!-- 星期标题 -->
+                                <Grid Margin="0,2,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition/><ColumnDefinition/><ColumnDefinition/>
+                                        <ColumnDefinition/><ColumnDefinition/><ColumnDefinition/>
+                                        <ColumnDefinition/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="一" HorizontalAlignment="Center"
+                                               FontSize="9" Foreground="#888888"/>
+                                    <TextBlock Grid.Column="1" Text="二" HorizontalAlignment="Center"
+                                               FontSize="9" Foreground="#888888"/>
+                                    <TextBlock Grid.Column="2" Text="三" HorizontalAlignment="Center"
+                                               FontSize="9" Foreground="#888888"/>
+                                    <TextBlock Grid.Column="3" Text="四" HorizontalAlignment="Center"
+                                               FontSize="9" Foreground="#888888"/>
+                                    <TextBlock Grid.Column="4" Text="五" HorizontalAlignment="Center"
+                                               FontSize="9" Foreground="#888888"/>
+                                    <TextBlock Grid.Column="5" Text="六" HorizontalAlignment="Center"
+                                               FontSize="9" Foreground="#888888"/>
+                                    <TextBlock Grid.Column="6" Text="日" HorizontalAlignment="Center"
+                                               FontSize="9" Foreground="#888888"/>
+                                </Grid>
+                                <!-- 日期格子容器（代码动态填充） -->
+                                <Grid x:Name="gridEndDays" Width="182" Height="132"
+                                      Margin="0,1,0,0"/>
+                            </StackPanel>
+                        </Border>
+                    </Popup>
+
+                    <Button x:Name="btnApplyDate"
+                            Content="应用"
+                            Width="50" Height="26" Margin="10,0,0,0"
+                            Style="{StaticResource ToolButton}"
+                            Click="btnApplyDate_Click"/>
+                    <Button x:Name="btnResetDate"
+                            Content="重置"
+                            Width="50" Height="26" Margin="4,0,0,0"
+                            Style="{StaticResource ToolButton}"
+                            Click="btnResetDate_Click"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- ===== K线图表 ===== -->
+        <ams:StockChart x:Name="stockChart" Grid.Row="2"
+                        Background="#FAFBFC"
+                        Margin="4,0,4,0"
+                        PreviewMouseMove="stockChart_MouseMove"
+                        MouseLeave="stockChart_MouseLeave">
             <ams:StockChart.DataSets>
-                <ams:DataSet Name="stockSet" Brush="#7f8da9" ItemsSource="{Binding Data}" DateMemberPath="date" OpenMemberPath="open" HighMemberPath="high" LowMemberPath="low" CloseMemberPath="close" ValueMemberPath="close" VolumeMemberPath="volume" />
+                <ams:DataSet x:Name="stockSet"
+                             Brush="#A0AAB4"
+                             ItemsSource="{Binding Data}"
+                             DateMemberPath="date"
+                             OpenMemberPath="open"
+                             HighMemberPath="high"
+                             LowMemberPath="low"
+                             CloseMemberPath="close"
+                             ValueMemberPath="close"
+                             VolumeMemberPath="volume"/>
             </ams:StockChart.DataSets>
 
             <ams:StockChart.Charts>
-                <ams:Chart Title="股票价格" GridHeight="2*">
+                <!-- 蜡烛图（K线主图） -->
+                <ams:Chart GridHeight="3*">
                     <ams:Chart.Graphs>
-                        <ams:Graph GraphType="Candlestick" NegativeBrush="Green" PositiveBrush="Red" LegendItemType="Ohlc" LegendPeriodItemType="Ohlc" CursorBrush="Blue" CursorSize="6" />
+                        <ams:Graph GraphType="Candlestick"
+                                   PositiveBrush="#DC3545"
+                                   NegativeBrush="#28A745"
+                                   LegendItemType="Ohlc"
+                                   LegendPeriodItemType="Ohlc"
+                                   CursorBrush="#1A73E8"
+                                   CursorSize="5"/>
                     </ams:Chart.Graphs>
-
                     <ams:Chart.DateTimeAxis>
-                        <ams:DateTimeAxis ValuesForeground="#90000000" StrokeThickness="0" TickLength="0" />
+                        <ams:DateTimeAxis ValuesForeground="#777777"
+                                          Stroke="#E8E8E8" StrokeThickness="1"
+                                          TickLength="0"/>
                     </ams:Chart.DateTimeAxis>
-
                     <ams:Chart.LeftValueAxis>
-                        <ams:ValueAxis ValuesForeground="#90000000" StrokeThickness="0" TickLength="0" />
+                        <ams:ValueAxis ValuesForeground="#777777"
+                                       Stroke="#E8E8E8" StrokeThickness="1"
+                                       TickLength="0"/>
                     </ams:Chart.LeftValueAxis>
-
                     <ams:Chart.Legend>
-                        <ams:Legend PositiveValueForeground="Red" NegativeValueForeground="Green" IsDateVisible="True"/>
+                        <ams:Legend PositiveValueForeground="#DC3545"
+                                    NegativeValueForeground="#28A745"
+                                    IsDateVisible="True"/>
                     </ams:Chart.Legend>
                 </ams:Chart>
-                <!--成交量的Chart-->
-                <ams:Chart Title="成交量">
+
+                <!-- 成交量副图 -->
+                <ams:Chart GridHeight="1*">
                     <ams:Chart.Graphs>
-                        <ams:Graph GraphType="Column" LegendItemType="Value" LegendPeriodItemType="Value" DataField="Volume" PeriodValue="Sum" CursorBrush="Blue" CursorSize="6" />
+                        <ams:Graph GraphType="Column"
+                                   LegendItemType="Value"
+                                   LegendPeriodItemType="Value"
+                                   DataField="Volume"
+                                   PeriodValue="Sum"
+                                   PositiveBrush="#DC3545"
+                                   NegativeBrush="#28A745"
+                                   CursorBrush="#1A73E8"
+                                   CursorSize="5"/>
                     </ams:Chart.Graphs>
-
                     <ams:Chart.DateTimeAxis>
-                        <ams:DateTimeAxis ValuesEnabled="False" StrokeThickness="0" />
+                        <ams:DateTimeAxis ValuesEnabled="False"
+                                          Stroke="#E8E8E8" StrokeThickness="1"
+                                          TickLength="0"/>
                     </ams:Chart.DateTimeAxis>
-
                     <ams:Chart.LeftValueAxis>
-                        <ams:ValueAxis ValuesForeground="#90000000" StrokeThickness="0" TickLength="0" />
+                        <ams:ValueAxis ValuesForeground="#777777"
+                                       Stroke="#E8E8E8" StrokeThickness="1"
+                                       TickLength="0"/>
                     </ams:Chart.LeftValueAxis>
-
                     <ams:Chart.Legend>
-                        <ams:Legend PositiveValueForeground="Red" NegativeValueForeground="Green" />
+                        <ams:Legend PositiveValueForeground="#DC3545"
+                                    NegativeValueForeground="#28A745"/>
                     </ams:Chart.Legend>
                 </ams:Chart>
             </ams:StockChart.Charts>
 
             <ams:StockChart.PeriodSelector>
-                <ams:PeriodSelector CustomPeriodLabelText="自定义间隔:" PresetPeriodLabelText="周期:" Margin="0,5,0,0">
+                <ams:PeriodSelector PresetPeriodLabelText="周期:"
+                                    Margin="0,4,0,0">
                     <ams:PeriodSelector.PresetPeriods>
-                        <ams:PresetPeriodButton Interval="Day" Quantity="10" ToolTipService.ToolTip="十天" Content="十天" />
-                        <ams:PresetPeriodButton Interval="Month" Quantity="1" ToolTipService.ToolTip="一个月" Content="一月" />
-                        <ams:PresetPeriodButton Interval="Month" Quantity="3" ToolTipService.ToolTip="三个月" Content="三月" />
-                        <ams:PresetPeriodButton Interval="Year" Quantity="1" ToolTipService.ToolTip="一年" Content="一年" />
-                        <ams:PresetPeriodButton Interval="Year" Quantity="3" ToolTipService.ToolTip="三年" Content="三年" />
-                        <ams:PresetPeriodButton Quantity="NaN" ToolTipService.ToolTip="所有数据" Content="最大" />
+                        <ams:PresetPeriodButton Interval="Day" Quantity="7"
+                                                ToolTip="周K线" Content="周K"/>
+                        <ams:PresetPeriodButton Interval="Month" Quantity="NaN"
+                                                ToolTip="月K线" Content="月K"/>
+                        <ams:PresetPeriodButton Interval="Month" Quantity="3"
+                                                ToolTip="季K线" Content="季K"/>
+                        <ams:PresetPeriodButton Interval="Year" Quantity="NaN"
+                                                ToolTip="年K线" Content="年K"/>
+                        <ams:PresetPeriodButton Interval="Year" Quantity="3"
+                                                ToolTip="三年" Content="3年"/>
+                        <ams:PresetPeriodButton Quantity="NaN"
+                                                ToolTip="全部数据" Content="全部"/>
                     </ams:PeriodSelector.PresetPeriods>
                 </ams:PeriodSelector>
             </ams:StockChart.PeriodSelector>
         </ams:StockChart>
+
+        <!-- ===== 状态栏 ===== -->
+        <Border Grid.Row="3" Background="#FFFFFF" Padding="12,3"
+                BorderBrush="#E0E0E0" BorderThickness="0,1,0,0">
+            <Grid>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                    <TextBlock x:Name="tbStatus" Text="就绪"
+                               Foreground="#888888" FontSize="11"
+                               VerticalAlignment="Center"/>
+                    <TextBlock x:Name="tbRecordCount" Text=""
+                               Foreground="#1A73E8" FontSize="11" FontWeight="Bold"
+                               VerticalAlignment="Center" Margin="20,0,0,0"/>
+                </StackPanel>
+                <TextBlock HorizontalAlignment="Right"
+                           Text="鼠标悬停图表查看 OHLCV 数据"
+                           Foreground="#BBBBBB" FontSize="10"
+                           VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+
+        <!-- ===== 图表浮窗 Popup ===== -->
+        <Popup x:Name="chartTooltip"
+               AllowsTransparency="True"
+               Focusable="False"
+               Placement="Relative"
+               PlacementTarget="{Binding ElementName=stockChart}"
+               StaysOpen="True"
+               IsOpen="False">
+            <Border x:Name="tooltipBorder"
+                    Background="#FFFFFF"
+                    BorderBrush="#C0C0C0"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    Padding="0"
+                    MouseEnter="tooltipBorder_MouseEnter"
+                    MouseLeave="tooltipBorder_MouseLeave">
+                <Border.Effect>
+                    <DropShadowEffect Color="#40000000" BlurRadius="8"
+                                      ShadowDepth="2" Opacity="0.3"/>
+                </Border.Effect>
+                <Grid Width="190">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- 日期标题行 -->
+                    <Border Grid.Row="0" Background="#F8F9FA"
+                            Padding="10,6" CornerRadius="4,4,0,0"
+                            BorderBrush="#E8E8E8" BorderThickness="0,0,0,1">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock x:Name="tooltipDate" Text="----"
+                                       FontSize="12" FontWeight="Bold"
+                                       Foreground="#333333"/>
+                            <TextBlock x:Name="tooltipWeekday" Text=""
+                                       FontSize="11" Foreground="#999999"
+                                       Margin="6,0,0,0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- OHLC 数值 -->
+                    <Grid Grid.Row="1" Margin="12,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="开盘"
+                                   FontSize="11" Foreground="#888888" Margin="0,0,14,5"/>
+                        <TextBlock x:Name="tooltipOpen" Grid.Row="0" Grid.Column="1"
+                                   Text="--" FontSize="12" FontWeight="SemiBold"
+                                   Foreground="#333333" Margin="0,0,0,5"/>
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="最高"
+                                   FontSize="11" Foreground="#888888" Margin="0,0,14,5"/>
+                        <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,5">
+                            <TextBlock x:Name="tooltipHigh" Text="--"
+                                       FontSize="12" FontWeight="SemiBold"
+                                       Foreground="#DC3545"/>
+                            <TextBlock x:Name="tooltipHighChg" Text=""
+                                       FontSize="10" Foreground="#DC3545"
+                                       VerticalAlignment="Center" Margin="8,0,0,0"/>
+                        </StackPanel>
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="最低"
+                                   FontSize="11" Foreground="#888888" Margin="0,0,14,5"/>
+                        <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,5">
+                            <TextBlock x:Name="tooltipLow" Text="--"
+                                       FontSize="12" FontWeight="SemiBold"
+                                       Foreground="#28A745"/>
+                            <TextBlock x:Name="tooltipLowChg" Text=""
+                                       FontSize="10" Foreground="#28A745"
+                                       VerticalAlignment="Center" Margin="8,0,0,0"/>
+                        </StackPanel>
+
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="收盘"
+                                   FontSize="11" Foreground="#888888"/>
+                        <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal">
+                            <TextBlock x:Name="tooltipClose" Text="--"
+                                       FontSize="12" FontWeight="Bold"/>
+                            <TextBlock x:Name="tooltipChgPct" Text=""
+                                       FontSize="11" FontWeight="SemiBold"
+                                       VerticalAlignment="Center" Margin="8,0,0,0"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- 成交量 -->
+                    <Border Grid.Row="2" Background="#F8F9FA"
+                            Padding="10,5" CornerRadius="0,0,4,4"
+                            BorderBrush="#E8E8E8" BorderThickness="0,1,0,0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="成交量" FontSize="11"
+                                       Foreground="#888888" Margin="0,0,8,0"/>
+                            <TextBlock x:Name="tooltipVolume" Text="--"
+                                       FontSize="11" FontWeight="SemiBold"
+                                       Foreground="#555555"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+        </Popup>
     </Grid>
 </Window>
