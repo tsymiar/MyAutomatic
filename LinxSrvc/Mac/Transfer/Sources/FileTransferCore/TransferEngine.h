@@ -66,7 +66,7 @@ public:
 
 private:
     std::map<int, std::unique_ptr<ClientSession>> m_sessions;
-    std::mutex m_mutex;
+    mutable std::mutex m_mutex;
 };
 
 class TransferEngine {
@@ -123,7 +123,6 @@ private:
 private:
     int m_serverSock;
     int m_clientSock;
-    std::atomic<int> m_currentSock;
 
     std::atomic<bool> m_serverRunning;
     std::atomic<bool> m_connected;

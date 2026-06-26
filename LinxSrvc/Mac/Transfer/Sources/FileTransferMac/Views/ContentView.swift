@@ -76,8 +76,7 @@ struct TransferProgressBar: View {
             }
         }
         .progressViewStyle(.linear)
-        .padding(.horizontal)
-        .padding(.vertical, 6)
+        .padding()
     }
 }
 
@@ -85,52 +84,43 @@ struct TransferProgressBar: View {
 //  ContentView — 3-tab file transfer UI backed by TransferCore (C++ core)
 // ──────────────────────────────────────────────────────────────────────────────
 
-// ──────────────────────────────────────────────────────────────────────────────
-//  Segmented tab picker — isolated to avoid re-renders during transfer updates
-// ──────────────────────────────────────────────────────────────────────────────
-
-struct SegmentedTabPicker: View {
-    @Binding var selection: Int
-
-    var body: some View {
-        Picker("Mode", selection: $selection) {
-            Label("Receive", systemImage: "arrow.down.circle").tag(0)
-            Label("Send",    systemImage: "arrow.up.circle").tag(1)
-            Label("History", systemImage: "clock").tag(2)
-        }
-        .pickerStyle(.segmented)
-    }
-}
-
 struct ContentView: View {
     @EnvironmentObject var core: TransferCore
     @State private var selectedTab = 0
 
     var body: some View {
         VStack(spacing: 0) {
-            // SegmentedTabPicker holds no @EnvironmentObject reference,
-            // so it won't re-render on transfer-progress updates.
-            // layoutPriority(1) ensures this bar never gets compressed
-            // by the List below during transfer updates.
-            SegmentedTabPicker(selection: $selectedTab)
-                .padding(.horizontal)
-                .padding(.top, 8)
-                .layoutPriority(1)
+            // Use Picker + conditional content instead of TabView.
+            // macOS NSTabView (backing SwiftUI TabView) sets
+            // refusesFirstResponder=YES on its content, which breaks
+            // all TextField / NSTextField focus.
+            //
+            // All text fields use MacTextField (native NSTextField via
+            // NSViewRepresentable), which bypasses SwiftUI responder-chain
+            // issues entirely.
+            Picker("Mode", selection: $selectedTab) {
+                Label("Receive", systemImage: "arrow.down.circle").tag(0)
+                Label("Send",    systemImage: "arrow.up.circle").tag(1)
+                Label("History", systemImage: "clock").tag(2)
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal)
+            .padding(.top, 8)
 
             Divider()
                 .padding(.top, 8)
-                .layoutPriority(1)
 
+            // Client-side text field state lives in TransferCore so
+            // values persist across tab switches even when the view
+            // is recreated via switch.
             Group {
                 switch selectedTab {
                 case 0: ServerView()
-                    .onAppear { core.resetProgress() }
                 case 1: ClientView()
                 case 2: TransferLogView()
                 default: EmptyView()
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             if !core.logMessages.isEmpty {
                 Divider()
@@ -235,84 +225,62 @@ struct ServerView: View {
 
             Divider()
 
-            // Content — ScrollView avoids greedy List expansion
+            // Content
             if core.isServerRunning {
-                ScrollView(.vertical) {
-                    VStack(spacing: 0) {
-                        if core.totalBytes > 0 {
-                            TransferProgressBar(status: core.transferStatus, progress: core.progress,
-                                                transferred: core.transferredBytes, total: core.totalBytes)
-                        }
+                if core.totalBytes > 0 {
+                    TransferProgressBar(status: core.transferStatus, progress: core.progress,
+                                        transferred: core.transferredBytes, total: core.totalBytes)
+                }
 
-                        // Connected devices
-                        VStack(alignment: .leading, spacing: 0) {
-                            Text("Connected Devices")
-                                .font(.caption.bold())
-                                .foregroundColor(.secondary)
-                                .padding(.horizontal)
-                                .padding(.top, 8)
-                            Divider()
-                            if core.clientCount == 0 {
-                                HStack {
-                                    Image(systemName: "info.circle")
-                                        .foregroundColor(.secondary)
-                                    Text("Waiting for device to connect to \(core.serverIP):\(portText)")
-                                        .foregroundColor(.secondary)
-                                }
-                                .padding(.horizontal)
-                                .padding(.vertical, 6)
-                            } else {
-                                HStack {
-                                    Image(systemName: "iphone.gen2")
-                                    Text("\(core.clientCount) device(s) connected")
-                                    Spacer()
-                                    Text("●")
-                                        .foregroundColor(.green)
-                                        .font(.caption)
-                                }
-                                .padding(.horizontal)
-                                .padding(.vertical, 6)
-                            }
-                            Divider()
-                        }
-
-                        if !core.receivedFiles.isEmpty {
-                            VStack(alignment: .leading, spacing: 0) {
-                                Text("Received Files")
-                                    .font(.caption.bold())
+                List {
+                    Section("Connected Devices") {
+                        if core.clientCount == 0 {
+                            HStack {
+                                Image(systemName: "info.circle")
                                     .foregroundColor(.secondary)
-                                    .padding(.horizontal)
-                                    .padding(.top, 8)
-                                Divider()
-                                ForEach(core.receivedFiles) { file in
-                                    HStack {
-                                        Image(systemName: "doc.fill")
-                                            .foregroundColor(.blue)
-                                        VStack(alignment: .leading) {
-                                            Text(file.fileName)
-                                                .lineLimit(1)
-                                            Text("\(formatBytes(file.fileSize)) • from \(file.fromIP)")
-                                                .font(.caption)
-                                                .foregroundColor(.secondary)
-                                        }
-                                        Spacer()
-                                        Button {
-                                            revealInFinder(file)
-                                        } label: {
-                                            Image(systemName: "folder.fill")
-                                                .foregroundColor(.accentColor)
-                                        }
-                                        .buttonStyle(.plain)
-                                        .help("Show in Finder")
+                                Text("Waiting for device to connect to \(core.serverIP):\(portText)")
+                                    .foregroundColor(.secondary)
+                            }
+                        } else {
+                            HStack {
+                                Image(systemName: "iphone.gen2")
+                                Text("\(core.clientCount) device(s) connected")
+                                Spacer()
+                                Text("●")
+                                    .foregroundColor(.green)
+                                    .font(.caption)
+                            }
+                        }
+                    }
+
+                    if !core.receivedFiles.isEmpty {
+                        Section("Received Files") {
+                            ForEach(core.receivedFiles) { file in
+                                HStack {
+                                    Image(systemName: "doc.fill")
+                                        .foregroundColor(.blue)
+                                    VStack(alignment: .leading) {
+                                        Text(file.fileName)
+                                            .lineLimit(1)
+                                        Text("\(formatBytes(file.fileSize)) • from \(file.fromIP)")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
                                     }
-                                    .padding(.horizontal)
-                                    .padding(.vertical, 4)
-                                    Divider()
+                                    Spacer()
+                                    Button {
+                                        revealInFinder(file)
+                                    } label: {
+                                        Image(systemName: "folder.fill")
+                                            .foregroundColor(.accentColor)
+                                    }
+                                    .buttonStyle(.plain)
+                                    .help("Show in Finder")
                                 }
                             }
                         }
                     }
                 }
+                .listStyle(.inset)
             } else {
                 VStack(spacing: 20) {
                     Image(systemName: "arrow.down.doc")
@@ -406,72 +374,59 @@ struct ClientView: View {
 
             Divider()
 
-            // Content — wrapped in ScrollView so transfer-task List
-            // never pushes the header / tab picker out of the window.
+            // Content
             if core.isConnected {
-                ScrollView(.vertical) {
-                    VStack(spacing: 0) {
-                        if core.totalBytes > 0 || core.isBusy {
-                            TransferProgressBar(status: core.transferStatus, progress: core.progress,
-                                                transferred: core.transferredBytes, total: core.totalBytes)
-                        }
+                VStack {
+                    if core.totalBytes > 0 || core.isBusy {
+                        TransferProgressBar(status: core.transferStatus, progress: core.progress,
+                                            transferred: core.transferredBytes, total: core.totalBytes)
+                    }
 
-                        // Drop zone
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 12)
-                                .strokeBorder(style: StrokeStyle(lineWidth: 2, dash: [8, 4]))
-                                .foregroundColor(isDragging ? .accentColor : .secondary.opacity(0.4))
-                                .background(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .fill(isDragging ? Color.accentColor.opacity(0.08) : Color.clear)
-                                )
+                    // Drop zone
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 12)
+                            .strokeBorder(style: StrokeStyle(lineWidth: 2, dash: [8, 4]))
+                            .foregroundColor(isDragging ? .accentColor : .secondary.opacity(0.4))
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(isDragging ? Color.accentColor.opacity(0.08) : Color.clear)
+                            )
 
-                            VStack(spacing: 12) {
-                                Image(systemName: "doc.badge.plus")
-                                    .font(.system(size: 36))
-                                    .foregroundColor(.secondary)
-                                Text("Drop files here")
-                                    .font(.headline)
-                                    .foregroundColor(.secondary)
-                                Text("or")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                Button {
-                                    pickAndSendFiles()
-                                } label: {
-                                    Label("Select Files…", systemImage: "folder")
-                                }
-                                .disabled(core.isBusy)
+                        VStack(spacing: 12) {
+                            Image(systemName: "doc.badge.plus")
+                                .font(.system(size: 36))
+                                .foregroundColor(.secondary)
+                            Text("Drop files here")
+                                .font(.headline)
+                                .foregroundColor(.secondary)
+                            Text("or")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Button {
+                                pickAndSendFiles()
+                            } label: {
+                                Label("Select Files…", systemImage: "folder")
                             }
+                            .disabled(core.isBusy)
                         }
-                        .frame(height: 160)
-                        .padding()
-                        .onDrop(of: [.fileURL], isTargeted: $isDragging) { providers in
-                            handleDrop(providers)
-                            return true
-                        }
+                    }
+                    .frame(height: 160)
+                    .padding()
+                    .onDrop(of: [.fileURL], isTargeted: $isDragging) { providers in
+                        handleDrop(providers)
+                        return true
+                    }
 
-                        // Active transfers — use LazyVStack instead of List
-                        // to avoid greedy layout expansion.
-                        if !core.transferTasks.isEmpty {
-                            VStack(alignment: .leading, spacing: 0) {
-                                Text("Transfer Tasks")
-                                    .font(.caption.bold())
-                                    .foregroundColor(.secondary)
-                                    .padding(.horizontal)
-                                    .padding(.top, 8)
-                                Divider()
+                    // Active transfers
+                    if !core.transferTasks.isEmpty {
+                        List {
+                            Section("Transfer Tasks") {
                                 ForEach(core.transferTasks) { task in
                                     TransferRow(task: task)
-                                        .padding(.horizontal)
-                                        .padding(.vertical, 4)
-                                    Divider()
                                 }
                             }
-                            .background(.regularMaterial)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                            .padding()
                         }
+                        .listStyle(.inset)
                     }
                 }
             } else {
@@ -551,51 +506,32 @@ struct TransferLogView: View {
                 }
                 .frame(maxHeight: .infinity)
             } else {
-                ScrollView(.vertical) {
-                    VStack(spacing: 0) {
-                        if !core.transferTasks.isEmpty {
-                            VStack(alignment: .leading, spacing: 0) {
-                                Text("Tasks")
-                                    .font(.caption.bold())
-                                    .foregroundColor(.secondary)
-                                    .padding(.horizontal)
-                                    .padding(.top, 8)
-                                Divider()
-                                ForEach(core.transferTasks) { task in
-                                    TransferRow(task: task)
-                                        .padding(.horizontal)
-                                        .padding(.vertical, 4)
-                                    Divider()
-                                }
+                List {
+                    if !core.transferTasks.isEmpty {
+                        Section("Tasks") {
+                            ForEach(core.transferTasks) { task in
+                                TransferRow(task: task)
                             }
                         }
-                        if !core.receivedFiles.isEmpty {
-                            VStack(alignment: .leading, spacing: 0) {
-                                Text("Received")
-                                    .font(.caption.bold())
-                                    .foregroundColor(.secondary)
-                                    .padding(.horizontal)
-                                    .padding(.top, 8)
-                                Divider()
-                                ForEach(core.receivedFiles) { file in
-                                    HStack {
-                                        Image(systemName: "doc.fill")
-                                            .foregroundColor(.blue)
-                                        VStack(alignment: .leading) {
-                                            Text(file.fileName).lineLimit(1)
-                                            Text("\(formatBytes(file.fileSize)) • \(file.fromIP) • \(timeFormatter.string(from: file.receivedAt))")
-                                                .font(.caption)
-                                                .foregroundColor(.secondary)
-                                        }
+                    }
+                    if !core.receivedFiles.isEmpty {
+                        Section("Received") {
+                            ForEach(core.receivedFiles) { file in
+                                HStack {
+                                    Image(systemName: "doc.fill")
+                                        .foregroundColor(.blue)
+                                    VStack(alignment: .leading) {
+                                        Text(file.fileName).lineLimit(1)
+                                        Text("\(formatBytes(file.fileSize)) • \(file.fromIP) • \(timeFormatter.string(from: file.receivedAt))")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
                                     }
-                                    .padding(.horizontal)
-                                    .padding(.vertical, 4)
-                                    Divider()
                                 }
                             }
                         }
                     }
                 }
+                .listStyle(.inset)
             }
         }
     }
