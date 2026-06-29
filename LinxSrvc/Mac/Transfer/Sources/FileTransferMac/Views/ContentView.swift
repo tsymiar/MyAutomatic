@@ -98,7 +98,7 @@ struct ContentView: View {
             // All text fields use MacTextField (native NSTextField via
             // NSViewRepresentable), which bypasses SwiftUI responder-chain
             // issues entirely.
-            Picker("Mode", selection: $selectedTab) {
+            Picker("", selection: $selectedTab) {
                 Label("Receive", systemImage: "arrow.down.circle").tag(0)
                 Label("Send",    systemImage: "arrow.up.circle").tag(1)
                 Label("History", systemImage: "clock").tag(2)
@@ -124,7 +124,9 @@ struct ContentView: View {
 
             if !core.logMessages.isEmpty {
                 Divider()
-                LogConsole(messages: core.logMessages)
+                LogConsole(messages: core.logMessages) {
+                    core.logMessages.removeAll()
+                }
                     .frame(height: 140)
             }
         }
@@ -203,12 +205,17 @@ struct ServerView: View {
                         core.stopServer()
                         pollTimer?.invalidate()
                     } label: {
-                        Label("Stop", systemImage: "stop.fill")
+                        Label("STOP", systemImage: "stop.fill")
                     }
                     .buttonStyle(.borderedProminent)
                 } else {
                     Button {
-                        core.startServer(port: UInt16(portText) ?? 8800)
+                        guard let port = UInt16(portText), port > 0 else {
+                            core.transferStatus = "Invalid port number"
+                            core.appendLog("ERROR: Invalid port: \(portText)")
+                            return
+                        }
+                        core.startServer(port: port)
                         pollTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: true) { _ in
                             MainActor.assumeIsolated {
                                 core.updateClientCount()
@@ -346,7 +353,12 @@ struct ClientView: View {
                         .buttonStyle(.borderedProminent)
                     } else {
                         Button {
-                            core.connect(to: core.targetIP, port: UInt16(core.targetPort) ?? 8800)
+                            guard let port = UInt16(core.targetPort), port > 0 else {
+                                core.transferStatus = "Invalid port number: \(core.targetPort)"
+                                core.appendLog("ERROR: Invalid port: \(core.targetPort)")
+                                return
+                            }
+                            core.connect(to: core.targetIP, port: port)
                         } label: {
                             Label("Connect", systemImage: "link")
                         }
@@ -593,6 +605,7 @@ struct TransferRow: View {
 
 struct LogConsole: View {
     let messages: [String]
+    var onClear: (() -> Void)?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -607,6 +620,24 @@ struct LogConsole: View {
                 Text("\(messages.count) entries")
                     .font(.caption2)
                     .foregroundColor(.secondary)
+
+                Button {
+                    copyAll()
+                } label: {
+                    Image(systemName: "doc.on.doc")
+                        .font(.caption)
+                }
+                .buttonStyle(.borderless)
+                .help("Copy all")
+
+                Button {
+                    onClear?()
+                } label: {
+                    Image(systemName: "trash")
+                        .font(.caption)
+                }
+                .buttonStyle(.borderless)
+                .help("Clear logs")
             }
             .padding(.horizontal)
             .padding(.vertical, 4)
@@ -623,6 +654,7 @@ struct LogConsole: View {
                                     .font(.system(size: 10, design: .monospaced))
                                     .lineLimit(2)
                                     .foregroundColor(logColor(msg).opacity(0.8))
+                                    .textSelection(.enabled)
                                 Spacer(minLength: 0)
                             }
                             .padding(.horizontal, 10)
@@ -642,10 +674,17 @@ struct LogConsole: View {
         }
     }
 
+    private func copyAll() {
+        let all = messages.joined(separator: "\n")
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(all, forType: .string)
+    }
+
     private func logColor(_ msg: String) -> Color {
-        if msg.contains("ERROR") { return .red }
+        if msg.contains("[ERROR]") || msg.contains("ERROR") { return .red }
+        if msg.contains("[WARN]")  || msg.contains("fail") || msg.contains("cancel") { return .orange }
         if msg.contains("complete") || msg.contains("connected") || msg.contains("started") { return .green }
-        if msg.contains("fail") || msg.contains("cancel") { return .orange }
+        if msg.contains("[DEBUG]") { return .purple }
         return .secondary
     }
 }

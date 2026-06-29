@@ -2,7 +2,20 @@
 
 #include "TransferBridge.h"
 #include "TransferEngine.h"
+#include "CommLogger.h"
 #include <string>
+
+// ── Log callback storage (global, because LOG_* macros are also global) ──
+static FT_LogCallback  g_logCb = nullptr;
+static void* g_logUserData = nullptr;
+
+/// Trampoline called by CommLogger.h's g_logOutputFunc → invokes the C callback.
+static void logTrampoline(const char* msg)
+{
+    if (g_logCb) {
+        g_logCb(g_logUserData, msg);
+    }
+}
 
 // ---------------------------------------------------------------------------
 //  Lifetime
@@ -28,7 +41,7 @@ int ft_start_server(FT_Handle handle, uint16_t port) {
 
 void ft_stop_server(FT_Handle handle) {
     if (!handle) return;
-    static_cast<TransferEngine*>(handle)->stopServer();
+    static_cast<TransferEngine*>(handle)->closeServer();
 }
 
 // ---------------------------------------------------------------------------
@@ -76,6 +89,17 @@ void ft_set_progress_callback(FT_Handle handle, FT_ProgressCallback callback, vo
     } else {
         static_cast<TransferEngine*>(handle)->setProgressCallback(nullptr);
     }
+}
+
+// ---------------------------------------------------------------------------
+//  Log callback (global — affects all LOG_* macros everywhere)
+// ---------------------------------------------------------------------------
+
+void ft_set_log_callback(FT_LogCallback callback, void* userData)
+{
+    g_logCb = callback;
+    g_logUserData = userData;
+    g_logOutputFunc = callback ? logTrampoline : nullptr;
 }
 
 // ---------------------------------------------------------------------------

@@ -14,19 +14,20 @@
 #include <fstream>
 #include <memory>
 #include <map>
+#include <vector>
 
 #ifndef LOG_TAG
 #define LOG_TAG "TransferEngine"
 #endif
 
-#include "Logger.h"
+#include "CommLogger.h"
 
-// 文件传输协议头 (64字节)
+// 文件传输协议头 (64字节), 主机字节序
 #pragma pack(push, 1)
 struct FileHeader {
     uint8_t  magic[4];       // 魔数: "FTF\0"
     uint8_t  version;        // 协议版本: 1
-    uint16_t cmd;            // 命令: 1=请求, 2=响应, 3=数据, 4=完成, 5=取消
+    uint16_t cmd;            // 命令
     uint32_t fileNameLen;    // 文件名长度
     uint64_t fileSize;       // 文件总大小
     uint32_t chunkSize;      // 分片大小
@@ -79,8 +80,8 @@ public:
 
     static constexpr uint32_t MAX_CHUNK_SIZE = 64 * 1024;  // 64KB per chunk
     static constexpr uint16_t DEFAULT_PORT = 8800;
-    static constexpr int CONNECT_TIMEOUT_MS = 3000;     // 客户端 connect 超时
-    static constexpr int RECV_POLL_TIMEOUT_MS = 200;   // 服务端 poll 超时（快速响应停止）
+    static constexpr int CONNECT_TIMEOUT_MS = 3000;    // 客户端 connect 超时
+    static constexpr int RECV_POLL_TIMEOUT_MS = 5000;  // 服务端 poll 超时（避免 Nagle/RTT 导致文件名读取超时）
     static constexpr int RECV_RESP_TIMEOUT_MS = 5000;  // 客户端等待响应超时
 
     TransferEngine();
@@ -88,7 +89,7 @@ public:
 
     // 服务器模式
     int startServer(unsigned short port = DEFAULT_PORT);
-    void stopServer();
+    void closeServer();
 
     // 客户端模式
     int connectToServer(const std::string& ip, unsigned short port);
@@ -115,7 +116,7 @@ private:
     void fileClientProcess();
     void clientHandler(int sock, const std::string& clientIp, unsigned short clientPort);
 
-    int sendFileData(int sock, const std::string& filePath, uint64_t fileSize);
+    int sendSliceData(int sock, const std::string& filePath, uint64_t fileSize);
     int sendHeader(int sock, const void* data, size_t len);
     int sendHeader(int sock, const FileHeader& header);
     int recvHeader(int sock, FileHeader& header);
@@ -130,8 +131,10 @@ private:
 
     std::thread m_serverThread;
     std::thread m_receiveThread;
+    std::vector<std::thread> m_clientThreads;
 
     std::mutex m_sendMutex;
+    std::mutex m_clientThreadMutex;
 
     std::string m_savePath;
     std::string m_serverIp;

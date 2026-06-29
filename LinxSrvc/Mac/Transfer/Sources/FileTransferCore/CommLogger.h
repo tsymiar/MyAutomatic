@@ -1,5 +1,5 @@
-#ifndef FILE_TRANSFER_LOGGER_H
-#define FILE_TRANSFER_LOGGER_H
+#ifndef FILE_TRANSFER_COMLOG_H
+#define FILE_TRANSFER_COMLOG_H
 #include <stdio.h>
 #include <time.h>
 #include <stdarg.h>
@@ -11,6 +11,12 @@
 #endif
 
 #pragma GCC diagnostic ignored "-Wformat"
+
+// ── Log output redirection ────────────────────────────────────────────────────
+// Set by the C bridge (TransferBridge.cpp) to forward C++ logs to Swift/SwiftUI.
+// When NULL (default), logs only go to stdout.
+typedef void (*LogOutputFunc)(const char* msg);
+extern LogOutputFunc g_logOutputFunc;
 
 #ifdef NOLOG
 #define LOG_INF(fmt, ...)  ((void)0)
@@ -29,14 +35,22 @@
 #define LOCATE_ARGS(_module) _module, basename(const_cast<char*>(__FILE__)), __LINE__, __FUNCTION__
 #define LOCATE_FORMAT "[%s](%s:%d)[%s]: "
 
-inline struct tm* log_times() { time_t now = time(NULL); static struct tm* local = NULL; local = localtime(&now); return local; }
+inline struct tm* log_times() { static thread_local struct tm tm_loc; time_t now = time(NULL); localtime_r(&now, &tm_loc); return &tm_loc; }
 inline void logger(const char* fm, ...)
 {
+  char buf[4096];
   va_list args;
   va_start(args, fm);
-  static_cast<void>(vprintf(fm, args));
+  int n = vsnprintf(buf, sizeof(buf), fm, args);
   va_end(args);
-  static_cast<void>(printf("\n"));
+
+  if (n > 0) {
+    if (g_logOutputFunc) { g_logOutputFunc(buf); }
+    printf("%s\n", buf);
+    // When stdout is not connected to a terminal, it defaults to fully buffered;
+    // we must explicitly flush to ensure log lines are written out promptly.
+    fflush(stdout);
+  }
 }
 
 #define LOG_INF(fmt, ...) logger(TIME_FORMAT "[INFO]" LOCATE_FORMAT fmt, TIME_ARGS(log_times()), LOCATE_ARGS(LOG_TAG), ##__VA_ARGS__)
@@ -45,4 +59,4 @@ inline void logger(const char* fm, ...)
 #define LOG_DBG(fmt, ...) logger(TIME_FORMAT "[DEBUG]" LOCATE_FORMAT fmt, TIME_ARGS(log_times()), LOCATE_ARGS(LOG_TAG), ##__VA_ARGS__)
 #endif
 
-#endif // FILE_TRANSFER_LOGGER_H
+#endif // FILE_TRANSFER_COMLOG_H

@@ -64,6 +64,16 @@ void ft_set_save_path(FT_Handle handle, const char* path);
 /// Pass callback==NULL to clear.
 void ft_set_progress_callback(FT_Handle handle, FT_ProgressCallback callback, void* userData);
 
+/// Log callback signature — receives every LOG_INF/WRN/ERR/DBG from C++.
+///   userData – opaque pointer registered via ft_set_log_callback()
+///   msg      – formatted log line (UTF-8, null-terminated, includes timestamp)
+typedef void (*FT_LogCallback)(void* userData, const char* msg);
+
+/// Register a global log callback.  When set, ALL C++ logs (from any TransferEngine
+/// instance) are forwarded to `callback` in addition to being printed to stdout.
+/// Pass callback==NULL to disable forwarding.
+void ft_set_log_callback(FT_LogCallback callback, void* userData);
+
 // ── Status queries ────────────────────────────────────
 
 bool ft_is_connected(FT_Handle handle);

@@ -5,6 +5,7 @@
 #include "TransferEngine.h"
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <netdb.h>
@@ -13,10 +14,15 @@
 #include <sys/stat.h>
 #include <cstring>
 #include <cerrno>
+#include <chrono>
 #include <algorithm>
 #include <memory>
 #include <vector>
 #include <map>
+
+// ── Global log output function pointer (defined here, declared in CommLogger.h) ──
+// Set by TransferBridge.cpp → Swift to forward all C++ LOG_* to the UI console.
+LogOutputFunc g_logOutputFunc = nullptr;
 
 // --- Helper: fill FileHeader with common defaults ---
 static inline void fillHeader(FileHeader& h, uint16_t cmd) {
@@ -34,7 +40,11 @@ static int sendAll(int sock, const void* buf, size_t len)
 {
     size_t total = 0;
     while (total < len) {
+#ifdef MSG_NOSIGNAL
+        ssize_t ret = send(sock, (const char*)buf + total, len - total, MSG_NOSIGNAL);
+#else
         ssize_t ret = send(sock, (const char*)buf + total, len - total, 0);
+#endif
         if (ret < 0) {
             if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
                 continue;  // 非阻塞/中断，重试
@@ -50,41 +60,43 @@ static int sendAll(int sock, const void* buf, size_t len)
 }
 
 // --- 可靠的 recv 辅助函数 ---
-// 使用 poll() 检测连接状态，以手动读循环替代 MSG_WAITALL，避免 SO_RCVTIMEO + MSG_WAITALL 的兼容性问题
-// 返回值: >0 成功（应等于len），0 客户端断开(EOF/POLLHUP)，-1 超时（可重试），-2 其他错误
+// 使用 SO_RCVTIMEO + recv() 循环。
+// macOS accept() 返回的 socket 在内核层可能延迟同步"已连接"状态，
+// 导致 recv() 返回 ENOTCONN(57)。此函数将 ENOTCONN 视为错误返回 -2，
+// 由调用方（clientHandler）的外层重试循环以更长延迟处理。
+//
+// 返回值: >0 成功（应等于len），0 客户端断开(EOF)，-1 超时（可重试），-2 其他错误
 static int recvAll(int sock, void* buf, size_t len, int timeoutMs)
 {
-    struct pollfd pfd;
-    pfd.fd = sock;
-    pfd.events = POLLIN;
+    struct timeval tv;
+    tv.tv_sec  = timeoutMs / 1000;
+    tv.tv_usec = (timeoutMs % 1000) * 1000;
+    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
 
     size_t total = 0;
     while (total < len) {
-        int pr = poll(&pfd, 1, timeoutMs);
-        if (pr == 0) {
-            return -1;  // 超时，无数据
-        }
-        if (pr < 0) {
-            return -2;  // poll 错误
-        }
-        if (pfd.revents & (POLLHUP | POLLERR)) {
-            return 0;   // 客户端断开
-        }
-        if (!(pfd.revents & POLLIN)) {
+        ssize_t r = recv(sock, (char*)buf + total, len - total, 0);
+        if (r > 0) {
+            total += (size_t)r;
             continue;
         }
-
-        ssize_t ret = recv(sock, (char*)buf + total, len - total, 0);
-        if (ret == 0) {
-            return 0;   // EOF，客户端正常关闭
+        if (r == 0) {
+            return 0;  // EOF
         }
-        if (ret < 0) {
-            if (errno == EAGAIN || errno == EWOULDBLOCK) {
-                continue;  // 非阻塞模式下无数据，继续 poll
-            }
-            return -2;  // recv 错误
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+            return -1;  // SO_RCVTIMEO 超时
         }
-        total += ret;
+        if (errno == EINTR) {
+            continue;
+        }
+        // ENOTCONN: macOS 内核 socket 状态同步延迟。
+        // 不在此处重试——返回 -2 由外层 clientHandler 以更长延迟重试整个 recvAll。
+        int savedErrno = errno;
+        int soErr = 0; socklen_t soLen = sizeof(soErr);
+        getsockopt(sock, SOL_SOCKET, SO_ERROR, &soErr, &soLen);
+        LOG_WRN("recvAll: recv errno=%d/%s, SO_ERROR=%d/%s",
+            savedErrno, strerror(savedErrno), soErr, soErr ? strerror(soErr) : "(none)");
+        return -2;
     }
     return (int)total;
 }
@@ -169,7 +181,7 @@ TransferEngine::TransferEngine()
 
 TransferEngine::~TransferEngine()
 {
-    stopServer();
+    closeServer();
     disconnect();
 }
 
@@ -193,6 +205,10 @@ int TransferEngine::createServerSocket(unsigned short port)
 
     int opt = 1;
     setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &opt, sizeof(opt));
+#ifdef SO_NOSIGPIPE
+    setsockopt(sock, SOL_SOCKET, SO_NOSIGPIPE, &opt, sizeof(opt));
+#endif
 
     struct sockaddr_in addr {};
     addr.sin_family = AF_INET;
@@ -223,22 +239,30 @@ int TransferEngine::createClientSocket(const std::string& ip, unsigned short por
         return -1;
     }
 
-    // Keepalive to detect broken connections early
+    // Keepalive to detect broken connections early; disable Nagle for low-latency sends
     int opt = 1;
     setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, &opt, sizeof(opt));
+    setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &opt, sizeof(opt));
+#ifdef SO_NOSIGPIPE
+    setsockopt(sock, SOL_SOCKET, SO_NOSIGPIPE, &opt, sizeof(opt));
+#endif
 
     struct sockaddr_in addr {};
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port);
 
     if (inet_pton(AF_INET, ip.c_str(), &addr.sin_addr) <= 0) {
-        struct hostent* he = gethostbyname(ip.c_str());
-        if (he == nullptr) {
-            LOG_ERR("gethostbyname() failed: invalid address %s", ip.c_str());
+        struct addrinfo hints{}, *res = nullptr;
+        hints.ai_family = AF_INET;
+        hints.ai_socktype = SOCK_STREAM;
+        int ga = getaddrinfo(ip.c_str(), nullptr, &hints, &res);
+        if (ga != 0 || res == nullptr) {
+            LOG_ERR("getaddrinfo() failed: %s -> %s", ip.c_str(), gai_strerror(ga));
             close(sock);
             return -2;
         }
-        memcpy(&addr.sin_addr, he->h_addr_list[0], he->h_length);
+        memcpy(&addr.sin_addr, &((struct sockaddr_in*)res->ai_addr)->sin_addr, sizeof(addr.sin_addr));
+        freeaddrinfo(res);
     }
 
     // ── Non-blocking connect with timeout via poll() ──
@@ -315,16 +339,14 @@ int TransferEngine::startServer(unsigned short port)
     return 0;
 }
 
-void TransferEngine::stopServer()
+void TransferEngine::closeServer()
 {
     m_serverRunning.store(false);
     m_running.store(false);
 
-    // 关闭所有客户端 socket，立即中断其阻塞的 recv() 调用
     m_sessionMgr.closeAllSockets();
 
     if (m_serverSock >= 0) {
-        // shutdown 立即中断阻塞的 accept() 调用
         shutdown(m_serverSock, SHUT_RDWR);
         close(m_serverSock);
         m_serverSock = -1;
@@ -332,6 +354,17 @@ void TransferEngine::stopServer()
 
     if (m_serverThread.joinable()) {
         m_serverThread.join();
+    }
+
+    // 安全等待所有 clientHandler 线程退出
+    {
+        std::lock_guard<std::mutex> lock(m_clientThreadMutex);
+        for (std::thread& t : m_clientThreads) {
+            if (t.joinable()) {
+                t.join();
+            }
+        }
+        m_clientThreads.clear();
     }
 
     LOG_INF("TransferEngine Server Exit");
@@ -384,7 +417,6 @@ void TransferEngine::fileServerProcess()
     while (m_serverRunning.load()) {
         int clientSock = accept(m_serverSock, (struct sockaddr*)&clientAddr, &addrLen);
         if (clientSock < 0) {
-            // accept 已由 stopServer() 中的 shutdown() 中断
             if (m_serverRunning.load()) {
                 LOG_ERR("accept() failed: %s", strerror(errno));
             }
@@ -394,10 +426,20 @@ void TransferEngine::fileServerProcess()
         char ipStr[INET_ADDRSTRLEN];
         unsigned short clientPort = ntohs(clientAddr.sin_port);
         inet_ntop(AF_INET, &clientAddr.sin_addr, ipStr, sizeof(ipStr));
+
         LOG_INF("TransferEngine client connected from %s:%d", ipStr, clientPort);
 
+        // 禁用 Nagle 确保 header+filename 小包立即发出不分段
+        int opt = 1;
+        setsockopt(clientSock, IPPROTO_TCP, TCP_NODELAY, &opt, sizeof(opt));
+#ifdef SO_NOSIGPIPE
+        setsockopt(clientSock, SOL_SOCKET, SO_NOSIGPIPE, &opt, sizeof(opt));
+#endif
+
         // 为每个客户端创建独立线程处理
-        std::thread(&TransferEngine::clientHandler, this, clientSock, std::string(ipStr), clientPort).detach();
+        std::lock_guard<std::mutex> lock(m_clientThreadMutex);
+        m_clientThreads.emplace_back(&TransferEngine::clientHandler, this,
+                                      clientSock, std::string(ipStr), clientPort);
     }
 }
 
@@ -412,10 +454,28 @@ void TransferEngine::fileClientProcess()
 
 void TransferEngine::clientHandler(int sock, const std::string& clientIp, unsigned short clientPort)
 {
+    LOG_INF("clientHandler START fd=%d from %s:%u", sock, clientIp.c_str(), clientPort);
+
+    // 确保 socket 处于阻塞模式（accept() 继承自 listening socket 的 flags，
+    // 理论上已是阻塞的，但显式设置消除潜在的平台差异）
+    int flags = fcntl(sock, F_GETFL, 0);
+    if (flags < 0) {
+        LOG_ERR("clientHandler fd=%d fcntl(F_GETFL) failed: %d/%s — fd already invalid, exiting",
+            sock, errno, strerror(errno));
+        close(sock);
+        m_sessionMgr.removeSession(sock);
+        return;
+    }
+    if (flags & O_NONBLOCK) {
+        LOG_WRN("clientHandler fd=%d was O_NONBLOCK, forcing blocking mode", sock);
+        fcntl(sock, F_SETFL, flags & ~O_NONBLOCK);
+    }
+
     // 添加会话到管理器
     m_sessionMgr.addSession(sock, clientIp, clientPort);
     ClientSession* session = m_sessionMgr.getSession(sock);
     if (!session) {
+        LOG_ERR("clientHandler fd=%d getSession returned null — closing", sock);
         close(sock);
         return;
     }
@@ -427,21 +487,51 @@ void TransferEngine::clientHandler(int sock, const std::string& clientIp, unsign
 
     std::string statusPrefix = "[" + clientIp + ":" + std::to_string(clientPort) + "] ";
 
+    // ── macOS 内核 socket 状态同步延迟处理 ──
+    // accept() 刚返回的 socket 在 macOS 上可能还处于初始化中，
+    // recv() 此时会返回 ENOTCONN(57) 且 SO_ERROR 可能为 EBADF(9)。
+    // 对此类瞬时错误以退避延迟重试（最多 16 次 ≈ 655s），而非立即断开。
+    static constexpr int ENOTCONN_RETRY_MAX = 16;
+    static constexpr int ENOTCONN_RETRY_DELAY_US = 10000;  // 起始 10ms，翻倍退避
+    static constexpr int SLEEP_SLICE_US = 50000;           // 单次 usleep 上限 50ms，超出则分片以轮询 m_running
+    int enotconnRetries = 0;
+
     while (m_running.load() && session->active.load()) {
         FileHeader header{};
         int ret = recvAll(sock, &header, sizeof(header), RECV_POLL_TIMEOUT_MS);
         if (ret <= 0) {
             if (ret == -1) {
-                // 超时，回到 while 检查 m_running 是否被 stopServer() 置为 false
+                // 超时，回到 while 检查 m_running 是否被 closeServer() 置为 false
+                LOG_INF("%s recv header timeout (%dms) — retry", statusPrefix.c_str(), RECV_POLL_TIMEOUT_MS);
+                enotconnRetries = 0;  // 超时后重置 ENOTCONN 计数器
+                continue;
+            }
+            if (ret == -2 && enotconnRetries < ENOTCONN_RETRY_MAX) {
+                // ENOTCONN/EBADF: macOS 内核 socket 状态同步延迟，退避重试
+                int delayUs = ENOTCONN_RETRY_DELAY_US * (1 << enotconnRetries);
+                ++enotconnRetries;
+                LOG_WRN("%s recv header returned ENOTCONN/EBADF, retry %d/%d after %dus",
+                    statusPrefix.c_str(), enotconnRetries, ENOTCONN_RETRY_MAX, delayUs);
+                // 分片睡眠，每 SLEEP_SLICE_US 检查一次 m_running，确保 closeServer() 能及时中断
+                while (delayUs > 0 && m_running.load()) {
+                    int slice = (delayUs > SLEEP_SLICE_US) ? SLEEP_SLICE_US : delayUs;
+                    usleep((useconds_t)slice);
+                    delayUs -= slice;
+                }
+                if (!m_running.load()) break;  // closeServer() 已触发，立即退出
                 continue;
             }
             if (ret == 0) {
-                LOG_INF("%s client disconnected (EOF/POLLHUP)", statusPrefix.c_str());
+                LOG_INF("%s recv header: EOF — client disconnected (fd=%d)",
+                    statusPrefix.c_str(), sock);
             } else {
-                LOG_WRN("%s recv header failed", statusPrefix.c_str());
+                // 详细错误已由 recvAll 内部记录，或 ENOTCONN 重试耗尽
+                LOG_WRN("%s recv header failed: ret=%d (fd=%d) — see recvAll log above",
+                    statusPrefix.c_str(), ret, sock);
             }
             break;
         }
+        enotconnRetries = 0;  // 成功收到数据，重置计数器
 
         // 验证魔数
         if (memcmp(header.magic, "FTF\0", 4) != 0) {
@@ -477,7 +567,11 @@ void TransferEngine::clientHandler(int sock, const std::string& clientIp, unsign
             FileHeader response{};
             fillHeader(response, CMD_RESPONSE);
             response.fileSize = header.fileSize;
-            sendHeader(sock, response);
+            if (sendHeader(sock, response) < 0) {
+                LOG_ERR("%s sendHeader(response) failed — closing", statusPrefix.c_str());
+                session->active.store(false);
+                break;
+            }
 
             // 通知进度
             if (m_progressCallback) {
@@ -496,9 +590,21 @@ void TransferEngine::clientHandler(int sock, const std::string& clientIp, unsign
                 if (!filePath.empty() && filePath.back() != '/' && filePath.back() != '\\') {
                     filePath += "/";
                 }
-                // 添加客户端前缀避免文件名冲突
-                filePath += clientIp + "_" + std::to_string(clientPort) + "_" +
-                    (session->pendingFileName.empty() ? "received_file" : session->pendingFileName);
+                // 使用时间戳后缀防止同名文件覆盖
+                time_t now = time(nullptr);
+                struct tm tmBuf;
+                localtime_r(&now, &tmBuf);
+                char ts[32];
+                strftime(ts, sizeof(ts), "_%Y%m%d_%H%M%S", &tmBuf);
+
+                std::string baseName = session->pendingFileName.empty() ? "received_file" : session->pendingFileName;
+                size_t dotPos = baseName.find_last_of('.');
+                if (dotPos != std::string::npos) {
+                    baseName.insert(dotPos, ts);
+                } else {
+                    baseName += ts;
+                }
+                filePath += clientIp + "_" + std::to_string(clientPort) + "_" + baseName;
 
                 session->recvFile.open(filePath, std::ios::binary | std::ios::trunc);
                 if (!session->recvFile.is_open()) {
@@ -525,6 +631,7 @@ void TransferEngine::clientHandler(int sock, const std::string& clientIp, unsign
                     LOG_ERR("%s recv data failed", statusPrefix.c_str());
                 }
                 if (session->recvFile.is_open()) session->recvFile.close();
+                session->active.store(false);
                 break;
             }
 
@@ -575,6 +682,9 @@ void TransferEngine::clientHandler(int sock, const std::string& clientIp, unsign
     }
 
     // 清理会话
+    LOG_INF("%s clientHandler EXIT — cleaning up fd=%d (active=%d, running=%d)",
+        statusPrefix.c_str(), sock, (int)session->active.load(), (int)m_running.load());
+
     if (session->recvFile.is_open()) {
         session->recvFile.close();
     }
@@ -607,7 +717,7 @@ int TransferEngine::recvHeader(int sock, FileHeader& header)
     return (ret > 0) ? 0 : -1;
 }
 
-int TransferEngine::sendFileData(int sock, const std::string& filePath, uint64_t fileSize)
+int TransferEngine::sendSliceData(int sock, const std::string& filePath, uint64_t fileSize)
 {
     std::ifstream file(filePath, std::ios::binary);
     if (!file.is_open()) {
@@ -670,7 +780,9 @@ int TransferEngine::sendFileData(int sock, const std::string& filePath, uint64_t
     fillHeader(complete, CMD_COMPLETE);
     complete.fileSize = fileSize;
     complete.transSize = totalSent;
-    sendHeader(sock, complete);
+    if (sendHeader(sock, complete) < 0) {
+        LOG_ERR("sendHeader(COMPLETE) failed: %s", strerror(errno));
+    }
 
     if (m_progressCallback) {
         m_progressCallback(totalSent, fileSize, "Send complete!");
@@ -720,7 +832,7 @@ int TransferEngine::sendLocalFile(const std::string& filePath)
         }
         if (sendAll(m_clientSock, fileName.c_str(), fileName.size()) < 0) {
             LOG_ERR("sendAll(filename) failed: %s", strerror(errno));
-            return -5;
+            return -6;
         }
     }
 
@@ -736,7 +848,7 @@ int TransferEngine::sendLocalFile(const std::string& filePath)
     }
 
     // 发送文件数据
-    return sendFileData(m_clientSock, filePath, fileSize);
+    return sendSliceData(m_clientSock, filePath, fileSize);
 }
 
 int TransferEngine::requestFile(const std::string& ip, unsigned short port, const std::string& fileName)
@@ -759,7 +871,7 @@ int TransferEngine::requestFile(const std::string& ip, unsigned short port, cons
         }
         if (sendAll(m_clientSock, fileName.c_str(), fileName.size()) < 0) {
             LOG_ERR("sendAll(filename) failed: %s", strerror(errno));
-            return -1;
+            return -2;
         }
     }
 
