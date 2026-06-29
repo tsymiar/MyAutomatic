@@ -44,6 +44,7 @@ final class TransferCore: ObservableObject {
 
     /// Keep a strong reference to the C callback so it is not deallocated.
     private var callbackRef: FT_ProgressCallback?
+    private var logCallbackRef: FT_LogCallback?
 
     // View models
     @Published var receivedFiles: [ReceivedFile] = []
@@ -60,9 +61,18 @@ final class TransferCore: ObservableObject {
 
     // MARK: - Logging helper
 
-    private func appendLog(_ msg: String) {
+    func appendLog(_ msg: String) {
         let line = "[\(timeFormatter.string(from: Date()))] \(msg)"
         logMessages.append(line)
+        if logMessages.count > 200 {
+            logMessages.removeFirst(50)
+        }
+    }
+
+    /// Append a log line that already has a timestamp prefix (e.g. from C++ LOG_* macros).
+    /// Avoids double-timestamping.
+    func appendTimestampedLog(_ msg: String) {
+        logMessages.append(msg)
         if logMessages.count > 200 {
             logMessages.removeFirst(50)
         }
@@ -79,7 +89,7 @@ final class TransferCore: ObservableObject {
             return nil
         }
         ft_set_save_path(h, savePath)
-        installCallback(h)
+        installCallbacks(h)
         return h
     }
 
@@ -89,6 +99,10 @@ final class TransferCore: ObservableObject {
         ft_destroy(h)
         handle = nil
         callbackRef = nil
+        // Note: log callback is global and survives engine destruction;
+        // explicitly clear it so no stale Unmanaged pointer is used.
+        ft_set_log_callback(nil, nil)
+        logCallbackRef = nil
     }
 
     func startServer(port: UInt16 = 8800) {
@@ -112,8 +126,8 @@ final class TransferCore: ObservableObject {
         ft_stop_server(handle)
         isServerRunning = false
         clientCount = 0
-        transferStatus = "Server stopped"
-        appendLog("Server stopped")
+        transferStatus = "Server stopped by swift"
+        appendLog(transferStatus)
         destroyEngine()
     }
 
@@ -128,6 +142,9 @@ final class TransferCore: ObservableObject {
     func connect(to ip: String, port: UInt16 = 8800) {
         guard !isConnected, let h = makeEngine() else { return }
         handle = h
+
+        // 重置进度条，避免残留上次传输的 100%
+        resetProgress()
 
         let rc = ft_connect(h, ip, port)
         if rc == 0 {
@@ -147,6 +164,7 @@ final class TransferCore: ObservableObject {
         isConnected = false
         transferStatus = "Disconnected"
         appendLog("Disconnected from server")
+        resetProgress()
         destroyEngine()
     }
 
@@ -186,22 +204,41 @@ final class TransferCore: ObservableObject {
                     self.appendLog("Send failed: \(task.fileName) (code \(rc))")
                     self.transferTasks[idx].status = .failed
                 }
+                // 发送完成后自动断开连接，下次连接时进度条从 0 开始
+                if self.isConnected {
+                    // 延时 1s 确保对端收到最后的 CMD_COMPLETE 并处理完毕
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                        self?.disconnect()
+                    }
+                }
             }
         }
     }
 
     // MARK: - Callback wiring (uses Unmanaged to avoid global state)
 
-    private func installCallback(_ h: FT_Handle) {
-        let trampoline: FT_ProgressCallback = { rawSelf, cur, tot, stPtr in
+    private func installCallbacks(_ h: FT_Handle) {
+        // ── Progress callback ──
+        let progTrampoline: FT_ProgressCallback = { rawSelf, cur, tot, stPtr in
             let status = stPtr.map { String(cString: $0) } ?? ""
             let core = Unmanaged<TransferCore>.fromOpaque(rawSelf!).takeUnretainedValue()
             DispatchQueue.main.async {
                 core.handleProgress(current: cur, total: tot, status: status)
             }
         }
-        callbackRef = trampoline
-        ft_set_progress_callback(h, trampoline, Unmanaged.passUnretained(self).toOpaque())
+        callbackRef = progTrampoline
+        ft_set_progress_callback(h, progTrampoline, Unmanaged.passUnretained(self).toOpaque())
+
+        // ── Log callback (global — routes ALL C++ LOG_* to the UI console) ──
+        let logTrampoline: FT_LogCallback = { rawSelf, msgPtr in
+            let msg = msgPtr.map { String(cString: $0) } ?? ""
+            let core = Unmanaged<TransferCore>.fromOpaque(rawSelf!).takeUnretainedValue()
+            DispatchQueue.main.async {
+                core.appendTimestampedLog(msg)
+            }
+        }
+        logCallbackRef = logTrampoline
+        ft_set_log_callback(logTrampoline, Unmanaged.passUnretained(self).toOpaque())
     }
 
     /// Called on the main thread by the trampoline above.
