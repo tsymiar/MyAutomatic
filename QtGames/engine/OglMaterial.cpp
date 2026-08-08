@@ -187,6 +187,7 @@ void QOglMaterial::initializeGL()
     kv.AdjustDraw(640, 480);
 #else
     mPng.setPixels(IMAGE_PATH"atlas.png");
+    mPng.loadAtlasBackground(IMAGE_PATH"atlas.png");
 #if SDL_MAJOR_VERSION >= 2
     if (m_showSdl && (SDL_GL_init() == 0)) {
 #ifndef MAX_PATH
@@ -291,12 +292,10 @@ void QOglMaterial::paintGL()
     glDisableVertexAttribArray(vertexLocation);
     glDisableVertexAttribArray(clorLocation);
 #else
-    glTranslatef(0, 0, 0);
-    static uint32_t i = 0, j = 0;
-    mPng.showPixels(i, j);
-    i++;j++;
-    if (i == 1024) i = 0;
-    if (j == 768) j = 0;
+    // 渲染滚动背景：正交投影全屏+纹理坐标偏移
+    if (mPng.isBgLoaded()) {
+        mPng.showBackground(bgScrollU);
+    }
 
     if (bingo) {
         textOut(30, 40, Qt::red, 3, "Helvetica");

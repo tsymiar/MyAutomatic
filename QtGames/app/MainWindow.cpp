@@ -139,6 +139,10 @@ void MainWindow::timeTrigger()
         setText("bingo!");
         setBingo();
     }
+    // 背景滚动：随着游戏时间缓慢前进，模拟愤怒的小鸟式背景平移
+    if (bgScrollU < BG_MAX_SCROLL) {
+        bgScrollU += 0.003f;
+    }
     update();
     QCoreApplication::processEvents(QEventLoop::AllEvents);
 #endif

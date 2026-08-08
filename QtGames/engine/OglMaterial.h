@@ -75,6 +75,8 @@ private:
     bool bingo = false;
     bool m_showSdl = false;
 protected:
+    float bgScrollU = 0.0f;      // 背景水平滚动偏移 (0.0 ~ 1.0)
+    static constexpr float BG_MAX_SCROLL = 0.44f; // 最大滚动范围
     inline void setXval(GLfloat x) { xVal = x; }
     inline void setYval(GLfloat y) { yVal = y; }
     inline void setZoom(GLfloat z) { zZoom = z; }
