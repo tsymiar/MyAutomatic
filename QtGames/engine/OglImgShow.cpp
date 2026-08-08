@@ -22,6 +22,10 @@ OglImgShow::~OglImgShow()
         free(m_pixels);
         m_pixels = nullptr;
     }
+    if (bgTexture != 0) {
+        glDeleteTextures(1, &bgTexture);
+        bgTexture = 0;
+    }
 }
 
 int OglImgShow::setPixels(const char* filename)
@@ -274,6 +278,64 @@ void OglImgShow::showPngTexByName(const char* filename)
     glTexCoord2f(0.0f, 1.0f); glVertex2f(-1.0f, 1.0f);
     glEnd();
     glDisable(GL_TEXTURE_2D);
+}
+
+int OglImgShow::loadAtlasBackground(const char* filename)
+{
+    bgTexture = CreateTextureFromPng(filename);
+    if (bgTexture == 0) {
+        qWarning("Failed to load background texture from: %s", filename);
+        return EXIT_FAILURE;
+    }
+    // 设置纹理环绕为 CLAMP，避免边缘重复
+    glBindTexture(GL_TEXTURE_2D, bgTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    return EXIT_SUCCESS;
+}
+
+void OglImgShow::showBackground(float scrollU)
+{
+    if (bgTexture == 0) return;
+
+    // 临时切换到正交投影，绘制全屏背景
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    glOrtho(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, bgTexture);
+    glDisable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);  // 不写入深度缓冲区
+
+    // 限制滚动范围，确保纹理坐标不越界
+    float u0 = scrollU;
+    float u1 = scrollU + bgUWindow;
+    if (u1 > 1.0f) u1 = 1.0f;
+
+    // 渲染全屏背景 quad，通过纹理坐标偏移实现裁剪+滚动效果
+    glBegin(GL_QUADS);
+    glTexCoord2f(u0, 0.0f);      glVertex2f(-1.0f, -1.0f);
+    glTexCoord2f(u1, 0.0f);      glVertex2f(1.0f, -1.0f);
+    glTexCoord2f(u1, bgVRange);  glVertex2f(1.0f, 1.0f);
+    glTexCoord2f(u0, bgVRange);  glVertex2f(-1.0f, 1.0f);
+    glEnd();
+
+    glDepthMask(GL_TRUE);  // 恢复深度写入
+    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_TEXTURE_2D);
+
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
 }
 
 // 显示图片
