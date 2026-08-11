@@ -2,12 +2,17 @@
 #include <QCloseEvent>
 #include <QDebug>
 
-OfficeWidget::OfficeWidget(QWidget*)
+OfficeWidget::OfficeWidget(QWidget* parent)
+#ifdef _WIN32
+    : QWidget(parent)
+#else
+    : WPSMainWindow(parent)
+#endif
 {}
 
 void OfficeWidget::showWidget()
 {
-    initApp();
+    initWps();
     resize(480, 640);
     show();
 }
@@ -15,9 +20,9 @@ void OfficeWidget::showWidget()
 OfficeWidget::~OfficeWidget()
 {}
 
-void OfficeWidget::test()
+void OfficeWidget::showDoc(std::string file)
 {
-    openDoc("./wpsapi/file/testword.docx");
+    openDoc(file.c_str());
     // printOutDoc();
     qDebug() << ("OfficeWidget::getContent=") << getDocContent();
 }
@@ -27,15 +32,15 @@ void OfficeWidget::closeEvent(QCloseEvent* event)
     if (event->type() == QEvent::Type::Close) {
         closeDoc();
     }
-#ifdef WIN32
+#ifdef _WIN32
     QWidget::closeEvent(event);
 #else
     WPSMainWindow::closeEvent(event);
 #endif
 }
 
-#ifdef WIN32
-void OfficeWidget::initApp()
+#ifdef _WIN32
+void OfficeWidget::initDocApp()
 {
     m_axCom = new QAxObject("Word.Application");
     m_axCom->dynamicCall("SetVisible(bool Visible)", "false");

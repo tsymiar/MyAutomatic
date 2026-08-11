@@ -1,4 +1,4 @@
-﻿/*
+/*
 ** Copyright @ 2012-2019, Kingsoft office,All rights reserved.
 ** Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are met:
@@ -42,6 +42,7 @@ using namespace wpsapiex;
 WPSWindow::WPSWindow(QWidget* parent)
 #if (QT_VERSION < QT_VERSION_CHECK(5,0,0))
 	: QX11EmbedContainer(parent)
+	, m_rpcClient(NULL)
 	, m_containerWin(NULL)
 	, m_hlayout(NULL)
 {
@@ -49,6 +50,7 @@ WPSWindow::WPSWindow(QWidget* parent)
 }
 #else
 	: QWidget(parent)
+	, m_rpcClient(NULL)
 	, m_containerWin(NULL)
 {
 	m_hlayout = new QHBoxLayout;
@@ -63,10 +65,7 @@ WPSWindow::~WPSWindow()
 		delete m_containerWin;
 		m_containerWin = NULL;
 	}
-	if (m_hlayout) {
-		delete m_hlayout;
-		m_hlayout = NULL;
-	}
+	// m_hlayout is owned by QWidget through setLayout(), do NOT delete it here
 }
 
 IKRpcClient* WPSWindow::initWpsApplication()
@@ -102,7 +101,10 @@ IKRpcClient* WPSWindow::initWpsApplication()
 
 void WPSWindow::destroyWpsApplication()
 {
-	m_rpcClient = NULL;
+	if (m_rpcClient) {
+		m_rpcClient->Release();
+		m_rpcClient = NULL;
+	}
 }
 
 void WPSWindow::addHotKey(const QString& hotKey, bool isEnable)
@@ -169,6 +171,7 @@ void WPSWindow::addContainerWin(QWidget* containerWin)
 
 WPSMainWindow::WPSMainWindow(QWidget* parent)
 	: QWidget(parent)
+	, m_rpcClient(NULL)
 	, m_mainArea(NULL)
 {
 	m_mainArea = new WPSWindow(this);
@@ -190,10 +193,10 @@ WPSMainWindow::~WPSMainWindow()
 	m_mainArea->destroyWpsApplication();
 	m_rpcClient = NULL;
 	delete m_mainArea;
-	delete m_hlayout;
+	// m_hlayout is owned by QWidget through setLayout(), do NOT delete it here
 }
 
-void WPSMainWindow::closeApp()
+void WPSMainWindow::closeWps()
 {
 	KComVariant vars[3];
 	if (m_spApplication != NULL) {
@@ -205,7 +208,7 @@ void WPSMainWindow::closeApp()
 	}
 }
 
-void WPSMainWindow::initApp()
+void WPSMainWindow::initWps()
 {
 	if (!m_spApplication) {
 		IKRpcClient* pRpcClient = m_mainArea->initWpsApplication();
@@ -271,13 +274,12 @@ QString WPSMainWindow::getDocContent()
 			spRange->AutoFormat();
 			single sig;
 			spRange->Calculate(&sig);
-			BSTR* text = new BSTR[1024];
-			spRange->get_Text(text);
-			for (int i = 0; i < 1024; i++) {
-				char* ctxt = (char*)(*text) + i;
-				content += QString::fromLocal8Bit("%1").arg(ctxt);
+			BSTR text = NULL;
+			spRange->get_Text(&text);
+			if (text) {
+				content = QString::fromUtf16(reinterpret_cast<const char16_t*>(text));
+				SysFreeString(text);
 			}
-			delete text;
 		}
 	}
 	return content;
@@ -863,7 +865,7 @@ void WPSMainWindow::slotButtonClick(const QString& name)
 	typedef void (WPSMainWindow::* WpsOperationFun)(void);
 	static QMap<QString, WpsOperationFun> s_operationFunMap;
 	if (s_operationFunMap.isEmpty()) {
-		s_operationFunMap.insert(QString::fromUtf8("初始化"), &WPSMainWindow::initApp);
+		s_operationFunMap.insert(QString::fromUtf8("初始化"), &WPSMainWindow::initWps);
 		s_operationFunMap.insert(QString::fromUtf8("新建文档"), &WPSMainWindow::newDoc);
 		s_operationFunMap.insert(QString::fromUtf8("打开文档"), &WPSMainWindow::openDoc);
 		s_operationFunMap.insert(QString::fromUtf8("另存文档"), &WPSMainWindow::saveAs);
@@ -877,7 +879,7 @@ void WPSMainWindow::slotButtonClick(const QString& name)
 		s_operationFunMap.insert(QString::fromUtf8("是否保存"), &WPSMainWindow::getSaved);
 		s_operationFunMap.insert(QString::fromUtf8("注册关闭事件"), &WPSMainWindow::registerCloseEvent);
 		s_operationFunMap.insert(QString::fromUtf8("注册保存事件"), &WPSMainWindow::registerSaveEvent);
-		s_operationFunMap.insert(QString::fromUtf8("关闭WPS"), &WPSMainWindow::closeApp);
+		s_operationFunMap.insert(QString::fromUtf8("关闭WPS"), &WPSMainWindow::closeWps);
 		s_operationFunMap.insert(QString::fromUtf8("设置页眉页脚"), &WPSMainWindow::setHeaderFooter);
 		s_operationFunMap.insert(QString::fromUtf8("获取页数"), &WPSMainWindow::getPagesNum);
 		s_operationFunMap.insert(QString::fromUtf8("设置自动备份"), &WPSMainWindow::forceBackUpEnabled);

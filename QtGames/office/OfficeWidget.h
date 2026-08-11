@@ -2,7 +2,7 @@
 #define OFFICE_WIDGET_H
 
 #include <QWidget>
-#ifdef WIN32
+#ifdef _WIN32
 #include <QAxObject>
 
 class OfficeWidget : public QWidget {
@@ -24,11 +24,11 @@ public:
     void closeEvent(QCloseEvent*);
 
     void showWidget();
-    void test();
+    void showDoc(std::string file = "./wpsapi/file/testword.docx");
 
 private:
-#ifdef WIN32
-    void initApp();
+#ifdef _WIN32
+    void initDocApp();
     void openDoc(const char* file);
     QString getDocContent();
     void closeDoc();

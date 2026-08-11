@@ -1,4 +1,4 @@
-﻿#include "OglImgShow.h"
+#include "OglImgShow.h"
 #include "SDL2tex.h"
 #include <QDebug>
 #include <QImage>
@@ -76,8 +76,6 @@ int OglImgShow::setPixels(const char* filename)
     png_get_IHDR(png_ptr, info_ptr, &m_width, &m_height, &bit_depth, &m_colour,
         NULL, NULL, NULL);
     qDebug() << "[" << m_width << "*" << m_height << "]";
-    m_width = m_width / 2 + 520;
-    m_height = m_height / 2 + 234;
 
     png_bytep* row_pointers = png_get_rows(png_ptr, info_ptr);
     // 计算pixel大小
@@ -189,27 +187,27 @@ GLuint OglImgShow::CreateTextureFromPng(const char* filename)
     rgba = (GLubyte*)malloc(width * height * 4);
     row_pointers = (png_bytep*)malloc(sizeof(png_bytep) * height);
 
-    for (k = 0; k < height; k++)
-        memset(row_pointers[k], 0, sizeof(unsigned char));
-
     // 通过扫描图片信息流中每一行，将数据赋值给动态数组
     for (k = 0; k < height; k++)
-        //row_pointers[k] = (png_byte*) malloc(png_get_rowbytes(png_ptr,info_ptr));
         row_pointers[k] = (png_bytep)png_malloc(png_ptr, png_get_rowbytes(png_ptr,
             info_ptr));
     // 由于PNG像素是 左-右 顶-底 而贴图需要的像素都是 左-右 底-顶 所以需要把像素内容进行重新排列
     png_read_image(png_ptr, row_pointers);
 
-    pos = (width * height * 4) - (4 * width);
-    for (row = 0; row < height; row++) {
+    // 从最后一行开始写入，实现上下翻转（OpenGL 原点在左下）
+    pos = 0;
+    for (row = height - 1; row >= 0; row--) {
         for (col = 0; col < (4 * width); col += 4) {
-            rgba[pos++] = row_pointers[row][col];        // red  
-            rgba[pos++] = row_pointers[row][col + 1];    // green  
-            rgba[pos++] = row_pointers[row][col + 2];    // blue  
-            rgba[pos++] = row_pointers[row][col + 3];    // alpha  
+            rgba[pos++] = row_pointers[row][col];        // red
+            rgba[pos++] = row_pointers[row][col + 1];    // green
+            rgba[pos++] = row_pointers[row][col + 2];    // blue
+            rgba[pos++] = row_pointers[row][col + 3];    // alpha
         }
-        pos = (pos - (width * 4) * 2);
     }
+
+    // 释放 png_malloc 分配的行内存
+    for (k = 0; k < height; k++)
+        png_free(png_ptr, row_pointers[k]);
 
     // 开启纹理贴图特效
     glEnable(GL_TEXTURE_2D);
@@ -217,12 +215,17 @@ GLuint OglImgShow::CreateTextureFromPng(const char* filename)
     glGenTextures(1, &textureID);
     // 绑定纹理
     glBindTexture(GL_TEXTURE_2D, textureID);
-    // 设置贴图和纹理的混合效果 默认只用纹理
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+    // 设置贴图和纹理的混合效果：GL_REPLACE 用纹理颜色替换片段颜色，
+    // 配合 alpha 混合使透明像素真正透明（GL_DECAL 对 RGBA 会忽略 alpha 导致透明区显示异常）
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
     // 设置纹理所需图片数据
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
+    free(rgba);
     free(row_pointers);
     fclose(fp);
     return textureID;
@@ -315,21 +318,37 @@ void OglImgShow::showBackground(float scrollU)
     glDisable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);  // 不写入深度缓冲区
 
-    // 限制滚动范围，确保纹理坐标不越界
-    float u0 = scrollU;
-    float u1 = scrollU + bgUWindow;
+    // 开启 alpha 混合，让纹理透明区域显示为清屏色（深色背景）
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // 纹理 v 方向：显示绿色立柱带区域 [bgVOffset, bgVOffset+bgVRange]
+    float v0 = bgVOffset;
+    float v1 = bgVOffset + bgVRange;
+
+    // 水平循环滚动：scrollU 在 [0, 1-bgUWindow] 之间，到达边界回绕
+    float maxU = 1.0f - bgUWindow;
+    if (maxU < 0.0f) maxU = 0.0f;
+    float u = scrollU;
+    if (maxU > 0.0f) {
+        u = fmodf(scrollU, maxU);
+        if (u < 0.0f) u += maxU;
+    }
+    float u0 = u;
+    float u1 = u + bgUWindow;
     if (u1 > 1.0f) u1 = 1.0f;
 
-    // 渲染全屏背景 quad，通过纹理坐标偏移实现裁剪+滚动效果
+    // 渲染全屏背景 quad，通过纹理坐标偏移实现裁剪+循环滚动效果
     glBegin(GL_QUADS);
-    glTexCoord2f(u0, 0.0f);      glVertex2f(-1.0f, -1.0f);
-    glTexCoord2f(u1, 0.0f);      glVertex2f(1.0f, -1.0f);
-    glTexCoord2f(u1, bgVRange);  glVertex2f(1.0f, 1.0f);
-    glTexCoord2f(u0, bgVRange);  glVertex2f(-1.0f, 1.0f);
+    glTexCoord2f(u0, v0);  glVertex2f(-1.0f, -1.0f);
+    glTexCoord2f(u1, v0);  glVertex2f(1.0f, -1.0f);
+    glTexCoord2f(u1, v1);  glVertex2f(1.0f, 1.0f);
+    glTexCoord2f(u0, v1);  glVertex2f(-1.0f, 1.0f);
     glEnd();
 
     glDepthMask(GL_TRUE);  // 恢复深度写入
     glEnable(GL_DEPTH_TEST);
+    glDisable(GL_BLEND);
     glDisable(GL_TEXTURE_2D);
 
     glPopMatrix();

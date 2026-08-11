@@ -28,6 +28,7 @@ public:
     bool isBgLoaded() const { return bgTexture != 0; }
     void setBgUWindow(float u) { bgUWindow = u; }
     void setBgVRange(float v) { bgVRange = v; }
+    void setBgVOffset(float v) { bgVOffset = v; }
     
 private:
     GLuint CreateTextureFromPng(const char* filename);
@@ -43,5 +44,6 @@ private:
     // 背景纹理滚动控制
     GLuint bgTexture = 0;
     float bgUWindow = 0.56f;  // 显示窗口占纹理宽度比例 (屏幕宽/纹理宽)
-    float bgVRange = 0.5f;    // 背景在纹理高度方向的范围 (atlas 顶部背景区域占比)
+    float bgVRange = 0.875f;  // 背景相对于纹理高度方向偏移(atlas 顶部背景区域占比)
+    float bgVOffset = 0.5f;   // 背景相对于纹理高度方向偏移
 };
