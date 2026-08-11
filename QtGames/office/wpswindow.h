@@ -72,8 +72,8 @@ class WPSMainWindow : public QWidget {
 public:
 	WPSMainWindow(QWidget* parent = NULL);
 	~WPSMainWindow();
-	void closeApp();
-	void initApp();
+	void closeWps();
+	void initWps();
 	void newDoc();
 	void openDoc();
 	void openDoc(QString filename);

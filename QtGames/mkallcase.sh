@@ -45,8 +45,18 @@ case "${1}" in
         install_deps
         ;;
     clean)
+        # 脚本所在目录
+        SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+        cd "${SCRIPT_DIR}"
+
         rm -rf "build"
-        echo "Cleaned build/"
+        rm -f QtGames Makefile
+        rm -f .qmake.stash
+        rm -f *.o
+        rm -f moc_*.cpp moc_*.o
+        rm -f qrc_*.cpp qrc_*.o
+        rm -f ui_*.h
+        echo "Cleaned build/ and intermediate files in ${SCRIPT_DIR}"
         ;;
     *)
         QMAKE_BIN=$(find_qmake)

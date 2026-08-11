@@ -60,11 +60,15 @@ unix {
 
 MYGL=external/kline/mygl
 MYGL_ROOT=external/kline
-# DEFINES += K_line # compile without K-line, to NOTE this line & HEADERS SOURCES include {MYGL}.
+# # DEFINES += K_line # compile without K-line, to NOTE this line & HEADERS SOURCES include {MYGL}.
 # DEFINES += _GLVBO_
 unix:contains(CONFIG, wps_support) {
     DEFINES += SHOW_OFFICE
 }
+
+# ── EchoResonance (余音回响) ──
+# 默认启用，注释下面这行可禁用
+DEFINES += ECHO_RESONANCE
 
 LIBS += -lglut \
         -lGLU \
@@ -88,7 +92,8 @@ unix:contains(CONFIG, wps_support) {
 INCLUDEPATH += \
     app \
     engine \
-    office
+    office \
+    echo_resonance
 
 win32 {
     INCLUDEPATH += $$(libPNG) $$(ZLIB)
@@ -127,6 +132,15 @@ unix:contains(CONFIG, wps_support) {
 
 unix {
     SOURCES += external/kline/mygl/SDL2tex.cc
+}
+
+# ── EchoResonance 源文件 ──
+contains(DEFINES, ECHO_RESONANCE) {
+    HEADERS += echo_resonance/EchoEngine.h \
+               echo_resonance/EchoMainWindow.h \
+               echo_resonance/SoundFragment.h
+    SOURCES += echo_resonance/EchoEngine.cpp \
+               echo_resonance/EchoMainWindow.cpp
 }
 
 FORMS += \

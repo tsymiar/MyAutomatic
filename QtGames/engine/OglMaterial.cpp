@@ -292,7 +292,7 @@ void QOglMaterial::paintGL()
     glDisableVertexAttribArray(vertexLocation);
     glDisableVertexAttribArray(clorLocation);
 #else
-    // 渲染滚动背景：正交投影全屏+纹理坐标偏移
+    // 先渲染滚动背景：正交投影全屏，纹理坐标偏移实现裁剪+前进效果
     if (mPng.isBgLoaded()) {
         mPng.showBackground(bgScrollU);
     }
