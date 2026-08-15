@@ -138,9 +138,28 @@ unix {
 contains(DEFINES, ECHO_RESONANCE) {
     HEADERS += echo_resonance/EchoEngine.h \
                echo_resonance/EchoMainWindow.h \
-               echo_resonance/SoundFragment.h
+               echo_resonance/CommonFragment.h \
+               echo_resonance/DeductionData.h \
+               echo_resonance/DeductionEngine.h \
+               echo_resonance/DeductionAudio.h \
+               echo_resonance/DeductionBoardWidget.h
     SOURCES += echo_resonance/EchoEngine.cpp \
-               echo_resonance/EchoMainWindow.cpp
+               echo_resonance/EchoMainWindow.cpp \
+               echo_resonance/DeductionEngine.cpp \
+               echo_resonance/DeductionAudio.cpp \
+               echo_resonance/DeductionBoardWidget.cpp
+}
+
+# ── 声纹推演盘：自动检测 Qt Multimedia 并启用真实音频合成 ──
+#   自动判断目标环境是否安装了 Qt Multimedia：
+#   已安装 → 链接 multimedia 模块 + 定义 DEDUCTION_AUDIO（真实变调/叠加合成）
+#   未安装 → 输出提示，DeductionAudio 自动退化为纯视觉/文字模拟
+qtHaveModule(multimedia) {
+    QT += multimedia
+    DEFINES += DEDUCTION_AUDIO
+    message("Qt Multimedia detected: enabling real-time deduction audio synthesis.")
+} else {
+    message("Qt Multimedia NOT found: deduction audio falls back to visual/text simulation.")
 }
 
 FORMS += \

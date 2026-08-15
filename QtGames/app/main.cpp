@@ -3,6 +3,7 @@
 #include <QApplication>
 #include <QCommandLineParser>
 #include <QDir>
+#include <iostream>
 #ifdef SHOW_OFFICE
 #include "OfficeWidget.h"
 #endif
