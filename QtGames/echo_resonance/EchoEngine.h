@@ -1,5 +1,6 @@
 #pragma once
-#include "SoundFragment.h"
+#include "CommonFragment.h"
+#include "DeductionData.h"  // 复用声灵/灵魂碎片/偏差能量结构（离奇魔幻基因，世界观与推演盘一致）
 #include <QObject>
 #include <QMap>
 #include <QStringList>
@@ -18,8 +19,8 @@ public:
     int chapterNumber() const { return static_cast<int>(m_currentChapter); }
 
     // ── 碎片管理 ──
-    const std::vector<SoundFragment>& fragments() const { return m_fragments; }
-    std::vector<SoundFragment>& fragments() { return m_fragments; }
+    const std::vector<CommonFragment>& fragments() const { return m_fragments; }
+    std::vector<CommonFragment>& fragments() { return m_fragments; }
     const std::vector<TimelineSlot>& timeline() const { return m_timeline; }
     bool placeFragment(int fragmentId, int slotIndex);
     bool removeFragment(int slotIndex);
@@ -60,6 +61,10 @@ public:
     // ── 导师信息 ──
     QString getMentorMessage(int index) const;
     void setPlayerName(const QString& name) { m_playerName = name; }
+    // 玩家显示名：空则用默认名（唯一默认名来源）
+    QString playerDisplayName() const { return m_playerName.isEmpty() ? DEFAULT_PLAYER_NAME : m_playerName; }
+    // 将文案中的 {name} 占位符替换为玩家显示名
+    QString applyPlayerName(const QString& text) const;
     QString playerName() const { return m_playerName; }
 
     // ── 选择系统 ──
@@ -72,9 +77,11 @@ public:
     EndingType calculateEnding() const;
     EndingInfo getEndingInfo(EndingType type) const;
     int unlockedEndingCount() const;
+    int totalEndingCount() const { return static_cast<int>(m_endings.size()); }
     QString endingTitle() const;
     QString endingDescription() const;
     bool isEndingUnlocked(EndingType type) const;
+    void unlockEnding(EndingType type);
 
     // ── 底噪意识 ──
     float lowFreqIntensity() const { return m_lowFreqIntensity; }
@@ -90,6 +97,80 @@ public:
     // ── 难度 ──
     bool isHardMode() const { return m_hardMode; }
     void setHardMode(bool hard) { m_hardMode = hard; }
+
+    // ── 共鸣度系统（耳蜗共鸣）──
+    float resonanceLevel() const { return m_resonanceLevel; }
+    void addResonance(float delta);
+    bool isResonancePeaked() const { return m_resonanceLevel >= 1.0f; }
+    bool isFirstSoundUnlocked() const { return m_firstSoundUnlocked; }
+    void unlockFirstSound() { m_firstSoundUnlocked = true; }
+
+    // ── 回声碎片（支线）──
+    const std::vector<EchoFragment>& echoFragments() const { return m_echoFragments; }
+    void unlockEchoFragment(int index);
+    // 章节完成时按进度解锁对应回声碎片（接入支线叙事）
+    void unlockEchoFragmentsForChapter(GameChapter chapter);
+    bool isEchoFragmentUnlocked(int index) const;
+    int unlockedEchoFragmentCount() const;
+    QString forgottenListText() const;
+
+    // ── 结局余波 ──
+    QString getEpilogue(EndingType type) const;
+
+    // ── 何悦分支 ──
+    HeYueState heYueState() const { return m_heYueState; }
+    void setHeYueState(HeYueState s) { m_heYueState = s; }
+    bool isHeYueRescued() const { return m_heYueState == HeYueState::Rescued; }
+    bool isHeYueBrainwashed() const { return m_heYueState == HeYueState::Brainwashed; }
+
+    // ── 陈远山"静音惩罚"（被静音的人）──
+    // 放置伪造碎片累积"静音倾向"，达到阈值触发单侧静音视觉
+    float silenceTendency() const { return m_silenceTendency; }
+    bool isRightEarSilenced() const { return m_rightEarSilenced; }
+    void resetSilencePunishment();
+
+    // ── 何悦"绝对参考系"（干净声纹照妖镜）──
+    // 救出何悦后，伪造碎片会被照出原形（可信度降级）
+    bool isCredibilityExposed(const CommonFragment& f) const;
+
+    // ── 碎片回声（衰减回声）──
+    const std::vector<FragmentEcho>& echoes() const { return m_echoes; }
+    void updateEchoes(float dt);
+
+    // ── 老刘静默摩斯（沉默中浮现）──
+    void updateSilenceMorse(float idleSeconds);
+    QString getSilenceMorseReveal() const;
+    bool isSilenceMorseReady() const;
+
+    // ── 共鸣度与结局联动 ──
+    // 共鸣度影响"被遗忘者名单"是否完整呈现
+
+    // ── 动态文案组合（减少硬编码）──
+    // 根据玩家名字、何悦状态、老刘沉默、静音惩罚等动态拼装选择提示
+    struct ChoiceContent { QString prompt; QStringList options; };
+    ChoiceContent buildChoice(ChoicePoint point) const;
+    // 根据当前状态生成"底噪意识"的动态称呼与语气
+    QString noiseConsciousnessLine() const;
+
+    // ── 离奇魔幻基因：声灵系统（与推演盘共享世界观）──
+    // 每个声音碎片都寄宿着一只声灵；放置碎片=召唤，扭曲拼接=偏差能量，
+    // 逆向播放=释放声灵并收集灵魂碎片。
+    const std::vector<SpiritInfo>& spirits() const { return m_spirits; }
+    SpiritInfo* findSpirit(SpiritKind kind);
+    void summonSpirit(SpiritKind kind);
+    float spiritAffinity(SpiritKind kind) const;
+    bool isSpiritBacklashing(SpiritKind kind) const;
+    QString spiritBacklashText(SpiritKind kind) const;
+    void accumulateDeviation(float delta);
+    const DeviationEnergy& deviation() const { return m_deviation; }
+    bool isPrimeEchoOverloaded() const { return m_deviation.overloaded; }
+    const std::vector<SoulFragment>& soulFragments() const { return m_soulFragments; }
+    void collectSoulFragment(int id);
+    int collectedSoulFragmentCount() const;
+    bool allSoulFragmentsCollected() const;
+    QString releaseSpirit(SpiritKind kind);
+    // 碎片类型 → 寄宿声灵
+    SpiritKind fragmentSpirit(FragmentType type) const;
 
     // ── 工具 ──
     static QColor credibilityToSpectrumColor(Credibility c);
@@ -107,11 +188,15 @@ signals:
     void morseMessage(const QString& message);
     void noiseCommunion(const QString& message);
     void silenceMode(bool active);
+    void spiritManifested(SpiritKind kind);
+    void spiritBacklash(SpiritKind kind);
+    void primeEchoOverloaded();
+    void soulFragmentCollected(int id);
 
 private:
     void initFragmentTypes();
-    SoundFragment createFragment(FragmentType type, Credibility cred, float duration,
-                                  bool isAnchor = false, AnchorType anchor = AnchorType::None);
+    CommonFragment createFragment(FragmentType type, Credibility cred, float duration,
+        bool isAnchor = false, AnchorType anchor = AnchorType::None);
     void setupChapterPrologue();
     void setupChapter1();
     void setupChapter2();
@@ -124,8 +209,12 @@ private:
     void initHallucinations();
     void initNoiseDialogues();
     void initMorseMessages();
+    void initEchoFragments();
+    void initEpilogues();
+    void initSpirits();          // 初始化声灵库（离奇魔幻基因）
+    void initSoulFragments();    // 初始化灵魂碎片
 
-    std::vector<SoundFragment> m_fragments;
+    std::vector<CommonFragment> m_fragments;
     std::vector<TimelineSlot> m_timeline;
     GameChapter m_currentChapter = GameChapter::Prologue;
     float m_paranoiaLevel = 0.3f;
@@ -149,4 +238,25 @@ private:
     std::vector<ChoiceRecord> m_choices;
     QMap<EndingType, EndingInfo> m_endings;
     QMap<QString, QStringList> m_characterDialogues;
+    std::vector<EchoFragment> m_echoFragments;
+    std::vector<ForgottenEntry> m_forgottenEntries;
+    QMap<EndingType, EpilogueRecord> m_epilogues;
+    float m_resonanceLevel = 0.0f;
+    bool m_firstSoundUnlocked = false;
+    HeYueState m_heYueState = HeYueState::Unknown;
+
+    // ── 巧妙机制内部状态 ──
+    float m_silenceTendency = 0.0f;         // 静音倾向（放置伪造碎片累积）
+    bool m_rightEarSilenced = false;        // 右耳被静音
+    std::vector<FragmentEcho> m_echoes;     // 衰减回声
+    QMap<int, int> m_fragmentPlaceCount;    // 碎片放置次数（共振）
+    float m_silenceIdleAccum = 0.0f;        // 静默累计时长
+    SilenceMorse m_silenceMorse;            // 老刘静默摩斯
+    bool m_silenceMorseRevealed = false;    // 是否已浮现
+
+    // ── 离奇魔幻基因：声灵系统状态 ──
+    std::vector<SpiritInfo> m_spirits;        // 声灵库
+    std::vector<SoulFragment> m_soulFragments; // 灵魂碎片（拼成林薇母亲的脸）
+    DeviationEnergy m_deviation;              // 偏差能量（原初嗡鸣倒计时）
+    int m_nextSoulFragmentId = 0;
 };

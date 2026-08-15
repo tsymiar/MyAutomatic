@@ -3,6 +3,16 @@
 #include <QColor>
 #include <vector>
 
+// 圆周率（float），统一宏，避免各处硬编码 3.1415926535f
+#ifndef ECHO_PI
+#define ECHO_PI 3.141592653589793f
+#endif
+
+// 玩家角色名的统一默认值与占位符
+// 所有叙事文案中用 {name} 占位，运行时统一替换为玩家输入的名字（空则用此默认值）
+inline const QString DEFAULT_PLAYER_NAME = QStringLiteral("小周");
+inline const QString PLAYER_NAME_PLACEHOLDER = QStringLiteral("{name}");
+
 // ── 声音碎片类型 ──
 enum class FragmentType {
     Footstep,      ElectricBuzz,  WaterDrop,     Heartbeat,
@@ -71,7 +81,7 @@ enum class PlayerChoice {
 };
 
 // ── 单个声音碎片 ──
-struct SoundFragment {
+struct CommonFragment {
     FragmentType type;
     QString name;
     QString description;
@@ -150,4 +160,64 @@ struct ChoiceRecord {
     PlayerChoice choice;
     GameChapter chapter;
     QString description;
+};
+
+// ── 回声碎片（支线叙事）──
+struct EchoFragment {
+    QString title;         // 碎片名
+    QString location;      // 触发地点
+    QString content;       // 内容
+    QString reward;        // 解锁奖励
+    bool unlocked = false; // 是否已解锁
+};
+
+// ── 结局余波录音 ──
+struct EpilogueRecord {
+    EndingType ending;
+    QString content;       // 余波录音文本（约90秒旁白）
+};
+
+// ── 被遗忘者名单条目 ──
+struct ForgottenEntry {
+    QString name;
+    QString epitaph;       // 墓志铭/一句话
+};
+
+// ── 何悦分支状态 ──
+enum class HeYueState {
+    Unknown,      // 未触发
+    Hostage,      // 被囚禁，待抉择
+    Rescued,      // 成功救出
+    Brainwashed,  // 被洗脑成傀儡
+};
+
+// ── 碎片回声（衰减回声，呼应"回声迷宫"）──
+struct FragmentEcho {
+    int sourceFragmentId;  // 源碎片
+    float remainingTime;   // 剩余持续时间（秒）
+    float maxTime;         // 最大持续时间
+    float intensity;       // 强度（随放置次数共振增强）
+};
+
+// ── 老刘静默摩斯（沉默中浮现的声音）──
+struct SilenceMorse {
+    QString message;    // 摩斯信息
+    float threshold;    // 需要的静默时长
+    bool revealed = false;
+};
+
+// ── 选择点类型 ──
+enum class ChoicePoint {
+    PrologueSigh,   // 序章：老刘的叹息
+    HeYueHostage,   // 第三章：何悦被囚禁
+    Identity,       // 第三章：自我声纹认同
+    LifeTransfer,   // 第四章：林薇生死
+};
+
+// ── 动态文案模板 ──
+// 用 {player} 占位玩家名，用 {suffix} 占位根据状态动态拼接的附加段落
+struct ChoiceTemplate {
+    ChoicePoint point;
+    QString promptBase;      // 提示基础文本（含 {player} 占位符）
+    QStringList options;     // 选项（含 {player} 占位符）
 };
