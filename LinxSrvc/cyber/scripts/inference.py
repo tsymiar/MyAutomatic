@@ -123,7 +123,7 @@ def chat(model, tokenizer, message, history=None, max_new_tokens=512, temperatur
     except Exception as e:
         raise RuntimeError(f"推理失败: {e}")
 
-if __name__ == "__main__":
+def build_cli_parser():
     parser = argparse.ArgumentParser(description="数字分身推理脚本")
     parser.add_argument("--base_model", type=str, required=True, help="基础模型路径或名称")
     parser.add_argument("--lora_path", type=str, default=None, help="LoRA权重路径")
@@ -134,24 +134,19 @@ if __name__ == "__main__":
     parser.add_argument("--top_p", type=float, default=0.9, help="nucleus采样参数")
     parser.add_argument("--top_k", type=int, default=50, help="top-k采样参数")
     parser.add_argument("--repetition_penalty", type=float, default=1.0, help="重复惩罚系数")
-    args = parser.parse_args()
+    return parser
 
-    # 检查CUDA可用性
+
+def report_environment():
+    """打印 CUDA 环境信息"""
     if torch.cuda.is_available():
         print(f"✓ 检测到CUDA设备: {torch.cuda.get_device_name(0)}")
         print(f"  显存: {torch.cuda.get_device_properties(0).total_memory / 1024**3:.1f} GB")
     else:
         print("⚠ 未检测到CUDA设备，将使用CPU推理（速度较慢）")
 
-    # 加载模型
-    try:
-        print("正在加载模型...")
-        model, tokenizer = load_lora_model(args.base_model, args.lora_path, args.load_in_4bit)
-        print("✓ 模型加载成功")
-    except Exception as e:
-        print(f"✗ 模型加载失败: {e}", file=sys.stderr)
-        sys.exit(1)
 
+def print_run_config(args):
     print("\n" + "="*50)
     print("数字分身已启动，输入 'quit' 退出")
     print("参数:")
@@ -163,50 +158,64 @@ if __name__ == "__main__":
     print(f"  repetition_penalty: {args.repetition_penalty}")
     print("="*50 + "\n")
 
+
+def chat_loop(model, tokenizer, args):
+    """交互式聊天循环，返回退出时的历史"""
     history = []
     while True:
         try:
             user_input = input("你: ")
-
-            # 退出命令
-            if user_input.lower() in ['quit', 'exit', 'q']:
-                print("再见！")
-                break
-
-            # 跳过空输入
-            if not user_input.strip():
-                continue
-
-            # 推理
-            try:
-                response = chat(
-                    model, tokenizer, user_input, history,
-                    max_history_len=args.max_history,
-                    max_new_tokens=args.max_new_tokens,
-                    temperature=args.temperature,
-                    top_p=args.top_p,
-                    top_k=args.top_k,
-                    repetition_penalty=args.repetition_penalty
-                )
-                print(f"分身: {response}\n")
-
-                # 更新历史
-                history.append({"user": user_input, "assistant": response})
-
-            except ValueError as e:
-                print(f"✗ 参数错误: {e}\n", file=sys.stderr)
-            except RuntimeError as e:
-                print(f"✗ 推理错误: {e}\n", file=sys.stderr)
-                # 清空历史，避免累积错误
-                if "显存不足" in str(e):
-                    print("提示: 可以尝试减小 max_new_tokens 或历史长度，或重启程序\n")
-                    history = []
-            except Exception as e:
-                print(f"✗ 未知错误: {e}\n", file=sys.stderr)
-
         except KeyboardInterrupt:
             print("\n\n检测到中断，退出程序...")
             break
         except EOFError:
             print("\n\n输入结束，退出程序...")
             break
+
+        if user_input.lower() in ['quit', 'exit', 'q']:
+            print("再见！")
+            break
+        if not user_input.strip():
+            continue
+
+        try:
+            response = chat(
+                model, tokenizer, user_input, history,
+                max_history_len=args.max_history,
+                max_new_tokens=args.max_new_tokens,
+                temperature=args.temperature,
+                top_p=args.top_p,
+                top_k=args.top_k,
+                repetition_penalty=args.repetition_penalty
+            )
+            print(f"分身: {response}\n")
+            history.append({"user": user_input, "assistant": response})
+        except ValueError as e:
+            print(f"✗ 参数错误: {e}\n", file=sys.stderr)
+        except RuntimeError as e:
+            print(f"✗ 推理错误: {e}\n", file=sys.stderr)
+            # 清空历史，避免累积错误
+            if "显存不足" in str(e):
+                print("提示: 可以尝试减小 max_new_tokens 或历史长度，或重启程序\n")
+                history = []
+        except Exception as e:
+            print(f"✗ 未知错误: {e}\n", file=sys.stderr)
+    return history
+
+
+if __name__ == "__main__":
+    args = build_cli_parser().parse_args()
+
+    report_environment()
+
+    # 加载模型
+    try:
+        print("正在加载模型...")
+        model, tokenizer = load_lora_model(args.base_model, args.lora_path, args.load_in_4bit)
+        print("✓ 模型加载成功")
+    except Exception as e:
+        print(f"✗ 模型加载失败: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    print_run_config(args)
+    chat_loop(model, tokenizer, args)

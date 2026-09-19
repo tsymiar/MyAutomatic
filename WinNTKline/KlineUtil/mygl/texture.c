@@ -28,7 +28,6 @@ TextureLoad(char      *filename, /* I - Bitmap file to load */
     BITMAPINFO	*info;           /* Bitmap information */
     GLubyte	*bits;               /* Bitmap RGB pixels */
     GLubyte     *ptr;            /* Pointer into bit buffer */
-    GLubyte     temp;            /* Swapping variable */
     GLenum      type;            /* Texture type */
     GLuint      texture;         /* Texture object */
 
@@ -49,7 +48,7 @@ TextureLoad(char      *filename, /* I - Bitmap file to load */
         i--, ptr += 3)
     {
         /* Swap red and blue */
-        temp = ptr[0];
+        GLubyte temp = ptr[0];   /* 交换变量，作用域收窄到循环体 */
         ptr[0] = ptr[2];
         ptr[2] = temp;
     }

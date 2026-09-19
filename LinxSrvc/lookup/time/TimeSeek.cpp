@@ -336,7 +336,6 @@ std::vector<SeekTimeContent> TimeSeek::sortFramebyTime(SelectOffset selectOffset
         memset(frmBuff, 0, sizeof(frmBuff));
         size_t bytes = 0;
         int current = 0;
-        bool once = true;
         while ((bytes = fread(frmBuff, 1, sizeof(frmBuff), m_file)) > 0) {
             for (size_t i = 0; i <= bytes - sizeof(uint64_t); i++) {
                 if (*(uint64_t*)(frmBuff + i) == CONST_FRAME_HEAD) {
@@ -345,11 +344,9 @@ std::vector<SeekTimeContent> TimeSeek::sortFramebyTime(SelectOffset selectOffset
                     comidx.value.size = header->len;
                     comidx.value.timestamp = header->timestamp;
                     m_dbMgr->insertContentNoDuplex(&comidx);
-                    if (once) {
-                        fseek(m_file, 0, SEEK_SET);
-                        printf("parseFileFrame: found frame head with timestamp: %lu, offset=%lu, size=%lu\n", comidx.value.timestamp, comidx.value.offset, comidx.value.size);
-                        seekTimes.push_back(comidx);
-                    }
+                    fseek(m_file, 0, SEEK_SET);
+                    printf("parseFileFrame: found frame head with timestamp: %lu, offset=%lu, size=%lu\n", comidx.value.timestamp, comidx.value.offset, comidx.value.size);
+                    seekTimes.push_back(comidx);
                 }
             }
             position += (bytes - sizeof(uint64_t));

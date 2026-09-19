@@ -17,8 +17,8 @@ func formatBytes(_ bytes: UInt64) -> String {
 // MARK: - Date formatter
 
 let timeFormatter: DateFormatter = {
-    let f = DateFormatter()
-    f.dateStyle = .none
-    f.timeStyle = .short
-    return f
+    let fmt = DateFormatter()
+    fmt.dateStyle = .none
+    fmt.timeStyle = .short
+    return fmt
 }()

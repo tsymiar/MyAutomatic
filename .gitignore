@@ -55,3 +55,4 @@ test.txt
 
 # Keep tracked .con files (e.g. config.con)
 !*.config.con
+*.json

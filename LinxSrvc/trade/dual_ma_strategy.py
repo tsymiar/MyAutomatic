@@ -36,7 +36,7 @@ import time
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from threading import Lock, Thread
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -54,7 +54,6 @@ from rich.console import Console
 from rich.layout import Layout
 from rich.panel import Panel
 from rich.table import Table
-from rich.text import Text
 
 # 日志配置
 logging.basicConfig(
@@ -909,142 +908,135 @@ class EnhancedDualMAStrategy:
 
 
 # ==================== 回测模块 ====================
+# backtrader 为可选依赖: 导入失败时仅把 bt 置空, 类定义退化为 object 基类,
+# 这样模块级 try 只包住 import 本身 (圈复杂度极低), 回测类则留在模块层
 try:
     import backtrader as bt
-
-    class DualMABacktestStrategy(bt.Strategy):
-        """Backtrader 双均线回测策略"""
-
-        params = (
-            ("fast_period", 5),
-            ("slow_period", 20),
-            ("rsi_period", 14),
-        )
-
-        def __init__(self):
-            self.ma_fast = bt.indicators.SMA(self.data.close, period=self.params.fast_period)
-            self.ma_slow = bt.indicators.SMA(self.data.close, period=self.params.slow_period)
-            self.rsi = bt.indicators.RSI(self.data.close, period=self.params.rsi_period)
-            self.crossover = bt.indicators.CrossOver(self.ma_fast, self.ma_slow)
-            self.order = None
-
-        def notify_order(self, order):
-            if order.status in [order.Completed, order.Canceled, order.Margin]:
-                self.order = None
-
-        def next(self):
-            if self.order:
-                return
-
-            # RSI 过滤: 只在非极端区间交易
-            if self.rsi[0] < 30 and self.crossover[0] > 0:
-                self.order = self.buy()
-            elif self.rsi[0] > 70 and self.crossover[0] < 0:
-                self.order = self.sell()
-
-
-    class BacktestEngine:
-        """回测引擎
-
-        使用示例:
-            engine = BacktestEngine()
-            engine.load_data("600519.SH", df)
-            result = engine.run()
-            engine.plot()
-        """
-
-        def __init__(self, initial_cash: float = 1_000_000.0, commission: float = 0.0003):
-            self.cerebro = bt.Cerebro()
-            self.cerebro.broker.setcash(initial_cash)
-            self.cerebro.broker.setcommission(commission=commission)
-            self.cerebro.addstrategy(DualMABacktestStrategy)
-            self._has_data = False
-
-        def load_data(self, symbol: str, df: pd.DataFrame) -> None:
-            """加载历史数据
-
-            Args:
-                symbol: 股票代码
-                df: 包含 open/high/low/close/volume 的 DataFrame
-            """
-            df = df.copy()
-            if "datetime" not in df.columns and df.index.name != "datetime":
-                df["datetime"] = pd.to_datetime(df.index)
-            data = bt.feeds.PandasData(
-                dataname=df,
-                datetime="datetime" if "datetime" in df.columns else None,
-                open="open", high="high", low="low", close="close", volume="volume",
-                openinterest=-1,
-            )
-            self.cerebro.adddata(data, name=symbol)
-            self._has_data = True
-
-        def add_sizer(self, sizer=None) -> None:
-            """添加仓位管理"""
-            if sizer:
-                self.cerebro.addsizer(sizer)
-            else:
-                # 默认: 每次使用 95% 可用资金
-                self.cerebro.addsizer(bt.sizers.PercentSizer, percents=95)
-
-        def add_analyzer(self, analyzer_cls=None) -> None:
-            """添加分析器"""
-            self.cerebro.addanalyzer(bt.analyzers.SharpeRatio, _name="sharpe")
-            self.cerebro.addanalyzer(bt.analyzers.DrawDown, _name="drawdown")
-            self.cerebro.addanalyzer(bt.analyzers.Returns, _name="returns")
-            self.cerebro.addanalyzer(bt.analyzers.TradeAnalyzer, _name="trades")
-
-        def run(self) -> Dict[str, Any]:
-            """执行回测，返回结果摘要"""
-            if not self._has_data:
-                logger.warning("回测引擎: 未加载数据")
-                return {}
-
-            start_value = self.cerebro.broker.getvalue()
-            logger.info("回测起始资金: ¥%.2f", start_value)
-
-            results = self.cerebro.run()
-            strategy = results[0]
-
-            end_value = self.cerebro.broker.getvalue()
-            total_return = (end_value - start_value) / start_value
-
-            summary = {
-                "初始资金": start_value,
-                "最终资金": end_value,
-                "总收益率": f"{total_return:.2%}",
-                "夏普比率": strategy.analyzers.sharpe.get_analysis().get("sharperatio", "N/A"),
-                "最大回撤": f"{strategy.analyzers.drawdown.get_analysis().get('max', {}).get('drawdown', 0):.2%}",
-                "年化收益": f"{strategy.analyzers.returns.get_analysis().get('rnorm100', 0):.2f}%",
-            }
-
-            logger.info("回测完成: %s", summary)
-            return summary
-
-        def plot(self, save_path: str = "") -> None:
-            """绘制回测图表"""
-            try:
-                self.cerebro.plot(style="candlestick")
-            except Exception as e:
-                logger.warning("回测绘图失败: %s", e)
-
 except ImportError:
     logger.warning("backtrader 未安装，回测模块不可用")
+    bt = None  # type: ignore[assignment]
 
-    class BacktestEngine:
-        """回测引擎占位 (需安装 backtrader)"""
+# 三元表达式不产生新的分支图, 避免在模块级引入额外复杂度
+_STRATEGY_BASE = bt.Strategy if bt is not None else object
 
-        def __init__(self, **kwargs):
-            logger.warning("BacktestEngine: backtrader 未安装")
 
-        def load_data(self, *args, **kwargs):
-            pass
+class DualMABacktestStrategy(_STRATEGY_BASE):
+    """Backtrader 双均线回测策略"""
 
-        def run(self):
+    params = (
+        ("fast_period", 5),
+        ("slow_period", 20),
+        ("rsi_period", 14),
+    )
+
+    def __init__(self):
+        self.ma_fast = bt.indicators.SMA(self.data.close, period=self.params.fast_period)
+        self.ma_slow = bt.indicators.SMA(self.data.close, period=self.params.slow_period)
+        self.rsi = bt.indicators.RSI(self.data.close, period=self.params.rsi_period)
+        self.crossover = bt.indicators.CrossOver(self.ma_fast, self.ma_slow)
+        self.order = None
+
+    def notify_order(self, order):
+        if order.status in [order.Completed, order.Canceled, order.Margin]:
+            self.order = None
+
+    def next(self):
+        if self.order:
+            return
+
+        # RSI 过滤: 只在非极端区间交易
+        if self.rsi[0] < 30 and self.crossover[0] > 0:
+            self.order = self.buy()
+        elif self.rsi[0] > 70 and self.crossover[0] < 0:
+            self.order = self.sell()
+
+
+class BacktestEngine:
+    """回测引擎
+
+    使用示例:
+        engine = BacktestEngine()
+        engine.load_data("600519.SH", df)
+        result = engine.run()
+        engine.plot()
+    """
+
+    def __init__(self, initial_cash: float = 1_000_000.0, commission: float = 0.0003):
+        if bt is None:
+            raise RuntimeError("BacktestEngine 需要 backtrader, 请先 pip install backtrader")
+        self.cerebro = bt.Cerebro()
+        self.cerebro.broker.setcash(initial_cash)
+        self.cerebro.broker.setcommission(commission=commission)
+        self.cerebro.addstrategy(DualMABacktestStrategy)
+        self._has_data = False
+
+    def load_data(self, symbol: str, df: pd.DataFrame) -> None:
+        """加载历史数据
+
+        Args:
+            symbol: 股票代码
+            df: 包含 open/high/low/close/volume 的 DataFrame
+        """
+        df = df.copy()
+        if "datetime" not in df.columns and df.index.name != "datetime":
+            df["datetime"] = pd.to_datetime(df.index)
+        data = bt.feeds.PandasData(
+            dataname=df,
+            datetime="datetime" if "datetime" in df.columns else None,
+            open="open", high="high", low="low", close="close", volume="volume",
+            openinterest=-1,
+        )
+        self.cerebro.adddata(data, name=symbol)
+        self._has_data = True
+
+    def add_sizer(self, sizer=None) -> None:
+        """添加仓位管理"""
+        if sizer:
+            self.cerebro.addsizer(sizer)
+        else:
+            # 默认: 每次使用 95% 可用资金
+            self.cerebro.addsizer(bt.sizers.PercentSizer, percents=95)
+
+    def add_analyzer(self, analyzer_cls=None) -> None:
+        """添加分析器"""
+        self.cerebro.addanalyzer(bt.analyzers.SharpeRatio, _name="sharpe")
+        self.cerebro.addanalyzer(bt.analyzers.DrawDown, _name="drawdown")
+        self.cerebro.addanalyzer(bt.analyzers.Returns, _name="returns")
+        self.cerebro.addanalyzer(bt.analyzers.TradeAnalyzer, _name="trades")
+
+    def run(self) -> Dict[str, Any]:
+        """执行回测，返回结果摘要"""
+        if not self._has_data:
+            logger.warning("回测引擎: 未加载数据")
             return {}
 
-        def plot(self, *args, **kwargs):
-            pass
+        start_value = self.cerebro.broker.getvalue()
+        logger.info("回测起始资金: ¥%.2f", start_value)
+
+        results = self.cerebro.run()
+        strategy = results[0]
+
+        end_value = self.cerebro.broker.getvalue()
+        total_return = (end_value - start_value) / start_value
+
+        summary = {
+            "初始资金": start_value,
+            "最终资金": end_value,
+            "总收益率": f"{total_return:.2%}",
+            "夏普比率": strategy.analyzers.sharpe.get_analysis().get("sharperatio", "N/A"),
+            "最大回撤": f"{strategy.analyzers.drawdown.get_analysis().get('max', {}).get('drawdown', 0):.2%}",
+            "年化收益": f"{strategy.analyzers.returns.get_analysis().get('rnorm100', 0):.2f}%",
+        }
+
+        logger.info("回测完成: %s", summary)
+        return summary
+
+    def plot(self, save_path: str = "") -> None:
+        """绘制回测图表"""
+        try:
+            self.cerebro.plot(style="candlestick")
+        except Exception as e:
+            logger.warning("回测绘图失败: %s", e)
 
 
 # ==================== 华泰证券接口 ====================

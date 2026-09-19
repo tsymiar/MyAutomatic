@@ -35,13 +35,16 @@ unsigned char* get_Ciphertext(char* filename, char* key, unsigned char* text)
         printf("unable to read public key!\n");
         return (unsigned char*)-1;
     }
-    if ((int)strlen(key) >= RSA_size(rsa1) - 41) {
+    const int maxKeyLen = RSA_size(rsa1) - 41;
+    // 以 RSA 载荷上限为界取长度，避免 key 未以 '\0' 结尾时的越界读取
+    const size_t keyLen = strnlen(key, maxKeyLen > 0 ? (size_t)maxKeyLen : 0);
+    if ((int)keyLen >= maxKeyLen) {
         printf("failed to encrypt\n");
         return (unsigned char*)-1;
     }
     fclose(pub_fp);
     // 用公钥加密(PKCS#1)
-    len = RSA_public_encrypt(strlen(key), (unsigned char*)key, text, rsa1, RSA_PKCS1_PADDING);
+    len = RSA_public_encrypt((int)keyLen, (unsigned char*)key, text, rsa1, RSA_PKCS1_PADDING);
     if (len == -1) {
         printf("failed to encrypt\n");
         return (unsigned char*)-1;
@@ -199,7 +202,8 @@ void RSA_check()
         return;
     }
     key = PEM_read_RSAPublicKey(stream, NULL/*&key*/, NULL, NULL);
-    ret = RSA_public_encrypt(strlen((char*)msg), msg, msg2, key, RSA_PKCS1_PADDING); // or RSA_PKCS1_OAEP_PADDING
+    // msg 为编译期已知的字面量数组，直接取长度避免无界 strlen
+    ret = RSA_public_encrypt((int)sizeof(msg) - 1, msg, msg2, key, RSA_PKCS1_PADDING); // or RSA_PKCS1_OAEP_PADDING
     if (RSA_verify(NID_idea_ecb, msg2, 256, msg, ret, key) == 1) {
         printf("RSA_check SUCCESS\n");
     }
@@ -296,7 +300,11 @@ void f_verify(char* filename)
     FILE* fp;
     char out[32];
     // 支持文件拖曳,但会多出双引号,这里是处理多余的双引号
-    if (filename[0] == 34) filename[strlen(filename) - 1] = 0, strcpy(filename, filename + 1);
+    const size_t nameLen = strnlen(filename, 4096);
+    if (nameLen > 1 && filename[0] == 34) {
+        filename[nameLen - 1] = '\0';
+        memmove(filename, filename + 1, nameLen);
+    }
     if (!strcmp(filename, "exit")) exit(0);  // 输入exit退出
     if (!(fp = fopen(filename, "rb"))) {
         printf("Can not open this file!\n"); // 以二进制打开文件
