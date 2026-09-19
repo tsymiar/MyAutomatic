@@ -74,7 +74,11 @@ int SetupChat(StSock* sock)
     memset(ipaddr, 0, 16);
     if (sock == NULL || sock->IP[0] == '\0' || sock->IP[0] < 0) {
         fprintf_s(stdout, "Current OS is %d bit.\nEnter server IP: ", (int)(sizeof(void*) * 8));
-        scanf_s("%15s", (char*)&ipaddr, 16);
+        // 用 fgets 替代 scanf_s，避免格式串与缓冲区长度参数不匹配
+        if (fgets(ipaddr, (int)sizeof(ipaddr), stdin) == NULL) {
+            ipaddr[0] = '\0';
+        }
+        ipaddr[strcspn(ipaddr, "\r\n")] = '\0';
         if (*ipaddr != 0) {
             memcpy(g_socks.IP, &ipaddr, 16);
         }

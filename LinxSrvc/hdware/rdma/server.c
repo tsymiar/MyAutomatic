@@ -150,7 +150,7 @@ void handle_cm_event(struct rdma_event_channel* ec)
 
             memset(&sge, 0, sizeof(sge));
             sge.addr = (uintptr_t)ctx->buff;
-            sge.length = strlen(ctx->buff) + 1;
+            sge.length = strnlen(ctx->buff, SERVER_BUFFER_SIZE) + 1;
             sge.lkey = ctx->mr->lkey;
 
             memset(&wr, 0, sizeof(wr));

@@ -212,7 +212,6 @@ LoadDIBitmap(const char *filename, /* I - File to load */
     FILE             *fp;          /* Open file pointer */
     GLubyte          *bits;        /* Bitmap pixel bits */
     GLubyte          *ptr;         /* Pointer into bitmap */
-    GLubyte          temp;         /* Temporary variable to swap red and blue */
     int              x, y;         /* X and Y position in image */
     int              length;       /* Line length */
     int              bitsize;      /* Size of bitmap */
@@ -299,7 +298,7 @@ LoadDIBitmap(const char *filename, /* I - File to load */
             x > 0;
             x--, ptr += 3)
     {
-        temp = ptr[0];
+        GLubyte temp = ptr[0];   /* 交换变量，作用域收窄到循环体 */
         ptr[0] = ptr[2];
         ptr[2] = temp;
     }
@@ -427,12 +426,12 @@ SaveDIBitmap(const char *filename, /* I - File to load */
 static unsigned short     /* O - 16-bit unsigned integer */
 read_word(FILE *fp)       /* I - File to read from */
 {
-    unsigned char b0, b1; /* Bytes from file */
+    unsigned char buf[2]; /* Bytes from file */
 
-    b0 = getc(fp);
-    b1 = getc(fp);
+    if (fread(buf, 1, sizeof(buf), fp) != sizeof(buf))
+        return (0);       /* EOF / 读取不足，返回 0 而不是继续越界读 */
 
-    return ((b1 << 8) | b0);
+    return ((unsigned short)((buf[1] << 8) | buf[0]));
 }
 
 
@@ -443,14 +442,12 @@ read_word(FILE *fp)       /* I - File to read from */
 static unsigned int               /* O - 32-bit unsigned integer */
 read_dword(FILE *fp)              /* I - File to read from */
 {
-    unsigned char b0, b1, b2, b3; /* Bytes from file */
+    unsigned char buf[4];         /* Bytes from file */
 
-    b0 = getc(fp);
-    b1 = getc(fp);
-    b2 = getc(fp);
-    b3 = getc(fp);
+    if (fread(buf, 1, sizeof(buf), fp) != sizeof(buf))
+        return (0);               /* EOF / 读取不足，返回 0 而不是继续越界读 */
 
-    return ((((((b3 << 8) | b2) << 8) | b1) << 8) | b0);
+    return ((((((buf[3] << 8) | buf[2]) << 8) | buf[1]) << 8) | buf[0]);
 }
 
 
@@ -461,14 +458,12 @@ read_dword(FILE *fp)              /* I - File to read from */
 static int                        /* O - 32-bit signed integer */
 read_long(FILE *fp)               /* I - File to read from */
 {
-    unsigned char b0, b1, b2, b3; /* Bytes from file */
+    unsigned char buf[4];         /* Bytes from file */
 
-    b0 = getc(fp);
-    b1 = getc(fp);
-    b2 = getc(fp);
-    b3 = getc(fp);
+    if (fread(buf, 1, sizeof(buf), fp) != sizeof(buf))
+        return (0);               /* EOF / 读取不足，返回 0 而不是继续越界读 */
 
-    return ((int)(((((b3 << 8) | b2) << 8) | b1) << 8) | b0);
+    return ((int)(((((buf[3] << 8) | buf[2]) << 8) | buf[1]) << 8) | buf[0]);
 }
 
 

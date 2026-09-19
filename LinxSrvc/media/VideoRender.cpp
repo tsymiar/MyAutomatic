@@ -387,6 +387,11 @@ private:
                         munmap(ptr, map_len);
                         throw std::runtime_error("No space left in buffer");
                     }
+                    // 读取区间 [total, total + to_read) 必须落在映射缓冲区内
+                    if (total < 0 || to_read > (local_buf_len - total)) {
+                        munmap(ptr, map_len);
+                        throw std::runtime_error("Read range exceeds mapped buffer");
+                    }
                     // perform read with EINTR handling and allow partial reads
                     ssize_t bytes = 0;
                     while (true) {
@@ -401,6 +406,11 @@ private:
                     if (bytes == 0) {
                         // EOF reached
                         break;
+                    }
+                    if (bytes > to_read) {
+                        // 返回值不可能大于请求长度, 出现即视为异常, 立即停止
+                        munmap(ptr, map_len);
+                        throw std::runtime_error("Read beyond requested size");
                     }
                     total += bytes;
                     if (total > local_buf_len) {

@@ -74,9 +74,11 @@ static int read_frame(Callback callback, void* flag)
 
     switch (io) {
     case IO_METHOD_READ:
-        if (data_buff == NULL)
+        if (data_buff == NULL || data_buff[0].start == NULL
+            || data_buff[0].length == 0)
             break;
-        if (-1 == read(fd, data_buff[0].start, data_buff[0].length)) {
+        ssize_t rd = read(fd, data_buff[0].start, data_buff[0].length);
+        if (-1 == rd) {
             switch (errno) {
             case EAGAIN:
                 return 0;
@@ -88,8 +90,14 @@ static int read_frame(Callback callback, void* flag)
                 errno_exit("read");
             }
         }
+        /* 防御: 返回值不应超过缓冲区长度, 超出即丢弃本帧 */
+        if (rd < 0 || (size_t)rd > data_buff[0].length) {
+            fprintf(stderr, "read out of range: %zd > %zu\n", rd, data_buff[0].length);
+            break;
+        }
 
-        ((char*)data_buff[0].start)[data_buff[0].length] = '\0';
+        if (data_buff[0].length > 0)
+            ((char*)data_buff[0].start)[data_buff[0].length - 1] = '\0';
         deal_image(callback, flag, data_buff[0].start, data_buff[0].length);
 
         break;

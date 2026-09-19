@@ -210,7 +210,11 @@ void GenericHandler(struct evhttp_request* req_ptr, void* param)
                 pid = waitpid(child, nullptr, WNOHANG);
             } while (pid == 0);
             close(filedes[1]);
-            if (read(filedes[0], &status, sizeof(int)) < 0) {
+            int childStatus = 0;
+            const ssize_t stLen = read(filedes[0], &childStatus, sizeof(childStatus));
+            if (stLen == (ssize_t)sizeof(childStatus)) {
+                status = childStatus; // 仅完整读取后才生效, 避免半包数据被当作状态
+            } else {
                 Error("failed to read status from filedes[0]");
             }
             HookDetail message = {};
@@ -259,7 +263,7 @@ int HttpClient(HookDetail& detail)
         return -2;
     }
     const char* path = evhttp_uri_get_path(uri);
-    if (path == nullptr || strlen(path) == 0) {
+    if (path == nullptr || path[0] == '\0') {
         detail.url = "/";
         path = "(null)";
     }
@@ -319,18 +323,20 @@ int HttpClient(HookDetail& detail)
         Message("setting '%s' form-data", detail.filename);
 
         evbuffer* output_buffer = evhttp_request_get_output_buffer(request);
-        const char* boundary = "------WebKitFormBoundaryAu886z32WLCM1Fl0\r\n";
-        int bndLen = strlen(boundary);
-        evbuffer_add(output_buffer, boundary, bndLen);
+        const char boundary[] = "------WebKitFormBoundaryAu886z32WLCM1Fl0\r\n";
+        int bndLen = (int)sizeof(boundary) - 1;
+        evbuffer_add(output_buffer, boundary, (size_t)bndLen);
 
         char bndBuf[256];
-        snprintf(bndBuf, 256, "Content-Disposition: form-data; name=\"file\"; filename=\"%s\"\r\n", detail.filename);
-        bndLen += strlen(bndBuf);
-        evbuffer_add(output_buffer, bndBuf, strlen(bndBuf));
+        snprintf(bndBuf, sizeof(bndBuf), "Content-Disposition: form-data; name=\"file\"; filename=\"%s\"\r\n", detail.filename);
+        size_t bndBufLen = strnlen(bndBuf, sizeof(bndBuf));
+        bndLen += (int)bndBufLen;
+        evbuffer_add(output_buffer, bndBuf, bndBufLen);
 
-        snprintf(bndBuf, 48, "Content-Type: application/octet-stream\r\n\r\n");
-        bndLen += strlen(bndBuf);
-        evbuffer_add(output_buffer, bndBuf, strlen(bndBuf));
+        snprintf(bndBuf, sizeof(bndBuf), "Content-Type: application/octet-stream\r\n\r\n");
+        bndBufLen = strnlen(bndBuf, sizeof(bndBuf));
+        bndLen += (int)bndBufLen;
+        evbuffer_add(output_buffer, bndBuf, bndBufLen);
 
         FILE* fd = fopen(detail.filename, "rb");
         char buf[1024];
@@ -347,9 +353,10 @@ int HttpClient(HookDetail& detail)
             bts += s;
         }
 
-        snprintf(bndBuf, 48, "\r\n------WebKitFormBoundaryAu886z32WLCM1Fl0--\r\n");
-        bndLen += strlen(bndBuf);
-        evbuffer_add(output_buffer, bndBuf, strlen(bndBuf));
+        snprintf(bndBuf, sizeof(bndBuf), "\r\n------WebKitFormBoundaryAu886z32WLCM1Fl0--\r\n");
+        bndBufLen = strnlen(bndBuf, sizeof(bndBuf)); // 有界取值, 防止未 '\0' 结尾时越界读
+        bndLen += (int)bndBufLen;
+        evbuffer_add(output_buffer, bndBuf, bndBufLen);
 
         fclose(fd);
         evutil_snprintf(buf, sizeof(buf) - 1, "%lu", (unsigned long)bts + bndLen);

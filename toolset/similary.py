@@ -68,6 +68,22 @@ def delete_initial_block_comment(source):
 
     return "\n".join(lines) if is_str else lines
 
+def _find_block_comment_start(line, pos, block_comments):
+    """返回命中位置上的 (块注释起始符, 块注释结束符)，未命中返回 (None, None)"""
+    for bs, be in block_comments:
+        if line.startswith(bs, pos):
+            return bs, be
+    return None, None
+
+
+def _has_line_comment_start(line, pos, line_comments):
+    """判断从 pos 开始是否为行注释"""
+    for lc in line_comments:
+        if lc and line.startswith(lc, pos):
+            return True
+    return False
+
+
 def deal_comments_by_state_machine(code, file_ext):
     """
     简化版状态机：逐行处理，支持行注释和块注释（跨行），保留字符串内的注释符号。
@@ -140,24 +156,15 @@ def deal_comments_by_state_machine(code, file_ext):
                 continue
 
             # check block comment start
-            started_block = False
-            for bs, be in block_comments:
-                if line.startswith(bs, i):
-                    in_block = True
-                    block_end = be
-                    i += len(bs)
-                    started_block = True
-                    break
-            if started_block:
+            bs, be = _find_block_comment_start(line, i, block_comments)
+            if bs is not None:
+                in_block = True
+                block_end = be
+                i += len(bs)
                 continue
 
             # check line comment start
-            line_comment_found = False
-            for lc in line_comments:
-                if lc and line.startswith(lc, i):
-                    line_comment_found = True
-                    break
-            if line_comment_found:
+            if _has_line_comment_start(line, i, line_comments):
                 break  # ignore rest of line
 
             # check string start
@@ -501,17 +508,41 @@ def parse_arguments():
 
     return args
 
+def _round_ratio_val(r):
+    try:
+        return round(float(r) * 100, 3)
+    except Exception:
+        return r
+
+
+def _normalize_ratio(info):
+    """把 ratio 归一化为百分比并保留 3 位小数"""
+    if 'ratio' not in info:
+        return
+    try:
+        val = float(info['ratio'])
+    except Exception as e:
+        print(f"Error processing ratio: {e}")
+        return
+    # Avoid multiplying twice: if ratio already > 1 assume it's percent and just round
+    info['ratio'] = _round_ratio_val(val) if val <= 1 else round(val, 3)
+
+
+def _normalize_details(details):
+    for info in details:
+        _normalize_ratio(info)
+        fn = info.get('file_name', '')
+        if '↔' in fn:
+            parts = [s.strip() for s in fn.split('↔', 1)]
+            info['file_name'] = f"{parts[0]} ↔ {parts[1]}"
+    return details
+
+
 def _on_json_output_exit():
     _orig_file_compare = globals().get('file_compare')
     _orig_dir_compare = globals().get('dir_compare')
     _orig_print = builtins.print
     _json_store = {'type': None, 'data': None}
-
-    def _round_ratio_val(r):
-        try:
-            return round(float(r) * 100, 3)
-        except Exception:
-            return r
 
     def _wrap_file_compare(file1, file2, base_dir, show_diff, use_state_machine=False):
         res = _orig_file_compare(file1, file2, base_dir, show_diff, use_state_machine)
@@ -528,21 +559,7 @@ def _on_json_output_exit():
 
         if 'ratio' in total:
             total['ratio'] = _round_ratio_val(total['ratio'])
-        for info in details:
-            if 'ratio' in info:
-                # Avoid multiplying twice: if ratio already > 1 assume it's percent and just round
-                try:
-                    val = float(info['ratio'])
-                    if val <= 1:
-                        info['ratio'] = _round_ratio_val(val)
-                    else:
-                        info['ratio'] = round(val, 3)
-                except Exception as e:
-                    print(f"Error processing ratio: {e}")
-            fn = info.get('file_name', '')
-            if '↔' in fn:
-                parts = [s.strip() for s in fn.split('↔', 1)]
-                info['file_name'] = f"{parts[0]} ↔ {parts[1]}"
+        details = _normalize_details(details)
 
         _json_store['data'] = {'total': total, 'details': details, 'unmatched': unmatched}
         return res

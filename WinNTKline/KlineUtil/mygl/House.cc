@@ -281,14 +281,18 @@ unsigned char* House::OpenTexImage(INT2U TexIndex, INT2U* slx, INT2U* sly)
     INT2U srcx, srcy;
     char ImageName[30];
     unsigned char* SImageData;
-    int width, height;
+    int width = 0, height = 0;
 
     strcpy_s(ImageName, TextureList[TexIndex]->fname);
     fopen_s(&fp, ImageName, "rb");
     if (!fp) return 0;
     fseek(fp, 18L, 0);
-    fread(&width, sizeof(long), 1, fp);
-    fread(&height, sizeof(long), 1, fp);
+    // BMP 的宽高为 4 字节字段，按目标变量实际大小读取，避免越界写入
+    if (fread(&width, sizeof(width), 1, fp) != 1 ||
+        fread(&height, sizeof(height), 1, fp) != 1) {
+        fclose(fp);
+        return 0;
+    }
     *slx = srcx = width; *sly = srcy = height;
     fseek(fp, 54L, 0);
     image = (unsigned char*)malloc(width * height * 3);

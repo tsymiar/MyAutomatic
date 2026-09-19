@@ -266,6 +266,7 @@ void makeDirExist(const char* dir)
         fprintf(stderr, "dir is null.\n");
         return;
     }
+    umask(077);
     char szPath[260];
     char szMkDir[260];
     size_t szPos = 1;
@@ -282,8 +283,7 @@ void makeDirExist(const char* dir)
             /* copy exactly szPos bytes and explicitly NUL-terminate */
             memcpy(szMkDir, szPath, szPos);
             szMkDir[szPos] = '\0';
-            /* set restrictive umask so group/other have no permissions (CWE-732) */
-            umask(0077);
+            /* szMkDir 已 NUL 结尾, 掩码在函数入口统一设置为 077 */
 #ifdef _WIN32
             mkdir(szMkDir);
 #else

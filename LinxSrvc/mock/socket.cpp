@@ -462,10 +462,19 @@ int client(int argc, char* argv[])
             uint64_t current = start;
             uint64_t calcsize = 0;
             ssize_t rdsize = 0;
-            ssize_t msglen = sizeof(msgbuf) > caplen ? caplen : sizeof(msgbuf);
-            while ((rdsize = read(g_state.fileno, msgbuf, msglen)) > 0) {
-                if (rdsize != msglen) {
-                    fprintf(stdout, "read last size=%zd, expect=%zd: error: %s\n", rdsize, msglen, strerror(errno));
+            // caplen 可能为非正数(atoi), 先夹紧到 (0, sizeof(msgbuf)] 再用作读取长度
+            size_t chunk = sizeof(msgbuf);
+            if (caplen > 0 && static_cast<size_t>(caplen) < chunk) {
+                chunk = static_cast<size_t>(caplen);
+            }
+            while ((rdsize = read(g_state.fileno, msgbuf, chunk)) > 0) {
+                if (rdsize > static_cast<ssize_t>(chunk)) {
+                    // 返回值不应大于请求长度, 出现则说明状态异常, 立即停止
+                    fprintf(stderr, "read beyond buffer: got %zd, expect <= %zu\n", rdsize, chunk);
+                    break;
+                }
+                if (rdsize != static_cast<ssize_t>(chunk)) {
+                    fprintf(stdout, "read last size=%zd, expect=%zu: error: %s\n", rdsize, chunk, strerror(errno));
                 }
                 if (g_state.how == TCP) {
                     if (thrds > 1) {

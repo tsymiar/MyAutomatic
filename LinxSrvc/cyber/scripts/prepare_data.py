@@ -6,7 +6,7 @@ import json
 import argparse
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from scripts.utils.data_utils import clean_text, convert_raw_to_sharegpt
+from scripts.utils.data_utils import convert_raw_to_sharegpt
 
 # 将原始对话文本转换为ShareGPT格式并保存为JSON格式
 def prepare_txt(input_file, output_file, self_name='我', other_name='对方'):

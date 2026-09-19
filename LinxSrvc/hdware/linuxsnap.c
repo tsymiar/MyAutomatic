@@ -13,6 +13,7 @@
 #include <sys/mman.h>    // unistd.h and sys/mman.h are needed by mmap function
 #include <stdbool.h>
 #include <sys/ioctl.h>
+#include <time.h>         // nanosleep
 #if defined(__arm__) || defined(__aarch64__)
 #include <bits/types/struct_timespec.h>
 #include <bits/types/struct_timeval.h>
@@ -104,7 +105,8 @@ int snap_get_pixel_format(snap_device* snap_dev)
         }
         snap_dev->fmtdesc.index++;
         fprintf(stdout, "\n");
-        usleep(1000);
+        struct timespec nap = { 0, 1000 * 1000 }; // 1ms
+        nanosleep(&nap, NULL);
     }
     return snap_dev->fmtdesc.index + 1;
 }

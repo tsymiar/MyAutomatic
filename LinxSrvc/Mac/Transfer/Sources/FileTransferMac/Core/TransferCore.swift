@@ -30,11 +30,11 @@ final class TransferCore: ObservableObject {
 
     /// Directory for received files.
     @Published var savePath: String = {
-        let dl = FileManager.default.homeDirectoryForCurrentUser
+        let uri = FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent("Downloads")
             .appendingPathComponent("FileTransfer")
-        try? FileManager.default.createDirectory(at: dl, withIntermediateDirectories: true)
-        return dl.path
+        try? FileManager.default.createDirectory(at: uri, withIntermediateDirectories: true)
+        return uri.path
     }()
 
     // MARK: - Internal state
@@ -56,7 +56,7 @@ final class TransferCore: ObservableObject {
     // MARK: - Lifetime
 
     deinit {
-        if let h = handle { ft_destroy(h); handle = nil }
+        if let engine = handle { ft_destroy(engine); handle = nil }
     }
 
     // MARK: - Logging helper
@@ -82,21 +82,21 @@ final class TransferCore: ObservableObject {
 
     /// Create engine, set save path & callback. Returns the handle on success, nil on failure.
     private func makeEngine() -> FT_Handle? {
-        let h = ft_create()
-        guard let h else {
+        let engine = ft_create()
+        guard let engine else {
             transferStatus = "Failed to create instance"
             appendLog("ERROR: Failed to create TransferEngine instance")
             return nil
         }
-        ft_set_save_path(h, savePath)
-        installCallbacks(h)
-        return h
+        ft_set_save_path(engine, savePath)
+        installCallbacks(engine)
+        return engine
     }
 
     /// Tear down the engine handle cleanly.
     private func destroyEngine() {
-        guard let h = handle else { return }
-        ft_destroy(h)
+        guard let engine = handle else { return }
+        ft_destroy(engine)
         handle = nil
         callbackRef = nil
         // Note: log callback is global and survives engine destruction;
@@ -106,17 +106,17 @@ final class TransferCore: ObservableObject {
     }
 
     func startServer(port: UInt16 = 8800) {
-        guard !isServerRunning, let h = makeEngine() else { return }
-        handle = h
+        guard !isServerRunning, let engine = makeEngine() else { return }
+        handle = engine
 
-        let rc = ft_start_server(h, port)
-        if rc == 0 {
+        let ret = ft_start_server(engine, port)
+        if ret == 0 {
             isServerRunning = true
             transferStatus = "Listening on port \(port)"
             appendLog("Server started on port \(port)")
         } else {
-            transferStatus = "Server start failed (code \(rc))"
-            appendLog("ERROR: Server start failed (code \(rc))")
+            transferStatus = "Server start failed (code \(ret))"
+            appendLog("ERROR: Server start failed (code \(ret))")
             destroyEngine()
         }
     }
@@ -133,27 +133,27 @@ final class TransferCore: ObservableObject {
 
     /// Poll client count periodically (server mode).
     func updateClientCount() {
-        guard let h = handle, isServerRunning else { return }
-        clientCount = Int(ft_get_client_count(h))
+        guard let engine = handle, isServerRunning else { return }
+        clientCount = Int(ft_get_client_count(engine))
     }
 
     // MARK: - Client mode
 
-    func connect(to ip: String, port: UInt16 = 8800) {
-        guard !isConnected, let h = makeEngine() else { return }
-        handle = h
+    func connect(to host: String, port: UInt16 = 8800) {
+        guard !isConnected, let engine = makeEngine() else { return }
+        handle = engine
 
         // 重置进度条，避免残留上次传输的 100%
         resetProgress()
 
-        let rc = ft_connect(h, ip, port)
-        if rc == 0 {
+        let ret = ft_connect(engine, host, port)
+        if ret == 0 {
             isConnected = true
-            transferStatus = "Connected to \(ip):\(port)"
-            appendLog("Connected to \(ip):\(port)")
+            transferStatus = "Connected to \(host):\(port)"
+            appendLog("Connected to \(host):\(port)")
         } else {
-            transferStatus = "Connection failed (code \(rc))"
-            appendLog("ERROR: Connection to \(ip):\(port) failed (code \(rc))")
+            transferStatus = "Connection failed (code \(ret))"
+            appendLog("ERROR: Connection to \(host):\(port) failed (code \(ret))")
             destroyEngine()
         }
     }
@@ -171,7 +171,7 @@ final class TransferCore: ObservableObject {
     // MARK: - Send file (client mode, blocking → run on background)
 
     func sendLocalFile(_ filePath: String) {
-        guard isConnected, let h = handle else {
+        guard isConnected, let engine = handle else {
             transferStatus = "Not connected"
             return
         }
@@ -186,22 +186,25 @@ final class TransferCore: ObservableObject {
         appendLog("Sending: \(fileName) (\(formatBytes(fileSize)))")
 
         let idx = transferTasks.count
-        transferTasks.append(TransferTask(fileName: fileName, fileSize: fileSize, direction: .sending, peerIP: "Peer Device"))
+        transferTasks.append(TransferTask(
+            fileName: fileName, fileSize: fileSize,
+            direction: .sending, peerIP: "Peer Device"
+        ))
 
-        Task.detached { [weak self, h] in
-            let rc = ft_send_file(h, filePath)
+        Task.detached { [weak self, engine] in
+            let ret = ft_send_file(engine, filePath)
             await MainActor.run { [weak self] in
                 guard let self, idx < self.transferTasks.count else { return }
                 self.isBusy = false
                 let task = self.transferTasks[idx]
-                if rc == 0 {
+                if ret == 0 {
                     self.transferStatus = "Send complete"; self.progress = 1.0
                     self.appendLog("Send complete: \(task.fileName)")
                     self.transferTasks[idx].status = .completed
                     self.transferTasks[idx].bytesTransferred = task.fileSize
                 } else {
-                    self.transferStatus = "Send failed (code \(rc))"
-                    self.appendLog("Send failed: \(task.fileName) (code \(rc))")
+                    self.transferStatus = "Send failed (code \(ret))"
+                    self.appendLog("Send failed: \(task.fileName) (code \(ret))")
                     self.transferTasks[idx].status = .failed
                 }
                 // 发送完成后自动断开连接，下次连接时进度条从 0 开始
@@ -217,7 +220,7 @@ final class TransferCore: ObservableObject {
 
     // MARK: - Callback wiring (uses Unmanaged to avoid global state)
 
-    private func installCallbacks(_ h: FT_Handle) {
+    private func installCallbacks(_ engine: FT_Handle) {
         // ── Progress callback ──
         let progTrampoline: FT_ProgressCallback = { rawSelf, cur, tot, stPtr in
             let status = stPtr.map { String(cString: $0) } ?? ""
@@ -227,7 +230,7 @@ final class TransferCore: ObservableObject {
             }
         }
         callbackRef = progTrampoline
-        ft_set_progress_callback(h, progTrampoline, Unmanaged.passUnretained(self).toOpaque())
+        ft_set_progress_callback(engine, progTrampoline, Unmanaged.passUnretained(self).toOpaque())
 
         // ── Log callback (global — routes ALL C++ LOG_* to the UI console) ──
         let logTrampoline: FT_LogCallback = { rawSelf, msgPtr in
@@ -261,15 +264,21 @@ final class TransferCore: ObservableObject {
         if let idx = transferTasks.firstIndex(where: { $0.status == .pending || $0.status == .transferring }) {
             transferTasks[idx].status = .transferring
             transferTasks[idx].bytesTransferred = current
-            if lower.contains("complete!") { transferTasks[idx].status = .completed }
-            else if lower.contains("cancel") { transferTasks[idx].status = .cancelled }
+            if lower.contains("complete!") {
+                transferTasks[idx].status = .completed
+            } else if lower.contains("cancel") {
+                transferTasks[idx].status = .cancelled
+            }
         }
 
         // Detect new incoming files (server mode)
         if isServerRunning, status.contains("Receiving:") {
             let name = status.components(separatedBy: ": ").last ?? ""
             if !transferTasks.contains(where: { $0.fileName == name && $0.direction == .receiving }) {
-                transferTasks.append(TransferTask(fileName: name, fileSize: total, direction: .receiving, peerIP: "Peer"))
+                transferTasks.append(TransferTask(
+                    fileName: name, fileSize: total,
+                    direction: .receiving, peerIP: "Peer"
+                ))
             }
         }
 

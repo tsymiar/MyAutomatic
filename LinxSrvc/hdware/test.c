@@ -49,13 +49,13 @@ int main(int argc, char** argv)
         perror("open [" DEV_NODE "] fail");
     } else {
         char msg[SizeOfBuf];
-        ssize_t len = read(fd, msg, SizeOfBuf - 1);
+        ssize_t len = read(fd, msg, sizeof(msg) - 1);
         if (len < 0) {
             perror("read fail");
             close(fd);
             return -1;
         }
-        msg[SizeOfBuf - 1] = '\0';
+        msg[len > 0 ? len : 0] = '\0';
         printf("Default chars is [%s].\n", msg);
         printf("Please input a string written to chars device: ");
         if (scanf("%1023s", msg) != 1) {
@@ -63,19 +63,19 @@ int main(int argc, char** argv)
             close(fd);
             return -1;
         }
-        ssize_t wlen = write(fd, msg, strlen(msg));
+        ssize_t wlen = write(fd, msg, strnlen(msg, sizeof(msg)));
         if (wlen < 0) {
             perror("write fail");
             close(fd);
             return -1;
         }
-        ssize_t rlen = read(fd, msg, SizeOfBuf - 1);
+        ssize_t rlen = read(fd, msg, sizeof(msg) - 1);
         if (rlen < 0) {
             perror("read fail");
             close(fd);
             return -1;
         }
-        msg[SizeOfBuf - 1] = '\0';
+        msg[rlen > 0 ? rlen : 0] = '\0';
         printf("Chars [%s] written to '%s'.\n", msg, DEV_NODE);
         close(fd);
     }

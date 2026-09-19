@@ -167,12 +167,8 @@ int main_server(int argc, char** argv)
 
     struct timespec ts = { 0, 50000 };
 
-    // 无参数: CGI 模式
-    if (argc < 2) {
-        soap_serve(&Soap);
-        soap_destroy(&Soap);
-        soap_end(&Soap);
-    } else {
+    // 入口已校验 argc >= 2，此处固定以独立服务器模式运行
+    {
         // 独立服务器模式
         struct soap* soap_thr[MAX_THR];
         pthread_t    tid[MAX_THR];
@@ -345,7 +341,8 @@ int api__get_server_status(struct soap* soap, xsd_string req, xsd_string& rsp)
         // 用 snprintf 替代已弃用的 gcvt
         snprintf(gt, sizeof(gt), "%.5g",
             ss.mem_all > 0 ? (100.0 * ss.mem_free / ss.mem_all) : 0.0);
-        rsp = gt;
+        // 用 soap 上下文分配，避免把栈上数组地址返回给调用方
+        rsp = soap_strdup(soap, gt);
         cout << req << ": " << rsp << endl;
     }
     return 0;

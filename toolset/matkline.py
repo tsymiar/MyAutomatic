@@ -8,7 +8,7 @@
     [时间, 成交量, 开, 收, 高, 低, 成交额]
 
 数据源（均为免密钥真实接口）:
-    tencent      A股/指数/基金    日线(原生支持区间) + 1/5/15/30/60分钟
+    tencent      A股/指数/基金    日线(原生支持区间) + 1/5/15/30分钟/小时
     eastmoney    东方财富        A股/期货/港股
     gold         沪金/沪银       新浪国内期货，日线全量历史 + 分钟线，真实OHLC
     xau/gc       伦敦金/纽约金    日线真实OHLC；分钟线由当日分时线+实时快照聚合
@@ -23,6 +23,8 @@
     --interval 1d           真实日线 OHLC（新浪国际期货全量历史）
     --interval 5m/15m/30m/1h 当日分时线聚合，真实高低点，开箱即可用
     --interval 1m           当日每分钟价格，单价的平价K线
+    --interval 1Q/1Y        季K/年K，由日线本地聚合（各源无原生季年接口）
+    --interval 5s           5秒线，由 Binance 系 1s K线聚合，默认以贝塞尔曲线显示
 
 交互：悬停蜡烛图看该根K线详情；单击底部副图在 成交量/MACD/RSI/KDJ 之间切换。
 导出：`--csv out.csv` 把当前K线写成CSV；指标参数用 --macd/--rsi/--kdj 调整。
@@ -38,7 +40,7 @@ import time
 from collections import namedtuple
 from datetime import datetime
 from functools import partial
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlparse
 from urllib.request import Request, urlopen
 
 import matplotlib.pyplot as plt
@@ -113,25 +115,34 @@ SINGLE_REQUEST_MAX = {"tencent": 640, "eastmoney": 10000, "binance": 1000, "okx"
 
 # 周期写法在各数据源的映射
 INTERVAL_ALIAS = {"day": "1d", "d": "1d", "1day": "1d", "week": "1w", "w": "1w",
-                  "month": "1M", "min": "1m", "1min": "1m", "hour": "1h", "1hour": "1h"}
-MINUTE_STEP = {"1m": 1, "5m": 5, "15m": 15, "30m": 30, "60m": 60, "1h": 60}
+                  "month": "1M", "min": "1m", "1min": "1m", "hour": "1h", "1hour": "1h",
+                  "quarter": "1Q", "q": "1Q", "1q": "1Q", "1quarter": "1Q",
+                  "year": "1Y", "y": "1Y", "1y": "1Y", "1year": "1Y",
+                  "5sec": "5s", "5secs": "5s", "5seconds": "5s"}
+# 60m 与 1h 完全等价(同为60分钟), 统一用 1h, 不再保留 60m 写法
+MINUTE_STEP = {"1m": 1, "5m": 5, "15m": 15, "30m": 30, "1h": 60}
 TENCENT_DAILY_KEY = {"1d": "day", "1w": "week", "1M": "month"}
-TENCENT_MINUTE_KEY = {"1m": "m1", "5m": "m5", "15m": "m15", "30m": "m30",
-                      "60m": "m60", "1h": "m60"}
-EASTMONEY_KLT = {"1m": 1, "5m": 5, "15m": 15, "30m": 30, "60m": 60,
+TENCENT_MINUTE_KEY = {"1m": "m1", "5m": "m5", "15m": "m15", "30m": "m30", "1h": "m60"}
+EASTMONEY_KLT = {"1m": 1, "5m": 5, "15m": 15, "30m": 30,
                  "1h": 60, "1d": 101, "1w": 102, "1M": 103}
-OKX_BAR = {"1m": "1m", "5m": "5m", "15m": "15m", "30m": "30m", "60m": "1H",
+OKX_BAR = {"1m": "1m", "5m": "5m", "15m": "15m", "30m": "30m",
            "1h": "1H", "4h": "4H", "1d": "1D", "1w": "1W", "1M": "1M"}
 
+# 无原生接口的周期: 先取「基础周期」再本地聚合 (见 resample_points)
+# 季K/年K 由日线聚合；5s 由 1s K线聚合（只有 Binance 系接口有秒级原始数据）
+RESAMPLE_BASE = {"1Q": "1d", "1Y": "1d", "5s": "1s"}
+BARS_PER_PERIOD = {"1Q": 63, "1Y": 250, "5s": 5}  # 一根目标K线大致需要的原始K线根数
+SECOND_STEP = {"5s": 5}                   # 秒级周期的聚合步长(秒)
+
 # 各数据源真正支持的周期（避免 .get(key, default) 静默降级成别的周期）
-FUTURES_INTERVALS = ["1m", "5m", "15m", "30m", "60m", "1h", "1d"]    # 新浪期货(国内/国际)
-USD_INDEX_INTERVALS = ["1m", "5m", "15m", "30m", "60m", "1h"]         # 东财分时(无免费日线)
+FUTURES_INTERVALS = ["1m", "5m", "15m", "30m", "1h", "1d", "1Q", "1Y"]  # 新浪期货(国内/国际)
+USD_INDEX_INTERVALS = ["1m", "5m", "15m", "30m", "1h"]   # 东财分时(无免费日线, 故无季/年K)
 SUPPORTED_INTERVALS = {
-    "tencent": ["1m", "5m", "15m", "30m", "60m", "1h", "1d", "1w", "1M"],
-    "eastmoney": ["1m", "5m", "15m", "30m", "60m", "1h", "1d", "1w", "1M"],
-    "binance": ["1m", "3m", "5m", "15m", "30m", "1h", "2h", "4h", "6h", "8h",
-                "12h", "1d", "3d", "1w", "1M"],
-    "okx": ["1m", "5m", "15m", "30m", "60m", "1h", "4h", "1d", "1w", "1M"],
+    "tencent": ["1m", "5m", "15m", "30m", "1h", "1d", "1w", "1M", "1Q", "1Y"],
+    "eastmoney": ["1m", "5m", "15m", "30m", "1h", "1d", "1w", "1M", "1Q", "1Y"],
+    "binance": ["1s", "5s", "1m", "3m", "5m", "15m", "30m", "1h", "2h", "4h", "6h", "8h",
+                "12h", "1d", "3d", "1w", "1M", "1Q", "1Y"],
+    "okx": ["1m", "5m", "15m", "30m", "1h", "4h", "1d", "1w", "1M", "1Q", "1Y"],
     "gold": FUTURES_INTERVALS,
     "usd": USD_INDEX_INTERVALS,
 }
@@ -285,7 +296,7 @@ class UnsupportedInterval(ValueError):
 
 
 def normalize_interval(interval):
-    """把常见周期写法统一成 1m/5m/15m/30m/60m/1h/4h/1d/1w/1M（M=月线，m=分钟）。"""
+    """把常见周期写法统一成 1m/5m/15m/30m/1h/4h/1d/1w/1M/1Q/1Y（M=月线，m=分钟）。"""
     text = (interval or "1m").strip()
     if not text:
         return "1m"
@@ -523,7 +534,11 @@ def fetch_text(url, params=None, timeout=10, encoding="utf-8", headers=None):
     """GET 请求并返回文本。"""
     if params:
         url = url + ("&" if "?" in url else "?") + urlencode(params)
+    # 只允许 http/https，避免 file: 等自定义协议被 urlopen 打开
+    if urlparse(url).scheme not in ("http", "https"):
+        raise ValueError("不支持的 URL 协议（仅允许 http/https）: %s" % url)
     request = Request(url, headers=headers or default_headers())
+    # nosec B310 - 已在上方限定 scheme 仅为 http/https, 不接受 file: 等自定义协议
     with urlopen(request, timeout=timeout) as response:
         raw = response.read()
     try:
@@ -566,6 +581,49 @@ def build_points(bars):
         points[5].append(bar[4])
         points[6].append(bar[6] if len(bar) > 6 else bar[2])
     return points
+
+
+def bucket_start(when, interval):
+    """返回该时间串所属周期的起始时刻。
+
+    1Q/1Y 取季初/年初；5s 等秒级周期把秒数向下取整到步长的整数倍（由 1s K线聚合）。
+    """
+    text = str(when)[:19].replace("/", "-").replace(".", "-")
+    day = datetime.strptime(text[:10], "%Y-%m-%d")
+    if interval == "1Y":
+        return "%04d-01-01 00:00:00" % day.year
+    if interval == "1Q":
+        return "%04d-%02d-01 00:00:00" % (day.year, (day.month - 1) // 3 * 3 + 1)
+    stamp = datetime.strptime(text, "%Y-%m-%d %H:%M:%S")
+    epoch = int(stamp.timestamp())
+    return datetime.fromtimestamp(epoch - epoch % SECOND_STEP[interval]).strftime(
+        "%Y-%m-%d %H:%M:%S")
+
+
+def resample_points(points, interval):
+    """把基础周期K线聚合成 1Q/1Y/5s：开=区间首开，收=区间尾收，高/低取极值，量额累加。
+
+    这些周期各数据源基本没有原生接口，本地聚合结果跨源一致；
+    最后一根是尚未走完的周期（季/年/5秒），与行情软件行为一致。
+    """
+    bars = []
+    slots = {}
+    for index, when in enumerate(points[0]):
+        try:
+            key = bucket_start(when, interval)
+        except ValueError:
+            continue
+        slot = slots.get(key)
+        if slot is None:
+            slots[key] = len(bars)
+            bars.append((key, points[2][index], points[3][index], points[4][index],
+                         points[5][index], points[1][index], points[6][index]))
+            continue
+        bar = bars[slot]
+        bars[slot] = (key, bar[1], points[3][index],
+                      max(bar[3], points[4][index]), min(bar[4], points[5][index]),
+                      bar[5] + points[1][index], bar[6] + points[6][index])
+    return build_points(bars)
 
 
 def normalize_day(stamp):
@@ -831,7 +889,7 @@ def floor_minute(when, step):
 def aggregate_snapshot(source, ticks, step, name, snapshot_code):
     """把分时/快照价格序列按 step 分钟聚合成K线（部分品种没有分钟K线接口）。
 
-    分时线一次就能提供当日（或近几日）全部分钟价格，因此 5m/15m/30m/60m 周期可立即
+    分时线一次就能提供当日（或近几日）全部分钟价格，因此 5m/15m/30m/1h 周期可立即
     得到带真实高低点的K线；1m 周期为每分钟单价的平价K线。
     """
     aggregator = AGGREGATORS.get(source)
@@ -1014,12 +1072,22 @@ def load_source_points(source, symbol, interval, limit=120, timeout=10, start=No
     loader = SOURCE_LOADERS.get(source)
     if loader is None:
         raise ValueError("未知数据源: %s" % source)
+    interval = validate_interval(source, normalize_interval(interval))
+    # 1Q/1Y/5s 无原生接口: 先按基础周期取数(根数按比例放大), 再本地聚合
+    resample = interval in RESAMPLE_BASE
+    fetch_interval = RESAMPLE_BASE[interval] if resample else interval
+    fetch_limit = request_limit(limit, SINGLE_REQUEST_MAX.get(source, 0))
+    if resample:
+        cap = SINGLE_REQUEST_MAX.get(source, 0)
+        fetch_limit = min(fetch_limit * BARS_PER_PERIOD[interval], cap) if cap \
+            else fetch_limit * BARS_PER_PERIOD[interval]
     query = Query(source,
                   normalize_symbol(source, symbol),
-                  validate_interval(source, normalize_interval(interval)),
-                  request_limit(limit, SINGLE_REQUEST_MAX.get(source, 0)),
+                  fetch_interval,
+                  fetch_limit,
                   timeout, start, end)
-    return shape_points(drop_future_points(loader(query)), start, end, limit)
+    points = shape_points(drop_future_points(loader(query)), start, end, fetch_limit)
+    return slice_tail(resample_points(points, interval), limit) if resample else points
 
 
 def resolve_points(source, symbol, interval, limit=120, timeout=10, start=None, end=None):
@@ -1042,10 +1110,17 @@ def resolve_points(source, symbol, interval, limit=120, timeout=10, start=None, 
 def load_api_points(url, symbol=None, interval="1m", limit=120, timeout=10,
                     start=None, end=None):
     """兼容旧用法：从自定义 REST 地址(Binance 风格 klines)读取，支持历史区间。"""
-    query = Query("binance", symbol or "", normalize_interval(interval),
-                  request_limit(limit, SINGLE_REQUEST_MAX["binance"]),
-                  timeout, start, end)
-    return shape_points(load_binance_points([url], query), start, end, limit)
+    interval = normalize_interval(interval)
+    resample = interval in RESAMPLE_BASE
+    fetch_limit = request_limit(limit, SINGLE_REQUEST_MAX["binance"])
+    if resample:
+        fetch_limit = min(fetch_limit * BARS_PER_PERIOD[interval],
+                          SINGLE_REQUEST_MAX["binance"])
+    query = Query("binance", symbol or "",
+                  RESAMPLE_BASE[interval] if resample else interval,
+                  fetch_limit, timeout, start, end)
+    points = shape_points(load_binance_points([url], query), start, end, fetch_limit)
+    return slice_tail(resample_points(points, interval), limit) if resample else points
 
 
 def load_file_points(path):
@@ -1468,6 +1543,53 @@ def plot_points(points, title):
     figure.subplots_adjust(left=0.065, right=0.975, top=0.9, bottom=0.12)
 
 
+def bezier_curve(x, y, samples=16, tension=1.0):
+    """Catmull-Rom 控制点转三次贝塞尔，把折线平滑成密集采样点。
+
+    tension=0 退化成直线，1 为标准 Catmull-Rom；x 只做线性插值，曲线仅在纵向弯曲，
+    因此时间轴刻度仍与原始K线一一对应。
+    """
+    values = np.asarray(y, dtype=float)
+    xs = np.asarray(x, dtype=float)
+    count = len(values)
+    if count < 3:
+        return xs, values
+    start, end = values[:-1], values[1:]
+    previous = np.concatenate(([values[0]], values[:-2]))     # P(i-1)，首点重复自身
+    following = np.concatenate((values[2:], [values[-1]]))    # P(i+2)，末点重复自身
+    control1 = start + (end - previous) * tension / 6.0
+    control2 = end - (following - start) * tension / 6.0
+    t = np.repeat(np.linspace(0.0, 1.0, samples)[:-1][:, None], count - 1, axis=1)
+    curve = ((1.0 - t) ** 3 * start + 3.0 * (1.0 - t) ** 2 * t * control1
+             + 3.0 * (1.0 - t) * t ** 2 * control2 + t ** 3 * end)
+    smooth_x = (xs[:-1] + t * (xs[1:] - xs[:-1])).ravel(order="F")
+    return np.append(smooth_x, xs[-1]), np.append(curve.ravel(order="F"), values[-1])
+
+
+def plot_bezier(points, title):
+    """贝塞尔模式：开/收/高/低四条线平滑成曲线，适合 5s 这类密集周期。"""
+    if not points[0]:
+        return
+    figure = plt.gcf()
+    figure.clf()
+    figure._matkline_hover = None         # 曲线模式不提供K线悬停提示
+    axis = figure.add_subplot(111)
+    x = np.arange(len(points[0]), dtype=float)
+    for values, label, color, style in ((points[2], "开", MA_COLORS[0][1], "-"),
+                                        (points[3], "收", STYLE["text"], "-"),
+                                        (points[4], "高", UP_COLOR, "--"),
+                                        (points[5], "低", DOWN_COLOR, "--")):
+        curve_x, curve_y = bezier_curve(x, values)
+        axis.plot(curve_x, curve_y, label=label, color=color, linestyle=style,
+                  linewidth=1.2)
+    axis.set_title(title, loc="left", pad=12)
+    apply_time_axis(axis, points[0])
+    style_price_axis(axis, min(points[5]), max(points[4]))
+    axis.legend(loc="upper left", ncol=4, columnspacing=1.0, handlelength=1.4,
+                frameon=True, framealpha=0.85, edgecolor="none")
+    figure.subplots_adjust(left=0.065, right=0.975, top=0.9, bottom=0.12)
+
+
 def plot_candles(points, title, bars=None, params=None):
     """蜡烛图模式：红涨绿跌 + 影线 + MA5/10/20 + 可切换副图。
 
@@ -1538,7 +1660,7 @@ def plot_candles(points, title, bars=None, params=None):
     change = (last_close - base_close) / base_close * 100.0 if base_close else 0.0
     tone = UP_COLOR if change >= 0 else DOWN_COLOR
     axis.set_title(title, loc="left", pad=12)
-    axis.text(1.0, 1.012, "最新 %.*f   %+.2f%%" % (decimals, last_close, change),
+    axis.text(1.0, 1.012, "实时 %.*f   %+.2f%%" % (decimals, last_close, change),
               transform=axis.transAxes, ha="right", va="bottom",
               fontsize=9.5, color=tone)
     axis.axhline(last_close, color=tone, linewidth=0.7, linestyle="--",
@@ -1619,6 +1741,8 @@ def stream_api(loader, refresh=5.0, chart="candle", csv_path=None, params=None):
     """
     if chart == "candle":
         render = partial(plot_candles, bars=None, params=params)
+    elif chart == "bezier":
+        render = plot_bezier
     else:
         render = plot_points
     figure = plt.figure(figsize=(12, 6))
@@ -1654,6 +1778,9 @@ EXAMPLES = """\
   python3 matkline.py --source xau --interval 1d --limit 250    # 国际金日线
   python3 matkline.py --history --symbol 600519 --interval 1d --start 2024-01-01 --end 2024-06-30
   python3 matkline.py --source tencent --symbol sh600519 --interval 1d --limit 250
+  python3 matkline.py --source tencent --symbol sh600519 --interval 1Q --limit 40  # 季K
+  python3 matkline.py --source eastmoney --symbol 1.600519 --interval 1Y --limit 20 # 年K
+  python3 matkline.py --source binance --symbol BTCUSDT --interval 5s --limit 60  # 5秒线(贝塞尔)
   python3 matkline.py --source auto --symbol 黄金 --interval 5m  # 按标的自动选源
   python3 matkline.py --source crude --interval 1d --limit 250   # WTI原油日线
   python3 matkline.py --live --source brent --interval 1h        # 布伦特原油实时
@@ -1664,7 +1791,8 @@ EXAMPLES = """\
   python3 matkline.py --live --source xau --macd 6,13,5 --rsi 6 --kdj 9,3,3  # 自定义指标参数
 数据源: tencent(A股) eastmoney(东财) gold(沪金/沪银) xau/gc(国际金) crude(美原油)
         brent(布伦特) ng(天然气) usd(美元指数) binance/okx(加密货币)
-国际盘: xau/gc/crude/brent/ng 支持 1m/5m/15m/30m/60m/1h/1d；usd(美元指数) 支持 1m~1h
+国际盘: xau/gc/crude/brent/ng 支持 1m/5m/15m/30m/1h/1d；usd(美元指数) 支持 1m~1h
+周期: 1Q/1Y 由日线本地聚合 5s 由 Binance 系 1s K线聚合(A股/期货源最小 1m，无秒级数据)，默认画成贝塞尔曲线
 交互: 悬停蜡烛图看该根K线详情；单击底部副图在 成交量/MACD/RSI/KDJ 之间切换
 """
 
@@ -1686,17 +1814,20 @@ def build_parser():
     parser.add_argument("--symbol",
                         help="标的代码或中文名(黄金/原油/美元指数等)，缺省用数据源默认标的")
     parser.add_argument("--interval", default="1m",
-                        help="K线周期，如 1m/5m/15m/30m/60m/1h/1d/1w/1M（1M=月线）")
+                        help="K线周期，如 1m/5m/15m/30m/1h/1d/1w/1M/1Q/1Y"
+                             "（1M=月线，1Q=季线，1Y=年线，季/年由日线聚合）")
     parser.add_argument("--limit", type=int,
-                        help="取最近多少根K线，0=不限；省略时普通模式120、历史区间查询不限")
+                        help="取最近多少根K线，0=不限；省略时普通模式120、历史区间查询不限"
+                             "（1Q/1Y 受日线单次取数上限约束，实际根数或少于该值）")
     parser.add_argument("--start", help="历史查询起始日期 YYYY-MM-DD")
     parser.add_argument("--end", help="历史查询结束日期 YYYY-MM-DD")
     parser.add_argument("--refresh", type=float, default=5.0,
                         help="实时刷新间隔秒数（仅 --live 生效）")
     parser.add_argument("--timeout", type=float, default=10.0,
                         help="单次请求超时秒数")
-    parser.add_argument("--chart", default="candle", choices=["candle", "line"],
-                        help="绘图方式：candle=K线蜡烛图(默认)，line=折线")
+    parser.add_argument("--chart", default=None, choices=["candle", "line", "bezier"],
+                        help="绘图方式：candle=K线蜡烛图(默认)，line=折线，"
+                             "bezier=贝塞尔平滑曲线（5s 等秒级周期自动使用）")
     parser.add_argument("--macd", default="12,26,9", metavar="FAST,SLOW,SIGNAL",
                         help="MACD 快线/慢线/信号线周期，默认 12,26,9")
     parser.add_argument("--rsi", default="14", metavar="N", help="RSI 周期，默认 14")
@@ -1732,15 +1863,8 @@ def source_loader(args, limit, start, end, suffix):
     return load
 
 
-def main(argv=None):
-    parser = build_parser()
-    argv = sys.argv[1:] if argv is None else argv
-    if not argv:                       # 不带任何参数时只打印用法
-        parser.print_help()
-        return 0
-    args = parser.parse_args(argv)
-
-    # ---- 参数校验：在取数前给出明确提示，避免静默降级或反复刷错误 ----
+def validate_args(parser, args):
+    """参数校验：在取数前给出明确提示，避免静默降级或反复刷错误"""
     if args.live and args.history:
         parser.error("--live 与 --history 语义冲突（--live 持续刷新，--history 只查一次）")
     if args.api_url and args.source != "auto":
@@ -1751,14 +1875,18 @@ def main(argv=None):
         parser.error("--refresh 必须大于 0")
     if args.timeout <= 0:
         parser.error("--timeout 必须大于 0")
-    if not args.api_url:
-        names = [args.source] if args.source != "auto" else candidate_sources(args.symbol)
-        wanted = normalize_interval(args.interval)
-        if not any(wanted in SUPPORTED_INTERVALS.get(name, []) for name in names):
-            parser.error("周期 %s 不被 %s 支持；%s 可用周期: %s"
-                         % (wanted, "/".join(names), names[0],
-                            "/".join(SUPPORTED_INTERVALS.get(names[0], []))))
+    if args.api_url:
+        return
+    names = [args.source] if args.source != "auto" else candidate_sources(args.symbol)
+    wanted = normalize_interval(args.interval)
+    if not any(wanted in SUPPORTED_INTERVALS.get(name, []) for name in names):
+        parser.error("周期 %s 不被 %s 支持；%s 可用周期: %s"
+                     % (wanted, "/".join(names), names[0],
+                        "/".join(SUPPORTED_INTERVALS.get(names[0], []))))
 
+
+def build_indicator_params(parser, args):
+    """解析并校验指标参数"""
     try:
         params = {"macd": parse_int_list(args.macd, 3, "--macd"),
                   "rsi": parse_int_list(args.rsi, 1, "--rsi"),
@@ -1768,6 +1896,19 @@ def main(argv=None):
     if params["macd"][0] >= params["macd"][1]:
         parser.error("--macd 快线周期(%d)必须小于慢线周期(%d)"
                      % (params["macd"][0], params["macd"][1]))
+    return params
+
+
+def main(argv=None):
+    parser = build_parser()
+    argv = sys.argv[1:] if argv is None else argv
+    if not argv:                       # 不带任何参数时只打印用法
+        parser.print_help()
+        return 0
+    args = parser.parse_args(argv)
+
+    validate_args(parser, args)
+    params = build_indicator_params(parser, args)
 
     setup_font()
     setup_style()
@@ -1783,8 +1924,11 @@ def main(argv=None):
     historical = bool(start or end)
     # 普通模式默认120根；历史区间查询默认不限条数，否则只会拿到区间末尾一小段
     limit = args.limit if args.limit is not None else (0 if historical else 120)
-    render = (partial(plot_candles, bars=None, params=params) if args.chart == "candle"
-              else plot_points)
+    # 秒级周期(5s)K线密集，默认画成贝塞尔曲线；显式指定 --chart 时以用户选择为准
+    chart = args.chart or ("bezier" if normalize_interval(args.interval) in SECOND_STEP
+                           else "candle")
+    render = (partial(plot_candles, bars=None, params=params) if chart == "candle"
+              else plot_bezier if chart == "bezier" else plot_points)
     suffix = range_suffix(start, end)
     # 联网条件：自定义地址 / --live / --history / 显式数据源 / 指定了标的
     # （--source auto --symbol 原油 这类写法显然是想查行情，不该退回本地文件）
@@ -1810,7 +1954,7 @@ def main(argv=None):
     loader = (api_loader(args, limit, start, end, suffix) if args.api_url
               else source_loader(args, limit, start, end, suffix))
     if stream:
-        stream_api(loader, args.refresh, args.chart, args.csv, params)
+        stream_api(loader, args.refresh, chart, args.csv, params)
         return 0
 
     try:

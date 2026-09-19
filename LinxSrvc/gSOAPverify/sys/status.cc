@@ -1,5 +1,32 @@
 #include "status.h"
 
+#if defined(__APPLE__)
+#include <mach/mach.h>
+#include <mach/host_info.h>
+#include <mach/vm_statistics.h>
+#endif
+
+// 可用物理页数: Linux 用 sysconf(_SC_AVPHYS_PAGES);
+// macOS 未定义该宏, 改用 Mach host_statistics64 统计 空闲 + 非活跃 + 投机 页
+static long available_pages(void)
+{
+#if defined(__APPLE__)
+    vm_statistics64_data_t vmstat;
+    mach_msg_type_number_t count = HOST_VM_INFO64_COUNT;
+    if (host_statistics64(mach_host_self(), HOST_VM_INFO64,
+        (host_info_t)&vmstat, &count) == KERN_SUCCESS) {
+        return (long)vmstat.free_count
+            + (long)vmstat.inactive_count
+            + (long)vmstat.speculative_count;
+    }
+    return 0;
+#elif defined(_SC_AVPHYS_PAGES)
+    return sysconf(_SC_AVPHYS_PAGES);
+#else
+    return sysconf(_SC_PHYS_PAGES);
+#endif
+}
+
 int get_mem_stat(const char* ip, st_sys* sys)
 {
     if (ip == nullptr || sys == nullptr) {
@@ -41,7 +68,7 @@ int get_mem_stat(const char* ip, st_sys* sys)
     long page_size = sysconf(_SC_PAGESIZE);
     sys->li_page = page_size / 1024;
     long num_pages = sysconf(_SC_PHYS_PAGES);       // 总物理页数
-    long free_pages = sysconf(_SC_AVPHYS_PAGES);      // 可用物理页数 (修复: 之前误用 _SC_PAGE_SIZE)
+    long free_pages = available_pages();            // 可用物理页数 (macOS 无 _SC_AVPHYS_PAGES)
 
     long long mem = (long long)num_pages * (long long)page_size;
     sys->mem_all = mem / ONE_MB;

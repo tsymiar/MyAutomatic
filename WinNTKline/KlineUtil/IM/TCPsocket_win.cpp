@@ -97,7 +97,7 @@ unsigned int __stdcall SocketThread(void* lp)
                 sprintf(__data, "%f", random(1000));
                 char clibuf[16];
                 sprintf_s(clibuf, __data, addr_out(cliSock.sin_addr), item);
-                send(sockClt, clibuf, (int)strlen(clibuf) + 1, 0);
+                send(sockClt, clibuf, (int)strnlen(clibuf, sizeof(clibuf)) + 1, 0);
                 u_long ul = 0;
                 int iResult = ioctlsocket(sockClt, FIONBIO, (unsigned long*)&ul);
                 time_t tmt;

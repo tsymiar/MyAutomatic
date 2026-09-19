@@ -52,7 +52,7 @@ case "${1}" in
         rm -rf "build"
         rm -f QtGames Makefile
         rm -f .qmake.stash
-        rm -f *.o
+        rm -f ./*.o
         rm -f moc_*.cpp moc_*.o
         rm -f qrc_*.cpp qrc_*.o
         rm -f ui_*.h
