@@ -19,6 +19,7 @@
 #include <memory>
 #include <vector>
 #include <map>
+#include <ctime>
 
 // ── Global log output function pointer (defined here, declared in CommLogger.h) ──
 // Set by TransferBridge.cpp → Swift to forward all C++ LOG_* to the UI console.
@@ -91,7 +92,7 @@ static int recvAll(int sock, void* buf, size_t len, int timeoutMs)
         }
         // ENOTCONN: macOS 内核 socket 状态同步延迟。
         // 不在此处重试——返回 -2 由外层 clientHandler 以更长延迟重试整个 recvAll。
-        int savedErrno = errno;
+        [[maybe_unused]] int savedErrno = errno;
         int soErr = 0; socklen_t soLen = sizeof(soErr);
         getsockopt(sock, SOL_SOCKET, SO_ERROR, &soErr, &soLen);
         LOG_WRN("recvAll: recv errno=%d/%s, SO_ERROR=%d/%s",
@@ -515,7 +516,8 @@ void TransferEngine::clientHandler(int sock, const std::string& clientIp, unsign
                 // 分片睡眠，每 SLEEP_SLICE_US 检查一次 m_running，确保 closeServer() 能及时中断
                 while (delayUs > 0 && m_running.load()) {
                     int slice = (delayUs > SLEEP_SLICE_US) ? SLEEP_SLICE_US : delayUs;
-                    usleep((useconds_t)slice);
+                    timespec nap = { 0, (long)slice * 1000 };
+                    nanosleep(&nap, nullptr);
                     delayUs -= slice;
                 }
                 if (!m_running.load()) break;  // closeServer() 已触发，立即退出

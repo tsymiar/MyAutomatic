@@ -38,7 +38,7 @@ import time
 from collections import namedtuple
 from datetime import datetime
 from functools import partial
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlparse
 from urllib.request import Request, urlopen
 
 import matplotlib.pyplot as plt
@@ -523,6 +523,9 @@ def fetch_text(url, params=None, timeout=10, encoding="utf-8", headers=None):
     """GET 请求并返回文本。"""
     if params:
         url = url + ("&" if "?" in url else "?") + urlencode(params)
+    # 只允许 http/https，避免 file: 等自定义协议被 urlopen 打开
+    if urlparse(url).scheme not in ("http", "https"):
+        raise ValueError("不支持的 URL 协议（仅允许 http/https）: %s" % url)
     request = Request(url, headers=headers or default_headers())
     with urlopen(request, timeout=timeout) as response:
         raw = response.read()
@@ -1732,15 +1735,8 @@ def source_loader(args, limit, start, end, suffix):
     return load
 
 
-def main(argv=None):
-    parser = build_parser()
-    argv = sys.argv[1:] if argv is None else argv
-    if not argv:                       # 不带任何参数时只打印用法
-        parser.print_help()
-        return 0
-    args = parser.parse_args(argv)
-
-    # ---- 参数校验：在取数前给出明确提示，避免静默降级或反复刷错误 ----
+def validate_args(parser, args):
+    """参数校验：在取数前给出明确提示，避免静默降级或反复刷错误"""
     if args.live and args.history:
         parser.error("--live 与 --history 语义冲突（--live 持续刷新，--history 只查一次）")
     if args.api_url and args.source != "auto":
@@ -1751,14 +1747,18 @@ def main(argv=None):
         parser.error("--refresh 必须大于 0")
     if args.timeout <= 0:
         parser.error("--timeout 必须大于 0")
-    if not args.api_url:
-        names = [args.source] if args.source != "auto" else candidate_sources(args.symbol)
-        wanted = normalize_interval(args.interval)
-        if not any(wanted in SUPPORTED_INTERVALS.get(name, []) for name in names):
-            parser.error("周期 %s 不被 %s 支持；%s 可用周期: %s"
-                         % (wanted, "/".join(names), names[0],
-                            "/".join(SUPPORTED_INTERVALS.get(names[0], []))))
+    if args.api_url:
+        return
+    names = [args.source] if args.source != "auto" else candidate_sources(args.symbol)
+    wanted = normalize_interval(args.interval)
+    if not any(wanted in SUPPORTED_INTERVALS.get(name, []) for name in names):
+        parser.error("周期 %s 不被 %s 支持；%s 可用周期: %s"
+                     % (wanted, "/".join(names), names[0],
+                        "/".join(SUPPORTED_INTERVALS.get(names[0], []))))
 
+
+def build_indicator_params(parser, args):
+    """解析并校验指标参数"""
     try:
         params = {"macd": parse_int_list(args.macd, 3, "--macd"),
                   "rsi": parse_int_list(args.rsi, 1, "--rsi"),
@@ -1768,6 +1768,19 @@ def main(argv=None):
     if params["macd"][0] >= params["macd"][1]:
         parser.error("--macd 快线周期(%d)必须小于慢线周期(%d)"
                      % (params["macd"][0], params["macd"][1]))
+    return params
+
+
+def main(argv=None):
+    parser = build_parser()
+    argv = sys.argv[1:] if argv is None else argv
+    if not argv:                       # 不带任何参数时只打印用法
+        parser.print_help()
+        return 0
+    args = parser.parse_args(argv)
+
+    validate_args(parser, args)
+    params = build_indicator_params(parser, args)
 
     setup_font()
     setup_style()

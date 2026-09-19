@@ -21,8 +21,7 @@ try:
         run_command,
         install_llama_cpp_converter,
         find_ollama_model_files,
-        find_model_files_in_path,
-        convert_ollama_model
+        find_model_files_in_path
     )
 except ImportError as e:
     print(f"错误: 无法导入 ollama_to_hf 模块: {e}")

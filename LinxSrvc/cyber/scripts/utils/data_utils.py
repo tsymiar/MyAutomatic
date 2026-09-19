@@ -1,6 +1,5 @@
 # scripts/utils/data_utils.py
 import re
-import json
 
 def clean_text(text):
     """基础清洗：去除多余空格、表情符号等"""

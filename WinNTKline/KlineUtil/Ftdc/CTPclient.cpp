@@ -49,20 +49,23 @@ unsigned int __stdcall CTPclient::SimpleClient(void* P)
     while (1)
     {
         if (net_exit) { m_hWnd->MessageBox("exit"); return -1; };
-        if (recv(clientSock, Buf, 50, 0) == SOCKET_ERROR)
+        int recvLen = recv(clientSock, Buf, (int)sizeof(Buf) - 1, 0);
+        if (recvLen == SOCKET_ERROR)
         {
             if (m_hWnd->m_hWnd != NULL)
                 ::PostMessage(m_hWnd->m_hWnd, WM_MSG_BOX, 0,
                 (LPARAM)m_ctp->Ogl.conv.AllocBuffer("接收失败！"));
             return -3;
         }//接收数据并填充到列表
-        MultiByteToWideChar(CP_ACP, 0, Buf, strlen(Buf) + 1, LPCT, sizeof(LPCT) / sizeof(LPCT[0]));
+        // recv 不保证以 '\0' 结尾，显式截断后再按有界长度转换
+        Buf[recvLen > 0 ? recvLen : 0] = '\0';
+        MultiByteToWideChar(CP_ACP, 0, Buf, (int)strnlen(Buf, sizeof(Buf)) + 1, LPCT, sizeof(LPCT) / sizeof(LPCT[0]));
         m_ctp->Ogl.DrawKtext(Buf, pnt, 20, { 1,1,1 });
         loo[0] = Str.Find(_T("."));//查找第一个"."位置
         Left = Str.Left(loo[0]);    //将","左边的值取出
         Str.Format(_T("%s"), LPCT);
         _ultoa_s(GetCurrentThreadId(), buffer, 10);//当前线程id
-        send(clientSock, buffer, strlen(buffer) + 1, 0);//发送数据
+        send(clientSock, buffer, (int)strnlen(buffer, sizeof(buffer)) + 1, 0);//发送数据
     }
     if (m_ctp != nullptr)
         delete m_ctp;

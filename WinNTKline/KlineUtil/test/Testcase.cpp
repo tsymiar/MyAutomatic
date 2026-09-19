@@ -7,6 +7,9 @@ template <class TestClass>
 class TestCase {
 public:
     TestCase<TestClass>() { testClass = nullptr; };
+    // 持有裸指针资源，禁止拷贝（Rule of Three）
+    TestCase(const TestCase&) = delete;
+    TestCase& operator=(const TestCase&) = delete;
     TestCase<TestClass> getInstance();
     virtual ~TestCase<TestClass>();
 private:

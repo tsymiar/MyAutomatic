@@ -64,7 +64,7 @@ namespace {
     {
         // 转义用户输入的密码
         char escaped[128] = { 0 };
-        size_t psw_len = strlen(psw);
+        size_t psw_len = strnlen(psw, sizeof(escaped) / 2 + 1);
         if (psw_len > sizeof(escaped) / 2) {
             cerr << "[SEC] password too long" << endl;
             return false;

@@ -129,10 +129,9 @@ void* parseMessage(void* msg)
                 continue;
             }
             for (int c = 0; c < atoi(payload + 4); c++) {
-                char user[25];
+                char user[25] = { 0 };
                 memcpy(user, payload + 32 + 8 * c, 8);
-                user[24] = '\0';
-                len = strlen(user);
+                len = (int)strnlen(user, sizeof(user));
                 if (len <= 0)
                     break;
                 memset(user + len + 1, ',', 1);
@@ -150,9 +149,10 @@ void* parseMessage(void* msg)
             MessageBox(NULL, msg, "---Message---", MB_OK);
         } else if (payload[1] == USERGROUP && payload[3] == '\0') {
             for (int c = 0; c < payload[5]; c++) {
-                char user[24];
-                memcpy(user, payload + 8 * (c + 4), 24);
-                len = strlen(user);
+                char user[24] = { 0 };
+                // 只拷贝 sizeof(user) - 1 字节, 保证末尾 '\0', 避免 strnlen 越界读
+                memcpy(user, payload + 8 * (c + 4), sizeof(user) - 1);
+                len = (int)strnlen(user, sizeof(user));
                 if (len <= 0)
                     break;
                 ((CIMhideWndDlg*)client.Dlg)->m_frndList.InsertItem(c, user);
@@ -162,11 +162,11 @@ void* parseMessage(void* msg)
                 MessageBox(NULL, title, "---Message---", MB_OK);
                 continue;
             }
-            char group[24];
+            char group[24] = { 0 };
             for (int c = 0; c < atoi(payload + 4); c++) {
                 memcpy(group, payload + 32 + 8 * c, 8);
                 memset(group + 8, '\0', 1);
-                len = strlen(group);
+                len = (int)strnlen(group, sizeof(group));
                 if (len <= 0)
                     break;
                 ((CIMhideWndDlg*)client.Dlg)->m_frndList.InsertItem(c, group);

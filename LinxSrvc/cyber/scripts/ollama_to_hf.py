@@ -25,6 +25,14 @@ _FORBIDDEN_PATH_PREFIXES = [
     "/etc", "/boot", "/sys", "/proc", "/dev",
 ]
 
+# 允许执行的程序白名单 — subprocess 仅用于这些可信程序, 且始终 shell=False
+_ALLOWED_BINARIES = {
+    "git",
+    "ollama",
+    "python",
+    "python3",
+}
+
 
 def _validate_safe_path(target):
     """校验路径不指向系统敏感目录，防止意外操作"""
@@ -69,6 +77,10 @@ def run_command(cmd, cwd=None, capture_output=True):
         raise ValueError("cmd 必须为非空的字符串列表")
     if not all(isinstance(arg, str) for arg in cmd):
         raise ValueError("cmd 中所有元素必须为字符串")
+
+    # 可执行文件白名单校验: 拒绝白名单之外的程序 (含用户可控输入)
+    if os.path.basename(cmd[0]) not in _ALLOWED_BINARIES:
+        raise ValueError(f"不允许执行的程序: {cmd[0]}")
 
     # cwd 校验: 若提供则必须存在且为目录
     if cwd is not None:
@@ -135,6 +147,93 @@ def install_llama_cpp_converter():
         return None
 
 
+def _locate_ollama_root():
+    """定位本地 Ollama 的模型存储根目录"""
+    home = Path.home()
+
+    ollama_roots = [
+        home / ".ollama" / "models",
+        home / ".cache" / "ollama" / "models",
+        Path("/usr/share/ollama/models"),
+    ]
+
+    if sys.platform == "darwin":
+        ollama_roots.append(home / "Library" / "Application Support" / "ollama" / "models")
+
+    for root_dir in ollama_roots:
+        if root_dir.exists():
+            logging.info(f"找到 Ollama 模型根目录: {root_dir}")
+            return root_dir
+
+    error_msg = "找不到 Ollama 模型存储目录。已尝试的位置:\n"
+    error_msg += "\n".join(f"  - {root}" for root in ollama_roots)
+    raise FileNotFoundError(error_msg)
+
+
+def _parse_model_name(ollama_model_name):
+    """把 library/model:tag 或 org/model:tag 解析为 (model, tag)"""
+    model_parts = ollama_model_name.split("/")
+
+    if len(model_parts) == 1:
+        model_with_tag = model_parts[0]
+    elif len(model_parts) == 2:
+        model_with_tag = model_parts[1]
+    else:
+        raise ValueError(f"无法解析模型名称: {ollama_model_name}")
+
+    if ":" in model_with_tag:
+        model, tag = model_with_tag.split(":")
+    else:
+        model, tag = model_with_tag, "latest"
+
+    logging.info(f"解析模型名称 -> 模型: {model}, 标签: {tag}")
+    return model, tag
+
+
+def _locate_manifest(manifest_dir, model, tag):
+    """按新/旧两种路径格式查找 manifest，返回 (manifest_path, 已尝试路径列表)"""
+    possible_manifest_paths = [
+        manifest_dir / "registry.ollama.ai" / "library" / model / tag,
+        manifest_dir / "library" / model / tag,
+    ]
+
+    for path in possible_manifest_paths:
+        if path.exists():
+            logging.info(f"找到 manifest 文件: {path}")
+            return path, possible_manifest_paths
+
+    return None, possible_manifest_paths
+
+
+def _lookup_model_via_ollama_list(ollama_model_name):
+    """manifest 缺失时，回退到 `ollama list` 输出里匹配的完整模型名"""
+    logging.info("未找到 manifest 文件，尝试通过 ollama 命令查找...")
+    try:
+        returncode, stdout, _ = run_command(["ollama", "list"], capture_output=True)
+        if returncode != 0 or not stdout:
+            return None
+        for line in stdout.split('\n'):
+            if not line.strip() or line.startswith("NAME"):
+                continue
+            parts = line.split()
+            if parts and ollama_model_name in parts[0]:
+                logging.info(f"找到模型: {parts[0]}")
+                return parts[0]
+    except Exception as e:
+        logging.debug(f"ollama list 命令失败: {e}")
+    return None
+
+
+def _detect_file_format(path):
+    """按扩展名或文件头判断模型格式，检测失败时回退为 gguf"""
+    if path.suffix:
+        return path.suffix[1:]
+    try:
+        return detect_model_format(path)
+    except Exception:
+        return "gguf"
+
+
 def find_ollama_model_files(ollama_model_name):
     """
     查找 Ollama 模型在本地存储的模型文件
@@ -145,94 +244,20 @@ def find_ollama_model_files(ollama_model_name):
     Returns:
         字典，包含模型文件路径和格式信息
     """
-    home = Path.home()
+    ollama_root = _locate_ollama_root()
 
-    # 常见的 Ollama 模型存储位置
-    ollama_roots = [
-        home / ".ollama" / "models",
-        home / ".cache" / "ollama" / "models",
-        Path("/usr/share/ollama/models"),
-    ]
-
-    # 检查 macOS 特定位置
-    if sys.platform == "darwin":
-        ollama_roots.append(home / "Library" / "Application Support" / "ollama" / "models")
-
-    # 查找 Ollama 模型根目录
-    ollama_root = None
-    for root_dir in ollama_roots:
-        if root_dir.exists():
-            ollama_root = root_dir
-            logging.info(f"找到 Ollama 模型根目录: {ollama_root}")
-            break
-
-    if ollama_root is None:
-        error_msg = "找不到 Ollama 模型存储目录。已尝试的位置:\n"
-        error_msg += "\n".join(f"  - {root}" for root in ollama_roots)
-        raise FileNotFoundError(error_msg)
-
-    # Ollama 使用 manifest 文件存储模型信息
     manifest_dir = ollama_root / "manifests"
     if not manifest_dir.exists():
         raise FileNotFoundError(f"Ollama manifest 目录不存在: {manifest_dir}")
 
-    # 解析模型名称为 registry/org/model 格式
-    # Ollama 格式通常是: library/model:tag 或 org/model:tag
-    model_parts = ollama_model_name.split("/")
-
-    if len(model_parts) == 1:
-        # 只提供模型名，如 "llama2" 或 "qwen3.5:4b"
-        model_with_tag = model_parts[0]
-        if ":" in model_with_tag:
-            model, tag = model_with_tag.split(":")
-        else:
-            model, tag = model_with_tag, "latest"
-    elif len(model_parts) == 2:
-        # "org/model:tag" 或 "org/model" 格式
-        org_model = model_parts[1]
-        if ":" in org_model:
-            model, tag = org_model.split(":")
-        else:
-            model, tag = org_model, "latest"
-    else:
-        raise ValueError(f"无法解析模型名称: {ollama_model_name}")
-
-    logging.info(f"解析模型名称 -> 模型: {model}, 标签: {tag}")
-
-    # 尝试查找 manifest 文件
-    # 路径格式: manifests/registry.ollama.ai/library/model/tag
-    possible_manifest_paths = [
-        manifest_dir / "registry.ollama.ai" / "library" / model / tag,
-    ]
-
-    # 也尝试旧格式 (向后兼容)
-    possible_manifest_paths.append(manifest_dir / "library" / model / tag)
-
-    manifest_path = None
-    for path in possible_manifest_paths:
-        if path.exists():
-            manifest_path = path
-            logging.info(f"找到 manifest 文件: {manifest_path}")
-            break
+    model, tag = _parse_model_name(ollama_model_name)
+    manifest_path, possible_manifest_paths = _locate_manifest(manifest_dir, model, tag)
 
     if manifest_path is None:
-        # 尝试通过 ollama list 命令获取模型信息
-        logging.info("未找到 manifest 文件，尝试通过 ollama 命令查找...")
-        try:
-            returncode, stdout, _ = run_command(["ollama", "list"], capture_output=True)
-            if returncode == 0 and stdout:
-                # 解析 ollama list 输出
-                for line in stdout.split('\n'):
-                    if line.strip() and not line.startswith("NAME"):
-                        # 格式: NAME              ID              SIZE
-                        parts = line.split()
-                        if parts and ollama_model_name in parts[0]:
-                            model_display_name = parts[0]
-                            logging.info(f"找到模型: {model_display_name}")
-                            # 重新解析找到的完整模型名
-                            return find_ollama_model_files(model_display_name)
-        except Exception as e:
-            logging.debug(f"ollama list 命令失败: {e}")
+        full_name = _lookup_model_via_ollama_list(ollama_model_name)
+        if full_name:
+            # 用 `ollama list` 返回的完整模型名重新解析
+            return find_ollama_model_files(full_name)
 
         error_msg = f"找不到 Ollama 模型 '{ollama_model_name}'。\n"
         error_msg += f"请确保已使用 'ollama pull {ollama_model_name}' 下载模型。\n"
@@ -240,127 +265,116 @@ def find_ollama_model_files(ollama_model_name):
         error_msg += "\n".join(f"  - {p}" for p in possible_manifest_paths)
         raise FileNotFoundError(error_msg)
 
-    # 读取 manifest 文件获取 blob 引用
+    result = _scan_manifest_layers(manifest_path, ollama_root)
+    if result is not None:
+        return result
+
+    return _scan_blobs_directory(ollama_root)
+
+
+def _scan_manifest_layers(manifest_path, ollama_root):
+    """读取 manifest 并定位第一个真实存在的 blob 文件"""
     try:
         with open(manifest_path, 'r') as f:
             manifest = json.load(f)
-
-        logging.info(f"Manifest 内容结构: {list(manifest.keys())}")
-        logging.debug(f"完整 manifest 内容: {manifest}")
-
-        # 查找 GGUF blob (layers)
-        if "layers" in manifest:
-            layers = manifest["layers"]
-            logging.info(f"Manifest 中有 {len(layers)} 个 layers")
-            for idx, layer in enumerate(layers):
-                if "digest" in layer and layer["digest"].startswith("sha256:"):
-                    digest_full = layer["digest"]
-                    digest = digest_full.split(":")[1]
-                    digest_lower = digest.lower()
-
-                    # 尝试多种可能的 blob 路径格式
-                    possible_blob_paths = [
-                        # 新格式: blobs/sha256/{digest[:2]}/{digest}
-                        ollama_root / "blobs" / "sha256" / digest_lower[:2] / digest_lower,
-                        # 旧格式: blobs/sha256-{digest}
-                        ollama_root / "blobs" / f"sha256-{digest_lower}",
-                    ]
-
-                    for blob_path in possible_blob_paths:
-                        logging.info(f"检查 blob [{idx}]: {blob_path}")
-                        if blob_path.exists():
-                            logging.info(f"找到模型文件: {blob_path}")
-                            # 检测文件格式
-                            if blob_path.suffix:
-                                file_format = blob_path.suffix[1:]
-                            else:
-                                # 无扩展名，尝试检测格式
-                                try:
-                                    file_format = detect_model_format(blob_path)
-                                except Exception:
-                                    file_format = "gguf"  # 默认假设为 GGUF
-
-                            return {"format": file_format, "files": [blob_path], "manifest": manifest_path}
-                        else:
-                            logging.debug(f"Blob 文件不存在: {blob_path}")
-                else:
-                    logging.debug(f"Layer {idx} 没有 sha256 digest: {layer.get('digest', 'N/A')[:20]}")
-        else:
-            logging.warning("Manifest 文件中未找到 'layers' 字段")
-            logging.info(f"Manifest 键: {list(manifest.keys())}")
-            # 检查是否有其他可能的字段
-            if "config" in manifest:
-                logging.info("找到 config 字段")
-            if "mediaType" in manifest:
-                logging.info(f"Media type: {manifest['mediaType']}")
-
     except Exception as e:
         logging.error(f"读取 manifest 失败: {e}")
         import traceback
         logging.debug(traceback.format_exc())
+        return None
 
-    # 如果通过 manifest 找不到，尝试在 blobs 目录中搜索
-    logging.info("在 blobs 目录中搜索模型文件...")
+    logging.info(f"Manifest 内容结构: {list(manifest.keys())}")
+    logging.debug(f"完整 manifest 内容: {manifest}")
 
-    # 搜索多种可能的 blob 存储格式
-    blob_search_dirs = [
-        ollama_root / "blobs" / "sha256",  # 新格式: blobs/sha256/{digest[:2]}/{digest}
-        ollama_root / "blobs",             # 旧格式: blobs/sha256-{digest}
-    ]
+    if "layers" not in manifest:
+        logging.warning("Manifest 文件中未找到 'layers' 字段")
+        logging.info(f"Manifest 键: {list(manifest.keys())}")
+        if "config" in manifest:
+            logging.info("找到 config 字段")
+        if "mediaType" in manifest:
+            logging.info(f"Media type: {manifest['mediaType']}")
+        return None
 
+    layers = manifest["layers"]
+    logging.info(f"Manifest 中有 {len(layers)} 个 layers")
+    for idx, layer in enumerate(layers):
+        digest_full = layer.get("digest", "")
+        if not digest_full.startswith("sha256:"):
+            logging.debug(f"Layer {idx} 没有 sha256 digest: {digest_full[:20]}")
+            continue
+
+        digest_lower = digest_full.split(":")[1].lower()
+        # 新格式: blobs/sha256/{digest[:2]}/{digest}；旧格式: blobs/sha256-{digest}
+        possible_blob_paths = [
+            ollama_root / "blobs" / "sha256" / digest_lower[:2] / digest_lower,
+            ollama_root / "blobs" / f"sha256-{digest_lower}",
+        ]
+
+        for blob_path in possible_blob_paths:
+            logging.info(f"检查 blob [{idx}]: {blob_path}")
+            if not blob_path.exists():
+                logging.debug(f"Blob 文件不存在: {blob_path}")
+                continue
+            logging.info(f"找到模型文件: {blob_path}")
+            return {
+                "format": _detect_file_format(blob_path),
+                "files": [blob_path],
+                "manifest": manifest_path,
+            }
+
+    return None
+
+
+def _collect_blob_files(ollama_root):
+    """在 blobs 目录中收集所有可能是模型权重的文件"""
     all_model_files = []
 
-    for search_dir in blob_search_dirs:
+    # 新格式: blobs/sha256/{digest[:2]}/{digest}；旧格式: blobs/sha256-{digest}
+    for search_dir in (ollama_root / "blobs" / "sha256", ollama_root / "blobs"):
         if not search_dir.exists():
             continue
 
         if search_dir.name == "sha256":
-            # 新格式: 遍历子目录（每个子目录以 digest 的前两位命名）
             for subdir in search_dir.iterdir():
-                if subdir.is_dir():
-                    # 搜索各种格式的模型文件
-                    gguf_files = list(subdir.glob("*.gguf"))
-                    safetensors_files = list(subdir.glob("*.safetensors"))
-                    bin_files = list(subdir.glob("*.bin"))
-                    pt_files = list(subdir.glob("*.pt"))
-
-                    # 搜索 sha256 命名的文件（无扩展名）
-                    sha256_files = []
-                    for f in subdir.iterdir():
-                        if f.is_file() and not f.suffix and SHA256_PATTERN.match(f.name.lower()):
-                            sha256_files.append(f)
-
-                    all_model_files.extend(gguf_files + safetensors_files + bin_files + pt_files + sha256_files)
+                if not subdir.is_dir():
+                    continue
+                found = []
+                for pattern in ("*.gguf", "*.safetensors", "*.bin", "*.pt"):
+                    found.extend(subdir.glob(pattern))
+                found.extend(
+                    f for f in subdir.iterdir()
+                    if f.is_file() and not f.suffix and SHA256_PATTERN.match(f.name.lower())
+                )
+                all_model_files.extend(found)
         else:
-            # 旧格式: blobs/sha256-{digest}
             for blob_file in search_dir.iterdir():
-                if blob_file.is_file() and blob_file.name.startswith("sha256-"):
-                    # 提取 sha256 部分
-                    sha256_part = blob_file.name[7:]  # 移除 "sha256-" 前缀
-                    # 检查是否为有效的 sha256
-                    if SHA256_PATTERN.match(sha256_part.lower()):
-                        all_model_files.append(blob_file)
+                if not blob_file.is_file() or not blob_file.name.startswith("sha256-"):
+                    continue
+                # 移除 "sha256-" 前缀后再校验是否为合法 sha256
+                if SHA256_PATTERN.match(blob_file.name[7:].lower()):
+                    all_model_files.append(blob_file)
 
-    if all_model_files:
-        # 按修改时间排序，取最新的
-        all_model_files.sort(key=lambda x: x.stat().st_mtime, reverse=True)
-        latest_file = all_model_files[0]
+    return all_model_files
 
-        # 检测文件格式
-        if latest_file.suffix:
-            file_format = latest_file.suffix[1:]
-        else:
-            # 无扩展名，尝试检测格式
-            try:
-                file_format = detect_model_format(latest_file)
-            except Exception:
-                file_format = "gguf"  # 默认假设为 GGUF
 
-        logging.info(f"找到 {len(all_model_files)} 个模型文件，使用最新的: {latest_file}")
-        logging.info(f"检测到文件格式: {file_format}")
-        return {"format": file_format, "files": [latest_file], "manifest": None}
+def _scan_blobs_directory(ollama_root):
+    """manifest 无法定位 blob 时，退化为在 blobs 目录中取最新的模型文件"""
+    logging.info("在 blobs 目录中搜索模型文件...")
 
-    raise FileNotFoundError(f"在 {ollama_root} 中找不到模型文件，已找到 manifest 但无法定位 blob 文件")
+    all_model_files = _collect_blob_files(ollama_root)
+    if not all_model_files:
+        raise FileNotFoundError(
+            f"在 {ollama_root} 中找不到模型文件，已找到 manifest 但无法定位 blob 文件"
+        )
+
+    # 按修改时间排序，取最新的
+    all_model_files.sort(key=lambda x: x.stat().st_mtime, reverse=True)
+    latest_file = all_model_files[0]
+    file_format = _detect_file_format(latest_file)
+
+    logging.info(f"找到 {len(all_model_files)} 个模型文件，使用最新的: {latest_file}")
+    logging.info(f"检测到文件格式: {file_format}")
+    return {"format": file_format, "files": [latest_file], "manifest": None}
 
 
 def find_model_files_in_path(model_dir):
@@ -671,7 +685,7 @@ def convert_ollama_model(
     output_path,
     hf_model_name=None,
     tokenizer_name=None,
-    format=None,
+    model_format=None,
     use_full_conversion=True,
     force_install=False
 ):
@@ -683,7 +697,7 @@ def convert_ollama_model(
         output_path: Hugging Face 格式模型输出路径
         hf_model_name: 对应的 Hugging Face 模型名称 (可选)
         tokenizer_name: 指定的 tokenizer 名称 (可选)
-        format: 指定模型格式 (gguf/safetensors/bin/pt, 自动检测)
+        model_format: 指定模型格式 (gguf/safetensors/bin/pt, 自动检测)
         use_full_conversion: 是否使用完整转换 (默认 True)
         force_install: 强制重新安装转换工具
     """
@@ -693,29 +707,29 @@ def convert_ollama_model(
         model_info = find_ollama_model_files(ollama_model_name)
 
         # 如果指定了格式且与检测到的格式不一致，尝试转换
-        if format and format != model_info["format"]:
+        if model_format and model_info["format"] != model_format:
             logging.warning(
-                f"指定的格式 '{format}' 与检测到的格式 '{model_info['format']}' 不一致，"
-                f"将尝试从模型目录中查找 {format} 文件"
+                f"指定的格式 '{model_format}' 与检测到的格式 '{model_info['format']}' 不一致，"
+                f"将尝试从模型目录中查找 {model_format} 文件"
             )
             # 尝试从 manifest 路径查找父目录并搜索指定格式
             if "manifest" in model_info and model_info["manifest"]:
                 search_dir = model_info["manifest"].parent.parent.parent.parent
                 try:
                     format_info = find_model_files_in_path(search_dir)
-                    if format_info["format"] == format:
+                    if format_info["format"] == model_format:
                         model_info = format_info
                 except FileNotFoundError:
                     pass
 
         # 根据格式进行转换
-        model_format = model_info["format"]
+        detected_format = model_info["format"]
         model_files = model_info["files"]
 
-        logging.info(f"模型格式: {model_format}")
+        logging.info(f"模型格式: {detected_format}")
         logging.info(f"模型文件: {[str(f) for f in model_files]}")
 
-        if model_format == "gguf":
+        if detected_format == "gguf":
             convert_gguf_to_hf(
                 model_files[0],
                 output_path,
@@ -724,7 +738,7 @@ def convert_ollama_model(
                 use_full_conversion=use_full_conversion,
                 force_install=force_install
             )
-        elif model_format in ["safetensors", "bin", "pt"]:
+        elif detected_format in ["safetensors", "bin", "pt"]:
             convert_safetensors_to_hf(
                 model_files,
                 output_path,
@@ -733,7 +747,7 @@ def convert_ollama_model(
                 use_full_conversion=use_full_conversion
             )
         else:
-            raise ValueError(f"不支持的模型格式: {model_format}")
+            raise ValueError(f"不支持的模型格式: {detected_format}")
 
     except Exception as e:
         logging.error(f"转换失败: {e}")
@@ -955,7 +969,7 @@ def main():
                 output_path=args.output,
                 hf_model_name=args.hf_model,
                 tokenizer_name=args.tokenizer,
-                format=args.format,
+                model_format=args.format,
                 use_full_conversion=use_full_conversion,
                 force_install=args.force_install
             )

@@ -122,30 +122,46 @@ public:
     afx_msg void OnScrn2Bmp();
     int movedll()
     {
-        char gc;
+        int gc;
         int i = 0;
-        char text[] = "Copying file....\r";
-        char* file = "./mysql/libmysql.dll";
-        char* moving = "../x64/gSOAPWeb/libmysql.dll";
-        FILE* fl = fopen(file, "rb"), * mv = fopen(moving, "a+");
-        if (!(fl || mv)) {
+        const char text[] = "Copying file....\r";
+        const char* file = "./mysql/libmysql.dll";
+        const char* moving = "../x64/gSOAPWeb/libmysql.dll";
+        FILE* fl = fopen(file, "rb");
+        FILE* mv = fopen(moving, "a+");
+        if (fl == NULL || mv == NULL) {
+            /* 任一端打开失败: 提示后安全关闭已打开的句柄, 禁止 fclose(NULL) */
             for (; i < (int)sizeof(text) - 1; i++) {
                 putchar(text[i]);
                 Sleep(70);
             }
-            if (fl)
-                while ((gc = fgetc(fl)) != EOF) {
-                    if (ferror(fl) || ferror(mv)) {
-                        fclose(fl);
-                        fclose(mv);
-                        return -1;
-                    }
-                    fputc(gc, mv);
-                }
-            fclose(fl);
-            fclose(mv);
-            return EXIT_SUCCESS;
+            if (fl != NULL)
+                fclose(fl);
+            if (mv != NULL)
+                fclose(mv);
+            return -1;
         }
-        return -1;
+        /* 以源文件字节数为上限做有界拷贝, 避免 fgetc 循环无界读写 */
+        long limit = 0;
+        if (fseek(fl, 0, SEEK_END) == 0) {
+            limit = ftell(fl);
+            rewind(fl);
+        }
+        long copied = 0;
+        while ((gc = fgetc(fl)) != EOF) {
+            if (limit > 0 && copied >= limit) {
+                break;
+            }
+            if (ferror(fl) || ferror(mv)) {
+                fclose(fl);
+                fclose(mv);
+                return -1;
+            }
+            fputc(gc, mv);
+            copied++;
+        }
+        fclose(fl);
+        fclose(mv);
+        return EXIT_SUCCESS;
     }
 };

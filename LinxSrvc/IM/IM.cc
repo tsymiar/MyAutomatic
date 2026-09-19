@@ -296,10 +296,11 @@ int main(int argc, char* argv[])
     } else {
         signal(SIGPIPE, pipesig_handler);
         prctl(PR_SET_NAME, "inst_mssg", 0, 0, 0);
+        // 最严格掩码: 仅属主可读写执行, 必须早于 inst_mssg 创建任何文件/管道 (CWE-732)
+        umask(077);
         inst_mssg(argc, argv);
         setsid();
         chdir("/");
-        umask(0077);
         close(STDIN_FILENO);
         close(STDOUT_FILENO);
         close(STDERR_FILENO);
@@ -1095,7 +1096,7 @@ int inst_mssg(int argc, char* argv[])
     std::thread task;
     struct TaskJohn {
         std::thread& t;
-        TaskJohn(std::thread& t) : t(t) {}
+        explicit TaskJohn(std::thread& t) : t(t) {}
         ~TaskJohn()
         {
             if (t.joinable())
@@ -1338,10 +1339,12 @@ void func_waitpid(int signo)
         ssize_t total = 0;
         char* sock_0 = reinterpret_cast<char*>(&sock);
         const ssize_t expect = sizeof(sock);
-        while (total < expect && total >= 0) {
-            ssize_t len = read(g_filedes[0], sock_0 + total, expect - total);
+        while (total >= 0 && total < expect) {
+            // total 已被约束在 [0, expect), 本次读取长度不超过剩余空间, 杜绝越界写
+            const size_t remain = static_cast<size_t>(expect - total);
+            ssize_t len = read(g_filedes[0], sock_0 + total, remain);
             if (len > 0) {
-                if (total + len > expect) {
+                if (len > static_cast<ssize_t>(remain)) {
                     fprintf(stderr, "Buffer overflow prevented: expects %zd, got %zd!\n", expect, total + len);
                     break;
                 }

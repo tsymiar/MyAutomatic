@@ -29,14 +29,14 @@ struct TransferTask: Identifiable, Equatable {
         guard elapsed > 0, bytesTransferred > 0 else { return "--" }
         let bps = Double(bytesTransferred) / elapsed
         if bps > 1_000_000 { return String(format: "%.1f MB/s", bps / 1_000_000) }
-        if bps > 1_000     { return String(format: "%.1f KB/s", bps / 1_000) }
+        if bps > 1_000 { return String(format: "%.1f KB/s", bps / 1_000) }
         return String(format: "%.0f B/s", bps)
     }
 
     var formattedSize: String {
         if fileSize > 1_000_000_000 { return String(format: "%.2f GB", Double(fileSize) / 1_000_000_000) }
-        if fileSize > 1_000_000     { return String(format: "%.2f MB", Double(fileSize) / 1_000_000) }
-        if fileSize > 1_000         { return String(format: "%.2f KB", Double(fileSize) / 1_000) }
+        if fileSize > 1_000_000 { return String(format: "%.2f MB", Double(fileSize) / 1_000_000) }
+        if fileSize > 1_000 { return String(format: "%.2f KB", Double(fileSize) / 1_000) }
         return "\(fileSize) B"
     }
 
