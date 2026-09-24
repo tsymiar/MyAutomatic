@@ -3,9 +3,11 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
 #include <sys/queue.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 #include <unordered_map>
 #include <chrono>
 #include <thread>
@@ -35,6 +37,7 @@ namespace {
     static unordered_map<void*, string> g_msgRecv = {};
     static unordered_map<string, string> g_extraOpts = {};
     static unordered_map<string, DealHooks> g_dealHooks = {};
+    static string g_frontendRoot = { };      // frontend static root; empty means frontend disabled
 }
 
 void Response(struct evhttp_request* request, HookDetail detail = {});
@@ -77,7 +80,7 @@ void RemoteRequestErrorCallback(enum evhttp_request_error error, void* arg)
     ElegantlyBreak(arg);
 }
 #endif
-void RemoteConnectionCloseCallback(struct evhttp_connection* connection, void* arg)
+void RemoteConnectionCloseCallback(struct evhttp_connection* /*connection*/, void* arg)
 {
     Warning("remote connection closed!");
     ElegantlyBreak(arg);
@@ -118,6 +121,273 @@ void ReadChunkCallback(struct evhttp_request* resp, void* base)
     fwrite("\n", 1, 1, stdout);
 }
 
+// ---------- frontend static files (default: git branch gh-pages) ----------
+const char* MimeTypeOf(const string& path)
+{
+    static const struct { const char* ext; const char* type; } table[] = {
+        { ".html", "text/html; charset=utf-8" },
+        { ".htm", "text/html; charset=utf-8" },
+        { ".css", "text/css; charset=utf-8" },
+        { ".js", "application/javascript; charset=utf-8" },
+        { ".mjs", "application/javascript; charset=utf-8" },
+        { ".json", "application/json; charset=utf-8" },
+        { ".map", "application/json; charset=utf-8" },
+        { ".txt", "text/plain; charset=utf-8" },
+        { ".xml", "application/xml; charset=utf-8" },
+        { ".svg", "image/svg+xml" },
+        { ".png", "image/png" },
+        { ".jpg", "image/jpeg" },
+        { ".jpeg", "image/jpeg" },
+        { ".gif", "image/gif" },
+        { ".webp", "image/webp" },
+        { ".bmp", "image/bmp" },
+        { ".ico", "image/x-icon" },
+        { ".woff", "font/woff" },
+        { ".woff2", "font/woff2" },
+        { ".ttf", "font/ttf" },
+        { ".otf", "font/otf" },
+        { ".eot", "application/vnd.ms-fontobject" },
+        { ".mp3", "audio/mpeg" },
+        { ".mp4", "video/mp4" },
+        { ".wasm", "application/wasm" },
+        { ".pdf", "application/pdf" },
+    };
+    size_t dot = path.find_last_of('.');
+    if (dot == string::npos) {
+        return "application/octet-stream";
+    }
+    string ext = path.substr(dot);
+    for (size_t i = 0; i < ext.size(); i++) {
+        ext[i] = static_cast<char>(tolower(static_cast<unsigned char>(ext[i])));
+    }
+    for (size_t i = 0; i < sizeof(table) / sizeof(table[0]); i++) {
+        if (ext == table[i].ext) {
+            return table[i].type;
+        }
+    }
+    return "application/octet-stream";
+}
+
+// only accept plain tokens for branch/dir, they are used to build shell commands
+bool IsSafeToken(const string& in)
+{
+    if (in.empty() || in.size() > 256) {
+        return false;
+    }
+    for (size_t i = 0; i < in.size(); i++) {
+        char c = in[i];
+        if (!(isalnum(static_cast<unsigned char>(c)) || c == '_' || c == '-' || c == '.' || c == '/')) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// map an url to a real file under the frontend root; empty result means "not served"
+string ResolveFrontendFile(const string& url)
+{
+    if (g_frontendRoot.empty()) {
+        return "";
+    }
+    string path = url;
+    size_t stop = path.find_first_of("?#");
+    if (stop != string::npos) {
+        path = path.substr(0, stop);
+    }
+    while (!path.empty() && path[0] == '/') {
+        path.erase(path.begin());
+    }
+    if (path.empty()) {
+        path = "index.html";                    // "/" serves the landing page
+    }
+    if (path.find("..") != string::npos || path.find('\\') != string::npos) {
+        return "";                              // reject path traversal
+    }
+    string full = g_frontendRoot;
+    if (full[full.size() - 1] != '/') {
+        full += "/";
+    }
+    full += path;
+    if (full[full.size() - 1] == '/') {
+        full += "index.html";                   // directory request serves its index
+    }
+    struct stat st = { };
+    if (stat(full.c_str(), &st) != 0 || !S_ISREG(st.st_mode)) {
+        return "";
+    }
+    return full;
+}
+
+void SendFrontend(struct evhttp_request* req_ptr, const string& content, int status, const char* type)
+{
+    struct evbuffer* buf = evbuffer_new();
+    if (buf == nullptr) {
+        Error("create response buffer for %zu bytes failed!", content.size());
+        return;
+    }
+    evbuffer_add(buf, content.data(), content.size());
+    struct evkeyvalq* heads = req_ptr->output_headers;
+    evhttp_add_header(heads, "Server", HTTPD_SIGNATURE);
+    evhttp_add_header(heads, "Content-Type", type);
+    evhttp_add_header(heads, "Access-Control-Allow-Origin", "*");
+    evhttp_add_header(heads, "Cache-Control", "no-cache");
+    evhttp_send_reply(req_ptr, status, "OK", buf);
+    evbuffer_free(buf);
+}
+
+// serve the frontend; return false when the frontend is disabled (keep legacy behavior)
+bool ServeFrontend(struct evhttp_request* req_ptr, const string& url)
+{
+    if (g_frontendRoot.empty()) {
+        return false;
+    }
+    string full = ResolveFrontendFile(url);
+    if (full.empty()) {
+        Warning("[404] frontend file not found: %s", url.c_str());
+        SendFrontend(req_ptr, "404 Not Found\n", HTTP_NOTFOUND, "text/plain; charset=utf-8");
+        return true;
+    }
+    string body = getFileAsCstring(full);
+    if (body.empty()) {
+        Error("[500] read frontend file failed: %s", full.c_str());
+        SendFrontend(req_ptr, "500 Read File Failed\n", HTTP_INTERNAL, "text/plain; charset=utf-8");
+        return true;
+    }
+    SendFrontend(req_ptr, body, HTTP_OK, MimeTypeOf(full));
+    Message("[200] frontend: %s (%zu bytes)", full.c_str(), body.size());
+    return true;
+}
+
+// registered APIs (/log branch, hooks) and OPTIONS preflight keep the legacy path
+bool IsDynamicUri(const vector<string>& list, evhttp_cmd_type method)
+{
+    if (method == EVHTTP_REQ_OPTIONS) {
+        return true;
+    }
+    if (!list.empty() && list[0] == "log") {
+        return true;
+    }
+    if (list.size() > 1) {
+        auto it = g_dealHooks.find(list[1]);
+        if (it != g_dealHooks.end() && it->second.method == method) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void SetFrontendRoot(const string& dir)
+{
+    g_frontendRoot = dir;
+}
+
+// locate the git repository root; git archive refuses to run when the current
+// working directory itself is untracked (e.g. started from a build/ignored dir)
+string DetectRepoRoot()
+{
+    const char* env = getenv("WEBEV_REPO");
+    if (env != nullptr && env[0] != '\0') {
+        return string(env);
+    }
+    FILE* pipe = popen("git rev-parse --show-toplevel 2>/dev/null", "r");
+    if (pipe == nullptr) {
+        return "";
+    }
+    char buf[1024] = { 0 };
+    string root = "";
+    if (fgets(buf, sizeof(buf), pipe) != nullptr) {
+        root = buf;
+    }
+    pclose(pipe);
+    while (!root.empty() && (root[root.size() - 1] == '\n' || root[root.size() - 1] == '\r')) {
+        root.erase(root.size() - 1);
+    }
+    return root;
+}
+
+// export a git branch as the frontend root; every git command runs inside the repo root
+int FetchFrontendFromGit(const string& branch, const string& workdir)
+{
+    if (!IsSafeToken(branch) || !IsSafeToken(workdir)) {
+        Error("unsafe branch/workdir: '%s', '%s'!", branch.c_str(), workdir.c_str());
+        return -1;
+    }
+    const string root = DetectRepoRoot();
+    if (root.empty() || root.find('\'') != string::npos) {
+        Error("git repository not found, set WEBEV_REPO=/path/to/repo!");
+        return -1;
+    }
+    const string dir = workdir.empty() ? string("./webev-frontend") : workdir;
+    if (system(("rm -rf '" + dir + "' && mkdir -p '" + dir + "'").c_str()) != 0) {
+        Error("prepare frontend dir '%s' failed!", dir.c_str());
+        return -1;
+    }
+    // keep the tarball path absolute: "git -C <root>" resolves -o against the repo root
+    string tarfile = dir;
+    if (tarfile[0] != '/') {
+        char cwd[1024] = { 0 };
+        if (getcwd(cwd, sizeof(cwd)) == nullptr) {
+            Error("getcwd failed!");
+            return -1;
+        }
+        tarfile = string(cwd) + "/" + tarfile;
+    }
+    tarfile += "/.frontend.tar";
+
+    // "origin/gh-pages"/"refs/..." is used as-is, a plain name tries local then origin/
+    vector<string> refs;
+    refs.push_back(branch);
+    if (branch.find('/') == string::npos) {
+        refs.push_back("origin/" + branch);
+    }
+    const string git = "git -C '" + root + "' ";
+    for (size_t i = 0; i < refs.size(); i++) {
+        const string& ref = refs[i];
+        // verify the ref first, otherwise an empty pipe would count as success
+        if (system((git + "rev-parse --verify --quiet " + ref + " >/dev/null").c_str()) != 0) {
+            Warning("git ref '%s' not found, try the next one", ref.c_str());
+            continue;
+        }
+        if (system((git + "archive --format=tar -o '" + tarfile + "' " + ref).c_str()) != 0) {
+            Warning("git archive '%s' failed, try the next one", ref.c_str());
+            continue;
+        }
+        if (system(("tar -xf '" + tarfile + "' -C '" + dir + "'").c_str()) != 0) {
+            Warning("extract frontend from '%s' failed, try the next one", ref.c_str());
+            continue;
+        }
+        remove(tarfile.c_str());
+        SetFrontendRoot(dir);
+        Message("frontend ready: repo '%s', branch '%s' -> '%s'", root.c_str(), ref.c_str(), dir.c_str());
+        return 0;
+    }
+    Error("no usable git branch for the frontend ('%s') in repo '%s'!", branch.c_str(), root.c_str());
+    return -2;
+}
+
+// WEBEV_FRONTEND="branch[:dir]" selects the source, "0" disables the frontend
+void InitFrontendFromEnv()
+{
+    const char* env = getenv("WEBEV_FRONTEND");
+    if (env != nullptr && string(env) == "0") {
+        Message("frontend disabled by env %s", env);
+        return;
+    }
+    string branch = "gh-pages";
+    string dir = "./webev-frontend";
+    if (env != nullptr && env[0] != '\0') {
+        string opt(env);
+        size_t split = opt.find(':');
+        if (split == string::npos) {
+            branch = opt;
+        } else {
+            branch = opt.substr(0, split);
+            dir = opt.substr(split + 1);
+        }
+    }
+    FetchFrontendFromGit(branch, dir);
+}
+
 void GenericHandler(struct evhttp_request* req_ptr, void* param)
 {
     if (req_ptr == nullptr) return;
@@ -140,6 +410,10 @@ void GenericHandler(struct evhttp_request* req_ptr, void* param)
     }
     Message("%s %s\trequest from: %s:%d\n[ %s ]", GetMethodName(method), url.c_str(), address, port, payload);
     vector<string> list = parseUri(url);
+    // serve frontend files first, registered APIs keep the legacy path
+    if (!IsDynamicUri(list, method) && ServeFrontend(req_ptr, url)) {
+        return;
+    }
     if (param != nullptr) {
         HookDetail message = {};
         message.url = url;
@@ -174,19 +448,19 @@ void GenericHandler(struct evhttp_request* req_ptr, void* param)
                     Message("request param(%zu): %s = %s", len, it->c_str(), val.c_str());
                     if (*it == "server") {
                         string server(val);
-                        uint32_t port = 0;
+                        uint32_t server_port = 0;
                         ssize_t pos = (server.empty() ? 0 : server.find(":"));
                         string ip = server.substr(0, pos);
                         string sub_port = server.substr(pos + 1, server.size() - 1);
                         if (isNum(sub_port)) {
-                            port = atoi(sub_port.c_str());
+                            server_port = atoi(sub_port.c_str());
                         }
                         if (pos <= 0) {
                             Error("can't find ':' in '%s'!", server.c_str());
                             status = HTTP_NOTIMPLEMENTED;
                             break;
                         }
-                        Message("server parse = %s:%u", ip.c_str(), port);
+                        Message("server parse = %s:%u", ip.c_str(), server_port);
                         size_t post_len = evbuffer_get_length(req_ptr->input_buffer);
                         char* post_data = (char*)evbuffer_pullup(req_ptr->input_buffer, post_len);
                         Message("request post_data = %s", post_data);
@@ -202,7 +476,9 @@ void GenericHandler(struct evhttp_request* req_ptr, void* param)
                 Message("no resource to deal.");
             }
             close(filedes[0]);
-            write(filedes[1], &status, sizeof(int));
+            if (write(filedes[1], &status, sizeof(int)) < 0) {
+                Error("write status to pipe failed!");
+            }
             exit(0);
         } else if (child > 0) {
             pid_t pid = 0;
@@ -405,6 +681,7 @@ int StartServer(short port, struct SrvCallbacks* callbacks)
     evhttp_set_allowed_methods(http, EVHTTP_REQ_GET | EVHTTP_REQ_POST | EVHTTP_REQ_HEAD
         | EVHTTP_REQ_OPTIONS | EVHTTP_REQ_PUT | EVHTTP_REQ_DELETE);
     evhttp_set_gencb(http, GenericHandler, callbacks);
+    InitFrontendFromEnv();
     Message("Http server start over [%d] OK!", port);
 
     event_base_dispatch(base);
@@ -415,8 +692,8 @@ int StartServer(short port, struct SrvCallbacks* callbacks)
 int RequestClient(const char* url, HookDetail& detail, DEALRES_CALLBACK hook)
 {
     int stat = -1;
-    thread client([&stat, &detail](const char* url) {
-        detail.url = url;
+    thread client([&stat, &detail](const char* target) {
+        detail.url = target;
         stat = HttpClient(detail);
         }, url);
     if (hook != nullptr) {
