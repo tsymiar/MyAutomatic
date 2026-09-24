@@ -8,7 +8,10 @@ using namespace std;
 int main(int argc, char** argv)
 {
     if (argc <= 1) {
-        cout << "Usage:\n " << (argv == nullptr ? "./webevent_server" : argv[0]) << " [ port || url(http://...) ]\nactually:" << endl;
+        cout << "Usage:\n " << (argv == nullptr ? "./webevent_server" : argv[0]) << " [ port || url(http://...) ]\n";
+        cout << " frontend: env WEBEV_FRONTEND=\"branch[:dir]\" (default \"gh-pages:./webev-frontend\", 0=disable)\n";
+        cout << "           env WEBEV_REPO=/path/to/repo to point at the git repository (auto-detected otherwise)\n";
+        cout << "actually:" << endl;
         int i = 0;
         while (i < argc) {
             cout << " " << argv[i];

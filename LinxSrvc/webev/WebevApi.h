@@ -29,9 +29,13 @@ struct DealHooks {
 };
 
 int StartServer(short, struct SrvCallbacks* = nullptr);
-void RegisterCallback(const std::string&, DEALRES_CALLBACK);
+void RegisterCallback(const std::string&, evhttp_cmd_type, DEALRES_CALLBACK);
 int RequestClient(const char*, HookDetail&, DEALRES_CALLBACK = nullptr);
 
 void SetExtraOption(const std::string&, const std::string&);
 void SetHeadsList(const std::vector<std::string>&);
 const char* GetMethodName(int);
+
+int FetchFrontendFromGit(const std::string& branch = "gh-pages",
+    const std::string& workdir = "./webev-frontend");
+void SetFrontendRoot(const std::string& dir);
