@@ -17,8 +17,13 @@
 #include <mutex>
 #include <thread>
 #include <vector>
+#include <atomic>
 
 using namespace std;
+
+const int MAX_PKG_SIZE = 0x400000;      // max size of one packet / one read: 4M
+const int MAX_WORK_THREADS = 64;        // max number of sender threads
+const int MAX_QUEUE_SIZE = 1000;        // send queue capacity
 
 enum TCPUDP {
     TCP = 1,
@@ -39,64 +44,113 @@ struct RuntimeState {
     int port = 8899;
 } g_state;
 
+// Queue element owns its own copy of the payload (deep copied on push) and is
+// released by the worker after sending, so caller buffers are never borrowed
 struct Message {
     char* addr;
     int size;
     int sock;
-    Message()
+
+    Message() : addr(nullptr), size(0), sock(-1) {}
+    Message(const Message&) = delete;
+    Message& operator=(const Message&) = delete;
+    Message(Message&& other) noexcept : addr(other.addr), size(other.size), sock(other.sock)
     {
-        sock = -1;
+        other.addr = nullptr;
+        other.size = 0;
+    }
+    Message& operator=(Message&& other) noexcept
+    {
+        if (this != &other) {
+            release();
+            addr = other.addr;
+            size = other.size;
+            sock = other.sock;
+            other.addr = nullptr;
+            other.size = 0;
+        }
+        return *this;
+    }
+    ~Message()
+    {
+        release();
+    }
+
+    void release()
+    {
+        if (addr != nullptr) {
+            free(addr);
+            addr = nullptr;
+        }
         size = 0;
-        addr = nullptr;
+    }
+
+    bool assign(const void* data, size_t len, int fd)
+    {
+        release();
+        addr = static_cast<char*>(malloc(len > 0 ? len : 1));
+        if (addr == nullptr) {
+            return false;
+        }
+        memcpy(addr, data, len);
+        size = static_cast<int>(len);
+        sock = fd;
+        return true;
     }
 };
 
-mutex g_mutex{};
-queue<Message*> g_msgQue{};
-const int MaxQueueSize = 1000;
+mutex g_mutex{ };
+queue<Message> g_msgQue{ };
+atomic<bool> g_sentOver(false);         // set by the sender when the file is queued; workers exit on it
 
 uint64_t getUsecTime()
 {
-    uint64_t usec = 0;
     struct timeval tv;
     gettimeofday(&tv, NULL);
-    usec = tv.tv_sec * 1000000ULL + tv.tv_usec;
-    return usec;
+    return static_cast<uint64_t>(tv.tv_sec) * 1000000ULL + static_cast<uint64_t>(tv.tv_usec);
 }
 
-void queuePush(Message* msg)
+// refresh the rate counter once per second
+void tickRate(uint64_t& stamp, uint64_t& bytes)
 {
-    lock_guard<mutex> guard(g_mutex);
-    g_msgQue.push(msg);
+    uint64_t now = getUsecTime();
+    if (now - stamp > 1000000ULL) {
+        g_state.fBps = static_cast<float>(bytes) / static_cast<float>(now - stamp) * 1000000.f;
+        stamp = now;
+        bytes = 0;
+    }
 }
 
-int queuePop(Message* msg)
+void queuePush(Message&& msg)
 {
     lock_guard<mutex> guard(g_mutex);
-    if (g_msgQue.size() == 0 || msg == nullptr) {
-        if (g_msgQue.size() > 0) {
-            // still pop to avoid leak if someone queued bad message pointer (keeps original behavior)
-            g_msgQue.pop();
-        }
+    g_msgQue.push(std::move(msg));
+}
+
+int queuePop(Message& msg)
+{
+    lock_guard<mutex> guard(g_mutex);
+    if (g_msgQue.empty()) {
         return -1;
     }
-    Message* m = g_msgQue.front();
-    *msg = *m;
+    msg = std::move(g_msgQue.front());
     g_msgQue.pop();
     return 0;
 }
 
 size_t queueSize()
 {
+    lock_guard<mutex> guard(g_mutex);
     return g_msgQue.size();
 }
 
 void wait(unsigned int tms)
 {
     struct timespec ts;
-    ts.tv_sec = 0;
-    ts.tv_nsec = 1000000 * tms; // 1 millisecond * tms
-    nanosleep(&ts, NULL);
+    ts.tv_sec = tms / 1000;
+    ts.tv_nsec = static_cast<long>(tms % 1000) * 1000000L;   // split into sec + nsec, avoids tv_nsec overflow
+    while (nanosleep(&ts, &ts) < 0 && errno == EINTR) {
+    }
 }
 
 void signal_exit(int s)
@@ -134,13 +188,21 @@ int server(int argc, char* argv[])
         return -1;
     }
     g_state.port = atoi(argv[1]);
+    if (g_state.port <= 0 || g_state.port > 65535) {
+        fprintf(stderr, "invalid port: %s\n", argv[1]);
+        return -1;
+    }
     g_state.how = (argc > 2) ? static_cast<TCPUDP>(atoi(argv[2])) : TCP;
     int pkgsize = 1024;
     if (argc > 3) {
         pkgsize = atoi(argv[3]);
-        if (pkgsize > 0x400000) {
-            pkgsize = 0x400000;
+        if (pkgsize > MAX_PKG_SIZE) {
+            pkgsize = MAX_PKG_SIZE;
             cout << "message size too big, fixed to 4M." << endl;
+        }
+        if (pkgsize <= 0) {
+            pkgsize = 1024;                     // negative input would become a huge size_t length, clamp it
+            cout << "message size invalid, fixed to 1024." << endl;
         }
     }
     if (argc > 4) {
@@ -177,7 +239,7 @@ int server(int argc, char* argv[])
         << (mgroup ? (", join multicast '" + string(mgroup) + "'") : "") << " ok." << endl;
     struct sockaddr_in local;
     local.sin_family = AF_INET;
-    local.sin_port = htons(g_state.port);
+    local.sin_port = htons(static_cast<uint16_t>(g_state.port));
     local.sin_addr.s_addr = htonl(INADDR_ANY);
     if (::bind(ssock, (struct sockaddr*)&local, sizeof(local)) < 0) {
         close(ssock);
@@ -213,8 +275,7 @@ int server(int argc, char* argv[])
     uint64_t calclen = 0;
     timeval timeout = { 0, 3000 };
     socklen_t locsize = sizeof(local);
-    unsigned char* msgbuf = (unsigned char*)malloc(pkgsize ? pkgsize : 1024);
-    if (!msgbuf) msgbuf = (unsigned char*)malloc(1024);
+    vector<unsigned char> msgbuf(static_cast<size_t>(pkgsize));
     char ip[16];
     fd_set fds;
     FD_ZERO(&fds);
@@ -222,7 +283,9 @@ int server(int argc, char* argv[])
         if (g_state.how == TCP) {
             int csock = accept(ssock, (struct sockaddr*)&local, &locsize);
             if (csock < 0) {
-                close(csock);
+                if (errno == EINTR) {
+                    continue;
+                }
                 perror("accept");
                 return -7;
             }
@@ -234,78 +297,81 @@ int server(int argc, char* argv[])
             }
             inet_ntop(AF_INET, (void*)&local.sin_addr, ip, 16);
             cout << "socket accept from " << ip << ":" << ntohs(local.sin_port) << ", waiting message..." << endl;
-            while (true) {
+            while (g_state.running) {
+                FD_ZERO(&fds);                      // rebuild the fd set every round; select rewrites timeout too
                 FD_SET(csock, &fds);
-                if (select((int)(csock + 1), &fds, NULL, NULL, &timeout) > 0) {
-                    if (FD_ISSET(csock, &fds) > 0) {
-                        ssize_t rcvlen = ::recv(csock, (char*)msgbuf, pkgsize, 0);
-                        if (rcvlen > 0) {
-                            calclen += rcvlen;
-                            total += rcvlen;
-                            if (getUsecTime() - start > 1000000ULL) {
-                                g_state.fBps = (calclen * 1.f) / (getUsecTime() - start) * 1000000.f;
-                                start = getUsecTime();
-                                calclen = 0;
-                            }
-                            if (g_state.dealFile && g_state.filep != NULL) {
-                                size_t i_write_count = fwrite(msgbuf, 1, rcvlen, g_state.filep);
-                                if (i_write_count != (size_t)rcvlen) {
-                                    fprintf(stderr, "recv data write failed: %s, write(count=%zu,size=%zd).\n", strerror(errno), i_write_count, rcvlen);
-                                    fclose(g_state.filep);
-                                    g_state.filep = NULL;
-                                }
-                                if (rcvlen < 0x10000) {
-                                    fsync(fileno(g_state.filep));
-                                }
-                            }
-                        } else if (rcvlen == 0) {
-                            sync();
-                            if (g_state.filep) {
-                                fclose(g_state.filep);
-                                g_state.filep = NULL;
-                            }
-                            cout << "\nrcvd total size: " << total << endl;
-                            close(csock);
-                            cout << "lose connection(" << csock << ")" << endl;
-                            total = 0;
-                            break;
-                        } else {
-                            close(csock);
-                            perror("recv");
-                            break;
+                timeout.tv_sec = 0;
+                timeout.tv_usec = 3000;
+                int ready = select(csock + 1, &fds, NULL, NULL, &timeout);
+                if (ready < 0) {
+                    if (errno == EINTR) {
+                        continue;
+                    }
+                    perror("select");
+                    break;
+                }
+                if (ready == 0 || !FD_ISSET(csock, &fds)) {
+                    continue;
+                }
+                ssize_t rcvlen = ::recv(csock, (char*)msgbuf.data(), static_cast<size_t>(pkgsize), 0);
+                if (rcvlen > 0) {
+                    calclen += static_cast<uint64_t>(rcvlen);
+                    total += static_cast<uint64_t>(rcvlen);
+                    tickRate(start, calclen);
+                    if (g_state.dealFile && g_state.filep != NULL) {
+                        size_t i_write_count = fwrite(msgbuf.data(), 1, static_cast<size_t>(rcvlen), g_state.filep);
+                        if (i_write_count != static_cast<size_t>(rcvlen)) {
+                            fprintf(stderr, "recv data write failed: %s, write(count=%zu,size=%zd).\n", strerror(errno), i_write_count, rcvlen);
+                            fclose(g_state.filep);
+                            g_state.filep = NULL;
+                        } else if (rcvlen < 0x10000) {
+                            fsync(fileno(g_state.filep));   // flush small packets; filep is NULL after a write error
                         }
                     }
+                } else if (rcvlen == 0) {
+                    sync();
+                    if (g_state.filep) {
+                        fclose(g_state.filep);
+                        g_state.filep = NULL;
+                    }
+                    cout << "\nrcvd total size: " << total << endl;
+                    close(csock);
+                    cout << "lose connection(" << csock << ")" << endl;
+                    total = 0;
+                    break;
+                } else {
+                    close(csock);
+                    perror("recv");
+                    break;
                 }
             }
         } else {
+            FD_ZERO(&fds);
             FD_SET(ssock, &fds);
-            if (select((int)(ssock + 1), &fds, NULL, NULL, &timeout) > 0) {
+            timeout.tv_sec = 0;
+            timeout.tv_usec = 3000;
+            if (select(ssock + 1, &fds, NULL, NULL, &timeout) > 0) {
                 if (FD_ISSET(ssock, &fds) > 0) {
                     ssize_t rcvlen = 0;
                     struct sockaddr_in loc;
                     socklen_t loclen = sizeof(loc);
-                    if ((rcvlen = ::recvfrom(ssock, (char*)msgbuf, pkgsize, 0, (struct sockaddr*)&loc, &loclen)) < 0) {
+                    if ((rcvlen = ::recvfrom(ssock, (char*)msgbuf.data(), static_cast<size_t>(pkgsize), 0, (struct sockaddr*)&loc, &loclen)) < 0) {
                         continue;
                     }
-                    calclen += rcvlen;
-                    if (getUsecTime() - start > 1000000ULL) {
-                        g_state.fBps = (calclen * 1.f) / (getUsecTime() - start) * 1000000.f;
-                        start = getUsecTime();
-                        calclen = 0;
-                    }
+                    calclen += static_cast<uint64_t>(rcvlen);
+                    tickRate(start, calclen);
                     inet_ntop(AF_INET, (void*)&loc.sin_addr, ip, sizeof(ip));
                     printf("recv from %s:%d size=%zd\n", ip, ntohs(loc.sin_port), rcvlen);
-                    for (int i = 0; i < (int)rcvlen; i++) {
+                    for (ssize_t i = 0; i < rcvlen; i++) {
                         if ((i % 32 == 0) && (i > 0))
                             printf("\n");
-                        printf("%02x ", msgbuf[i]);
+                        printf("%02x ", msgbuf[static_cast<size_t>(i)]);
                     }
                     printf("\nrecv[%d] size %zd ok.\n", ssock, rcvlen);
                 }
             }
         }
     }
-    free(msgbuf);
     signal_exit(0);
     cout << "server exit." << endl;
     return 0;
@@ -321,36 +387,42 @@ int client(int argc, char* argv[])
     int ssock = -1;
     struct sockaddr_in local;
     local.sin_family = AF_INET;
-    const char* ip = "192.168.197.140";
     int caplen = 1024;
     const char* file = "./test";
     size_t thrds = 1;
     g_state.bserv = false;
-    vector<bool> vecstat(0);
-    char msgbuf[1024];
-    if (argc > 1) {
-        ip = argv[1];
-    } else {
+    vector<int> vecstat;
+    vector<char> msgbuf(1024);
+    if (argc <= 2) {
         usage(argv[0]);
         return -1;
     }
+    const char* ip = argv[1];
     local.sin_addr.s_addr = inet_addr(ip);
-    if (argc > 2) {
-        g_state.port = atoi(argv[2]);
-    } else {
-        usage(argv[0]);
+    if (local.sin_addr.s_addr == INADDR_NONE && strcmp(ip, "255.255.255.255") != 0) {
+        fprintf(stderr, "invalid ip: %s\n", ip);
         return -1;
     }
-    local.sin_port = htons(g_state.port);
+    g_state.port = atoi(argv[2]);
+    if (g_state.port <= 0 || g_state.port > 65535) {
+        fprintf(stderr, "invalid port: %s\n", argv[2]);
+        return -1;
+    }
+    local.sin_port = htons(static_cast<uint16_t>(g_state.port));
     if (argc > 3) {
         g_state.how = static_cast<TCPUDP>(atoi(argv[3]));
     }
     if (argc > 4) {
         caplen = atoi(argv[4]);
-        if (caplen > 0x400000) {
-            caplen = 0x400000;
+        if (caplen > MAX_PKG_SIZE) {
+            caplen = MAX_PKG_SIZE;
             cout << "message caplen too big, fixed to 4M." << endl;
         }
+        if (caplen <= 0) {
+            caplen = static_cast<int>(msgbuf.size());
+            cout << "message caplen invalid, fixed to " << caplen << "." << endl;
+        }
+        msgbuf.resize(static_cast<size_t>(caplen));   // let --package size really drive the per-send packet size
     }
     if (argc > 5) {
         file = argv[5];
@@ -359,52 +431,43 @@ int client(int argc, char* argv[])
     cout << "client start by " << (g_state.how == TCP ? "TCP" : (g_state.how == MCAST ? "MCAST" : "UDP")) << " send-to " << ip << ":" << g_state.port << " caplen=" << caplen << (g_state.dealFile ? ", file=" + string(file) : "") << " ok." << endl;
     bool is_mcast = is_multicast_addr(ip);
     if (argc > 6) {
-        thrds = atoi(argv[6]);
-        thread* works = new thread[thrds];
-        vecstat.resize(thrds);
-        for (size_t i = 0; i < vecstat.size(); i++) {
-            vecstat[i] = false;
+        thrds = static_cast<size_t>(atoi(argv[6]));
+        if (thrds < 1) {
+            thrds = 1;
         }
+        if (thrds > MAX_WORK_THREADS) {
+            thrds = MAX_WORK_THREADS;
+            cout << "thread count too big, fixed to " << MAX_WORK_THREADS << "." << endl;
+        }
+    }
+    if (thrds > 1 && g_state.how == TCP) {      // UDP sends via sendto directly, no worker threads needed
+        vecstat.assign(thrds, 0);
+        thread* works = new thread[thrds];
         for (size_t i = 0; i < thrds; i++) {
-            works[i] = thread([&](int i) -> void {
+            works[i] = thread([&](size_t index) -> void {
                 Message msg;
-                fd_set fds;
-                timeval latency = { 0, 120 };
                 uint64_t total = 0;
-                while (true) {
-                    FD_ZERO(&fds);
-                    FD_SET(msg.sock, &fds);
-                    if (select(msg.sock + 1, NULL, &fds, NULL, &latency) > 0) {
-                        if (FD_ISSET(msg.sock, &fds) > 0) {
-                            if (queuePop(&msg) < 0) {
-                                wait(10);
-                                continue;
-                            }
-                            if (msg.sock <= 0 || msg.size <= 0 || msg.addr == nullptr) {
-                                continue;
-                            }
-                            int bytes = send(msg.sock, (const char*)msg.addr, msg.size, 0);
-                            if (bytes < 0) {
-                                fprintf(stderr, "send failed, socket=%d, size=%d.\n", msg.sock, msg.size);
-                                continue;
-                            }
-                            total += msg.size;
+                while (!g_sentOver || queueSize() > 0) {   // exit only after the sender is done and the queue drains
+                    if (queuePop(msg) < 0) {
+                        wait(1);
+                        continue;
+                    }
+                    if (msg.sock > 0 && msg.size > 0 && msg.addr != nullptr) {
+                        ssize_t bytes = send(msg.sock, msg.addr, static_cast<size_t>(msg.size), 0);
+                        if (bytes < 0) {
+                            fprintf(stderr, "send failed, socket=%d, size=%d.\n", msg.sock, msg.size);
+                        } else {
+                            total += static_cast<uint64_t>(bytes);
                         }
                     }
-                    if (queueSize() == 0) {
-                        break;
-                    }
+                    msg.release();
                 }
-                vecstat[i] = true;
-                cout << "work thread[" << i << "] total size = " << total << endl;
+                vecstat[index] = 1;             // separate storage per element, avoids vector<bool> bit sharing
+                cout << "work thread[" << index << "] total size = " << total << endl;
                 },
                 i);
-            if (works[i].joinable()) {
-                works[i].detach();
-                cout << "work thread[" << i << "] start" << endl;
-            } else {
-                cout << "work thread[" << i << "] not able to join main thread!" << endl;
-            }
+            works[i].detach();
+            cout << "work thread[" << i << "] start" << endl;
         }
         delete[] works;
     }
@@ -438,38 +501,35 @@ int client(int argc, char* argv[])
     }
     if (argc <= 5) {
         cout << "type message to send:" << endl;
-        while (cin >> msgbuf) {
-            int len = strnlen(msgbuf, sizeof(msgbuf) - 1) + 1;
-            msgbuf[sizeof(msgbuf) - 1] = '\0'; // Ensure null-termination
+        while (cin >> msgbuf.data()) {
+            size_t len = strnlen(msgbuf.data(), msgbuf.size() - 1) + 1;
+            msgbuf[msgbuf.size() - 1] = '\0'; // Ensure null-termination
             if (g_state.how == TCP) {
-                int bytes = send(ssock, (const char*)msgbuf, len, 0);
+                ssize_t bytes = send(ssock, msgbuf.data(), len, 0);
                 if (bytes < 0) {
                     perror("send");
                     continue;
                 }
             } else {
-                ::sendto(ssock, (const char*)msgbuf, len, 0, (struct sockaddr*)&local, sizeof(local));
+                ::sendto(ssock, msgbuf.data(), len, 0, (struct sockaddr*)&local, sizeof(local));
             }
-            cout << "sent [" << msgbuf << "] to " << ip << endl;
+            cout << "sent [" << msgbuf.data() << "] to " << ip << endl;
         }
     } else {
+        g_sentOver = false;
         g_state.fileno = open(file, O_RDONLY, 0666);
         if (g_state.fileno != -1) {
-            uint64_t sentLen = 0;
+            uint64_t sentSize = 0;
             long total = lseek(g_state.fileno, 0, SEEK_END);
             lseek(g_state.fileno, 0, SEEK_SET);
             uint64_t start = getUsecTime();
             uint64_t current = start;
             uint64_t calcsize = 0;
             ssize_t rdsize = 0;
-            // caplen 可能为非正数(atoi), 先夹紧到 (0, sizeof(msgbuf)] 再用作读取长度
-            size_t chunk = sizeof(msgbuf);
-            if (caplen > 0 && static_cast<size_t>(caplen) < chunk) {
-                chunk = static_cast<size_t>(caplen);
-            }
-            while ((rdsize = read(g_state.fileno, msgbuf, chunk)) > 0) {
+            size_t chunk = msgbuf.size();          // caplen was already clamped and resized while parsing args
+            while ((rdsize = read(g_state.fileno, msgbuf.data(), chunk)) > 0) {
                 if (rdsize > static_cast<ssize_t>(chunk)) {
-                    // 返回值不应大于请求长度, 出现则说明状态异常, 立即停止
+                    // read() must not return more than requested; stop if it does
                     fprintf(stderr, "read beyond buffer: got %zd, expect <= %zu\n", rdsize, chunk);
                     break;
                 }
@@ -478,51 +538,58 @@ int client(int argc, char* argv[])
                 }
                 if (g_state.how == TCP) {
                     if (thrds > 1) {
+                        while (queueSize() >= static_cast<size_t>(MAX_QUEUE_SIZE)) {
+                            wait(1);                    // back-pressure: wait for workers when the queue is full
+                        }
                         Message msg;
-                        msg.sock = ssock;
-                        msg.size = rdsize;
-                        msg.addr = msgbuf;
-                        do {
-                            if (queueSize() < MaxQueueSize) {
-                                queuePush(&msg);
-                                break;
-                            } else {
-                                // fprintf(stderr, "queue size = %ld is full waiting free...\n", queueSize());
-                            }
-                        } while (true);
+                        if (!msg.assign(msgbuf.data(), static_cast<size_t>(rdsize), ssock)) {
+                            fprintf(stderr, "malloc failed, drop %zd bytes.\n", rdsize);
+                            break;
+                        }
+                        queuePush(std::move(msg));
                     } else {
-                        int bytes = send(ssock, (const char*)msgbuf, rdsize, 0);
+                        ssize_t bytes = send(ssock, msgbuf.data(), static_cast<size_t>(rdsize), 0);
                         if (bytes < 0) {
                             perror("send");
                             continue;
                         }
-                        sentLen += bytes;
-                        calcsize += bytes;
+                        sentSize += static_cast<uint64_t>(bytes);
+                        calcsize += static_cast<uint64_t>(bytes);
                         if (getUsecTime() - current > 1000000ULL) {
-                            g_state.fBps = (calcsize * 1.f) / (getUsecTime() - current) * 1000000.f;
-                            g_state.progress = sentLen * 1.00f / total;
+                            g_state.fBps = static_cast<float>(calcsize) / static_cast<float>(getUsecTime() - current) * 1000000.f;
+                            g_state.progress = static_cast<float>(sentSize) / static_cast<float>(total);
                             current = getUsecTime();
                             calcsize = 0;
                         }
                     }
                 } else {
-                    sentLen += ::sendto(ssock, (const char*)msgbuf, rdsize, 0, (struct sockaddr*)&local, sizeof(local));
+                    ssize_t sent = ::sendto(ssock, msgbuf.data(), static_cast<size_t>(rdsize), 0,
+                        (struct sockaddr*)&local, sizeof(local));
+                    if (sent < 0) {
+                        perror("sendto");
+                    } else {
+                        sentSize += static_cast<uint64_t>(sent);
+                    }
                 }
             }
-            while (g_state.how == TCP && thrds > 1) {
+            g_sentOver = true;                  // everything is queued, tell the workers they may exit
+            while (thrds > 1 && g_state.how == TCP) {
                 bool status = true;
                 for (size_t i = 0; i < vecstat.size(); i++) {
-                    status &= vecstat[i];
+                    status = status && (vecstat[i] != 0);
                 }
                 if (status) {
-                    vecstat.clear();
                     break;
                 }
+                wait(1);                        // sleep instead of spinning, keep the CPU free
             }
-            fprintf(stdout, "sent %.3fM over, average speed is %.3f MB/s\n", sentLen * 1.0f / 1048576, (sentLen * 1.f) / (getUsecTime() - start) * 1048576 / 1000000.f);
+            fprintf(stdout, "sent %.3fM over, average speed is %.3f MB/s\n",
+                static_cast<double>(sentSize) / 1048576.0,
+                static_cast<double>(sentSize) / static_cast<double>(getUsecTime() - start) * 1048576.0 / 1000000.0);
             close(g_state.fileno);
         } else {
             perror("open");
+            g_sentOver = true;              // nothing to send, do not keep the workers waiting
         }
     }
     close(ssock);
@@ -549,14 +616,16 @@ int main(int argc, char* argv[])
                 }
                 if (g_state.bserv) {
                     if (lastValue != value || lastUnit != unit) {
-                        fprintf(stdout, "recvd speed %.3f %s\r", value, unit.c_str());
+                        fprintf(stdout, "recvd speed %.3f %s\r", static_cast<double>(value), unit.c_str());
                         fflush(stdout);
                         lastValue = value;
                         lastUnit = unit;
                     }
                 } else {
                     if (lastValue != value || lastUnit != unit) {
-                        fprintf(stdout, "sent %3.3f%% speed %.3f %s\r", g_state.progress * 100, value, unit.c_str());
+                        fprintf(stdout, "sent %3.3f%% speed %.3f %s\r",
+                            static_cast<double>(g_state.progress) * 100.0,
+                            static_cast<double>(value), unit.c_str());
                         fflush(stdout);
                         lastValue = value;
                         lastUnit = unit;

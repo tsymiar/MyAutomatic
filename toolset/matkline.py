@@ -530,15 +530,24 @@ def sina_headers():
     return {"User-Agent": USER_AGENT, "Referer": SINA_REFERER}
 
 
+def ensure_http_url(url):
+    """校验地址只走 http/https，否则抛 ValueError。
+
+    urlopen 本身支持 file:、ftp: 等协议，若不限制，用户传入的 --api-url 就能让
+    程序读本地文件或走别的协议，因此这里同时要求带主机名。
+    """
+    parts = urlparse(url)
+    if parts.scheme not in ("http", "https") or not parts.netloc:
+        raise ValueError("仅支持 http/https 地址: %s" % url)
+    return url
+
+
 def fetch_text(url, params=None, timeout=10, encoding="utf-8", headers=None):
-    """GET 请求并返回文本。"""
+    """GET 请求并返回文本（仅允许 http/https）。"""
     if params:
         url = url + ("&" if "?" in url else "?") + urlencode(params)
-    # 只允许 http/https，避免 file: 等自定义协议被 urlopen 打开
-    if urlparse(url).scheme not in ("http", "https"):
-        raise ValueError("不支持的 URL 协议（仅允许 http/https）: %s" % url)
-    request = Request(url, headers=headers or default_headers())
-    # nosec B310 - 已在上方限定 scheme 仅为 http/https, 不接受 file: 等自定义协议
+    request = Request(ensure_http_url(url), headers=headers or default_headers())
+    # nosec B310 - ensure_http_url 已限定 scheme 为 http/https 且要求主机名
     with urlopen(request, timeout=timeout) as response:
         raw = response.read()
     try:
@@ -1869,6 +1878,11 @@ def validate_args(parser, args):
         parser.error("--live 与 --history 语义冲突（--live 持续刷新，--history 只查一次）")
     if args.api_url and args.source != "auto":
         parser.error("--api-url 与 --source 不能同时使用")
+    if args.api_url:
+        try:
+            ensure_http_url(args.api_url)     # 提前拦截 file: 等协议，避免进入刷新循环反复报错
+        except ValueError as error:
+            parser.error(str(error))
     if args.limit is not None and args.limit < 0:
         parser.error("--limit 不能为负数（0 表示不限）")
     if args.refresh <= 0:
