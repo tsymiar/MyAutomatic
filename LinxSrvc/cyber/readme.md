@@ -100,4 +100,4 @@ python scripts/inference.py --base_model /path/to/model --lora_path ./outputs/be
 
 ## 详细文档
 
-- [Ollama 模型转换指南](OLLAMA_CONVERSION_GUIDE.md)
+- [Ollama 模型转换指南](OLLAMA_TO_GUFF.md)
