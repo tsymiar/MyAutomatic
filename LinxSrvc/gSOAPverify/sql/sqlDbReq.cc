@@ -60,20 +60,29 @@ namespace {
 
     // ---------- 安全拼接 SQL（防注入） ----------
     bool build_sql(char* buf, size_t buf_size, const char* table,
-        const char* psw)
+        const char* usr, const char* psw)
     {
-        // 转义用户输入的密码
-        char escaped[128] = { 0 };
-        size_t psw_len = strnlen(psw, sizeof(escaped) / 2 + 1);
-        if (psw_len > sizeof(escaped) / 2) {
-            cerr << "[SEC] password too long" << endl;
+        // 未建立连接时 mysql_real_escape_string 无法安全工作
+        if (!g_ctx.connected) {
+            cerr << "[DB] not connected, skip building SQL." << endl;
             return false;
         }
-        mysql_real_escape_string(&g_ctx.mysql, escaped, psw, psw_len);
+        // 转义用户输入（转义结果最长为输入的 2 倍，故输入限半缓冲）
+        char esc_usr[128] = { 0 };
+        char esc_psw[128] = { 0 };
+        size_t usr_len = strnlen(usr, sizeof(esc_usr) / 2 + 1);
+        size_t psw_len = strnlen(psw, sizeof(esc_psw) / 2 + 1);
+        if (usr_len > sizeof(esc_usr) / 2 || psw_len > sizeof(esc_psw) / 2) {
+            cerr << "[SEC] user or password too long" << endl;
+            return false;
+        }
+        mysql_real_escape_string(&g_ctx.mysql, esc_usr, usr, usr_len);
+        mysql_real_escape_string(&g_ctx.mysql, esc_psw, psw, psw_len);
 
+        // 必须同时匹配 user 与 psw：只按 psw 匹配会让口令碰撞返回他人资料
         return snprintf(buf, buf_size,
-            "SELECT email,tell FROM %s WHERE `psw`='%s'",
-            table, escaped) < (int)buf_size;
+            "SELECT email,tell FROM %s WHERE `user`='%s' AND `psw`='%s'",
+            table, esc_usr, esc_psw) < (int)buf_size;
     }
 
     // ---------- 安全查询 (FIX 路径) ----------
@@ -110,7 +119,9 @@ namespace {
         }
 
         char sql[MAX_SQL_LEN] = { 0 };
-        if (!build_sql(sql, sizeof(sql), table.c_str(), param.user.psw)) {
+        if (!build_sql(sql, sizeof(sql), table.c_str(),
+            param.user.acc ? param.user.acc : "",
+            param.user.psw ? param.user.psw : "")) {
             return -1;
         }
         cout << "SQL(" << g_ctx.call_cnt << "):[\033[34m" << sql << "\033[0m]" << endl;
@@ -224,16 +235,13 @@ int sqlQuery(struct queryParam& param, bool flag)
         if (mysql_options(&g_ctx.mysql, MYSQL_SET_CHARSET_NAME, "utf8") != 0)
             cerr << "MySQL setting fail." << endl;
 
-        // 用 SOAP 传来的用户名/密码尝试连接 MySQL
-        const char* auth_user = (param.user.acc && param.user.acc[0])
-            ? param.user.acc : SQL_USER;
-        const char* auth_psw = (param.user.psw && param.user.psw[0])
-            ? param.user.psw : get_sql_password();
-
-        if (auth_psw == nullptr) {
-            cerr << "MySQL password not configured and no SOAP password provided." << endl;
-        } else if (mysql_real_connect(&g_ctx.mysql, SQL_HOST,
-            auth_user, auth_psw,
+        // 客户端传来的 usr/psw 仅作为查询条件，绝不能当作 MySQL 登录凭据：
+        // 否则任何远程调用者都能拿它探测数据库账号，
+        // 且一旦有人以 root 登录成功，全局单例连接身份就被污染（后续查询都以该身份执行）。
+        const char* sql_psw = get_sql_password();
+        if (sql_psw == nullptr) {
+            cerr << "MySQL password not configured, please set MYAUTO_MYSQL_PSW." << endl;
+        } else if (mysql_real_connect(&g_ctx.mysql, SQL_HOST, SQL_USER, sql_psw,
             SQL_DB, SQL_PORT, NULL, 0) == NULL) {
             cerr << "Connect mysql fail: " << mysql_error(&g_ctx.mysql)
             << "!" << endl;

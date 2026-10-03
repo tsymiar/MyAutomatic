@@ -15,6 +15,7 @@
 #define MAX_THR    (8)     // 工作线程数
 #define MAX_QUEUE  (1024)  // 环形缓冲区容量
 #define SOAP_404   404     // HTTP 404 状态码
+#define TIMEOUT_SEC (20)   // socket 超时（秒），0 表示无限
 
 // SOAP_SOCKET 由 stdsoap2.h 定义(通常为 int)，本头文件不依赖 SOAP 头文件
 typedef int soap_socket_t;

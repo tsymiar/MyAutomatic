@@ -165,6 +165,12 @@ int main_server(int argc, char** argv)
     soap_set_mode(&Soap, SOAP_C_UTFSTRING);
     soap_set_namespaces(&Soap, namespaces);
 
+    // 超时（秒）。不设默认就是 0 = 无限：慢客户端 / 半开连接会长期占住 worker，
+    // 8 个线程很快被耗尽。worker 的 soap 由 soap_copy(&Soap) 得到，会继承这三个值。
+    Soap.accept_timeout = TIMEOUT_SEC;   // 等待新连接
+    Soap.recv_timeout   = TIMEOUT_SEC;   // 接收请求
+    Soap.send_timeout   = TIMEOUT_SEC;   // 发送响应
+
     struct timespec ts = { 0, 50000 };
 
     // 入口已校验 argc >= 2，此处固定以独立服务器模式运行
@@ -199,18 +205,17 @@ int main_server(int argc, char** argv)
         }
 
         // 主循环: 接受连接并分发
-        int j = 0;
         static int no = 0;
         for (;;) {
             soap_socket_t sock = soap_accept(&Soap);
             if (!soap_valid_socket(sock)) {
                 if (Soap.errnum) {
                     soap_print_fault(&Soap, stderr);
-                    continue;
-                } else {
-                    fprintf(stderr, "Server timed out\n");
-                    break;
                 }
+                // accept 超时（errnum 为 0，属正常空闲）与可恢复错误都继续等待。
+                // 这里不能 break：设了 accept_timeout 后，空闲 TIMEOUT_SEC 秒就会
+                // 触发一次超时，break 会让服务自己退出。
+                continue;
             }
             no++;
             fprintf(stdout,
@@ -222,19 +227,17 @@ int main_server(int argc, char** argv)
                 (int)((Soap.ip) & 0xFF),
                 (int)(Soap.socket), no);
 
-            // 入队，满则等待
-            while (enqueue(sock, ips[j]) == SOAP_EOM) {
+            // 入队，满则等待。IP 必须传本次连接的真实地址：
+            // 原先传 ips[j] 只是槽位里的旧值/未初始化值，记录到的客户端 IP 全是错的
+            while (enqueue(sock, Soap.ip) == SOAP_EOM) {
                 ts.tv_nsec = 100000;
                 nanosleep(&ts, NULL);
             }
-            j++;
-            if (j >= MAX_THR)
-                j = 0;
         }
 
         // 发送停止信号
         for (int i = 0; i < MAX_THR; i++) {
-            while (enqueue(SOAP_INVALID_SOCKET, ips[i]) == SOAP_EOM) {
+            while (enqueue(SOAP_INVALID_SOCKET, 0) == SOAP_EOM) {
                 ts.tv_nsec = 100000;
                 nanosleep(&ts, NULL);
             }
@@ -255,7 +258,10 @@ int main_server(int argc, char** argv)
 }
 
 // ==================== API: trans — 通用数据转发 ====================
-// 修复: 移除 text[0] 内存覆写、memset(text[0]) 循环 bug、内存泄漏
+// 注意: gSOAP 服务函数返回非 0 会被当成错误、不发响应体（客户端只收到 Fault），
+//       所以出错时也要返回 SOAP_OK，把错误说明放在出参 *rtn 里。
+//       解析必须用 strtok_r（strtok 用内部静态状态，8 个 worker 并发会互相打断），
+//       输出缓冲区必须是栈上临时缓冲 + soap_strdup（原 static text_buf 会被并发覆盖）。
 int api__trans(struct soap* soap, char* msg, char* rtn[])
 {
     static const int MAX_PARAM = 8;
@@ -269,72 +275,68 @@ int api__trans(struct soap* soap, char* msg, char* rtn[])
         char value[VAL_LEN];
     };
 
-    if (rtn == nullptr) {
-        return -1;
-    }
+    if (rtn == nullptr)
+        return SOAP_OK;
     if (msg == nullptr || msg[0] == '\0') {
-        static char err_buf[] = "request uri empty!";
-        *rtn = err_buf;
-        return -1;
+        *rtn = soap_strdup(soap, "request uri empty!");
+        return SOAP_OK;
     }
 
-    // 拷贝 msg 避免 strtok 修改原始数据
+    // 拷贝 msg 避免解析时修改原始数据
     char msg_copy[BUF_LEN];
     size_t msg_len = strnlen(msg, BUF_LEN);
     if (msg_len == BUF_LEN) {
-        static char err_buf[] = "request uri too long!";
-        *rtn = err_buf;
-        return -1;
+        *rtn = soap_strdup(soap, "request uri too long!");
+        return SOAP_OK;
     }
     memcpy(msg_copy, msg, msg_len);
     msg_copy[msg_len] = '\0';
 
     int neq = ss.char_count_(msg_copy, '=');
     if (neq < 0) {
-        static char err_buf[] = "request uri error!";
-        *rtn = err_buf;
-        return -1;
+        *rtn = soap_strdup(soap, "request uri error!");
+        return SOAP_OK;
     }
     printf("GET:[%s][%d]\n", msg_copy, neq);
 
-    // 分配输出缓冲区 (修复: 原 memset(text[0]) 循环 bug)
-    static char text_buf[MAX_PARAM][BUF_LEN];
-    memset(text_buf, 0, sizeof(text_buf));
+    char out[BUF_LEN] = { 0 };
+    char line[BUF_LEN];
 
     // 解析命令名
-    char* token = strtok(msg_copy, "@&");
-    if (token == nullptr || memcmp(token, "trans", 6) != 0) {
-        snprintf(text_buf[0], BUF_LEN, "illegal command!");
-        *rtn = text_buf[0];
-        return -2;
+    char* saveptr = nullptr;
+    char* token = strtok_r(msg_copy, "@&", &saveptr);
+    if (token == nullptr || strcmp(token, "trans") != 0) {
+        *rtn = soap_strdup(soap, "illegal command!");
+        return SOAP_OK;
     }
 
     // 解析 key=value 参数
     struct PARAM params[MAX_PARAM];
     memset(params, 0, sizeof(params));
     int p_cnt = 0;
-    token = strtok(NULL, "&");
-    while (token != nullptr && p_cnt < MAX_PARAM) {
+    while ((token = strtok_r(nullptr, "&", &saveptr)) != nullptr
+        && p_cnt < MAX_PARAM) {
         if (strchr(token, '=') != nullptr) {
             ss.strcut_((unsigned char*)token, '=',
                 params[p_cnt].key, params[p_cnt].value);
-            snprintf(text_buf[p_cnt], BUF_LEN,
-                "Param(%d): %s[%s]", p_cnt,
+            snprintf(line, BUF_LEN, "Param(%d): %s[%s]", p_cnt,
                 params[p_cnt].key, params[p_cnt].value);
-            cout << text_buf[p_cnt] << endl;
+            cout << line << endl;
+            if (p_cnt == 0)
+                memcpy(out, line, strlen(line) + 1);
             p_cnt++;
         }
-        token = strtok(NULL, "&");
     }
 
-    *rtn = text_buf[0];
-    return 0;
+    *rtn = soap_strdup(soap, out);
+    return SOAP_OK;
 }
 
 // ==================== API: get-server-status — 获取服务器状态 ====================
 int api__get_server_status(struct soap* soap, xsd_string req, xsd_string& rsp)
 {
-    if (req != nullptr && memcmp(req, "1000", 5) == 0) {
+    // 用 strcmp 而非 memcmp(req,"1000",5)：后者固定读 5 字节，req 短于 4 字符会越界读
+    if (req != nullptr && strcmp(req, "1000") == 0) {
         st_sys ss = {};
         char gt[16];
         get_mem_stat("localhost", &ss);
@@ -349,11 +351,16 @@ int api__get_server_status(struct soap* soap, xsd_string req, xsd_string& rsp)
 }
 
 // ==================== API: login-by-key — 用户登录认证 ====================
-int api__login_by_key(struct soap*, char* usr, char* psw,
+// 注意: gSOAP 要求服务函数返回 SOAP_OK(0)，返回任何非 0 值都会被当成错误、
+//       直接中断且不发送响应体（客户端只会收到 Fault）。
+//       认证结果必须放在出参 sch.rslt.flag 里返回。
+int api__login_by_key(struct soap* soap, char* usr, char* psw,
     struct api__ArrayOfEmp2& sch)
 {
     sch.rslt.flag = -3;
-    if (usr != nullptr && psw != nullptr) {
+    sch.rslt.email = nullptr;
+    sch.rslt.tell  = nullptr;
+    if (usr != nullptr && psw != nullptr && usr[0] != '\0' && psw[0] != '\0') {
         struct queryParam param;
         memset(&param, 0, sizeof(param));
         param.user.acc = usr;
@@ -363,19 +370,21 @@ int api__login_by_key(struct soap*, char* usr, char* psw,
         if (ret != 0) {
             param.msg.flag = false;
             sch.rslt.flag = -2;
-            printf("[OUT]:\tqueryParam.rslt is null.\n");
+            printf("[OUT]:\tqueryParam.rslt is null (ret=%d).\n", ret);
         }
         if (param.msg.flag) {
-            sch.rslt.email = param.msg.email;
-            sch.rslt.tell = param.msg.tell;
+            // param 是栈上变量，直接保存它的数组成员地址会变成悬垂指针；
+            // 必须用 soap 上下文分配，生命周期才覆盖到本次响应序列化结束。
+            sch.rslt.email = soap_strdup(soap, param.msg.email);
+            sch.rslt.tell  = soap_strdup(soap, param.msg.tell);
             sch.rslt.flag = 200;
-            printf("[OUT]:\temail:%s\t", sch.rslt.email);
-            if (sch.rslt.tell[0] != '\0')
+            printf("[OUT]:\temail:%s\t", sch.rslt.email ? sch.rslt.email : "(null)");
+            if (sch.rslt.tell && sch.rslt.tell[0] != '\0')
                 cout << "tell:" << sch.rslt.tell;
             cout << endl;
         }
     }
-    return sch.rslt.flag;
+    return SOAP_OK;
 }
 
 int main(int argc, char* argv[])

@@ -14,7 +14,8 @@ int main(int argc, char* argv[])
     if (argc > 1) {
         fileName = argv[1];
     } else {
-        printf("Usage:\n\t%s [data file]\n\tconfig file is ./%s.csv\n", argv[0], argv[1]);
+        /* 无参数时 argv[1] 是 NULL，不能传给 %s（UB） */
+        printf("Usage:\n\t%s [data file]\n\tconfig file is ./(data file).csv\n", argv[0]);
         return 0;
     }
     TimeSeek seekTime;

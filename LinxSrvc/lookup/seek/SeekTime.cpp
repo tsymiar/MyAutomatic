@@ -469,6 +469,10 @@ int SeekTime::getFileTime(const std::string& sfile, SelectTime& time, uint32_t o
         if (getTailFrame(file, m_windSize, frameIdx)) {
             time.last = frameIdx.value.timestamp;
         }
+        fclose(file);   /* 原实现漏了 fclose，文件句柄泄漏 */
+        /* 注意：这里不要把文件登记进 TblFileMapping。seekFileDataTime 靠
+           queryFileIdbyName 是否成功来判断"这个文件建过索引没有"，
+           提前登记会让它跳过建索引分支，TblSeekTime 就永远填不上。 */
     }
     LOG_INF("------- Parse file(%s) time=(first=%llu,last=%llu) -------", sfile.c_str(), time.first, time.last);
     return 0;

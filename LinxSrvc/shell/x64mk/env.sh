@@ -13,7 +13,7 @@
 #
 # Available variables:
 #   DKQM_HOME        scripts + logs + out/ root          (default: this dir)
-#   APP_SRC         Android project source dir          (default: the repo)
+#   APP_SRC          Android project source dir          (default: the repo)
 #   DKQM_TOOLS       host tool root holding sdk/gradle   (default: /home/jetson/build-tools)
 #   DKQM_SDK         Android SDK root                    (default: $DKQM_TOOLS/sdk_root)
 #   DKQM_NDK_VER     NDK version inside the SDK          (default: 23.0.7599858)
