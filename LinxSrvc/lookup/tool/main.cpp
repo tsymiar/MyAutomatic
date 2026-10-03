@@ -353,6 +353,18 @@ void usageExit(int exitcode, char** argv)
     exit(exitcode);
 }
 
+/* optional_argument 下 --opt=v 能直接拿到值，但 --opt v（空格分隔）getopt 不消费 v，
+   所以这里补一步前看，否则用户写空格形式时选项会静默失效。
+   返回 NULL 表示用户没给值，取默认值。 */
+static const char* getValue(int argc, char** argv)
+{
+    if (optarg != NULL)
+        return optarg;
+    if (optind < argc && argv[optind] != NULL && argv[optind][0] != '-')
+        return argv[optind++];
+    return NULL;
+}
+
 void parseArgs(int argc, char** argv)
 {
     char* tail = NULL;
@@ -360,17 +372,16 @@ void parseArgs(int argc, char** argv)
     {
         {"file", required_argument, NULL, 'f'},
         {"total", required_argument, NULL, 't'},
-        {"endian", no_argument, NULL, 'e'},
-        {"start", no_argument, NULL, 's'},
-        {"interval", no_argument, NULL, 'i'},
-        {"digress", no_argument, NULL, 'd'},
-        {"bits", no_argument, NULL, 'b'},
+        { "endian", optional_argument, NULL, 'e' },
+        { "start", optional_argument, NULL, 's' },
+        { "interval", optional_argument, NULL, 'i' },
+        { "digress", optional_argument, NULL, 'd' },
+        { "bits", optional_argument, NULL, 'b' },
         {"frame", no_argument, NULL, 'F'},
         {0} };
 
     while (1) {
         int idx = 0;
-        std::string chans = "";
         int c = getopt_long(argc, argv, "f:t:e:s:i:d:b:F:", opts, &idx);
         if (c == -1)
             break;
@@ -383,38 +394,62 @@ void parseArgs(int argc, char** argv)
             g_total = sizeConvert(optarg);
             break;
         case 'e':
-            g_endian = strtoul(optarg, &tail, 10);
-            if (*tail) {
-                fprintf(stderr, "invalid argument to endian: %s\n", optarg);
-                usageExit(1, argv);
+        {
+            const char* val = getValue(argc, argv);
+            if (val != NULL) {
+                g_endian = strtoul(val, &tail, 10);
+                if (*tail) {
+                    fprintf(stderr, "invalid argument to endian: %s\n", val);
+                    usageExit(1, argv);
+                }
             }
             break;
+        }
         case 's':
-            g_vecStart.clear();
-            chans = optarg;
-            conStringToVec(chans, g_vecStart);
+        {
+            const char* val = getValue(argc, argv);
+            if (val != NULL) {
+                g_vecStart.clear();
+                conStringToVec(std::string(val), g_vecStart);
+            }
             break;
+        }
         case 'i':
-            g_interval = strtoul(optarg, &tail, 10);
-            if (*tail) {
-                fprintf(stderr, "invalid argument to interval: %s\n", optarg);
-                usageExit(1, argv);
+        {
+            const char* val = getValue(argc, argv);
+            if (val != NULL) {
+                g_interval = strtoul(val, &tail, 10);
+                if (*tail) {
+                    fprintf(stderr, "invalid argument to interval: %s\n", val);
+                    usageExit(1, argv);
+                }
             }
             break;
+        }
         case 'd':
-            g_digress = strtoul(optarg, &tail, 10);
-            if (*tail) {
-                fprintf(stderr, "invalid argument to increding or decreasing: %s\n", optarg);
-                usageExit(1, argv);
+        {
+            const char* val = getValue(argc, argv);
+            if (val != NULL) {
+                g_digress = strtoul(val, &tail, 10);
+                if (*tail) {
+                    fprintf(stderr, "invalid argument to increding or decreasing: %s\n", val);
+                    usageExit(1, argv);
+                }
             }
             break;
+        }
         case 'b':
-            g_bits = strtoul(optarg, &tail, 10);
-            if (*tail) {
-                fprintf(stderr, "invalid argument to number bits: %s\n", optarg);
-                usageExit(1, argv);
+        {
+            const char* val = getValue(argc, argv);
+            if (val != NULL) {
+                g_bits = strtoul(val, &tail, 10);
+                if (*tail) {
+                    fprintf(stderr, "invalid argument to number bits: %s\n", val);
+                    usageExit(1, argv);
+                }
             }
             break;
+        }
         case 'F':
             g_addRandFrame = true;
             break;

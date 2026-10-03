@@ -52,29 +52,38 @@ void kmp_free(KMPDetail* kmp)
     }
 }
 
+/* kmp_get_frame / chunkSize==0 时使用的默认读取块大小 */
+#define KMP_CHUNK_SIZE (1024 * 1024)
+
 size_t kmp_match(KMPDetail* kmp, const char* filename, size_t chunkSize, size_t* offsets, size_t maxResults)
 {
+    if (kmp == NULL || filename == NULL || kmp->size == 0) return 0;
+    if (offsets == NULL || maxResults == 0) return 0;
+    if (chunkSize == 0) chunkSize = KMP_CHUNK_SIZE;
+
     FILE* file = fopen(filename, "rb");
     if (!file) return 0;
 
     size_t pattlen = kmp->size;
-    if (pattlen == 0) {
+    /* 匹配可能跨越块边界，因此每块末尾要保留 pattlen-1 字节带到下一块 */
+    size_t overlapSize = pattlen > 1 ? pattlen - 1 : 0;
+    unsigned char* buffer = (unsigned char*)malloc(chunkSize + overlapSize);
+    if (!buffer) {
         fclose(file);
         return 0;
     }
 
-    size_t overlapSize = pattlen > 1 ? pattlen - 1 : 0;
-    unsigned char* buffer = (unsigned char*)malloc(chunkSize + overlapSize);
-    size_t globalPos = 0;
+    size_t globalPos = 0;   /* buffer[0] 对应的文件绝对偏移 */
+    size_t carry = 0;       /* buffer 开头已有的有效字节数（上一块留下的 overlap） */
     size_t found = 0;
 
-    while (1) {
-        size_t bytesRead = fread(buffer + overlapSize, 1, chunkSize, file);
+    for (;;) {
+        size_t bytesRead = fread(buffer + carry, 1, chunkSize, file);
         if (bytesRead == 0) break;
+        size_t total = carry + bytesRead;
 
-        int j = 0;
         size_t i = 0;
-        size_t total = bytesRead + overlapSize;
+        int j = 0;
         while (i < total) {
             if (buffer[i] == kmp->pattern[j]) {
                 ++i; ++j;
@@ -90,11 +99,15 @@ size_t kmp_match(KMPDetail* kmp, const char* filename, size_t chunkSize, size_t*
             }
         }
 
-        if (bytesRead == chunkSize && overlapSize > 0) {
-            memmove(buffer, buffer + chunkSize, overlapSize);
+        if (bytesRead < chunkSize) break;   /* 已读到 EOF，无需再保留 overlap */
+        if (overlapSize == 0) {
+            globalPos += total;
+            continue;
         }
-        globalPos += bytesRead;
-        if (bytesRead < chunkSize) break;
+        /* 把本块末尾 overlapSize 字节挪到 buffer 开头，globalPos 同步前移 */
+        memmove(buffer, buffer + total - overlapSize, overlapSize);
+        globalPos += total - overlapSize;
+        carry = overlapSize;
     }
 
     free(buffer);
@@ -104,44 +117,21 @@ size_t kmp_match(KMPDetail* kmp, const char* filename, size_t chunkSize, size_t*
 
 size_t kmp_get_frame(KMPDetail* kmp, const char* filename, MatchedFrame* matches, size_t maxResults)
 {
-    FILE* fp = fopen(filename, "rb");
-    if (!fp) return 0;
+    if (kmp == NULL || filename == NULL || matches == NULL || maxResults == 0) return 0;
 
-    fseek(fp, 0, SEEK_END);
-    size_t fileSize = ftell(fp);
-    size_t left = 0, right = fileSize;
-    size_t found = 0;
+    /* 全文件流式扫描（原来这里是二分采样，只扫了 ~log2(filesize) 个窗口，
+       绝大多数匹配会漏掉）。先把偏移收进临时数组，再填 MatchedFrame。 */
+    size_t* offsets = (size_t*)malloc(sizeof(size_t) * maxResults);
+    if (!offsets) return 0;
 
-    while (left < right && found < maxResults) {
-        size_t mid = left + (right - left) / 2;
-        size_t chunkSize = kmp->size * 2;
-        if (mid + chunkSize > fileSize) chunkSize = fileSize - mid;
-
-        unsigned char* buffer = (unsigned char*)malloc(chunkSize);
-        fseek(fp, mid, SEEK_SET);
-        size_t bytesRead = fread(buffer, 1, chunkSize, fp);
-        if (bytesRead == 0) {
-            free(buffer);
-            break;
-        }
-
-        for (size_t i = 0; i + kmp->size <= chunkSize; ++i) {
-            if (memcmp(buffer + i, kmp->pattern, kmp->size) == 0) {
-                matches[found].offset = mid + i;
-                matches[found].length = kmp->size;
-                matches[found].pattern = kmp->pattern;
-                found++;
-                if (found >= maxResults) break;
-            }
-        }
-        free(buffer);
-
-        right = mid;
-        if (found < maxResults) {
-            left = mid + 1;
-            right = fileSize;
-        }
+    size_t found = kmp_match(kmp, filename, KMP_CHUNK_SIZE, offsets, maxResults);
+    for (size_t i = 0; i < found; ++i) {
+        matches[i].offset = offsets[i];
+        matches[i].length = kmp->size;
+        /* 指向 KMP 内部的 pattern 副本，kmp_free() 之后失效 */
+        matches[i].pattern = kmp->pattern;
+        matches[i].reserved = NULL;
     }
-    fclose(fp);
+    free(offsets);
     return found;
 }
