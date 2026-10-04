@@ -57,5 +57,5 @@ test.txt
 !*.config.con
 *.json
 
-# webev frontend exported from the gh-pages branch at startup
-/webev-frontend/
+# webevs frontend exported from the gh-pages branch at startup
+*/**/webevs-frontend/
