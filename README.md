@@ -42,7 +42,7 @@ LinxSrvc
     analyzing dpsk_chat
     gn1 lookup seekTimeTest
     trans_server trans_client
-    video_render webevent_server
+    video_render webevs_server
     ```
 
 * Description
@@ -98,9 +98,9 @@ LinxSrvc
 
         A video decode demo using `ffmpeg`/`multimedia` (Jetson Orin Nano).
 
-    * webevent_server
+    * webevs_server
 
-        Is an HTTP server and client message manager, depends on `libevent`.
+        HTTP + WebSocket server built on `libevent` (HTTP) and `libwebsockets` (WS). The WS port runs alongside the HTTP port; launch with `./webevs_server <http_port> [ws_port]` or set `WEBEV_WS_PORT`.
 
     * analyzing
 

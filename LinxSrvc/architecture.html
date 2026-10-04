@@ -66,7 +66,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <nav><div class="nv">
 <div class="lg">🏗️ LinxSrvc</div>
 <div class="lk">
-<a href="#ov">概览</a><a href="#cy">Cyber</a><a href="#im">IM</a><a href="#lk">Lookup</a><a href="#wb">Webev</a><a href="#gs">gSOAP</a><a href="#dp">dpsk</a><a href="#hd">HDware</a><a href="#th">Thread</a><a href="#md">Media</a><a href="#vs">VSExtn</a><a href="#qt">Trade</a><a href="#bf">构建</a><a href="#fl">数据流</a><a href="#pt">模式</a><a href="#rk">风险</a>
+<a href="#ov">概览</a><a href="#cy">Cyber</a><a href="#im">IM</a><a href="#lk">Lookup</a><a href="#wb">Webevs</a><a href="#gs">gSOAP</a><a href="#dp">dpsk</a><a href="#hd">HDware</a><a href="#th">Thread</a><a href="#md">Media</a><a href="#vs">VSExtn</a><a href="#qt">Trade</a><a href="#bf">构建</a><a href="#fl">数据流</a><a href="#pt">模式</a><a href="#rk">风险</a>
 </div>
 </div></nav>
 
@@ -100,7 +100,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 </div></div>
 <div class="ag"><div class="al">网络 / 服务层</div><div class="ao">
 <div class="n s1"><div class="lb">📡 IM</div><div class="ln">KaiSocket</div></div>
-<div class="n s1"><div class="lb">🌐 webev</div><div class="ln">Web 服务器</div></div>
+<div class="n s1"><div class="lb">🌐 webevs</div><div class="ln">HTTP/WebSocket 服务器</div></div>
 <div class="n x1"><div class="lb">🔄 gSOAP</div><div class="ln">SOAP 验证</div></div>
 <div class="n s1"><div class="lb">🔍 lookup</div><div class="ln">查找服务</div></div>
 </div></div>
@@ -121,7 +121,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <pre>LinxSrvc/
 ├── 3rd/               # 第三方 (googletest, lcov, rdma-core, llama.cpp-to-hf)
 ├── CMakeLists.txt     # 顶层 CMake → media, dpsk, gn1, diff, lookup, mock, test
-├── Makefile           # 总控 Makefile → webev, hdware, IM, thread, gSOAPverify, pyex
+├── Makefile           # 总控 Makefile → webevs, hdware, IM, thread, gSOAPverify, pyex
 ├── bin/               # 编译产物输出
 ├── include/           # 公共头文件 (String_-inl.h, Structures.h)
 ├── cyber/             # LLM 训练/推理 (Python/PyTorch + PEFT/LoRA)
@@ -133,7 +133,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 ├── media/             # FFmpeg 音视频处理 (Jetson 渲染)
 ├── thread/            # 纯 C 线程池 (pthdpool · 固定 worker 数)
 ├── trade/             # 量化交易 (Python · 双均线+LSTM+BS期权)
-├── webev/             # 事件驱动 Web 服务器 (epoll/kqueue · Reactor)
+├── webevs/             # 事件驱动 Web 服务器 (epoll/kqueue · Reactor) + WebSocket (libwebsockets)
 ├── vs-extension/      # VSCode 扩展 (TS+Python 文件夹相似度比较)
 ├── dpsk/ diff/ gn1/ mock/ pyex/ shell/ test/ e.g/</pre>
 </div>
@@ -258,9 +258,9 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 </div></section>
 
 <section id="wb"><div class="ct">
-<div class="st"><h2>🌐 Webev — 事件驱动 Web 服务器</h2><span class="tg">C++ / epoll</span></div>
+<div class="st"><h2>🌐 Webevs — 事件驱动 Web 服务器</h2><span class="tg">C++ / epoll</span></div>
 <div class="cd"><div class="cd2">
-<div style="text-align:center;margin-bottom:.3rem"><div class="n s1"><div class="lb" style="font-size:.72rem">Webev</div><div class="ln">epoll/kqueue 事件驱动 HTTP 服务器</div></div></div>
+<div style="text-align:center;margin-bottom:.3rem"><div class="n s1"><div class="lb" style="font-size:.72rem">Webevs</div><div class="ln">epoll/kqueue 事件驱动 HTTP + WebSocket 服务器</div></div></div>
 <div class="rw" style="justify-content:center">
 <div class="n s1"><div class="lb">🚪 ListenFd(port)</div><div class="ln">监听端口</div></div>
 <div class="n s1"><div class="lb">⚡ epoll/kqueue</div><div class="ln">事件循环</div></div>
@@ -274,20 +274,23 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 </div></div>
 <div class="ag"><div class="al">业务逻辑</div><div class="ao">
 <div class="n m1"><div class="lb">WebevApi.cpp</div><div class="ln">请求处理 + 响应生成</div></div>
+<div class="n m1"><div class="lb">WsCtrl.{h,cpp}</div><div class="ln">WebSocket 服务 (libwebsockets)</div></div>
 <div class="n i1"><div class="lb">Utils.cpp</div><div class="ln">辅助函数</div></div>
 </div></div>
 <div class="ag"><div class="al">运行模式</div><div class="ao">
-<div class="n g1"><div class="lb">Server(port)</div><div class="ln">服务模式</div></div>
+<div class="n g1"><div class="lb">Server(port)</div><div class="ln">HTTP 服务模式</div></div>
 <div class="n y1"><div class="lb">Client(url)</div><div class="ln">客户端模式</div></div>
+<div class="n y1"><div class="lb">WsStartServer(ws)</div><div class="ln">WebSocket 独立端口</div></div>
 </div></div>
 </div>
 </div></div>
 <table style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现</th></tr></thead><tbody>
 <tr><td>事件循环</td><td>epoll（Linux）/ kqueue（macOS）</td></tr>
-<tr><td>模式</td><td>Server 独立端口 / Client 模式</td></tr>
-<tr><td>启动</td><td>./WebMain [port] 或 ./WebMain [http://url]</td></tr>
+<tr><td>模式</td><td>HTTP Server 独立端口 / Client 模式</td></tr>
+<tr><td>WebSocket</td><td>libwebsockets 独立端口，与 HTTP 并存（默认 echo 广播）</td></tr>
+<tr><td>启动</td><td>./WebMain [http_port] [ws_port]，或 env WEBEV_WS_PORT 指定 WS 端口</td></tr>
 </tbody></table>
-<div class="tags" style="margin-top:.4rem"><span class="t tb">epoll</span><span class="t tb">kqueue</span><span class="t tc">Reactor</span><span class="t tg2">非阻塞</span></div>
+<div class="tags" style="margin-top:.4rem"><span class="t tb">epoll</span><span class="t tb">kqueue</span><span class="t tc">Reactor</span><span class="t tg2">非阻塞</span><span class="t tg2">libwebsockets</span><span class="t tb">WebSocket</span></div>
 </div></section>
 
 <section id="gs"><div class="ct">
@@ -595,7 +598,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <div class="n g1"><div class="lb">test/</div><div class="ln">GoogleTest</div></div>
 </div></div>
 <div class="ag"><div class="al">Make 构建</div><div class="ao">
-<div class="n x1"><div class="lb">Makefile</div><div class="ln">webev/hdware/IM</div></div>
+<div class="n x1"><div class="lb">Makefile</div><div class="ln">webevs/hdware/IM</div></div>
 <div class="n g1"><div class="lb">Makefile</div><div class="ln">thread/gSOAPverify</div></div>
 </div></div>
 </div>
@@ -606,7 +609,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <div class="st"><h2>🔄 数据流与交互</h2></div>
 <div class="cd"><div class="cd2">
 <div class="fc">
-<div class="fd" style="background:rgba(236,72,153,.06)"><div class="dm" style="background:linear-gradient(135deg,var(--pk),var(--pp))">1</div><div><div class="lb" style="font-size:.6rem">🌐 客户端 → IM (KaiSocket) / Webev (HTTP)</div></div></div>
+<div class="fd" style="background:rgba(236,72,153,.06)"><div class="dm" style="background:linear-gradient(135deg,var(--pk),var(--pp))">1</div><div><div class="lb" style="font-size:.6rem">🌐 客户端 → IM (KaiSocket) / Webevs (HTTP / WebSocket)</div></div></div>
 <div class="dx">↓</div>
 <div class="fd" style="background:rgba(59,130,246,.06)"><div class="dm">2</div><div><div class="lb" style="font-size:.6rem">📡 请求解析 → 路由分发</div></div></div>
 <div class="dx">↓</div>
@@ -629,7 +632,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <table style="margin-top:.4rem">
 <thead><tr><th>模式</th><th>应用位置</th><th>作用</th></tr></thead><tbody>
 <tr><td><span class="n g1"><div class="lb" style="font-size:.6rem">单例</div></span></td><td>KaiSocket</td><td>确保全局唯一网络实例</td></tr>
-<tr><td><span class="n s1"><div class="lb" style="font-size:.6rem">Reactor</div></span></td><td>Webev epoll</td><td>高并发事件驱动</td></tr>
+<tr><td><span class="n s1"><div class="lb" style="font-size:.6rem">Reactor</div></span></td><td>Webevs epoll</td><td>高并发事件驱动</td></tr>
 <tr><td><span class="n x1"><div class="lb" style="font-size:.6rem">Pub/Sub</div></span></td><td>KaiSocket 订阅</td><td>消息路由与分发</td></tr>
 <tr><td><span class="n m1"><div class="lb" style="font-size:.6rem">门面</div></span></td><td>cyber/dpsk</td><td>简化复杂 AI API</td></tr>
 <tr><td><span class="n i1"><div class="lb" style="font-size:.6rem">适配器</div></span></td><td>hdware</td><td>统一硬件接口</td></tr>
