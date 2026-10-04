@@ -31,3 +31,7 @@ QtCases/
 WinNTKline/
 /nbproject/
 trans/logs/error.log
+
+
+#Ignore vscode AI rules
+.github/instructions/codacy.instructions.md

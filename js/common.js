@@ -144,7 +144,7 @@ function format_parse(key) {
 }
 
 function aes_encrypt(psw, key){
-    key = CryptoJS.enc.Utf8.parse(format_parse(md5(key)));
+    key = CryptoJS.enc.Utf8.parse(format_parse(CryptoJS.MD5(key).toString()));
     var raws = CryptoJS.enc.Utf8.parse(psw);//CryptoJS.pad.Pkcs7
     var encrypted = CryptoJS.AES.encrypt(raws, key, { 
         iv: iv,
@@ -155,7 +155,7 @@ function aes_encrypt(psw, key){
 }
 
 function aes_decrypt(enc, key){
-    key = CryptoJS.enc.Utf8.parse(md5(key));
+    key = CryptoJS.enc.Utf8.parse(CryptoJS.MD5(key).toString());
     var encHex = Base64.decode(enc);
     var decrypt = CryptoJS.AES.decrypt(encHex, key, { 
         iv: iv,
