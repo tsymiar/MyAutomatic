@@ -2,7 +2,7 @@ PROJECT_BASE=$(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 BUILD_PATH:=$(PROJECT_BASE)/../build
 MAKEFILE_DIR_PATSUBST:=$(patsubst %/,%,$(patsubst %..,%,$(patsubst %/,%,$(dir $(BUILD_PATH)))))
 
-TARGET:=$(notdir $(MAKEFILE_DIR_PATSUBST))ent_server
+TARGET:=$(notdir $(MAKEFILE_DIR_PATSUBST))_serve
 EXECUTABLE:=$(PROJECT_BASE)/../gen/$(TARGET)
 
 $(abspath $(BUILD_PATH))/Makefile:

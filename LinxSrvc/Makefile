@@ -6,7 +6,7 @@ all:
 	@echo "\033[4;3mMaking thread\033[0m"
 	@make -C thread all
 	@echo "\033[4;3mMaking webserver by event\033[0m"
-	@make -C webev build
+	@make -C webevs build
 	@echo "\033[4;3mMaking gSOAPverify\033[0m"
 	@make -C gSOAPverify || true
 	@echo "\033[4;3mMaking CMake targets\033[0m"
@@ -19,7 +19,7 @@ cmake:
 	@ cd build && cmake .. && make -j4 && cd -
 clean:
 	@make -C gSOAPverify clean
-	@make -C webev clean-all
+	@make -C webevs clean-all
 	@make -C thread clean
 	@make -C hdware clean
 	@make -C IM clean

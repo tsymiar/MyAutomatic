@@ -317,7 +317,7 @@ int FetchFrontendFromGit(const string& branch, const string& workdir)
         Error("git repository not found, set WEBEV_REPO=/path/to/repo!");
         return -1;
     }
-    const string dir = workdir.empty() ? string("./webev-frontend") : workdir;
+    const string dir = workdir.empty() ? string("./webevs-frontend") : workdir;
     if (system(("rm -rf '" + dir + "' && mkdir -p '" + dir + "'").c_str()) != 0) {
         Error("prepare frontend dir '%s' failed!", dir.c_str());
         return -1;
@@ -374,7 +374,7 @@ void InitFrontendFromEnv()
         return;
     }
     string branch = "gh-pages";
-    string dir = "./webev-frontend";
+    string dir = "./webevs-frontend";
     if (env != nullptr && env[0] != '\0') {
         string opt(env);
         size_t split = opt.find(':');

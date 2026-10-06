@@ -37,5 +37,5 @@ void SetHeadsList(const std::vector<std::string>&);
 const char* GetMethodName(int);
 
 int FetchFrontendFromGit(const std::string& branch = "gh-pages",
-    const std::string& workdir = "./webev-frontend");
+    const std::string& workdir = "./webevs-frontend");
 void SetFrontendRoot(const std::string& dir);
