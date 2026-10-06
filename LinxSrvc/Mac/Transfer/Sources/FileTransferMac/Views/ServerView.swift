@@ -4,8 +4,9 @@ import AppKit
 
 struct ServerView: View {
     @EnvironmentObject var core: TransferCore
-    @State private var portText = "8800"
+    @State private var portText = UserDefaults.standard.string(forKey: "defaultPort") ?? "8800"
     @State private var pollTimer: Timer?
+    @State private var showSettings = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -18,6 +19,21 @@ struct ServerView: View {
                     Text("Receive Files from Device")
                         .font(.title2.bold())
                     Spacer()
+
+                    // Settings gear — opens a popover with the backoff switch
+                    // and the received-file save location picker.
+                    Button {
+                        showSettings.toggle()
+                    } label: {
+                        Image(systemName: "gearshape")
+                            .font(.title3)
+                            .foregroundColor(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .help("Settings")
+                    .popover(isPresented: $showSettings, arrowEdge: .bottom) {
+                        TransferSettingsPanel()
+                    }
                 }
 
                 HStack {
@@ -181,5 +197,48 @@ struct ServerView: View {
         } else {
             NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: core.savePath)
         }
+    }
+}
+
+// MARK: - Settings panel (shown from the gear button in the Server tab)
+
+struct TransferSettingsPanel: View {
+    @EnvironmentObject var core: TransferCore
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Settings")
+                .font(.headline)
+
+            Toggle("Exponential backoff", isOn: $core.backoffEnabled)
+            Text("Retry a connection that died before any data arrived (ENOTCONN). On: up to 16 retries, delay doubles from 10ms (~655s worst case). Off (default): 3 short retries, then close.")
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Divider()
+
+            Text("Receive Location")
+                .font(.subheadline.bold())
+            HStack {
+                Text(core.savePath)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .foregroundColor(.secondary)
+                Spacer()
+                Button("Choose…") {
+                    let panel = NSOpenPanel()
+                    panel.canChooseDirectories = true
+                    panel.canChooseFiles = false
+                    panel.canCreateDirectories = true
+                    panel.prompt = "Select"
+                    if panel.runModal() == .OK, let url = panel.url {
+                        core.savePath = url.path
+                    }
+                }
+            }
+        }
+        .padding()
+        .frame(width: 340)
     }
 }

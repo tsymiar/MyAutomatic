@@ -99,8 +99,8 @@ struct ContentView: View {
             // NSViewRepresentable), which bypasses SwiftUI responder-chain
             // issues entirely.
             Picker("", selection: $selectedTab) {
-                Label("Receive", systemImage: "arrow.down.circle").tag(0)
-                Label("Send", systemImage: "arrow.up.circle").tag(1)
+                Label("Server", systemImage: "arrow.down.circle").tag(0)
+                Label("Client", systemImage: "arrow.up.circle").tag(1)
                 Label("History", systemImage: "clock").tag(2)
             }
             .pickerStyle(.segmented)
@@ -122,7 +122,7 @@ struct ContentView: View {
                 }
             }
 
-            if !core.logMessages.isEmpty {
+            if core.showLogConsole && !core.logMessages.isEmpty {
                 Divider()
                 LogConsole(messages: core.logMessages) {
                     core.logMessages.removeAll()

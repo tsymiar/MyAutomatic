@@ -21,32 +21,24 @@ struct FileTransferApp: App {
     }
 }
 
-// MARK: - Settings
+// MARK: - Settings (⌘,) — miscellaneous options not covered by the Server-tab gear
 
 struct SettingsView: View {
     @EnvironmentObject var core: TransferCore
 
     var body: some View {
         Form {
-            Section("Receive Location") {
-                HStack {
-                    Text(core.savePath)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-                        .foregroundColor(.secondary)
-                    Spacer()
-                    Button("Choose…") {
-                        let panel = NSOpenPanel()
-                        panel.canChooseDirectories = true
-                        panel.canChooseFiles = false
-                        panel.canCreateDirectories = true
-                        panel.prompt = "Select"
-                        if panel.runModal() == .OK, let url = panel.url {
-                            core.savePath = url.path
-                        }
-                    }
-                }
+            HStack {
+                Text("Default port")
+                Spacer()
+                MacTextField(text: $core.defaultPort, placeholder: "8800", width: 90)
             }
+            Text("Pre-fills the Server and Client port fields.")
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Toggle("Show log console", isOn: $core.showLogConsole)
         }
         .padding()
         .formStyle(.grouped)
