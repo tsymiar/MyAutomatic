@@ -56,9 +56,23 @@ cat > "${SCRIPT_DIR}/${APP_BUNDLE}/Contents/Info.plist" << 'PLIST'
     <string>13.0</string>
     <key>NSHighResolutionCapable</key>
     <true/>
+    <key>NSLocalNetworkUsageDescription</key>
+    <string>FileTransfer needs access to the local network to send and receive files with other devices on your LAN.</string>
 </dict>
 </plist>
 PLIST
+
+# ── Ad-hoc sign ──────────────────────────────────────────────
+# Gives the bundle a stable code identity so macOS can remember the
+# Local Network permission grant. Without it, LAN transfers fail with
+# EHOSTUNREACH ("No route to host") while 127.0.0.1 keeps working.
+if command -v codesign >/dev/null 2>&1; then
+    echo "==> Ad-hoc signing ${APP_BUNDLE} ..."
+    codesign --force --deep --sign - "${SCRIPT_DIR}/${APP_BUNDLE}" \
+        || echo "    WARNING: codesign failed, continuing unsigned"
+else
+    echo "    WARNING: codesign not found, skipping signature"
+fi
 
 echo "==> Done: ${SCRIPT_DIR}/${APP_BUNDLE}"
 du -sh "${SCRIPT_DIR}/${APP_BUNDLE}"

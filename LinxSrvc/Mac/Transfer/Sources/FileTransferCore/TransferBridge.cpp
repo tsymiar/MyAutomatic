@@ -64,7 +64,7 @@ void ft_disconnect(FT_Handle handle) {
 
 int ft_send_file(FT_Handle handle, const char* filePath) {
     if (!handle) return -1;
-    return static_cast<TransferEngine*>(handle)->sendLocalFile(std::string(filePath ? filePath : ""));
+    return static_cast<TransferEngine*>(handle)->postLocalFile(std::string(filePath ? filePath : ""));
 }
 
 // ---------------------------------------------------------------------------
@@ -74,6 +74,11 @@ int ft_send_file(FT_Handle handle, const char* filePath) {
 void ft_set_save_path(FT_Handle handle, const char* path) {
     if (!handle) return;
     static_cast<TransferEngine*>(handle)->setSavePath(std::string(path ? path : ""));
+}
+
+void ft_set_backoff_enabled(FT_Handle handle, bool enabled) {
+    if (!handle) return;
+    static_cast<TransferEngine*>(handle)->setBackoffEnabled(enabled);
 }
 
 void ft_set_progress_callback(FT_Handle handle, FT_ProgressCallback callback, void* userData) {

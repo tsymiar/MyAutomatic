@@ -33,6 +33,55 @@ static inline void fillHeader(FileHeader& h, uint16_t cmd) {
     h.cmd = cmd;
 }
 
+// --- 字节序转换 ---
+// 协议头统一按大端(网络字节序)传输，否则两端字节序不同的设备之间根本解不开。
+static uint64_t hton64(uint64_t v)
+{
+    uint32_t hi = htonl((uint32_t)(v >> 32));
+    uint32_t lo = htonl((uint32_t)(v & 0xFFFFFFFFu));
+    return ((uint64_t)lo << 32) | (uint64_t)hi;
+}
+
+static void headerToNet(FileHeader& h)
+{
+    h.cmd          = htons(h.cmd);
+    h.fileNameLen  = htonl(h.fileNameLen);
+    h.fileSize     = hton64(h.fileSize);
+    h.chunkSize    = htonl(h.chunkSize);
+    h.chunkCount   = htonl(h.chunkCount);
+    h.currentChunk = htonl(h.currentChunk);
+    h.transSize    = hton64(h.transSize);
+}
+
+/// 转换是对称的，网络序 -> 主机序复用同一个函数。
+static void headerToHost(FileHeader& h) { headerToNet(h); }
+
+// --- 文件名安全化 ---
+// 客户端给的文件名不可信：必须剥掉所有路径成分，
+// 否则 "../../.ssh/authorized_keys" 能写到进程有权限的任意位置。
+static std::string sanitizeFileName(const std::string& name)
+{
+    size_t pos = name.find_last_of("/\\");
+    std::string base = (pos != std::string::npos) ? name.substr(pos + 1) : name;
+
+    std::string out;
+    out.reserve(base.size());
+    for (unsigned char c : base) {
+        if (c < 32 || c == 127 || c == '/' || c == '\\' || c == ':') {
+            out += '_';
+        } else {
+            out += (char)c;
+        }
+    }
+    if (out.empty() || out == "." || out == "..") {
+        out = "received_file";
+    }
+    if (out.size() > 255) {
+        out = out.substr(0, 255);
+    }
+    return out;
+}
+
 // --- 可靠的 send 辅助函数 ---
 // send() 不保证一次发送所有数据（只返回实际发送量）。
 // sendAll 循环调用 send() 直到全部发送或出错，与 recvAll 对称。
@@ -47,10 +96,13 @@ static int sendAll(int sock, const void* buf, size_t len)
         ssize_t ret = send(sock, (const char*)buf + total, len - total, 0);
 #endif
         if (ret < 0) {
-            if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
-                continue;  // 非阻塞/中断，重试
+            if (errno == EINTR) {
+                continue;  // 被信号中断，重试
             }
-            return -1;  // 真正的发送错误
+            // EAGAIN/EWOULDBLOCK = 触发了 SO_SNDTIMEO（对端迟迟不读）。
+            // 这里绝不能 continue：阻塞 socket 上会退化成无限忙等，
+            // 发送方永久卡死，UI 的 isBusy 再也回不来。
+            return -1;
         }
         if (ret == 0) {
             return -1;  // send 返回 0 表示连接关闭
@@ -62,9 +114,8 @@ static int sendAll(int sock, const void* buf, size_t len)
 
 // --- 可靠的 recv 辅助函数 ---
 // 使用 SO_RCVTIMEO + recv() 循环。
-// macOS accept() 返回的 socket 在内核层可能延迟同步"已连接"状态，
-// 导致 recv() 返回 ENOTCONN(57)。此函数将 ENOTCONN 视为错误返回 -2，
-// 由调用方（clientHandler）的外层重试循环以更长延迟处理。
+// ENOTCONN(57) 表示这条本应已连接的 socket 实际已失效（对端 RST/abort），
+// 视为不可重试错误，返回 -2 由调用方（clientHandler）以极短宽限后判死关闭。
 //
 // 返回值: >0 成功（应等于len），0 客户端断开(EOF)，-1 超时（可重试），-2 其他错误
 static int recvAll(int sock, void* buf, size_t len, int timeoutMs)
@@ -90,8 +141,7 @@ static int recvAll(int sock, void* buf, size_t len, int timeoutMs)
         if (errno == EINTR) {
             continue;
         }
-        // ENOTCONN: macOS 内核 socket 状态同步延迟。
-        // 不在此处重试——返回 -2 由外层 clientHandler 以更长延迟重试整个 recvAll。
+        // ENOTCONN: 对端已 abort/连接已死（非瞬时），返回 -2 交上层判死关闭。
         [[maybe_unused]] int savedErrno = errno;
         int soErr = 0; socklen_t soLen = sizeof(soErr);
         getsockopt(sock, SOL_SOCKET, SO_ERROR, &soErr, &soLen);
@@ -177,6 +227,7 @@ TransferEngine::TransferEngine()
     , m_serverRunning(false)
     , m_connected(false)
     , m_running(false)
+    , m_backoffEnabled(false)
     , m_serverPort(0)
 {}
 
@@ -194,6 +245,11 @@ void TransferEngine::setSavePath(const std::string& path)
 void TransferEngine::setProgressCallback(ProgressCallback callback)
 {
     m_progressCallback = callback;
+}
+
+void TransferEngine::setBackoffEnabled(bool enabled)
+{
+    m_backoffEnabled.store(enabled);
 }
 
 int TransferEngine::createServerSocket(unsigned short port)
@@ -247,6 +303,12 @@ int TransferEngine::createClientSocket(const std::string& ip, unsigned short por
 #ifdef SO_NOSIGPIPE
     setsockopt(sock, SOL_SOCKET, SO_NOSIGPIPE, &opt, sizeof(opt));
 #endif
+
+    // 发送超时：对端一直不读时 send() 会返回 EAGAIN 而不是永久阻塞
+    struct timeval sndTv;
+    sndTv.tv_sec  = SEND_TIMEOUT_SEC;
+    sndTv.tv_usec = 0;
+    setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &sndTv, sizeof(sndTv));
 
     struct sockaddr_in addr {};
     addr.sin_family = AF_INET;
@@ -357,15 +419,16 @@ void TransferEngine::closeServer()
         m_serverThread.join();
     }
 
-    // 安全等待所有 clientHandler 线程退出
+    // 安全等待所有客户端任务退出：必须在 engine 析构前做完，
+    // 否则还在跑的 clientHandler 会访问已析构的 this。
     {
         std::lock_guard<std::mutex> lock(m_clientThreadMutex);
-        for (std::thread& t : m_clientThreads) {
-            if (t.joinable()) {
-                t.join();
+        for (std::future<void>& f : m_clientFutures) {
+            if (f.valid()) {
+                f.wait();
             }
         }
-        m_clientThreads.clear();
+        m_clientFutures.clear();
     }
 
     LOG_INF("TransferEngine Server Exit");
@@ -428,6 +491,30 @@ void TransferEngine::fileServerProcess()
         unsigned short clientPort = ntohs(clientAddr.sin_port);
         inet_ntop(AF_INET, &clientAddr.sin_addr, ipStr, sizeof(ipStr));
 
+        // 丢弃"到达即死"的连接：accept() 可能返回对端已 abort 的连接（recv 只会报 ENOTCONN）。
+        // 用非阻塞 MSG_PEEK 探测：空闲连接返回 EAGAIN 属正常，MSG_PEEK 不消耗已到达的数据。
+        int probeFlags = fcntl(clientSock, F_GETFL, 0);
+        if (probeFlags >= 0) {
+            fcntl(clientSock, F_SETFL, probeFlags | O_NONBLOCK);
+        }
+        char probeByte = 0;
+        ssize_t probe = recv(clientSock, &probeByte, 1, MSG_PEEK);
+        int probeErrno = errno;  // 必须在还原 flags 前快照，后续 syscall 会覆盖 errno
+        if (probeFlags >= 0) {
+            fcntl(clientSock, F_SETFL, probeFlags);
+        }
+        if (probe == 0) {
+            LOG_WRN("client %s:%d already closed (EOF) — dropping fd=%d", ipStr, clientPort, clientSock);
+            close(clientSock);
+            continue;
+        }
+        if (probe < 0 && probeErrno != EAGAIN && probeErrno != EWOULDBLOCK && probeErrno != EINTR) {
+            LOG_WRN("client %s:%d dead on arrival (errno=%d/%s) — dropping fd=%d",
+                ipStr, clientPort, probeErrno, strerror(probeErrno), clientSock);
+            close(clientSock);
+            continue;
+        }
+
         LOG_INF("TransferEngine client connected from %s:%d", ipStr, clientPort);
 
         // 禁用 Nagle 确保 header+filename 小包立即发出不分段
@@ -437,10 +524,24 @@ void TransferEngine::fileServerProcess()
         setsockopt(clientSock, SOL_SOCKET, SO_NOSIGPIPE, &opt, sizeof(opt));
 #endif
 
-        // 为每个客户端创建独立线程处理
+        // 同上：给已连接 socket 也设发送超时
+        struct timeval sndTv;
+        sndTv.tv_sec  = SEND_TIMEOUT_SEC;
+        sndTv.tv_usec = 0;
+        setsockopt(clientSock, SOL_SOCKET, SO_SNDTIMEO, &sndTv, sizeof(sndTv));
+
+        // 为每个客户端创建独立任务处理
         std::lock_guard<std::mutex> lock(m_clientThreadMutex);
-        m_clientThreads.emplace_back(&TransferEngine::clientHandler, this,
-                                      clientSock, std::string(ipStr), clientPort);
+        // 先回收已结束的任务：否则长跑时这里会一直堆积线程对象，
+        // 直到 closeServer() 才统一 join（原实现的资源会持续增长）。
+        m_clientFutures.erase(
+            std::remove_if(m_clientFutures.begin(), m_clientFutures.end(),
+                [](std::future<void>& f) {
+                    return f.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
+                }),
+            m_clientFutures.end());
+        m_clientFutures.push_back(std::async(std::launch::async,
+            &TransferEngine::clientHandler, this, clientSock, std::string(ipStr), clientPort));
     }
 }
 
@@ -488,13 +589,16 @@ void TransferEngine::clientHandler(int sock, const std::string& clientIp, unsign
 
     std::string statusPrefix = "[" + clientIp + ":" + std::to_string(clientPort) + "] ";
 
-    // ── macOS 内核 socket 状态同步延迟处理 ──
-    // accept() 刚返回的 socket 在 macOS 上可能还处于初始化中，
-    // recv() 此时会返回 ENOTCONN(57) 且 SO_ERROR 可能为 EBADF(9)。
-    // 对此类瞬时错误以退避延迟重试（最多 16 次 ≈ 655s），而非立即断开。
-    static constexpr int ENOTCONN_RETRY_MAX = 16;
-    static constexpr int ENOTCONN_RETRY_DELAY_US = 10000;  // 起始 10ms，翻倍退避
-    static constexpr int SLEEP_SLICE_US = 50000;           // 单次 usleep 上限 50ms，超出则分片以轮询 m_running
+    // ── ENOTCONN / EBADF 处理 ──
+    // 一个已 accept 的 TCP socket 在 recv 时返回 ENOTCONN(57)（首次 SO_ERROR 还可能是
+    // EBADF(9)）几乎总是意味着对端已把连接 abort/RST 掉，连接已死 —— 这不是真实存在的
+    // "macOS 内核初始化延迟"（那种状态不会持续，重试也不会自愈）。
+    // 默认策略是极短宽限后判死关闭；旧的指数退避保留为可选项（UI 可切换），但它最多
+    // 16 次、累计约 655s，会把处理线程卡住并刷满日志，故默认关闭。
+    static constexpr int ENOTCONN_RETRY_MAX = 3;
+    static constexpr int ENOTCONN_RETRY_DELAY_US = 20000;  // 固定 20ms 宽限
+    static constexpr int BACKOFF_RETRY_MAX = 16;           // 指数退避：次数
+    static constexpr int BACKOFF_BASE_DELAY_US = 10000;    // 指数退避：起始 10ms，逐次翻倍
     int enotconnRetries = 0;
 
     while (m_running.load() && session->active.load()) {
@@ -507,21 +611,27 @@ void TransferEngine::clientHandler(int sock, const std::string& clientIp, unsign
                 enotconnRetries = 0;  // 超时后重置 ENOTCONN 计数器
                 continue;
             }
-            if (ret == -2 && enotconnRetries < ENOTCONN_RETRY_MAX) {
-                // ENOTCONN/EBADF: macOS 内核 socket 状态同步延迟，退避重试
-                int delayUs = ENOTCONN_RETRY_DELAY_US * (1 << enotconnRetries);
-                ++enotconnRetries;
-                LOG_WRN("%s recv header returned ENOTCONN/EBADF, retry %d/%d after %dus",
-                    statusPrefix.c_str(), enotconnRetries, ENOTCONN_RETRY_MAX, delayUs);
-                // 分片睡眠，每 SLEEP_SLICE_US 检查一次 m_running，确保 closeServer() 能及时中断
-                while (delayUs > 0 && m_running.load()) {
-                    int slice = (delayUs > SLEEP_SLICE_US) ? SLEEP_SLICE_US : delayUs;
-                    timespec nap = { 0, (long)slice * 1000 };
+            if (ret == -2) {
+                const bool backoff = m_backoffEnabled.load();
+                const int retryMax = backoff ? BACKOFF_RETRY_MAX : ENOTCONN_RETRY_MAX;
+                if (enotconnRetries < retryMax) {
+                    ++enotconnRetries;
+                    long delayUs = backoff
+                        ? (long)(BACKOFF_BASE_DELAY_US * (1LL << (enotconnRetries - 1)))
+                        : (long)ENOTCONN_RETRY_DELAY_US;
+                    LOG_WRN("%s recv header ENOTCONN/EBADF, retry %d/%d after %ldus (backoff=%d)",
+                        statusPrefix.c_str(), enotconnRetries, retryMax, delayUs, (int)backoff);
+                    // tv_nsec 必须 < 1e9，退避后期必须把整秒拆到 tv_sec
+                    timespec nap;
+                    nap.tv_sec  = (time_t)(delayUs / 1000000);
+                    nap.tv_nsec = (long)((delayUs % 1000000) * 1000);
                     nanosleep(&nap, nullptr);
-                    delayUs -= slice;
+                    continue;
                 }
-                if (!m_running.load()) break;  // closeServer() 已触发，立即退出
-                continue;
+                // 宽限/退避用尽：连接确已死亡，按对端断开处理
+                LOG_WRN("%s recv header ENOTCONN persists after %d retries — peer aborted, closing (fd=%d)",
+                    statusPrefix.c_str(), retryMax, sock);
+                break;
             }
             if (ret == 0) {
                 LOG_INF("%s recv header: EOF — client disconnected (fd=%d)",
@@ -535,6 +645,9 @@ void TransferEngine::clientHandler(int sock, const std::string& clientIp, unsign
         }
         enotconnRetries = 0;  // 成功收到数据，重置计数器
 
+        // 收到的头是网络序，先转回主机序再解析
+        headerToHost(header);
+
         // 验证魔数
         if (memcmp(header.magic, "FTF\0", 4) != 0) {
             LOG_ERR("%s invalid magic number: 0x%08x, client disconnected", statusPrefix.c_str(), *(uint32_t*)header.magic);
@@ -544,6 +657,15 @@ void TransferEngine::clientHandler(int sock, const std::string& clientIp, unsign
         LOG_INF("%s Received command: %d", statusPrefix.c_str(), header.cmd);
         switch (header.cmd) {
         case CMD_REQUEST: {
+            // 文件名长度必须校验：客户端可以伪造一个 4GB 的 fileNameLen，
+            // 直接拿它构造 std::string 会把进程内存打爆（DoS）。
+            if (header.fileNameLen == 0 || header.fileNameLen > MAX_FILE_NAME_LEN) {
+                LOG_ERR("%s invalid fileNameLen=%u (max %u) — closing",
+                    statusPrefix.c_str(), header.fileNameLen, MAX_FILE_NAME_LEN);
+                session->active.store(false);
+                break;
+            }
+
             // 读取文件名
             std::string fileName(header.fileNameLen, '\0');
             int r = recvAll(sock, &fileName[0], header.fileNameLen, RECV_POLL_TIMEOUT_MS);
@@ -558,10 +680,12 @@ void TransferEngine::clientHandler(int sock, const std::string& clientIp, unsign
                 break;
             }
 
+            // 文件名来自对端，先剥掉路径成分再落盘（防路径遍历）
+            std::string safeName = sanitizeFileName(fileName);
             LOG_INF("%s TransferEngine incoming request: %s (%llu bytes)",
-                statusPrefix.c_str(), fileName.c_str(), (unsigned long long)header.fileSize);
+                statusPrefix.c_str(), safeName.c_str(), (unsigned long long)header.fileSize);
 
-            session->pendingFileName = fileName;
+            session->pendingFileName = safeName;
             session->pendingFileSize = header.fileSize;
             session->transSize = 0;
 
@@ -613,32 +737,42 @@ void TransferEngine::clientHandler(int sock, const std::string& clientIp, unsign
                     LOG_ERR("%s failed to open file %s", statusPrefix.c_str(), filePath.c_str());
                     break;
                 }
+                session->currentFilePath = filePath;   // 完成后回传给 UI
                 LOG_INF("%s receiving: %s", statusPrefix.c_str(), filePath.c_str());
             }
 
             // 接收数据
-            uint32_t dataSize = header.chunkSize;
-            if (header.currentChunk == header.chunkCount - 1) {
-                dataSize = (uint32_t)(header.fileSize % header.chunkSize);
-                if (dataSize == 0) dataSize = header.chunkSize;
-            }
-
-            std::vector<char> buffer(dataSize);
-            int r = recvAll(sock, buffer.data(), dataSize, RECV_POLL_TIMEOUT_MS);
-            if (r <= 0) {
-                if (r == 0) {
-                    LOG_INF("%s client disconnected while receiving data (chunk %u/%u)",
-                        statusPrefix.c_str(), header.currentChunk, header.chunkCount);
-                } else {
-                    LOG_ERR("%s recv data failed", statusPrefix.c_str());
-                }
-                if (session->recvFile.is_open()) session->recvFile.close();
+            // 用"剩余字节数"算本片大小，而不是 fileSize % chunkSize：
+            //   1) 空文件(0 字节)时旧算法算出 chunkSize，会去等一个永远不来的分片；
+            //   2) currentChunk 越界时 % 的结果与实际偏移对不上，会写坏文件。
+            if (header.chunkSize == 0 || header.currentChunk >= header.chunkCount) {
+                LOG_ERR("%s invalid chunk meta: chunk %u/%u size=%u — closing",
+                    statusPrefix.c_str(), header.currentChunk, header.chunkCount, header.chunkSize);
                 session->active.store(false);
                 break;
             }
+            uint64_t offset = (uint64_t)header.currentChunk * header.chunkSize;
+            uint64_t remain = (header.fileSize > offset) ? (header.fileSize - offset) : 0;
+            uint32_t dataSize = (remain > header.chunkSize) ? header.chunkSize : (uint32_t)remain;
 
-            session->recvFile.write(buffer.data(), r);
-            session->transSize += r;
+            if (dataSize > 0) {
+                std::vector<char> buffer(dataSize);
+                int r = recvAll(sock, buffer.data(), dataSize, RECV_POLL_TIMEOUT_MS);
+                if (r <= 0) {
+                    if (r == 0) {
+                        LOG_INF("%s client disconnected while receiving data (chunk %u/%u)",
+                            statusPrefix.c_str(), header.currentChunk, header.chunkCount);
+                    } else {
+                        LOG_ERR("%s recv data failed", statusPrefix.c_str());
+                    }
+                    if (session->recvFile.is_open()) session->recvFile.close();
+                    session->active.store(false);
+                    break;
+                }
+
+                session->recvFile.write(buffer.data(), r);
+                session->transSize += r;
+            }
 
             // 进度回调
             if (m_progressCallback && session->transSize > 0) {
@@ -656,9 +790,15 @@ void TransferEngine::clientHandler(int sock, const std::string& clientIp, unsign
             }
 
             if (m_progressCallback) {
-                m_progressCallback(header.fileSize, header.fileSize,
-                    statusPrefix + "Transfer complete!");
+                // 用 "|" 带上真实落盘路径：接收端文件名带时间戳后缀，
+                // 上层自己按原文件名拼出来的路径是不存在的（"Show in Finder" 会失效）。
+                std::string status = statusPrefix + "Transfer complete!";
+                if (!session->currentFilePath.empty()) {
+                    status += "|" + session->currentFilePath;
+                }
+                m_progressCallback(header.fileSize, header.fileSize, status);
             }
+            session->currentFilePath.clear();
             break;
         }
         case CMD_CANCEL: {
@@ -700,7 +840,10 @@ void TransferEngine::clientHandler(int sock, const std::string& clientIp, unsign
 
 int TransferEngine::sendHeader(int sock, const FileHeader& header)
 {
-    return sendHeader(sock, &header, sizeof(header));
+    // 线上传输用网络序；header 本身始终保持主机序，方便日志与比较
+    FileHeader net = header;
+    headerToNet(net);
+    return sendHeader(sock, &net, sizeof(net));
 }
 
 int TransferEngine::sendHeader(int sock, const void* data, size_t len)
@@ -716,7 +859,11 @@ int TransferEngine::sendHeader(int sock, const void* data, size_t len)
 int TransferEngine::recvHeader(int sock, FileHeader& header)
 {
     int ret = recvAll(sock, &header, sizeof(header), RECV_RESP_TIMEOUT_MS);
-    return (ret > 0) ? 0 : -1;
+    if (ret > 0) {
+        headerToHost(header);
+        return 0;
+    }
+    return -1;
 }
 
 int TransferEngine::sendSliceData(int sock, const std::string& filePath, uint64_t fileSize)
@@ -728,7 +875,10 @@ int TransferEngine::sendSliceData(int sock, const std::string& filePath, uint64_
     }
 
     uint32_t chunkSize = MAX_CHUNK_SIZE;
-    uint32_t chunkCount = (uint32_t)((fileSize + chunkSize - 1) / chunkSize);
+    // 空文件也要发一个分片：chunkCount=0 时服务端一次 CMD_DATA 都收不到，
+    // 也就不会创建文件（0 字节文件传完会凭空消失）。
+    uint32_t chunkCount = (fileSize == 0) ? 1
+                        : (uint32_t)((fileSize + chunkSize - 1) / chunkSize);
     uint64_t totalSent = 0;
     int lastPct = -1;  // 去重进度回调
 
@@ -744,18 +894,16 @@ int TransferEngine::sendSliceData(int sock, const std::string& filePath, uint64_
 
         if (sendHeader(sock, header) < 0) break;
 
-        // 读取并发送数据
-        uint32_t dataSize = chunkSize;
-        if (i == chunkCount - 1) {
-            dataSize = (uint32_t)(fileSize % chunkSize);
-            if (dataSize == 0) dataSize = chunkSize;
-        }
+        // 读取并发送数据（按剩余字节算，与服务端算法保持一致）
+        uint64_t remain = fileSize - (uint64_t)i * chunkSize;
+        uint32_t dataSize = (remain > chunkSize) ? chunkSize : (uint32_t)remain;
 
-        std::vector<char> buffer(dataSize);
-        file.read(buffer.data(), dataSize);
-        std::streamsize bytesRead = file.gcount();
+        std::streamsize bytesRead = 0;
+        if (dataSize > 0) {
+            std::vector<char> buffer(dataSize);
+            file.read(buffer.data(), dataSize);
+            bytesRead = file.gcount();
 
-        {
             std::lock_guard<std::mutex> lock(m_sendMutex);
             if (sendAll(sock, buffer.data(), bytesRead) < 0) {
                 LOG_ERR("sendAll() failed at chunk %u/%u", i, chunkCount);
@@ -767,7 +915,7 @@ int TransferEngine::sendSliceData(int sock, const std::string& filePath, uint64_
 
         // 进度回调（每 10% 或最后一块）
         if (m_progressCallback) {
-            int pct = (int)(totalSent * 100 / fileSize);
+            int pct = fileSize > 0 ? (int)(totalSent * 100 / fileSize) : 100;
             if (pct != lastPct) {
                 m_progressCallback(totalSent, fileSize, "Sending...");
                 lastPct = pct;
@@ -794,7 +942,7 @@ int TransferEngine::sendSliceData(int sock, const std::string& filePath, uint64_
     return 0;
 }
 
-int TransferEngine::sendLocalFile(const std::string& filePath)
+int TransferEngine::postLocalFile(const std::string& filePath)
 {
     if (!m_connected.load()) {
         LOG_ERR("not connected");
@@ -812,7 +960,7 @@ int TransferEngine::sendLocalFile(const std::string& filePath)
     // 提取文件名
     size_t pos = filePath.find_last_of("/\\");
     std::string fileName = (pos != std::string::npos) ? filePath.substr(pos + 1) : filePath;
-    LOG_INF("sendLocalFile: [%s] size=%llu bytes", fileName.c_str(), (unsigned long long)fileSize);
+    LOG_INF("postLocalFile: [%s] size=%llu bytes", fileName.c_str(), (unsigned long long)fileSize);
 
     // 发送请求头
     FileHeader header{};
@@ -826,9 +974,11 @@ int TransferEngine::sendLocalFile(const std::string& filePath)
     // 两次 sendHeader 若分开调用，mutex 在中间释放，服务器可能
     // 在收到 header 后立刻读取 filename 却发现数据未到 → 协议错位。
     // 这里把 header 和 filename 合并为一次 sendAll，彻底消除竞态。
+    FileHeader netHeader = header;
+    headerToNet(netHeader);
     {
         std::lock_guard<std::mutex> lock(m_sendMutex);
-        if (sendAll(m_clientSock, &header, sizeof(header)) < 0) {
+        if (sendAll(m_clientSock, &netHeader, sizeof(netHeader)) < 0) {
             LOG_ERR("sendAll(header) failed: %s", strerror(errno));
             return -5;
         }
@@ -865,9 +1015,11 @@ int TransferEngine::requestFile(const std::string& ip, unsigned short port, cons
     fillHeader(header, CMD_REQUEST);
     header.fileNameLen = (uint32_t)fileName.size();
 
+    FileHeader netHeader = header;
+    headerToNet(netHeader);
     {
         std::lock_guard<std::mutex> lock(m_sendMutex);
-        if (sendAll(m_clientSock, &header, sizeof(header)) < 0) {
+        if (sendAll(m_clientSock, &netHeader, sizeof(netHeader)) < 0) {
             LOG_ERR("sendAll(header) failed: %s", strerror(errno));
             return -1;
         }

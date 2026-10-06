@@ -15,6 +15,7 @@
 #include <memory>
 #include <map>
 #include <vector>
+#include <future>
 
 #ifndef LOG_TAG
 #define LOG_TAG "TransferEngine"
@@ -22,7 +23,7 @@
 
 #include "CommLogger.h"
 
-// 文件传输协议头 (64字节), 主机字节序
+// 文件传输协议头 (64字节), 大端序(网络字节序)
 #pragma pack(push, 1)
 struct FileHeader {
     uint8_t  magic[4];       // 魔数: "FTF\0"
@@ -34,9 +35,13 @@ struct FileHeader {
     uint32_t chunkCount;     // 分片总数
     uint32_t currentChunk;   // 当前分片索引
     uint64_t transSize;      // 已传输大小
-    uint8_t  reserved[16];   // 保留
+    uint8_t  reserved[25];   // 保留（补齐到 64 字节）
 };
 #pragma pack(pop)
+
+// 协议头必须是 64 字节：字段自然长度只有 55 字节，靠 reserved 补齐。
+// 一旦有人改动字段，这里会直接编译失败，避免线上出现"头长度对不上"的兼容性问题。
+static_assert(sizeof(FileHeader) == 64, "FileHeader must be exactly 64 bytes");
 
 // 传输进度回调
 using ProgressCallback = std::function<void(uint64_t current, uint64_t total, const std::string& status)>;
@@ -51,6 +56,7 @@ struct ClientSession {
     uint64_t pendingFileSize;         // 待接收文件大小
     uint64_t transSize;               // 已传输大小
     std::atomic<bool> active;         // 会话是否活跃
+    std::string currentFilePath;      // 本次实际落盘的完整路径（完成后回传给 UI）
 
     ClientSession() : sock(-1), clientPort(0), pendingFileSize(0), transSize(0), active(false) {}
 };
@@ -83,6 +89,8 @@ public:
     static constexpr int CONNECT_TIMEOUT_MS = 3000;    // 客户端 connect 超时
     static constexpr int RECV_POLL_TIMEOUT_MS = 5000;  // 服务端 poll 超时（避免 Nagle/RTT 导致文件名读取超时）
     static constexpr int RECV_RESP_TIMEOUT_MS = 5000;  // 客户端等待响应超时
+    static constexpr int SEND_TIMEOUT_SEC = 30;        // 发送超时（对端一直不读时不会永久卡死）
+    static constexpr uint32_t MAX_FILE_NAME_LEN = 1024; // 文件名长度上限（防恶意长度触发超大分配）
 
     TransferEngine();
     ~TransferEngine();
@@ -99,8 +107,13 @@ public:
     void setSavePath(const std::string& path);
     void setProgressCallback(ProgressCallback callback);
 
+    // ENOTCONN 重试策略。true = 指数退避（旧行为：最多 16 次、间隔翻倍、累计约 655s）；
+    // false = 默认，3 次固定 20ms 宽限后判死关闭。可在 UI 里切换。
+    void setBackoffEnabled(bool enabled);
+    bool isBackoffEnabled() const { return m_backoffEnabled.load(); }
+
     // 文件发送
-    int sendLocalFile(const std::string& filePath);
+    int postLocalFile(const std::string& filePath);
     int requestFile(const std::string& ip, unsigned short port, const std::string& fileName);
 
     // 状态查询
@@ -128,10 +141,13 @@ private:
     std::atomic<bool> m_serverRunning;
     std::atomic<bool> m_connected;
     std::atomic<bool> m_running;
+    std::atomic<bool> m_backoffEnabled;  // ENOTCONN 是否走指数退避（默认 false）
 
     std::thread m_serverThread;
     std::thread m_receiveThread;
-    std::vector<std::thread> m_clientThreads;
+    // 每个客户端一个异步任务。已结束的任务会在 accept 时被回收，
+    // 否则长时间运行的 server 会一直堆积线程对象（原实现只在 closeServer 才 join）。
+    std::vector<std::future<void>> m_clientFutures;
 
     std::mutex m_sendMutex;
     std::mutex m_clientThreadMutex;

@@ -19,7 +19,18 @@ final class TransferCore: ObservableObject {
 
     // Client-mode text field state (persists across tab switches)
     @Published var targetIP = ""
-    @Published var targetPort = "8800"
+    @Published var targetPort: String = UserDefaults.standard.string(forKey: "defaultPort") ?? "8800"
+
+    /// Default port pre-filled into the Server / Client port fields. Persisted.
+    @Published var defaultPort: String = UserDefaults.standard.string(forKey: "defaultPort") ?? "8800" {
+        didSet { UserDefaults.standard.set(defaultPort, forKey: "defaultPort") }
+    }
+
+    /// Whether the bottom log console is shown (default true). Persisted.
+    /// object(forKey:) is used instead of bool(forKey:) so the default is true, not false.
+    @Published var showLogConsole: Bool = UserDefaults.standard.object(forKey: "showLogConsole") as? Bool ?? true {
+        didSet { UserDefaults.standard.set(showLogConsole, forKey: "showLogConsole") }
+    }
 
     @Published var transferStatus: String = ""
     @Published var transferredBytes: UInt64 = 0
@@ -27,6 +38,15 @@ final class TransferCore: ObservableObject {
     @Published var progress: Double = 0           // 0.0 … 1.0
 
     @Published var isBusy = false                 // true while sending
+
+    /// ENOTCONN retry policy: exponential backoff (legacy) vs. short grace then close.
+    /// Persisted in UserDefaults; pushed to the engine on change and on every new engine.
+    @Published var backoffEnabled: Bool = UserDefaults.standard.bool(forKey: "backoffEnabled") {
+        didSet {
+            UserDefaults.standard.set(backoffEnabled, forKey: "backoffEnabled")
+            if let engine = handle { ft_set_backoff_enabled(engine, backoffEnabled) }
+        }
+    }
 
     /// Directory for received files.
     @Published var savePath: String = {
@@ -89,6 +109,7 @@ final class TransferCore: ObservableObject {
             return nil
         }
         ft_set_save_path(engine, savePath)
+        ft_set_backoff_enabled(engine, backoffEnabled)
         installCallbacks(engine)
         return engine
     }
@@ -170,7 +191,22 @@ final class TransferCore: ObservableObject {
 
     // MARK: - Send file (client mode, blocking → run on background)
 
-    func sendLocalFile(_ filePath: String) {
+    /// 待发送队列。多文件必须串行发送：
+    /// 一条连接上并发发两个文件时，两边的分片会交错，
+    /// 而服务端是按"一个会话一个文件"顺序写盘的，最终落盘的是混合后的损坏内容。
+    private var sendQueue: [String] = []
+
+    func postLocalFile(_ filePath: String) {
+        sendQueue.append(filePath)
+        drainSendQueue()
+    }
+
+    private func drainSendQueue() {
+        guard !isBusy, !sendQueue.isEmpty else { return }
+        performSend(sendQueue.removeFirst())
+    }
+
+    private func performSend(_ filePath: String) {
         guard isConnected, let engine = handle else {
             transferStatus = "Not connected"
             return
@@ -207,8 +243,10 @@ final class TransferCore: ObservableObject {
                     self.appendLog("Send failed: \(task.fileName) (code \(ret))")
                     self.transferTasks[idx].status = .failed
                 }
-                // 发送完成后自动断开连接，下次连接时进度条从 0 开始
-                if self.isConnected {
+                // 队列里还有文件就接着发下一个；全部发完才自动断开
+                if !self.sendQueue.isEmpty {
+                    self.drainSendQueue()
+                } else if self.isConnected {
                     // 延时 1s 确保对端收到最后的 CMD_COMPLETE 并处理完毕
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
                         self?.disconnect()
@@ -283,13 +321,19 @@ final class TransferCore: ObservableObject {
         }
 
         // Append completed received files
+        // C++ 端在 "Transfer complete!" 后用 "|" 带上真实落盘路径：接收端文件名
+        // 带时间戳后缀，上层按原文件名自己拼出来的路径在磁盘上并不存在。
         if status.localizedCaseInsensitiveContains("complete!") {
-            for task in transferTasks where task.status == .completed && task.direction == .receiving
-                && !receivedFiles.contains(where: { $0.fileName == task.fileName }) {
-                let path = URL(fileURLWithPath: savePath).appendingPathComponent(task.fileName)
+            let parts = status.components(separatedBy: "|")
+            let pathHint = (parts.count == 2 && !parts[1].isEmpty) ? parts[1] : nil
+
+            for task in transferTasks where task.status == .completed && task.direction == .receiving {
+                let url = pathHint.map { URL(fileURLWithPath: $0) }
+                    ?? URL(fileURLWithPath: savePath).appendingPathComponent(task.fileName)
+                guard !receivedFiles.contains(where: { $0.savedPath == url }) else { continue }
                 receivedFiles.append(ReceivedFile(
-                    fileName: task.fileName, fileSize: task.fileSize,
-                    fromIP: task.peerIP, savedPath: path, receivedAt: Date()
+                    fileName: url.lastPathComponent, fileSize: task.fileSize,
+                    fromIP: task.peerIP, savedPath: url, receivedAt: Date()
                 ))
             }
         }

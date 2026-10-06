@@ -59,6 +59,11 @@ int ft_send_file(FT_Handle handle, const char* filePath);
 /// Set the directory where received files are saved.
 void ft_set_save_path(FT_Handle handle, const char* path);
 
+/// Set the retry policy for connections that died before any data arrived (ENOTCONN).
+///   true  – exponential backoff: up to 16 retries, delay doubles from 10ms (~655s total).
+///   false – short fixed grace: 3 retries of 20ms, then the connection is closed (default).
+void ft_set_backoff_enabled(FT_Handle handle, bool enabled);
+
 /// Register a progress callback with an opaque user-data pointer.
 /// The `userData` pointer is forwarded verbatim to every invocation of `callback`.
 /// Pass callback==NULL to clear.
