@@ -3,7 +3,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8...3.16)
 SET(PROJ_NAME mocking)
 PROJECT(${PROJ_NAME} C CXX)
 FILE(GLOB SOURCE_FILES "*.c*" "*/*.c*")
-SET(TARGETS server client)
+SET(TARGETS main client)
 
 foreach(target IN LISTS TARGETS)
     set(TARGET_NAME "${PROJ_NAME}_${target}")

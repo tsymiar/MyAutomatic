@@ -12,11 +12,11 @@ include_directories(../3rd/googletest/googletest/include/gtest)
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
     ../include
-    ../webev
+    ../webevs
 )
 
 set(TEST_FILE
-    ../webev/Utils.cpp
+    ../webevs/Utils.cpp
     test_main.cpp
 )
 
