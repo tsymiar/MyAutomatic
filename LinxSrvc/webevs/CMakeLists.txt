@@ -7,6 +7,7 @@ add_definitions(-std=c++11)
 set(CXX_STANDARD 11)
 
 include_directories (
+    ../include
     /usr/local/include
     /usr/include
 )

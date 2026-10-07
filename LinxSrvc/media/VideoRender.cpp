@@ -1,3 +1,6 @@
+#include <atomic>
+#include <chrono>
+#include <condition_variable>
 #include <iostream>
 #include <mutex>
 #include <queue>
@@ -46,8 +49,63 @@ extern "C" {
 // Global parameters
 int video_width = 0;
 int video_height = 0;
+
+// Frame queue cap: applies backpressure to the producer when decoding outruns
+// rendering, so memory cannot grow without bound
+// (1080p RGB24 is ~6MB per frame, so 8 frames stay under ~50MB)
+constexpr size_t MAX_FRAME_QUEUE = 8;
 std::queue<uint8_t*> g_frame_queue{};
 std::mutex queue_mutex{};
+std::condition_variable queue_cv{};
+std::atomic<bool> g_decodeDone{false}; // decoder thread finished (EOF or exception)
+std::atomic<bool> g_renderDone{false}; // render side asked to stop (playback done / window closed)
+
+// Enqueue: wait for the consumer when the queue is full; drop the frame and
+// return false once the render side has stopped
+bool pushFrame(uint8_t* rgb)
+{
+    std::unique_lock<std::mutex> lock(queue_mutex);
+    queue_cv.wait(lock, [] {
+        return g_frame_queue.size() < MAX_FRAME_QUEUE || g_renderDone.load();
+    });
+    if (g_renderDone.load()) {
+        delete[] rgb;
+        return false;
+    }
+    g_frame_queue.push(rgb);
+    lock.unlock();
+    queue_cv.notify_one();
+    return true;
+}
+
+// Dequeue: wait at most 5ms on an empty queue, then return nullptr
+// (the render loop uses that to tell idling from end-of-stream)
+uint8_t* popFrame()
+{
+    std::unique_lock<std::mutex> lock(queue_mutex);
+    if (!queue_cv.wait_for(lock, std::chrono::milliseconds(5),
+            [] { return !g_frame_queue.empty() || g_decodeDone.load(); })) {
+        return nullptr;
+    }
+    if (g_frame_queue.empty()) {
+        return nullptr;
+    }
+    uint8_t* frame = g_frame_queue.front();
+    g_frame_queue.pop();
+    lock.unlock();
+    queue_cv.notify_one();
+    return frame;
+}
+
+// Free whatever is still queued and un-rendered before shutting down
+void drainFrameQueue()
+{
+    std::lock_guard<std::mutex> lock(queue_mutex);
+    while (!g_frame_queue.empty()) {
+        delete[] g_frame_queue.front();
+        g_frame_queue.pop();
+    }
+}
 
 #ifdef USE_JETSON_MULTIMEDIA_API
 
@@ -540,40 +598,50 @@ void convertYUVtoRGB(AVFrame* frame, uint8_t* dst)
 
 void videoDecodeRender(const char* filename)
 {
+    try {
 #ifdef USE_JETSON_MULTIMEDIA_API
-    if (!isJetsonPlatform()) {
-        throw std::runtime_error("Jetson platform required");
-    }
-    JetsonDecoder decoder(filename);
-    while (true) {
-        NvBufSurface* buffer = decoder.getFrame();
-        if (!buffer) break;
-
-        uint8_t* rgb = new uint8_t[video_width * video_height * 3];
-        convertNV12toRGB(buffer, rgb);
-
-        std::lock_guard<std::mutex> lock(queue_mutex);
-        g_frame_queue.push(rgb);
-    }
-#else
-    FFmpegDecoder decoder(filename);
-    AVPacket pkt;
-    while (av_read_frame(decoder.fmt_ctx, &pkt) >= 0) {
-        if (pkt.stream_index == decoder.video_stream) {
-            avcodec_send_packet(decoder.codec_ctx, &pkt);
-            AVFrame* frame = av_frame_alloc();
-            if (avcodec_receive_frame(decoder.codec_ctx, frame) == 0) {
-                uint8_t* rgb = new uint8_t[video_width * video_height * 3];
-                convertYUVtoRGB(frame, rgb);
-
-                std::lock_guard<std::mutex> lock(queue_mutex);
-                g_frame_queue.push(rgb);
-            }
-            av_frame_free(&frame);
+        if (!isJetsonPlatform()) {
+            throw std::runtime_error("Jetson platform required");
         }
-        av_packet_unref(&pkt);
-    }
+        JetsonDecoder decoder(filename);
+        while (!g_renderDone.load()) {
+            NvBufSurface* buffer = decoder.getFrame();
+            if (!buffer) break;
+
+            uint8_t* rgb = new uint8_t[video_width * video_height * 3];
+            convertNV12toRGB(buffer, rgb);
+            if (!pushFrame(rgb)) break;
+        }
+#else
+        FFmpegDecoder decoder(filename);
+        AVPacket pkt;
+        while (!g_renderDone.load()
+            && av_read_frame(decoder.fmt_ctx, &pkt) >= 0) {
+            if (pkt.stream_index == decoder.video_stream) {
+                avcodec_send_packet(decoder.codec_ctx, &pkt);
+                AVFrame* frame = av_frame_alloc();
+                if (avcodec_receive_frame(decoder.codec_ctx, frame) == 0) {
+                    uint8_t* rgb = new uint8_t[video_width * video_height * 3];
+                    convertYUVtoRGB(frame, rgb);
+                    if (!pushFrame(rgb)) {
+                        av_frame_free(&frame);
+                        av_packet_unref(&pkt);
+                        break;
+                    }
+                }
+                av_frame_free(&frame);
+            }
+            av_packet_unref(&pkt);
+        }
 #endif
+    } catch (const std::exception& e) {
+        std::cerr << "Decode fail: " << e.what() << std::endl;
+    } catch (...) {
+        std::cerr << "Decode fail: unknown error" << std::endl;
+    }
+    // Wake both sides whatever happened, they may be blocked on the cv
+    g_decodeDone.store(true);
+    queue_cv.notify_all();
 }
 
 int main(int argc, char** argv)
@@ -599,23 +667,28 @@ int main(int argc, char** argv)
     // Start the video decoding thread
     std::thread mmediaThread(videoDecodeRender, argv[1]);
 
+    // Exit only when decoding is done and the queue is drained; the old while(true)
+    // left the join() and EGL/DRM cleanup below unreachable
     while (true) {
         glClear(GL_COLOR_BUFFER_BIT);
 
-        if (!g_frame_queue.empty()) {
-            std::lock_guard<std::mutex> lock(queue_mutex);
-            uint8_t* frame = g_frame_queue.front();
-            g_frame_queue.pop();
+        uint8_t* frame = popFrame();
+        if (frame) {
             updateTexture(frame);
             delete[] frame;
             // render to texture
             glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        } else if (g_decodeDone.load()) {
+            break;
         }
         // submit to screen
         render_frame();
     }
 
+    g_renderDone.store(true);
+    queue_cv.notify_all();
     mmediaThread.join();
+    drainFrameQueue();
 
     if (eglCtx != EGL_NO_CONTEXT) {
         eglDestroyContext(eglDpy, eglCtx);
@@ -623,6 +696,7 @@ int main(int argc, char** argv)
     if (eglDpy != EGL_NO_DISPLAY) {
         eglTerminate(eglDpy);
     }
+    cleanup_drm();
 #else
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         std::cerr << "SDL init fail: " << SDL_GetError() << std::endl;
@@ -660,10 +734,8 @@ int main(int argc, char** argv)
             }
         }
 
-        if (!g_frame_queue.empty()) {
-            std::lock_guard<std::mutex> lock(queue_mutex);
-            uint8_t* frame = g_frame_queue.front();
-
+        uint8_t* frame = popFrame();
+        if (frame) {
             if (!texture) {
                 texture = SDL_CreateTexture(renderer,
                     SDL_PIXELFORMAT_RGB24,
@@ -677,17 +749,20 @@ int main(int argc, char** argv)
             SDL_RenderPresent(renderer);
 
             delete[] frame;
-            g_frame_queue.pop();
         }
         SDL_Delay(10);
     }
+
+    // Stop the decoder before joining, otherwise it keeps decoding the whole file
+    g_renderDone.store(true);
+    queue_cv.notify_all();
+    ffmpegThread.join();
+    drainFrameQueue();
 
     if (texture) SDL_DestroyTexture(texture);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
-
-    ffmpegThread.join();
 #endif
     return 0;
 }

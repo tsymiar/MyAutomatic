@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
     std::vector<SelectTime> times;
     size_t pos = fileName.rfind('.');
     string csvpre = fileName.substr(0, pos);
-    std::vector<std::string> cfgs = splitLines(getFileAsString(csvpre + ".csv"));
+    std::vector<std::string> cfgs = linesToVec(getFileAsCstring(csvpre + ".csv"));
     if (cfgs.size() == 0) {
         printf("Error read config file!\n");
         return 0;

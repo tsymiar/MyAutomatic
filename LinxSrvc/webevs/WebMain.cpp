@@ -23,14 +23,23 @@ int main(int argc, char** argv)
         return -1;
     } else {
         if (isNum(argv[1])) {
-            short port = atoi(argv[1]);
-            short wsPort = 0;
+            int port = atoi(argv[1]);
+            int wsPort = 0;
             if (argc > 2 && isNum(argv[2])) {
                 wsPort = atoi(argv[2]);
             } else {
                 const char* env = getenv("WEBEV_WS_PORT");
                 if (env != nullptr && isNum(env))
                     wsPort = atoi(env);
+            }
+            // short caps at 32767, so validate the port as int before passing it on
+            if (port <= 0 || port > 65535) {
+                cerr << "invalid http port: " << port << " (expect 1~65535)" << endl;
+                return -1;
+            }
+            if (wsPort != 0 && (wsPort <= 0 || wsPort > 65535)) {
+                cerr << "invalid websocket port: " << wsPort << " (expect 1~65535)" << endl;
+                return -1;
             }
             if (wsPort > 0)
                 WsStartServer(wsPort);

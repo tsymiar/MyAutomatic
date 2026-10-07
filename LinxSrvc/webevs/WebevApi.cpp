@@ -1,5 +1,6 @@
 #include "WebevApi.h"
 
+#include <errno.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/wait.h>
@@ -404,10 +405,20 @@ void GenericHandler(struct evhttp_request* req_ptr, void* param)
     free(dec_uri);
     evhttp_cmd_type method = evhttp_request_get_command(req_ptr);
     size_t size = EVBUFFER_LENGTH(req_ptr->input_buffer);
-    char* payload = (char*)evbuffer_pullup(req_ptr->input_buffer, size);
-    if (size > 0 && payload[size] != '\0') {
-        payload[size] = '\0';
+    // evbuffer_pullup() only guarantees [0, size) is readable: the old
+    // payload[size]='\0' wrote one byte past the end.
+    // Copy by length into a string instead and let c_str() supply the
+    // terminator, so we never touch memory outside the buffer.
+    string body{};
+    if (size > 0) {
+        const char* raw = (const char*)evbuffer_pullup(req_ptr->input_buffer, size);
+        if (raw != nullptr) {
+            body.assign(raw, size);
+        } else {
+            size = 0;
+        }
     }
+    const char* payload = body.c_str();
     Message("%s %s\trequest from: %s:%d\n[ %s ]", GetMethodName(method), url.c_str(), address, port, payload);
     vector<string> list = parseUri(url);
     // serve frontend files first, registered APIs keep the legacy path
@@ -461,9 +472,17 @@ void GenericHandler(struct evhttp_request* req_ptr, void* param)
                             break;
                         }
                         Message("server parse = %s:%u", ip.c_str(), server_port);
+                        // Same as above: copy by length, never feed %s a raw
+                        // pointer that is not guaranteed to be NUL-terminated
                         size_t post_len = evbuffer_get_length(req_ptr->input_buffer);
-                        char* post_data = (char*)evbuffer_pullup(req_ptr->input_buffer, post_len);
-                        Message("request post_data = %s", post_data);
+                        string post_data{};
+                        if (post_len > 0) {
+                            const char* raw = (const char*)evbuffer_pullup(req_ptr->input_buffer, post_len);
+                            if (raw != nullptr) {
+                                post_data.assign(raw, post_len);
+                            }
+                        }
+                        Message("request post_data = %s", post_data.c_str());
                     }
                     if (*it == "flag") {
                         Message("flag = %s", val.c_str());
@@ -481,10 +500,7 @@ void GenericHandler(struct evhttp_request* req_ptr, void* param)
             }
             exit(0);
         } else if (child > 0) {
-            pid_t pid = 0;
-            do {
-                pid = waitpid(child, nullptr, WNOHANG);
-            } while (pid == 0);
+            // Close the write end first: otherwise read() never sees EOF if the child dies
             close(filedes[1]);
             int childStatus = 0;
             const ssize_t stLen = read(filedes[0], &childStatus, sizeof(childStatus));
@@ -493,6 +509,12 @@ void GenericHandler(struct evhttp_request* req_ptr, void* param)
             } else {
                 Error("failed to read status from filedes[0]");
             }
+            close(filedes[0]);
+            // Blocking reap: the old WNOHANG loop spun and burned a core until exit
+            pid_t pid = 0;
+            do {
+                pid = waitpid(child, nullptr, 0);
+            } while (pid < 0 && errno == EINTR);
             HookDetail message = {};
             message.msg = "OK";
             message.method = method;
@@ -501,7 +523,7 @@ void GenericHandler(struct evhttp_request* req_ptr, void* param)
             if (pid == child) {
                 Message("successfully release child %d", pid);
             } else {
-                Error("some error ocurred");
+                Error("waitpid(%d) failed: %s", child, strerror(errno));
             }
         }
     }
@@ -558,7 +580,7 @@ int HttpClient(HookDetail& detail)
         Release(base);
         return -4;
     }
-    short int port = evhttp_uri_get_port(uri);
+    int port = evhttp_uri_get_port(uri);
     if (port < 0) port = 80;
 
     Message("url: %s, host: %s, port: %d, path: %s.", detail.url.c_str(), host, port, path);
@@ -657,8 +679,14 @@ int HttpClient(HookDetail& detail)
     return 0;
 }
 
-int StartServer(short port, struct SrvCallbacks* callbacks)
+int StartServer(int port, struct SrvCallbacks* callbacks)
 {
+    // Port used to be short: >32767 wrapped to negative (e.g. 50000 -> -15536)
+    if (port <= 0 || port > 65535) {
+        Error("invalid port %d, expect 1~65535!", port);
+        return -1;
+    }
+
     struct event_base* base = event_base_new();
     if (base == nullptr) {
         Error("create event base failed!");

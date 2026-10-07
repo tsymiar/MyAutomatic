@@ -10,7 +10,7 @@ int main(int argc, char* argv[])
     TimeSeek seekTime;
     seekTime.init(file + ".db");
     std::vector<SelectTime> times;
-    std::vector<std::string> cfgs = splitLines(getFileAsString("./time.cfg"));
+    std::vector<std::string> cfgs = linesToVec(getFileAsCstring("./time.cfg"));
     if (cfgs.size() == 0) {
         printf("Error reading config file!\n");
         return 0;
