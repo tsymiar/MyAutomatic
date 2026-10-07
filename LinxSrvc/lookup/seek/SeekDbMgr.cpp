@@ -55,7 +55,11 @@ int DBbase::executeSql(const std::string& sql)
         LOG_ERR("database is not connected!");
         return -1;
     }
-    m_db->execute(sql.c_str());
+    int rc = m_db->execute(sql.c_str());
+    if (rc != 0) {
+        LOG_ERR("executeSql(sql=%s) failed(%d)!", sql.c_str(), rc);
+        return rc;
+    }
     return 0;
 }
 

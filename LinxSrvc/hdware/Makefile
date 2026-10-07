@@ -8,6 +8,8 @@ define Built
   @echo "-- Built: \033[1m$1\033[0m"
 endef
 export GEN KO Built OS
+# chsdev / virtex / phm2f 同名于真实目录，不加 .PHONY 会被 make 判定已是最新而跳过配方
+.PHONY: chsdev virtex phm2f
 null:
 	@echo "\033[7;41m$(shell uname -a)\033[0m"
 chigpio:
@@ -33,7 +35,7 @@ chstest:
 	@gcc -g -DDRIVER test.c -o $(GEN)/chstest
 	$(call Built,$@)
 phm2f:
-	@if [ -d $(BUILD) ]; then make -C phy_mem KNLDIR=$(BUILD); fi;
+	@if [ -d $(BUILD) ]; then make -C phm2f KNLDIR=$(BUILD); fi;
 	$(call Built,$@)
 image:
 	@gcc -g -DSNAP test.c linuxsnap.c -o $(GEN)/imgfilesnap.exe
