@@ -6,6 +6,9 @@
 #include <iostream>
 #include <sys/time.h>
 
+// Shared helpers (getFileAsCstring / getVariable ...) live in ../../include/Utils.h
+#include "../include/Utils.h"
+
 #ifndef MAX_NAME_LEN
 #define MAX_NAME_LEN 128
 #endif
@@ -141,81 +144,4 @@ static void* memset16(void* ptr, uint16_t value, size_t num_pairs)
 #endif
     }
     return ptr;
-}
-
-static std::string getFileAsString(const std::string& filename)
-{
-    std::string content = "";
-    std::ifstream file(filename);
-    if (file.is_open()) {
-        content.assign(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
-    }
-    file.close();
-    return content;
-}
-
-static std::vector<std::string> splitLines(const std::string& str)
-{
-    std::vector<std::string> res{};
-    if (str.empty()) {
-        return res;
-    }
-    size_t start = 0;
-    while (true) {
-        size_t pos = str.find('\n', start);
-        if (pos != std::string::npos) {
-            if (pos > 0 && str[pos - 1] == '\r') {
-                std::string val = str.substr(start, pos - 1 - start);
-                if (!val.empty())
-                    res.push_back(val);
-            } else {
-                std::string val = str.substr(start, pos - start);
-                if (!val.empty())
-                    res.push_back(val);
-            }
-            start = pos + 1;
-        } else {
-            std::string val = str.substr(start);
-            if (!val.empty())
-                res.push_back(val);
-            break;
-        }
-    }
-    return res;
-}
-
-static std::string getVariable(const std::string& src, const std::string& key)
-{
-    std::string val = "";
-    size_t pos = src.find(key);
-    if (pos != std::string::npos) {
-        val = src.substr(pos, src.size());
-        pos = val.find("=");
-        size_t org = val.find(",");
-        if (org == std::string::npos) {
-            val = val.substr(pos + 1, val.size() - pos - 1);
-        } else {
-            val = val.substr(pos + 1, org - pos - 1);
-        }
-        if (val[val.size() - 1] == '\n') {
-            val = val.substr(0, val.size() - 1);
-        }
-    }
-    return val;
-}
-
-static void stringToVec(std::string str, std::vector<std::string>& vec)
-{
-    vec.clear();
-    std::string tmp = "";
-    while (!str.empty()) {
-        std::string::size_type pos = str.find(",");
-        if (pos == std::string::npos) {
-            vec.push_back(str);
-            break;
-        }
-        tmp = str.substr(0, pos);
-        vec.push_back(tmp);
-        str = str.substr(pos + 1);
-    }
 }

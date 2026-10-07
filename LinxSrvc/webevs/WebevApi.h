@@ -13,7 +13,7 @@ struct HookDetail {
     std::string url = {};
 };
 
-typedef struct HookDetail(*PARSREQ_CALLBACK)(const std::vector<std::string>&, evhttp_cmd_type, char*);
+typedef struct HookDetail(*PARSREQ_CALLBACK)(const std::vector<std::string>&, evhttp_cmd_type, const char*);
 typedef void(*PACKRSP_CALLBACK)(HookDetail&);
 
 struct SrvCallbacks {
@@ -28,7 +28,7 @@ struct DealHooks {
     DEALRES_CALLBACK callback;
 };
 
-int StartServer(short, struct SrvCallbacks* = nullptr);
+int StartServer(int, struct SrvCallbacks* = nullptr);
 void RegisterCallback(const std::string&, evhttp_cmd_type, DEALRES_CALLBACK);
 int RequestClient(const char*, HookDetail&, DEALRES_CALLBACK = nullptr);
 

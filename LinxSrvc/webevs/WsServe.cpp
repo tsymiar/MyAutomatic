@@ -99,7 +99,7 @@ void WsBroadcast(const std::string& message)
     }
 }
 
-void wsServiceLoop(short port)
+void wsServiceLoop(int port)
 {
     struct lws_context_creation_info info;
     memset(&info, 0, sizeof(info));
@@ -125,8 +125,13 @@ void wsServiceLoop(short port)
 
 void WsOnMessage(WsMessageCallback cb) { g_onMessage = cb; }
 
-int WsStartServer(short port)
+int WsStartServer(int port)
 {
+    // Port used to be short: >32767 wrapped to a negative value, lws failed to bind
+    if (port <= 0 || port > 65535) {
+        Error("ws: invalid port %d, expect 1~65535!", port);
+        return -1;
+    }
     if (g_running) {
         Warning("ws: server already running");
         return 0;

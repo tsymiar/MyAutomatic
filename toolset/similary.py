@@ -43,9 +43,7 @@ def is_text_file(file_path):
     return file_ext in _TEXT_EXTS, file_ext
 
 def delete_initial_block_comment(source):
-    """
-    删除文件开头的块注释（如C/Java的/* ... */），支持字符串或行列表输入。
-    """
+    """删除文件开头的块注释，支持字符串或行列表输入"""
     is_str = isinstance(source, str)
     lines = source.splitlines() if is_str else list(source)
 
@@ -85,10 +83,7 @@ def _has_line_comment_start(line, pos, line_comments):
 
 
 def deal_comments_by_state_machine(code, file_ext):
-    """
-    简化版状态机：逐行处理，支持行注释和块注释（跨行），保留字符串内的注释符号。
-    返回 (处理后的代码行列表, 对应的原始行号列表[0-based])
-    """
+    """简化版状态机：处理行/块注释（可跨行），保留字符串内的注释符号；返回 (代码行列表, 原行号列表)"""
     non_code_exts = {".txt", ".md", ".json", ".yml", ".yaml"}
     if file_ext in non_code_exts:
         lines = code.splitlines() if isinstance(code, str) else list(code)
@@ -129,7 +124,7 @@ def deal_comments_by_state_machine(code, file_ext):
         buf = []
 
         while i < n:
-            # handle block comment spanning lines
+            # 块注释跨行
             if in_block:
                 if block_end and line.startswith(block_end, i):
                     in_block = False
@@ -140,11 +135,11 @@ def deal_comments_by_state_machine(code, file_ext):
 
             ch = line[i]
 
-            # string handling
+            # 字符串内
             if in_string:
                 buf.append(ch)
                 if ch == "\\":
-                    # preserve escape and next char if any
+                    # 保留转义符及其后字符
                     if i + 1 < n:
                         buf.append(line[i + 1])
                         i += 2
@@ -155,7 +150,7 @@ def deal_comments_by_state_machine(code, file_ext):
                 i += 1
                 continue
 
-            # check block comment start
+            # 块注释起始
             bs, be = _find_block_comment_start(line, i, block_comments)
             if bs is not None:
                 in_block = True
@@ -163,11 +158,11 @@ def deal_comments_by_state_machine(code, file_ext):
                 i += len(bs)
                 continue
 
-            # check line comment start
+            # 行注释起始
             if _has_line_comment_start(line, i, line_comments):
-                break  # ignore rest of line
+                break  # 丢弃该行剩余部分
 
-            # check string start
+            # 字符串起始
             if ch == '"' or ch == "'":
                 in_string = True
                 string_delim = ch
@@ -175,7 +170,7 @@ def deal_comments_by_state_machine(code, file_ext):
                 i += 1
                 continue
 
-            # normal char
+            # 普通字符
             buf.append(ch)
             i += 1
 
@@ -306,14 +301,31 @@ def parse_file(file_path, use_state_machine, cache=None):
         cache[file_path] = ([], 0)
         return [], 0
 
-def build_index(directory, ignore_dirs, ignore_files):
+def normalize_exts(ext_values):
+    """把 --ignore-ext 输入规范为带点小写扩展名列表（兼容 `.LOG` / `log` / `*.log`）"""
+    normalized = []
+    for value in ext_values or []:
+        for item in str(value).split(","):
+            ext = item.strip().lower().lstrip("*")
+            if not ext:
+                continue
+            if not ext.startswith("."):
+                ext = f".{ext}"
+            if ext not in normalized:
+                normalized.append(ext)
+    return normalized
+
+def build_index(directory, ignore_dirs, ignore_files, ignore_exts=()):
     index = defaultdict(list)
     ignore_dirs = set(ignore_dirs)
     ignore_files = set(ignore_files)
+    ignore_exts = set(normalize_exts(ignore_exts))
     for root, dirs, files in os.walk(directory, True):
         dirs[:] = [d for d in dirs if d not in ignore_dirs]
         for f in files:
-            is_text, _ = is_text_file(f)
+            is_text, file_ext = is_text_file(f)
+            if file_ext in ignore_exts:
+                continue
             if not is_text:
                 continue
             if any(fnmatch.fnmatch(f, pattern) for pattern in ignore_files):
@@ -386,9 +398,9 @@ def file_compare(file1, file2, base_dir, show_diff, use_state_machine=False):
     )
     return result
 
-def dir_compare(dir1, dir2, show_diff, ignore_dirs, ignore_files):
-    index1 = build_index(dir1, ignore_dirs, ignore_files)
-    index2 = build_index(dir2, ignore_dirs, ignore_files)
+def dir_compare(dir1, dir2, show_diff, ignore_dirs, ignore_files, ignore_exts=()):
+    index1 = build_index(dir1, ignore_dirs, ignore_files, ignore_exts)
+    index2 = build_index(dir2, ignore_dirs, ignore_files, ignore_exts)
     total = defaultdict(int)
     details = []
     unmatched = {"source": [], "target": []}
@@ -497,14 +509,22 @@ def parse_arguments():
         default=[],
         help="要忽略的文件模式列表（多个模式用逗号分隔），如：--ignore-files *.tmp,*.bak",
     )
+    parser.add_argument(
+        "--ignore-ext",
+        dest="ignore_ext",
+        action="append",
+        default=[],
+        help="要忽略的扩展名列表（可重复指定，也可用逗号分隔），如：--ignore-ext=.log --ignore-ext=.tmp,.bak",
+    )
     parser.add_argument("--no-color", action="store_true", help="禁用颜色输出")
     parser.add_argument("--json", action="store_true", help="按json格式打印")
 
     args = parser.parse_args()
 
-    # 确保忽略目录和文件模式列表中没有空值
+    # 清洗忽略目录/模式中的空值，扩展名规范为带点小写
     args.ignore_dirs = [d.strip() for d in args.ignore_dirs if d.strip()]
     args.ignore_files = [f.strip() for f in args.ignore_files if f.strip()]
+    args.ignore_ext = normalize_exts(args.ignore_ext)
 
     return args
 
@@ -524,7 +544,7 @@ def _normalize_ratio(info):
     except Exception as e:
         print(f"Error processing ratio: {e}")
         return
-    # Avoid multiplying twice: if ratio already > 1 assume it's percent and just round
+    # ratio 已 >1 视为百分比，不再乘 100
     info['ratio'] = _round_ratio_val(val) if val <= 1 else round(val, 3)
 
 
@@ -552,8 +572,8 @@ def _on_json_output_exit():
         _json_store['data'] = res
         return res
 
-    def _wrap_dir_compare(dir1, dir2, show_diff, ignore_dirs, ignore_files):
-        res = _orig_dir_compare(dir1, dir2, show_diff, ignore_dirs, ignore_files)
+    def _wrap_dir_compare(dir1, dir2, show_diff, ignore_dirs, ignore_files, ignore_exts=()):
+        res = _orig_dir_compare(dir1, dir2, show_diff, ignore_dirs, ignore_files, ignore_exts)
         _json_store['type'] = 'dir'
         total, details, unmatched = res
 
@@ -613,6 +633,7 @@ def main():
                 args.diff,
                 args.ignore_dirs,
                 args.ignore_files,
+                args.ignore_ext,
             )
             if args.diff:
                 print(f"\n{color('cyan')}=== 差异详情 ===")
@@ -621,7 +642,7 @@ def main():
                         print(f"\n{color('cyan')}--- {file_info['file_name']} ---")
                         print(file_info["diff"])
 
-            # 传递unmatched参数
+            # 传递 unmatched 参数
             print_detail(total, details, unmatched, args.detail, not args.no_color)
 
         else:

@@ -196,19 +196,51 @@ inline void Sqlite::free(char** pResult)
 
 // ============================================================================
 // 未定义 USE_SQLITE3 时：空实现桩（stub）
+// The stub must fail *visibly*: open() returns false, execute() returns -1,
+// otherwise callers are left with "query succeeded but no rows, ever".
 // ============================================================================
 #else
 
-inline bool Sqlite::open() { return true; }
+#include <cstdio>
+
+#if defined(_MSC_VER)
+#pragma message("Sqlite: USE_SQLITE3 not defined, compiled as no-op stub - open()=false / execute()=-1 / query()=nullptr")
+#else
+#warning "Sqlite: USE_SQLITE3 not defined, compiled as no-op stub - open()=false / execute()=-1 / query()=nullptr"
+#endif
+
+// Warn once on stderr at the first stub call, so the degradation is never silent
+inline void SqliteStubWarn(const char* api)
+{
+    static bool warned = false;
+    if (!warned) {
+        warned = true;
+        fprintf(stderr, "[Sqlite][STUB] USE_SQLITE3 not defined, %s() is a no-op: "
+                        "every DB operation is inert (real sqlite3 is never used)\n", api);
+    }
+}
+
+inline bool Sqlite::open()
+{
+    SqliteStubWarn("open");
+    return false;
+}
 inline void Sqlite::close() { }
-inline int Sqlite::execute(const char* sql) { (void)sql; return 0; }
+inline int Sqlite::execute(const char* sql)
+{
+    SqliteStubWarn("execute");
+    (void)sql;
+    return -1;
+}
 inline char** Sqlite::query(const char* sql, int& row, int& column)
 {
+    SqliteStubWarn("query");
     (void)sql; row = 0; column = 0;
     return nullptr;
 }
 inline char** Sqlite::queryParam(const char* sql, int& row, int& column, ...)
 {
+    SqliteStubWarn("queryParam");
     (void)sql; row = 0; column = 0;
     return nullptr;
 }

@@ -17,30 +17,30 @@ TEST(Utils, isNum)
     EXPECT_FALSE(isNum(num));
 }
 
-TEST(Utils, ipIsValid)
+TEST(Utils, isIpAddr)
 {
     const char* ip = "xyz";
-    EXPECT_FALSE(ipIsValid(ip));
+    EXPECT_FALSE(isIpAddr(ip));
     ip = "";
-    EXPECT_FALSE(ipIsValid(ip));
+    EXPECT_FALSE(isIpAddr(ip));
     ip = "01";
-    EXPECT_FALSE(ipIsValid(ip));
+    EXPECT_FALSE(isIpAddr(ip));
     ip = "....";
-    EXPECT_FALSE(ipIsValid(ip));
+    EXPECT_FALSE(isIpAddr(ip));
     ip = "0...";
-    EXPECT_FALSE(ipIsValid(ip));
+    EXPECT_FALSE(isIpAddr(ip));
     ip = "0.1.2.3";
-    EXPECT_FALSE(ipIsValid(ip));
+    EXPECT_FALSE(isIpAddr(ip));
     ip = "127.0.0.0";
-    EXPECT_FALSE(ipIsValid(ip));
+    EXPECT_FALSE(isIpAddr(ip));
     ip = "127.0.0.1";
-    EXPECT_TRUE(ipIsValid(ip));
+    EXPECT_TRUE(isIpAddr(ip));
     ip = "192.168.0.1";
-    EXPECT_TRUE(ipIsValid(ip));
+    EXPECT_TRUE(isIpAddr(ip));
     ip = "123.123.123.123";
-    EXPECT_TRUE(ipIsValid(ip));
+    EXPECT_TRUE(isIpAddr(ip));
     ip = "123.123.123.123.";
-    EXPECT_FALSE(ipIsValid(ip));
+    EXPECT_FALSE(isIpAddr(ip));
 }
 
 TEST(Utils, sIP2long)

@@ -45,11 +45,15 @@ export function activate(context: vscode.ExtensionContext) {
         outChannel.show();
     });
 
+    // Command palette / shortcut entry: falls back to the compareFolders flow
+    // when two folders are not selected
+    registerQuickCompareShortcut(context);
+
     context.subscriptions.push(disposableCompare, disposableOpenResults, outChannel);
 }
 
 /**
- * 统一的文件夹比较命令处理逻辑，供 compareFolders 和 quickCompare 共用。
+ * Shared handler for both the compareFolders and quickCompare commands.
  */
 async function handleCompareCommand(
     context: vscode.ExtensionContext,
@@ -273,7 +277,7 @@ async function runFolderComparison(
             return;
         }
 
-        // 构建参数
+        // Build the argument list
         const args = [
             scriptPath,
             `"${source}"`,
@@ -316,13 +320,13 @@ async function runFolderComparison(
 
             let outJson = null;
             try {
-                // 清理 JSON 字符串
+                // Sanitize the JSON string
                 let cleanOutput = output.replace(/[\x00-\x1F]/g, '');
                 cleanOutput = cleanOutput.trim();
 
-                // 验证 JSON 格式
+                // Validate the JSON envelope
                 if (!cleanOutput.startsWith('{') || !cleanOutput.endsWith('}')) {
-                    // 尝试提取有效的 JSON 部分
+                    // Try to extract the valid JSON slice
                     const jsonStart = cleanOutput.indexOf('{');
                     const jsonEnd = cleanOutput.lastIndexOf('}') + 1;
 
@@ -334,7 +338,7 @@ async function runFolderComparison(
                         cleanOutput = JSON.stringify(jsonOut, null, 2);
                     }
                 }
-                // 尝试解析 JSON
+                // Parse the JSON
                 outJson = cleanOutput;
                 const result = JSON.parse(cleanOutput) as ComparisonFolderResults;
                 outChannel.appendLine(`Parsed JSON output: ${JSON.stringify(result, null, 2)}`);
@@ -360,7 +364,7 @@ function showComparisonResults(result: ComparisonFolderResults, outChannel: vsco
     outChannel.appendLine(`Differences: ${result.different_files.length ?? 0}`);
     outChannel.appendLine(`Matched files: ${result.matched_files.length ?? 0}`);
     outChannel.appendLine(`Common files: ${result.common_files.length ?? 0}`);
-    // 创建Web视图显示详细结果
+    // Open a webview with the detailed results
     const panel = vscode.window.createWebviewPanel(
         'folderComparisonResults',
         'Folder Comparison Results',

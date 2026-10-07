@@ -39,8 +39,28 @@ else()
     find_program(APT_GET_EXE apt-get)
     if(APT_GET_EXE)
         execute_process(COMMAND sudo apt-get install -y libsqlite3-dev)
+        # find_path/find_library results are cached: clear them and probe again,
+        # so a successful install is not wasted and we do not fall back to the stub
+        unset(SQLITE3_INCLUDE_DIR CACHE)
+        unset(SQLITE3_LIBRARY CACHE)
+        find_path(SQLITE3_INCLUDE_DIR sqlite3.h
+            PATHS /usr/include /usr/local/include
+            PATH_SUFFIXES sqlite3
+        )
+        find_library(SQLITE3_LIBRARY NAMES sqlite3
+            PATHS /usr/lib /usr/local/lib /usr/lib/x86_64-linux-gnu /usr/lib/aarch64-linux-gnu
+        )
+        if(SQLITE3_INCLUDE_DIR AND SQLITE3_LIBRARY)
+            message(STATUS "Found SQLite3 after install: ${SQLITE3_LIBRARY}, include: ${SQLITE3_INCLUDE_DIR}")
+            include_directories(${SQLITE3_INCLUDE_DIR})
+            list(APPEND EXTRA_LIBS ${SQLITE3_LIBRARY})
+            add_definitions(-DUSE_SQLITE3)
+        endif()
     else()
         message(WARNING "Not found apt-get!")
+    endif()
+    if(NOT (SQLITE3_INCLUDE_DIR AND SQLITE3_LIBRARY))
+        message(WARNING "SQLite3 unavailable: building with the no-op stub (STUB) - open() always false / execute() always -1 / query() always nullptr, every DB call fails")
     endif()
 endif()
 
