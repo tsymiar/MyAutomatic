@@ -21,6 +21,10 @@
       {
         "command": "similarity.openResults",
         "title": "Open Files Comparison Results"
+      },
+      {
+        "command": "similarity.quickCompare",
+        "title": "Quick Compare Selected Folders"
       }
     ],
     "menus": {

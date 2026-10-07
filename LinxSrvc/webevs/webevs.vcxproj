@@ -112,16 +112,20 @@
   <ItemGroup>
     <ClCompile Include="WebevApi.cpp" />
     <ClCompile Include="WebMain.cpp" />
-    <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="WebevApi.h" />
     <ClInclude Include="WebMain.h" />
-    <ClInclude Include="Utils.h" />
+    <ClInclude Include="..\include\Utils.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />
   </ItemGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <Link>
       <AdditionalOptions>-lpthread -levent %(AdditionalOptions)</AdditionalOptions>

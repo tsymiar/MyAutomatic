@@ -17,9 +17,9 @@ all:
 	@if [ "$(UNAME_S)" = "Darwin" ]; then \
 		cd Mac/Transfer && ./build_app.sh; \
 	else echo "\t skipped: requires macOS (Darwin), current = $(UNAME_S)"; fi
-	@echo "\033[4;3mMaking sudoku\033[0m"
+	@echo "\033[4;3mMaking python extensions\033[0m"
 	@make -C pyex all
-	@echo "\033[4;3mMaking extensions\033[0m"
+	@echo "\033[4;3mMaking vscode extensions\033[0m"
 	@make -C vs-extension all
 cmake:
 	@ if [ ! -d build ]; then mkdir -p build; else echo Deleting built files; rm -rf build/*; fi;
