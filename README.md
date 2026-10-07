@@ -6,149 +6,154 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![996.icu](https://img.shields.io/badge/link-996.icu-red.svg)](https://996.icu)
 
-##### This is **_`MyAutomatic`_**, getting by
+> A hands-on playground for **systems code**: instant messaging, a `SOAP` service, an `HTTP`/`WebSocket` server, Linux hardware and kernel drivers, `RDMA`, plus `Qt` / `C#` / `Python` / `Swift` side projects — all driven by one script.
 
 ```sh
 git clone https://github.com/tsymiar/MyAutomatic.git
 ```
 
-##### _includes sub-projects below ⇣⇣⇣_
+##### _top-level ⇣⇣⇣_
+
+| Directory | Stack | What lives there |
+| :-- | :-- | :-- |
+| [LinxSrvc](#linxsrvc) | C / C++ / Python / Swift | the main project — services, drivers and tools (see the categories below) |
+| [QtGames](#qtgames) | `Qt` + `SDL` + `OpenGL` | rendering / input test-cases |
+| [WinNTKline](#winntkline) | `C#` / `WPF` / `MFC` / `C++` (**Windows**) | K-line desktop apps and their utility libs |
+| Market | prebuilt `.exe` | demo binaries kept as built |
+| toolset | Shell / Python | standalone helpers — `similary.py` (comparison backend for the VSCode extension), `matkline.py` (draws K-line figures), plus cache / git / gdb scripts |
+
+### Build &amp; test
+
+| Goal | Command |
+| :-- | :-- |
+| Build everything | `./build.sh all -j` |
+| Unit tests + `lcov` coverage | `./build.sh test` |
+| Remove caches and artifacts | `./build.sh clean` |
+| Build a single CMake sub-project | `./build.sh <dir>` — e.g. `./build.sh lookup` |
+
+Third-party sources sit in `LinxSrvc/3rd/` as submodules (`googletest`, `rdma-core`, `rxe-dev`, `json`, `lcov`); `./build.sh test` fetches the ones it needs.
+
+---
 
 LinxSrvc
 --------
 
-* Brief
+`./build.sh all` runs two independent chains — the top-level `Makefile` chain and the top-level `CMakeLists.txt` chain — so artifacts end up in one of two directories:
 
-    Build all executables with `./build.sh all (-j)`. Use `./build.sh test` to test, and `./build.sh clean` to delete caches.
+| Output | Artifacts |
+| :-- | :-- |
+| `bin/` (Make chain) | `IM.exe`, `client.exe`, `kaics.exe` (`kaics.cfg`), `gSOAPverify` (`myweb.wsdl`), `pthdtest.exe`, `VideoCapture`, `imgfilesnap.exe`, `chstest`, `chigpio`, `mes909`, `pipefifo`, `dirtyhack`, `test_phm2f.exe`, `rdma_server.exe`, `rdma_client.exe` |
+| `gen/` (CMake chain) | `lookup`, `genSeek`, `seek_test` (`time.cfg`, `libtimeUtil.so`), `diffs`, `gn1`, `e.g`, `webevs_serve`, `mocking_main`, `mocking_client`, `dpsk_chat` (`params.txt`), `video_render`, `sudoku-*.whl`, `similarity-*.vsix` |
 
-    Once generated _SUCCESSFULLY_, some binary files will appear in the _bin_ / _gen_ directories, such as:
+### Messaging &amp; networking
 
-    [_bin_]
+* **IM.exe | client.exe**
 
-    ```c
-    chstest chigpio mes909 pipefifo
-    rdma_server.exe rdma_client.exe
-    VideoCapture imgfilesnap.exe
-    IM.exe client.exe
-    kaics.exe (kaics.cfg)
-    gSOAPverify (myweb.wsdl)
-    test_phm2f.exe
-    pthdtest.exe
-    ```
+    [_`IM.exe`_](https://raw.githubusercontent.com/tsymiar/MyAutomatic/auto-dev/LinxSrvc/IM/IM.cc) is an `instant-messaging` chat room demo: register, login, send commands, and exchange _a small number_ of messages. It forks a child per connection, listens on `argv[1]` (default `8877`), and `-m` / `-x` print / reset the shared-memory online table.
 
-    [_gen_]
+    _client.exe_ is the chat-room peer with its own menus. Its sources live outside this folder (`WinNTKline/KlineUtil/IM/client.cc` and `WinNTKline/IMclient/imclient.cpp`), so it only builds when that sibling project is checked out too.
 
-    ```c
-    analyzing dpsk_chat
-    gn1 lookup seekTimeTest
-    trans_server trans_client
-    video_render webevs_server
-    ```
+* **kaics.exe**
 
-* Description
+    A _sub-pub_ message queue (_`MQ`_) that can penetrate the intranet — the `KaiTest` CLI linked against `KaiSocket` (`-S` / `-C` / `-BK` / `-SS [topic]` / `-PB [topic] [msg]` / `-TF [topic] [file]`, endpoint from `kaics.cfg`, default `127.0.0.1:9999`). More in [its readme](https://github.com/tsymiar/MyAutomatic/blob/auto-dev/LinxSrvc/IM/readme.md).
 
-    | chstest | chigpio | mes909 | pipefifo |
-    | :------: | :-----: | :----: | :------: |
+* **webevs_serve**
 
-    Some scattered _`*.c`_ files are drivers for **hardware** such as `GPIO`, `ME909S-821` (_a Huawei `LTE 4G` network module_), `pipe`/`fifo`, etc. _chstest_ is a sample for the _chsdev_ driver.
+    HTTP + WebSocket server built on `libevent` (HTTP) and `libwebsockets` (WS). The WS port runs alongside the HTTP one: launch with `./webevs_serve <http_port> [ws_port]`, or set `WEBEV_WS_PORT`.
 
-    * VideoCapture | imgfilesnap
+* **gSOAPverify**
 
-        _VideoCapture_ is a video capture program based on **v4l2** and runs _only_ on Linux.
+    A `SOAP` server that verifies logins against the contract in `myweb.wsdl`.
 
-        _imgfilesnap_ is a photo take*r*, also runs only on Linux.
+* **mocking_main | mocking_client**
 
-    * IM.exe | client.exe
+    [_`UDP`_/_`TCP`_/multicast] throughput tool pair in _C++11_. Both come from the same `socket.cpp`, split by the `CLIENT` macro — useful as a baseline when sizing the `Mac/Transfer` and KaiSocket paths.
 
-        [_`IM.exe`_](https://raw.githubusercontent.com/tsymiar/MyAutomatic/auto-dev/LinxSrvc/IM/IM.cc) is an `instant-messaging` chat room demo. Use it to register, login, send commands, and send _a small number_ of messages.
+* **rdma_server.exe | rdma_client.exe**
 
-        _client.exe_ is a client peer implementation of an _online chat room_ with menus as below.
+    _`RDMA`_ sample pair for `TCP/IP` / `Rocket Direct` applications, on top of _librdmacm.so_.
 
-    * kaics.exe
+### Search, data generation &amp; code analysis
 
-        A _sub-pub_ message queue (_`MQ`_), which can penetrate the intranet. More info can be found [here](https://github.com/tsymiar/MyAutomatic/blob/auto-dev/LinxSrvc/IM/readme.md).
+* **lookup | genSeek | seek_test**
 
-    * gSOAPverify
+    _lookup_ searches recorded streams with `kmp` / `manacher` (`lookup <file> [pattern]`, default = longest palindrome). _genSeek_ emits synthetic frames to test with, and _seek_test_ exercises the time-index engine (V1 = `seek/`, V2 = `time/`). `time.cfg` and `libtimeUtil.so` land in _gen_ as well — note that index/query go through SQLite and silently no-op when built without `USE_SQLITE3`.
 
-        A `SOAP-server` used to verify login using the config file _myweb.wsdl_.
+* **gn1**
 
-    * rdma_server.exe | rdma_client.exe
+    A _cross-platform_, _big/small endian_, _increasing/decreasing_ binary number generator.
 
-        _`RDMA`_ is a library for developing `TCP/IP`/`Rocket Direct` based applications, using _librdmacm.so_.
+* **diffs**
 
-    * test_phm2f
+    Compares differences between two same-named files or directories (CMake target renamed from `analyzing` to **`diffs`**). Similarity is computed after stripping comments and whitespace.
 
-        A tiny test to show _`phy_mem.ko`_ usage.
+    <img src="assets/diff.png" title="diffs" width="50%" height="auto" />
 
-    * pthdtest.exe
+### Concurrency
 
-        A thread pool based on `pthread`.
+* **pthdtest.exe**
 
-    * gn1
+    A thread pool based on `pthread` (`LinxSrvc/thread/pthdpool`).
 
-        A _cross-platform_, _big/small endian_, _increasing/decreasing_ binary number generator.
+### Hardware &amp; drivers (`LinxSrvc/hdware/`)
 
-    * dpsk_chat
+| Tool | What it exercises |
+| :-- | :-- |
+| chstest | sample client for the `chsdev` character device |
+| chigpio | `GPIO` lines |
+| mes909 | `ME909S-821`, a Huawei `LTE 4G` module |
+| pipefifo | `pipe` / `fifo` samples |
+| dirtyhack | the classic DirtyCOW write-up in code form |
+| test_phm2f | tiny test showing `phy_mem.ko` usage |
+| VideoCapture | video capture with **v4l2** (Linux only) |
+| imgfilesnap | snapshot grabber (Linux only) |
 
-        A mini chat tool using the _`DeepSeek`_ API to answer questions, which is one of the most popular question answering systems. Modify _params.txt_ to set key-value pairs, such as model, stream, etc.
+### Media &amp; AI
 
-        <img src="assets/dpsk.jpg" title="DeepSeek" onclick="javascript:location.href='https://www.deepseek.com'" width="70%" height="auto" />
+* **video_render**
 
-    * video_render
+    A video decode demo using `ffmpeg` / `multimedia` (Jetson Orin Nano).
 
-        A video decode demo using `ffmpeg`/`multimedia` (Jetson Orin Nano).
+* **dpsk_chat**
 
-    * webevs_server
+    A mini chat tool built on the _`DeepSeek`_ API. Export `DPSK_API_KEY` before launching — otherwise it prints a notice and exits (`dpsk/CurlReqs.cpp:254`). ⚠️ Key-value pairs such as model or stream live in `params.txt`, which must sit in the working directory (a copy lands in _gen_).
 
-        HTTP + WebSocket server built on `libevent` (HTTP) and `libwebsockets` (WS). The WS port runs alongside the HTTP port; launch with `./webevs_server <http_port> [ws_port]` or set `WEBEV_WS_PORT`.
+    <img src="assets/dpsk.jpg" title="DeepSeek" onclick="javascript:location.href='https://www.deepseek.com'" width="70%" height="auto" />
 
-    * analyzing
+### Projects outside the two build chains
 
-        A code tool to compare differences between two same-named files or different directories.
-
-        <img src="assets/diff.png" title="analyzing" width="50%" height="auto" />
-
-    * trans_server | trans_client
-
-        [_`UDP`_/_`TCP`_] transfer client/server using _C++11_, supports file transfer and multi-connect.
-
-    * lookup / seekTimeTest
-
-        The _lookup_ is a tool to find pattern by `regex` using `kmp`/`manacher` algorithm. _seekTimeTest_ is a tool to seek data offsets by gaven times. If time offsets are not found in the database, it reads the given data file. The _time.cfg_ is a demo config file to set seeking timestamps.
-
-    There are more tools, check _sometools_.
+| Project | What it is | How to build / run |
+| :-- | :-- | :-- |
+| [Mac/Transfer](LinxSrvc/Mac/Transfer/README.md) | macOS `SwiftUI` app over a C++17 `FTF` transfer engine (64-byte header, port `8800`) | needs macOS + Swift 5.9 |
+| cyber | `LoRA` fine-tuning pipeline (`PEFT`, 4-bit capable) over chat exports | `pip install -r LinxSrvc/cyber/requirements.txt`, then its scripts — see its readme |
+| trade | single-file quantitative strategy (`dual_ma_strategy.py` + `strategy.yaml`) with Backtrader and an LSTM branch | `python dual_ma_strategy.py` after installing the deps |
+| vs-extension | VSCode "Files Comparison" extension; Python backend symlinked from `toolset/similary.py` | `make.sh` inside the folder, packages `similarity-*.vsix` into _gen_ |
+| pyex | a `sudoku` CPython C extension | `python -m build`, wheel into _gen_ |
+| test | `GoogleTest` + `lcov` harness, depends on `3rd/googletest` and `webevs/Utils.cpp` | `./build.sh test` (or `./test.sh` inside the folder) |
+| shell | ops helpers: `x64mk/` builds an amd64 APK under QEMU, `expect/` automates logins (contains plaintext passwords — keep private) | — |
 
 QtGames
 -------
 
-* [_`It`_](https://github.com/tsymiar/MyAutomatic/tree/auto-dev/QtGames) is a test-case using _`Qt`_, _`SDL`_ and _`OpenGL`_. Use _mkallcase.sh_ to build it.
-  
-## WinNTKline
+* [_`It`_](https://github.com/tsymiar/MyAutomatic/tree/auto-dev/QtGames) is a test-case using _`Qt`_, _`SDL`_ and _`OpenGL`_. Use _mkallcase.sh_ to build it (or `./build.sh QtGames/` from the repository root).
+
+WinNTKline
+----------
 
 ##### [Microsoft .NET Framework 3.5](https://aka.ms/msbuild/developerpacks) is needed to compile WinNTKline
 
-| CvMlwk |
-|:------:|
+| Project | What it is |
+| :-- | :-- |
+| CvMlwk | _`OpenCV`_ and some _`Machine Learning`_ learning cases |
+| KlineUtil | utils for `cef-browser`, security libs, drawing _K-line_ with GL, simulating `CTP`, etc. |
+| IMclient | the Windows chat-room peer that `client.exe` is built from |
+| MFCKline | the `MFC` dialog flavour of the K-line client (login / register / log windows, OpenGL drawing) |
+| WPFKline | a K-line application using _`C#`_ |
+| TestUtils | test cases for the _KlineUtil_ interfaces |
 
-> _`OpenCV`_ and some _`Machine Learning`_ learning cases.
+Market
+------
 
-| KlineUtil |
-|:---------:|
-
-> Utils for `cef-browser`, security libs, show _K-line_ by GL, simulate `CTP`, etc.
-
-| WPFKline |
-|:--------:|
-
-> A K-line application using _`C#`_.
-
-| TestUtils |
-|:---------:|
-
-> Test cases to test the interface of _KlineUtil_.
-
--------
-
-#### _**I**mpact of the program has built in [`Market`]:_
+Prebuilt demo binaries kept as they were produced; the impact of one of them:
 
 <img src="assets/impact.png" title="impact" height="80%" width="80%" align="middle" />
