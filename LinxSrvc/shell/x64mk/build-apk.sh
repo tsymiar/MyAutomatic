@@ -61,14 +61,14 @@ echo "== start $(date) =="
 docker run --rm --platform linux/amd64 \
     --name "$DKQM_RUN" \
     -v "$SRC":/src \
-    -v "$DKQM_GRADLE_DIST":/opt/gradle-$GRADLE_VER:ro \
+    -v "$DKQM_GRADLE_DIST:/opt/gradle-$GRADLE_VER:ro" \
     -v "$DKQM_SDK":/opt/android-sdk \
     -v "$DKQM_CACHE":/root/.gradle \
     -v "$OUT":/out \
     -e ANDROID_HOME=/opt/android-sdk \
     -e ANDROID_SDK_ROOT=/opt/android-sdk \
     -e ANDROID_NDK_HOME=/opt/android-sdk/ndk/"$DKQM_NDK_VER" \
-    -e GRADLE_BIN=/opt/gradle-$GRADLE_VER/bin \
+    -e "GRADLE_BIN=/opt/gradle-$GRADLE_VER/bin" \
     "$DKQM_IMAGE" \
     bash -c '
       set -e

@@ -285,7 +285,7 @@ void s_verify(char* str)
 {
     int i = 0;
     char dig[16];
-    char out[32];
+    char out[33] = { 0 };   // 32 位十六进制 + '\0'; 使用前必须清零
     md5_to_hex(str, dig);
     printf("摘要:\t");
     for (; i < 16; i++) // 16位无符号整数
@@ -298,7 +298,7 @@ void f_verify(char* filename)
 {
     // RSAPublic读取
     FILE* fp;
-    char out[32];
+    char out[33] = { 0 };   // open_md5_file 会写入 32 字符 + '\0'
     // 支持文件拖曳,但会多出双引号,这里是处理多余的双引号
     const size_t nameLen = strnlen(filename, 4096);
     if (nameLen > 1 && filename[0] == 34) {

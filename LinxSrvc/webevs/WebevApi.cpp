@@ -193,7 +193,7 @@ string ResolveFrontendFile(const string& url)
     string path = url;
     size_t stop = path.find_first_of("?#");
     if (stop != string::npos) {
-        path = path.substr(0, stop);
+        path.resize(stop);   // stop <= size()，等价截断且不再构造临时串
     }
     while (!path.empty() && path[0] == '/') {
         path.erase(path.begin());

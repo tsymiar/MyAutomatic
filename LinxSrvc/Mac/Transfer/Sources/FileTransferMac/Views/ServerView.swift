@@ -211,7 +211,9 @@ struct TransferSettingsPanel: View {
                 .font(.headline)
 
             Toggle("Exponential backoff", isOn: $core.backoffEnabled)
-            Text("Retry a connection that died before any data arrived (ENOTCONN). On: up to 16 retries, delay doubles from 10ms (~655s worst case). Off (default): 3 short retries, then close.")
+            Text("Retry a connection that died before any data arrived (ENOTCONN). "
+                + "On: up to 16 retries, delay doubles from 10ms (~655s worst case). "
+                + "Off (default): 3 short retries, then close.")
                 .font(.caption)
                 .foregroundColor(.secondary)
                 .fixedSize(horizontal: false, vertical: true)

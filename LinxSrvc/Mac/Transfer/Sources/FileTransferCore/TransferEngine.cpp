@@ -77,7 +77,7 @@ static std::string sanitizeFileName(const std::string& name)
         out = "received_file";
     }
     if (out.size() > 255) {
-        out = out.substr(0, 255);
+        out.resize(255);
     }
     return out;
 }

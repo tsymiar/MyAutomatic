@@ -33,6 +33,18 @@ _ALLOWED_BINARIES = {
     "python3",
 }
 
+# 模型名白名单: [registry/][org/]model[:tag]
+# 必须排除 ".."、绝对路径与 shell 元字符，
+# 形如 "../../etc/passwd:latest" 的输入会造成路径穿越。
+_OLLAMA_MODEL_PATTERN = re.compile(
+    r'^(?:[A-Za-z0-9._-]+/){0,2}[A-Za-z0-9._-]+(?::[A-Za-z0-9._+-]+)?$'
+)
+
+# Hugging Face 仓库名白名单: org/name 或 name
+# 这两个值会带 trust_remote_code=True 传给 transformers，必须限定为合法仓库名，
+# 避免把任意路径 / URL 交给远程代码加载逻辑。
+_HF_REPO_PATTERN = re.compile(r'^[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)?$')
+
 
 def _validate_safe_path(target):
     """校验路径不指向系统敏感目录，防止意外操作"""
@@ -41,6 +53,43 @@ def _validate_safe_path(target):
     for prefix in _FORBIDDEN_PATH_PREFIXES:
         if resolved_str == prefix or resolved_str.startswith(prefix + os.sep):
             raise ValueError(f"拒绝访问系统敏感路径: {target}")
+
+
+def _validate_model_name(value, label, pattern):
+    """按白名单正则校验模型名，拒绝路径穿越与命令元字符"""
+    if not isinstance(value, str) or not value:
+        raise ValueError(f"{label}不能为空")
+    if not pattern.match(value):
+        raise ValueError(
+            f"非法的{label}: {value!r}。"
+            "只允许字母、数字与 . _ - （Ollama 名可带 registry/org 前缀与 :tag，"
+            "HF 仓库名可带 org/ 前缀）"
+        )
+
+
+def _validate_cli_args(args):
+    """
+    入口校验：所有用户可控参数在使用前统一过一遍白名单 / 路径检查
+
+    Raises:
+        ValueError: 模型名不合法或路径指向系统敏感目录
+        FileNotFoundError: --model-file 不存在
+    """
+    if args.ollama_model:
+        _validate_model_name(args.ollama_model, "Ollama 模型名", _OLLAMA_MODEL_PATTERN)
+    if args.hf_model:
+        _validate_model_name(args.hf_model, "Hugging Face 模型名", _HF_REPO_PATTERN)
+    if args.tokenizer:
+        _validate_model_name(args.tokenizer, "tokenizer 名称", _HF_REPO_PATTERN)
+
+    if args.model_file:
+        model_file = Path(args.model_file)
+        if not model_file.exists():
+            raise FileNotFoundError(f"模型文件不存在: {model_file}")
+        _validate_safe_path(model_file)
+
+    # 输出目录同样受保护：不允许写到 /etc、/boot 等系统目录
+    _validate_safe_path(Path(args.output))
 
 
 def setup_logging(verbose=False):
@@ -172,6 +221,8 @@ def _locate_ollama_root():
 
 def _parse_model_name(ollama_model_name):
     """把 library/model:tag 或 org/model:tag 解析为 (model, tag)"""
+    # 解析结果会拼进 manifest 路径, 先按白名单挡掉 ".." 与绝对路径
+    _validate_model_name(ollama_model_name, "Ollama 模型名", _OLLAMA_MODEL_PATTERN)
     model_parts = ollama_model_name.split("/")
 
     if len(model_parts) == 1:
@@ -939,6 +990,13 @@ def main():
     )
 
     args = parser.parse_args()
+
+    # 参数校验（模型名白名单 + 路径安全性），失败直接非零退出，不做任何转换
+    try:
+        _validate_cli_args(args)
+    except (ValueError, FileNotFoundError) as e:
+        print(f"参数校验失败: {e}", file=sys.stderr)
+        sys.exit(2)
 
     # 确定转换模式
     use_full_conversion = args.full_conversion and not args.simple_conversion
