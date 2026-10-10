@@ -31,7 +31,8 @@ section{padding:1.8rem 0}
 .cd{background:var(--cd);border:1px solid var(--bdr);border-radius:9px;padding:1.1rem;transition:all .2s}.cd:hover{background:var(--ch);transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,0,0,.25)}
 .cd2{background:rgba(0,0,0,.22);border:1px solid var(--bdr);border-radius:7px;padding:.65rem;margin-top:.5rem;overflow-x:auto}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem}
-@media(max-width:700px){.g2,.g3{grid-template-columns:1fr}}
+/* minmax(0,1fr): stops the grid track from being widened by content min-content, which otherwise overflows the page horizontally on narrow screens */
+@media(max-width:700px){.g2,.g3{grid-template-columns:minmax(0,1fr)}.fd{max-width:100%;padding:.3rem .45rem;gap:.4rem;align-items:flex-start}.fd>.dm{margin-top:.1rem}}
 .tags{display:flex;flex-wrap:wrap;gap:.22rem;margin-top:.45rem}
 .t{font-size:.54rem;padding:.08rem .35rem;border-radius:4px;font-family:var(--mn)}.tp{background:rgba(139,92,246,.1);color:var(--pp);border:1px solid rgba(139,92,246,.2)}.tb{background:rgba(59,130,246,.1);color:var(--bl2);border:1px solid rgba(59,130,246,.2)}.tg2{background:rgba(16,185,129,.1);color:var(--gn);border:1px solid rgba(16,185,129,.2)}.ty{background:rgba(245,158,11,.1);color:var(--yl);border:1px solid rgba(245,158,11,.2)}.tc{background:rgba(6,182,212,.1);color:var(--cy);border:1px solid rgba(6,182,212,.2)}.to{background:rgba(249,115,22,.1);color:var(--or);border:1px solid rgba(249,115,22,.2)}.tr{background:rgba(239,68,68,.1);color:var(--rd);border:1px solid rgba(239,68,68,.2)}.tk{background:rgba(236,72,153,.1);color:var(--pk);border:1px solid rgba(236,72,153,.2)}.tz{background:rgba(20,184,166,.1);color:var(--te);border:1px solid rgba(20,184,166,.2)}
 .n{display:inline-flex;flex-direction:column;align-items:center;border-radius:6px;padding:.35rem .5rem;text-align:center;font-size:.55rem;min-width:50px;margin:.12rem;transition:all .15s;cursor:default}.n:hover{transform:scale(1.06)}
@@ -49,16 +50,21 @@ section{padding:1.8rem 0}
 .ao{display:flex;flex-wrap:wrap;gap:.12rem;justify-content:center;flex-direction:column;align-items:center;padding-top:.08rem}
 .dv{width:55%;margin:.2rem auto;height:1px;background:linear-gradient(90deg,transparent,var(--bdr),transparent)}
 .av{color:var(--bl);font-size:.7rem;text-align:center;opacity:.3;margin:-1px 0}
-.fc{display:flex;flex-direction:column;align-items:center;gap:0;padding:.35rem 0}
-.fd{display:flex;align-items:center;gap:.5rem;padding:.35rem .6rem;background:var(--cd);border:1px solid var(--bdr);border-radius:6px;min-width:160px;max-width:380px;width:100%}
+.fc{display:flex;flex-direction:column;align-items:center;gap:0;padding:.35rem 0;width:100%}
+.fd{display:flex;align-items:center;gap:.5rem;padding:.35rem .6rem;background:var(--cd);border:1px solid var(--bdr);border-radius:6px;min-width:0;max-width:420px;width:100%}
+/* The text wrapper defaults to min-width:auto, and .lb's nowrap then pushes the card out of its parent; allow shrinking and wrapping */
+.fd>div:not(.dm){min-width:0;flex:1 1 auto}
+.fd .lb,.fd .ln{white-space:normal;overflow-wrap:anywhere}
 .dm{width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,var(--bl),var(--pp));color:#fff;font-weight:700;font-size:.5rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .dx{font-size:.65rem;color:var(--t2)}
 table{width:100%;border-collapse:collapse;margin:.45rem 0;font-size:.68rem}th{background:rgba(59,130,246,.06);color:var(--bl2);padding:.38rem .5rem;text-align:left;font-weight:600;border-bottom:2px solid var(--bl)}td{padding:.35rem .5rem;border-bottom:1px solid rgba(37,48,80,.4);color:var(--t2)}tr:hover{background:rgba(59,130,246,.04)}
 pre{background:rgba(0,0,0,.25);border:1px solid var(--bdr);border-radius:7px;padding:.65rem;overflow-x:auto;margin:.45rem 0;font-size:.6rem;line-height:1.38;font-family:var(--mn)}
 .rg{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:.65rem}
+.rg.rgf{grid-template-columns:minmax(0,1fr)}
 .rc{padding:.6rem;border-radius:6px;background:var(--cd);border-left:3px solid}.rh{border-left-color:var(--rd)}.rm{border-left-color:var(--yl)}.rl{border-left-color:var(--gn)}
 .rc h4{color:var(--t1);margin-bottom:.12rem;display:flex;align-items:center;gap:.3rem;font-size:.8rem}.rc p{font-size:.66rem;color:var(--t2)}
 .sr{font-size:.44rem;padding:.04rem .25rem;border-radius:3px;text-transform:uppercase;font-weight:700}.sh2{background:rgba(239,68,68,.15);color:var(--rd2)}.sm{background:rgba(245,158,11,.15);color:var(--yl)}.sl{background:rgba(16,185,129,.15);color:var(--gn2)}
+code{font-family:var(--mn);font-size:.62rem;background:rgba(0,0,0,.3);padding:.05rem .22rem;border-radius:3px;color:var(--bl2)}
 footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-align:center;color:var(--t3);font-size:.65rem}
 </style>
 </head>
@@ -66,604 +72,721 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <nav><div class="nv">
 <div class="lg">🏗️ LinxSrvc</div>
 <div class="lk">
-<a href="#ov">概览</a><a href="#cy">Cyber</a><a href="#im">IM</a><a href="#lk">Lookup</a><a href="#wb">Webevs</a><a href="#gs">gSOAP</a><a href="#dp">dpsk</a><a href="#hd">HDware</a><a href="#th">Thread</a><a href="#md">Media</a><a href="#vs">VSExtn</a><a href="#qt">Trade</a><a href="#bf">构建</a><a href="#fl">数据流</a><a href="#pt">模式</a><a href="#rk">风险</a>
+<a href="#ov">概览</a><a href="#bf">构建地图</a><a href="#im">IM/KaiSocket</a><a href="#wb">Webevs</a><a href="#gs">gSOAP</a><a href="#lk">Lookup</a><a href="#cy">Cyber</a><a href="#mc">Mac/Transfer</a><a href="#hd">HDware</a><a href="#md">Media</a><a href="#th">Thread</a><a href="#tl">工具集</a><a href="#dp">dpsk</a><a href="#qt">Trade</a><a href="#vs">VSExtn</a><a href="#fl">数据流</a><a href="#pt">模式</a><a href="#rk">风险</a>
 </div>
 </div></nav>
 
 <div class="hero"><div class="ct">
-<div class="badge">📐 深度架构分析 · 2026-06-07</div>
+<div class="badge">📐 深度架构分析 · 基于工作区代码实测</div>
 <h1 class="ht">LinxSrvc 项目架构全景</h1>
-<p class="hd">混合语言（C/C++/Python）大型服务端框架，集成网络通信、硬件交互、ML 训练、Web 服务、数据库查询与量化交易。CMake 构建，跨 Linux/macOS/Windows。</p>
+<p class="hd">C/C++ 为主、混编 Python / Swift / TypeScript / Shell 的服务端与系统级实验框架：网络传输、Web 服务、SOAP、内核与硬件驱动、音视频渲染、检索、LLM 微调与量化，Linux / macOS / Windows 三平台。</p>
 <div class="hs">
-<div class="st2"><div class="hh">18+</div><div class="hl">子模块</div></div>
-<div class="st2"><div class="hh">3</div><div class="hl">编程语言</div></div>
-<div class="st2"><div class="hh">3</div><div class="hl">目标平台</div></div>
-<div class="st2"><div class="hh">9+</div><div class="hl">外部依赖</div></div>
+<div><div class="hh">19</div><div class="hl">功能模块</div></div>
+<div><div class="hh">5</div><div class="hl">编程语言</div></div>
+<div><div class="hh">3</div><div class="hl">目标平台</div></div>
+<div><div class="hh">14+</div><div class="hl">外部依赖</div></div>
+<div><div class="hh">2</div><div class="hl">并行构建链</div></div>
 </div>
 </div></div>
 
 <section id="ov"><div class="ct">
 <div class="st"><h2>📋 项目概览</h2><span class="tg">Overview</span></div>
 <div class="g2" style="margin-bottom:.7rem">
-<div class="cd"><h4>🔧 技术栈</h4>
-<div class="tags"><span class="t tb">C/C++11-17</span><span class="t ty">Python 3</span><span class="t tp">PyTorch</span><span class="t tc">Sockets</span><span class="t tg2">SQLite</span><span class="t to">cURL</span><span class="t tk">TypeScript</span><span class="t tc">FFmpeg</span><span class="t tp">OpenMP</span></div></div>
+<div class="cd"><h4>🔧 技术栈（按 linker / 依赖实际出现）</h4>
+<div class="tags"><span class="t tb">C</span><span class="t tb">C++11/17/20</span><span class="t ty">Python 3</span><span class="t to">Swift 5.9</span><span class="t tk">TypeScript</span><span class="t tc">Shell</span><span class="t tg2">libevent2</span><span class="t tg2">libwebsockets</span><span class="t tr">gSOAP 2.8.106</span><span class="t tp">SQLite3</span><span class="t tp">MySQL C API</span><span class="t to">cURL</span><span class="t tz">FFmpeg / SDL2</span><span class="t tz">DRM / GBM / EGL / V4L2</span><span class="t tc">librdmacm / libibverbs</span><span class="t tg2">pthread</span><span class="t tg2">GoogleTest + lcov</span><span class="t tp">PyTorch / PEFT</span><span class="t ty">OpenMP</span></div></div>
 <div class="cd"><h4>🏢 架构特性</h4>
-<div class="tags"><span class="t tg2">高内聚模块化</span><span class="t tb">跨平台</span><span class="t ty">事件驱动</span><span class="t ty">线程池</span><span class="t tr">硬件亲和</span><span class="t tc">AI 原生</span><span class="t tk">SOAP/Web</span></div></div>
+<div class="tags"><span class="t tg2">模块化分目录自治</span><span class="t tb">跨平台</span><span class="t ty">事件驱动 Reactor</span><span class="t ty">fork-per-connection</span><span class="t ty">线程池 / 环形队列</span><span class="t tr">内核模块（字符设备/FPGA/RDMA/物理内存）</span><span class="t tk">SwiftUI + C++ 桥接</span><span class="t tc">AI 原生（LoRA / DeepSeek / LSTM）</span></div>
+<div class="dv"></div>
+<p style="font-size:.68rem;color:var(--t2)">两大并行构建链：<b style="color:var(--bl2)">CMake</b>（e.g / media / dpsk / gn1 / diff / lookup / mock）与 <b style="color:var(--yl)">Make</b>（IM / hdware / thread / webevs / gSOAPverify + 转发 cmake + pyex / vs-extension），二者<b style="color:var(--rd2)">互不覆盖</b>，详见「构建地图」。</p></div>
 </div>
 <div class="cd"><div class="cd2">
-<div style="text-align:center;margin-bottom:.4rem"><div class="n c1"><div class="lb" style="font-size:.72rem">LinxSrvc 构建系统</div><div class="ln">Makefile + CMakeLists.txt 聚合所有子目录</div></div></div>
+<div style="text-align:center;margin-bottom:.4rem"><div class="n c1"><div class="lb" style="font-size:.72rem">LinxSrvc 双构建入口</div><div class="ln">根目录 build.sh（按目录有无 CMakeLists 分发） / 根目录 Makefile（串行编排全部）</div></div></div>
 <div class="rw">
 <div class="ag"><div class="al">AI / ML 层</div><div class="ao">
-<div class="n m1"><div class="lb">🧠 cyber</div><div class="ln">LLM 训练</div></div>
+<div class="n m1"><div class="lb">🧠 cyber</div><div class="ln">LoRA 微调 / 推理</div></div>
 <div class="n x1"><div class="lb">🤖 dpsk</div><div class="ln">DeepSeek API</div></div>
-<div class="n m1"><div class="lb">📈 trade</div><div class="ln">量化策略</div></div>
+<div class="n m1"><div class="lb">📈 trade</div><div class="ln">双均线 + LSTM + BS</div></div>
 </div></div>
 <div class="ag"><div class="al">网络 / 服务层</div><div class="ao">
-<div class="n s1"><div class="lb">📡 IM</div><div class="ln">KaiSocket</div></div>
-<div class="n s1"><div class="lb">🌐 webevs</div><div class="ln">HTTP/WebSocket 服务器</div></div>
-<div class="n x1"><div class="lb">🔄 gSOAP</div><div class="ln">SOAP 验证</div></div>
-<div class="n s1"><div class="lb">🔍 lookup</div><div class="ln">查找服务</div></div>
+<div class="n s1"><div class="lb">📡 IM</div><div class="ln">聊天服务 + KaiSocket</div></div>
+<div class="n s1"><div class="lb">🌐 webevs</div><div class="ln">libevent HTTP + WS</div></div>
+<div class="n x1"><div class="lb">🔄 gSOAPverify</div><div class="ln">SOAP + MySQL</div></div>
+<div class="n g1"><div class="lb">📦 Mac/Transfer</div><div class="ln">FTF 文件传输</div></div>
 </div></div>
-<div class="ag"><div class="al">基础设施层</div><div class="ao">
-<div class="n i1"><div class="lb">⚡ hdware</div><div class="ln">硬件驱动</div></div>
-<div class="n o1"><div class="lb">🧵 thread</div><div class="ln">线程池</div></div>
-<div class="n z1"><div class="lb">🎬 media</div><div class="ln">音视频</div></div>
+<div class="ag"><div class="al">检索 / 数据层</div><div class="ao">
+<div class="n s1"><div class="lb">🔍 lookup</div><div class="ln">录制流按时间检索</div></div>
+<div class="n i1"><div class="lb">🛠 gn1 / genSeek</div><div class="ln">测试数据生成</div></div>
+<div class="n y1"><div class="lb">📊 diff</div><div class="ln">源码相似度分析</div></div>
 </div></div>
-<div class="ag"><div class="al">工具 / 其他</div><div class="ao">
-<div class="n y1"><div class="lb">🔌 VSExtn</div><div class="ln">VSCode 扩展</div></div>
-<div class="n y1"><div class="lb">🐍 pyex</div><div class="ln">C 扩展</div></div>
-<div class="n z1"><div class="lb">🔧 gn1</div><div class="ln">生成器</div></div>
-<div class="n z1"><div class="lb">📊 diff</div><div class="ln">差分分析</div></div>
+<div class="ag"><div class="al">系统 / 基础设施</div><div class="ao">
+<div class="n i1"><div class="lb">⚡ hdware</div><div class="ln">内核/硬件驱动</div></div>
+<div class="n z1"><div class="lb">🎬 media</div><div class="ln">Jetson DRM/EGL 渲染</div></div>
+<div class="n o1"><div class="lb">🧵 thread</div><div class="ln">纯 C 线程池</div></div>
+<div class="n r1"><div class="lb">🚀 mock</div><div class="ln">吞吐压测</div></div>
+</div></div>
+<div class="ag"><div class="al">工具 / 前端</div><div class="ao">
+<div class="n y1"><div class="lb">🔌 vs-extension</div><div class="ln">VSCode 比较扩展</div></div>
+<div class="n y1"><div class="lb">🐍 pyex</div><div class="ln">数独 C 扩展</div></div>
+<div class="n z1"><div class="lb">🌀 shell</div><div class="ln">运维 / 交叉编译脚本</div></div>
+<div class="n g1"><div class="lb">🧪 test</div><div class="ln">GoogleTest + 覆盖率</div></div>
 </div></div>
 </div>
 </div></div>
 <div class="cd" style="margin-top:.7rem"><h3>📁 目录结构</h3>
 <pre>LinxSrvc/
-├── 3rd/               # 第三方 (googletest, lcov, rdma-core, llama.cpp-to-hf)
-├── CMakeLists.txt     # 顶层 CMake → media, dpsk, gn1, diff, lookup, mock, test
-├── Makefile           # 总控 Makefile → webevs, hdware, IM, thread, gSOAPverify, pyex
-├── bin/               # 编译产物输出
-├── include/           # 公共头文件 (String_-inl.h, Structures.h)
-├── cyber/             # LLM 训练/推理 (Python/PyTorch + PEFT/LoRA)
-├── dpsk/              # DeepSeek API 客户端 (C++/cURL · 流式调用)
-├── gSOAPverify/       # 多线程 SOAP Web 服务 (gSOAP 2.8 + MySQL)
-├── hdware/            # 硬件驱动 (字符设备/FPGA/RDMA/UART/4G)
-├── IM/                # KaiSocket 网络通信库 (C++ · Pub/Sub · epoll)
-├── lookup/            # SQLite 多维度查找 (seek/time/tool · KMP/Manacher)
-├── media/             # FFmpeg 音视频处理 (Jetson 渲染)
-├── thread/            # 纯 C 线程池 (pthdpool · 固定 worker 数)
-├── trade/             # 量化交易 (Python · 双均线+LSTM+BS期权)
-├── webevs/             # 事件驱动 Web 服务器 (epoll/kqueue · Reactor) + WebSocket (libwebsockets)
-├── vs-extension/      # VSCode 扩展 (TS+Python 文件夹相似度比较)
-├── dpsk/ diff/ gn1/ mock/ pyex/ shell/ test/ e.g/</pre>
+├── CMakeLists.txt      # CMake 链入口：ADD_SUBDIRECTORY(e.g media dpsk gn1 diff lookup mock)
+├── Makefile            # Make 链入口：IM → hdware → thread → webevs → gSOAPverify → cmake → pyex → vs-extension
+├── include/            # 公共头 (String_-inl.h, Structures.h, Utils.h 单头 inline 实现；Utils.h 亦被 lookup/common.h 复用)
+├── cyber/              # LLM LoRA 微调 (PyTorch + PEFT + BitsAndBytes 4bit)
+├── dpsk/               # DeepSeek API 客户端 (cURL + nlohmann_json · 流式)
+├── diff/               # 源码相似度 / 抄袭度分析 (单文件 C++17)
+├── e.g/                # CMake 工程模板骨架
+├── gSOAPverify/        # gSOAP 2.8.106 SOAP 服务 (soap/ sql/ sys/ main/ file/ fix/)
+├── hdware/             # 内核与硬件：chsdev / virtex / rdma / phm2f + GPIO/4G/v4l2 等
+├── IM/                 # IM.cc 聊天服务器 + KaiSocket pub/sub 库 + KaiTest CLI
+├── lookup/             # 按时间定位录制帧 (seek/ time/ tool/ sql/ test/)
+├── Mac/Transfer/       # macOS SwiftUI App + C++17 FTF 传输引擎 (SwiftPM)
+├── media/              # VideoRender：Jetson DRM/EGL/V4L2 分支 + FFmpeg/SDL2 分支
+├── mock/               # TCP / UDP / 组播吞吐压测工具
+├── pyex/               # 数独 Python C 扩展 (extend.c + sudoku.c)
+├── shell/              # 运维脚本 (x64mk 交叉打包 / expect / blobs / gdb 签名 ...)
+├── test/               # GoogleTest + lcov (依赖 ../3rd/googletest 与 ../include/Utils.h)
+├── thread/             # 纯 C 线程池 pthdpool
+├── trade/              # 量化交易（单文件 dual_ma_strategy.py + strategy.yaml）
+├── vs-extension/       # VSCode 文件夹相似度扩展 (TS + Python 后端)
+├── webevs/             # libevent HTTP 服务 + libwebsockets WS + git 静态前端
+├── 3rd/                # 第三方源码 (googletest, rdma-core, llama.cpp-to-hf ...)
+└── bin/ gen/ build/ out/ kos/   # 产物（运行时生成，均被 .gitignore 忽略）</pre>
 </div>
 </div></section>
 
-<section id="cy"><div class="ct">
-<div class="st"><h2>🧠 Cyber — LLM 训练与推理</h2><span class="tg">Python / ML</span></div>
+<section id="bf"><div class="ct">
+<div class="st"><h2>🔨 构建地图</h2><span class="tg">Build Topology</span></div>
 <div class="cd"><div class="cd2">
-<div style="text-align:center;margin-bottom:.4rem"><div class="n c1" style="width:auto;padding:.3rem .8rem"><div class="lb" style="font-size:.68rem">cyber/ — 大语言模型全链路</div><div class="ln">数据准备 → 训练 → 量化 → 推理 → 评估</div></div></div>
+<div style="text-align:center;margin-bottom:.3rem"><div class="n x1" style="width:auto;padding:.3rem .8rem"><div class="lb" style="font-size:.68rem">两套并行构建体系 · 互不感知</div><div class="ln">同目录下既可能有 CMakeLists.txt 也可能有 Makefile，两条链接各自编自己负责的子目录</div></div></div>
 <div class="rw">
-<div class="ag"><div class="al">数据层</div><div class="ao">
-<div class="n e1"><div class="lb">📂 raw/</div><div class="ln">原始数据</div></div>
-<div class="n g1"><div class="lb">prepare_data.py</div><div class="ln">数据预处理</div></div>
-<div class="n i1"><div class="lb">📂 processed/</div><div class="ln">处理后数据</div></div>
-<div class="n g1"><div class="lb">utils/data_utils.py</div><div class="ln">数据集处理</div></div>
+<div class="ag"><div class="al">入口 A：build.sh &lt;目录&gt;</div><div class="ao">
+<div class="n s1"><div class="lb">有 CMakeLists.txt</div><div class="ln">在该目录 build/ 下 cmake + make -j4</div></div>
+<div class="n y1"><div class="lb">无 CMakeLists.txt</div><div class="ln">转发 make "$@" 给顶层 Makefile</div></div>
+<div class="n e1"><div class="lb">Qt* 目录</div><div class="ln">走 qmake 分支</div></div>
+<div class="n e1"><div class="lb">clean</div><div class="ln">清理各 build/ 与产物目录</div></div>
 </div></div>
-<div class="ag"><div class="al">模型层</div><div class="ao">
-<div class="n e1"><div class="lb">base_model/</div><div class="ln">基座模型</div></div>
-<div class="n x1"><div class="lb">训练配置</div><div class="ln">YAML 参数</div></div>
-<div class="n e1"><div class="lb">adapters/</div><div class="ln">LoRA 权重</div></div>
-<div class="n g1"><div class="lb">utils/model_utils.py</div><div class="ln">模型加载/组合</div></div>
-</div></div>
-<div class="ag"><div class="al">训练引擎</div><div class="ao">
-<div class="n m1"><div class="lb">llm_train.py</div><div class="ln">训练循环</div></div>
-<div class="n m1"><div class="lb">inference.py</div><div class="ln">推理服务</div></div>
-<div class="n m1"><div class="lb">ollama_to_hf.py</div><div class="ln">模型格式转换</div></div>
-<div class="n e1"><div class="lb">📂 output/llm_result/</div><div class="ln">训练输出</div></div>
+<div class="ag"><div class="al">入口 B：根目录 make</div><div class="ao">
+<div class="n g1"><div class="lb">make all</div><div class="ln">串行 8 步全量构建</div></div>
+<div class="n x1"><div class="lb">make cmake</div><div class="ln">rm -rf build/* → cmake → make -j4</div></div>
+<div class="n r1"><div class="lb">build.sh clean</div><div class="ln">额外清理 ../build lib jniLibs 等</div></div>
 </div></div>
 </div>
-<div class="dv"></div>
-<div class="rw" style="justify-content:center"><div class="n c1" style="min-width:180px"><div class="lb">📊 TensorBoard / eval_results.json</div><div class="ln">训练监控与评估结果</div></div></div>
 </div></div>
-<table style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现</th></tr></thead><tbody>
-<tr><td>量化</td><td>4bit 量化 + LoRA 高效微调</td></tr>
-<tr><td>回调</td><td>EarlyStopping + 学习率衰减 + 检查点保存</td></tr>
-<tr><td>可视化</td><td>TensorBoard 实时监控</td></tr>
-<tr><td>模型组合</td><td>基础模型 + 适配器自动组合加载</td></tr>
+<table style="margin-top:.6rem"><thead><tr><th>构建链</th><th>覆盖模块</th><th>典型产物（实测 gen/ 与 bin/）</th></tr></thead><tbody>
+<tr><td><b style="color:var(--bl2)">CMake</b>（顶层 CMakeLists.txt，要求 2.8…3.16）</td><td>e.g、media、dpsk、gn1、diff、lookup（挂 <code>time</code> / <code>seek</code> / <code>tool</code> / <code>test</code> 四个子目录）、mock</td><td><code>e.g</code> <code>diffs</code> <code>gn1</code> <code>dpsk_chat</code> <code>lookup</code> <code>genSeek</code> <code>seek_test</code> <code>lookup_test_v2</code> <code>libtimeUtil.so</code> <code>mocking_main</code> <code>mocking_client</code>（<b>均落在 ../gen/</b>）</td></tr>
+<tr><td><b style="color:var(--yl)">Make</b>（顶层 Makefile 的 all）</td><td>IM、hdware(all)、thread(all)、webevs(build)、gSOAPverify（<code>|| true</code> 失败不中断）、pyex、vs-extension</td><td><code>bin/IM.exe</code> <code>bin/kaics.exe</code> <code>bin/client.exe</code> <code>bin/pthdtest.exe</code> <code>bin/gSOAPverify</code> <code>bin/chigpio</code> <code>bin/mes909</code> <code>bin/pipefifo</code> <code>bin/rdma_server.exe</code> <code>bin/rdma_client.exe</code> <code>bin/imgfilesnap.exe</code> <code>bin/VideoCapture</code> <code>bin/dirtyhack</code> <code>gen/similarity-*.vsix</code> <code>gen/webevs_serve</code>（尚未产出，跑一次 <code>make -C webevs build</code> 或顶层 <code>make all</code> 后落入 <code>gen/</code>）</td></tr>
+<tr><td><b style="color:var(--pk)">独立入口</b></td><td>Mac/Transfer（SwiftPM）、cyber（pip + python）、trade（pip + python）、pyex（python -m build）</td><td><code>FileTransfer.app</code>（build_app.sh）、<code>*.whl</code>（gen/）</td></tr>
 </tbody></table>
-<div class="tags" style="margin-top:.4rem"><span class="t tp">PyTorch</span><span class="t tp">Transformers</span><span class="t tp">PEFT/LoRA</span><span class="t tg2">4bit</span><span class="t ty">EarlyStopping</span><span class="t tc">TensorBoard</span><span class="t tp">Ollama</span><span class="t tp">HuggingFace</span></div>
+<div class="rg rgf" style="margin-top:.6rem">
+<div class="rc rm"><h4>webevs 的构建：两个入口两套落点，且规则挂在文件上</h4><p><code>./build.sh webevs</code> 因目录内有 CMakeLists 而在 <code>webevs/build/</code> 就地构建；<code>make -C webevs build</code>（顶层 <code>all</code> 的第 4 步）才走该 Makefile，用共用的 <code>LinxSrvc/build</code> 并把二进制拷进 <code>gen/</code>。又因为构建规则的目标是目录里的 <code>Makefile</code> 文件本身，一旦生成过，<code>make -C webevs make-all</code> 会判为「已最新」空转，仍需用 <code>make -C webevs build</code>（= clean + make-all）强制重建。</p></div>
+</div>
 </div></section>
 
 <section id="im"><div class="ct">
-<div class="st"><h2>📡 IM — KaiSocket 网络通信库</h2><span class="tg">C++ / Network</span></div>
+<div class="st"><h2>📡 IM — 即时通信服务 + KaiSocket 传输库</h2><span class="tg">C++ / Socket / SysV IPC</span></div>
 <div class="cd"><div class="cd2">
-<div style="text-align:center;margin-bottom:.3rem"><div class="n s1"><div class="lb" style="font-size:.72rem">KaiSocket</div><div class="ln">核心网络通信库 · 单例模式</div></div></div>
-<div class="av">▼</div>
-<div class="rw" style="justify-content:center">
-<div class="n s1"><div class="lb">Initialize()</div><div class="ln">端口/IP</div></div>
-<div class="n s1"><div class="lb">registerCallback()</div><div class="ln">注册回调</div></div>
-<div class="n s1"><div class="lb">start()/connect()</div><div class="ln">启动连接</div></div>
-</div>
-<div class="av">▼</div>
-<div class="rw" style="justify-content:center">
-<div class="ag"><div class="al">协议层</div><div class="ao">
-<div class="n e1"><div class="lb">📦 消息头</div><div class="ln">协议结构</div></div>
-<div class="n e1"><div class="lb">📦 消息体</div><div class="ln">Payload</div></div>
-</div></div>
-<div class="ag"><div class="al">并发安全</div><div class="ao">
-<div class="n x1"><div class="lb">🔒 mutex</div></div>
-<div class="n x1"><div class="lb">thread-safe</div><div class="ln">线程安全</div></div>
-</div></div>
-<div class="ag"><div class="al">通信架构</div><div class="ao">
-<div class="n g1"><div class="lb">📤 Publisher(topic)</div><div class="ln">发布消息</div></div>
-<div class="n i1"><div class="lb">📥 CallbackHandler</div><div class="ln">处理回调</div></div>
-</div></div>
-</div>
-</div></div>
-<table style="margin-top:.6rem"><thead><tr><th>特性</th><th>详情</th></tr></thead><tbody>
-<tr><td>跨平台</td><td>WinSock2 + BSD Sockets + epoll 自动适配</td></tr>
-<tr><td>Pub/Sub</td><td>topic 驱动，Publisher → CallbackHandler</td></tr>
-<tr><td>安全</td><td>std::mutex 保护共享状态</td></tr>
-<tr><td>测试</td><td>KaiTest.cxx — Publish/Subscribe/Callback 全流程验证</td></tr>
-</tbody></table>
-<div class="tags" style="margin-top:.4rem"><span class="t tb">BSD Sockets</span><span class="t tb">epoll</span><span class="t tb">WinSock2</span><span class="t tg2">单例</span><span class="t tc">Pub/Sub</span></div>
-</div></section>
-
-<section id="lk"><div class="ct">
-<div class="st"><h2>🔍 Lookup — SQLite 多维度查找</h2><span class="tg">C++ / SQLite</span></div>
-<div class="cd"><div class="cd2">
-<div style="text-align:center;margin-bottom:.3rem"><div class="n g1"><div class="lb" style="font-size:.72rem">Lookup 查找服务</div><div class="ln">seek/ · time/ · tool/ 三模块协同</div></div></div>
+<div style="text-align:center;margin-bottom:.3rem"><div class="n s1" style="width:auto;padding:.3rem .8rem"><div class="lb" style="font-size:.68rem">同一目录下的两套东西：独立聊天服务器 + 可复用 pub/sub 库</div><div class="ln">IM.cc（1796 行）｜ KaiSocket.cc/.h（956/146）｜ KaiTest.cxx（168）</div></div></div>
 <div class="rw">
-<div class="ag"><div class="al">seek/ 查询层</div><div class="ao">
-<div class="n x1"><div class="lb">SeekApi.h</div><div class="ln">API 接口</div></div>
-<div class="n x1"><div class="lb">SeekApi.cpp</div><div class="ln">API 实现</div></div>
-<div class="n m1"><div class="lb">SeekDbMgr.cpp</div><div class="ln">数据库管理</div></div>
-<div class="n i1"><div class="lb">DBbase.h/.cpp</div><div class="ln">数据库基类</div></div>
+<div class="ag"><div class="al">IM.cc — 聊天服务器</div><div class="ao">
+<div class="n s1"><div class="lb">守护化</div><div class="ln">umask 077 → setsid → chdir /</div></div>
+<div class="n s1"><div class="lb">fork-per-conn</div><div class="ln">accept → fork → monitor()</div></div>
+<div class="n x1"><div class="lb">SysV shm IPC</div><div class="ln">IPC_KEY 0x520607</div></div>
+<div class="n y1"><div class="lb">控制台线程</div><div class="ln">quit / kick / cls</div></div>
+<div class="n e1"><div class="lb">端口 argv[1]，默认 8877</div></div>
 </div></div>
-<div class="ag"><div class="al">time/ 时间引擎</div><div class="ao">
-<div class="n tc"><div class="lb">SeekTime.cpp</div><div class="ln">时间索引</div></div>
-<div class="n tc"><div class="lb">TimeManager.cpp</div><div class="ln">时间管理</div></div>
-<div class="n e1"><div class="lb">TimeData*</div><div class="ln">数据结构</div></div>
-<div class="n e1"><div class="lb">TimeSql.h</div><div class="ln">SQL 操作</div></div>
-<div class="n m1"><div class="lb">SQLiteTool.cpp</div><div class="ln">SQLite 工具</div></div>
+<div class="ag"><div class="al">KaiSocket — 异步传输库</div><div class="ao">
+<div class="n m1"><div class="lb">SERVER/BROKER/CLIENT</div><div class="ln">三角色</div></div>
+<div class="n i1"><div class="lb">Header 48B</div><div class="ln">rsv/etag/ssid/text[32]/size</div></div>
+<div class="n i1"><div class="lb">Payload</div><div class="ln">stat[8] + 变长 body</div></div>
+<div class="n g1"><div class="lb">m_msgQue</div><div class="ln">deque 消息队列</div></div>
+<div class="n x1"><div class="lb">USE_EPOLL</div><div class="ln">Linux 真 epoll，否则退化</div></div>
 </div></div>
-<div class="ag"><div class="al">tool/ 工具层</div><div class="ao">
-<div class="n z1"><div class="lb">LookupTool.cpp</div><div class="ln">查找工具</div></div>
-<div class="n z1"><div class="lb">LookupTool.h</div><div class="ln">工具定义</div></div>
-<div class="n e1"><div class="lb">kmp.c</div><div class="ln">KMP 算法</div></div>
-<div class="n e1"><div class="lb">manacher.cxx</div><div class="ln">回文算法</div></div>
+<div class="ag"><div class="al">KaiTest.cxx — CLI</div><div class="ao">
+<div class="n z1"><div class="lb">-S / -C</div><div class="ln">服务端 / 客户端</div></div>
+<div class="n z1"><div class="lb">-BK / -SS</div><div class="ln">Broker / 订阅</div></div>
+<div class="n z1"><div class="lb">-PB / -TF</div><div class="ln">发布 / 传文件</div></div>
+<div class="n e1"><div class="lb">kaics.cfg</div><div class="ln">IP=127.0.0.1，默认 9999</div></div>
 </div></div>
 </div>
 <div class="dv"></div>
 <div class="fc">
-<div class="fd" style="background:rgba(59,130,246,.06)"><div class="dm">1</div><div><div class="lb" style="font-size:.6rem">connectDB() 打开数据库</div></div></div>
+<div class="fd" style="background:rgba(59,130,246,.06)"><div class="dm">1</div><div><div class="lb" style="font-size:.6rem">首次实例化 KaiSocket 前自动 WSAStartup / 忽略 SIGPIPE（按平台差异处理）</div></div></div>
 <div class="dx">↓</div>
-<div class="fd" style="background:rgba(139,92,246,.06)"><div class="dm">2</div><div><div class="lb" style="font-size:.6rem">SELECT / INSERT 构建查询</div></div></div>
+<div class="fd" style="background:rgba(139,92,246,.06)"><div class="dm">2</div><div><div class="lb" style="font-size:.6rem">Initialize(角色) → 绑定 IP/PORT → start()/connect() 建立链路</div></div></div>
 <div class="dx">↓</div>
-<div class="fd" style="background:rgba(16,185,129,.06)"><div class="dm">3</div><div><div class="lb" style="font-size:.6rem">queryTable() 返回结果集</div></div></div>
+<div class="fd" style="background:rgba(16,185,129,.06)"><div class="dm">3</div><div><div class="lb" style="font-size:.6rem">Publish(topic) / Subscribe(topic) → 回调表分发到 CallbackHandler</div></div></div>
 <div class="dx">↓</div>
-<div class="fd" style="background:rgba(249,115,22,.06)"><div class="dm">4</div><div><div class="lb" style="font-size:.6rem">freeTable() / disconnectDB() 释放</div></div></div>
+<div class="fd" style="background:rgba(249,115,22,.06)"><div class="dm">4</div><div><div class="lb" style="font-size:.6rem">BROKER 经 proxyHook 转发；IM.cc 侧用 SysV 共享内存在线表判重/踢人</div></div></div>
 </div>
 </div></div>
-<table style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现</th></tr></thead><tbody>
-<tr><td>线程安全</td><td>std::mutex 保护数据库操作</td></tr>
-<tr><td>查询引擎</td><td>SeekApi + SeekTime 双引擎</td></tr>
-<tr><td>时间索引</td><td>TimeManager/TimeData 高效时间范围查询</td></tr>
-<tr><td>算法</td><td>KMP 字符串匹配、Manacher 回文检测</td></tr>
-<tr><td>数据库基类</td><td>DBbase 封装 SQLite API（connect/execute/free）</td></tr>
-<tr><td>安全加固</td><td>snprintf 防溢出 · sqlite3_mprintf("%q") SQL 注入防护</td></tr>
+<table style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现（代码实测）</th></tr></thead><tbody>
+<tr><td>进程模型</td><td>IM.cc 主进程 accept + 每连接 <code>fork()</code>；<code>prctl(PR_SET_NAME,"inst_mssg")</code></td></tr>
+<tr><td>并发 / IPC</td><td>System V 共享内存在线表（<code>IPC_KEY 0x520607</code>），<code>select()</code> 做 socket 就绪探活，<code>set_n_get_mem</code> 带长度夹紧</td></tr>
+<tr><td>KaiSocket 传输</td><td>48B 定长头 + 变长负载，<code>ssid = PORT&lt;&lt;16 | socket&lt;&lt;8 | IP</code>；Linux 走 <code>USE_EPOLL</code>，其它平台退化为阻塞 accept + select/sleep</td></tr>
+<tr><td>运维参数</td><td><code>./IM.exe -m</code> 打印共享内存在线表，<code>./IM.exe -x</code> 清空在线表（与端口参数位冲突）</td></tr>
+<tr><td>消息/文件</td><td><code>-SS topic</code> 订阅、<code>-PB topic msg</code> 发布、<code>-TF topic file</code> 文件传输</td></tr>
+<tr><td>构建产物</td><td>Makefile → <code>bin/IM.exe</code> + <code>bin/kaics.exe</code>；CMake → 共享库 <code>kaics</code>（<code>../../lib/libkaics.so</code>）</td></tr>
 </tbody></table>
-<div class="tags" style="margin-top:.4rem"><span class="t tg2">SQLite3</span><span class="t tc">thread-safe</span><span class="t tc">时间索引</span><span class="t ty">KMP</span><span class="t tp">Manacher</span><span class="t tr">snprintf 防溢出</span><span class="t tr">SQL 注入防护</span></div>
+<div class="tags" style="margin-top:.4rem"><span class="t tb">BSD Sockets</span><span class="t tb">epoll</span><span class="t tr">fork</span><span class="t ty">SysV shm</span><span class="t tc">Pub/Sub</span><span class="t tg2">select</span><span class="t tp">CMake + Makefile 双入口</span></div>
 </div></section>
 
 <section id="wb"><div class="ct">
-<div class="st"><h2>🌐 Webevs — 事件驱动 Web 服务器</h2><span class="tg">C++ / epoll</span></div>
+<div class="st"><h2>🌐 Webevs — libevent HTTP 服务 + WebSocket + 静态前端</h2><span class="tg">C++ / libevent2 / libwebsockets</span></div>
 <div class="cd"><div class="cd2">
-<div style="text-align:center;margin-bottom:.3rem"><div class="n s1"><div class="lb" style="font-size:.72rem">Webevs</div><div class="ln">epoll/kqueue 事件驱动 HTTP + WebSocket 服务器</div></div></div>
-<div class="rw" style="justify-content:center">
-<div class="n s1"><div class="lb">🚪 ListenFd(port)</div><div class="ln">监听端口</div></div>
-<div class="n s1"><div class="lb">⚡ epoll/kqueue</div><div class="ln">事件循环</div></div>
-<div class="n g1"><div class="lb">💻 RequestClient</div><div class="ln">客户端请求</div></div>
-</div>
-<div class="av">▼</div>
+<div style="text-align:center;margin-bottom:.3rem"><div class="n s1" style="width:auto;padding:.3rem .8rem"><div class="lb" style="font-size:.68rem">evhttp 事件循环（<b>不是裸 epoll</b>）+ 可选 WS 独立端口 + git 分支导出的静态前端</div><div class="ln">WebevApi.cpp 808 ｜ WebMain.cpp 47 ｜ WsServe.cpp 148 ｜ ../include/Utils.h 146（单头 inline）</div></div></div>
 <div class="rw">
-<div class="ag"><div class="al">入口层</div><div class="ao">
-<div class="n x1"><div class="lb">WebMain.cpp</div><div class="ln">参数解析 + 模式选择</div></div>
-<div class="n x1"><div class="lb">WebevApi.h</div><div class="ln">API 定义</div></div>
+<div class="ag"><div class="al">入口</div><div class="ao">
+<div class="n s1"><div class="lb">WebMain.cpp</div><div class="ln">参数解析 + 模式选择</div></div>
+<div class="n e1"><div class="lb">argv[1]=port</div><div class="ln">服务端模式</div></div>
+<div class="n y1"><div class="lb">argv[1]=http://url</div><div class="ln">客户端 RequestClient</div></div>
+<div class="n i1"><div class="lb">argv[2] / WEBEV_WS_PORT</div><div class="ln">WS 端口</div></div>
 </div></div>
-<div class="ag"><div class="al">业务逻辑</div><div class="ao">
-<div class="n m1"><div class="lb">WebevApi.cpp</div><div class="ln">请求处理 + 响应生成</div></div>
-<div class="n m1"><div class="lb">WsCtrl.{h,cpp}</div><div class="ln">WebSocket 服务 (libwebsockets)</div></div>
-<div class="n i1"><div class="lb">Utils.cpp</div><div class="ln">辅助函数</div></div>
+<div class="ag"><div class="al">核心 WebevApi.cpp</div><div class="ao">
+<div class="n x1"><div class="lb">StartServer()</div><div class="ln">evhttp_new + bind 0.0.0.0</div></div>
+<div class="n m1"><div class="lb">GenericHandler</div><div class="ln">统一 gencb 分发</div></div>
+<div class="n m1"><div class="lb">g_dealHooks</div><div class="ln">path+method → 回调</div></div>
+<div class="n g1"><div class="lb">Response()</div><div class="ln">手工拼 JSON 状态体</div></div>
 </div></div>
-<div class="ag"><div class="al">运行模式</div><div class="ao">
-<div class="n g1"><div class="lb">Server(port)</div><div class="ln">HTTP 服务模式</div></div>
-<div class="n y1"><div class="lb">Client(url)</div><div class="ln">客户端模式</div></div>
-<div class="n y1"><div class="lb">WsStartServer(ws)</div><div class="ln">WebSocket 独立端口</div></div>
+<div class="ag"><div class="al">静态前端</div><div class="ao">
+<div class="n z1"><div class="lb">WEBEV_FRONTEND</div><div class="ln">"branch[:dir]"，0=关闭</div></div>
+<div class="n z1"><div class="lb">FetchFrontendFromGit</div><div class="ln">IsSafeToken + git archive</div></div>
+<div class="n i1"><div class="lb">ResolveFrontendFile</div><div class="ln">拒绝 ..、必须 S_ISREG</div></div>
+<div class="n e1"><div class="lb">MimeTypeOf</div><div class="ln">26 项映射，/ → index.html</div></div>
+</div></div>
+<div class="ag"><div class="al">WebSocket（WsServe）</div><div class="ao">
+<div class="n i1"><div class="lb">libwebsockets 独立线程</div><div class="ln">与 HTTP 并存</div></div>
+<div class="n x1"><div class="lb">协议 "echo"</div><div class="ln">MAX_WS_MSG 16KB</div></div>
+<div class="n g1"><div class="lb">发送队列 deque</div><div class="ln">lws_callback_on_writable</div></div>
+<div class="n e1"><div class="lb">无回调则广播</div><div class="ln">默认 echo 回显</div></div>
 </div></div>
 </div>
+<div class="dv"></div>
+<div class="fc">
+<div class="fd" style="background:rgba(59,130,246,.06)"><div class="dm">1</div><div><div class="lb" style="font-size:.6rem">请求进入 GenericHandler → decode_uri + parseUri 拆段</div></div></div>
+<div class="dx">↓</div>
+<div class="fd" style="background:rgba(139,92,246,.06)"><div class="dm">2</div><div><div class="lb" style="font-size:.6rem">IsDynamicUri? → OPTIONS / /log / g_dealHooks 命中走动态，否则 ServeFrontend 取静态文件</div></div></div>
+<div class="dx">↓</div>
+<div class="fd" style="background:rgba(16,185,129,.06)"><div class="dm">3</div><div><div class="lb" style="font-size:.6rem">GetResHook 按 path+method 取处理函数，未注册则回落 SrvCallbacks.ParsReq/PackRsp</div></div></div>
+<div class="dx">↓</div>
+<div class="fd" style="background:rgba(249,115,22,.06)"><div class="dm">4</div><div><div class="lb" style="font-size:.6rem">Response() 输出 {"status":[200,true][,"message":"…"]}；/log 分支 fork 子进程读日志</div></div></div>
+</div>
 </div></div>
-<table style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现</th></tr></thead><tbody>
-<tr><td>事件循环</td><td>epoll（Linux）/ kqueue（macOS）</td></tr>
-<tr><td>模式</td><td>HTTP Server 独立端口 / Client 模式</td></tr>
-<tr><td>WebSocket</td><td>libwebsockets 独立端口，与 HTTP 并存（默认 echo 广播）</td></tr>
-<tr><td>启动</td><td>./WebMain [http_port] [ws_port]，或 env WEBEV_WS_PORT 指定 WS 端口</td></tr>
+<table style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现（代码实测）</th></tr></thead><tbody>
+<tr><td>事件框架</td><td>libevent2 <code>event2/http.h</code>（evhttp + event_base_dispatch），非裸 epoll</td></tr>
+<tr><td>允许方法</td><td>GET｜POST｜HEAD｜OPTIONS｜PUT｜DELETE；OPTIONS 强制回 200</td></tr>
+<tr><td>WebSocket</td><td>libwebsockets 独立端口 + 独立线程；CMake <code>find_library(websockets)</code> 命中才加 <code>-DWITH_WEBSOCKETS</code>，缺失时 <code>WsServe.h</code> 提供空桩</td></tr>
+<tr><td>静态前端</td><td>默认 <code>gh-pages:./webevs-frontend</code>，启动时 <code>rm -rf</code> 后用 <code>git archive | tar -x</code> 导出；先从 <code>WEBEV_REPO</code> 或 <code>git rev-parse --show-toplevel</code> 定位仓库</td></tr>
+<tr><td>可选 LevelDB</td><td>环境变量 <code>WITH_LEVELDB</code> 指向根目录时追加头文件路径与 leveldb 链接</td></tr>
+<tr><td>启动方式</td><td><code>./webevs_serve &lt;port&gt; [ws_port]</code> 或 <code>./webevs_serve http://…</code>（客户端），WS 端口可来自 <code>WEBEV_WS_PORT</code></td></tr>
 </tbody></table>
-<div class="tags" style="margin-top:.4rem"><span class="t tb">epoll</span><span class="t tb">kqueue</span><span class="t tc">Reactor</span><span class="t tg2">非阻塞</span><span class="t tg2">libwebsockets</span><span class="t tb">WebSocket</span></div>
+<div class="tags" style="margin-top:.4rem"><span class="t tb">libevent2</span><span class="t tb">evhttp</span><span class="t tg2">libwebsockets</span><span class="t tc">Reactor</span><span class="t tp">JSON</span><span class="t ty">git archive 前端</span></div>
 </div></section>
 
 <section id="gs"><div class="ct">
-<div class="st"><h2>🔄 gSOAPverify — 多线程 SOAP Web 服务</h2><span class="tg">gSOAP / MySQL / pthread</span></div>
+<div class="st"><h2>🔄 gSOAPverify — 多线程 SOAP 服务</h2><span class="tg">gSOAP 2.8.106 / MySQL / pthread</span></div>
 <div class="cd"><div class="cd2">
-<div style="text-align:center;margin-bottom:.3rem"><div class="n x1"><div class="lb" style="font-size:.72rem">gSOAPverify 服务架构</div><div class="ln">环形缓冲队列 + 线程池 + MySQL · 3 个 SOAP API</div></div></div>
+<div style="text-align:center;margin-bottom:.3rem"><div class="n x1" style="width:auto;padding:.3rem .8rem"><div class="lb" style="font-size:.68rem">gSOAP 源码已内嵌（stdsoap2.h: GSOAP_VERSION 208106）· 真正参与编译只有 6 个翻译单元</div><div class="ln">soap/{soapC,stdsoap2,soapServer}.cpp + sys/status.cc + sql/sqlDbReq.cc + main/mainSoap.cc</div></div></div>
 <div class="rw">
-<div class="ag"><div class="al">SOAP 代码生成</div><div class="ao">
-<div class="n e1"><div class="lb">myweb.wsdl</div><div class="ln">WSDL 接口定义</div></div>
-<div class="n e1"><div class="lb">wsdl2h</div><div class="ln">WSDL → 头文件</div></div>
-<div class="n x1"><div class="lb">soapcpp2</div><div class="ln">头文件 → 存根/代理</div></div>
-<div class="n e1"><div class="lb">soapC.cpp · soapStub.h</div><div class="ln">序列化/反序列化</div></div>
+<div class="ag"><div class="al">接口生成</div><div class="ao">
+<div class="n s1"><div class="lb">soap/rpcapi.h</div><div class="ln">真正的接口输入头</div></div>
+<div class="n x1"><div class="lb">soapcpp2 -S rpcapi.h</div><div class="ln">重生成存根</div></div>
+<div class="n e1"><div class="lb">soapC.cpp / soapH.h / soapStub.h</div><div class="ln">序列化代码（生成物）</div></div>
+<div class="n e1"><div class="lb">soap/myweb.wsdl + *.{req,res}.xml</div><div class="ln">契约与报文样例</div></div>
 </div></div>
-<div class="ag"><div class="al">服务核心层</div><div class="ao">
-<div class="n m1"><div class="lb">mainSoap.cc</div><div class="ln">主循环 + 环形队列</div></div>
-<div class="n m1"><div class="lb">mainSoap.h</div><div class="ln">soap_socket_t 类型</div></div>
-<div class="n s1"><div class="lb">process_queue()</div><div class="ln">MAX_THR=8 工作线程</div></div>
-<div class="n s1"><div class="lb">enqueue / dequeue</div><div class="ln">MAX_QUEUE=1024 环缓</div></div>
+<div class="ag"><div class="al">服务核心 main/</div><div class="ao">
+<div class="n m1"><div class="lb">mainSoap.cc (408)</div><div class="ln">主循环 + 环形队列</div></div>
+<div class="n x1"><div class="lb">MAX_THR 8</div><div class="ln">process_queue 工作线程</div></div>
+<div class="n x1"><div class="lb">MAX_QUEUE 1024</div><div class="ln">socket 环形缓冲</div></div>
+<div class="n e1"><div class="lb">BACKLOG 64 / TIMEOUT 20s</div><div class="ln">mainSoap.h 常量</div></div>
 </div></div>
-<div class="ag"><div class="al">数据与工具层</div><div class="ao">
-<div class="n g1"><div class="lb">sql/sqlDbReq.cc</div><div class="ln">MySQL 连接 + 查询</div></div>
-<div class="n i1"><div class="lb">sys/status.cc</div><div class="ln">CPU/内存/网卡监控</div></div>
-<div class="n g1"><div class="lb">watch_connect()</div><div class="ln">自动重连守护线程</div></div>
+<div class="ag"><div class="al">数据与监控</div><div class="ao">
+<div class="n g1"><div class="lb">sql/sqlDbReq.cc</div><div class="ln">MySQL 3306 + 看门狗</div></div>
+<div class="n i1"><div class="lb">sys/status.cc</div><div class="ln">内存 / 网线状态</div></div>
+<div class="n z1"><div class="lb">MYAUTO_MYSQL_PSW</div><div class="ln">口令走环境变量</div></div>
+<div class="n e1"><div class="lb">watch_connect()</div><div class="ln">最多重连 9 次</div></div>
 </div></div>
 <div class="ag"><div class="al">3 个 SOAP API</div><div class="ao">
 <div class="n z1"><div class="lb">🔀 trans</div><div class="ln">通用数据转发</div></div>
 <div class="n tc"><div class="lb">📊 get-server-status</div><div class="ln">系统状态查询</div></div>
-<div class="n m1"><div class="lb">🔐 login-by-key</div><div class="ln">用户登录认证</div></div>
+<div class="n m1"><div class="lb">🔐 login-by-key</div><div class="ln">登录认证（查库）</div></div>
+<div class="n r1"><div class="lb">必须 return SOAP_OK</div><div class="ln">否则只回 Fault</div></div>
 </div></div>
 </div>
 <div class="dv"></div>
 <div class="fc">
-<div class="fd" style="background:rgba(59,130,246,.06)"><div class="dm">1</div><div><div class="lb" style="font-size:.6rem">soap_bind(port) → listen(BACKLOG=64)</div></div></div>
+<div class="fd" style="background:rgba(59,130,246,.06)"><div class="dm">1</div><div><div class="lb" style="font-size:.6rem">soap_bind(port) → listen(BACKLOG=64)；WSDL 读取经 open_wsdl_safe() 做路径穿越拦截</div></div></div>
 <div class="dx">↓</div>
-<div class="fd" style="background:rgba(139,92,246,.06)"><div class="dm">2</div><div><div class="lb" style="font-size:.6rem">soap_accept() → enqueue(sock, ip) 入环形缓冲</div></div></div>
+<div class="fd" style="background:rgba(139,92,246,.06)"><div class="dm">2</div><div><div class="lb" style="font-size:.6rem">soap_accept() → enqueue(sock, ip) 压入 1024 槽环形队列</div></div></div>
 <div class="dx">↓</div>
-<div class="fd" style="background:rgba(16,185,129,.06)"><div class="dm">3</div><div><div class="lb" style="font-size:.6rem">8 个工作线程 dequeue() → soap_serve() 处理</div></div></div>
+<div class="fd" style="background:rgba(16,185,129,.06)"><div class="dm">3</div><div><div class="lb" style="font-size:.6rem">8 个 pthread 工作线程 dequeue() → soap_serve() 分发到 3 个 API</div></div></div>
 <div class="dx">↓</div>
-<div class="fd" style="background:rgba(249,115,22,.06)"><div class="dm">4</div><div><div class="lb" style="font-size:.6rem">SOAP 请求 → MySQL 查询/状态监控 → SOAP 响应</div></div></div>
+<div class="fd" style="background:rgba(249,115,22,.06)"><div class="dm">4</div><div><div class="lb" style="font-size:.6rem">SQL 查询 / 状态采样 → 结果写回；字符串必须 soap_strdup 分配，业务状态放进参</div></div></div>
 </div>
 </div></div>
-<table style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现</th></tr></thead><tbody>
-<tr><td>并发模型</td><td>主线程 accept + 8 工作线程 (pthread) + 环形缓冲队列 (1024 槽位)</td></tr>
-<tr><td>API: trans</td><td><code>trans@key1=val1&amp;key2=val2</code> → 解析参数 → 转发处理</td></tr>
-<tr><td>API: get-server-status</td><td>req="1000" → 返回内存空闲百分比 (sysconf)</td></tr>
-<tr><td>API: login-by-key</td><td>usr + psw → MySQL 查询 → 返回 result{flag, idx, age, tell, email}</td></tr>
-<tr><td>数据库安全</td><td>snprintf 防溢出 · 密码从 MYAUTO_MYSQL_PSW 环境变量读取</td></tr>
-<tr><td>连接管理</td><td>watch_connect 守护线程 · MYSQL_OPT_RECONNECT · 最多重连 9 次</td></tr>
-<tr><td>跨平台兼容</td><td>soap_socket_t 解耦 SOAP 头文件 · AArch64 匿名 namespace 常量</td></tr>
-<tr><td>状态监控</td><td>getnameinfo/getaddrinfo (替代已弃用 API) · ETHTOOL 网线检测</td></tr>
+<table style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现（代码实测）</th></tr></thead><tbody>
+<tr><td>并发模型</td><td>主线程 accept + 8 工作线程 + 1024 槽环形队列（<code>MAX_THR</code>/<code>MAX_QUEUE</code> 见 <code>main/mainSoap.h</code>）</td></tr>
+<tr><td>返回约定</td><td>服务函数<b>必须返回 SOAP_OK(0)</b>；返回业务码会被 <code>soapServer.cpp</code> 的 <code>if (soap-&gt;error) return soap-&gt;error;</code> 吞掉响应体</td></tr>
+<tr><td>内存约定</td><td>出参字符串必须 <code>soap_strdup(soap, …)</code>，存栈变量地址会 stack-use-after-return</td></tr>
+<tr><td>数据库</td><td><code>SQL_PORT 3306</code>、口令读环境变量 <code>MYAUTO_MYSQL_PSW</code>、<code>watch_connect()</code> 守护线程最多重连 9 次；建库脚本 <code>file/myautomatic.sql</code></td></tr>
+<tr><td>状态监控</td><td><code>get_mem_stat()</code>（sysconf 取内存空闲率）与 <code>detect_eth_cable()</code>（ETHTOOL 网线检测）</td></tr>
+<tr><td>兼容处理</td><td><code>soap_socket_t</code> 解耦平台 socket 类型；AArch64 下常量放匿名 namespace</td></tr>
+<tr><td>本机限制</td><td>本机无 mysqld / mysql 客户端（只有 libmysqlclient），DB 成功路径需用 <code>extern "C"</code> mock 桩链接替换 <code>sqlDbReq.o</code> 才能端到端验证</td></tr>
 </tbody></table>
-<div class="tags" style="margin-top:.4rem"><span class="t tk">gSOAP 2.8</span><span class="t tk">WSDL</span><span class="t tk">SOAP/XML</span><span class="t tg2">MySQL 8</span><span class="t to">pthread</span><span class="t tr">环形缓冲</span><span class="t tp">线程池</span><span class="t g1">env 密码</span><span class="t tc">AArch64</span></div>
+<div class="tags" style="margin-top:.4rem"><span class="t tk">gSOAP 2.8.106</span><span class="t tk">WSDL / XSD</span><span class="t tg2">MySQL 8</span><span class="t to">pthread</span><span class="t tr">环形缓冲</span><span class="t tp">线程池</span><span class="t tc">env 密码</span><span class="t tz">路径穿越拦截</span></div>
 </div></section>
 
-<section id="dp"><div class="ct">
-<div class="st"><h2>🤖 dpsk — DeepSeek API 客户端</h2><span class="tg">C++ / cURL</span></div>
+<section id="lk"><div class="ct">
+<div class="st"><h2>🔍 Lookup — 录制数据帧按时间检索</h2><span class="tg">C++ / SQLite / KMP / Manacher</span></div>
 <div class="cd"><div class="cd2">
-<div style="text-align:center;margin-bottom:.3rem"><div class="n x1"><div class="lb" style="font-size:.72rem">DeepSeek API 客户端</div><div class="ln">cURL 封装 + JSON 交互</div></div></div>
+<div style="text-align:center;margin-bottom:.3rem"><div class="n g1" style="width:auto;padding:.3rem .8rem"><div class="lb" style="font-size:.68rem">从具备帧结构的录制文件里，按时间段 / 字节模式定位数据</div><div class="ln">主 CLI：lookup &lt;file&gt; [pattern] —— 无 pattern 走 Manacher 找最长回文，有 pattern 走 KMP 搜帧</div></div></div>
 <div class="rw">
-<div class="ag"><div class="al">请求构建</div><div class="ao">
-<div class="n y1"><div class="lb">processChat()</div><div class="ln">聊天请求</div></div>
-<div class="n y1"><div class="lb">getBalance()</div><div class="ln">余额查询</div></div>
+<div class="ag"><div class="al">主程序</div><div class="ao">
+<div class="n x1"><div class="lb">main.cc (93)</div><div class="ln">CLI 入口</div></div>
+<div class="n e1"><div class="lb">common.h (193)</div><div class="ln">帧结构 / 魔数 / SeekTimeValue；文件读取与变量解析复用 ../include/Utils.h</div></div>
+<div class="n z1"><div class="lb">kmp.c (137)</div><div class="ln">字节模式匹配</div></div>
+<div class="n z1"><div class="lb">manacher.cxx (114)</div><div class="ln">跨块最长回文</div></div>
 </div></div>
-<div class="ag"><div class="al">请求参数</div><div class="ao">
-<div class="n e1"><div class="lb">model</div><div class="ln">deepseek-chat/coder</div></div>
-<div class="n e1"><div class="lb">stream</div><div class="ln">流式开关</div></div>
-<div class="n e1"><div class="lb">temperature</div><div class="ln">创造性控制</div></div>
-<div class="n e1"><div class="lb">max_tokens</div><div class="ln">输出长度</div></div>
+<div class="ag"><div class="al">seek/ V1 引擎</div><div class="ao">
+<div class="n s1"><div class="lb">SeekTime.cpp (498)</div><div class="ln">seekFileDataTime()</div></div>
+<div class="n m1"><div class="lb">SeekDbMgr.cpp (526)</div><div class="ln">索引 / 查询（std::mutex）</div></div>
+<div class="n e1"><div class="lb">windSize 0x10000</div><div class="ln">maxFrame 0x100000</div></div>
 </div></div>
-<div class="ag"><div class="al">网络层</div><div class="ao">
-<div class="n g1"><div class="lb">CurlBase</div><div class="ln">cURL 基类</div></div>
-<div class="n m1"><div class="lb">performRequest()</div><div class="ln">POST 请求</div></div>
-<div class="n e1"><div class="lb">回调函数</div><div class="ln">响应数据收集</div></div>
+<div class="ag"><div class="al">time/ V2 引擎</div><div class="ao">
+<div class="n i1"><div class="lb">TimeSeek.cpp (382)</div><div class="ln">无 duration 参数版本</div></div>
+<div class="n y1"><div class="lb">TimeDbMgr.cpp (141)</div><div class="ln">V2 数据库层（connect 仍是桩，未实连 sqlite3）</div></div>
+<div class="n e1"><div class="lb">windSize 0x100000</div></div>
+</div></div>
+<div class="ag"><div class="al">配套工具</div><div class="ao">
+<div class="n y1"><div class="lb">tool/main.cpp (472)</div><div class="ln">genSeek v1.0.7 造数据</div></div>
+<div class="n g1"><div class="lb">seek/ → seek_test</div><div class="ln">BUILD_SEEK_TIME_LIB 关闭时出可执行</div></div>
+<div class="n g1"><div class="lb">time/ → libtimeUtil.so</div><div class="ln">BUILD_TIME_SEEK_LIB 打开时出库</div></div>
+<div class="n g1"><div class="lb">test/ → lookup_test_v2</div><div class="ln">V2 分支端到端用例（-DTIMESEEK）</div></div>
+<div class="n g1"><div class="lb">sql/Sqlite.hxx (249)</div><div class="ln">header-only，有 USE_SQLITE3 才真连库；否则显式降级告警</div></div>
+</div></div>
+</div>
+<div class="dv"></div>
+<div class="fc">
+<div class="fd" style="background:rgba(59,130,246,.06)"><div class="dm">1</div><div><div class="lb" style="font-size:.6rem">open SQLite → queryFileIdbyName(file) 判断是否已建过索引（<b>失败才建索引</b>）</div></div></div>
+<div class="dx">↓</div>
+<div class="fd" style="background:rgba(139,92,246,.06)"><div class="dm">2</div><div><div class="lb" style="font-size:.6rem">从 PROJECT_FILE_OFFSET(80) 起扫 CONST_FRAME_HEAD / SEEK_FRAME_HEAD 定位帧边界</div></div></div>
+<div class="dx">↓</div>
+<div class="fd" style="background:rgba(16,185,129,.06)"><div class="dm">3</div><div><div class="lb" style="font-size:.6rem">按窗口滑动解析时间戳 → 写入 TblSeekTime（SQLite，sqlite3_mprintf("%q") 防注入）</div></div></div>
+<div class="dx">↓</div>
+<div class="fd" style="background:rgba(249,115,22,.06)"><div class="dm">4</div><div><div class="lb" style="font-size:.6rem">给定时间区间 → 查 Index → 返回文件偏移 / 帧序列（V1 走 SeekTime，V2 走 TimeSeek）</div></div></div>
+</div>
+</div></div>
+<table style="margin-top:.6rem"><thead><tr><th>常量 / 约定</th><th>值</th><th>说明</th></tr></thead><tbody>
+<tr><td>CONST_FRAME_HEAD</td><td><code>0x1234567890abcdef</code></td><td>帧起始魔数（common.h）</td></tr>
+<tr><td>SEEK_FRAME_HEAD</td><td><code>0x1122334455667788</code></td><td>可检索帧魔数</td></tr>
+<tr><td>MIN_JUDGE_FRAME_SIZE</td><td><code>0x40</code> / PROJECT_FILE_OFFSET <code>80</code></td><td>最小判定帧长 / 起始扫描偏移</td></tr>
+<tr><td>匹配结果上限</td><td><code>MatchedFrame frames[1000]</code></td><td>单次 KMP 返回帧数上限</td></tr>
+<tr><td>索引判据</td><td><code>queryFileIdbyName</code> 成败</td><td><b>不可提前登记</b> insertFileIdbyName，否则跳过建索引、永远查不到时间</td></tr>
+<tr><td>DB 层降级</td><td><code>USE_SQLITE3</code> 宏</td><td>未定义时 <code>Sqlite.hxx</code> 退化为 stub，但会<b>可见地失败</b>：编译期 <code>#warning</code>、首次调用 stderr 告警，<code>open()</code> 恒 false / <code>execute()</code> 恒 -1 / <code>query()</code> 恒 nullptr；CMake 侧降级也发 <code>message(WARNING)</code></td></tr>
+<tr><td>构建开关</td><td><code>BUILD_SEEK_TIME_LIB</code> / <code>BUILD_TIME_SEEK_LIB</code></td><td>决定产出可执行 <code>seek_test</code> 还是动态库 <code>libtimeUtil.so</code>（均 POST_BUILD 拷 <code>../gen</code>）</td></tr>
+</tbody></table>
+<div class="tags" style="margin-top:.4rem"><span class="t tg2">SQLite3</span><span class="t tc">thread-safe</span><span class="t ty">KMP</span><span class="t tp">Manacher</span><span class="t tb">16MB 分块</span><span class="t tr">SQL 注入防护</span><span class="t tc">CMake</span></div>
+</div></section>
+
+<section id="cy"><div class="ct">
+<div class="st"><h2>🧠 Cyber — 聊天语料 LoRA 微调与推理</h2><span class="tg">Python / PyTorch / PEFT</span></div>
+<div class="cd"><div class="cd2">
+<div style="text-align:center;margin-bottom:.3rem"><div class="n m1" style="width:auto;padding:.3rem .8rem"><div class="lb" style="font-size:.68rem">数据准备 → LoRA 微调 → 量化合并 → 推理 / 格式转换</div><div class="ln">llm_train.py(416) · ollama_to_hf.py(988) · inference.py(221) · prepare_data.py(67)</div></div></div>
+<div class="rw">
+<div class="ag"><div class="al">数据层</div><div class="ao">
+<div class="n g1"><div class="lb">prepare_data.py</div><div class="ln">「我:/对方:」→ ShareGPT JSONL</div></div>
+<div class="n x1"><div class="lb">data/dataset.py</div><div class="ln">raw/sharegpt/alpaca，max_length 1024</div></div>
+<div class="n e1"><div class="lb">data/{raw,processed}/</div><div class="ln">chats → train/check</div></div>
+</div></div>
+<div class="ag"><div class="al">训练引擎</div><div class="ao">
+<div class="n m1"><div class="lb">llm_train.py</div><div class="ln">Trainer / 早停 / 调度器</div></div>
+<div class="n m1"><div class="lb">DistributedSampler</div><div class="ln">多卡采样</div></div>
+<div class="n i1"><div class="lb">TensorBoard</div><div class="ln">训练监控</div></div>
+</div></div>
+<div class="ag"><div class="al">模型与量化</div><div class="ao">
+<div class="n x1"><div class="lb">DeepSeek-R1-Distill-Llama-8B</div><div class="ln">基座（或本地 Ollama 8b）</div></div>
+<div class="n g1"><div class="lb">model_utils.py</div><div class="ln">4bit + merge_and_unload</div></div>
+<div class="n z1"><div class="lb">ollama_to_hf.py</div><div class="ln">HF ↔ llama.cpp 互转</div></div>
+</div></div>
+<div class="ag"><div class="al">关键超参（training_config.yaml）</div><div class="ao">
+<div class="n e1"><div class="lb">epochs 10 · batch 2 · seq 1024</div></div>
+<div class="n e1"><div class="lb">lr 2e-4 · grad_clip 1.0</div></div>
+<div class="n e1"><div class="lb">LoRA r16 / α32 / drop 0.05</div><div class="ln">target 7 个 proj</div></div>
+<div class="n y1"><div class="lb">early_stop_patience 3</div></div>
 </div></div>
 </div>
 </div></div>
 <table style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现</th></tr></thead><tbody>
-<tr><td>流式响应</td><td>stream=true，回调函数分块接收</td></tr>
-<tr><td>模型选择</td><td>deepseek-chat / deepseek-coder / deepseek-reasoner</td></tr>
-<tr><td>参数配置</td><td>temperature / max_tokens / web_search</td></tr>
-<tr><td>门面模式</td><td>processChat() 简化复杂 API 调用</td></tr>
+<tr><td>数据格式</td><td><code>prepare_data.py --input … --output …</code>（两个参数<b>必填</b>）产出每行一个 JSON 对象的 ShareGPT 数据；<code>training_config.yaml</code> 里路径名为 <code>data/processed/train.txt</code> 但 <code>data_format: sharegpt</code>，<b>扩展名不代表纯文本</b></td></tr>
+<tr><td>微调方式</td><td>LoRA（PEFT，r16 / α32 / 7 个 target proj）+ BitsAndBytes 4bit <b>可选</b>（<code>model.load_in_4bit</code> 已配置为 <code>false</code>），可 <code>merge_and_unload</code> 合成完整模型</td></tr>
+<tr><td>训练控制</td><td><code>get_linear_schedule_with_warmup</code> + EarlyStopping(patience 3) + 检查点保存 + TensorBoard</td></tr>
+<tr><td>推理</td><td><code>inference.py</code> 加载 adapter 与基座组合</td></tr>
+<tr><td>依赖</td><td>torch / transformers / datasets / accelerate / peft / trl / bitsandbytes / tensorboard / sentencepiece / tiktoken / llama-cpp-python / safetensors</td></tr>
+<tr><td>现状</td><td><code>data/processed/</code> 为空、<code>models/</code> 未落盘权重，需自备基座模型</td></tr>
 </tbody></table>
-<div class="tags" style="margin-top:.4rem"><span class="t to">cURL</span><span class="t to">OpenSSL</span><span class="t tg2">REST API</span><span class="t tg2">JSON</span><span class="t ty">流式</span></div>
+<div class="tags" style="margin-top:.4rem"><span class="t tp">PyTorch</span><span class="t tp">Transformers</span><span class="t tp">PEFT/LoRA</span><span class="t tg2">4bit</span><span class="t ty">EarlyStopping</span><span class="t tc">TensorBoard</span><span class="t tp">Ollama</span><span class="t tp">HuggingFace</span><span class="t tz">llama.cpp</span></div>
+</div></section>
+
+<section id="mc"><div class="ct">
+<div class="st"><h2>📦 Mac/Transfer — macOS SwiftUI + C++17 FTF 文件传输</h2><span class="tg">Swift 5.9 / C++17 / POSIX</span></div>
+<div class="cd"><div class="cd2">
+<div style="text-align:center;margin-bottom:.3rem"><div class="n g1" style="width:auto;padding:.3rem .8rem"><div class="lb" style="font-size:.68rem">SwiftPM 双 target：FileTransferCore（C++ 静态库 + C 桥）→ FileTransferMac（SwiftUI App）</div><div class="ln">链接分离的关键：Swift 侧只见 C ABI（FT_Handle + 回调 + void* userData）</div></div></div>
+<div class="rw">
+<div class="ag"><div class="al">C++ 引擎 FileTransferCore</div><div class="ao">
+<div class="n s1"><div class="lb">TransferEngine.cpp (~1000)</div><div class="ln">服务端 / 客户端收发</div></div>
+<div class="n i1"><div class="lb">TransferBridge.cpp (127)</div><div class="ln">C API 桥接</div></div>
+<div class="n z1"><div class="lb">CommLogger.h (62)</div><div class="ln">4KB 日志缓冲 → Swift</div></div>
+</div></div>
+<div class="ag"><div class="al">协议（64B 定长头）</div><div class="ao">
+<div class="n x1"><div class="lb">magic "FTF"+NUL</div><div class="ln">大端序 htonl</div></div>
+<div class="n x1"><div class="lb">CMD 1..5</div><div class="ln">请求/响应/数据/完成/取消</div></div>
+<div class="n e1"><div class="lb">MAX_CHUNK_SIZE 64KB</div><div class="ln">MAX_FILE_NAME_LEN 1024</div></div>
+<div class="n e1"><div class="lb">DEFAULT_PORT 8800</div><div class="ln">超时 3s / 5s / 30s</div></div>
+</div></div>
+<div class="ag"><div class="al">SwiftUI 界面</div><div class="ao">
+<div class="n m1"><div class="lb">ContentView (134)</div><div class="ln">三页：Server/Client/History</div></div>
+<div class="n m1"><div class="lb">ServerView (244)</div><div class="ln">监听 + 齿轮设置</div></div>
+<div class="n m1"><div class="lb">ClientView (201)</div><div class="ln">连接 + 拖拽发送</div></div>
+<div class="n i1"><div class="lb">TransferCore.swift (383)</div><div class="ln">@MainActor 状态中心</div></div>
+</div></div>
+<div class="ag"><div class="al">构建 / 分发</div><div class="ao">
+<div class="n y1"><div class="lb">build_app.sh</div><div class="ln">release → .app → ad-hoc 签名</div></div>
+<div class="n g1"><div class="lb">Info.plist</div><div class="ln">NSLocalNetworkUsageDescription</div></div>
+<div class="n r1"><div class="lb">本地网络权限</div><div class="ln">macOS 15 起必须授权</div></div>
+</div></div>
+</div>
+<div class="dv"></div>
+<div class="fc">
+<div class="fd" style="background:rgba(16,185,129,.06)"><div class="dm">1</div><div><div class="lb" style="font-size:.6rem">Server 页 startServer(8800) 监听（listen backlog 5 + TCP_NODELAY）；Client 页 connectToServer → EHOSTUNREACH 多为本地网络权限未授权</div></div></div>
+<div class="dx">↓</div>
+<div class="fd" style="background:rgba(59,130,246,.06)"><div class="dm">2</div><div><div class="lb" style="font-size:.6rem">发送端先发 64B 头（CMD 1 请求）→ 接收端回 CMD 2 响应（含文件名长度校验与路径穿越防护）</div></div></div>
+<div class="dx">↓</div>
+<div class="fd" style="background:rgba(139,92,246,.06)"><div class="dm">3</div><div><div class="lb" style="font-size:.6rem">CMD 3 按剩余字节分片发送（≤64KB/片），Swift 侧串行队列避免多文件分片交错</div></div></div>
+<div class="dx">↓</div>
+<div class="fd" style="background:rgba(249,115,22,.06)"><div class="dm">4</div><div><div class="lb" style="font-size:.6rem">CMD 4 完成（回传真实落盘路径）/ CMD 5 取消；日志记录进 History 页</div></div></div>
+</div>
+</div></div>
+<table style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现（代码实测）</th></tr></thead><tbody>
+<tr><td>工程结构</td><td><code>Package.swift</code>（swift-tools 5.9，macOS 13+）：<code>FileTransferCore</code>(C++17, libc++) 被 <code>FileTransferMac</code> 依赖</td></tr>
+<tr><td>桥接方式</td><td><code>include/TransferBridge.h</code> 提供 <code>extern "C"</code> 接口（<code>ft_create/ft_start_server/ft_send_local_file/ft_set_save_path/ft_set_backoff_enabled…</code>），Swift 用 <code>Unmanaged</code> 传 self 作回调 userData</td></tr>
+<tr><td>健壮性</td><td>文件名长度上限 + 路径穿越过滤；空文件支持（分片按剩余字节算）；SO_SNDTIMEO + sendAll 超时不忙等；接收端 accept 后 <code>recv(MSG_PEEK)</code> 探测「到达即死」连接</td></tr>
+<tr><td>可选项</td><td>指数退避开关（构造默认关闭=快速判死）、保存路径、默认端口、日志控制台显示，均 UserDefaults 持久化</td></tr>
+<tr><td>本机限制</td><td><b>Linux 无法构建 SwiftUI 部分</b>（无 SwiftUI/AppKit/Combine）；C++ core 可 <code>g++ -fsyntax-only -std=c++17</code> 校验，Swift 层只能 <code>swiftc -typecheck</code> + 手写 modulemap 顶替</td></tr>
+<tr><td>已知坑</td><td>服务运行中改保存路径不会立即生效（引擎懒创建，仅在 makeEngine 时下发）— 现状保留</td></tr>
+</tbody></table>
+<div class="tags" style="margin-top:.4rem"><span class="t tk">SwiftUI</span><span class="t tp">Combine</span><span class="t tb">C++17</span><span class="t to">C ABI 桥接</span><span class="t tc">POSIX socket</span><span class="t ty">大端序协议</span><span class="t tr">ENOTCONN/退避</span></div>
 </div></section>
 
 <section id="hd"><div class="ct">
-<div class="st"><h2>⚡ HDware — 硬件驱动与交互</h2><span class="tg">C/C++ / 硬件</span></div>
+<div class="st"><h2>⚡ HDware — 内核模块与硬件交互</h2><span class="tg">C / Kernel Module / FPGA / RDMA</span></div>
 <div class="cd"><div class="cd2">
-<div style="text-align:center;margin-bottom:.3rem"><div class="n i1"><div class="lb" style="font-size:.72rem">HDware 硬件接口</div><div class="ln">字符设备 · FPGA · RDMA · 串口 · 4G网络</div></div></div>
+<div style="text-align:center;margin-bottom:.3rem"><div class="n i1" style="width:auto;padding:.3rem .8rem"><div class="lb" style="font-size:.68rem">统一 Makefile 入口 + <code>-D</code> 宏切换目标，内核目录 <code>/lib/modules/$(uname -r)/build</code></div><div class="ln">产物：<code>../bin</code>（用户态工具）与 <code>../kos</code>（.ko 内核模块）</div></div></div>
 <div class="rw">
-<div class="ag"><div class="al">设备驱动</div><div class="ao">
-<div class="n e1"><div class="lb">📂 charDev/</div><div class="ln">字符设备接口</div></div>
-<div class="n e1"><div class="lb">📂 serialPort/</div><div class="ln">串口通信</div></div>
-<div class="n e1"><div class="lb">📂 uart/</div><div class="ln">UART 通信</div></div>
-<div class="n e1"><div class="lb">📂 FPGA/</div><div class="ln">FPGA 接口</div></div>
+<div class="ag"><div class="al">chsdev/</div><div class="ao">
+<div class="n e1"><div class="lb">chsdev.c (130)</div><div class="ln">静态主设备号 234</div></div>
+<div class="n g1"><div class="lb">cdev_add + device_create</div><div class="ln">节点 chars-node</div></div>
+<div class="n x1"><div class="lb">chsDat[1024]</div><div class="ln">read/write/ioctl</div></div>
 </div></div>
-<div class="ag"><div class="al">网络硬件</div><div class="ao">
-<div class="n i1"><div class="lb">🔌 RDMA</div><div class="ln">远程直接内存访问</div></div>
-<div class="n i1"><div class="lb">📡 4GNetwork/</div><div class="ln">4G 网络模块</div></div>
+<div class="ag"><div class="al">virtex/</div><div class="ao">
+<div class="n e1"><div class="lb">virtexdrv.c (395)</div><div class="ln">Xilinx FPGA 字符设备</div></div>
+<div class="n i1"><div class="lb">DdrBar / Virtex</div><div class="ln">寄存器抽象</div></div>
+<div class="n x1"><div class="lb">0x1000 版本=0x12345</div><div class="ln">poll + mmap</div></div>
+<div class="n r1"><div class="lb">tasklet 软中断</div><div class="ln">EXPORT_SYMBOL</div></div>
 </div></div>
-<div class="ag"><div class="al">控制/工具</div><div class="ao">
-<div class="n g1"><div class="lb">📂 control/</div><div class="ln">硬件控制</div></div>
-<div class="n y1"><div class="lb">📂 tools/</div><div class="ln">测试/调试工具</div></div>
-<div class="n m1"><div class="lb">hdwareAPI.h</div><div class="ln">统一硬件 API</div></div>
-<div class="n x1"><div class="lb">Makefile</div><div class="ln">构建脚本</div></div>
+<div class="ag"><div class="al">rdma/</div><div class="ao">
+<div class="n i1"><div class="lb">server.c (231) / client.c (132)</div><div class="ln">Soft-RoCE 用户态</div></div>
+<div class="n x1"><div class="lb">端口 12345</div><div class="ln">QP depth 5 / buf 1024</div></div>
+<div class="n e1"><div class="lb">-lrdmacm -libverbs</div><div class="ln">RDMA_WRITE</div></div>
+<div class="n g1"><div class="lb">set_sw-rxe.sh</div><div class="ln">环境配置</div></div>
 </div></div>
-<div class="ag"><div class="al">数据流向</div><div class="ao">
-<div class="n e1"><div class="lb">🔧 硬件设备</div></div>
-<div class="dx">↓</div>
-<div class="n i1"><div class="lb">📡 硬件驱动</div></div>
-<div class="dx">↓</div>
-<div class="n m1"><div class="lb">📋 硬件API</div></div>
-<div class="dx">↓</div>
-<div class="n x1"><div class="lb">💻 应用程序</div></div>
-</div></div>
-</div>
-</div></div>
-<table style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现</th></tr></thead><tbody>
-<tr><td>硬件支持</td><td>字符设备、FPGA、串口、UART</td></tr>
-<tr><td>网络硬件</td><td>RDMA 高速传输、4G 网络</td></tr>
-<tr><td>开发辅助</td><td>完整的测试/调试工具集</td></tr>
-<tr><td>统一接口</td><td>hdwareAPI.h 封装所有硬件操作</td></tr>
-</tbody></table>
-<div class="tags" style="margin-top:.4rem"><span class="t tc">字符设备</span><span class="t tc">FPGA</span><span class="t tc">串口</span><span class="t tc">RDMA</span><span class="t i1">4G</span><span class="t tc">UART</span></div>
-</div></section>
-
-<section id="th"><div class="ct">
-<div class="st"><h2>🧵 Thread — 纯 C 线程池</h2><span class="tg">C / 并发</span></div>
-<div class="cd"><div class="cd2">
-<div style="text-align:center;margin-bottom:.3rem"><div class="n o1"><div class="lb" style="font-size:.72rem">线程池 (Pure C)</div><div class="ln">线程池 · 任务队列 · 同步机制</div></div></div>
-<div class="rw">
-<div class="ag"><div class="al">线程池核心</div><div class="ao">
-<div class="n o1"><div class="lb">pthdpool.c</div><div class="ln">池管理实现</div></div>
-<div class="n o1"><div class="lb">pthdpool.h</div><div class="ln">API 定义</div></div>
-</div></div>
-<div class="ag"><div class="al">任务管理</div><div class="ao">
-<div class="n y1"><div class="lb">任务队列</div><div class="ln">FIFO 队列</div></div>
-<div class="n y1"><div class="lb">worker threads</div><div class="ln">工作线程</div></div>
-</div></div>
-<div class="ag"><div class="al">同步机制</div><div class="ao">
-<div class="n e1"><div class="lb">pthread_mutex</div></div>
-<div class="n e1"><div class="lb">条件变量</div></div>
-<div class="n y1"><div class="lb">信号量</div></div>
+<div class="ag"><div class="al">phm2f/</div><div class="ao">
+<div class="n e1"><div class="lb">phy_mem.c (357)</div><div class="ln">设备 phy_mem_drv</div></div>
+<div class="n y1"><div class="lb">IOCTL_MAGIC 0x12347379</div><div class="ln">5 组命令</div></div>
+<div class="n z1"><div class="lb">kref + per-file mutex</div><div class="ln">MAX_FILE_ID 256</div></div>
 </div></div>
 </div>
 <div class="dv"></div>
-<div class="fc">
-<div class="fd" style="background:rgba(249,115,22,.06)"><div class="dm">1</div><div><div class="lb" style="font-size:.6rem">pthdpool_create(workers) 创建线程池</div></div></div>
-<div class="dx">↓</div>
-<div class="fd" style="background:rgba(245,158,11,.06)"><div class="dm">2</div><div><div class="lb" style="font-size:.6rem">pthdpool_add_task(pool, task_fn, arg) 入队任务</div></div></div>
-<div class="dx">↓</div>
-<div class="fd" style="background:rgba(16,185,129,.06)"><div class="dm">3</div><div><div class="lb" style="font-size:.6rem">空闲线程取任务 → task_fn(arg) 执行</div></div></div>
-<div class="dx">↓</div>
-<div class="fd" style="background:rgba(139,92,246,.06)"><div class="dm">4</div><div><div class="lb" style="font-size:.6rem">pthdpool_destroy(pool) 安全关闭</div></div></div>
+<div class="rw">
+<div class="ag"><div class="al">其它 <code>-D</code> 开关目标</div><div class="ao">
+<div class="n y1"><div class="lb">chigpio</div><div class="ln">-DGPIO 通用 IO</div></div>
+<div class="n y1"><div class="lb">mes909</div><div class="ln">-DME9S 华为 4G 模块</div></div>
+<div class="n y1"><div class="lb">image / video</div><div class="ln">-DSNAP / -DVIDEO V4L2</div></div>
+<div class="n o1"><div class="lb">pipefifo / dirtyhack</div><div class="ln">管道 / PoC</div></div>
+</div></div>
 </div>
 </div></div>
-<table style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现</th></tr></thead><tbody>
-<tr><td>语言</td><td>纯 C（无 C++/STL 依赖）</td></tr>
-<tr><td>线程模型</td><td>固定数量 worker 线程，预创建</td></tr>
-<tr><td>同步</td><td>pthread_mutex + 条件变量 + 信号量</td></tr>
-<tr><td>任务队列</td><td>FIFO 队列，线程安全入队/出队</td></tr>
+<table style="margin-top:.6rem"><thead><tr><th>目标</th><th>产出</th><th>说明</th></tr></thead><tbody>
+<tr><td>chsdev</td><td><code>bin/chigpio</code>、<code>bin/chstest</code> + <code>*.ko</code></td><td>Makefile 里带自动 <code>insmod</code>，类 <code>chs_dev_class</code></td></tr>
+<tr><td>virtex</td><td><code>*.ko</code>（<code>virtexdma0</code>）</td><td>自实现消息队列 + <code>wake_up_interruptible</code></td></tr>
+<tr><td>RDMA</td><td><code>bin/rdma_server.exe</code>、<code>bin/rdma_client.exe</code></td><td>连接上下文链表 + <code>pthread_mutex</code>，私有数据里传 rkey</td></tr>
+<tr><td>phm2f</td><td><code>bin/test_phm2f.exe</code> + <code>*.ko</code></td><td>按 chunk 写物理地址对应文件</td></tr>
+<tr><td>GPIO / 4G / V4L2</td><td><code>bin/mes909</code>、<code>bin/imgfilesnap.exe</code>、<code>bin/VideoCapture</code></td><td><code>linuxsnap.c</code> 默认设备 <code>/dev/video0</code>，mmap 抓帧</td></tr>
+<tr><td>顶层库代码</td><td>—</td><td><code>routine.c</code>(731)、<code>linuxsnap.c</code>(291)、<code>gpio.h</code>、<code>me909s.h</code>、<code>test.c</code>（多 <code>-D</code> 复用同一份源码）</td></tr>
 </tbody></table>
-<div class="tags" style="margin-top:.4rem"><span class="t o1">pthread</span><span class="t o1">互斥锁</span><span class="t o1">条件变量</span><span class="t o1">信号量</span></div>
+<div class="tags" style="margin-top:.4rem"><span class="t tc">字符设备</span><span class="t tc">FPGA / Virtex</span><span class="t tc">RDMA / Soft-RoCE</span><span class="t i1">4G / ME909s</span><span class="t tc">V4L2</span><span class="t tr">内核模块</span><span class="t ty">ioctl / mmap / poll</span></div>
 </div></section>
 
 <section id="md"><div class="ct">
-<div class="st"><h2>🎬 Media — FFmpeg 音视频处理</h2><span class="tg">C / FFmpeg</span></div>
+<div class="st"><h2>🎬 Media — 视频解码渲染（双分支）</h2><span class="tg">C++20 / DRM / V4L2 / FFmpeg</span></div>
 <div class="cd"><div class="cd2">
-<div style="text-align:center;margin-bottom:.3rem"><div class="n z1"><div class="lb" style="font-size:.72rem">Media 音视频处理</div><div class="ln">FFmpeg C API 封装</div></div></div>
+<div style="text-align:center;margin-bottom:.3rem"><div class="n z1" style="width:auto;padding:.3rem .8rem"><div class="lb" style="font-size:.68rem"><code>USE_JETSON_MULTIMEDIA_API</code> 决定两条完全不同的流水线</div><div class="ln">VideoRender.cpp(693) + CMakeLists.txt(204) + cmake/FindFFmpeg.cmake(41) + check.sh(15)</div></div></div>
 <div class="rw">
-<div class="ag"><div class="al">核心处理</div><div class="ao">
-<div class="n z1"><div class="lb">MediaCore.cpp</div><div class="ln">音频处理</div></div>
-<div class="n z1"><div class="lb">MediaVideo.cpp</div><div class="ln">视频处理</div></div>
+<div class="ag"><div class="al">Jetson 分支（原生）</div><div class="ao">
+<div class="n i1"><div class="lb">init_drm()</div><div class="ln">/dev/dri/card* + CRTC</div></div>
+<div class="n i1"><div class="lb">init_egl()</div><div class="ln">GBM_XRGB8888 + GLES2</div></div>
+<div class="n x1"><div class="lb">JetsonDecoder</div><div class="ln">V4L2 H264 → NV12</div></div>
+<div class="n m1"><div class="lb">NvBufSurfTransform</div><div class="ln">NV12 → RGB</div></div>
+<div class="n g1"><div class="lb">drmModeSetCrtc</div><div class="ln">eglSwapBuffers 上屏</div></div>
 </div></div>
-<div class="ag"><div class="al">音频分析</div><div class="ao">
-<div class="n i1"><div class="lb">🎵 频谱分析</div></div>
-<div class="n i1"><div class="lb">🎵 波形分析</div></div>
-<div class="n i1"><div class="lb">🎵 节奏检测</div></div>
-<div class="n i1"><div class="lb">🎵 特征提取</div></div>
+<div class="ag"><div class="al">非 Jetson 分支</div><div class="ao">
+<div class="n z1"><div class="lb">FFmpeg libav*</div><div class="ln">open_input → send_packet</div></div>
+<div class="n z1"><div class="lb">sws_scale</div><div class="ln">YUV420P → RGB24</div></div>
+<div class="n i1"><div class="lb">SDL2</div><div class="ln">1280x720 窗口</div></div>
+<div class="n e1"><div class="lb">media/mock/mock.c</div><div class="ln">缺 FFmpeg 时的桩</div></div>
 </div></div>
-<div class="ag"><div class="al">构建配置</div><div class="ao">
-<div class="n x1"><div class="lb">CMakeLists.txt</div><div class="ln">构建配置</div></div>
-<div class="n e1"><div class="lb">FindFFmpeg.cmake</div><div class="ln">查找 FFmpeg</div></div>
+<div class="ag"><div class="al">平台探测</div><div class="ao">
+<div class="n x1"><div class="lb">aarch64 + /etc/nv_tegra_release</div><div class="ln">R32/34/35/36</div></div>
+<div class="n y1"><div class="lb">Jetson MM API include</div><div class="ln">/usr/src/jetson_multimedia_api</div></div>
+<div class="n e1"><div class="lb">check.sh</div><div class="ln">设备权限/hugepages/EGL_PLATFORM</div></div>
+</div></div>
+</div>
+</div></div>
+<table style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现</th></tr></thead><tbody>
+<tr><td>Jetson 解码</td><td>V4L2 INPUT(H264, sizeimage=1920*1080*1.5) / CAPTURE(NV12, 4 buffers) 双 STREAMON，<code>NvBufSurfaceFromFd</code> 取帧</td></tr>
+<tr><td>上屏</td><td><code>drmModeAddFB</code>(24/32bpp) + <code>drmModeSetCrtc</code> + <code>eglSwapBuffers</code></td></tr>
+<tr><td>线程模型</td><td>解码线程 push、渲染线程 pop 全局 <code>std::queue&lt;uint8_t*&gt;</code>，容量上限 <code>MAX_FRAME_QUEUE=8</code>，满则对生产者施加<b>背压</b>（condvar 等待）；<code>g_decodeDone</code> / <code>g_renderDone</code> 两个 atomic 控制收尾，Jetson 主循环不再是 <code>while(true)</code>，<code>join()</code> 与 EGL/DRM 清理可达</td></tr>
+<tr><td>FFmpeg 位置</td><td>只在<b>非 Jetson 分支</b>使用；Jetson 分支完全不依赖 libav*</td></tr>
+<tr><td>构建</td><td>target <code>video_render</code>（C++20）；缺库时会尝试 <code>sudo apt-get install</code>，未挂载 SDL2 则 skip</td></tr>
+</tbody></table>
+<div class="tags" style="margin-top:.4rem"><span class="t tz">DRM/KMS</span><span class="t tz">GBM / EGL</span><span class="t tz">V4L2</span><span class="t tz">NvBufSurface</span><span class="t tz">FFmpeg</span><span class="t tz">SDL2</span><span class="t tg2">队列有上限</span></div>
+</div></section>
+
+<section id="th"><div class="ct">
+<div class="st"><h2>🧵 Thread — 纯 C 线程池</h2><span class="tg">C / pthread</span></div>
+<div class="cd"><div class="cd2">
+<div style="text-align:center;margin-bottom:.3rem"><div class="n o1" style="width:auto;padding:.3rem .8rem"><div class="lb" style="font-size:.68rem">零 C++ 依赖的 pthdpool：预创建固定 worker + FIFO 任务队列</div><div class="ln">pthdpool.c(220) · pthdpool.h(90) · pthdtest.c(74)</div></div></div>
+<div class="rw">
+<div class="ag"><div class="al">核心结构</div><div class="ao">
+<div class="n o1"><div class="lb">pthd_pool_t</div><div class="ln">队列头尾 + 线程表</div></div>
+<div class="n y1"><div class="lb">MAX_THRD_NUM 1024</div></div>
+<div class="n e1"><div class="lb">STK_SIZE 10*4096</div></div>
+</div></div>
+<div class="ag"><div class="al">API</div><div class="ao">
+<div class="n g1"><div class="lb">pthd_pool_init(sz_que, thrd_num)</div></div>
+<div class="n g1"><div class="lb">pthd_pool_add_task(...)</div></div>
+<div class="n i1"><div class="lb">pthd_pool_destroy(...)</div></div>
+</div></div>
+<div class="ag"><div class="al">同步</div><div class="ao">
+<div class="n e1"><div class="lb">pthread_mutex</div></div>
+<div class="n e1"><div class="lb">条件变量</div></div>
+<div class="n x1"><div class="lb">attr attr_STATE</div><div class="ln">detach 等属性</div></div>
 </div></div>
 </div>
 <div class="dv"></div>
 <div class="fc">
-<div class="fd" style="background:rgba(20,184,166,.06)"><div class="dm">1</div><div><div class="lb" style="font-size:.6rem">打开输入文件 (avformat_open_input)</div></div></div>
+<div class="fd" style="background:rgba(249,115,22,.06)"><div class="dm">1</div><div><div class="lb" style="font-size:.6rem">pthd_pool_init(queue_size, worker_num) 预创建线程</div></div></div>
 <div class="dx">↓</div>
-<div class="fd" style="background:rgba(59,130,246,.06)"><div class="dm">2</div><div><div class="lb" style="font-size:.6rem">解码 (avcodec_send_packet / recv_frame)</div></div></div>
+<div class="fd" style="background:rgba(245,158,11,.06)"><div class="dm">2</div><div><div class="lb" style="font-size:.6rem">pthd_pool_add_task(pool, task_fn, arg) 加锁入 FIFO 队尾并 signal</div></div></div>
 <div class="dx">↓</div>
-<div class="fd" style="background:rgba(139,92,246,.06)"><div class="dm">3</div><div><div class="lb" style="font-size:.6rem">处理 (频谱/波形分析、滤镜)</div></div></div>
+<div class="fd" style="background:rgba(16,185,129,.06)"><div class="dm">3</div><div><div class="lb" style="font-size:.6rem">空闲 worker 抢锁取任务 → task_fn(arg) → 回到等待</div></div></div>
 <div class="dx">↓</div>
-<div class="fd" style="background:rgba(16,185,129,.06)"><div class="dm">4</div><div><div class="lb" style="font-size:.6rem">编码输出 (avcodec_send_frame)</div></div></div>
+<div class="fd" style="background:rgba(139,92,246,.06)"><div class="dm">4</div><div><div class="lb" style="font-size:.6rem">pthd_pool_destroy() 广播退出 + join，错误码 -1..-5</div></div></div>
 </div>
 </div></div>
-<table style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现</th></tr></thead><tbody>
-<tr><td>音频分析</td><td>频谱、波形、节奏检测、特征提取</td></tr>
-<tr><td>视频处理</td><td>基于 FFmpeg libav* 系列 API</td></tr>
-<tr><td>构建</td><td>CMake + FindFFmpeg.cmake 自动查找库</td></tr>
-</tbody></table>
-<div class="tags" style="margin-top:.4rem"><span class="t tz">FFmpeg</span><span class="t tz">libavcodec</span><span class="t tz">libavformat</span><span class="t tz">libavfilter</span></div>
+<div class="tags" style="margin-top:.4rem"><span class="t o1">pthread</span><span class="t o1">互斥锁</span><span class="t o1">条件变量</span><span class="t tr">共享栈区</span></div>
+</div></section>
+
+<section id="tl"><div class="ct">
+<div class="st"><h2>🛠 工具集 — mock / diff / gn1 / pyex / shell / test</h2><span class="tg">Utilities</span></div>
+<div class="g2">
+<div class="cd"><h4>🚀 mock — 网络吞吐压测</h4>
+<p style="font-size:.68rem;color:var(--t2)">同一份 <code>socket.cpp</code>(649) 编译出 <code>mocking_main</code>(服务端) 与 <code>mocking_client</code>(<code>-DCLIENT</code>)：TCP / UDP / 组播三种模式，可落盘校验。发送侧「队列 + 最多 64 worker」，<code>Message</code> 自持内存 move-only；<code>SIGINT</code> 触发统计。<br>常量：MAX_PKG_SIZE 4M · MAX_WORK_THREADS 64 · MAX_QUEUE_SIZE 1000 · 默认端口 8899；组播地址判定 224.0.0.0–239.255.255.255。</p>
+<div class="tags"><span class="t tb">TCP/UDP/组播</span><span class="t ty">多线程发送</span><span class="t tg2">吞吐统计</span></div></div>
+<div class="cd"><h4>📊 diff — 源码相似度 / 抄袭度</h4>
+<p style="font-size:.68rem;color:var(--t2)"><code>analyzing.cc</code>(327，C++17，无第三方库)：只对 24 种文本后缀取 UTF 文件 → <code>get_effective_content()</code> 去注释与空白 → 逐行入 <code>map&lt;string,int&gt;</code> 求交集 <code>Σmin</code> → <code>ratio = duplicates / max(行数)</code>（&gt;0.8 绿 / &gt;0.4 黄 / 否则红）。支持 <code>--exclude</code>（可多次）、<code>--diff</code>、<code>--no-color</code>；源与目标必须同为文件或同为目录。</p>
+<div class="tags"><span class="t tc">多重集交集</span><span class="t ty">去注释去空白</span><span class="t tg2">24 种后缀</span></div></div>
+<div class="cd"><h4>🧪 gn1 — 测试数据生成器</h4>
+<p style="font-size:.68rem;color:var(--t2)"><code>main.cxx</code>(547)：按帧描述语法 <code>name:length[=fixed_value]</code> 生成按规律递增/递减的大文件，<code>size</code> 字段自动回填帧长，可选 8/16/32/64bit 与大小端，收尾打印平均 MB/s。另有 detached 线程每 100ms 打百分比进度。<br>默认：<code>g_file=test</code>、<code>g_total=1048576</code>、<code>g_bits=32</code>；Linux 下 root 时产物装到 <code>/usr/local/bin</code>，否则 <code>../gen</code>。</p>
+<div class="tags"><span class="t tp">帧模板语法</span><span class="t tb">大小端可配</span><span class="t ty">吞吐统计</span></div></div>
+<div class="cd"><h4>🐍 pyex — 数独 C 扩展</h4>
+<p style="font-size:.68rem;color:var(--t2)"><code>setup.py</code> 声明 <code>Extension('sudoku', sources=['extend.c','sudoku.c'])</code>：<code>extend.c</code>(28) 导出 <code>sudoku.game()</code>，<code>sudoku.c</code>(217) 用 <code>placeable()</code> 约束检查 + <code>backtrace()</code> 回溯求解 + <code>shuffle()</code> 出题。<code>make.sh</code> 走 <code>python -m build</code>，wheel 输出 <code>../gen</code>；脚本先探测解释器与 PEP 668 标记（<code>stdlib/EXTERNALLY-MANAGED</code>），命中时自动给 pip 加 <code>--break-system-packages</code>，旧版 pip 不识别该 flag 会降级重试。</p>
+<div class="tags"><span class="t ty">CPython C API</span><span class="t tp">回溯求解</span></div></div>
+<div class="cd"><h4>🌀 shell — 运维与交叉编译脚本</h4>
+<p style="font-size:.68rem;color:var(--t2)"><code>x64mk/</code>：QEMU 模拟 amd64 容器里 gradle 打 Device2Device APK（env.sh / Dockerfile / build-image.sh / build-apk.sh / kill-build.sh，JDK11+NDK23+Gradle7.0.2，gradle 堆 <code>-Xmx1500m</code> 适配本机 ~7.6GiB 内存）<br><code>expect/</code>：expect 自动登录 + pf 端口转发；另有 <code>blobs.sh</code>（Caffe prototxt 批处理）、<code>del_mac_icon.sh</code>、<code>sign_gdb.sh</code>、<code>gitbase.sh</code>、<code>cudaturch</code>（PyTorch nightly cu126）、<code>shadowsocks.sh</code>、Windows 自启动 bat/vbs。</p>
+<div class="tags"><span class="t tb">QEMU/binfmt</span><span class="t to">gradle/APK</span><span class="t tk">expect</span><span class="t tr">含明文口令</span></div></div>
+<div class="cd"><h4>🧪 test — GoogleTest + lcov</h4>
+<p style="font-size:.68rem;color:var(--t2)">target <code>test</code>：<code>add_subdirectory(../3rd/googletest)</code>，链接 gtest/gmock，源码在 <code>tests/test*_*.c*</code>（test1_string 192 / test2_struct 141 / test3_event 88），其中 <code>test3_event.cpp</code> 覆盖 <code>../include/Utils.h</code> 的 6 个 inline 函数（<code>isNum</code> / <code>isIpAddr</code> / <code>sIP2long</code> / <code>parseUri</code> / <code>getVariable</code> / <code>getFileAsCstring</code>）。<code>./test.sh</code> = cmake+make+运行+lcov/genhtml 覆盖率。<br>注意：<b>它没有被顶层 CMakeLists 收录</b>，仍依赖 <code>3rd/googletest</code> 与 <code>../include</code>，脱离这两个目录无法构建——但已<b>不再依赖 webevs</b>。</p>
+<div class="tags"><span class="t tg2">GoogleTest</span><span class="t tc">lcov</span><span class="t tr">依赖外部目录</span></div></div>
+<div class="cd"><h4>📐 e.g — CMake 工程模板</h4>
+<p style="font-size:.68rem;color:var(--t2)"><code>CMakeLists.txt</code>(25) + <code>main.c</code>(7)：只打印一行提示，用 <code>FILE(GLOB "*.c*")</code> 编全部源码，POST_BUILD 自述用途「template to build using [ build.sh xxx ]」。产出按平台落到 <code>../out</code>(Win) 或 <code>../gen</code>。</p>
+<div class="tags"><span class="t tb">模板骨架</span></div></div>
+</div>
+</div></section>
+
+<section id="dp"><div class="ct">
+<div class="st"><h2>🤖 dpsk — DeepSeek API 客户端</h2><span class="tg">C++11 / cURL / nlohmann_json</span></div>
+<div class="cd"><div class="cd2">
+<div style="text-align:center;margin-bottom:.3rem"><div class="n x1" style="width:auto;padding:.3rem .8rem"><div class="lb" style="font-size:.68rem">命令行聊天：<code>Chat.cc</code> 状态机 + <code>CurlReqs.cpp</code> 网络层</div><div class="ln">CurlReqs.cpp(342) · CurlReqs.h(59) · Chat.cc(69) · Utils.hpp(792)</div></div></div>
+<div class="rw">
+<div class="ag"><div class="al">接口</div><div class="ao">
+<div class="n g1"><div class="lb">/chat/completions</div><div class="ln">POST 对话</div></div>
+<div class="n g1"><div class="lb">/chat/balance</div><div class="ln">余额查询</div></div>
+<div class="n r1"><div class="lb">DPSK_API_KEY</div><div class="ln">缺失即退出</div></div>
+</div></div>
+<div class="ag"><div class="al">参数</div><div class="ao">
+<div class="n e1"><div class="lb">5 个 Models</div><div class="ln">chat/coder/reasoner/…</div></div>
+<div class="n e1"><div class="lb">stream(true) · temp 0.7</div></div>
+<div class="n e1"><div class="lb">max_tokens 3000 · top 0.9</div></div>
+</div></div>
+<div class="ag"><div class="al">依赖兜底</div><div class="ao">
+<div class="n y1"><div class="lb">find_package(CURL)</div><div class="ln">缺则 apt/yum</div></div>
+<div class="n y1"><div class="lb">ExternalProject curl-7.79.1</div></div>
+<div class="n i1"><div class="lb">json v3.10.5 FetchContent</div></div>
+</div></div>
+</div>
+</div></div>
+<div class="tags" style="margin-top:.4rem"><span class="t to">cURL</span><span class="t to">OpenSSL</span><span class="t tg2">REST</span><span class="t tg2">JSON</span><span class="t ty">流式 100ms 轮询</span></div>
 </div></section>
 
 <section id="qt"><div class="ct">
-<div class="st"><h2>📈 Trade — 量化交易系统</h2><span class="tg">Python / 金融</span></div>
+<div class="st"><h2>📈 Trade — 量化交易（双均线多周期）</h2><span class="tg">Python / pandas / backtrader</span></div>
 <div class="cd"><div class="cd2">
-<div style="text-align:center;margin-bottom:.3rem"><div class="n m1"><div class="lb" style="font-size:.72rem">Dual MA Trading System</div><div class="ln">行情网关 → 策略引擎 → 风控引擎 → 交易网关 → 券商</div></div></div>
+<div style="text-align:center;margin-bottom:.3rem"><div class="n m1" style="width:auto;padding:.3rem .8rem"><div class="lb" style="font-size:.68rem">单文件策略 <code>dual_ma_strategy.py</code>（1600+ 行）+ <code>strategy.yaml</code></div><div class="ln">行情 → 多周期分析 → 风控 → 下单 → 终端面板（Rich）</div></div></div>
 <div class="rw">
-<div class="ag"><div class="al">数据与接口</div><div class="ao">
-<div class="n y1"><div class="lb">TushareAPI</div><div class="ln">行情源 (缓存+超时)</div></div>
-<div class="n y1"><div class="lb">CTPTradeAPI</div><div class="ln">CTP 期货交易</div></div>
-<div class="n y1"><div class="lb">HTSCAPI</div><div class="ln">华泰 REST 接口</div></div>
-<div class="n e1"><div class="lb">Account · Order · Signal</div><div class="ln">dataclass 数据模型</div></div>
+<div class="ag"><div class="al">数据 / 交易接口</div><div class="ao">
+<div class="n y1"><div class="lb">MarketDataAPI(ABC)</div><div class="ln">TushareAPI（1s 缓存）</div></div>
+<div class="n y1"><div class="lb">TradeAPI(ABC)</div><div class="ln">CTP WebSocket / HTSC REST</div></div>
+<div class="n e1"><div class="lb">Account · Order · Signal</div><div class="ln">dataclass 模型</div></div>
 </div></div>
-<div class="ag"><div class="al">策略与分析</div><div class="ao">
-<div class="n m1"><div class="lb">MultiTimeframeAnalyzer</div><div class="ln">MA/RSI/MACD/KDJ/ATR/BB</div></div>
-<div class="n m1"><div class="lb">EnhancedDualMAStrategy</div><div class="ln">多周期共振信号</div></div>
-<div class="n tc"><div class="lb">Predictor (LSTM)</div><div class="ln">Keras 价格预测</div></div>
-<div class="n tc"><div class="lb">DerivativesEngine</div><div class="ln">BS 期权定价 · Greeks</div></div>
+<div class="ag"><div class="al">分析 / 策略</div><div class="ao">
+<div class="n m1"><div class="lb">MultiTimeframeAnalyzer</div><div class="ln">MA/RSI/MACD/ATR + 趋势评分</div></div>
+<div class="n m1"><div class="lb">EnhancedDualMAStrategy</div><div class="ln">多周期共振</div></div>
+<div class="n tc"><div class="lb">Predictor (LSTM)</div><div class="ln">Keras 涨跌预测</div></div>
+<div class="n tc"><div class="lb">DerivativesEngine</div><div class="ln">BS + Greeks + IV</div></div>
 </div></div>
-<div class="ag"><div class="al">风控与执行</div><div class="ao">
-<div class="n r1"><div class="lb">RiskManager</div><div class="ln">6 层风控 (黑名单/杠杆/ATR止损)</div></div>
-<div class="n r1"><div class="lb">BacktestEngine</div><div class="ln">Backtrader 回测 (Sharpe/DrawDown)</div></div>
-<div class="n i1"><div class="lb">AsyncDataUpdater</div><div class="ln">asyncio 并发数据更新</div></div>
+<div class="ag"><div class="al">风控 / 回测</div><div class="ao">
+<div class="n r1"><div class="lb">RiskManager</div><div class="ln">日亏/仓位/ATR 止损</div></div>
+<div class="n r1"><div class="lb">BacktestEngine</div><div class="ln">backtrader 回测</div></div>
+<div class="n i1"><div class="lb">AsyncDataUpdater</div><div class="ln">asyncio 并发更新</div></div>
 </div></div>
-<div class="ag"><div class="al">监控与可视化</div><div class="ao">
-<div class="n g1"><div class="lb">📊 Dashboard (Rich)</div><div class="ln">终端实时面板</div></div>
-<div class="n g1"><div class="lb">📈 账户概览</div><div class="ln">总资产/仓位/盈亏</div></div>
-<div class="n g1"><div class="lb">📡 信号历史</div><div class="ln">最近 5 条信号</div></div>
+<div class="ag"><div class="al">strategy.yaml（部分）</div><div class="ao">
+<div class="n e1"><div class="lb">600519.SH / 000001.SZ</div><div class="ln">15m / 30m</div></div>
+<div class="n x1"><div class="lb">最大仓位 0.5 · 杠杆 2.0</div></div>
+<div class="n x1"><div class="lb">日亏 -5% · 止损 3%</div></div>
 </div></div>
 </div>
 </div></div>
-<table style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现</th></tr></thead><tbody>
-<tr><td>行情接入</td><td>Tushare Pro REST API（缓存 + 超时控制）</td></tr>
-<tr><td>交易接口</td><td>CTP WebSocket（SimNow 仿真）/ 华泰 REST API（可切换）</td></tr>
-<tr><td>技术指标</td><td>MA5/MA20/MA60 · EMA · RSI · MACD · KDJ · ATR · 布林带（TA-Lib）</td></tr>
-<tr><td>多周期共振</td><td>15m/30m/1d 三周期，加权评分（MA排列+RSI+MACD+KDJ+布林带）</td></tr>
-<tr><td>风控层次</td><td>日亏损限制 · 杠杆上限 · 单品种仓位 · ATR 动态止损 · 日交易次数 · 黑名单</td></tr>
-<tr><td>仓位管理</td><td>风险预算 = 总资产 × 1% / ATR(14)，动态计算</td></tr>
-<tr><td>历史回测</td><td>Backtrader 集成：夏普比率 · 最大回撤 · 收益率 · 交易分析</td></tr>
-<tr><td>价格预测</td><td>LSTM 神经网络（TensorFlow/Keras），60 根K线OHLCV → 涨跌幅预测</td></tr>
-<tr><td>期权定价</td><td>Black-Scholes 公式 · Delta/Gamma/Theta/Vega/Rho 希腊值 · 隐含波动率（Newton-Raphson）</td></tr>
-<tr><td>可视化</td><td>Rich 终端面板：账户概览 · 持仓监控 · 信号历史 · 趋势评分</td></tr>
-<tr><td>并发更新</td><td>asyncio 异步并发获取多标的行情数据</td></tr>
-</tbody></table>
-<div class="tags" style="margin-top:.4rem"><span class="t tp">pandas</span><span class="t tp">numpy</span><span class="t tp">TA-Lib</span><span class="t tp">Backtrader</span><span class="t tp">TensorFlow</span><span class="t tk">LSTM</span><span class="t tg2">Rich</span><span class="t tc">asyncio</span><span class="t to">CTP</span><span class="t to">Black-Scholes</span><span class="t tr">风控</span></div>
+<div class="tags" style="margin-top:.4rem"><span class="t tp">pandas</span><span class="t tp">numpy</span><span class="t tp">TA-Lib</span><span class="t tp">Backtrader</span><span class="t tp">TensorFlow</span><span class="t tk">LSTM</span><span class="t tg2">Rich</span><span class="t tc">asyncio</span><span class="t to">CTP</span><span class="t to">Black-Scholes</span></div>
 </div></section>
 
 <section id="vs"><div class="ct">
-<div class="st"><h2>🔌 VS Extension — VSCode 文件夹比较扩展</h2><span class="tg">TypeScript / Python</span></div>
+<div class="st"><h2>🔌 VS Extension — VSCode 文件夹相似度扩展</h2><span class="tg">TypeScript / Python</span></div>
 <div class="cd"><div class="cd2">
-<div style="text-align:center;margin-bottom:.3rem"><div class="n y1"><div class="lb" style="font-size:.72rem">Files Comparison</div><div class="ln">VSCode 扩展 · 代码相似度分析 · 文件夹对比</div></div></div>
+<div style="text-align:center;margin-bottom:.3rem"><div class="n y1" style="width:auto;padding:.3rem .8rem"><div class="lb" style="font-size:.68rem">TS 前端负责交互与展示，Python 后端负责真正的比对计算</div><div class="ln">extension.ts(480) · parse_text.ts(168) · view_html.ts(241)</div></div></div>
 <div class="rw">
-<div class="ag"><div class="al">TS 扩展核心</div><div class="ao">
-<div class="n y1"><div class="lb">extension.ts</div><div class="ln">入口 · 命令处理</div></div>
-<div class="n y1"><div class="lb">parse_text.ts</div><div class="ln">JSON 解析</div></div>
-<div class="n y1"><div class="lb">view_html.ts</div><div class="ln">Webview 模板</div></div>
-<div class="n e1"><div class="lb">package.json</div><div class="ln">命令 & 菜单</div></div>
+<div class="ag"><div class="al">TS 扩展</div><div class="ao">
+<div class="n y1"><div class="lb">similarity.compareFolders</div><div class="ln">右键多选比较</div></div>
+<div class="n y1"><div class="lb">quickCompare</div><div class="ln">快捷键入口</div></div>
+<div class="n i1"><div class="lb">spawn python similarity.py</div><div class="ln">--detail --ignore-ext</div></div>
+<div class="n m1"><div class="lb">Webview 面板</div><div class="ln">绿≥70 / 黄30-70 / 红&lt;30</div></div>
 </div></div>
 <div class="ag"><div class="al">Python 后端</div><div class="ao">
-<div class="n g1"><div class="lb">similarity.py</div><div class="ln">比较引擎 (22KB)</div></div>
-<div class="n i1"><div class="lb">双引擎去注释</div><div class="ln">状态机逐字符 + 行标记正则</div></div>
+<div class="n z1"><div class="lb">scripts/similarity.py</div><div class="ln">指向 ../../../toolset/similary.py 的软链接</div></div>
+<div class="n e1"><div class="lb">双引擎去注释</div><div class="ln">状态机 + 行正则</div></div>
 <div class="n i1"><div class="lb">SequenceMatcher</div><div class="ln">行级 diff 评分</div></div>
-<div class="n i1"><div class="lb">JSON 输出模式</div><div class="ln">结构化结果解析</div></div>
 </div></div>
-<div class="ag"><div class="al">用户交互</div><div class="ao">
-<div class="n m1"><div class="lb">右键菜单</div><div class="ln">单选 / Ctrl+多选</div></div>
-<div class="n m1"><div class="lb">快捷键</div><div class="ln">quickCompare</div></div>
-<div class="n e1"><div class="lb">Webview</div><div class="ln">深色结果面板</div></div>
-<div class="n e1"><div class="lb">Output Channel</div><div class="ln">实时进度</div></div>
+<div class="ag"><div class="al">构建 / 分发</div><div class="ao">
+<div class="n g1"><div class="lb">make.sh → nvm + vsce</div><div class="ln">vsce package → gen/*.vsix</div></div>
+<div class="n s1"><div class="lb">package.json</div><div class="ln">similarity v1.0.1 · ts 4.9 · eslint</div></div>
+<div class="n g1"><div class="lb">quickCompare 已声明</div><div class="ln">contributes.commands 三个命令齐全</div></div>
 </div></div>
-</div>
-<div class="dv"></div>
-<div class="fc">
-<div class="fd" style="background:rgba(16,185,129,.06)"><div class="dm">1</div><div><div class="lb" style="font-size:.6rem">右键选中 1~N 个文件夹 → 1 个弹窗选第二个 / ≥2 个直接比较前两个</div></div></div>
-<div class="dx">↓</div>
-<div class="fd" style="background:rgba(59,130,246,.06)"><div class="dm">2</div><div><div class="lb" style="font-size:.6rem">TS 扩展检测 Python 环境 → 收集忽略扩展名</div></div></div>
-<div class="dx">↓</div>
-<div class="fd" style="background:rgba(139,92,246,.06)"><div class="dm">3</div><div><div class="lb" style="font-size:.6rem">spawn Python similarity.py → 注释剥离 → 行级 diff</div></div></div>
-<div class="dx">↓</div>
-<div class="fd" style="background:rgba(249,115,22,.06)"><div class="dm">4</div><div><div class="lb" style="font-size:.6rem">JSON 输出解析 → Webview 面板展示结果</div></div></div>
 </div>
 </div></div>
 <table style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现</th></tr></thead><tbody>
-<tr><td>命令入口</td><td>右键菜单（单选/多选）+ 快捷键 (quickCompare)</td></tr>
-<tr><td>多选支持</td><td>≥2 个文件夹直接比较前两个，1 个弹窗选第二个</td></tr>
-<tr><td>注释剥离</td><td>双引擎：状态机逐字符解析 + 行标记正则匹配</td></tr>
-<tr><td>语言支持</td><td>Python / C / C++ / Java / JS / TS / Rust / Swift / Kotlin / CSS / HTML / XML</td></tr>
-<tr><td>结果展示</td><td>Output Channel 实时进度 + Webview 深色面板</td></tr>
-<tr><td>模板分离</td><td>view_html.ts 独立管理 HTML/CSS，extension.ts 只构建数据</td></tr>
-<tr><td>忽略规则</td><td>扩展名 + 目录名 + 文件模式，三种维度</td></tr>
+<tr><td>命令</td><td><code>similarity.compareFolders</code> / <code>similarity.openResults</code> / <code>similarity.quickCompare</code></td></tr>
+<tr><td>Python 探测</td><td>extension.ts 依次探测 python3 / python 后再 spawn</td></tr>
+<tr><td>结果与展示</td><td>JSON 输出由 <code>parse_text.ts</code> 解析（含纯文本回退），<code>view_html.ts</code> 负责 HTML/CSS 模板</td></tr>
+<tr><td>注意</td><td>后端脚本是<b>软链接</b>，真实实现在仓库外的相对路径 <code>../../../toolset/similary.py</code>（该文件确实存在，22.8KB）；克隆时若缺少该路径，命令拿不到任何结果。扩展调用 <code>--detail</code> + <code>--ignore-ext=&lt;ext&gt;</code>，<code>similary.py</code> 已定义 <code>--ignore-ext</code>（可重复指定或逗号分隔，输入统一规范为小写带点，可写 <code>.LOG</code> / <code>log</code> / <code>*.log</code>），由 <code>build_index</code> 在两侧目录建索引时即过滤</td></tr>
 </tbody></table>
 <div class="tags" style="margin-top:.4rem"><span class="t ty">TypeScript</span><span class="t tp">Python 3</span><span class="t tp">difflib</span><span class="t tc">SequenceMatcher</span><span class="t tg2">VSCode API</span><span class="t tk">Webview</span><span class="t to">child_process</span></div>
 </div></section>
 
-<section id="bf"><div class="ct">
-<div class="st"><h2>🔨 构建系统</h2><span class="tg">CMake / Make</span></div>
-<div class="cd"><div class="cd2">
-<div style="text-align:center;margin-bottom:.3rem"><div class="n x1"><div class="lb" style="font-size:.72rem">混合构建系统</div><div class="ln">CMake 主目录 + Makefile 子模块</div></div></div>
-<div class="rw">
-<div class="ag"><div class="al">CMake 构建</div><div class="ao">
-<div class="n x1"><div class="lb">CMakeLists.txt</div><div class="ln">顶层配置</div></div>
-<div class="n m1"><div class="lb">media/dpsk/lookup</div><div class="ln">CMake 子模块</div></div>
-<div class="n g1"><div class="lb">test/</div><div class="ln">GoogleTest</div></div>
-</div></div>
-<div class="ag"><div class="al">Make 构建</div><div class="ao">
-<div class="n x1"><div class="lb">Makefile</div><div class="ln">webevs/hdware/IM</div></div>
-<div class="n g1"><div class="lb">Makefile</div><div class="ln">thread/gSOAPverify</div></div>
-</div></div>
-</div>
-</div></div>
-</div></section>
-
 <section id="fl"><div class="ct">
-<div class="st"><h2>🔄 数据流与交互</h2></div>
-<div class="cd"><div class="cd2">
+<div class="st"><h2>🔄 数据流与典型调用链</h2></div>
+<div class="g2">
+<div class="cd"><h4>Web / 服务侧</h4>
 <div class="fc">
-<div class="fd" style="background:rgba(236,72,153,.06)"><div class="dm" style="background:linear-gradient(135deg,var(--pk),var(--pp))">1</div><div><div class="lb" style="font-size:.6rem">🌐 客户端 → IM (KaiSocket) / Webevs (HTTP / WebSocket)</div></div></div>
+<div class="fd" style="background:rgba(236,72,153,.06)"><div class="dm" style="background:linear-gradient(135deg,var(--pk),var(--pp))">1</div><div><div class="lb" style="font-size:.6rem">客户端 HTTP → webevs(evhttp)，或 WS → WsServe 独立端口</div></div></div>
 <div class="dx">↓</div>
-<div class="fd" style="background:rgba(59,130,246,.06)"><div class="dm">2</div><div><div class="lb" style="font-size:.6rem">📡 请求解析 → 路由分发</div></div></div>
+<div class="fd" style="background:rgba(59,130,246,.06)"><div class="dm">2</div><div><div class="lb" style="font-size:.6rem">GenericHandler：静态前端优先，否则查 g_dealHooks / SrvCallbacks</div></div></div>
 <div class="dx">↓</div>
-<div class="fd" style="background:rgba(16,185,129,.06)"><div class="dm">3</div><div><div class="lb" style="font-size:.6rem">🧵 thread/ 线程池分配 Worker</div></div></div>
+<div class="fd" style="background:rgba(16,185,129,.06)"><div class="dm">3</div><div><div class="lb" style="font-size:.6rem">业务回调 → 必要时查 SQL / 调 dpsk 推理 / 落盘</div></div></div>
 <div class="dx">↓</div>
-<div class="fd" style="background:rgba(139,92,246,.06)"><div class="dm">4</div><div><div class="lb" style="font-size:.6rem">🧠 cyber/dpsk AI 推理 或 ⚡ hdware 硬件交互 或 🔍 lookup 查询</div></div></div>
-<div class="dx">↓</div>
-<div class="fd" style="background:rgba(249,115,22,.06)"><div class="dm">5</div><div><div class="lb" style="font-size:.6rem">📨 结果 → 响应返回</div></div></div>
-</div>
+<div class="fd" style="background:rgba(249,115,22,.06)"><div class="dm">4</div><div><div class="lb" style="font-size:.6rem">Response() 统一 JSON 状态体返回</div></div></div>
 </div></div>
+<div class="cd"><h4>SOAP / 检索 / 传输侧</h4>
+<div class="fc">
+<div class="fd" style="background:rgba(139,92,246,.06)"><div class="dm">1</div><div><div class="lb" style="font-size:.6rem">SOAP 请求 → gSOAPverify 环形队列 → 8 工作线程 → MySQL / 状态采样</div></div></div>
+<div class="dx">↓</div>
+<div class="fd" style="background:rgba(6,182,212,.06)"><div class="dm">2</div><div><div class="lb" style="font-size:.6rem">lookup：genSeek 造数据 → 扫帧头建索引 → 按时间窗返回偏移</div></div></div>
+<div class="dx">↓</div>
+<div class="fd" style="background:rgba(16,185,129,.06)"><div class="dm">3</div><div><div class="lb" style="font-size:.6rem">Mac/Transfer：64B 头握手 → 64KB 分片 → 完成/落盘</div></div></div>
+<div class="dx">↓</div>
+<div class="fd" style="background:rgba(249,115,22,.06)"><div class="dm">4</div><div><div class="lb" style="font-size:.6rem">hdware：ioctl/mmap 直接驱动字符设备、FPGA、RDMA</div></div></div>
+</div></div>
+</div>
 </div></section>
 
 <section id="pt"><div class="ct">
 <div class="st"><h2>🏗️ 架构模式总结</h2></div>
 <div class="cd"><div class="cd2">
 <div class="tags">
-<span class="t tg2">单例模式</span><span class="t tb">Reactor 模式</span><span class="t to">Pub/Sub</span>
-<span class="t m1">门面模式</span><span class="t g1">适配器模式</span><span class="t x1">工厂方法</span>
+<span class="t tg2">Reactor</span><span class="t tb">生产者-消费者</span><span class="t to">Pub/Sub</span>
+<span class="t m1">门面</span><span class="t g1">桥接/适配</span><span class="t x1">模板方法</span>
+<span class="t tr">fork-per-connection</span><span class="t ty">策略</span><span class="t tc">注册表/钩子</span>
 </div>
 <table style="margin-top:.4rem">
 <thead><tr><th>模式</th><th>应用位置</th><th>作用</th></tr></thead><tbody>
-<tr><td><span class="n g1"><div class="lb" style="font-size:.6rem">单例</div></span></td><td>KaiSocket</td><td>确保全局唯一网络实例</td></tr>
-<tr><td><span class="n s1"><div class="lb" style="font-size:.6rem">Reactor</div></span></td><td>Webevs epoll</td><td>高并发事件驱动</td></tr>
-<tr><td><span class="n x1"><div class="lb" style="font-size:.6rem">Pub/Sub</div></span></td><td>KaiSocket 订阅</td><td>消息路由与分发</td></tr>
-<tr><td><span class="n m1"><div class="lb" style="font-size:.6rem">门面</div></span></td><td>cyber/dpsk</td><td>简化复杂 AI API</td></tr>
-<tr><td><span class="n i1"><div class="lb" style="font-size:.6rem">适配器</div></span></td><td>hdware</td><td>统一硬件接口</td></tr>
-<tr><td><span class="n o1"><div class="lb" style="font-size:.6rem">池化</div></span></td><td>thread/ + 模型缓存</td><td>复用资源，减少开销</td></tr>
-<tr><td><span class="n tr"><div class="lb" style="font-size:.6rem">生产者-消费者</div></span></td><td>gSOAPverify 环形缓冲</td><td>主线程 enqueue / 工作线程 dequeue</td></tr>
+<tr><td><span class="n s1"><div class="lb" style="font-size:.6rem">Reactor</div></span></td><td>webevs（libevent evhttp）</td><td>单线程事件循环承载高并发 HTTP</td></tr>
+<tr><td><span class="n tr"><div class="lb" style="font-size:.6rem">生产者-消费者</div></span></td><td>gSOAPverify 环形队列、mock 发送队列、media 帧队列</td><td>accept/produce 与处理/consumer 解耦</td></tr>
+<tr><td><span class="n x1"><div class="lb" style="font-size:.6rem">Pub/Sub</div></span></td><td>KaiSocket topic</td><td>消息路由与分发</td></tr>
+<tr><td><span class="n r1"><div class="lb" style="font-size:.6rem">fork-per-conn</div></span></td><td>IM.cc</td><td>连接隔离，子进程崩溃不影响主进程</td></tr>
+<tr><td><span class="n m1"><div class="lb" style="font-size:.6rem">钩子/注册表</div></span></td><td>webevs <code>g_dealHooks</code>、WsServe 回调</td><td>业务与框架解耦，新增接口不动主循环</td></tr>
+<tr><td><span class="n i1"><div class="lb" style="font-size:.6rem">桥接（C ABI）</div></span></td><td>Mac/Transfer TransferBridge</td><td>SwiftUI 与 C++ 引擎解耦</td></tr>
+<tr><td><span class="n o1"><div class="lb" style="font-size:.6rem">池化</div></span></td><td>thread/ pthdpool、gSOAP 工作线程池、cyber 模型/数据加载</td><td>复用资源，降低创建开销</td></tr>
+<tr><td><span class="n g1"><div class="lb" style="font-size:.6rem">策略 / 模板方法</div></span></td><td>trade MarketDataAPI/TradeAPI(ABC)、lookup V1/V2 引擎</td><td>可插拔实现，便于切换数据源与算法版本</td></tr>
 </tbody></table>
 </div></div>
 </div></section>
 
 <section id="rk"><div class="ct">
-<div class="st"><h2>⚠️ 风险与优化建议</h2></div>
-<div class="cd"><div class="cd2">
-<div class="rw">
-<div class="ag"><div class="al">🔴 高风险</div><div class="ao">
-<div class="n r1"><div class="lb">多构建系统</div><div class="ln">CMake + Make 维护成本高</div></div>
-<div class="n r1"><div class="lb">依赖链长</div><div class="ln">3rd/ 依赖编译复杂</div></div>
-</div></div>
-<div class="ag"><div class="al">🟡 中风险</div><div class="ao">
-<div class="n y1"><div class="lb">内存管理</div><div class="ln">C++ 裸指针 + 手动释放</div></div>
-<div class="n y1"><div class="lb">头文件顺序</div><div class="ln">SOAP 宏定义时序依赖</div></div>
-</div></div>
-<div class="ag"><div class="al">💚 已解决</div><div class="ao">
-<div class="n g1"><div class="lb">AArch64 兼容</div><div class="ln">匿名 namespace 常量</div></div>
-<div class="n g1"><div class="lb">SOAP 解耦</div><div class="ln">soap_socket_t typedef</div></div>
-</div></div>
+<div class="st"><h2>⚠️ 风险与待办清单</h2><span class="tg">Risk Register</span></div>
+<div class="rg">
+<div class="rc rh"><h4>🔴 多套构建系统共用目录 <span class="sr sh2">High</span></h4><p>CMake 链与 Make 链各自为政，<code>LinxSrvc/build</code> 被两者共用，多个子项目同时以 <code>../gen</code> 为输出目录；一处 clean 可能清掉另一处的中间文件。</p></div>
+<div class="rc rm"><h4>🟡 IM 账号落盘格式脆弱 <span class="sr sm">Medium</span></h4><p>用户/群组表以<b>裸结构体</b> <code>fwrite</code> 写 <code>accounts</code> 文件，字段一改即不可读，且不跨平台（含 <code>MAX_ACTIVE</code> 差异）。</p></div>
+<div class="rc rm"><h4>🟡 IM 命令执行面 <span class="sr sm">Medium</span></h4><p><code>EXEC</code>/<code>IMAGE</code> 分支直接 <code>execvp("imgfilesnap.exe")</code>（RASPI 下为 raspistill），属于外部命令执行面，需约束输入。</p></div>
+<div class="rc rm"><h4>🟡 gSOAPverify 静默成功 / 误挪 .o <span class="sr sm">Medium</span></h4><p>缺 MySQL 库时 Makefile 仍打印 SUCCESS 但不产出 ELF；<code>mv $(CUR)/../*.o</code> 会把相邻工程的中间文件一起搬走；<code>make install</code> 会 <code>killall -9</code> 并写系统目录。</p></div>
+<div class="rc rm"><h4>🟡 线程池共享同一块栈 <span class="sr sm">Medium</span></h4><p><code>thread/pthdpool.c</code> 把一整块 <code>pool->stack</code>（<code>STK_SIZE 10*4096</code>）传给所有 worker，不符合每线程独立栈的正常使用方式。</p></div>
+<div class="rc rm"><h4>🟡 脚本内明文口令 <span class="sr sm">Medium</span></h4><p><code>shell/expect/*</code>（autossh、8927 端口脚本）与 <code>shell/x64mk/env.sh</code> 残留明文口令 / token 占位，<code>shell/shadowsocks.sh</code> 使用了固定口令。</p></div>
+<div class="rc rm"><h4>🟡 WS 默认广播语义 <span class="sr sm">Medium</span></h4><p>未注册 <code>WsOnMessage</code> 时，WS 服务默认把收到的消息广播给全部连接；对外提供服务需显式注册并鉴权。</p></div>
 </div>
-</div></div>
+<div class="cd" style="margin-top:.7rem"><h4>📌 建议的下一步（按性价比）</h4>
+<table>
+<thead><tr><th>优先级</th><th>事项</th><th>收益</th></tr></thead><tbody>
+<tr><td><span class="sr sh2">P0</span></td><td>把 webevs 的 <code>BUILD_PATH</code> 改为私有目录 <code>webevs/build</code></td><td>webevs 的 clean 不再清掉共用 <code>LinxSrvc/build</code> 里其它工程的中间文件</td></tr>
+<tr><td><span class="sr sm">P1</span></td><td>把 <code>test/</code> 纳入顶层构建或明确其独立构建方式</td><td>单测可随全量构建回归</td></tr>
+<tr><td><span class="sr sm">P2</span></td><td>清理脚本中的明文口令与 token 占位</td><td>降低泄露面</td></tr>
+</tbody></table>
+</div>
 </div></section>
 
 <footer>
-<div class="ct">LinxSrvc 架构分析 · 更新于 2026-06-07 · 基于代码优化后的最新状态</div>
+<div class="ct">LinxSrvc 架构分析 · 更新于 2026-10-08 · 基于工作区代码逐模块实测（含构建链、关键常量与已知缺陷）</div>
 </footer>
 
 </body>

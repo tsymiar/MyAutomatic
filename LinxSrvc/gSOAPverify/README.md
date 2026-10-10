@@ -1,4 +1,6 @@
-# gSOAPverify Introduce
+---
+title: gSOAPverify Introduce
+---
 
 基于 **gSOAP 2.8.106** 的多线程 SOAP 服务端（RPC/encoded），提供 `trans`、
 `get-server-status`、`login-by-key` 三个接口，后者查询本机 MySQL 的 `myautomatic.glkline` 表。
@@ -21,7 +23,7 @@
 
 ## 2. 目录
 
-```
+```text
 gSOAPverify/
 ├── Makefile                  # 构建（产物 ../bin/gSOAPverify）
 ├── main/mainSoap.cc/.h       # 【手写】main、线程池+环形队列、http_get、3 个接口实现
@@ -46,10 +48,12 @@ gSOAPverify/
 | 依赖 | 必需 | 说明 |
 |---|---|---|
 | g++（C++11） | ✅ | 实测 11.4 |
-| MySQL/MariaDB 客户端库 | ✅ | `<mysql/mysql.h>` + `-lmysqlclient`；Debian `libmysql++-dev`，RHEL `mariadb-devel` |
+| MySQL/MariaDB 客户端库 | ✅ | `<mysql/mysql.h>` + `-lmysqlclient` |
 | pthread | ✅ | `-lpthread` |
 | MySQL 服务端 | ⚠️ | 仅 `login-by-key` 需要 |
 | OpenSSL / zlib | ❌ | 未启用 → **只有明文 HTTP** |
+
+包名对应关系：Debian/Ubuntu `libmysql++-dev`，RHEL `mariadb-devel`。
 
 ## 4. 编译
 
@@ -113,9 +117,11 @@ curl -s -X POST --data-binary @req.xml http://localhost:8800
 ```
 
 ```xml
-<api:trans><msg>trans@usr=tom&amp;psw=123</msg></api:trans>   <!-- XML 里 & 要写 &amp; -->
+<api:trans><msg>trans@usr=tom&amp;psw=123</msg></api:trans>
 → <rtn>Param(0): usr[tom]</rtn>
 ```
+
+XML 里的 `&` 必须写成 `&amp;`。
 
 出错时**正常返回**（不发 Fault）：`illegal command!` / `request uri empty!` /
 `request uri too long!` / `request uri error!`。
@@ -143,21 +149,23 @@ curl -s -X POST --data-binary @req.xml http://localhost:8800
 
 ## 8. 遗留问题（未修）
 
-**正确性 / 并发**
+### 正确性 / 并发
 
-- `sql/sqlDbReq.cc`：看门狗线程的 `mysql_ping`/`mysql_real_connect` **无锁**，与查询线程竞争同一连接；`call_cnt == 0` 的初始化判断也无锁 → 并发首调用可能重复 init、起多个看门狗线程。
+- `sql/sqlDbReq.cc`：看门狗线程的 `mysql_ping`/`mysql_real_connect` **无锁**，与查询
+  线程竞争同一连接；`call_cnt == 0` 的初始化判断也无锁 → 并发首调用可能重复 init、
+  起多个看门狗线程。
 - 全局只有一条 MySQL 连接，`sqlClose()` 从未被调用。
 - `sys/status.cc`：`get_mem_stat` 的 `strdup` 从不释放，每次 `get-server-status` 泄漏 2 块。
 - `main/mainSoap.cc:28`：打印 `serv->user`（从未赋值）→ 输出垃圾值。
 
-**安全**
+### 安全
 
 - 明文 HTTP，无 TLS、无认证、无访问控制。
 - 明文口令与完整 SQL 打印到 stdout（**按需要保留**，调试用；上生产前自行关闭）。
 - `sql/sqlDbReq.cc` 的 `get_rslt_raw()` 含直接 SQL 注入，被 `#ifndef FIX` 排除，但是死代码仍在仓库，建议删除。
 - 无信号处理、无 `chdir("/")`、无 stdio 重定向。
 
-**工程**
+### 工程
 
 - Makefile：见第 4 节三个坑；`-I/usr/lib$(BIT)/mysql` 对 Debian/Ubuntu 无效。
 - `sys/status.cc` 的 `detect_eth_cable()` 会写 `const` 字符串且无调用点（死代码）。
