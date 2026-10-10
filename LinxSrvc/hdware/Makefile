@@ -8,7 +8,7 @@ define Built
   @echo "-- Built: \033[1m$1\033[0m"
 endef
 export GEN KO Built OS
-# chsdev / virtex / phm2f 同名于真实目录，不加 .PHONY 会被 make 判定已是最新而跳过配方
+# chsdev / virtex / phm2f have the same names as the real directories; without .PHONY, make will treat them as up-to-date and skip the rules
 .PHONY: chsdev virtex phm2f
 null:
 	@echo "\033[7;41m$(shell uname -a)\033[0m"
@@ -48,8 +48,11 @@ pipefifo:
 	$(call Built,$@)
 all:
 	@make null
+	@echo "\033[4;3mMaking chip's gpio\033[0m"
 	@make chigpio
+	@echo "\033[4;3mMaking mes909\033[0m"
 	@make mes909
+	@echo "\033[4;3mMaking dirty hack\033[0m"
 	@make dirty
 ifneq ($(OS), )
 	@echo "\033[4;3mMaking $(OS) drivers\033[0m"
@@ -64,7 +67,7 @@ ifeq ($(OS), Linux)
 	@make video
 endif
 endif
-	@echo "\033[4;3mMaking pipe/fifo\033[0m"
+	@echo "\033[4;3mMaking pipe & fifo\033[0m"
 	@make pipefifo
 clean:
 	@rm -rvf $(GEN)/chigpio* $(GEN)/mes909* $(GEN)/dirtyhack* $(GEN)/chstest*

@@ -5,6 +5,14 @@ import FileTransferCore
 //  TransferCore — thin Swift wrapper around the C++ TransferEngine (via C bridge)
 //  @MainActor ensures all @Published mutations happen on the main thread.
 //  Uses Unmanaged<TransferCore> as the callback userData to avoid global state.
+//
+//  This file holds state + small helpers only; behaviour lives in the sibling
+//  extension files in the same directory, grouped by topic:
+//    • TransferCore+Engine.swift     engine lifecycle, server / client connection
+//    • TransferCore+Sending.swift    send queue and single-file sending
+//    • TransferCore+Callbacks.swift  C callback wiring and progress handling
+//  Members touched from those files cannot be private (Swift private is
+//  file-scoped), hence the internal storage below.
 // ──────────────────────────────────────────────────────────────────────────────
 
 @MainActor
@@ -59,12 +67,13 @@ final class TransferCore: ObservableObject {
 
     // MARK: - Internal state
 
-    /// Opaque C++ handle (TransferEngine*)
-    private var handle: FT_Handle?
+    /// Opaque C++ handle (TransferEngine*) — internal so the +Engine / +Callbacks
+    /// extensions can reach it.
+    var handle: FT_Handle?
 
     /// Keep a strong reference to the C callback so it is not deallocated.
-    private var callbackRef: FT_ProgressCallback?
-    private var logCallbackRef: FT_LogCallback?
+    var callbackRef: FT_ProgressCallback?
+    var logCallbackRef: FT_LogCallback?
 
     // View models
     @Published var receivedFiles: [ReceivedFile] = []
@@ -72,6 +81,13 @@ final class TransferCore: ObservableObject {
 
     /// Console-style log messages (capped at 200 entries).
     @Published var logMessages: [String] = []
+
+    /// Queue of files waiting to be sent. Multiple files must go one after
+    /// another: sending two files at once over a single connection interleaves
+    /// their chunks, while the server writes one file per session in order —
+    /// the result on disk would be a mix of both.
+    /// Consumed by TransferCore+Sending.swift (internal for that reason).
+    var sendQueue: [String] = []
 
     // MARK: - Lifetime
 
@@ -95,247 +111,6 @@ final class TransferCore: ObservableObject {
         logMessages.append(msg)
         if logMessages.count > 200 {
             logMessages.removeFirst(50)
-        }
-    }
-
-    // MARK: - Engine lifecycle
-
-    /// Create engine, set save path & callback. Returns the handle on success, nil on failure.
-    private func makeEngine() -> FT_Handle? {
-        let engine = ft_create()
-        guard let engine else {
-            transferStatus = "Failed to create instance"
-            appendLog("ERROR: Failed to create TransferEngine instance")
-            return nil
-        }
-        ft_set_save_path(engine, savePath)
-        ft_set_backoff_enabled(engine, backoffEnabled)
-        installCallbacks(engine)
-        return engine
-    }
-
-    /// Tear down the engine handle cleanly.
-    private func destroyEngine() {
-        guard let engine = handle else { return }
-        ft_destroy(engine)
-        handle = nil
-        callbackRef = nil
-        // Note: log callback is global and survives engine destruction;
-        // explicitly clear it so no stale Unmanaged pointer is used.
-        ft_set_log_callback(nil, nil)
-        logCallbackRef = nil
-    }
-
-    func startServer(port: UInt16 = 8800) {
-        guard !isServerRunning, let engine = makeEngine() else { return }
-        handle = engine
-
-        let ret = ft_start_server(engine, port)
-        if ret == 0 {
-            isServerRunning = true
-            transferStatus = "Listening on port \(port)"
-            appendLog("Server started on port \(port)")
-        } else {
-            transferStatus = "Server start failed (code \(ret))"
-            appendLog("ERROR: Server start failed (code \(ret))")
-            destroyEngine()
-        }
-    }
-
-    func stopServer() {
-        guard isServerRunning else { return }
-        ft_stop_server(handle)
-        isServerRunning = false
-        clientCount = 0
-        transferStatus = "Server stopped by swift"
-        appendLog(transferStatus)
-        destroyEngine()
-    }
-
-    /// Poll client count periodically (server mode).
-    func updateClientCount() {
-        guard let engine = handle, isServerRunning else { return }
-        clientCount = Int(ft_get_client_count(engine))
-    }
-
-    // MARK: - Client mode
-
-    func connect(to host: String, port: UInt16 = 8800) {
-        guard !isConnected, let engine = makeEngine() else { return }
-        handle = engine
-
-        // 重置进度条，避免残留上次传输的 100%
-        resetProgress()
-
-        let ret = ft_connect(engine, host, port)
-        if ret == 0 {
-            isConnected = true
-            transferStatus = "Connected to \(host):\(port)"
-            appendLog("Connected to \(host):\(port)")
-        } else {
-            transferStatus = "Connection failed (code \(ret))"
-            appendLog("ERROR: Connection to \(host):\(port) failed (code \(ret))")
-            destroyEngine()
-        }
-    }
-
-    func disconnect() {
-        guard isConnected else { return }
-        ft_disconnect(handle)
-        isConnected = false
-        transferStatus = "Disconnected"
-        appendLog("Disconnected from server")
-        resetProgress()
-        destroyEngine()
-    }
-
-    // MARK: - Send file (client mode, blocking → run on background)
-
-    /// 待发送队列。多文件必须串行发送：
-    /// 一条连接上并发发两个文件时，两边的分片会交错，
-    /// 而服务端是按"一个会话一个文件"顺序写盘的，最终落盘的是混合后的损坏内容。
-    private var sendQueue: [String] = []
-
-    func postLocalFile(_ filePath: String) {
-        sendQueue.append(filePath)
-        drainSendQueue()
-    }
-
-    private func drainSendQueue() {
-        guard !isBusy, !sendQueue.isEmpty else { return }
-        performSend(sendQueue.removeFirst())
-    }
-
-    private func performSend(_ filePath: String) {
-        guard isConnected, let engine = handle else {
-            transferStatus = "Not connected"
-            return
-        }
-
-        let url = URL(fileURLWithPath: filePath)
-        let fileName = url.lastPathComponent
-        let fileSize = (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize).map(UInt64.init) ?? 0
-
-        isBusy = true
-        transferStatus = "Preparing..."
-        transferredBytes = 0; totalBytes = fileSize; progress = 0
-        appendLog("Sending: \(fileName) (\(formatBytes(fileSize)))")
-
-        let idx = transferTasks.count
-        transferTasks.append(TransferTask(
-            fileName: fileName, fileSize: fileSize,
-            direction: .sending, peerIP: "Peer Device"
-        ))
-
-        Task.detached { [weak self, engine] in
-            let ret = ft_send_file(engine, filePath)
-            await MainActor.run { [weak self] in
-                guard let self, idx < self.transferTasks.count else { return }
-                self.isBusy = false
-                let task = self.transferTasks[idx]
-                if ret == 0 {
-                    self.transferStatus = "Send complete"; self.progress = 1.0
-                    self.appendLog("Send complete: \(task.fileName)")
-                    self.transferTasks[idx].status = .completed
-                    self.transferTasks[idx].bytesTransferred = task.fileSize
-                } else {
-                    self.transferStatus = "Send failed (code \(ret))"
-                    self.appendLog("Send failed: \(task.fileName) (code \(ret))")
-                    self.transferTasks[idx].status = .failed
-                }
-                // 队列里还有文件就接着发下一个；全部发完才自动断开
-                if !self.sendQueue.isEmpty {
-                    self.drainSendQueue()
-                } else if self.isConnected {
-                    // 延时 1s 确保对端收到最后的 CMD_COMPLETE 并处理完毕
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-                        self?.disconnect()
-                    }
-                }
-            }
-        }
-    }
-
-    // MARK: - Callback wiring (uses Unmanaged to avoid global state)
-
-    private func installCallbacks(_ engine: FT_Handle) {
-        // ── Progress callback ──
-        let progTrampoline: FT_ProgressCallback = { rawSelf, cur, tot, stPtr in
-            let status = stPtr.map { String(cString: $0) } ?? ""
-            let core = Unmanaged<TransferCore>.fromOpaque(rawSelf!).takeUnretainedValue()
-            DispatchQueue.main.async {
-                core.handleProgress(current: cur, total: tot, status: status)
-            }
-        }
-        callbackRef = progTrampoline
-        ft_set_progress_callback(engine, progTrampoline, Unmanaged.passUnretained(self).toOpaque())
-
-        // ── Log callback (global — routes ALL C++ LOG_* to the UI console) ──
-        let logTrampoline: FT_LogCallback = { rawSelf, msgPtr in
-            let msg = msgPtr.map { String(cString: $0) } ?? ""
-            let core = Unmanaged<TransferCore>.fromOpaque(rawSelf!).takeUnretainedValue()
-            DispatchQueue.main.async {
-                core.appendTimestampedLog(msg)
-            }
-        }
-        logCallbackRef = logTrampoline
-        ft_set_log_callback(logTrampoline, Unmanaged.passUnretained(self).toOpaque())
-    }
-
-    /// Called on the main thread by the trampoline above.
-    private func handleProgress(current: UInt64, total: UInt64, status: String) {
-        transferredBytes = current
-        totalBytes = total
-        transferStatus = status
-        progress = total > 0 ? Double(current) / Double(total) : 0
-
-        let lower = status.lowercased()
-        let isKeyEvent = lower.contains("connected") || lower.contains("disconnect")
-            || lower.contains("complete") || lower.contains("cancel")
-            || lower.contains("listening") || lower.contains("failed") || lower.contains("error")
-
-        if isKeyEvent {
-            appendLog(status)
-        }
-
-        // Update the first active task
-        if let idx = transferTasks.firstIndex(where: { $0.status == .pending || $0.status == .transferring }) {
-            transferTasks[idx].status = .transferring
-            transferTasks[idx].bytesTransferred = current
-            if lower.contains("complete!") {
-                transferTasks[idx].status = .completed
-            } else if lower.contains("cancel") {
-                transferTasks[idx].status = .cancelled
-            }
-        }
-
-        // Detect new incoming files (server mode)
-        if isServerRunning, status.contains("Receiving:") {
-            let name = status.components(separatedBy: ": ").last ?? ""
-            if !transferTasks.contains(where: { $0.fileName == name && $0.direction == .receiving }) {
-                transferTasks.append(TransferTask(
-                    fileName: name, fileSize: total,
-                    direction: .receiving, peerIP: "Peer"
-                ))
-            }
-        }
-
-        // Append completed received files
-        // C++ 端在 "Transfer complete!" 后用 "|" 带上真实落盘路径：接收端文件名
-        // 带时间戳后缀，上层按原文件名自己拼出来的路径在磁盘上并不存在。
-        if status.localizedCaseInsensitiveContains("complete!") {
-            let parts = status.components(separatedBy: "|")
-            let pathHint = (parts.count == 2 && !parts[1].isEmpty) ? parts[1] : nil
-
-            for task in transferTasks where task.status == .completed && task.direction == .receiving {
-                let url = pathHint.map { URL(fileURLWithPath: $0) }
-                    ?? URL(fileURLWithPath: savePath).appendingPathComponent(task.fileName)
-                guard !receivedFiles.contains(where: { $0.savedPath == url }) else { continue }
-                receivedFiles.append(ReceivedFile(
-                    fileName: url.lastPathComponent, fileSize: task.fileSize,
-                    fromIP: task.peerIP, savedPath: url, receivedAt: Date()
-                ))
-            }
         }
     }
 
