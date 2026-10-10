@@ -1,4 +1,6 @@
-# FileTransfer
+---
+title: FileTransfer
+---
 
 macOS 文件传输应用 —— 底层 C++ 协议引擎 + 上层 SwiftUI 界面。
 
@@ -41,7 +43,8 @@ macOS 文件传输应用 —— 底层 C++ 协议引擎 + 上层 SwiftUI 界面�
 
 ## 构建
 
-要求 macOS 13+ / Swift 5.9（`Package.swift` 里两个 target：`FileTransferCore` 静态库 → `FileTransferMac` 可执行）。
+要求 macOS 13+ / Swift 5.9（`Package.swift` 里两个 target：
+`FileTransferCore` 静态库 → `FileTransferMac` 可执行）。
 
 ```bash
 cd LinxSrvc/Mac/Transfer
