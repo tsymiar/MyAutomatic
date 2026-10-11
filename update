@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+GIT_TERMINAL_PROMPT=0 timeout 120 git push origin HEAD:gh-pages
