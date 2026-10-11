@@ -8,7 +8,7 @@ import json
 import shutil
 import logging
 import argparse
-import subprocess
+import subprocess  # nosec B404
 from pathlib import Path
 
 # 注意: transformers 库在函数内部按需导入以加快启动速度
@@ -25,7 +25,7 @@ _FORBIDDEN_PATH_PREFIXES = [
     "/etc", "/boot", "/sys", "/proc", "/dev",
 ]
 
-# 允许执行的程序白名单 — subprocess 仅用于这些可信程序, 且始终 shell=False
+# 允许执行的程序白名单
 _ALLOWED_BINARIES = {
     "git",
     "ollama",
@@ -146,7 +146,7 @@ def run_command(cmd, cwd=None, capture_output=True):
         capture_output=capture_output,
         text=True,
         check=False,
-        shell=False
+        shell=False  # nosec B603
     )
 
     if result.stdout and logging.getLogger().level <= logging.DEBUG:

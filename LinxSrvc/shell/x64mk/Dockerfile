@@ -14,6 +14,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # JDK 11 (same as azure-pipelines.yml) + cmake (must be amd64, cannot reuse the
 # aarch64 cmake built on the host) + misc tools used by build.sh / CMake.
+# hadolint ignore=DL3008 - 构建盒随 jammy 仓库滚动更新, 写死版本号会在镜像过期后直接失败
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates \

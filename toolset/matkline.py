@@ -547,8 +547,7 @@ def fetch_text(url, params=None, timeout=10, encoding="utf-8", headers=None):
     if params:
         url = url + ("&" if "?" in url else "?") + urlencode(params)
     request = Request(ensure_http_url(url), headers=headers or default_headers())
-    # nosec B310 - ensure_http_url 已限定 scheme 为 http/https 且要求主机名
-    with urlopen(request, timeout=timeout) as response:
+    with urlopen(request, timeout=timeout) as response:  # nosec B310 - ensure_http_url() 已限定 http/https
         raw = response.read()
     try:
         return raw.decode(encoding)

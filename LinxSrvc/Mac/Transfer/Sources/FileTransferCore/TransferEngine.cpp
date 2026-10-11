@@ -895,11 +895,12 @@ int TransferEngine::sendSliceData(int sock, const std::string& filePath, uint64_
         if (sendHeader(sock, header) < 0) break;
 
         // 读取并发送数据（按剩余字节算，与服务端算法保持一致）
-        uint64_t remain = fileSize - (uint64_t)i * chunkSize;
-        uint32_t dataSize = (remain > chunkSize) ? chunkSize : (uint32_t)remain;
-
+        // 空文件 (fileSize == 0) 只发头不读数据, 因此外层用 fileSize 判断
         std::streamsize bytesRead = 0;
-        if (dataSize > 0) {
+        if (fileSize > 0) {
+            uint64_t remain = fileSize - (uint64_t)i * chunkSize;
+            uint32_t dataSize = (remain > chunkSize) ? chunkSize : (uint32_t)remain;
+
             std::vector<char> buffer(dataSize);
             file.read(buffer.data(), dataSize);
             bytesRead = file.gcount();
