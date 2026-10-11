@@ -14,17 +14,24 @@ CRegistDlg::CRegistDlg(char* IP, CWnd* pParent /*=NULL*/)
     : CDialogEx(IDD_BROWSER, pParent)
     //, m_browser()
 {
+    // 按目标容量截断拷贝
+    m_IP[0] = '\0';
     if (IP == nullptr)
         return;
-    memcpy(&this->m_IP, IP, sizeof(IP) * sizeof(char*) + 1);
+    strncpy_s(m_IP, sizeof(m_IP), IP, _TRUNCATE);
 }
 
 CRegistDlg::~CRegistDlg()
 {
+    if (m_HTMLPage != NULL) {
+        delete m_HTMLPage;
+        m_HTMLPage = NULL;
+    }
 }
 
 CRegistDlg::CRegistDlg()
 {
+    m_IP[0] = '\0';
 }
 
 void CRegistDlg::DoDataExchange(CDataExchange* pDX)
@@ -40,16 +47,21 @@ END_MESSAGE_MAP()
 
 int ShowBox(HWND hWndParent)
 {
-    HMODULE g_hmodu = LoadLibrary(_T("HOOK/hook.dll"));
+    HMODULE hmodu = LoadLibrary(_T("HOOK/hook.dll"));
     typedef int(*ADDROC) ();
-    ADDROC ExitWindow = (ADDROC)GetProcAddress(g_hmodu, "ExitWindow");
-
+    if (hmodu == NULL) {
+        MessageBox(hWndParent, _T("加载 HOOK/hook.dll 失败。"), _T("Error"), MB_OK);
+        return -1;
+    }
+    ADDROC ExitWindow = (ADDROC)GetProcAddress(hmodu, "ExitWindow");
     if (!ExitWindow)
     {
         MessageBox(hWndParent, _T("获取函数地址失败。"), _T("Error"), MB_OK);
+        FreeLibrary(hmodu);
         return -1;
     }
     ExitWindow();
+    FreeLibrary(hmodu);
     return 0;
 }
 

@@ -1,0 +1,22 @@
+# CTP 连接配置。复制为 ctp.conf 后填写账号与口令，
+# 路径可用环境变量 CTP_CONFIG 指定（缺省 ./ctp.conf）。
+# 请勿提交填写了真实账号的 ctp.conf。
+
+# 流文件目录
+flow_path = ./
+# 前置地址
+front_addr = tcp://180.168.146.187:10000
+# 经纪公司代码
+broker_id = 88888888
+# 投资者代码（必填）
+investor_id = 092380
+# 用户代码（必填）
+user_id = [GIT_USER]
+# 密码（必填）
+password = Minctp905
+# 合约代码
+instrument_id = i1409
+# 买卖方向：1 = Sell，0 = Buy
+direction = 1
+# 价格
+limit_price = 2380

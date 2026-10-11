@@ -210,16 +210,16 @@ void RSA_check()
     fclose(stream);
 }
 
-char cc[2];
+char cc[5];	// 2 字节 CRC -> 4 个十六进制字符 + '\0'
 char BCD20[20] = { 0 };
 char Hex20[20];
 char EBCD20[20];
-char hash[16];
+char hash[17];	// get_Hash 写 16 个字符 + '\0'
 char hash1[8];
 unsigned char ha[8];
 unsigned char sh[8];
 unsigned char CRC[2];
-unsigned char ASC10[10] = { 0 };
+unsigned char ASC10[16] = { 0 };	// 8 字节标识 + 4 字节 CRC 字符 + '\0'
 
 void Verify(char out[])
 {
@@ -234,7 +234,7 @@ void Verify(char out[])
     printf("\n");
     // CRC运算
     get_CRC(ha, 8, CRC);
-    hex_to_ascii((unsigned char*)CRC, cc);
+    hex_to_ascii((unsigned char*)CRC, cc, 2);
     printf("\tCRC:%c(%02x),%c(%02x)\n", cc[0], cc[0], cc[1], cc[1]);
     printf("\t复制： ");
     memcpy(ASC10, (char*)ha, 8);
@@ -291,6 +291,8 @@ void s_verify(char* str)
     for (; i < 16; i++) // 16位无符号整数
         printf("%02x", (unsigned char)dig[i]);
     printf("\n");
+    // 转 ASCII 后再交给 Verify()
+    hex_to_ascii((unsigned char*)dig, out, 16);
     Verify(out);
 }
 

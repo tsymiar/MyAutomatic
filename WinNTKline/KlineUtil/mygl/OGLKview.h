@@ -262,10 +262,22 @@ public:
             color.A = 1;
         glColor4f(color.R, color.G, color.B, color.A);
     }
+    // 释放 GL 渲染上下文
+    void ReleaseContext()
+    {
+#ifdef _WIN32
+        if (m_hRC != NULL)
+        {
+            ::wglMakeCurrent(NULL, NULL);
+            ::wglDeleteContext(m_hRC);
+            m_hRC = NULL;
+        }
+#endif
+    }
 private:
 #ifdef _WIN32
-    HGLRC m_hRC;
-    HWND m_hDlg;
+    HGLRC m_hRC = NULL;
+    HWND m_hDlg = NULL;
 #endif
 #ifdef __linux
     TTF_Font* ttffont = NULL;

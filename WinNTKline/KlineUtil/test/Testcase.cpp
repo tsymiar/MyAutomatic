@@ -3,36 +3,29 @@
 
 #define EXCEPTION_MESSAGE_MAXLEN 256
 
-template <class TestClass>
+template <class T>
 class TestCase {
 public:
-    TestCase<TestClass>() { testClass = nullptr; };
+    TestCase() : testClass(nullptr) {}
     // 持有裸指针资源，禁止拷贝（Rule of Three）
     TestCase(const TestCase&) = delete;
     TestCase& operator=(const TestCase&) = delete;
-    TestCase<TestClass> getInstance();
-    virtual ~TestCase<TestClass>();
+    // 函数内静态对象，防止递归构造
+    static TestCase& getInstance()
+    {
+        static TestCase instance;
+        return instance;
+    }
+    virtual ~TestCase()
+    {
+        delete testClass;
+        testClass = nullptr;
+    }
 private:
-    TestCase<TestClass> instance;
-    TestClass* testClass;
+    T* testClass;
 };
-class TestClass { };
-void* test = new TestClass();
-template <class TestClass>
-TestCase<TestClass>
-TestCase<TestClass>::getInstance()
-{
-    if (instance == nullptr)
-        instance = new TestCase<TestClass>();
-    return instance;
-}
 
-template <class TestClass>
-TestCase<TestClass>::~TestCase()
-{
-    delete testClass;
-    delete instance;
-}
+class TestClass {};
 
 class Exception {
 private:

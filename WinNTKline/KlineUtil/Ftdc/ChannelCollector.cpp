@@ -1,16 +1,16 @@
 ﻿#include "ChannelCollector.h"
 
 extern struct st_TThostFtdc STFTDC;
-extern CThostFtdcTraderApi *TRDAPI;
+extern CThostFtdcTraderApi* TRDAPI;
 
 #ifdef THOST_FTDCMDAPI_H
 
-MarketDataCollector::MarketDataCollector(CThostFtdcMdApi * api) {}
+MarketDataCollector::MarketDataCollector(CThostFtdcMdApi* api) {}
 MarketDataCollector::~MarketDataCollector() {}
 
 int MarketDataCollector::CtpMarketMainApi()
 {
-    CThostFtdcMdApi *api =
+    CThostFtdcMdApi* api =
         CThostFtdcMdApi::CreateFtdcMdApi(STFTDC.FLOW_PATH, true, STFTDC.ISMULTICAST);
     MarketDataCollector mdCollector(api);
     api->RegisterSpi(&mdCollector);
@@ -20,7 +20,7 @@ int MarketDataCollector::CtpMarketMainApi()
     return 0;
 }
 
-void MarketDataCollector::OnRspError(CThostFtdcRspInfoField * pRspInfo, int nRequestID, bool bIsLast)
+void MarketDataCollector::OnRspError(CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast)
 {
     cerr << "--->>> " << __FUNCTION__ << endl;
     IsErrorRspInfo(pRspInfo);
@@ -59,21 +59,19 @@ int MarketDataCollector::CtpMarketReqUserLogin()
     strcpy_s(req.Password, STFTDC.PASSWORD);
     iResult = TRDAPI->ReqUserLogin(&req, ++STFTDC.iReqID);
     cerr << "--->>> 发送用户登录请求: ", iResult == 0 ? cerr << "成功" : cerr << "失败 [" << iResult << "]" << endl;
-    void onRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin,
-        CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast);
+    void onRspUserLogin(CThostFtdcRspUserLoginField * pRspUserLogin,
+        CThostFtdcRspInfoField * pRspInfo, int nRequestID, bool bIsLast);
     return iResult;
 }
 
-void MarketDataCollector::OnRspUserLogin(CThostFtdcRspUserLoginField * pRspUserLogin, CThostFtdcRspInfoField * pRspInfo, int nRequestID, bool bIsLast)
+void MarketDataCollector::OnRspUserLogin(CThostFtdcRspUserLoginField* pRspUserLogin, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast)
 {
     cerr << "--->>> " << __FUNCTION__ << endl;
 
-    if (IsErrorRspInfo(pRspInfo))
-    {
+    if (IsErrorRspInfo(pRspInfo)) {
         cerr << "--->>> 行情登录错误: " << pRspInfo->ErrorID << pRspInfo->ErrorMsg << endl;
     }
-    if (bIsLast && !IsErrorRspInfo(pRspInfo))
-    {
+    if (bIsLast && !IsErrorRspInfo(pRspInfo)) {
         ///获取当前交易日
         cerr << "--->>> 获取当前交易日 = " << STFTDC.MdApi->GetTradingDay() << endl;
         // 请求订阅行情
@@ -81,22 +79,22 @@ void MarketDataCollector::OnRspUserLogin(CThostFtdcRspUserLoginField * pRspUserL
     }
 }
 
-void MarketDataCollector::OnRspSubMarketData(CThostFtdcSpecificInstrumentField * pSpecificInstrument, CThostFtdcRspInfoField * pRspInfo, int nRequestID, bool bIsLast)
+void MarketDataCollector::OnRspSubMarketData(CThostFtdcSpecificInstrumentField* pSpecificInstrument, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast)
 {
     cerr << "--->>> " << "订阅行情品种：" << pSpecificInstrument->InstrumentID << endl;
 }
 
-void MarketDataCollector::OnRspUnSubMarketData(CThostFtdcSpecificInstrumentField * pSpecificInstrument, CThostFtdcRspInfoField * pRspInfo, int nRequestID, bool bIsLast)
+void MarketDataCollector::OnRspUnSubMarketData(CThostFtdcSpecificInstrumentField* pSpecificInstrument, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast)
 {
     cerr << "--->>> " << __FUNCTION__ << endl;
 }
 
-void MarketDataCollector::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField * pDepthMarketData)
+void MarketDataCollector::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField* pDepthMarketData)
 {
     //cerr << "--->>> " << __FUNCTION__ << endl;
     ///数据缓存
     double GetLocalTimeMs1();
-    void WriteConfiguration(char *filepaths);
+    void WriteConfiguration(char* filepaths);
     void Count_Day_BuySellpos(int i);
 
     char names[10] = "";
@@ -116,12 +114,10 @@ void MarketDataCollector::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField * 
     double NewPrice = pDepthMarketData->LastPrice;
 
     Q_BarTime_1 = hours * 60 * 60 + minutes * 60 + seconds;                        //时间采用秒计
-    Q_BarTime_2 = (1 / 10e1)*hours + (1 / 10e3)*minutes + (1 / 10e5)*seconds;    //时间格式0.145100 = 14：51：00
+    Q_BarTime_2 = (1 / 10e1) * hours + (1 / 10e3) * minutes + (1 / 10e5) * seconds;    //时间格式0.145100 = 14：51：00
 
-    for (int i = 0; i < 20; i++)
-    {
-        if (InstrumentID_name == InstrumentID_n[i])
-        {
+    for (int i = 0; i < 20; i++) {
+        if (InstrumentID_name == InstrumentID_n[i]) {
             ReceiveTick[i] = true;
 
             Q_BarTime_1n[i] = Q_BarTime_1;
@@ -137,12 +133,11 @@ void MarketDataCollector::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField * 
             tick_data[i][7] = pDepthMarketData->LowestPrice;
 
             //***************************************************    
-            bool check0 = (tick_data[i][2] > 0.0910 && tick_data[i][2] < 0.0915 && i>17) || (tick_data[i][2]<0.1518 && tick_data[i][2]>0.0914 && !FirstTick[i] && i > 17);
-            bool check1 = (tick_data[i][2] > 0.0856 && tick_data[i][2] < 0.0900 && i <= 17) || (tick_data[i][2]<0.1505 && tick_data[i][2]>0.0859 && !FirstTick[i] && i <= 17);
-            bool check2 = (tick_data[i][2] > 0.2056 && tick_data[i][2] < 0.2100 && i <= 17) || ((tick_data[i][2]<0.0235 || tick_data[i][2]>0.2059) && !FirstTick[i] && i <= 17);
+            bool check0 = (tick_data[i][2] > 0.0910 && tick_data[i][2] < 0.0915 && i>17) || (tick_data[i][2] < 0.1518 && tick_data[i][2]>0.0914 && !FirstTick[i] && i > 17);
+            bool check1 = (tick_data[i][2] > 0.0856 && tick_data[i][2] < 0.0900 && i <= 17) || (tick_data[i][2] < 0.1505 && tick_data[i][2]>0.0859 && !FirstTick[i] && i <= 17);
+            bool check2 = (tick_data[i][2] > 0.2056 && tick_data[i][2] < 0.2100 && i <= 17) || ((tick_data[i][2] < 0.0235 || tick_data[i][2]>0.2059) && !FirstTick[i] && i <= 17);
 
-            if (STFTDC.stMDATA.MdMode && (check0 || check1 || check2))
-            {
+            if (STFTDC.stMDATA.MdMode && (check0 || check1 || check2)) {
                 MnKlinesig[i] = true;
                 Day_open[i][0] = pDepthMarketData->OpenPrice;
 
@@ -167,8 +162,7 @@ void MarketDataCollector::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField * 
             }
 
             //***************************************************    
-            for (int j = 59; j > 0; j--)
-            {
+            for (int j = 59; j > 0; j--) {
                 tick_AskPrice1[i][j] = tick_AskPrice1[i][j - 1];
                 tick_BidPrice1[i][j] = tick_BidPrice1[i][j - 1];
                 tick_AskVolume1[i][j] = tick_AskVolume1[i][j - 1];
@@ -183,9 +177,7 @@ void MarketDataCollector::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField * 
             {
                 tick_AskPrice1[i][0] = 0;
                 tick_BidPrice1[i][0] = 0;
-            }
-            else
-            {
+            } else {
                 tick_AskPrice1[i][0] = pDepthMarketData->AskPrice1;
                 tick_BidPrice1[i][0] = pDepthMarketData->BidPrice1;
             }
@@ -201,8 +193,7 @@ void MarketDataCollector::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField * 
             bool Timemore1 = tick_data[i][2] != 0.2059 && tick_data[i][2] != 0.2100 && tick_data[i][2] != 0.0230;
             bool Timemore2 = (tick_data[i][2] > 0.0900 && tick_data[i][2] < 0.1500) || tick_data[i][2] > 0.2100 || tick_data[i][2] < 0.0230;
 
-            if (Timemore0 && Timemore1  && Timemore2 && seconds >= 0 && seconds<40 && tick_Volume[i][0]>tick_Volume[i][1] && MnKlinesig[i] == false)
-            {
+            if (Timemore0 && Timemore1 && Timemore2 && seconds >= 0 && seconds<40 && tick_Volume[i][0]>tick_Volume[i][1] && MnKlinesig[i] == false) {
                 MnKlinesig[i] = true;
 
                 Mn_open[i][1] = Mn_open[i][0];
@@ -216,24 +207,20 @@ void MarketDataCollector::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField * 
                 Mn_close[i][0] = NewPrice;
                 //打印K线线数据
                 //cerr << "--->>> " << InstrumentID_n[i] << "_" <<ff2ss(tick_data[i][1])<< "_" << tick_data[i][2]<< "_" << Mn_open[i][1]<< "_" << Mn_high[i][1]<< "_" << Mn_low[i][1]<< "_" << Mn_close[i][1] << endl;
-            }
-            else
-            {
+            } else {
                 Mn_high[i][0] = max(Mn_high[i][0], NewPrice);
                 Mn_low[i][0] = min(Mn_low[i][0], NewPrice);
                 Mn_close[i][0] = NewPrice;
             }
 
-            if (seconds > 45 && seconds < 55 && MnKlinesig[i] == true)
-            {
+            if (seconds > 45 && seconds < 55 && MnKlinesig[i] == true) {
                 MnKlinesig[i] = false;
             }
             //***************************************************
 
             //tick_data[i][0]= 0;        //设置标志位
 
-            if (TickFileWritepaths[i][0] == '\0')
-            {
+            if (TickFileWritepaths[i][0] == '\0') {
                 tick_data[i][8] = pDepthMarketData->UpperLimitPrice;
                 tick_data[i][9] = pDepthMarketData->LowerLimitPrice;
 
@@ -252,12 +239,9 @@ void MarketDataCollector::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField * 
             //记录TICK数据
             ofstream o_file(TickFileWritepaths[i], ios::app);
 
-            if (STFTDC.stMDATA.MdMode && (check0 || check1 || check2))
-            {
+            if (STFTDC.stMDATA.MdMode && (check0 || check1 || check2)) {
                 o_file << ff2ss(tick_data[i][1]) << "\t" << tick_data[i][2] << "\t" << Millisecs << "\t" << tick_AskPrice1[i][0] << "\t" << tick_AskVolume1[i][0] << "\t" << tick_BidPrice1[i][0] << "\t" << tick_BidVolume1[i][0] << "\t" << tick_data[i][4] << "\t" << ff2ss(tick_Volume[i][0]) << "\t" << ff2ss(tick_OpenInterest[i][0]) << "\t" << Day_open[i][2] << "\t" << Day_high[i][2] << "\t" << Day_low[i][2] << "\t" << Day_close[i][2] << "\t" << Day_open[i][1] << "\t" << Day_high[i][1] << "\t" << Day_low[i][1] << "\t" << Day_close[i][1] << "\t" << tick_data[i][8] << "\t" << tick_data[i][9] << endl;
-            }
-            else
-            {
+            } else {
                 o_file << ff2ss(tick_data[i][1]) << "\t" << tick_data[i][2] << "\t" << Millisecs << "\t" << tick_AskPrice1[i][0] << "\t" << tick_AskVolume1[i][0] << "\t" << tick_BidPrice1[i][0] << "\t" << tick_BidVolume1[i][0] << "\t" << tick_data[i][4] << "\t" << ff2ss(tick_Volume[i][0]) << "\t" << ff2ss(tick_OpenInterest[i][0]) << endl; //将内容写入到文本文件中
             }
             o_file.close();                        //关闭文件
@@ -275,8 +259,7 @@ void MarketDataCollector::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField * 
                 //WriteConfiguration("./AutoTrader.dat");
             }
 
-            if ((i < 20 && i > 17 && tick_data[i][2] > 0.0913) || (i <= 17 && tick_data[i][2] > 0.0858))
-            {
+            if ((i < 20 && i > 17 && tick_data[i][2] > 0.0913) || (i <= 17 && tick_data[i][2] > 0.0858)) {
                 FirstTick[i] = true;
             }
 
@@ -301,7 +284,7 @@ int MarketDataCollector::CtpMarketSubscribe()
     return iResult;
 }
 
-bool MarketDataCollector::IsErrorRspInfo(CThostFtdcRspInfoField * pRspInfo)
+bool MarketDataCollector::IsErrorRspInfo(CThostFtdcRspInfoField* pRspInfo)
 {
     // 如果ErrorID != 0, 说明收到了错误的响应
     bool bResult = ((pRspInfo) && (pRspInfo->ErrorID != 0));
@@ -310,12 +293,12 @@ bool MarketDataCollector::IsErrorRspInfo(CThostFtdcRspInfoField * pRspInfo)
     return bResult;
 }
 
-int MarketDataCollector::CtpMarketUnSubscribe(char *arrayOfConracts[], int sizeOfArray)
+int MarketDataCollector::CtpMarketUnSubscribe(char* arrayOfConracts[], int sizeOfArray)
 {
     return STFTDC.MdApi->UnSubscribeMarketData(arrayOfConracts, sizeOfArray);
 }
 
-int MarketDataCollector::CtpMarketLogout(CThostFtdcUserLogoutField *req, int iReqID)
+int MarketDataCollector::CtpMarketLogout(CThostFtdcUserLogoutField* req, int iReqID)
 {
     return STFTDC.MdApi->ReqUserLogout(req, iReqID);
 }
@@ -323,12 +306,10 @@ int MarketDataCollector::CtpMarketLogout(CThostFtdcUserLogoutField *req, int iRe
 #endif
 
 TradeChannel::TradeChannel(CThostFtdcTraderApi* api) : lOrderTime(0), lOrderOkTime(0)
-{
-}
+{}
 
 TradeChannel::~TradeChannel()
-{
-}
+{}
 
 /*
 订阅模式
@@ -338,7 +319,7 @@ TradeChannel::~TradeChannel()
 */
 int TradeChannel::CtpTradeMainApi()
 {
-    CThostFtdcTraderApi *api =
+    CThostFtdcTraderApi* api =
         CThostFtdcTraderApi::CreateFtdcTraderApi(STFTDC.FLOW_PATH);
     TradeChannel tdChnl(TRDAPI = api);
     api->RegisterSpi(&tdChnl);
@@ -362,7 +343,7 @@ void TradeChannel::OnFrontConnected()
     CtpTrdReqUserLogin();
 }
 
-bool TradeChannel::IsErrorRspInfo(CThostFtdcRspInfoField *pRspInfo)
+bool TradeChannel::IsErrorRspInfo(CThostFtdcRspInfoField* pRspInfo)
 {
     // 如果ErrorID != 0, 说明收到了错误的响应
     bool bResult = ((pRspInfo) && (pRspInfo->ErrorID != 0));
@@ -384,8 +365,7 @@ int TradeChannel::CtpTrdReqUserLogin()
     strcpy_s(req.BrokerID, STFTDC.BROKER_ID);
     strcpy_s(req.UserID, STFTDC.INVESTOR_ID);
     strcpy_s(req.Password, STFTDC.PASSWORD);
-    if (STFTDC.AUTHCODE[0] != '\0')
-    {
+    if (STFTDC.AUTHCODE[0] != '\0') {
         CThostFtdcReqAuthenticateField authReq;
         memset(&authReq, 0, sizeof(authReq));
         strcpy_s(authReq.BrokerID, STFTDC.BROKER_ID);
@@ -399,12 +379,11 @@ int TradeChannel::CtpTrdReqUserLogin()
     return iResult;
 }
 
-void TradeChannel::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin,
-    CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
+void TradeChannel::OnRspUserLogin(CThostFtdcRspUserLoginField* pRspUserLogin,
+    CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast)
 {
     cerr << "--->>> " << "OnRspUserLogin" << endl;
-    if (bIsLast && !IsErrorRspInfo(pRspInfo))
-    {
+    if (bIsLast && !IsErrorRspInfo(pRspInfo)) {
         // 保存会话参数
         STFTDC.FRONT_ID = pRspUserLogin->FrontID;
         STFTDC.SESSION_ID = pRspUserLogin->SessionID;
@@ -428,11 +407,10 @@ void TradeChannel::CtpTrdReqSettlementInfoConfirm()
     ((cerr << "--->>> 投资者结算结果确认: ", iResult == 0) ? cerr << "成功" : cerr << "失败 [" << iResult << (iResult != 0 ? "]" : "")) << endl;
 }
 
-void TradeChannel::OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField *pSettlementInfoConfirm, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
+void TradeChannel::OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField* pSettlementInfoConfirm, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast)
 {
     cerr << "--->>> " << "OnRspSettlementInfoConfirm" << endl;
-    if (bIsLast && !IsErrorRspInfo(pRspInfo))
-    {
+    if (bIsLast && !IsErrorRspInfo(pRspInfo)) {
         ///请求查询合约
         CtpTrdReqQryInstrument();
     }
@@ -447,11 +425,10 @@ void TradeChannel::CtpTrdReqQryInstrument()
     ((cerr << "--->>> 请求查询合约: ", iResult == 0) ? cerr << "成功" : cerr << "失败 [" << iResult << (iResult != 0 ? "]" : "")) << endl;
 }
 
-void TradeChannel::OnRspQryInstrument(CThostFtdcInstrumentField *pInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
+void TradeChannel::OnRspQryInstrument(CThostFtdcInstrumentField* pInstrument, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast)
 {
     cerr << "--->>> " << "OnRspQryInstrument" << endl;
-    if (bIsLast && !IsErrorRspInfo(pRspInfo))
-    {
+    if (bIsLast && !IsErrorRspInfo(pRspInfo)) {
         ///请求查询合约
         CtpTrdReqQryTradingAccount();
     }
@@ -467,11 +444,10 @@ void TradeChannel::CtpTrdReqQryTradingAccount()
     ((cerr << "--->>> 请求查询资金账户: ", iResult == 0) ? cerr << "成功" : cerr << "失败 [" << iResult << (iResult != 0 ? "]" : "")) << endl;
 }
 
-void TradeChannel::OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingAccount, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
+void TradeChannel::OnRspQryTradingAccount(CThostFtdcTradingAccountField* pTradingAccount, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast)
 {
     cerr << "--->>> " << "OnRspQryTradingAccount" << endl;
-    if (bIsLast && !IsErrorRspInfo(pRspInfo))
-    {
+    if (bIsLast && !IsErrorRspInfo(pRspInfo)) {
         ///请求查询投资者持仓
         CtpTrdReqQryInvestorPosition();
     }
@@ -488,11 +464,10 @@ void TradeChannel::CtpTrdReqQryInvestorPosition()
     ((cerr << "--->>> 请求查询投资者持仓: ", iResult == 0) ? cerr << "成功" : cerr << "失败 [" << iResult << (iResult != 0 ? "]" : "")) << endl;
 }
 
-void TradeChannel::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInvestorPosition, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
+void TradeChannel::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField* pInvestorPosition, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast)
 {
     cerr << "--->>> " << "OnRspQryInvestorPosition" << endl;
-    if (bIsLast && !IsErrorRspInfo(pRspInfo))
-    {
+    if (bIsLast && !IsErrorRspInfo(pRspInfo)) {
         ///报单录入请求
         CtpTrdReqOrderInsert();
     }
@@ -552,13 +527,13 @@ void TradeChannel::CtpTrdReqOrderInsert()
     ((cerr << "--->>> 报单录入请求: ", iResult == 0) ? cerr << "成功" : cerr << "失败 [" << iResult << (iResult != 0 ? "]" : "")) << endl;
 }
 
-void TradeChannel::OnRspOrderInsert(CThostFtdcInputOrderField *pInputOrder, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
+void TradeChannel::OnRspOrderInsert(CThostFtdcInputOrderField* pInputOrder, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast)
 {
     cerr << "--->>> " << "OnRspOrderInsert" << endl;
     IsErrorRspInfo(pRspInfo);
 }
 
-void TradeChannel::CtpTrdReqOrderAction(CThostFtdcOrderField *pOrder)
+void TradeChannel::CtpTrdReqOrderAction(CThostFtdcOrderField* pOrder)
 {
     static bool ORDER_ACTION_SENT = false;        //是否发送了报单
     if (ORDER_ACTION_SENT)
@@ -600,32 +575,29 @@ void TradeChannel::CtpTrdReqOrderAction(CThostFtdcOrderField *pOrder)
     ORDER_ACTION_SENT = true;
 }
 
-void TradeChannel::OnRspOrderAction(CThostFtdcInputOrderActionField *pInputOrderAction, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
+void TradeChannel::OnRspOrderAction(CThostFtdcInputOrderActionField* pInputOrderAction, CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast)
 {
     cerr << "--->>> " << "OnRspOrderAction" << endl;
     IsErrorRspInfo(pRspInfo);
 }
 
 ///报单通知
-void TradeChannel::OnRtnOrder(CThostFtdcOrderField *pOrder)
+void TradeChannel::OnRtnOrder(CThostFtdcOrderField* pOrder)
 {
     cerr << "--->>> " << "OnRtnOrder" << endl;
     lOrderOkTime = time(NULL);
     time_t lTime = lOrderOkTime - lOrderTime;
     cerr << "--->>> 报单到报单通知的时间差 = " << lTime << endl;
-    if (IsMyOrder(pOrder))
-    {
-        if (IsTradingOrder(pOrder))
-        {
+    if (IsMyOrder(pOrder)) {
+        if (IsTradingOrder(pOrder)) {
             //ReqOrderAction(pOrder);
-        }
-        else if (pOrder->OrderStatus == THOST_FTDC_OST_Canceled)
+        } else if (pOrder->OrderStatus == THOST_FTDC_OST_Canceled)
             cerr << "--->>> 撤单成功" << endl;
     }
 }
 
 ///成交通知
-void TradeChannel::OnRtnTrade(CThostFtdcTradeField *pTrade)
+void TradeChannel::OnRtnTrade(CThostFtdcTradeField* pTrade)
 {
     cerr << "--->>> " << "OnRtnTrade" << endl;
 }
@@ -642,20 +614,20 @@ void TradeChannel::OnHeartBeatWarning(int nTimeLapse)
     cerr << "--->>> nTimerLapse = " << nTimeLapse << endl;
 }
 
-void TradeChannel::OnRspError(CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
+void TradeChannel::OnRspError(CThostFtdcRspInfoField* pRspInfo, int nRequestID, bool bIsLast)
 {
     cerr << "--->>> " << "OnRspError" << endl;
     IsErrorRspInfo(pRspInfo);
 }
 
-bool TradeChannel::IsMyOrder(CThostFtdcOrderField *pOrder)
+bool TradeChannel::IsMyOrder(CThostFtdcOrderField* pOrder)
 {
     return ((pOrder->FrontID == STFTDC.FRONT_ID) &&
         (pOrder->SessionID == STFTDC.SESSION_ID) &&
         (strcmp(pOrder->OrderRef, STFTDC.ORDER_REF) == 0));
 }
 
-bool TradeChannel::IsTradingOrder(CThostFtdcOrderField *pOrder)
+bool TradeChannel::IsTradingOrder(CThostFtdcOrderField* pOrder)
 {
     return ((pOrder->OrderStatus != THOST_FTDC_OST_PartTradedNotQueueing) &&
         (pOrder->OrderStatus != THOST_FTDC_OST_Canceled) &&

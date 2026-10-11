@@ -16,14 +16,6 @@
 #ifdef PTHREAD_H
 #pragma comment(lib, "pthreadVC2.lib")
 #endif
-#define CHEAK _sopen_s(&file,_file, O_RDONLY,0,0);\
-_sopen_s(&move,_moving, O_WRONLY | O_CREAT,0,0);\
-if(file < 0 || move < 0)\
-printf("Move error.");\
-_lseek(file, -OFFSET, SEEK_END);\
-while (len = _read(file, buff, sizeof(buff)) > 0)\
-{_write(move, buff, len);_close(move);_close(file);}
-
 using namespace freetype;
 // MyOglDrawDlg 对话框
 
@@ -31,7 +23,16 @@ class MyOglDrawDlg : public CDialog {
     DECLARE_DYNAMIC(MyOglDrawDlg)
 
 public:
-    MyOglDrawDlg() { };
+    MyOglDrawDlg()
+    {
+        W = H = 0;
+        offsetX = offsetY = 0.f;
+        margin = 0.f;
+        m_hDC = NULL;
+        m_hIcon = NULL;
+        m_hAcc = NULL;
+        ::InitializeCriticalSection(&mutex);
+    };
     MyOglDrawDlg(const char* sIP, CWnd* pParent = NULL);   // 标准构造函数
     virtual ~MyOglDrawDlg();
 
@@ -97,12 +98,7 @@ public:
     afx_msg void OnMouseMove(UINT nFlags, CPoint point);
     afx_msg BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pnt);
     afx_msg BOOL OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message);
-    afx_msg LRESULT CALLBACK WindowProc(
-        _In_ HWND   hwnd,
-        _In_ UINT   uMsg,
-        _In_ WPARAM wParam,
-        _In_ LPARAM lParam
-    );
+    virtual LRESULT WindowProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
     afx_msg void OnClose();
     // 自定义消息函数
     afx_msg LRESULT GetOglCmd(WPARAM wparam, LPARAM lparam);

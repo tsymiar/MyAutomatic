@@ -330,22 +330,29 @@ void md5_to_hex(char* md5, char* hex)
 /*从32字节的MD5字符串的中间截取16个字符*/
 char* get_Hash(char* md5, int len, char* dst)
 {
-    char* in = md5;
-    char* out = dst;
+    if (md5 == NULL || dst == NULL)
+        return NULL;
     int m = 16;
     //int len = strlen(md5);  
     if (m > len) m = len - 8;
-    in += 8;
+    // m <= 0 时 while(m--) 会无限拷贝
+    if (m <= 0) {
+        dst[0] = '\0';
+        return dst;
+    }
+    // 支持 dst == md5 的重叠拷贝
+    char* in = md5 + 8;
+    char* out = dst;
     while (m--) *(out++) = *(in++);
-    *(out++) = '\0';
+    *out = '\0';
     return dst;
 }
 
-void hex_to_ascii(unsigned char* hex, char* ascii)
+/* len 是待转换的字节数，不能用 sizeof(hex)*4 推导（hex 已退化为指针） */
+void hex_to_ascii(unsigned char* hex, char* ascii, int len)
 {
-    if (hex == NULL)
+    if (hex == NULL || ascii == NULL || len <= 0)
         return;
-    int len = sizeof(hex) * 4;
     for (int i = 0; i < len; i++) {
         char ddl, ddh;
         ddh = 48 + hex[i] / 16;

@@ -253,3 +253,4 @@ WPF/
 cache/
 KlineUtil/image/*.jpeg
 *.bin
+*.conf

@@ -90,92 +90,115 @@ BEGIN_MESSAGE_MAP(CIMhideWndDlg, CDialogEx)
     ON_BN_CLICKED(IDC_SEEKNEW, &CIMhideWndDlg::OnBnClickedSeeknew)
 END_MESSAGE_MAP()
 
+namespace {
+// 临界区必须全局共享：函数局部变量各线程各持一把，互斥不了
+struct PayloadLock {
+    CRITICAL_SECTION cs;
+    PayloadLock() { InitializeCriticalSection(&cs); }
+    ~PayloadLock() { DeleteCriticalSection(&cs); }
+} g_payloadLock;
+}
+
+// 协议分发独立成函数，避免临界区内 continue/break
+static void dispatchPayload(const char* payload, int len, void* dlg)
+{
+    char title[512];
+    CIMhideWndDlg* pDlg = static_cast<CIMhideWndDlg*>(dlg);
+    if (len < 8)   // 连协议头都不完整
+        return;
+    // payload[0..7] 是协议头，正文从 +8 开始
+    sprintf_s(title, sizeof(title), "%.*s", (int)(sizeof(title) - 1), payload + 8);
+
+    if (payload[1] == LOGIN) {
+        if (pDlg == NULL) return;
+        LPCSTR username = g_logDlg == NULL ? (char*)g_content.username : g_logDlg->getUsername();
+        pDlg->m_username.SetWindowText(username);
+    } else if (payload[1] == ONLINE) {
+        if (payload[2] != '0') {
+            MessageBox(NULL, title, "---Message---", MB_OK);
+            return;
+        }
+        int n = atoi(payload + 4);
+        for (int c = 0; c < n && c < MAX_MEMBERS_PER_GROUP; c++) {
+            char user[25] = { 0 };
+            memcpy(user, payload + 32 + 8 * c, 8);
+            if (strnlen(user, sizeof(user)) == 0)
+                break;
+            if (pDlg != NULL) pDlg->m_frndList.InsertItem(c, user);
+        }
+    } else if (payload[1] == NETNDT || payload[1] == PEER2P) {
+        char msg[128];
+        if (payload[2] != '0')
+            sprintf_s(msg, sizeof(msg), "'%s': %.*s", title,
+                (int)(sizeof(msg) - 1), (len > 32) ? payload + 32 : "");
+        else
+            sprintf_s(msg, sizeof(msg), "%.*s", (int)(sizeof(msg) - 1), title);
+        MessageBox(NULL, msg, "---Message---", MB_OK);
+    } else if (payload[1] == USERGROUP && payload[3] == '\0') {
+        // payload[5] 是有符号 char
+        int n = (unsigned char)payload[5];
+        for (int c = 0; c < n && c < MAX_MEMBERS_PER_GROUP; c++) {
+            char user[24] = { 0 };
+            // 保留末尾 '\0'
+            memcpy(user, payload + 8 * (c + 4), sizeof(user) - 1);
+            if (strnlen(user, sizeof(user)) == 0)
+                break;
+            if (pDlg != NULL) pDlg->m_frndList.InsertItem(c, user);
+        }
+    } else if (payload[1] == VIEWGROUP) {
+        if (payload[2] != '0') {
+            MessageBox(NULL, title, "---Message---", MB_OK);
+            return;
+        }
+        int n = atoi(payload + 4);
+        for (int c = 0; c < n && c < MAX_MEMBERS_PER_GROUP; c++) {
+            char group[24] = { 0 };
+            memcpy(group, payload + 32 + 8 * c, 8);
+            group[8] = '\0';
+            if (strnlen(group, sizeof(group)) == 0)
+                break;
+            if (pDlg != NULL) pDlg->m_frndList.InsertItem(c, group);
+        }
+    } else {
+        MessageBox(NULL, title, "---Message---", MB_OK);
+    }
+}
+
 void* parseMessage(void* msg)
 {
-    int len = 0;
-    char title[512];
-    static char payload[256];
-    CRITICAL_SECTION wrcsec;
+    char payload[256];
     StClient client; // = (StClient*)malloc(sizeof(StClient));
-    memset(payload, 0, 256);
+
+    if (msg == NULL)
+        return NULL;
     client = (StClient) * ((StClient*)msg);
-    InitializeCriticalSection(&wrcsec);
+
     while (1) {
-        if (client.flag == 0) {
-            MessageBox(NULL, "ignore flag", "---Message---", MB_OK);
+        if (client.flag == 0 || client.sock == 0) {
+            // 未就绪时休眠，避免空转
+            Sleep(200);
             continue;
         }
-        EnterCriticalSection(&wrcsec);
-        if (client.sock == 0) {
-            MessageBox(NULL, "socket invalid!", "---Message---", MB_OK);
-            continue;
+        memset(payload, 0, sizeof(payload));
+        EnterCriticalSection(&g_payloadLock.cs);
+        // 少收 1 字节，保证下面能补 '\0'
+        int len = recv(client.sock, payload, (int)sizeof(payload) - 1, 0);
+        if (len > 0) {
+            payload[len] = '\0';
+            dispatchPayload(payload, len, client.Dlg);
         }
-        len = recv(client.sock, payload, 256, 0);
-        if (len <= 0) {
-            MessageBox(NULL, "connection lost!", "client", MB_OK);
-            if (len == -1)
-                break;
+        LeaveCriticalSection(&g_payloadLock.cs);   // 所有路径都会走到这里
+
+        if (len == 0) {              // 对端正常关闭
             closesocket(client.sock);
-            continue;
+            break;
         }
-        sprintf_s(title, 512, "%s", payload + 8);
-        if (payload[1] == LOGIN) {
-            LPCSTR username = TEXT(g_logDlg == NULL ? (char*)g_content.username : g_logDlg->getUsername());
-            ((CIMhideWndDlg*)client.Dlg)->m_username.SetWindowText(username);
-            continue;
-        } else if (payload[1] == ONLINE) {
-            if (payload[2] != '0') {
-                MessageBox(NULL, title, "---Message---", MB_OK);
-                continue;
-            }
-            for (int c = 0; c < atoi(payload + 4); c++) {
-                char user[25] = { 0 };
-                memcpy(user, payload + 32 + 8 * c, 8);
-                len = (int)strnlen(user, sizeof(user));
-                if (len <= 0)
-                    break;
-                memset(user + len + 1, ',', 1);
-                strcpy(title + 36 + 8 * c - (8 - len - 2), user);
-                ((CIMhideWndDlg*)client.Dlg)->m_frndList.InsertItem(c, user);
-            }
-        } else if (payload[1] == NETNDT || payload[1] == PEER2P) {
-            char msg[128];
-            if (payload[2] != '0') {
-                sprintf_s(msg, sizeof(msg), "'%s': %s", title, payload + 32);
-            } else {
-                title[127] = '\0';
-                sprintf_s(msg, sizeof(msg), "%.*s", (int)(sizeof(msg) - 1), title);
-            }
-            MessageBox(NULL, msg, "---Message---", MB_OK);
-        } else if (payload[1] == USERGROUP && payload[3] == '\0') {
-            for (int c = 0; c < payload[5]; c++) {
-                char user[24] = { 0 };
-                // 只拷贝 sizeof(user) - 1 字节, 保证末尾 '\0', 避免 strnlen 越界读
-                memcpy(user, payload + 8 * (c + 4), sizeof(user) - 1);
-                len = (int)strnlen(user, sizeof(user));
-                if (len <= 0)
-                    break;
-                ((CIMhideWndDlg*)client.Dlg)->m_frndList.InsertItem(c, user);
-            }
-        } else if (payload[1] == VIEWGROUP) {
-            if (payload[2] != '0') {
-                MessageBox(NULL, title, "---Message---", MB_OK);
-                continue;
-            }
-            char group[24] = { 0 };
-            for (int c = 0; c < atoi(payload + 4); c++) {
-                memcpy(group, payload + 32 + 8 * c, 8);
-                memset(group + 8, '\0', 1);
-                len = (int)strnlen(group, sizeof(group));
-                if (len <= 0)
-                    break;
-                ((CIMhideWndDlg*)client.Dlg)->m_frndList.InsertItem(c, group);
-            }
-        } else {
-            MessageBox(NULL, title, "---Message---", MB_OK);
+        if (len < 0) {               // SOCKET_ERROR
+            MessageBox(NULL, "connection lost!", "client", MB_OK);
+            closesocket(client.sock);
+            break;
         }
         Sleep(100);
-        LeaveCriticalSection(&wrcsec);
     }
     return NULL;
 }

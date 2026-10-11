@@ -134,7 +134,7 @@ unsigned int _stdcall call_soap_thrd(void* lr)
 
 void CLoginDlg::OnBnClickedLogin()
 {
-    char hexmd5[32], out[32], addr[256];
+    char hexmd5[32], out[33], addr[256];
     memset(&elem, 0, sizeof(SOAPELEM));
     ::GetDlgItemText(this->m_hWnd, IDC_ACNT, m_acnt, 32);
     ::GetDlgItemText(this->m_hWnd, IDC_PSW, m_pswd, 32);
@@ -154,17 +154,12 @@ void CLoginDlg::OnBnClickedLogin()
     else
         sprintf_s(addr, 256, "http://%s:%s/myweb.cgi", m_IP, m_Port);
     elem.soap = logDlg::elem.soap;
-    elem.__rslt = new char* [M];
-    //elem.__rslt[0] = (char *)malloc(sizeof(char) * M * 8);
-    memset(elem.__rslt, 0, 32);
-    for (int i = 1; i < M; i++)
-    {
-        elem.__rslt[i] = new char[16];
-        // elem.__rslt[i - 1] + 8;
-    }
+    // 登录接口不使用 __rslt
+    elem.__rslt = NULL;
     memcpy(elem.sock.form, form, sizeof(form));
     memcpy(elem.sock.addr, addr, sizeof(addr));
-    memcpy(elem.user.username, m_acnt, sizeof(m_acnt));
+    // username 仅 24 字节
+    strncpy_s((char*)elem.user.username, sizeof(elem.user.username), m_acnt, _TRUNCATE);
     memcpy(elem.sock.IP, m_IP, 16);
     //CloseHandle((HANDLE)_beginthreadex(NULL, 0, \
     //    (_beginthreadex_proc_type)&call_soap_thrd \
@@ -200,8 +195,6 @@ void CLoginDlg::OnBnClickedLogin()
         break;
     }
     AfxMessageBox(STrslt);
-    delete[] elem.__rslt;
-    //free(elem.__rslt);
 }
 
 void CLoginDlg::OnBnClickedCancel()
@@ -302,7 +295,6 @@ void CLoginDlg::OnCbnSelchangeCom()
 {
     CString sip;
     CvimgMat image;
-    CTPclient* m_ctp = NULL;
     int curNo = m_combo.GetCurSel();
     m_combo.GetLBText(curNo, sip);
     ::GetDlgItemText(this->m_hWnd, IDC_IPADDR, m_IP, 16);
@@ -320,9 +312,8 @@ void CLoginDlg::OnCbnSelchangeCom()
     }
     break;
     case 2:
-        CloseHandle((HANDLE)_beginthreadex(NULL, 0, m_ctp->TradeMarket, (void*)this, 0, NULL));
-        delete m_ctp;
-        m_ctp = NULL;
+        // TradeMarket 把参数当 MyOglDrawDlg* 用
+        CloseHandle((HANDLE)_beginthreadex(NULL, 0, &CTPclient::TradeMarket, (void*)&m_Gl, 0, NULL));
         break;
     case 3:
         if (AllocConsole())

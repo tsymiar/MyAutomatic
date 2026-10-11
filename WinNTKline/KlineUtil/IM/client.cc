@@ -1,8 +1,17 @@
 ﻿#include "client.h"
+#include <string>
 
 static StSock g_socks = {};
 static StClient g_client = {};
 static StMsgContent g_content = {};
+
+// 临界区必须全局共享：函数局部变量各线程各持一把，互斥不了
+struct RecvSection {
+    CRITICAL_SECTION cs;
+    RecvSection() { InitializeCriticalSection(&cs); }
+    ~RecvSection() { DeleteCriticalSection(&cs); }
+};
+static RecvSection g_recvSection;
 
 // 参考该函数编写报文处理函数
 #ifdef _WIN32
@@ -12,23 +21,29 @@ void*
 #endif
 runtime(void* param)
 {
-    CRITICAL_SECTION section;
-    InitializeCriticalSection(&section);
     StClient* g_client = reinterpret_cast<StClient*>(param);
+    if (g_client == NULL)
+        return 0;
     while (1) {
-        if (!g_client->flag)
+        if (!g_client->flag) {
+            // 休眠，避免忙等
+            Sleep(100);
             continue;
+        }
         char rcv_buf[256];
-        memset(rcv_buf, 0, 256);
-        int len = recv(g_client->sock, rcv_buf, 256, 0);
-        EnterCriticalSection(&section);
+        memset(rcv_buf, 0, sizeof(rcv_buf));
+        int len = recv(g_client->sock, rcv_buf, (int)sizeof(rcv_buf) - 1, 0);
+        EnterCriticalSection(&g_recvSection.cs);
         for (int c = 0; c < len; c++)
             fprintf(stdout, "%c", (unsigned char)rcv_buf[c]);
         fprintf(stdout, "\n");
-        LeaveCriticalSection(&section);
+        LeaveCriticalSection(&g_recvSection.cs);
         if (len <= 0) {
-            char detail[64];
-            snprintf(detail, 38 + 16, "Connection lost!\n\tsocket: %s, size=%d", _itoa((int)g_client->sock, rcv_buf, 10), len);
+            char detail[128];
+            char socktxt[32];
+            // 不要 itoa 进 rcv_buf，会覆盖收到的数据
+            _itoa((int)g_client->sock, socktxt, 10);
+            snprintf(detail, sizeof(detail), "Connection lost!\n\tsocket: %s, size=%d", socktxt, len);
             char title[32];
             snprintf(title, 32, "%s:%d", inet_ntoa(g_client->srvaddr.sin_addr), g_client->srvaddr.sin_port);
             MessageBox(0, detail, title, MB_OK);
@@ -53,7 +68,6 @@ runtime(void* param)
             continue;
         };
     };
-    DeleteCriticalSection(&section);
 };
 
 int SetupChat(StSock* sock)
@@ -127,7 +141,7 @@ std::string GetLastErrorToString(int errorCode)
         FORMAT_MESSAGE_IGNORE_INSERTS, NULL, errorCode,
         MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
         (LPTSTR)&text, 0, NULL) == 0 || text == nullptr) {
-        return "unknown error code: " + std::to_string(errorCode);
+        return std::string("unknown error code: ") + std::to_string(errorCode);
     }
     std::string result(text);
     LocalFree(text);
@@ -250,10 +264,15 @@ RecvThreadProc(void* PrimaryUDP)
 {
     int MAX_PACKET_SIZE = 256;
     P2P_NETWORK* P2Psock = reinterpret_cast<P2P_NETWORK*>(PrimaryUDP);
+    if (P2Psock == NULL)
+        return 0;
     int len = sizeof(P2Psock->addr);
     for (;;) {
-        if (!g_client.flag || P2Psock->socket == 0)
+        if (!g_client.flag || P2Psock->socket == 0) {
+            // 休眠，避免忙等
+            Sleep(100);
             continue;
+        }
         char rcvbuf[256];
         memset(rcvbuf, 0, 256);
         int ret = recvfrom(P2Psock->socket, reinterpret_cast<char*>(rcvbuf), MAX_PACKET_SIZE, 0, (sockaddr*)&P2Psock->addr,
@@ -295,6 +314,12 @@ RecvThreadProc(void* PrimaryUDP)
             fprintf(stdout, "\n");
         }
     }
+    // 释放 p2pMessage 分配的 P2P_NETWORK 与 socket
+    if (P2Psock->socket != 0) {
+        closesocket(P2Psock->socket);
+        P2Psock->socket = 0;
+    }
+    delete P2Psock;
     return 0;
 }
 /*P2P主体函数*/
@@ -317,10 +342,12 @@ int p2pMessage(unsigned char* userName, int UserIP, unsigned int UserPort, char 
     int MAXRETRY = 5;
     if (SOCKET_ERROR == retSetsockopt) {
         std::cout << "setsockopt() error!" << std::endl;
+        closesocket(PrimaryUDP);
         return 0;
     }
     if (bind(PrimaryUDP, (const sockaddr*)&addr, (int)sizeof(addr)) < 0) {
         std::cout << "socket binding failure!" << std::endl;
+        closesocket(PrimaryUDP);
         return 0;
     }
     if (g_client.flag) {
@@ -335,6 +362,8 @@ int p2pMessage(unsigned char* userName, int UserIP, unsigned int UserPort, char 
         //请求服务器“打洞”
         SendClientMessage(&MessageHost);
     }
+    const size_t msgLen = (Message != NULL)
+        ? strnlen(Message, sizeof(StMsgContent) - 1) + 1 : 0;
     for (int trytime = 0; trytime < MAXRETRY; trytime++) {
         sockaddr_in remote;
         remote.sin_family = AF_INET;
@@ -355,18 +384,21 @@ int p2pMessage(unsigned char* userName, int UserIP, unsigned int UserPort, char 
         if (p2pres < 0)
             return p2pres;
         //发送P2P消息体
-        p2pres = sendto(PrimaryUDP, (const char*)&Message, sizeof(StMsgContent), 0, (const sockaddr*)&remote, sizeof(remote));
+        p2pres = sendto(PrimaryUDP, Message, (int)msgLen, 0, (const sockaddr*)&remote, sizeof(remote));
         if (p2pres < 0)
             return p2pres;
         memset(&MessagePeer, 0, sizeof(StMsgContent));
-        memcpy(&MessagePeer, Message, sizeof(StMsgContent));
+        // 按实际长度拷贝
+        if (msgLen > 0)
+            memcpy(&MessagePeer, Message, msgLen);
         if (g_client.count == 0) {
             //启动接收线程
-            P2P_NETWORK pp_sock;
-            pp_sock.addr = remote;
-            pp_sock.socket = PrimaryUDP;
+            // 由 RecvThreadProc 释放，socket 所有权随之移交
+            P2P_NETWORK* pp_sock = new P2P_NETWORK();
+            pp_sock->addr = remote;
+            pp_sock->socket = PrimaryUDP;
             Pthreadt threads;
-            _beginthreadex(NULL, 0, RecvThreadProc, &pp_sock, 0, &threads);
+            _beginthreadex(NULL, 0, RecvThreadProc, pp_sock, 0, &threads);
         }
         g_client.count++;
         //等待接收消息线程修改标志

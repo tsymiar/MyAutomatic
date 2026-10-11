@@ -33,3 +33,4 @@ copy %CEFDIR%\Debug\chrome_elf.dll .\
 copy %libPNG%\lib\Debug\libpng16.dll .\
 copy %SDL2%\lib\x86\SDL2*.dll .\
 copy %PTHD_LIB86%\..\..\dll\x86\pthreadVC*.dll .\
+copy ..\KlineUtil\Ftdc\ctp.conf.example .\ctp.conf
