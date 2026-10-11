@@ -8,10 +8,17 @@ extern "C"
 {
 #endif
 
+/* len 是待转换字节数（默认 16）；ascii 缓冲区需 >= len * 2 + 1 字节 */
+#define MD5_DIGEST_LEN 16
+
     void open_md5_file(FILE* fp, char out[]);
     void md5_to_hex(char* input, char* output);
     char* get_Hash(char* md5, int len, char* dst);
-    void hex_to_ascii(unsigned char* hex, char* ascii);
+#ifdef __cplusplus
+    void hex_to_ascii(unsigned char* hex, char* ascii, int len = MD5_DIGEST_LEN);
+#else
+    void hex_to_ascii(unsigned char* hex, char* ascii, int len);
+#endif
     int ascii_to_hex(char* ascii, char* hex);
     void test_f_md5();
     void test_s_md5();

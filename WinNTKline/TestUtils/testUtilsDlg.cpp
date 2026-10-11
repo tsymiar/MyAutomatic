@@ -18,10 +18,21 @@
 
 namespace {
     StSock socks = {};
-    CLoginDlg login = {};
-    CTPclient* g_ctp = nullptr;
+    CLoginDlg login = { };
     MyOglDrawDlg* g_ogl = nullptr;
     CIMhideWndDlg* g_pIM = nullptr;
+
+    // 先 DestroyWindow()，再按真实类型 delete
+    template <class T>
+    void DestroyModeless(T*& p)
+    {
+        if (p == nullptr)
+            return;
+        if (::IsWindow(p->m_hWnd))
+            p->DestroyWindow();
+        delete p;
+        p = nullptr;
+    }
 };
 
 IMPLEMENT_DYNCREATE(CWebBrowser2, CWnd)
@@ -34,9 +45,8 @@ CtestUtilsDlg::CtestUtilsDlg(CWnd* pParent /*=NULL*/)
 
 CtestUtilsDlg::~CtestUtilsDlg()
 {
-    LeakCheck(g_ogl);
-    LeakCheck(g_ctp);
-    LeakCheck(g_pIM);
+    DestroyModeless(g_ogl);
+    DestroyModeless(g_pIM);
 }
 
 void CtestUtilsDlg::DoDataExchange(CDataExchange* pDX)
@@ -145,8 +155,9 @@ void CtestUtilsDlg::OnBnClickedKline()
 
 void CtestUtilsDlg::OnBnClickedCtp()
 {
-    g_ctp = new CTPclient();
-    CloseHandle((HANDLE)_beginthreadex(NULL, 0, g_ctp->TradeMarket, (void*)this, 0, NULL));
+    // TradeMarket 把参数当 MyOglDrawDlg* 用，g_ogl 为空时传 NULL
+    CloseHandle((HANDLE)_beginthreadex(NULL, 0, &CTPclient::TradeMarket,
+        (void*)g_ogl, 0, NULL));
 }
 
 void CtestUtilsDlg::OnBnClickedSimbtn()

@@ -113,7 +113,8 @@ bool OGLKview::DrawKline(const OGLKview::Market& markdata, const OGLKview::FixWh
     hollow = !dlginfo.bkg;
     mouse.x = static_cast<float>(dlginfo.mouX);
     mouse.y = static_cast<float>(dlginfo.mouY);
-    candleMiddle = /*xVal =*/pnt.x = Okv->Pxtinker(co);
+    // Okv 是恒为 NULL 的自指针，Pxtinker 是本对象成员函数
+    candleMiddle = /*xVal =*/pnt.x = this->Pxtinker(co);
     fillitem.closing = markdata.close;
     fillitem.curprice = markdata.price;
     fillitem.gross = markdata.amount;
@@ -130,7 +131,8 @@ bool OGLKview::DrawKline(const OGLKview::Market& markdata, const OGLKview::FixWh
     sprintf(markchars.low, "%.2f", markdata.low);
     if (fillitem.highest < markdata.high)
         max_price = fillitem.highest = markdata.high;
-    if (fillitem.lowest < markdata.low)
+    // 最低价取更小的值
+    if (fillitem.lowest > markdata.low)
         min_price = fillitem.lowest = markdata.low;
     //
     if (tinkep.ratio < 1)
@@ -393,8 +395,10 @@ void OGLKview::print_string(const char* str)
     wstring = (wchar_t*)malloc((len + 1) * sizeof(wchar_t));
 #endif
 #endif
-    MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, str, -1, wstring, len);
-    if (wstring != nullptr) return;
+    // 分配失败直接返回
+    if (wstring == nullptr) return;
+    // 目标缓冲是 len+1 个 wchar_t
+    MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, str, -1, wstring, len + 1);
     wstring[len] = _T('\0');
     if (0x2f < wstring[0])
         //if (wstring[0] > 127)
@@ -402,12 +406,9 @@ void OGLKview::print_string(const char* str)
     else
         i = -1;//ASCII
     for (; i < len; ++i) {
-#if !defined(_UNICODE)
-#define _UNICODE
+        // 必须生成字形列表，否则 glCallList 无输出
         if (m_hDC != nullptr)
             wglUseFontBitmapsW(m_hDC, wstring[i], 1, list);
-#undef _UNICODE
-#endif
         glCallList(list);
     }
     if (wstring != nullptr) {
@@ -481,8 +482,9 @@ void OGLKview::AdjustDraw(GLsizei W, GLsizei H)
     glViewport(0, 0, W, H);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
+    // 转浮点避免整数除法
     if (H != 0)
-        gluPerspective(45.0f, W / H, 0.1f, 100.0f);
+        gluPerspective(45.0f, (GLdouble)W / (GLdouble)H, 0.1f, 100.0f);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glClearDepth(1.0f);
@@ -543,7 +545,8 @@ int OGLKview::DrawArrow(Point begin)
         (begin.x - 0.003f * tinkep.ratio) * 2 / (float)sqrt(3),begin.y + 0.001f * tinkep.ratio,//0.0f,1.0f,
         (begin.x - 0.003f * tinkep.ratio) * 2 / (float)sqrt(3),begin.y - 0.001f * tinkep.ratio,//0.0f,1.0f,
     };
-    const GLuint NumVertices = sizeof(vertices) / sizeof(GLfloat);
+    // 顶点数而非 float 个数
+    const GLuint NumVertices = (GLuint)(sizeof(vertices) / (2 * sizeof(GLfloat)));
 
 #ifdef _glew_h_
     Point arrend{ 0,0 };
@@ -927,13 +930,17 @@ int OGLKview::DrawKtext(char text[], Point& coor, int size, OGLKview::Color4f co
 #endif
         font
     );
-    HFONT hOldFont = (HFONT)SelectObject(wglGetCurrentDC(), mhfont);
-    DeleteObject(hOldFont);
+    HDC hTextDC = wglGetCurrentDC();
+    HFONT hOldFont = (HFONT)SelectObject(hTextDC, mhfont);
     if (color.A == 0)
         color.A = 1;
     glColor4f(color.R, color.G, color.B, color.A);
     glRasterPos2f(coor.x, coor.y);
     print_string(text);
+    // 恢复旧字体后再删自建字体
+    if (hOldFont != NULL)
+        SelectObject(hTextDC, hOldFont);
+    DeleteObject(mhfont);
 #elif __linux
     GLfloat texcoord[4];
     GLfloat texMinX, texMinY;
@@ -1099,17 +1106,27 @@ bool OGLKview::GetMarkDatatoDraw(const char* file, void* P, char* title, int hl,
 #endif // _MSC_VER
                     }
                     i = 0;
+                    for (int k = 0; k < 3; k++)
+                        div_stock[k] = nullptr;
                     token = _Strtok(buff, " ", (char**)&cotx);
-                    while (token != nullptr)//行优先
+                    // div_stock 只有 3 个元素，必须限界
+                    while (token != nullptr && i < 3)//行优先
                     {
                         div_stock[i] = token;
                         token = _Strtok(nullptr, " ", (char**)&cotx);
                         i++;
                     }
                     SwitchViewport(0);
-                    sprintf(code, "%s(%s)", div_stock[1], div_stock[0]);
-                    DrawKtext(code, ot_code, 20, { 1,1,0,0 }, (char*)"Terminal", false);
-                    sprintf(code, ("%s(%s)<%s>"), div_stock[1], div_stock[0], div_stock[2]);
+                    // 不足 3 个 token 时为 NULL
+                    if (div_stock[1] != nullptr)
+                    {
+                        sprintf_s(code, sizeof(code), "%s(%s)", div_stock[1], div_stock[0]);
+                        DrawKtext(code, ot_code, 20, { 1,1,0,0 }, (char*)"Terminal", false);
+                    }
+                    sprintf_s(code, sizeof(code), ("%s(%s)<%s>"),
+                        div_stock[1] != nullptr ? div_stock[1] : "",
+                        div_stock[0] != nullptr ? div_stock[0] : "",
+                        div_stock[2] != nullptr ? div_stock[2] : "");
                     ot_code = { -1.22f,ot_code.y };//格式化并输出
                     DrawKtext(code, ot_code, 12, { 1,1,0,0 }, (char*)"宋体");
                     ot_code = { 0.8f,1.189f };
@@ -1304,10 +1321,10 @@ bool OGLKview::GetMarkDatatoDraw(const char* file, void* P, char* title, int hl,
                         DrawKtext(macd, ot_macd, 15, { 1,0,0,0 });
                         //DIF深绿
                         sprintf_s(dif, "%s%.2f", s_dif, fo);
-                        DrawKtext(macd, ot_macd, 15, { 1,0,0,0 });
+                        DrawKtext(dif, ot_dif, 15, { 0,0.5f,0,0 });
                         //DEA黄色
                         sprintf_s(dea, "%s%.2f", s_dea, fo);
-                        DrawKtext(macd, ot_dea, 15, { 1,0,0,0 });
+                        DrawKtext(dea, ot_dea, 15, { 1,1,0,0 });
                         //RSI红色
                         sprintf_s(rsi, "%s%.2f", s_rsi, fo);
                         DrawKtext(rsi, ot_rsi, 15, { 1,0,0,0 });

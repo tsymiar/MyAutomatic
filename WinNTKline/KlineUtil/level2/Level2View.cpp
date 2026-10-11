@@ -30,13 +30,13 @@ void Level2View::DrawItem(OGLKview::Item item, int col)
     OGLKview::Point pnt = { 0.72f,Py - 0.666f*(col + 1) };
     if (item.time.hour > hour)
     {
-        sprintf(time0, "%d:%d", item.time.hour, item.time.min);
-        hour = item.time.hour; \
-            Okv.DrawKtext(time0, pnt, 13, color, "", false);
+        sprintf_s(time0, sizeof(time0), "%d:%d", item.time.hour, item.time.min);
+        hour = item.time.hour;
+        Okv.DrawKtext(time0, pnt, 13, color, "", false);
     }
     else {
         pnt.x = 0.752f;
-        sprintf(time0, ":%d", item.time.min);
+        sprintf_s(time0, sizeof(time0), ":%d", item.time.min);
         Okv.DrawKtext(time0, pnt, 14, color);
     }
 }
@@ -46,18 +46,20 @@ int Level2View::DrawItem(OGLKview::Item item, bool mode)
     char ti[8], time[8] = " ";
     const OGLKview::Color4f color = { 1,1,1,1 };
     OGLKview::Point pnt = { 0.72f,Py - 0.666f };
-    item.time.min <= 9 ? sprintf(time, "0%d", item.time.min) : sprintf(time, "%d", item.time.min);
+    // 先校验再格式化
     if ((item.time.min >= 60) || (item.time.min < 0) || (item.time.hour > 24) || (item.time.hour < 0))
         return -1;
+    item.time.min <= 9 ? sprintf_s(time, sizeof(time), "0%d", item.time.min)
+        : sprintf_s(time, sizeof(time), "%d", item.time.min);
     if (item.time.hour >= hour)
     {
-        sprintf(ti, "%d:%s", item.time.hour, time);
+        sprintf_s(ti, sizeof(ti), "%d:%s", item.time.hour, time);
         hour = item.time.hour;
         Okv.DrawKtext(ti, pnt, 13, color, "", false);
     }
     else {
         pnt.x = 0.752f;
-        sprintf(ti, ":%s", time);
+        sprintf_s(ti, sizeof(ti), ":%s", time);
         Okv.DrawKtext(ti, pnt, 13, color);
     }
     column++;

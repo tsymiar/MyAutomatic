@@ -504,7 +504,7 @@ ssize_t KaiSocket::writes(Network& network, const uint8_t* data, size_t len)
     memset(buff, 0, left);
     memcpy(buff, data, left);
     while (left > 0) {
-        ssize_t wrote = ::write(network.socket, reinterpret_cast<char*>(buff + (len - left)), left);
+        ssize_t wrote = write(network.socket, reinterpret_cast<char*>(buff + (len - left)), left);
         if (wrote <= 0) {
             if (wrote < 0 && errno == EINTR) {
                 continue; /* interrupted, retry */

@@ -73,7 +73,8 @@ static int getDaysOfThisYear(int year, int month, int day, int* dest)
         return -1;
     int total = 0;
     for (int i = 0; i < month - 1; i++) {
-        if (year % 400 || (year % 100 != 0 && year % 4 == 0))
+        // 整百年需被 400 整除才是闰年
+        if (year % 400 == 0 || (year % 100 != 0 && year % 4 == 0))
             total += leap[i];
         else
             total += comm[i];
@@ -90,23 +91,18 @@ struct BearCharges
 
     static double Max_len(GlAlgorithm::GLPoint Base[_N_])
     {
-        double S, max = 0;
-        for (int i = 0; i < _N_; i++) {
-            if (i != 0) {
-                S = Sqrt_sum(int(Base[i].x - Base[i - 1].x), int(Base[i].y - Base[i - 1].y));
-                if (max <= S)
-                    break;
-            }
+        // 先初始化，避免返回未定义值
+        double S = 0.0, max = 0.0;
+        if (Base == nullptr)
+            return 0.0;
+        for (int i = 1; i < _N_; i++) {
+            S = Sqrt_sum(int(Base[i].x - Base[i - 1].x), int(Base[i].y - Base[i - 1].y));
+            // 逐段比较取最大值
+            if (S > max)
+                max = S;
         }
-        return S;
+        return max;
     }
 };
 
-static void LeakCheck(void* ptr)
-{
-    if (ptr != nullptr) {
-        delete (char*)ptr;
-        ptr = nullptr;
-    }
-}
 #endif

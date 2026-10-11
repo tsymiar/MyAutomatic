@@ -2,7 +2,7 @@
 #define STOCK_CLASS_H_
 
 class Stock {
-public:	Stock() {}
+public:	Stock() : alph(0.f), EMA12(0.f), EMA26(0.f), DIF(0.f), f_dea{ } {}
         //destructor
         ~Stock() {}
         //variables
@@ -53,17 +53,20 @@ public:
         if (ma.N <= ma.M)
             return 0;
         else
-            return (ma.M*ma.X + (ma.N - ma.M)*pY) / ma.N;
+            // 转 float 避免整数乘法溢出
+            return ((float)ma.M * (float)ma.X + (float)(ma.N - ma.M) * pY) / (float)ma.N;
     }
     float EMA(float EMA_y, float toclose, int N)
     {
         alph = 2 / ((float)N + 1);
         return alph * toclose + (1 - alph)*EMA_y;
     }
-    float DEA(float dea[])
+    // dea 已退化为指针，长度必须显式传入
+    float DEA(float dea[], int size = 9)
     {
+        if (dea == nullptr || size <= 0)
+            return 0.f;
         float sum = 0;
-        int size = sizeof(*dea) / sizeof(float);
         for (int i = 0; i < size; i++)
             sum += dea[i];
         return sum / size;

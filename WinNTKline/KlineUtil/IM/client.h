@@ -69,7 +69,7 @@ inline int closesocket(SOCKET socket)
 }
 inline void Sleep(unsigned long ms)
 {
-    std::this_thread::sleep_for(std::chrono::microseconds(ms));
+    std::this_thread::sleep_for(std::chrono::milliseconds(ms));
 }
 inline char* strcpy_s(char(strDestination)[], char const* src)
 {
@@ -96,7 +96,7 @@ inline int InitializeCriticalSection(CRITICAL_SECTION* mutex)
 }
 inline int EnterCriticalSection(CRITICAL_SECTION* mutex)
 {
-    return pthread_mutex_trylock(mutex);
+    return pthread_mutex_lock(mutex);
 }
 inline int LeaveCriticalSection(CRITICAL_SECTION* mutex)
 {
@@ -247,14 +247,22 @@ enum  RCV_STATE {
     RCV_NDT
 };
 
-inline int checkPswValid(char* str)
+// 强度：长度 >= PSW_MIN_LEN 且字符种类 >= PSW_MIN_CLASS；
+// 非 ASCII 字节（中文等）单独计一类
+#define PSW_MIN_LEN 8
+#define PSW_MIN_CLASS 3
+
+inline int checkPswValid(const char* str)
 {
-    int z0 = 0;
-    int zz = 0;
-    int zZ = 0;
-    int z_ = 0;
-    for (int i = 0; i < (int)strnlen(str, 256); i++) {
-        char ansi = str[i];
+    if (str == NULL)
+        return 0;
+    const size_t len = strnlen(str, 256);
+    if (len < PSW_MIN_LEN)
+        return 0;
+    int z0 = 0, zz = 0, zZ = 0, z_ = 0, zw = 0;
+    for (size_t i = 0; i < len; i++) {
+        // char 符号性由实现决定，比较前先转 unsigned
+        const unsigned char ansi = (unsigned char)str[i];
         if (ansi <= '9' && ansi >= '0') {
             z0 = 1;
         } else if (ansi <= 'z' && ansi >= 'a') {
@@ -262,12 +270,12 @@ inline int checkPswValid(char* str)
         } else if (ansi <= 'Z' && ansi >= 'A') {
             zZ = 1;
         } else if (ansi > 127) {
-            z_ = 0;
+            zw = 1;	// 中文等多字节字符
         } else {
-            z_ = 1;
+            z_ = 1;	// ASCII 标点符号
         }
     }
-    return (z0 + zz + zZ + z_ == 4 ? 1 : 0);
+    return (z0 + zz + zZ + z_ + zw >= PSW_MIN_CLASS ? 1 : 0);
 }
 int SetupChat(StSock* sock = NULL);
 int StartChat(int error,
