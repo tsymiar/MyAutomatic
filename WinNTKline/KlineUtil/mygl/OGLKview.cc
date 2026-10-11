@@ -1,5 +1,6 @@
 ﻿#include "OGLKview.h"
 #include <assert.h>
+#include <new>
 
 #pragma unmanaged
 
@@ -374,8 +375,8 @@ void OGLKview::print_string(const char* str)
             ++len;
     }
     len += 1;
-    //wstring = new wchar_t(len);
-    if ((wstring = (wchar_t*)malloc(len * sizeof(wchar_t))) == NULL)
+    // new (std::nothrow) 失败时返回 nullptr 而不是抛异常, 与原 malloc 判空等价
+    if ((wstring = new (std::nothrow) wchar_t[len]) == nullptr)
         return;
 #else
     if (str == NULL) {
@@ -387,16 +388,10 @@ void OGLKview::print_string(const char* str)
             ++i;
         ++len;
     }
-#if !defined(_UNICODE)
-#define _UNICODE
-    wstring = static_cast<wchar_t*>(malloc((len + 1) * sizeof(wchar_t)));
-#undef _UNICODE
-#else
-    wstring = (wchar_t*)malloc((len + 1) * sizeof(wchar_t));
-#endif
-#endif
+    wstring = new (std::nothrow) wchar_t[len + 1];
     // 分配失败直接返回
     if (wstring == nullptr) return;
+#endif
     // 目标缓冲是 len+1 个 wchar_t
     MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, str, -1, wstring, len + 1);
     wstring[len] = _T('\0');
@@ -412,7 +407,7 @@ void OGLKview::print_string(const char* str)
         glCallList(list);
     }
     if (wstring != nullptr) {
-        free(wstring);
+        delete[] wstring;
         wstring = nullptr;
     }
     glDeleteLists(list, 1);

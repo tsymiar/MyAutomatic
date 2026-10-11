@@ -134,18 +134,15 @@ int SetupChat(StSock* sock)
 std::string GetLastErrorToString(int errorCode)
 {
 #ifdef _WIN32
-    char* text = nullptr;
-    // 设置FORMAT_MESSAGE_ALLOCATE_BUFFER标志分配内存时需要LocalFree释放
-    // 失败时 text 不会被赋值, 必须初始化并在返回前判空, 否则读到野指针
-    if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
-        FORMAT_MESSAGE_IGNORE_INSERTS, NULL, errorCode,
-        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-        (LPTSTR)&text, 0, NULL) == 0 || text == nullptr) {
+    // 固定栈缓冲 + FormatMessageA: 失败时缓冲保持空串并按错误码兜底,
+    // 既不需要 LocalFree, 也不会出现「text 未被赋值而判空恒真」的死分支
+    char text[256] = { '\0' };
+    if (FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+        NULL, errorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        text, static_cast<DWORD>(sizeof(text) / sizeof(text[0])), NULL) == 0) {
         return std::string("unknown error code: ") + std::to_string(errorCode);
     }
-    std::string result(text);
-    LocalFree(text);
-    return result;
+    return std::string(text);
 #else
     return strerror(errorCode);
 #endif

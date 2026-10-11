@@ -323,7 +323,9 @@ int api__trans(struct soap* soap, char* msg, char* rtn[])
                 params[p_cnt].key, params[p_cnt].value);
             cout << line << endl;
             if (p_cnt == 0)
-                memcpy(out, line, strlen(line) + 1);
+                // 用 snprintf 代替 memcpy+strlen: 自带上界, 不会因 line 缺少
+                // '\0' 结尾而越界读 (CWE-126)
+                snprintf(out, BUF_LEN, "%s", line);
             p_cnt++;
         }
     }
