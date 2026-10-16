@@ -15,8 +15,6 @@
 #define get_var(v)  (#v)
 //#pragma comment(lib,"ws2_32.lib")
 //#pragma comment(lib,"mysql/libmysql.lib")
-// 启用查询路径 SQL 注入防护
-#define FIX
 // 最大 SQL 语句长度
 #define MAX_SQL_LEN 512
 
@@ -44,7 +42,9 @@ struct queryParam {
 extern "C" {
 #endif
 
-    int  sqlQuery(struct queryParam& param, bool flag = false);
+    // sqlQuery 内部完成一次性初始化（并发安全）；命中返回 0，其余见 .cc 注释
+    int  sqlQuery(struct queryParam& param);
+    // 停看门狗 + 关连接 + 释放库资源，退出前调用一次
     void sqlClose();
 
 #ifdef __cplusplus

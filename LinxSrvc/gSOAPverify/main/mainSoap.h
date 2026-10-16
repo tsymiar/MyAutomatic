@@ -28,8 +28,8 @@ extern unsigned long    ips[MAX_QUEUE];
 
 void* process_queue(void*);
 int           enqueue(soap_socket_t, unsigned long ip);
-soap_socket_t dequeue();
-void          dequeue(unsigned int&);
+// 出队：一次加锁同时取 socket 与 IP（分两次取会读到别的线程刚改过的 head）
+soap_socket_t dequeue(unsigned int* ip = nullptr);
 int           main_server(int argc, char** argv);
 
 #endif

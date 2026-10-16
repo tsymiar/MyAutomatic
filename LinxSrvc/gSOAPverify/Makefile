@@ -1,64 +1,70 @@
-CUR  = $(shell pwd)
-GEN  = $(CUR)/../bin
-OBJ  = $(CUR)/../out
-PRJ  = $(OBJ)/gSOAPverify
-WSDL = ./soap/myweb.wsdl
+# gSOAPverify 构建
+#   make            : 编译，产物 ../bin/gSOAPverify（并同步 myweb.wsdl）
+#   make clean      : 只删本项目自己的 .o 与可执行文件，不动 ../bin 下其它项目
+#   make install    : 拷贝可执行文件到 $(PREFIX)（默认 /usr/sbin），需 root
+CUR  := $(shell pwd)
+GEN  := $(CUR)/../bin
+OBJ  := $(CUR)/../out/gSOAPverify
+WSDL := ./soap/myweb.wsdl
+TGT  := $(GEN)/gSOAPverify
 
-FLAG  = -Wall -g -DNS_DBG -std=c++11
-SOAP  = soapC.o stdsoap2.o soapServer.o
-STAT  = status.o
-MAIN  = sqlDbReq.o mainSoap.o
+CXX  ?= g++
+# -DNS_DBG 打开调试日志（含明文口令与完整 SQL）。上生产时覆盖它即可:
+#   make FLAG="-O2 -std=c++11"
+FLAG ?= -Wall -g -DNS_DBG -std=c++11
+PTHD := -lpthread
 
-BIT   = $(shell if [ `getconf LONG_BIT` -eq '64' ]; then echo 64; fi)
-SQL   = -I/usr/lib$(BIT)/mysql -lmysqlclient
-PTHD  = -lpthread
+# MySQL 头文件/库：优先 pkg-config，其次 mysql_config
+MYSQL_CFLAGS := $(shell pkg-config --cflags mysqlclient 2>/dev/null \
+                  || mysql_config --cflags 2>/dev/null)
+MYSQL_LIBS   := $(shell pkg-config --libs mysqlclient 2>/dev/null \
+                  || mysql_config --libs 2>/dev/null)
+HAVE_MYSQL   := $(if $(MYSQL_LIBS),yes,$(shell test -f /usr/include/mysql/mysql.h && echo yes))
 
-gSOAPverify:
-	@g++ $(FLAG) -c soap/soapC.cpp
-	@g++ $(FLAG) -c soap/stdsoap2.cpp
-	@g++ $(FLAG) -c soap/soapServer.cpp
-	@g++ $(FLAG) -c sys/status.cc
-#	bash -c '`command -v apt >/dev/null 2>&1 || { echo >&2 "-";}` == "-"'
-#	if [ ! -d "/usr/include/mysql" ]; then if [ `command -v apt` == "" ]; then sudo yum install mariadb-devel -y; else sudo apt-get install libmysql++-dev -y; fi; fi;
-	@echo "### To install MySQL development library:"
-	@echo "###  \033[1mREHL:\033[0m   sudo yum install mariadb-devel -y"
-	@echo "###  \033[1mDebian:\033[0m  sudo apt install libmysql++-dev -y"
-	@[ ! -d ${GEN} ] && mkdir ${GEN} || echo "-- [$(abspath ${GEN})] exists!"
-ifneq ($(shell if [ ! -d /usr/lib/mysql ] && [ `ls /usr/lib/*/libmysql*.so 2>/dev/null | wc -l` -le 0 ]; then echo false; fi;), false)
-	@g++ $(FLAG) -c ./sql/sqlDbReq.cc $(SQL)
-	@g++ $(FLAG) -I.. -c ./main/mainSoap.cc $(PTHD)
-	@g++ $(FLAG) -o $(GEN)/gSOAPverify $(STAT) $(SOAP) $(MAIN) $(SQL) $(PTHD)
-	@echo "-- Built: \033[1m$@\033[0m"
+SRCS := soap/soapC.cpp soap/stdsoap2.cpp soap/soapServer.cpp \
+        sys/status.cc  sql/sqlDbReq.cc  main/mainSoap.cc
+OBJS := $(addprefix $(OBJ)/,$(patsubst %.cc,%.o,$(patsubst %.cpp,%.o,$(SRCS))))
+
+PREFIX ?= /usr/sbin
+
+.PHONY: all gSOAPverify check-mysql clean clear install
+
+all: gSOAPverify
+
+gSOAPverify: check-mysql $(TGT)
+
+# 没装 MySQL 开发库时必须真的失败，不能只打印成功
+check-mysql:
+ifeq ($(HAVE_MYSQL),)
+	@echo "\033[31mERROR\033[0m: MySQL/MariaDB 客户端开发库未找到，无法构建。" >&2; \
+	 echo "  Debian/Ubuntu: sudo apt install libmysql++-dev" >&2; \
+	 echo "  RHEL/CentOS  : sudo yum install mariadb-devel" >&2; \
+	 exit 1
 else
-	@echo "[100%] Built gSOAPverify without MySQL library"
+	@true
 endif
-	$(shell if [ -f $(WSDL) ]; then if [ -d $(GEN) ]; then cp $(WSDL) $(GEN)/; fi; else echo "file <$(WSDL)> doesn't exist."; fi)
-	$(shell if [ -d $(PRJ) ]; then rm -rf $(OBJ); fi)
-	@mkdir -p $(PRJ)
-	@mv $(CUR)/../*.o ${OBJ} 2>/dev/null || true
-	@mv ./*.o $(PRJ) 2>/dev/null || true
-	@echo "-- make gSOAPverify SUCCESS"
 
-all:
-	@if ps -fe | grep -q '[g]SOAPverify'; then killall -9 gSOAPverify; else echo "making gSOAPverify."; fi
-	make clear
-	make -j4
-	$(GEN)/gSOAPverify 8800
+$(TGT): $(OBJS)
+	@mkdir -p $(GEN)
+	$(CXX) $(FLAG) -o $@ $(OBJS) $(MYSQL_LIBS) $(PTHD)
+	@cp -f $(WSDL) $(GEN)/
+	@echo "-- Built: \033[1m$@\033[0m"
 
-install:
-	make -j4
-	cp $(GEN)/gSOAPverify /usr/sbin/
-	cp $(GEN)/gSOAPverify /etc/init.d/
-	chmod +x /etc/init.d/gSOAPverify
-	cd /etc/rc3.d/ && ln -sf ../init.d/gSOAPverify ./S77_SOAP
-	@cp -R ./readme/* /var/www/html 2>/dev/null || true
+$(OBJ)/%.o: %.cpp
+	@mkdir -p $(dir $@)
+	$(CXX) $(FLAG) -I.. $(MYSQL_CFLAGS) -c $< -o $@
 
+$(OBJ)/%.o: %.cc
+	@mkdir -p $(dir $@)
+	$(CXX) $(FLAG) -I.. $(MYSQL_CFLAGS) -c $< -o $@
+
+# 只清理本项目产物：../out/gSOAPverify 与 ../bin/gSOAPverify
 clean:
-	@rm -f ./*.o ./core.* $(GEN)/*.a $(GEN)/*.out $(GEN)/core.* $(PRJ)/*.o $(GEN)/gSOAPverify
+	@rm -rf $(OBJ)
+	@rm -f $(TGT)
 
-clear:
-	@rm -f ./*.o ./core.* $(PRJ)/*.o
-	@rm -f `ls *.o 2>/dev/null | egrep -v 'soapC.o|stdsoap2.o|soapServer.o'`
-	@rm -rvf $(GEN) $(OBJ)
-	@rm -f /etc/init.d/gSOAPverify /usr/sbin/gSOAPverify
-	@rm -f S77_SOAP
+clear: clean
+
+install: gSOAPverify
+	install -m 0755 $(TGT) $(PREFIX)/gSOAPverify
+	@echo "-- installed: $(PREFIX)/gSOAPverify"
