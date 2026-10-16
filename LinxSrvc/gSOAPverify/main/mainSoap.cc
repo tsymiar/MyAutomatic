@@ -6,6 +6,9 @@
 #ifdef NS_DBG
 #define SOAP_DEBUG
 #endif
+#include <sys/socket.h>
+#include <sys/utsname.h>
+#include <cerrno>
 #include "../soap/soapStub.h"
 #include "../soap/myweb.nsmap"
 
@@ -16,14 +19,42 @@ int              head = 0;            // 队列头
 int              tail = 0;            // 队列尾
 unsigned long    ips[MAX_QUEUE];      // 客户端 IP 记录
 
+// 优雅退出：SIGINT/SIGTERM 置位，主循环与看门狗据此收尾
+static volatile sig_atomic_t g_stop  = 0;
+static soap_socket_t         g_master = SOAP_INVALID_SOCKET;  // 监听 socket
+static pid_t                 g_child  = -1;                   // 父进程持有子进程 PID
+
+extern "C" void on_signal_stop(int sig)
+{
+    g_stop = 1;
+    // 关掉监听 socket，让阻塞在 soap_accept 的主线程立刻返回，不必等满超时
+    if (soap_valid_socket(g_master)) {
+        shutdown(g_master, SHUT_RDWR);
+    }
+    // 父进程（等待者）把信号转给真正干活的子进程
+    if (g_child > 0) {
+        kill(g_child, sig);
+    }
+}
+
+static void install_signal_handlers()
+{
+    struct sigaction sa;
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_handler = on_signal_stop;
+    sigemptyset(&sa.sa_mask);
+    // 不设 SA_RESTART：让 accept/recv 立即被 EINTR 打断，尽快退出
+    sigaction(SIGINT,  &sa, NULL);
+    sigaction(SIGTERM, &sa, NULL);
+}
+
 void* process_queue(void* soap)
 {
     if (soap == nullptr)
         return nullptr;
     struct soap* serv = (struct soap*)soap;
     for (;;) {
-        serv->socket = dequeue();
-        dequeue(serv->ip);
+        serv->socket = dequeue(&serv->ip);
         if (!soap_valid_socket(serv->socket)) {
             fprintf(stderr, "Thread %d terminating\n", (int)(long)serv->user);
             break;
@@ -54,25 +85,22 @@ int enqueue(soap_socket_t sock, unsigned long ip)
     return status;
 }
 
-soap_socket_t dequeue()
+soap_socket_t dequeue(unsigned int* ip)
 {
     pthread_mutex_lock(&queue_lock);
     while (head == tail) {
         pthread_cond_wait(&queue_cond, &queue_lock);
     }
     soap_socket_t sock = queue[head];
+    // IP 必须和 socket 在同一次加锁里取，否则会读到别的连接对应的 IP
+    if (ip != nullptr) {
+        *ip = ips[head];
+    }
     head++;
     if (head >= MAX_QUEUE)
         head = 0;
     pthread_mutex_unlock(&queue_lock);
     return sock;
-}
-
-void dequeue(unsigned int& ip)
-{
-    // 读取刚出队元素对应的 IP（head 已在 dequeue() 中递增）
-    int idx = (head == 0) ? (MAX_QUEUE - 1) : (head - 1);
-    ip = ips[idx];
 }
 
 // ---------- WSDL 文件安全读取 ----------
@@ -93,9 +121,71 @@ static FILE* open_wsdl_safe(const char* path)
     return fopen(path, "rb");
 }
 
+// 命令名前缀（GET 查询串用），与 SOAP 操作名 api__get_server_status 对应
+#define HTTP_CMD_STATUS "get-server-status"
+
+// ---------- GET 形式的状态查询 ----------
+// 让 ?wsdl 之外的 GET 也能取到服务器状态，地址栏写法与 trans 的
+// "<cmd>@k=v" 保持一致，同时接受标准查询串写法：
+//   http://host:8800/?get-server-status@req=100
+//   http://host:8800/?get-server-status&req=100
+static int http_get_server_status(struct soap* soap, const char* query)
+{
+    char buf[128] = { 0 };
+    snprintf(buf, sizeof(buf), "%s", query);
+
+    // 按 "@" 与 "&" 切段，取 req 的值（找不到就是空串）。
+    // ram / cpu 也可以直接写成查询键：?get-server-status@ram=1
+    char req[32] = { 0 };
+    char* saveptr = nullptr;
+    for (char* tk = strtok_r(buf, "@&", &saveptr); tk != nullptr;
+        tk = strtok_r(nullptr, "@&", &saveptr)) {
+        if (strncmp(tk, "req=", 4) == 0) {
+            snprintf(req, sizeof(req), "%s", tk + 4);
+            break;
+        }
+        if (strncmp(tk, "ram", 3) == 0) {
+            snprintf(req, sizeof(req), "ram");
+            break;
+        }
+        if (strncmp(tk, "cpu", 3) == 0) {
+            snprintf(req, sizeof(req), "cpu");
+            break;
+        }
+    }
+
+    // 复用 SOAP 接口的实现：req 不是 "100" 时 rsp 保持为空
+    char* rsp = nullptr;
+    api__get_server_status(soap, req, rsp);
+
+    soap->http_content = "text/plain; charset=utf-8";
+    if (rsp == nullptr || rsp[0] == '\0') {
+        static const char hint[] =
+            "usage: ?" HTTP_CMD_STATUS "@req=100|ram|cpu\n";
+        // SOAP_FILE + 400 = HTTP 400（soap_response 会把 status 换算成状态码）
+        soap_response(soap, SOAP_FILE + 400);
+        soap_send_raw(soap, hint, sizeof(hint) - 1);
+        soap_end_send(soap);
+        return SOAP_OK;
+    }
+    char line[64];
+    int len = snprintf(line, sizeof(line), "%s\n", rsp);
+    soap_response(soap, SOAP_FILE);
+    if (len > 0) {
+        soap_send_raw(soap, line, (size_t)len);
+    }
+    soap_end_send(soap);
+    return SOAP_OK;
+}
+
 int http_get(struct soap* soap)
 #ifdef NS_HTTPPOST
 {
+    char* q = strchr(soap->path, '?');
+    if (q != nullptr && strncmp(q + 1, HTTP_CMD_STATUS,
+        sizeof(HTTP_CMD_STATUS) - 1) == 0) {
+        return http_get_server_status(soap, q + 1);
+    }
     soap_response(soap, SOAP_HTML);
     soap_send(soap, "<html>Hello I'm WebService.</html>");
     soap_end_send(soap);
@@ -119,8 +209,16 @@ int http_post(struct soap* soap, const char* endpoint, const char* host,
     stream = open_wsdl_safe(fileName.c_str());
 #else
     char* s = strchr(soap->path, '?');
-    if (!s || strcmp(s, "?wsdl"))
+    if (s == nullptr) {
         return SOAP_GET_METHOD;
+    }
+    // GET 形式的状态查询（?wsdl 之外的唯一可用 GET）
+    if (strncmp(s + 1, HTTP_CMD_STATUS, sizeof(HTTP_CMD_STATUS) - 1) == 0) {
+        return http_get_server_status(soap, s + 1);
+    }
+    if (strcmp(s + 1, "wsdl") != 0) {
+        return SOAP_GET_METHOD;
+    }
     stream = open_wsdl_safe("myweb.wsdl");
 #endif
     if (!stream) {
@@ -151,9 +249,11 @@ int main_server(int argc, char** argv)
     if (argc < 2 || argv[1] == nullptr) {
         std::cout << "Please type an argument as port eg. '\033[45m"
             << argv[0] << " 8800\033[0m'" << std::endl;
-        kill(getppid(), SIGALRM);
+        // 退出码交给 main() 带回给父进程
         return -1;
     }
+
+    install_signal_handlers();
 
     struct soap Soap;
     soap_init(&Soap);
@@ -199,16 +299,25 @@ int main_server(int argc, char** argv)
         // 创建工作线程池
         for (int i = 0; i < MAX_THR; i++) {
             soap_thr[i] = soap_copy(&Soap);
+            // 记下线程号，process_queue 退出时打印用
+            soap_thr[i]->user = (void*)(long)i;
             fprintf(stderr, " ++++\tthread %d.\n", i);
             pthread_create(&tid[i], NULL, process_queue, (void*)soap_thr[i]);
             nanosleep(&ts, NULL);
         }
+        g_master = Soap.master;
 
         // 主循环: 接受连接并分发
         static int no = 0;
         for (;;) {
+            if (g_stop) {
+                break;
+            }
             soap_socket_t sock = soap_accept(&Soap);
             if (!soap_valid_socket(sock)) {
+                if (g_stop) {
+                    break;
+                }
                 if (Soap.errnum) {
                     soap_print_fault(&Soap, stderr);
                 }
@@ -227,15 +336,15 @@ int main_server(int argc, char** argv)
                 (int)((Soap.ip) & 0xFF),
                 (int)(Soap.socket), no);
 
-            // 入队，满则等待。IP 必须传本次连接的真实地址：
-            // 原先传 ips[j] 只是槽位里的旧值/未初始化值，记录到的客户端 IP 全是错的
+            // 入队，满则等待。IP 必须传本次连接的真实地址
             while (enqueue(sock, Soap.ip) == SOAP_EOM) {
                 ts.tv_nsec = 100000;
                 nanosleep(&ts, NULL);
             }
         }
 
-        // 发送停止信号
+        // 发送停止信号（每个 worker 一个非法 socket，各自取到就退出）
+        fprintf(stderr, "Shutting down, waiting for workers ..\n");
         for (int i = 0; i < MAX_THR; i++) {
             while (enqueue(SOAP_INVALID_SOCKET, 0) == SOAP_EOM) {
                 ts.tv_nsec = 100000;
@@ -244,9 +353,7 @@ int main_server(int argc, char** argv)
         }
         // 等待线程终止
         for (int i = 0; i < MAX_THR; i++) {
-            fprintf(stderr, "Waiting for thread %d to terminate ..\n", i);
             pthread_join(tid[i], NULL);
-            fprintf(stderr, "terminated\n");
             soap_done(soap_thr[i]);
             free(soap_thr[i]);
         }
@@ -254,6 +361,8 @@ int main_server(int argc, char** argv)
         pthread_cond_destroy(&queue_cond);
         soap_done(&Soap);
     }
+    // 收尾：停掉 MySQL 看门狗并关闭连接
+    sqlClose();
     return 0;
 }
 
@@ -335,20 +444,41 @@ int api__trans(struct soap* soap, char* msg, char* rtn[])
 }
 
 // ==================== API: get-server-status — 获取服务器状态 ====================
+// req 取值决定返回什么：
+//   "100"  空闲内存百分比
+//   "ram"  物理内存总大小
+//   "cpu"  CPU 核数与架构
 int api__get_server_status(struct soap* soap, xsd_string req, xsd_string& rsp)
 {
-    // 用 strcmp 而非 memcmp(req,"1000",5)：后者固定读 5 字节，req 短于 4 字符会越界读
-    if (req != nullptr && strcmp(req, "1000") == 0) {
-        st_sys ss = {};
-        char gt[16];
+    if (req == nullptr) {
+        return 0;
+    }
+    st_sys ss = {};
+    char gt[128] = { 0 };   // 放得下 "cpu=N arch=<machine>"（machine 最长 65）
+    // 用 strcmp 而非 memcmp(req,"100",5)：后者固定读 5 字节，
+    // req 短于 4 字符会越界读
+    if (strcmp(req, "100") == 0) {
         get_mem_stat("localhost", &ss);
         // 用 snprintf 替代已弃用的 gcvt
         snprintf(gt, sizeof(gt), "%.5g",
             ss.mem_all > 0 ? (100.0 * ss.mem_free / ss.mem_all) : 0.0);
-        // 用 soap 上下文分配，避免把栈上数组地址返回给调用方
-        rsp = soap_strdup(soap, gt);
-        cout << req << ": " << rsp << endl;
+    } else if (strcmp(req, "ram") == 0) {
+        get_mem_stat("localhost", &ss);
+        snprintf(gt, sizeof(gt), "ram=%lldMB", ss.mem_all);
+    } else if (strcmp(req, "cpu") == 0) {
+        get_mem_stat("localhost", &ss);
+        struct utsname uts;
+        if (uname(&uts) != 0) {
+            snprintf(gt, sizeof(gt), "cpu=%ld", ss.li_cpu);
+        } else {
+            snprintf(gt, sizeof(gt), "cpu=%ld arch=%s", ss.li_cpu, uts.machine);
+        }
+    } else {
+        return 0;
     }
+    // 用 soap 上下文分配，避免把栈上数组地址返回给调用方
+    rsp = soap_strdup(soap, gt);
+    cout << req << ": " << rsp << endl;
     return 0;
 }
 
@@ -367,7 +497,7 @@ int api__login_by_key(struct soap* soap, char* usr, char* psw,
         memset(&param, 0, sizeof(param));
         param.user.acc = usr;
         param.user.psw = psw;
-        // sqlQuery 内部通过指针修改 param.msg (修复: 原按值传递无效)
+        // sqlQuery 通过引用修改 param.msg
         int ret = sqlQuery(param);
         if (ret != 0) {
             param.msg.flag = false;
@@ -398,13 +528,18 @@ int main(int argc, char* argv[])
     }
     if (pid == 0) {
         // 子进程: 运行 SOAP 服务
-        // 创建新会话，脱离终端
+        // 创建新会话，脱离终端。这里故意不 chdir("/")：
+        // ?wsdl 要按相对路径读 myweb.wsdl，切根目录会直接 404。
         setsid();
         return main_server(argc, argv);
     }
-    // 父进程: 等待子进程避免僵尸进程
+    // 父进程: 等待子进程避免僵尸进程，并把收到的终止信号转给子进程
+    g_child = pid;
+    install_signal_handlers();
     printf("gSOAPverify daemon started, PID = %d\n", pid);
-    int status;
-    waitpid(pid, &status, 0);
-    return 0;
+    int status = 0;
+    while (waitpid(pid, &status, 0) < 0 && errno == EINTR) {
+        // 被信号打断继续等，直到子进程真的退出
+    }
+    return WIFEXITED(status) ? WEXITSTATUS(status) : 1;
 }

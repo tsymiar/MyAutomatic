@@ -41,11 +41,13 @@ int get_mem_stat(const char* ip, st_sys* sys)
         memset(&sa, 0, sizeof(sa));
         sa.sin_family = AF_INET;
         sa.sin_addr = addr;
-        char hostname[NI_MAXHOST] = { 0 };
+        // 与 sys->s_host 同长，getnameinfo 结果不会超出目标缓冲
+        char hostname[SYS_HOST_LEN] = { 0 };
         rtn = getnameinfo((const struct sockaddr*)&sa, sizeof(sa),
             hostname, sizeof(hostname), NULL, 0, 0);
         if (rtn == 0) {
-            sys->s_host = strdup(hostname);
+            // 定长数组 + snprintf，调用方无需 free
+            snprintf(sys->s_host, sizeof(sys->s_host), "%s", hostname);
         }
     } else {
         // getaddrinfo 替代已弃用的 gethostbyname
@@ -57,12 +59,12 @@ int get_mem_stat(const char* ip, st_sys* sys)
         if (rtn == 0 && result != nullptr) {
             struct sockaddr_in* sa = (struct sockaddr_in*)result->ai_addr;
             addr.s_addr = sa->sin_addr.s_addr;
-            sys->s_host = strdup(ip);  // 保留原始 IP 作为主机名
-            sys->ss_addr = strdup(inet_ntoa(addr));
+            snprintf(sys->s_host, sizeof(sys->s_host), "%s", ip);  // 原始 IP 作为主机名
+            snprintf(sys->ss_addr, sizeof(sys->ss_addr), "%s", inet_ntoa(addr));
             freeaddrinfo(result);
         }
     }
-    printf("address: %s\n", sys->ss_addr ? sys->ss_addr : "unknown");
+    printf("address: %s\n", sys->ss_addr[0] != '\0' ? sys->ss_addr : "unknown");
     // ---------- 内存统计 ----------
     sys->li_cpu = sysconf(_SC_NPROCESSORS_CONF);
     long page_size = sysconf(_SC_PAGESIZE);
@@ -90,6 +92,13 @@ int detect_eth_cable(const char* ifname)
         return -1;
     }
 
+    // 接口名超长要提前拒绝：ifr_name 只有 IFNAMSIZ 字节且需留 '\0'
+    // 用 strnlen 而不是 strlen：不会越过 IFNAMSIZ 去读没有 '\0' 的入参
+    if (strnlen(ifname, IFNAMSIZ) >= IFNAMSIZ) {
+        fprintf(stderr, "Interface name too long: %s\n", ifname);
+        return -1;
+    }
+
     int fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (fd < 0) {
         perror("Cannot get control socket");
@@ -98,9 +107,10 @@ int detect_eth_cable(const char* ifname)
 
     struct ifreq ifr;
     memset(&ifr, 0, sizeof(ifr));
-    *(char*)(ifname + IFNAMSIZ - 1) = '\0';
+    // snprintf 已按 IFNAMSIZ 截断，不要尝试改写入参（ifname 是 const）
     snprintf(ifr.ifr_name, IFNAMSIZ, "%s", ifname);
     struct ethtool_value ethval;
+    memset(&ethval, 0, sizeof(ethval));
     ethval.cmd = ETHTOOL_GLINK_VAL;
     ifr.ifr_data = (caddr_t)&ethval;
 
