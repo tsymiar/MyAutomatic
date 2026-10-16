@@ -59,3 +59,7 @@ test.txt
 
 # webevs frontend exported from the gh-pages branch at startup
 */**/webevs-frontend/
+
+#Ignore vscode AI rules
+.github/**/*.md
+**/generate*
