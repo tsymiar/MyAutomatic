@@ -1,16 +1,46 @@
 ###############################################################################
-# Set default behavior to automatically normalize line endings.
+# Line endings
+# Default: normalize on checkin, convert on checkout
 ###############################################################################
 * text=auto
+*.bat text eol=lf
 *.c text
 *.H text
-*.py eol=lf
 *.java eol=lf
+*.py eol=lf
 *.sh text eol=lf
-*.bat text eol=lf
 *.vcproj text eol=crlf
-*.h linguist-language=C++
+
+###############################################################################
+# Language detection
+###############################################################################
 *.cc linguist-language=C++
 *.cpp linguist-language=C++
-*.hpp linguist-language=C++
 *.cxx linguist-language=C++
+*.h linguist-language=C++
+*.hpp linguist-language=C++
+
+###############################################################################
+# Git LFS
+# Keep binary files out of the Git object database.
+# Takes effect only when a file is modified and re-added; objects already
+# stored in history are left unchanged.
+###############################################################################
+*.7z filter=lfs diff=lfs merge=lfs -text
+*.a filter=lfs diff=lfs merge=lfs -text
+*.[Bb][Mm][Pp] filter=lfs diff=lfs merge=lfs -text
+*.dll filter=lfs diff=lfs merge=lfs -text
+*.exe filter=lfs diff=lfs merge=lfs -text
+*.h5 filter=lfs diff=lfs merge=lfs -text
+*.[Ll][Ii][Bb] filter=lfs diff=lfs merge=lfs -text
+*.onnx filter=lfs diff=lfs merge=lfs -text
+*.otf filter=lfs diff=lfs merge=lfs -text
+*.pb filter=lfs diff=lfs merge=lfs -text
+*.pdb filter=lfs diff=lfs merge=lfs -text
+*.pdf filter=lfs diff=lfs merge=lfs -text
+*.pth filter=lfs diff=lfs merge=lfs -text
+*.rar filter=lfs diff=lfs merge=lfs -text
+*.so filter=lfs diff=lfs merge=lfs -text
+*.tflite filter=lfs diff=lfs merge=lfs -text
+*.ttf filter=lfs diff=lfs merge=lfs -text
+*.zip filter=lfs diff=lfs merge=lfs -text

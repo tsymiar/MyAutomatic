@@ -281,11 +281,11 @@
     <ClInclude Include="..\KlineUtil\boost\boostest.h" />
     <ClInclude Include="..\KlineUtil\level2\Level2View.h" />
     <ClInclude Include="..\KlineUtil\Def\MacroDef.h" />
-    <ClInclude Include="..\KlineUtil\dos\DOSCout.h" />
+    <ClInclude Include="..\KlineUtil\DOS\DOSCout.h" />
     <ClInclude Include="..\KlineUtil\elem\Screen-Sharing.h" />
-    <ClInclude Include="..\KlineUtil\Font\FontNehe.h" />
+    <ClInclude Include="..\KlineUtil\font\FontNehe.h" />
     <ClInclude Include="..\KlineUtil\HOOK\injectDLL.h" />
-    <ClInclude Include="..\KlineUtil\IM\IMclient.h" />
+    <ClInclude Include="..\KlineUtil\IM\client.h" />
     <ClInclude Include="..\KlineUtil\html\cefWebKit.h" />
     <ClInclude Include="..\KlineUtil\html\MfcHtmlView.h" />
     <ClInclude Include="..\KlineUtil\com\auto_tchar.h" />
@@ -313,7 +313,7 @@
     <ClInclude Include="..\KlineUtil\security\verify.h" />
     <ClInclude Include="..\KlineUtil\Stock\Stock.h" />
     <ClInclude Include="..\KlineUtil\service\httpGet.h" />
-    <ClInclude Include="..\KlineUtil\WPF\WPFhost.h" />
+    <ClInclude Include="..\KlineUtil\WPF\WpfHost.h" />
     <ClInclude Include="LoginDlg.h" />
     <ClInclude Include="IMlogDlg.h" />
     <ClInclude Include="RegistDlg.h" />
@@ -332,10 +332,10 @@
     <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\stdsoap2.cpp" />
     <ClCompile Include="..\IMclient\imclient.cpp" />
     <ClCompile Include="..\KlineUtil\level2\Level2View.cpp" />
-    <ClCompile Include="..\KlineUtil\dos\DOSCout.cpp" />
+    <ClCompile Include="..\KlineUtil\DOS\DOSCout.cpp" />
     <ClCompile Include="..\KlineUtil\elem\CCustomCtl.cpp" />
     <ClCompile Include="..\KlineUtil\elem\Screen-Sharing.cpp" />
-    <ClCompile Include="..\KlineUtil\Font\FontNehe.cc" />
+    <ClCompile Include="..\KlineUtil\font\FontNehe.cc" />
     <ClCompile Include="..\KlineUtil\HOOK\injectDLL.cpp" />
     <ClCompile Include="..\KlineUtil\HOOK\jniNative.cpp" />
     <ClCompile Include="..\KlineUtil\html\cefWebKit.cpp" />
@@ -379,7 +379,6 @@
     <None Include="..\KlineUtil\com\plus1second" />
     <None Include="..\KlineUtil\built\call.bat" />
     <None Include="..\..\toolset\matkline.py" />
-    <None Include="..\..\toolset\webload.py" />
     <None Include="..\KlineUtil\service\BareBonesBrowserLaunch.java" />
     <None Include="..\KlineUtil\service\Client.java" />
     <None Include="packages.config" />

@@ -1,21 +1,48 @@
 ## Ignore patterns for build artifacts and temporary files
-**/*/.*
-**/*/*.ko
-**/*/[Mm]odule*
-**/*/*.mod.*
-**/*.egg-info
-**/*.tmp*
+
+# Build output
 **/build
 **/dist
 **/lcov
-#object files
-*.xx*
-*.user
-*.suo
-*.o
-.vs*
-#targets
+.build
+
+# Compiled object files
 bin
 gen
 out
 kos
+
+# Object and library files
+*.o
+*.a
+*.so
+*.so.*
+*.d
+
+# Kernel module artifacts
+*.ko
+*.mod*
+[Mm]odule*.symvers
+modules.order
+.*.cmd
+
+# Coverage
+*.gcda
+*.gcno
+*.gcov
+*.info
+
+# Python
+__pycache__
+*.pyc
+*.egg-info
+
+# Visual Studio
+.vs*
+*.user
+*.suo
+
+# Temporary files
+*.tmp*
+*.log
+.DS_Store

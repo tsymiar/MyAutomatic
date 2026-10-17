@@ -2,15 +2,28 @@
 Makefile
 QtGames
 build/
+Release/
+Debug/
+x64/
+Win32/
+
+# Object and library files
 *.o
 *.obj
+*.a
+*.so
+*.so.*
+*.lib
 *.exe
+*.pdb
+*.ilk
 
 # Qt generated files
 moc_*
 ui_*
 qrc_*
 *.moc
+object_script.*
 
 # CMake outputs
 CMakeCache.txt
@@ -19,12 +32,9 @@ cmake_install.cmake
 CTestTestfile.cmake
 
 # IDE files
+.vs/
 *.pro.user*
 *.vcxproj.user
 *.qtvscr
-.fuse_*
 *.stash
 *.TMP
-
-# Documents
-*.docx
