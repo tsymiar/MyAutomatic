@@ -219,7 +219,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\KlineUtil\level2\Level2View.h" />
-    <ClInclude Include="..\KlineUtil\dos\DOSCout.h" />
+    <ClInclude Include="..\KlineUtil\DOS\DOSCout.h" />
     <ClInclude Include="..\KlineUtil\elem\Screen-Sharing.h" />
     <ClInclude Include="..\KlineUtil\html\cefWebKit.h" />
     <ClInclude Include="..\KlineUtil\mygl\House.h" />
@@ -234,7 +234,7 @@
     <ClInclude Include="..\MFCKline\MyOglDrawDlg.h" />
     <ClInclude Include="..\MFCKline\RegistDlg.h" />
     <ClInclude Include="..\MFCKline\SetMarkDlg.h" />
-    <ClInclude Include="Resource.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="testUtils.h" />
@@ -245,7 +245,7 @@
     <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\soapC.cpp" />
     <ClCompile Include="..\..\LinxSrvc\gSOAPverify\soap\stdsoap2.cpp" />
     <ClCompile Include="..\KlineUtil\level2\Level2View.cpp" />
-    <ClCompile Include="..\KlineUtil\dos\DOSCout.cpp">
+    <ClCompile Include="..\KlineUtil\DOS\DOSCout.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\KlineUtil\elem\Screen-Sharing.cpp" />
