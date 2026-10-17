@@ -436,8 +436,124 @@
             box-shadow: inset 0 0 0 1px rgba(28,36,74,.07), 0 14px 34px -20px rgba(28,36,74,.55);
         }
         @media (max-width: 640px) {
-            .g2048-board, #snakeCanvas, #trexCanvas { max-width: 100%; }
+            .g2048-board, #snakeCanvas, #trexCanvas,
+            .sudoku-board, .puzzle-board, .memory-grid { max-width: 100%; }
         }
+
+        /* 数独 */
+        .sudoku-wrap { display: flex; gap: 18px; flex-wrap: wrap; align-items: flex-start; }
+        .sudoku-board {
+            display: grid; grid-template-columns: repeat(9, 1fr);
+            width: 100%; max-width: 396px; aspect-ratio: 1 / 1;
+            border: 2px solid #7c88a8; border-radius: 10px; overflow: hidden;
+            background: #fff; box-shadow: 0 14px 34px -20px rgba(28,36,74,.55);
+        }
+        .sd-cell {
+            position: relative; display: flex; align-items: center; justify-content: center;
+            border-right: 1px solid var(--border); border-bottom: 1px solid var(--border);
+            font-weight: 700; font-size: clamp(15px, 4.2vw, 21px); line-height: 1;
+            font-variant-numeric: tabular-nums; color: var(--primary-dark);
+            background: #fff; cursor: pointer; transition: background .12s;
+            user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+        }
+        .sd-cell:nth-child(9n) { border-right: none; }
+        .sd-cell:nth-last-child(-n+9) { border-bottom: none; }
+        .sd-cell.br { border-right: 2px solid #7c88a8; }
+        .sd-cell.bb { border-bottom: 2px solid #7c88a8; }
+        .sd-cell.given { color: #2b3450; }
+        .sd-cell.peer { background: #f2f5fd; }
+        .sd-cell.same { background: #e4e9fb; }
+        .sd-cell.sel  { background: #ccd5ff; }
+        .sd-cell.err  { background: #ffe5ea; color: #e11d48; }
+        .sd-cell.pop  { animation: sdPop .85s ease; }
+        @keyframes sdPop { 0%, 100% { background: #ccd5ff; } 45% { background: #a7f3d0; } }
+        .sd-notes {
+            position: absolute; inset: 2px;
+            display: none; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
+            place-items: center; font-size: clamp(7px, 1.8vw, 10px);
+            font-weight: 600; color: var(--muted); line-height: 1;
+        }
+        .sd-notes i { font-style: normal; visibility: hidden; }
+        .sudoku-side { flex: 1 1 150px; min-width: 140px; display: flex; flex-direction: column; gap: 10px; }
+        .sd-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+        .sd-key {
+            border: 1px solid var(--border); background: #fff; border-radius: 10px;
+            padding: 8px 0; font-size: 16px; font-weight: 700; color: var(--primary-dark);
+            cursor: pointer; transition: .15s;
+        }
+        .sd-key:hover { background: #f2f5ff; border-color: #c9d0f5; }
+        .sd-key:active { transform: scale(.94); }
+        .sd-key.wide { grid-column: 1 / -1; padding: 7px 0; font-size: 12.5px; font-weight: 600; color: var(--muted); }
+        .sd-tip { font-size: 12.5px; color: var(--muted); line-height: 1.65; }
+        .mini-pick { display: flex; gap: 6px; flex-wrap: wrap; }
+        .mini-pick button {
+            padding: 5px 13px; border-radius: 9px; border: 1px solid var(--border);
+            background: #fff; cursor: pointer; font-weight: 600; font-size: 12.5px;
+            color: var(--muted); transition: .18s;
+        }
+        .mini-pick button:hover { color: var(--primary-dark); border-color: #c9d0f5; background: #f6f8ff; }
+        .mini-pick button.on {
+            color: #fff; border-color: transparent; background: var(--grad-btn);
+            box-shadow: 0 6px 14px -8px rgba(91,98,244,.7);
+        }
+
+        /* 俄罗斯方块 */
+        .tetris-wrap { display: flex; gap: 18px; flex-wrap: wrap; align-items: flex-start; }
+        .tetris-main { display: flex; flex-direction: column; gap: 10px; }
+        #tetrisCanvas {
+            display: block; width: 100%; max-width: 240px; aspect-ratio: 1 / 2;
+            border-radius: 14px; touch-action: none;
+            background: linear-gradient(180deg, #111c36 0%, #0c1327 100%);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,.07), 0 14px 34px -20px rgba(15,23,42,.75);
+        }
+        .tetris-keys { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; width: 100%; max-width: 240px; }
+        .tetris-keys button {
+            padding: 9px 0; border-radius: 10px; border: 1px solid var(--border); background: #fff;
+            font-size: 15px; font-weight: 700; color: var(--primary-dark); cursor: pointer; transition: .15s;
+        }
+        .tetris-keys button:hover { background: #f2f5ff; border-color: #c9d0f5; }
+        .tetris-keys button:active { transform: scale(.94); }
+        .tetris-side { flex: 1 1 130px; min-width: 120px; display: flex; flex-direction: column; gap: 8px; }
+        #tetrisNext {
+            display: block; width: 96px; height: 96px; border-radius: 12px;
+            background: linear-gradient(180deg, #111c36 0%, #0c1327 100%);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,.07);
+        }
+
+        /* 数字华容道 */
+        .puzzle-board {
+            --gp: 1.6%; --ts: 32%; --st: 33.6%;
+            position: relative; width: 100%; max-width: 380px; aspect-ratio: 1 / 1;
+            border-radius: 16px; touch-action: manipulation;
+            background: linear-gradient(160deg, rgba(148,163,184,.32), rgba(148,163,184,.18));
+            box-shadow: inset 0 1px 3px rgba(15,23,42,.10), 0 14px 34px -20px rgba(28,36,74,.5);
+        }
+        .pz-tile {
+            --r: 0; --c: 0;
+            position: absolute; width: var(--ts); height: var(--ts);
+            left: calc(var(--gp) + var(--st) * var(--c));
+            top:  calc(var(--gp) + var(--st) * var(--r));
+            display: grid; place-items: center; border-radius: 12px;
+            font-weight: 700; color: #fff; font-variant-numeric: tabular-nums;
+            background: var(--grad-btn); box-shadow: 0 8px 16px -9px rgba(91,98,244,.9);
+            cursor: pointer; user-select: none; -webkit-user-select: none;
+            transition: left .16s cubic-bezier(.3,.85,.3,1), top .16s cubic-bezier(.3,.85,.3,1), background .2s;
+        }
+        .pz-tile.ok { background: linear-gradient(135deg, var(--ok), #34d399); box-shadow: 0 8px 16px -9px rgba(16,185,129,.85); }
+
+        /* 记忆翻牌 */
+        .memory-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; max-width: 380px; }
+        .mm-card { position: relative; aspect-ratio: 3 / 4; perspective: 700px; cursor: pointer; }
+        .mm-in { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform .35s cubic-bezier(.3,.85,.3,1); }
+        .mm-card.flip .mm-in { transform: rotateY(180deg); }
+        .mm-face {
+            position: absolute; inset: 0; border-radius: 12px; display: grid; place-items: center;
+            font-size: clamp(20px, 6vw, 30px);
+            backface-visibility: hidden; -webkit-backface-visibility: hidden;
+        }
+        .mm-back { background: var(--grad-btn); box-shadow: 0 10px 20px -12px rgba(91,98,244,.9); color: rgba(255,255,255,.9); font-size: 17px; font-weight: 700; }
+        .mm-front { transform: rotateY(180deg); background: #fff; border: 1px solid var(--border); }
+        .mm-card.done .mm-front { background: #ecfdf5; border-color: #a7f3d0; }
 
         .login-wrap { display: flex; align-items: center; justify-content: center; padding: 24px 16px; min-height: calc(100vh - 150px); min-height: calc(100dvh - 150px); }
         .login-card { width: 100%; max-width: 380px; text-align: center; }
@@ -840,12 +956,16 @@
             <section class="panel" id="game">
                 <div class="card">
                     <h2>🎮 休闲小游戏</h2>
-                    <p class="desc">摸鱼时刻：2048 / 贪吃蛇 / T-Rex 跑酷 / 猜数字。最高分会保存在浏览器本地。</p>
+                    <p class="desc">摸鱼时刻：2048 / 贪吃蛇 / T-Rex 跑酷 / 猜数字 / 数独 / 俄罗斯方块 / 数字华容道 / 记忆翻牌。最高分与纪录会保存在浏览器本地。</p>
                     <div class="game-pick" id="gamePick">
                         <button data-g="g2048" class="on">🧩 2048</button>
                         <button data-g="snake">🐍 贪吃蛇</button>
                         <button data-g="trex">🦖 T-Rex</button>
                         <button data-g="guess">🎯 猜数字</button>
+                        <button data-g="sudoku">🔢 数独</button>
+                        <button data-g="tetris">🟦 俄罗斯方块</button>
+                        <button data-g="puzzle">🧮 华容道</button>
+                        <button data-g="memory">🃏 记忆翻牌</button>
                     </div>
 
                     <!-- 2048 -->
@@ -907,6 +1027,104 @@
                             <button class="btn" data-action="guessSubmit">猜！</button>
                         </div>
                         <div class="out empty" id="guess_out"></div>
+                    </div>
+
+                    <!-- 数独 -->
+                    <div class="game-stage" id="stage_sudoku">
+                        <div class="game-bar">
+                            <span class="gstat">用时 <b id="sudoku_time">00:00</b></span>
+                            <span class="gstat">最佳 <b id="sudoku_best">—</b></span>
+                            <span class="gstat">待填 <b id="sudoku_left">0</b></span>
+                            <button class="btn sm" data-action="sudokuNew">新一局</button>
+                            <button class="btn ghost sm" data-action="sudokuCheck">检查</button>
+                            <button class="btn ghost sm" data-action="sudokuHint">提示</button>
+                        </div>
+                        <div class="mini-pick" id="sudoku_lvl" style="margin:0 0 14px">
+                            <button data-lvl="0">简单</button>
+                            <button data-lvl="1">中等</button>
+                            <button data-lvl="2">困难</button>
+                        </div>
+                        <div class="sudoku-wrap">
+                            <div class="sudoku-board" id="sudoku_board"></div>
+                            <div class="sudoku-side">
+                                <div class="sd-pad" id="sudoku_pad">
+                                    <button class="sd-key" data-n="1">1</button>
+                                    <button class="sd-key" data-n="2">2</button>
+                                    <button class="sd-key" data-n="3">3</button>
+                                    <button class="sd-key" data-n="4">4</button>
+                                    <button class="sd-key" data-n="5">5</button>
+                                    <button class="sd-key" data-n="6">6</button>
+                                    <button class="sd-key" data-n="7">7</button>
+                                    <button class="sd-key" data-n="8">8</button>
+                                    <button class="sd-key" data-n="9">9</button>
+                                    <button class="sd-key wide" data-action="sudokuNote" id="sudoku_note">✏️ 笔记：关</button>
+                                    <button class="sd-key wide" data-n="0">清除本格</button>
+                                </div>
+                                <div class="sd-tip">点格子选中，再按数字填入；再按一次同一数字可清除。键盘 1-9 填数、方向键移动、Delete 清除。</div>
+                            </div>
+                        </div>
+                        <div class="stat" id="sudoku_msg"></div>
+                    </div>
+
+                    <!-- 俄罗斯方块 -->
+                    <div class="game-stage" id="stage_tetris">
+                        <div class="game-bar">
+                            <span class="gstat">得分 <b id="tetris_score">0</b></span>
+                            <span class="gstat">最高 <b id="tetris_best">0</b></span>
+                            <span class="gstat">消行 <b id="tetris_lines">0</b></span>
+                            <span class="gstat">等级 <b id="tetris_level">1</b></span>
+                            <button class="btn sm" data-action="tetrisToggle" id="tetris_btn">开始</button>
+                            <button class="btn ghost sm" data-action="tetrisRestart">重开</button>
+                        </div>
+                        <div class="tetris-wrap">
+                            <div class="tetris-main">
+                                <canvas id="tetrisCanvas" width="240" height="480"></canvas>
+                                <div class="tetris-keys">
+                                    <button data-action="tetrisAct" data-arg="left" aria-label="左移">◀</button>
+                                    <button data-action="tetrisAct" data-arg="rot" aria-label="旋转">🔄</button>
+                                    <button data-action="tetrisAct" data-arg="right" aria-label="右移">▶</button>
+                                    <button data-action="tetrisAct" data-arg="down" aria-label="下移">▼</button>
+                                    <button data-action="tetrisAct" data-arg="drop" aria-label="直落">⤓</button>
+                                </div>
+                            </div>
+                            <div class="tetris-side">
+                                <label class="fld">下一个</label>
+                                <canvas id="tetrisNext" width="96" height="96"></canvas>
+                                <div class="sd-tip">← → 移动，↑ / X 旋转，Z 反向，↓ 软降，空格直落，P 暂停。手机上可直接用下方按钮或在画面滑动。</div>
+                            </div>
+                        </div>
+                        <div class="stat" id="tetris_msg">点击「开始」或按空格启动</div>
+                    </div>
+
+                    <!-- 数字华容道 -->
+                    <div class="game-stage" id="stage_puzzle">
+                        <div class="game-bar">
+                            <span class="gstat">步数 <b id="puzzle_moves">0</b></span>
+                            <span class="gstat">用时 <b id="puzzle_time">00:00</b></span>
+                            <span class="gstat">最佳 <b id="puzzle_best">—</b></span>
+                            <button class="btn sm" data-action="puzzleNew">打乱重来</button>
+                            <span class="stat">点击方块滑动，或方向键移动空格</span>
+                        </div>
+                        <div class="mini-pick" id="puzzle_size" style="margin:0 0 14px">
+                            <button data-size="3">3 × 3</button>
+                            <button data-size="4">4 × 4</button>
+                            <button data-size="5">5 × 5</button>
+                        </div>
+                        <div class="puzzle-board" id="puzzle_board"></div>
+                        <div class="stat" id="puzzle_msg">把数字按 1 → N 排好，空格留在右下角</div>
+                    </div>
+
+                    <!-- 记忆翻牌 -->
+                    <div class="game-stage" id="stage_memory">
+                        <div class="game-bar">
+                            <span class="gstat">步数 <b id="memory_moves">0</b></span>
+                            <span class="gstat">用时 <b id="memory_time">00:00</b></span>
+                            <span class="gstat">最佳 <b id="memory_best">—</b></span>
+                            <button class="btn ghost sm" data-action="memoryNew">重新洗牌</button>
+                            <span class="stat">翻开两张相同图案即配对成功</span>
+                        </div>
+                        <div class="memory-grid" id="memory_grid"></div>
+                        <div class="stat" id="memory_msg">翻牌开始计时，步数越少越好</div>
                     </div>
                 </div>
             </section>
@@ -1105,6 +1323,11 @@ $('nav').addEventListener('click', e => {
     btn.classList.add('active');
     $(btn.dataset.tab).classList.add('active');
     if (btn.dataset.tab !== 'game') stopAllGames();   // 离开游戏页时停止计时器
+    else {
+        resumeClock('sudoku', SD, 'sudoku_time');
+        resumeClock('puzzle', PZ, 'puzzle_time');
+        resumeClock('memory', MM, 'memory_time');
+    }
 });
 function toggleNet() {
     $('netDrawer').classList.toggle('show');
@@ -1710,7 +1933,10 @@ function buildPalette() {
 const LS = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) {} return null; };
 let curGame = 'g2048';
 
-function stopAllGames() { snakeStop(); trexStop(); }
+function stopAllGames() {
+    snakeStop(); trexStop(); tetrisStop();
+    clockStop(SD); clockStop(PZ); clockStop(MM);
+}
 function showGame(name) {
     stopAllGames();
     $$('.game-stage').forEach(s => s.classList.remove('on'));
@@ -1718,6 +1944,10 @@ function showGame(name) {
     if (st) st.classList.add('on');
     if (name === 'snake') snakeReset();
     if (name === 'trex') trexReset();
+    if (name === 'sudoku') { sudokuBuild(); resumeClock('sudoku', SD, 'sudoku_time'); }
+    if (name === 'tetris') tetrisInit();
+    if (name === 'puzzle') resumeClock('puzzle', PZ, 'puzzle_time');
+    if (name === 'memory') resumeClock('memory', MM, 'memory_time');
 }
 $('gamePick').addEventListener('click', e => {
     const b = e.target.closest('button[data-g]'); if (!b) return;
@@ -2194,6 +2424,653 @@ function guessSubmit() {
     setOut('guess_out', tip + '\n\n历史：\n' + GUESS.history.join('\n'));
 }
 
+/* ---------- 通用计时器：st 需含 el / tid / t0 ---------- */
+function fmtTime(ms) {
+    const s = Math.max(0, Math.floor(ms / 1000));
+    return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+}
+function clockStart(st, elId) {
+    if (st.tid || st.done) return;
+    st.t0 = Date.now();
+    st.tid = setInterval(() => {
+        const el = $(elId);
+        if (el) el.textContent = fmtTime(st.el + Date.now() - st.t0);
+    }, 500);
+}
+function clockStop(st) {
+    if (!st.tid) return;
+    clearInterval(st.tid); st.tid = 0;
+    st.el += Date.now() - st.t0;
+}
+function resumeClock(name, st, elId) {
+    if (st.done) return;
+    const s = $('stage_' + name);
+    if (s && s.classList.contains('on')) clockStart(st, elId);
+}
+function shuf(a) {
+    for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = a[i]; a[i] = a[j]; a[j] = t; }
+    return a;
+}
+
+/* ---------- 数独 ---------- */
+const SD_LVLS = [{ name: '简单', blanks: 34 }, { name: '中等', blanks: 44 }, { name: '困难', blanks: 54 }];
+const SD = {
+    grid: [], sol: [], given: [], notes: [], cells: [], sel: -1, note: false,
+    lvl: 0, done: false, el: 0, tid: 0, t0: 0
+};
+function sdFull() {
+    const g = new Array(81).fill(0);
+    const row = new Array(9).fill(0), col = new Array(9).fill(0), box = new Array(9).fill(0);
+    (function fill(p) {
+        if (p === 81) return true;
+        const r = (p / 9) | 0, c = p % 9, b = ((r / 3) | 0) * 3 + ((c / 3) | 0);
+        const used = row[r] | col[c] | box[b];
+        const cand = [];
+        for (let v = 1; v <= 9; v++) if (!(used & (1 << v))) cand.push(v);
+        shuf(cand);
+        for (const v of cand) {
+            const m = 1 << v;
+            g[p] = v; row[r] |= m; col[c] |= m; box[b] |= m;
+            if (fill(p + 1)) return true;
+            row[r] &= ~m; col[c] &= ~m; box[b] &= ~m; g[p] = 0;
+        }
+        return false;
+    })(0);
+    return g;
+}
+function sdCount(g, limit) {
+    const work = g.slice();
+    const row = new Array(9).fill(0), col = new Array(9).fill(0), box = new Array(9).fill(0);
+    for (let i = 0; i < 81; i++) {
+        const v = work[i]; if (!v) continue;
+        const r = (i / 9) | 0, c = i % 9, b = ((r / 3) | 0) * 3 + ((c / 3) | 0);
+        const m = 1 << v;
+        if ((row[r] | col[c] | box[b]) & m) return 0;
+        row[r] |= m; col[c] |= m; box[b] |= m;
+    }
+    let cnt = 0;
+    (function rec() {
+        let best = -1, used = 0, few = 10;
+        for (let i = 0; i < 81; i++) {
+            if (work[i]) continue;
+            const r = (i / 9) | 0, c = i % 9, b = ((r / 3) | 0) * 3 + ((c / 3) | 0);
+            const u = row[r] | col[c] | box[b];
+            let n = 0;
+            for (let v = 1; v <= 9; v++) if (!(u & (1 << v))) n++;
+            if (n === 0) return;
+            if (n < few) { few = n; best = i; used = u; if (n === 1) break; }
+        }
+        if (best < 0) { cnt++; return; }
+        const r = (best / 9) | 0, c = best % 9, b = ((r / 3) | 0) * 3 + ((c / 3) | 0);
+        for (let v = 1; v <= 9; v++) {
+            const m = 1 << v;
+            if (used & m) continue;
+            work[best] = v; row[r] |= m; col[c] |= m; box[b] |= m;
+            rec();
+            row[r] &= ~m; col[c] &= ~m; box[b] &= ~m; work[best] = 0;
+            if (cnt >= limit) return;
+        }
+    })();
+    return cnt;
+}
+function sdFits(g, i, v) {
+    const r = (i / 9) | 0, c = i % 9;
+    for (let k = 0; k < 9; k++) {
+        if (g[r * 9 + k] === v || g[k * 9 + c] === v) return false;
+    }
+    const br = ((r / 3) | 0) * 3, bc = ((c / 3) | 0) * 3;
+    for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) if (g[(br + y) * 9 + bc + x] === v) return false;
+    return true;
+}
+/* 挖空：只要该格还能填别的数字且仍可解，就说明不唯一，必须保留 */
+function sdMake(blanks) {
+    const sol = sdFull();
+    const g = sol.slice();
+    const order = shuf(Array.from({ length: 81 }, (_, i) => i));
+    let n = 0;
+    for (const i of order) {
+        if (n >= blanks) break;
+        const bak = g[i];
+        g[i] = 0;
+        let unique = true;
+        for (let v = 1; v <= 9 && unique; v++) {
+            if (v === bak || !sdFits(g, i, v)) continue;
+            const w = g.slice(); w[i] = v;
+            if (sdCount(w, 1) === 1) unique = false;
+        }
+        if (unique) n++; else g[i] = bak;
+    }
+    return { g, sol };
+}
+function sdPeer(a, b) {
+    const ar = (a / 9) | 0, ac = a % 9, br = (b / 9) | 0, bc = b % 9;
+    return ar === br || ac === bc || (((ar / 3) | 0) === ((br / 3) | 0) && ((ac / 3) | 0) === ((bc / 3) | 0));
+}
+function sdConflicts() {
+    const bad = new Array(81).fill(false);
+    for (let i = 0; i < 81; i++) {
+        const v = SD.grid[i]; if (!v) continue;
+        const r = (i / 9) | 0, c = i % 9;
+        for (let k = 0; k < 9; k++) {
+            const jr = r * 9 + k, jc = k * 9 + c;
+            if (k !== c && SD.grid[jr] === v) { bad[i] = bad[jr] = true; }
+            if (k !== r && SD.grid[jc] === v) { bad[i] = bad[jc] = true; }
+        }
+        const br = ((r / 3) | 0) * 3, bc = ((c / 3) | 0) * 3;
+        for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) {
+            const j = (br + y) * 9 + bc + x;
+            if (j !== i && SD.grid[j] === v) { bad[i] = bad[j] = true; }
+        }
+    }
+    return bad;
+}
+function sudokuBuild() {
+    const board = $('sudoku_board'); if (!board) return;
+    if (board.childElementCount !== 81) {
+        board.innerHTML = ''; SD.cells = [];
+        for (let i = 0; i < 81; i++) {
+            const r = (i / 9) | 0, c = i % 9;
+            const el = document.createElement('div');
+            el.className = 'sd-cell' + (c === 2 || c === 5 ? ' br' : '') + (r === 2 || r === 5 ? ' bb' : '');
+            el.dataset.i = i;
+            const v = document.createElement('span');
+            const nt = document.createElement('span'); nt.className = 'sd-notes';
+            for (let d = 1; d <= 9; d++) { const s = document.createElement('i'); s.textContent = d; nt.appendChild(s); }
+            el.appendChild(v); el.appendChild(nt);
+            board.appendChild(el);
+            SD.cells.push({ el, v, nt });
+        }
+        board.addEventListener('click', e => { const c2 = e.target.closest('.sd-cell'); if (c2) sudokuSelect(+c2.dataset.i); });
+    }
+}
+function sudokuRender() {
+    const conf = sdConflicts();
+    const sv = SD.sel >= 0 ? SD.grid[SD.sel] : 0;
+    let left = 0;
+    for (let i = 0; i < 81; i++) {
+        const o = SD.cells[i]; if (!o) continue;
+        const v = SD.grid[i]; if (!v) left++;
+        const r = (i / 9) | 0, c = i % 9;
+        let cls = 'sd-cell';
+        if (c === 2 || c === 5) cls += ' br';
+        if (r === 2 || r === 5) cls += ' bb';
+        if (SD.given[i]) cls += ' given';
+        if (SD.sel === i) cls += ' sel';
+        else if (sv && v === sv) cls += ' same';
+        else if (SD.sel >= 0 && sdPeer(SD.sel, i)) cls += ' peer';
+        if (conf[i]) cls += ' err';
+        o.el.className = cls;
+        o.v.textContent = v || '';
+        const nm = SD.notes[i] || 0;
+        if (v || !nm) o.nt.style.display = 'none';
+        else {
+            o.nt.style.display = 'grid';
+            for (let d = 0; d < 9; d++) o.nt.childNodes[d].style.visibility = (nm & (1 << (d + 1))) ? 'visible' : 'hidden';
+        }
+    }
+    $('sudoku_left').textContent = left;
+}
+function sudokuSelect(i) { SD.sel = i; sudokuRender(); }
+function sudokuMoveSel(d) {
+    const cur = SD.sel < 0 ? 40 : SD.sel;
+    let r = (cur / 9) | 0, c = cur % 9;
+    if (d === 'up') r = (r + 8) % 9;
+    else if (d === 'down') r = (r + 1) % 9;
+    else if (d === 'left') c = (c + 8) % 9;
+    else c = (c + 1) % 9;
+    sudokuSelect(r * 9 + c);
+}
+function sudokuInput(v) {
+    if (SD.done) { toast('本局已完成，点「新一局」再来'); return; }
+    if (SD.sel < 0) { toast('先点一个要填的格子'); return; }
+    const i = SD.sel;
+    if (SD.given[i]) { toast('这是题目给定的数字'); return; }
+    if (!v) { SD.grid[i] = 0; SD.notes[i] = 0; }
+    else if (SD.note) { if (SD.grid[i]) return; SD.notes[i] ^= (1 << v); }
+    else { SD.grid[i] = SD.grid[i] === v ? 0 : v; SD.notes[i] = 0; }
+    sudokuRender(); sudokuWinCheck();
+}
+function sudokuWinCheck() {
+    if (!SD.done && SD.grid.every(v => v) && !sdConflicts().some(Boolean)) {
+        SD.done = true;
+        clockStop(SD);
+        const key = 'du_sudoku_best_' + SD.lvl, prev = +LS(key) || 0;
+        if (!prev || SD.el < prev) LS(key, SD.el);
+        $('sudoku_best').textContent = fmtTime(+LS(key) || SD.el);
+        $('sudoku_msg').textContent = '🎉 完成！用时 ' + fmtTime(SD.el) + (!prev || SD.el < prev ? '（新纪录）' : '');
+        toast('数独完成！');
+    }
+}
+function sudokuCheck() {
+    const left = SD.grid.reduce((a, v) => a + (v ? 0 : 1), 0);
+    if (left) { $('sudoku_msg').textContent = '还有 ' + left + ' 格没填，继续加油～'; toast('还有 ' + left + ' 格未填'); return; }
+    if (sdConflicts().some(Boolean)) { sudokuRender(); $('sudoku_msg').textContent = '有冲突（红色格子），检查一下吧'; }
+    else sudokuWinCheck();
+}
+function sudokuHint() {
+    if (SD.done) return;
+    let i = SD.sel;
+    if (i < 0 || SD.given[i] || SD.grid[i] === SD.sol[i]) {
+        const cand = [];
+        for (let k = 0; k < 81; k++) if (SD.grid[k] !== SD.sol[k]) cand.push(k);
+        if (!cand.length) return;
+        i = cand[Math.floor(Math.random() * cand.length)];
+    }
+    SD.sel = i; SD.grid[i] = SD.sol[i]; SD.notes[i] = 0;
+    sudokuRender();
+    if (SD.cells[i]) {
+        const el = SD.cells[i].el;
+        el.classList.add('pop'); setTimeout(() => el.classList.remove('pop'), 900);
+    }
+    $('sudoku_msg').textContent = '已替你填好一格正确答案 ✅';
+    sudokuWinCheck();
+}
+function sudokuNote() {
+    SD.note = !SD.note;
+    const b = $('sudoku_note');
+    if (b) { b.textContent = '✏️ 笔记：' + (SD.note ? '开' : '关'); b.style.color = SD.note ? 'var(--primary-dark)' : ''; }
+}
+function sudokuSyncLvl() { $$('#sudoku_lvl button').forEach(b => b.classList.toggle('on', +b.dataset.lvl === SD.lvl)); }
+function sudokuLvl(v) {
+    SD.lvl = Math.min(2, Math.max(0, +v || 0)); LS('du_sudoku_lvl', SD.lvl);
+    sudokuSyncLvl(); sudokuNew();
+}
+function sudokuNew() {
+    sudokuBuild();
+    const made = sdMake(SD_LVLS[SD.lvl].blanks);
+    SD.grid = made.g; SD.sol = made.sol;
+    SD.given = made.g.map(v => !!v);
+    SD.notes = new Array(81).fill(0);
+    SD.sel = -1; SD.done = false;
+    clockStop(SD); SD.el = 0;
+    const bk = +LS('du_sudoku_best_' + SD.lvl) || 0;
+    $('sudoku_best').textContent = bk ? fmtTime(bk) : '—';
+    $('sudoku_time').textContent = '00:00';
+    $('sudoku_msg').textContent = '难度：' + SD_LVLS[SD.lvl].name + '，共 ' + SD.grid.reduce((a, v) => a + (v ? 0 : 1), 0) + ' 格待填';
+    sudokuRender();
+    resumeClock('sudoku', SD, 'sudoku_time');
+}
+$('sudoku_pad').addEventListener('click', e => {
+    const b = e.target.closest('button[data-n]');
+    if (b) sudokuInput(+b.dataset.n);
+});
+$('sudoku_lvl').addEventListener('click', e => {
+    const b = e.target.closest('button[data-lvl]');
+    if (b) sudokuLvl(b.dataset.lvl);
+});
+
+/* ---------- 俄罗斯方块 ---------- */
+const TET = {
+    I: ['#22d3ee', [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]]],
+    J: ['#6366f1', [[1,0,0],[1,1,1],[0,0,0]]],
+    L: ['#f59e0b', [[0,0,1],[1,1,1],[0,0,0]]],
+    O: ['#facc15', [[1,1],[1,1]]],
+    S: ['#22c55e', [[0,1,1],[1,1,0],[0,0,0]]],
+    T: ['#a855f7', [[0,1,0],[1,1,1],[0,0,0]]],
+    Z: ['#ef4444', [[1,1,0],[0,1,1],[0,0,0]]]
+};
+const TET_KEYS = Object.keys(TET);
+const TT = {
+    cols: 10, rows: 20, cell: 24, ctx: null, nctx: null, grid: [], cur: null, next: null, bag: [],
+    score: 0, lines: 0, level: 1, best: +(LS('du_tetris_best') || 0),
+    playing: false, over: false, raf: 0, last: 0, acc: 0
+};
+function tetrisInit() {
+    if (!TT.ctx) {
+        const cv = $('tetrisCanvas'); if (!cv) return;
+        TT.ctx = cv.getContext('2d');
+        TT.nctx = $('tetrisNext') ? $('tetrisNext').getContext('2d') : null;
+    }
+    if (TT.grid.length !== TT.rows) tetrisReset();
+    tetrisDraw();
+}
+function tetrisTake() {
+    if (!TT.bag.length) TT.bag = shuf(TET_KEYS.slice());
+    const k = TT.bag.pop();
+    const m = TET[k][1].map(r => r.slice());
+    return { k, m, x: Math.floor((TT.cols - m.length) / 2), y: 0 };
+}
+function tetrisReset() {
+    tetrisStop();
+    TT.grid = Array.from({ length: TT.rows }, () => new Array(TT.cols).fill(0));
+    TT.bag = []; TT.score = 0; TT.lines = 0; TT.level = 1; TT.acc = 0; TT.over = false;
+    TT.cur = null; TT.next = tetrisTake();
+    $('tetris_score').textContent = '0';
+    $('tetris_lines').textContent = '0';
+    $('tetris_level').textContent = '1';
+    $('tetris_best').textContent = TT.best || 0;
+    const b = $('tetris_btn'); if (b) b.textContent = '开始';
+    $('tetris_msg').textContent = '点击「开始」或按空格启动';
+    tetrisDraw();
+}
+function tetrisStart() {
+    if (TT.playing) return;
+    tetrisInit();
+    if (TT.over) tetrisReset();
+    if (!TT.cur) { TT.cur = TT.next || tetrisTake(); TT.next = tetrisTake(); }
+    if (tetrisHit(TT.cur.m, TT.cur.x, TT.cur.y)) { tetrisGameOver(); return; }
+    TT.playing = true; TT.last = 0; TT.acc = 0;
+    const b = $('tetris_btn'); if (b) b.textContent = '暂停';
+    $('tetris_msg').textContent = '进行中…← → 移动，↑ 旋转，空格直落';
+    TT.raf = requestAnimationFrame(tetrisLoop);
+    tetrisDraw();
+}
+function tetrisStop() { TT.playing = false; if (TT.raf) { cancelAnimationFrame(TT.raf); TT.raf = 0; } }
+function tetrisToggle() {
+    if (TT.over) { tetrisRestart(); return; }
+    if (TT.playing) {
+        tetrisStop();
+        const b = $('tetris_btn'); if (b) b.textContent = '继续';
+        $('tetris_msg').textContent = '已暂停，按 P 或「继续」恢复';
+        tetrisDraw();
+    } else tetrisStart();
+}
+function tetrisRestart() { tetrisReset(); tetrisStart(); }
+function tetrisHit(m, px, py) {
+    for (let y = 0; y < m.length; y++) for (let x = 0; x < m.length; x++) {
+        if (!m[y][x]) continue;
+        const gx = px + x, gy = py + y;
+        if (gx < 0 || gx >= TT.cols || gy >= TT.rows) return true;
+        if (gy >= 0 && TT.grid[gy][gx]) return true;
+    }
+    return false;
+}
+function tetrisLock() {
+    const p = TT.cur;
+    for (let y = 0; y < p.m.length; y++) for (let x = 0; x < p.m.length; x++) {
+        if (p.m[y][x] && p.y + y >= 0) TT.grid[p.y + y][p.x + x] = p.k;
+    }
+    let n = 0;
+    for (let y = TT.rows - 1; y >= 0; y--) {
+        if (TT.grid[y].every(v => v)) { TT.grid.splice(y, 1); TT.grid.unshift(new Array(TT.cols).fill(0)); n++; y++; }
+    }
+    if (n) {
+        TT.lines += n;
+        TT.score += [0, 100, 300, 500, 800][n] * TT.level;
+        TT.level = Math.floor(TT.lines / 10) + 1;
+        if (TT.score > TT.best) { TT.best = TT.score; LS('du_tetris_best', TT.best); }
+        $('tetris_lines').textContent = TT.lines;
+        $('tetris_level').textContent = TT.level;
+        $('tetris_score').textContent = TT.score;
+        $('tetris_best').textContent = TT.best;
+    }
+    TT.cur = TT.next; TT.next = tetrisTake(); TT.acc = 0;
+    if (tetrisHit(TT.cur.m, TT.cur.x, TT.cur.y)) { tetrisGameOver(); return; }
+}
+function tetrisRotate(dir) {
+    const p = TT.cur; if (!p) return;
+    const n = p.m.length, nm = [];
+    for (let y = 0; y < n; y++) { nm.push([]); for (let x = 0; x < n; x++) nm[y].push(dir > 0 ? p.m[n - 1 - x][y] : p.m[x][n - 1 - y]); }
+    for (const off of [0, -1, 1, -2, 2]) if (!tetrisHit(nm, p.x + off, p.y)) { p.m = nm; p.x += off; return; }
+}
+function tetrisAct(a) {
+    if (TT.over) return;
+    if (!TT.playing) { tetrisStart(); return; }
+    const p = TT.cur; if (!p) return;
+    if (a === 'left') { if (!tetrisHit(p.m, p.x - 1, p.y)) p.x--; }
+    else if (a === 'right') { if (!tetrisHit(p.m, p.x + 1, p.y)) p.x++; }
+    else if (a === 'rot') tetrisRotate(1);
+    else if (a === 'rot2') tetrisRotate(-1);
+    else if (a === 'down') {
+        if (!tetrisHit(p.m, p.x, p.y + 1)) { p.y++; TT.score++; $('tetris_score').textContent = TT.score; TT.acc = 0; }
+        else tetrisLock();
+    } else if (a === 'drop') {
+        let d = 0; while (!tetrisHit(p.m, p.x, p.y + d + 1)) d++;
+        p.y += d; TT.score += d * 2; $('tetris_score').textContent = TT.score; tetrisLock();
+    }
+    tetrisDraw();
+}
+function tetrisGameOver() {
+    TT.over = true; tetrisStop();
+    if (TT.score > TT.best) { TT.best = TT.score; LS('du_tetris_best', TT.best); }
+    $('tetris_best').textContent = TT.best;
+    const b = $('tetris_btn'); if (b) b.textContent = '开始';
+    $('tetris_msg').textContent = '💀 堆到顶了！本局 ' + TT.score + ' 分 / ' + TT.lines + ' 行，按「重开」再来';
+    tetrisDraw();
+}
+function tetrisLoop(ts) {
+    if (!TT.playing) return;
+    if (!TT.last) TT.last = ts;
+    let dt = ts - TT.last; TT.last = ts;
+    if (dt > 100) dt = 100;
+    const iv = Math.max(90, 800 - (TT.level - 1) * 65);
+    TT.acc += dt;
+    while (TT.acc >= iv && TT.playing) {
+        TT.acc -= iv;
+        const p = TT.cur; if (!p) break;
+        if (!tetrisHit(p.m, p.x, p.y + 1)) p.y++;
+        else { tetrisLock(); break; }
+    }
+    if (!TT.playing) return;
+    tetrisDraw();
+    TT.raf = requestAnimationFrame(tetrisLoop);
+}
+function tetBlock(ctx, px, py, cs, key, ghost) {
+    const c = TET[key] ? TET[key][0] : '#94a3b8';
+    if (ghost) {
+        ctx.strokeStyle = c; ctx.lineWidth = 2;
+        roundRect(ctx, px + 2, py + 2, cs - 4, cs - 4, 4); ctx.stroke();
+        return;
+    }
+    ctx.fillStyle = c;
+    roundRect(ctx, px + 1, py + 1, cs - 2, cs - 2, 4); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.30)';
+    roundRect(ctx, px + 3, py + 3, cs - 6, cs * .34, 3); ctx.fill();
+}
+function tetrisDrawNext() {
+    const ctx = TT.nctx; if (!ctx) return;
+    ctx.clearRect(0, 0, 96, 96);
+    const p = TT.next; if (!p) return;
+    const m = p.m, n = m.length;
+    let minX = n, maxX = -1, minY = n, maxY = -1;
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (m[y][x]) {
+        if (x < minX) minX = x; if (x > maxX) maxX = x;
+        if (y < minY) minY = y; if (y > maxY) maxY = y;
+    }
+    if (maxX < 0) return;
+    const cs = Math.min(22, Math.floor(88 / Math.max(maxX - minX + 1, maxY - minY + 1)));
+    const ox = (96 - (maxX - minX + 1) * cs) / 2, oy = (96 - (maxY - minY + 1) * cs) / 2;
+    for (let y = minY; y <= maxY; y++) for (let x = minX; x <= maxX; x++)
+        if (m[y][x]) tetBlock(ctx, ox + (x - minX) * cs, oy + (y - minY) * cs, cs, p.k, false);
+}
+function tetrisDraw() {
+    const ctx = TT.ctx; if (!ctx) return;
+    const cs = TT.cell, W = TT.cols * cs, H = TT.rows * cs;
+    ctx.clearRect(0, 0, W, H);
+    ctx.strokeStyle = 'rgba(255,255,255,.055)'; ctx.lineWidth = 1;
+    for (let x = 1; x < TT.cols; x++) { ctx.beginPath(); ctx.moveTo(x * cs, 0); ctx.lineTo(x * cs, H); ctx.stroke(); }
+    for (let y = 1; y < TT.rows; y++) { ctx.beginPath(); ctx.moveTo(0, y * cs); ctx.lineTo(W, y * cs); ctx.stroke(); }
+    for (let y = 0; y < TT.rows; y++) for (let x = 0; x < TT.cols; x++)
+        if (TT.grid[y][x]) tetBlock(ctx, x * cs, y * cs, cs, TT.grid[y][x], false);
+    const p = TT.cur;
+    if (p && !TT.over) {
+        let gy = p.y; while (!tetrisHit(p.m, p.x, gy + 1)) gy++;
+        for (let y = 0; y < p.m.length; y++) for (let x = 0; x < p.m.length; x++) {
+            if (!p.m[y][x]) continue;
+            if (gy + y >= 0 && gy !== p.y) tetBlock(ctx, (p.x + x) * cs, (gy + y) * cs, cs, p.k, true);
+            if (p.y + y >= 0) tetBlock(ctx, (p.x + x) * cs, (p.y + y) * cs, cs, p.k, false);
+        }
+    }
+    if (!TT.playing) {
+        ctx.fillStyle = 'rgba(9,14,30,.62)'; ctx.fillRect(0, 0, W, H);
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#e2e8f0'; ctx.font = '700 15px -apple-system, "PingFang SC", sans-serif';
+        ctx.fillText(TT.over ? 'GAME OVER' : '已暂停', W / 2, H / 2 - 6);
+        ctx.fillStyle = 'rgba(226,232,240,.75)'; ctx.font = '600 12px -apple-system, "PingFang SC", sans-serif';
+        ctx.fillText(TT.over ? '点「重开」再来一局' : '按 P 或点「继续」恢复', W / 2, H / 2 + 14);
+        ctx.textAlign = 'left';
+    }
+    tetrisDrawNext();
+}
+
+/* ---------- 数字华容道 ---------- */
+const PZ = { n: 3, a: [], tiles: [], moves: 0, done: false, el: 0, tid: 0, t0: 0, best: {} };
+function puzzleSolved() {
+    const tot = PZ.n * PZ.n;
+    for (let i = 0; i < tot - 1; i++) if (PZ.a[i] !== i + 1) return false;
+    return PZ.a[tot - 1] === 0;
+}
+function puzzleShuffle() {
+    const n = PZ.n;
+    let b = PZ.a.indexOf(0);
+    const step = () => {
+        const r = (b / n) | 0, c = b % n, cand = [];
+        if (r > 0) cand.push(b - n);
+        if (r < n - 1) cand.push(b + n);
+        if (c > 0) cand.push(b - 1);
+        if (c < n - 1) cand.push(b + 1);
+        const nb = cand[Math.floor(Math.random() * cand.length)];
+        PZ.a[b] = PZ.a[nb]; PZ.a[nb] = 0; b = nb;
+    };
+    for (let s = 0, tot = n * n * 60; s < tot; s++) step();
+    for (let s = 0; s < 9 && puzzleSolved(); s++) step();   // 极小概率走回原状，再挪几步
+}
+function puzzleBuild() {
+    const board = $('puzzle_board'); if (!board) return;
+    const n = PZ.n, tot = n * n, gp = 1.6, ts = (100 - gp * (n + 1)) / n;
+    board.style.setProperty('--gp', gp + '%');
+    board.style.setProperty('--ts', ts + '%');
+    board.style.setProperty('--st', (ts + gp) + '%');
+    board.innerHTML = ''; PZ.tiles = [];
+    for (let v = 1; v < tot; v++) {
+        const t = document.createElement('div');
+        t.className = 'pz-tile'; t.dataset.v = v; t.textContent = v;
+        t.style.fontSize = n >= 5 ? 'clamp(14px,3.4vw,20px)' : n === 4 ? 'clamp(17px,4.4vw,25px)' : 'clamp(20px,5.8vw,30px)';
+        board.appendChild(t); PZ.tiles[v] = t;
+    }
+    if (!board.dataset.bound) {
+        board.dataset.bound = '1';
+        board.addEventListener('click', e => { const t = e.target.closest('.pz-tile'); if (t) puzzleTry(+t.dataset.v); });
+    }
+}
+function puzzleRender() {
+    const n = PZ.n;
+    for (let i = 0; i < n * n; i++) {
+        const v = PZ.a[i]; if (!v) continue;
+        const t = PZ.tiles[v]; if (!t) continue;
+        t.style.setProperty('--r', String((i / n) | 0));
+        t.style.setProperty('--c', String(i % n));
+        t.classList.toggle('ok', v === i + 1);
+    }
+}
+function puzzleTry(v) {
+    if (PZ.done) return;
+    const n = PZ.n, blank = PZ.a.indexOf(0), i = PZ.a.indexOf(v);
+    if (i < 0) return;
+    const r = (i / n) | 0, c = i % n, br = (blank / n) | 0, bc = blank % n;
+    if (Math.abs(r - br) + Math.abs(c - bc) !== 1) return;
+    PZ.a[blank] = v; PZ.a[i] = 0;
+    PZ.moves++;
+    $('puzzle_moves').textContent = PZ.moves;
+    puzzleRender(); puzzleWinCheck();
+}
+function puzzleMove(d) {
+    const n = PZ.n, blank = PZ.a.indexOf(0);
+    const br = (blank / n) | 0, bc = blank % n;
+    let tr = br, tc = bc;
+    if (d === 'up') tr++; else if (d === 'down') tr--;
+    else if (d === 'left') tc++; else tc--;
+    if (tr < 0 || tr >= n || tc < 0 || tc >= n) return;
+    puzzleTry(PZ.a[tr * n + tc]);
+}
+function puzzleWinCheck() {
+    if (!puzzleSolved()) return;
+    PZ.done = true;
+    clockStop(PZ);
+    const prev = PZ.best[PZ.n] || 0, rec = !prev || PZ.moves < prev;
+    if (rec) { PZ.best[PZ.n] = PZ.moves; LS('du_puzzle_best_' + PZ.n, PZ.moves); }
+    $('puzzle_best').textContent = PZ.best[PZ.n];
+    $('puzzle_msg').textContent = '🎉 复原成功！' + PZ.moves + ' 步 / ' + fmtTime(PZ.el) + (rec ? '（新纪录）' : '');
+    toast('华容道复原！');
+}
+function puzzleSyncSize() { $$('#puzzle_size button').forEach(b => b.classList.toggle('on', +b.dataset.size === PZ.n)); }
+function puzzleSize(v) {
+    PZ.n = [3, 4, 5].indexOf(+v) >= 0 ? +v : 3;
+    LS('du_puzzle_n', PZ.n);
+    puzzleSyncSize(); puzzleNew();
+}
+function puzzleNew() {
+    const n = PZ.n, tot = n * n;
+    if (!PZ.best[n]) PZ.best[n] = +LS('du_puzzle_best_' + n) || 0;
+    PZ.a = Array.from({ length: tot }, (_, i) => (i + 1) % tot);
+    PZ.moves = 0; PZ.done = false;
+    clockStop(PZ); PZ.el = 0;
+    $('puzzle_time').textContent = '00:00';
+    $('puzzle_moves').textContent = '0';
+    $('puzzle_best').textContent = PZ.best[n] || '—';
+    $('puzzle_msg').textContent = '把数字按 1 → ' + (tot - 1) + ' 排好，空格留在右下角';
+    puzzleShuffle(); puzzleBuild(); puzzleRender();
+    resumeClock('puzzle', PZ, 'puzzle_time');
+}
+$('puzzle_size').addEventListener('click', e => {
+    const b = e.target.closest('button[data-size]');
+    if (b) puzzleSize(b.dataset.size);
+});
+
+/* ---------- 记忆翻牌 ---------- */
+const MM_ICONS = ['🍎', '🍇', '🍋', '🍉', '🍓', '🥑', '🍒', '🥕', '🐳', '🦊'];
+const MM = { list: [], els: [], first: -1, lock: false, moves: 0, matched: 0, done: false,
+             best: +(LS('du_memory_best') || 0), el: 0, tid: 0, t0: 0 };
+function memoryBuild() {
+    const g = $('memory_grid'); if (!g) return;
+    g.innerHTML = '';
+    MM.els = MM.list.map((ic, i) => {
+        const c = document.createElement('div'); c.className = 'mm-card'; c.dataset.i = i;
+        const inn = document.createElement('div'); inn.className = 'mm-in';
+        const back = document.createElement('div'); back.className = 'mm-face mm-back'; back.textContent = '?';
+        const front = document.createElement('div'); front.className = 'mm-face mm-front'; front.textContent = ic;
+        inn.appendChild(back); inn.appendChild(front);
+        c.appendChild(inn); g.appendChild(c);
+        return c;
+    });
+    if (!g.dataset.bound) {
+        g.dataset.bound = '1';
+        g.addEventListener('click', e => { const c = e.target.closest('.mm-card'); if (c) memoryFlip(+c.dataset.i); });
+    }
+}
+function memoryFlip(i) {
+    const el = MM.els[i];
+    if (!el || MM.lock || MM.done) return;
+    if (el.classList.contains('flip') || el.classList.contains('done')) return;
+    el.classList.add('flip');
+    if (MM.first < 0) { MM.first = i; return; }
+    const a = MM.first, b = i;
+    MM.first = -1;
+    MM.moves++;
+    $('memory_moves').textContent = MM.moves;
+    if (MM.list[a] === MM.list[b]) {
+        MM.els[a].classList.add('done'); MM.els[b].classList.add('done');
+        MM.matched += 2;
+        if (MM.matched === MM.list.length) memoryWin();
+    } else {
+        MM.lock = true;
+        setTimeout(() => {
+            MM.els[a].classList.remove('flip'); MM.els[b].classList.remove('flip'); MM.lock = false;
+        }, 720);
+    }
+}
+function memoryWin() {
+    MM.done = true;
+    clockStop(MM);
+    const prev = MM.best || 0, rec = !prev || MM.moves < prev;
+    if (rec) { MM.best = MM.moves; LS('du_memory_best', MM.best); }
+    $('memory_best').textContent = MM.best;
+    $('memory_msg').textContent = '🎉 全部配对完成！' + MM.moves + ' 步 / ' + fmtTime(MM.el) + (rec ? '（新纪录）' : '');
+    toast('记忆翻牌完成！');
+}
+function memoryNew() {
+    const icons = shuf(MM_ICONS.slice()).slice(0, 8);
+    MM.list = shuf(icons.concat(icons));
+    MM.first = -1; MM.lock = false; MM.moves = 0; MM.matched = 0; MM.done = false;
+    clockStop(MM); MM.el = 0;
+    $('memory_time').textContent = '00:00';
+    $('memory_moves').textContent = '0';
+    $('memory_best').textContent = MM.best || '—';
+    $('memory_msg').textContent = '翻牌开始计时，步数越少越好';
+    memoryBuild();
+    resumeClock('memory', MM, 'memory_time');
+}
+
 function bindSwipe(el, cb) {
     if (!el) return;
     let sx = 0, sy = 0;
@@ -2217,6 +3094,9 @@ bindSwipe(trexCanvas, d => {
     else { trexDuck(true); setTimeout(() => trexDuck(false), 450); }
 });
 if (trexCanvas) trexCanvas.addEventListener('click', () => trexJump());
+bindSwipe($('tetrisCanvas'), d => {
+    tetrisAct(d === 'left' ? 'left' : d === 'right' ? 'right' : d === 'up' ? 'rot' : 'down');
+});
 const guessInput = $('guess_in');
 if (guessInput) guessInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); guessSubmit(); } });
 const KEY_DIR4 = { arrowleft: 'left', arrowright: 'right', arrowup: 'up', arrowdown: 'down', a: 'left', d: 'right', w: 'up', s: 'down' };
@@ -2236,6 +3116,21 @@ document.addEventListener('keydown', e => {
     } else if (curGame === 'trex') {
         if (e.key === ' ' || k === 'arrowup' || k === 'w') { e.preventDefault(); trexJump(); }
         else if (k === 'arrowdown' || k === 's') { e.preventDefault(); trexDuck(true); }
+    } else if (curGame === 'sudoku') {
+        if (k >= '1' && k <= '9') { e.preventDefault(); sudokuInput(+k); }
+        else if (k === '0' || k === 'backspace' || k === 'delete') { e.preventDefault(); sudokuInput(0); }
+        else { const d = KEY_DIR4[k]; if (d) { e.preventDefault(); sudokuMoveSel(d); } }
+    } else if (curGame === 'tetris') {
+        if (k === 'arrowleft' || k === 'a') { e.preventDefault(); tetrisAct('left'); }
+        else if (k === 'arrowright' || k === 'd') { e.preventDefault(); tetrisAct('right'); }
+        else if (k === 'arrowup' || k === 'w' || k === 'x') { e.preventDefault(); tetrisAct('rot'); }
+        else if (k === 'z') { e.preventDefault(); tetrisAct('rot2'); }
+        else if (k === 'arrowdown' || k === 's') { e.preventDefault(); tetrisAct('down'); }
+        else if (e.key === ' ') { e.preventDefault(); tetrisAct('drop'); }
+        else if (k === 'p') { e.preventDefault(); tetrisToggle(); }
+    } else if (curGame === 'puzzle') {
+        const d = KEY_DIR4[k];
+        if (d) { e.preventDefault(); puzzleMove(d); }
     }
 });
 document.addEventListener('keyup', e => {
@@ -2245,15 +3140,26 @@ document.addEventListener('keyup', e => {
 });
 /* 切到后台自动暂停，避免回来时已经撞死 / 分数虚高 */
 document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) return;
+    if (!document.hidden) {
+        if (curGame === 'sudoku') resumeClock('sudoku', SD, 'sudoku_time');
+        if (curGame === 'puzzle') resumeClock('puzzle', PZ, 'puzzle_time');
+        if (curGame === 'memory') resumeClock('memory', MM, 'memory_time');
+        return;
+    }
     if (SN.playing) {
         snakeStop();
         const b = $('snake_btn'); if (b) b.textContent = '继续';
         $('snake_msg').textContent = '已暂停，按空格或「继续」恢复';
     }
     if (TR.running) trexStop();
+    tetrisStop();
+    clockStop(SD); clockStop(PZ); clockStop(MM);
 });
+const _sl = +LS('du_sudoku_lvl'); SD.lvl = [0, 1, 2].indexOf(_sl) >= 0 ? _sl : 0;
+const _pn = +LS('du_puzzle_n');   PZ.n = [3, 4, 5].indexOf(_pn) >= 0 ? _pn : 3;
+sudokuSyncLvl(); puzzleSyncSize();
 g2048New(); snakeReset(); trexReset(); guessNew();
+sudokuNew(); tetrisReset(); puzzleNew(); memoryNew();
 
 const Tools = {
     net:     { toggleNet },
@@ -2261,7 +3167,9 @@ const Tools = {
     time:    { getTimeStamp, getTimeNow, getLocalTime, getTimestampFromDate, timeEvent, tsStep, swToggle, swReset, swSetMode, fillDateNow },
     crypto:  { base64Encode, base64Decode, aesEncrypt, aesDecrypt, aesEncrypt1, fillKey, clearAes, publicKeyEncrypt, privateKeyDecrypt, decryptByPrivateKey, getShaVal, getMD5Val },
     convert: { stringToHex, hexToString, rgb2hex, hex2rgb, togglePalette, imgToBase64, spApply },
-    game:    { g2048New, snakeToggle, snakeRestart, trexToggle, trexRestart, guessNew, guessSubmit },
+    game:    { g2048New, snakeToggle, snakeRestart, trexToggle, trexRestart, guessNew, guessSubmit,
+               sudokuNew, sudokuCheck, sudokuHint, sudokuNote, sudokuLvl,
+               tetrisToggle, tetrisRestart, tetrisAct, puzzleNew, puzzleSize, memoryNew },
     login:   { click2Submit, togglePwd }
 };
 const Actions = {};
