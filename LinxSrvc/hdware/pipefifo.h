@@ -39,7 +39,7 @@ struct PipeFifo read_pipe(struct PipeFifo* _pipe)
         return pipe;
     }
     close(filedes[1]);
-    ssize_t bytes = read(filedes[0], _pipe, sizeof(struct PipeFifo));
+    ssize_t bytes = read(filedes[0], _pipe, sizeof(struct PipeFifo)); /*Flawfinder: ignore*/
     if (bytes < 0) {
         perror("read pipe from filedes[0] fail");
     } else if (bytes != sizeof(struct PipeFifo)) {
@@ -111,7 +111,7 @@ struct PipeFifo read_fifo(long long flag)
         perror("open FIFO by RDONLY fail");
         return fifo;
     }
-    while ((len = read(fio, &fifo, size)) > 0 && len == size) {
+    while ((len = read(fio, &fifo, size)) > 0 && len == size) { /*Flawfinder: ignore*/
         if (fifo.flag == flag) {
             break;
         } else {
@@ -122,7 +122,6 @@ struct PipeFifo read_fifo(long long flag)
             fio = open(FIFO_FILE, O_RDONLY);
             continue;
         }
-        usleep(1000);
     }
     close(fio);
     return fifo;
@@ -154,7 +153,7 @@ int pipe_fifo_test(long long flag, int value)
         } else {
             perror("fork child fail");
         }
-    } else if (flag > 0) {
+    } else {
         if (flag == 1) {
             pp0ff = read_fifo(flag);
             stat = pp0ff.flag;
@@ -162,11 +161,9 @@ int pipe_fifo_test(long long flag, int value)
         } else if (flag == 2) {
             stat = write_fifo(&pp0ff);
             printf("FIFO wrote: { %d, %lld, %p }, ", pp0ff.value, pp0ff.flag, pp0ff.reserve);
+        } else {
+            printf("stat=%d, %s.\n", stat, hint);
         }
-        printf("stat = %d.\n", stat);
-    } else {
-        printf("%s\n", hint);
-        return 1;
     }
     return 0;
 }

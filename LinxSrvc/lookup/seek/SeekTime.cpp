@@ -42,9 +42,13 @@ int SeekTime::init(const std::string& fileName)
         return -1;
     }
     int ret = m_dbMgr->connectDB(dbName);
-    m_dbMgr->createTable();
     if (ret != 0) {
         LOG_ERR("connectDB(%s) failed(0x%08X).", dbName.c_str(), ret);
+        return ret;
+    }
+    ret = m_dbMgr->createTable();
+    if (ret != 0) {
+        LOG_ERR("createTable failed(0x%08X).", ret);
         return ret;
     }
     return 0;

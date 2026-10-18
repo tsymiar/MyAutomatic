@@ -1,9 +1,12 @@
+#include <cinttypes>
 #ifndef TIMESEEK
 #include "seek/SeekTime.h"
 typedef SeekTime TimeSeek;
 #else
 #include "time/TimeSeek.h"
 #endif
+#include "common.h"
+#include "Utils.h"
 
 using namespace std;
 #define FRAGMENT_TIME_DURATION 10
@@ -23,7 +26,7 @@ int main(int argc, char* argv[])
     seekTime.init(fileName);
 #ifndef TIMESEEK
     seekTime.getFileTime(fileName, time);
-    printf("getFileTime start=%ld, last=%ld\n", time.first, time.last);
+    printf("getFileTime start=%" PRIu64 ", last=%" PRIu64 "\n", time.first, time.last);
 #endif
     std::vector<SelectTime> times;
     size_t pos = fileName.rfind('.');
@@ -50,7 +53,7 @@ int main(int argc, char* argv[])
         printf("Not found seek times!\n");
     } else
         for (auto content : vecContent) {
-            printf("filename[%s], len=%ld, offset=%ld, time=%ld\n", content.fileName, content.value.size, content.value.offset, content.value.timestamp);
+            printf("filename[%s], len=%" PRIu64 ", offset=%" PRIu64 ", time=%" PRIu64 "\n", content.fileName, content.value.size, content.value.offset, content.value.timestamp);
         }
     seekTime.uninit();
 }

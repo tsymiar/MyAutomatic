@@ -1,6 +1,8 @@
-#include <atomic>
-
 #include "sqlDbReq.h"
+
+#ifdef HAVE_MYSQL
+
+#include <atomic>
 
 using namespace std;
 
@@ -292,3 +294,5 @@ void sqlClose()
     pthread_mutex_destroy(&g_ctx.sql_lock);
     g_ctx.ready = false;
 }
+
+#endif  // HAVE_MYSQL

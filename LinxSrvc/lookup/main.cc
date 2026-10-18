@@ -1,9 +1,32 @@
 #include "manacher.h"
 #include "kmp.h"
 #include <iostream>
+#include <ostream>
 
 #include <vector>
 #include <string>
+
+void printUsage(const char* prog, std::ostream& os)
+{
+    os << "Usage:\n"
+        << "  " << prog << " <filePath>            Scan a file and print its longest palindrome\n"
+        << "  " << prog << " <filePath> <pattern>  Search a file for a hex byte pattern (KMP)\n"
+        << "  " << prog << " -h | --help           Print this help\n"
+        << "\nArguments:\n"
+        << "  filePath  Path of the file to scan, opened in binary mode\n"
+        << "  pattern   Hex byte sequence, e.g. deadbeef / 0xdeadbeef /0xDEADBEEF\n"
+        << "            Must contain an even number of hex digits\n"
+        << "\nExamples:\n"
+        << "  " << prog << " data.bin\n"
+        << "  " << prog << " data.bin deadbeef\n"
+        << "  " << prog << " data.bin 0xdeadbeef\n"
+        << "\nOutput:\n"
+        << "  Palindrome mode  Longest palindrome at position: <start offset>\n"
+        << "                   Content: <palindrome bytes in hex, 16 bytes per line>\n"
+        << "  Search mode      At <index>, offset: <match offset>, size: <pattern length>\n"
+        << "                   At most 1000 matches are reported\n"
+        << std::endl;
+}
 
 template <typename T>
 std::string parseVector(const std::vector<T>& vec)
@@ -50,44 +73,59 @@ std::vector<uint8_t> hexStringToBinary(const std::string& hex)
     return vec;
 }
 
+void processPalindromeFile(const std::string& filePath)
+{
+    try {
+        ManacherFileProcessor processor(16 * 1024 * 1024); // 16MB
+        auto target = processor.findLongestPalindrome(filePath);
+        std::cout << "Longest palindrome at position: " << target.first
+            << "\nContent: " << parseVector(target.second) << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+}
+
+int processSearchFile(const std::string& filePath, const char* patternText)
+{
+    auto vecBin = hexStringToBinary(patternText);
+    unsigned char* pattern = nullptr;
+    if (!vecBin.empty()) {
+        pattern = reinterpret_cast<unsigned char*>(vecBin.data());
+    }
+    KMPDetail* kmp = kmp_create(pattern, vecBin.size());
+    if (!kmp) {
+        std::cerr << "Failed to create KMP pattern." << std::endl;
+        return 1;
+    }
+    MatchedFrame frames[1000];
+    size_t found = kmp_get_frame(kmp, filePath.c_str(), frames, 1000);
+    std::cout << (found > 0 ? "Has" : "Not") << " found pattern: [" << parseVector(vecBin) << "]" << std::endl;
+    for (size_t i = 0; i < found; ++i) {
+        printf("At %zu, size: %zu, offset: 0x%08lx(%zu)\n", i + 1,
+            frames[i].length,
+            frames[i].offset,
+            frames[i].offset);
+    }
+    kmp_free(kmp);
+    return 0;
+}
+
 int main(int argc, char* argv[])
 {
     if (argc < 2) {
-        std::cerr << "Usage: " << argv[0] << " <filePath> [pattern]" << std::endl;
+        printUsage(argv[0], std::cerr);
         return 1;
     }
     std::string filePath = argv[1];
+    if (filePath == "-h" || filePath == "--help" || filePath == "help") {
+        printUsage(argv[0], std::cout);
+        return 0;
+    }
     std::cout << "Processing file: " << filePath << std::endl;
 
     if (argc < 3) {
-        try {
-            ManacherFileProcessor processor(16 * 1024 * 1024); // 16MB
-            auto target = processor.findLongestPalindrome(filePath);
-            std::cout << "Longest palindrome at position: " << target.first
-                << "\nContent: " << parseVector(target.second) << std::endl;
-        } catch (const std::exception& e) {
-            std::cerr << "Error: " << e.what() << std::endl;
-        }
-    } else {
-        auto vecBin = hexStringToBinary(argv[2]);
-        unsigned char* pattern = nullptr;
-        if (!vecBin.empty()) {
-            pattern = reinterpret_cast<unsigned char*>(vecBin.data());
-        }
-        KMPDetail* kmp = kmp_create(pattern, vecBin.size());
-        if (!kmp) {
-            std::cerr << "Failed to create KMP pattern." << std::endl;
-            return 1;
-        }
-        MatchedFrame frames[1000];
-        size_t found = kmp_get_frame(kmp, filePath.c_str(), frames, 1000);
-        std::cout << "Found pattern: [" << parseVector(vecBin) << "]" << std::endl;
-        for (size_t i = 0; i < found; ++i) {
-            printf("At %zu, offset: %zu, size: %zu\n", i + 1,
-                frames[i].offset,
-                frames[i].length);
-        }
-        kmp_free(kmp);
+        processPalindromeFile(filePath);
+        return 0;
     }
-    return 0;
+    return processSearchFile(filePath, argv[2]);
 }

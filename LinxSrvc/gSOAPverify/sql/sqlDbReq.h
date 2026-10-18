@@ -2,7 +2,9 @@
 #define _SQLOFDB_H
 
 #include <sys/socket.h>
+#ifdef HAVE_MYSQL
 #include <mysql/mysql.h>
+#endif
 #include <pthread.h>
 #include <iostream>
 #include <unistd.h>
@@ -38,6 +40,7 @@ struct queryParam {
     USR_MSG  msg;
 };
 
+#ifdef HAVE_MYSQL
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -50,5 +53,6 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
+#endif  // HAVE_MYSQL
 
 #endif

@@ -18,7 +18,7 @@ public:
     void close();
     int execute(const char* sql);
     char** query(const char* sql, int& row, int& column);
-    char** queryParam(const char* sql, int& row, int& column, ...);
+    char** queryParam(const char* sql, int& row, int& column, const char* fmt, ...);
     void free(char** pResult);
 
 private:
@@ -121,10 +121,12 @@ inline char** Sqlite::query(const char* sql, int& row, int& column)
  *        "d", (int64_t)42,    // INT64 参数
  *        nullptr              // 终止标记（必须）
  *    );
+ * 无绑定参数时：db.queryParam("select 1", row, col, nullptr);
  * 格式符: "s"=TEXT, "d"=INT64, "i"=INT32
- * @note 结尾必须传 nullptr 作为参数终止标记
+ * @note fmt 是变参之前的具名参数（va_start 不能锚定引用类型的 column），
+ *       后续仍按 fmt/值 成对传入，并以 nullptr 终止
  */
-inline char** Sqlite::queryParam(const char* sql, int& row, int& column, ...)
+inline char** Sqlite::queryParam(const char* sql, int& row, int& column, const char* fmt, ...)
 {
     row = 0;
     column = 0;
@@ -137,12 +139,10 @@ inline char** Sqlite::queryParam(const char* sql, int& row, int& column, ...)
     }
 
     va_list args;
-    va_start(args, column);
+    va_start(args, fmt);
     int idx = 1;
-    while (true) {
-        const char* fmt = va_arg(args, const char*);
-        if (!fmt) break;
-        switch (fmt[0]) {
+    for (const char* spec = fmt; spec != nullptr; spec = va_arg(args, const char*)) {
+        switch (spec[0]) {
         case 's': {
             const char* val = va_arg(args, const char*);
             sqlite3_bind_text(stmt, idx++, val, -1, SQLITE_TRANSIENT);
@@ -238,10 +238,10 @@ inline char** Sqlite::query(const char* sql, int& row, int& column)
     (void)sql; row = 0; column = 0;
     return nullptr;
 }
-inline char** Sqlite::queryParam(const char* sql, int& row, int& column, ...)
+inline char** Sqlite::queryParam(const char* sql, int& row, int& column, const char* fmt, ...)
 {
     SqliteStubWarn("queryParam");
-    (void)sql; row = 0; column = 0;
+    (void)sql; (void)fmt; row = 0; column = 0;
     return nullptr;
 }
 inline void Sqlite::free(char** x) { (void)x; }

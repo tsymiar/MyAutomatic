@@ -56,7 +56,7 @@ void TimeSeek::setFilesTime(const std::vector<SelectTime>& times, const std::str
     }
 }
 
-static SeekTimeContent parseFrameFirst(FILE* file, TimeDbMgr* dbMgr, int position = 0, long int targetHeader = CONST_FRAME_HEAD, uint32_t windSize = 1024)
+static SeekTimeContent parseFrameFirst(FILE* file, TimeDbMgr* dbMgr, int position = 0, uint64_t targetHeader = CONST_FRAME_HEAD, uint32_t windSize = 1024 * 64)
 {
     if (file == NULL) {
         return {};
@@ -65,7 +65,7 @@ static SeekTimeContent parseFrameFirst(FILE* file, TimeDbMgr* dbMgr, int positio
     fseek(file, 0, SEEK_END);
     uint64_t fileSize = ftell(file);
     fseek(file, position, SEEK_SET);
-    uint8_t buffer[windSize]; // 1MB
+    uint8_t buffer[windSize]; // 64K
     memset(buffer, 0, sizeof(buffer));
     size_t bytes = 0;
     int current = 0;
@@ -73,7 +73,7 @@ static SeekTimeContent parseFrameFirst(FILE* file, TimeDbMgr* dbMgr, int positio
     while ((bytes = fread(buffer, 1, sizeof(buffer), file)) > 0) {
         for (size_t i = 0; i <= bytes - sizeof(uint64_t); i++) {
             if (*(uint64_t*)(buffer + i) == targetHeader) {
-                UserFileFrameHeader* header = (UserFileFrameHeader*)(buffer + i);
+                UserFileFrame* header = (UserFileFrame*)(buffer + i);
                 if (header->timestamp == 0) {
                     printf("timestamp format error!\n");
                     break;
@@ -117,7 +117,7 @@ static SeekTimeContent parseFrameBack(FILE* file, uint32_t windSize)
         while ((bytes = fread(buff, 1, size, file)) > 0) {
             for (size_t i = bytes - sizeof(uint64_t); i > 0; i--) {
                 if (*(uint64_t*)(buff + i) == CONST_FRAME_HEAD) {
-                    UserFileFrameHeader* header = (UserFileFrameHeader*)(buff + i);
+                    UserFileFrame* header = (UserFileFrame*)(buff + i);
                     if (header->timestamp == 0) {
                         printf("timestamp format error!\n");
                         break;
@@ -160,7 +160,7 @@ SeekTimeContent TimeSeek::parseFileFrame(SelectOffset position, int64_t timestam
         for (size_t i = 0; i <= bytes - sizeof(uint64_t); i++) {
             size_t idx = i;
             if (*(uint64_t*)(buffer + idx) == CONST_FRAME_HEAD) {
-                UserFileFrameHeader* header = (UserFileFrameHeader*)(buffer + idx);
+                UserFileFrame* header = (UserFileFrame*)(buffer + idx);
                 if (header->timestamp > timestamp) {
                     position.last = curpos + idx;
                 } else {
@@ -239,10 +239,10 @@ bool getTimefromDatabase(TimeDbMgr* dbMgr, SelectValue selectValue, SeekTimeCont
             fileinfo.value = seekOffsets[v - 1];
             fileinfo.param = selectValue.average();
             fileinfos.emplace_back(fileinfo);
+            return true;
         } else {
-            LOG_ERR("Not find file time from %lu to %lu.", selectValue.first, selectValue.last);
+            LOG_WRN("Not find file time from %lu to %lu.", selectValue.first, selectValue.last);
         }
-        return true;
     }
     return false;
 }
@@ -339,7 +339,7 @@ std::vector<SeekTimeContent> TimeSeek::sortFramebyTime(SelectOffset selectOffset
         while ((bytes = fread(frmBuff, 1, sizeof(frmBuff), m_file)) > 0) {
             for (size_t i = 0; i <= bytes - sizeof(uint64_t); i++) {
                 if (*(uint64_t*)(frmBuff + i) == CONST_FRAME_HEAD) {
-                    UserFileFrameHeader* header = (UserFileFrameHeader*)(frmBuff + i);
+                    UserFileFrame* header = (UserFileFrame*)(frmBuff + i);
                     comidx.value.offset = position + i;
                     comidx.value.size = header->len;
                     comidx.value.timestamp = header->timestamp;
