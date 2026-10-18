@@ -15,14 +15,20 @@ FLAG ?= -Wall -g -DNS_DBG -std=c++11
 PTHD := -lpthread
 
 # MySQL 头文件/库：优先 pkg-config，其次 mysql_config
-MYSQL_CFLAGS := $(shell pkg-config --cflags mysqlclient 2>/dev/null \
+MYSQL_CFLAGS ?= $(shell pkg-config --cflags mysqlclient 2>/dev/null \
                   || mysql_config --cflags 2>/dev/null)
-MYSQL_LIBS   := $(shell pkg-config --libs mysqlclient 2>/dev/null \
+MYSQL_LIBS   ?= $(shell pkg-config --libs mysqlclient 2>/dev/null \
                   || mysql_config --libs 2>/dev/null)
-HAVE_MYSQL   := $(if $(MYSQL_LIBS),yes,$(shell test -f /usr/include/mysql/mysql.h && echo yes))
+HAVE_MYSQL := $(shell echo 'int main(){mysql_library_init(0,0,0);return 0;}' \
+                | $(CXX) $(MYSQL_CFLAGS) -include mysql/mysql.h -x c++ - -o /dev/null \
+                  $(MYSQL_LIBS) >/dev/null 2>&1 && echo yes)
 
 SRCS := soap/soapC.cpp soap/stdsoap2.cpp soap/soapServer.cpp \
-        sys/status.cc  sql/sqlDbReq.cc  main/mainSoap.cc
+        sys/status.cc  main/mainSoap.cc
+ifeq ($(HAVE_MYSQL),yes)
+FLAG += -DHAVE_MYSQL
+SRCS += sql/sqlDbReq.cc
+endif
 OBJS := $(addprefix $(OBJ)/,$(patsubst %.cc,%.o,$(patsubst %.cpp,%.o,$(SRCS))))
 
 PREFIX ?= /usr/sbin
@@ -33,15 +39,14 @@ all: gSOAPverify
 
 gSOAPverify: check-mysql $(TGT)
 
-# 没装 MySQL 开发库时必须真的失败，不能只打印成功
+# 提示是否构建 MySQL
 check-mysql:
-ifeq ($(HAVE_MYSQL),)
-	@echo "\033[31mERROR\033[0m: MySQL/MariaDB 客户端开发库未找到，无法构建。" >&2; \
-	 echo "  Debian/Ubuntu: sudo apt install libmysql++-dev" >&2; \
-	 echo "  RHEL/CentOS  : sudo yum install mariadb-devel" >&2; \
-	 exit 1
+ifeq ($(HAVE_MYSQL),yes)
+	@echo "-- MySQL: \033[32menabled\033[0m"
 else
-	@true
+	@echo "-- MySQL/MariaDB 客户端开发库未找到，跳过 mysql 相关代码。"
+	@echo "   如需启用: Debian/Ubuntu: sudo apt install libmysql++-dev"
+	@echo "             RHEL/CentOS  : sudo yum install mariadb-devel"
 endif
 
 $(TGT): $(OBJS)
@@ -58,7 +63,7 @@ $(OBJ)/%.o: %.cc
 	@mkdir -p $(dir $@)
 	$(CXX) $(FLAG) -I.. $(MYSQL_CFLAGS) -c $< -o $@
 
-# 只清理本项目产物：../out/gSOAPverify 与 ../bin/gSOAPverify
+# 清理产物：../out/gSOAPverify 与 ../bin/gSOAPverify
 clean:
 	@rm -rf $(OBJ)
 	@rm -f $(TGT)

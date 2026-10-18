@@ -146,7 +146,7 @@ bool SeekDbMgr::isTableExist()
 int SeekDbMgr::createTable()
 {
     if (isTableExist()) {
-        return 0;
+        return clearTable();
     }
     char sql[SQL_LEN] = { 0 };
     snprintf(sql, SQL_LEN, "create table %s(id integer primary key autoincrement, %s integer, %s large integer, %s integer, %s integer, %s integer)",
@@ -183,6 +183,27 @@ int SeekDbMgr::createTable()
         return ret;
     }
 
+    return 0;
+}
+
+int SeekDbMgr::clearTable()
+{
+    std::lock_guard<std::mutex> lock(m_lock);
+    const char* tables[] = { TABLE_SEEK_TIME, TABLE_FILE_MAPPING };
+    for (const char* table : tables) {
+        if (!DBbase::isTableExist(table)) {
+            continue;
+        }
+        char sql[SQL_LEN] = { 0 };
+        snprintf(sql, SQL_LEN, "delete from %s", table);
+        string sqlStatement = sql;
+        printf("SQLITE:[ %s ]\n", sqlStatement.c_str());
+        int ret = executeSql(sqlStatement);
+        if (ret != 0) {
+            LOG_ERR("clear %s failed(sql=%s) error: %d!", table, sqlStatement.c_str(), ret);
+            return ret;
+        }
+    }
     return 0;
 }
 

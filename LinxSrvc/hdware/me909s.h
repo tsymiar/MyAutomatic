@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <termios.h>
+#include <time.h>
 
 #define TIME_WAIT 10000
 #define MAX_BUF_LEN 1024
@@ -44,7 +45,6 @@ int mem_usb_check()
         perror("WARN: fail to read usb list file");
         return -1;
     }
-    char* vendor, * prodid;
     size_t maxlinesize = 256;
     char* strperline = (char*)malloc(maxlinesize);
     if (strperline == NULL) {
@@ -55,8 +55,8 @@ int mem_usb_check()
     while (!feof(fusb) && fgets(strperline, maxlinesize - 1, fusb) != NULL) {
         if (strperline[strlen(strperline) - 1] == '\n') {
             if (strperline[0] == 'P') {
-                vendor = strstr(strperline, "Vendor=");
-                prodid = strstr(strperline, "ProdID=");
+                char* vendor = strstr(strperline, "Vendor=");
+                char* prodid = strstr(strperline, "ProdID=");
                 if (vendor && prodid && memcmp("12d1", vendor + 7, 4) == 0 && memcmp("15c1", prodid + 7, 4) == 0) {
                     free(strperline);
                     fclose(fusb);

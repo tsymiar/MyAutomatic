@@ -22,7 +22,7 @@ typedef int soap_socket_t;
 
 extern pthread_mutex_t  queue_lock;
 extern pthread_cond_t   queue_cond;
-extern soap_socket_t    queue[MAX_QUEUE];
+extern soap_socket_t    sock_queue[MAX_QUEUE];
 extern int              head, tail;
 extern unsigned long    ips[MAX_QUEUE];
 

@@ -26,6 +26,7 @@ public:
 	virtual bool isTableExist();
 
 	virtual int createTable();
+	virtual int clearTable();
 	virtual int addIndexNoDuplex(void* pIndex);
 
 	virtual int getTargetFragmentByTime(int64_t time, int32_t duration, SeekTimeContent* content);

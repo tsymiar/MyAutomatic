@@ -6,9 +6,6 @@
 #include <iostream>
 #include <sys/time.h>
 
-// Shared helpers (getFileAsCstring / getVariable ...) live in ../../include/Utils.h
-#include "../include/Utils.h"
-
 #ifndef MAX_NAME_LEN
 #define MAX_NAME_LEN 128
 #endif
@@ -26,6 +23,8 @@
 #define CONST_FRAME_HEAD (0x1234567890abcdefULL)
 #define SEEK_FRAME_HEAD (0x1122334455667788ULL)
 
+#pragma pack(push)
+#pragma pack(4)
 struct ProjectFrame {
     uint64_t syncHead;
     uint64_t utctime;
@@ -37,14 +36,13 @@ struct ProjectFrame {
         size = 0;
     }
 };
-
-struct UserFileFrameHeader {
+struct UserFileFrame {
     uint64_t header;
     uint64_t timestamp;
     uint32_t id;
     uint32_t len;
     uint64_t tail;
-    UserFileFrameHeader()
+    UserFileFrame()
     {
         header = CONST_FRAME_HEAD;
         id = 0;
@@ -52,7 +50,6 @@ struct UserFileFrameHeader {
         timestamp = 0;
     }
 };
-
 struct SeekTimeValue {
     uint64_t timestamp;
     uint64_t offset;
@@ -62,9 +59,6 @@ struct SeekTimeValue {
         timestamp = offset = size = 0;
     }
 };
-
-#pragma pack(push)
-#pragma pack(4)
 typedef struct tagSeekTimeContent {
     char fileName[MAX_NAME_LEN];
     uint32_t fileid = 1;

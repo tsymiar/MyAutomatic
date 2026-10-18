@@ -23,12 +23,12 @@ void TimeDbMgr::disconnect()
 void TimeDbMgr::create()
 {
     char sql[SQL_LEN];
-    sprintf(sql, "create table %s(id integer primary key autoincrement, %s integer, %s integer, %s integer, %s integer)",
+    snprintf(sql, sizeof(sql), "create table %s(id integer primary key autoincrement, %s integer, %s integer, %s integer, %s integer)",
         TABLE_SEEK_TIME, FIELD_TIMESTAMP, FIELD_OFFSET, FIELD_SIZE, FIELD_FILEID);
     PR_SQL(sql);
-    sprintf(sql, "create index if not exists id on %s(%s)", TABLE_SEEK_TIME, FIELD_TIMESTAMP);
+    snprintf(sql, sizeof(sql), "create index if not exists id on %s(%s)", TABLE_SEEK_TIME, FIELD_TIMESTAMP);
     PR_SQL(sql);
-    sprintf(sql, "create table %s(id integer primary key autoincrement, %s char(128), %s integer, %s integer, %s integer, %s integer, %s char(16))",
+    snprintf(sql, sizeof(sql), "create table %s(id integer primary key autoincrement, %s char(128), %s integer, %s integer, %s integer, %s integer, %s char(16))",
         TABLE_FILE_MAPPING, FIELD_FILENAME,
         FIELD_FIRST_OFFSET, FIELD_LAST_OFFSET,
         FIELD_FIRST_TIME, FIELD_LAST_TIME,
@@ -48,7 +48,7 @@ int TimeDbMgr::queryTimeOffset(SelectValue seek, std::vector<SeekTimeValue>& see
     if (fileid != 0)
         fileid1 = fileid;
     char sql[SQL_LEN] = { 0 };
-    sprintf(sql, "select %s,%s,%s,%s from %s where %s>=%lu and %s<=%lu and %s=%d ",
+    snprintf(sql, sizeof(sql), "select %s,%s,%s,%s from %s where %s>=%lu and %s<=%lu and %s=%d ",
         FIELD_TIMESTAMP,
         FIELD_OFFSET,
         FIELD_SIZE,
@@ -99,7 +99,7 @@ void TimeDbMgr::insertContentNoDuplex(SeekTimeContent* content)
     }
     ssql = "";
     char sql[SQL_LEN] = { 0 };
-    sprintf(sql, "insert into %s(%s,%s,%s,%s)",
+    snprintf(sql, sizeof(sql), "insert into %s(%s,%s,%s,%s)",
         TABLE_SEEK_TIME,
         FIELD_TIMESTAMP,
         FIELD_OFFSET,
@@ -107,7 +107,7 @@ void TimeDbMgr::insertContentNoDuplex(SeekTimeContent* content)
         FIELD_FILEID);
     ssql += sql;
 
-    sprintf(sql, "SELECT %lu,%lu,%lu,%d WHERE NOT EXISTS",
+    snprintf(sql, sizeof(sql), "SELECT %lu,%lu,%lu,%d WHERE NOT EXISTS",
         content->value.timestamp,
         content->value.offset,
         content->value.size,
@@ -115,7 +115,7 @@ void TimeDbMgr::insertContentNoDuplex(SeekTimeContent* content)
     content->fileid = fileid;
     ssql += sql;
 
-    sprintf(sql, "(SELECT 1 FROM %s WHERE %s = %lu);",
+    snprintf(sql, sizeof(sql), "(SELECT 1 FROM %s WHERE %s = %lu);",
         TABLE_SEEK_TIME,
         FIELD_OFFSET,
         content->value.offset);
@@ -131,7 +131,7 @@ int TimeDbMgr::getFileIdbyName(const std::string& filename, int& fileid)
         return -1;
     }
     char sql[SQL_LEN] = { 0 };
-    sprintf(sql, "select id from %s where %s='%s' ",
+    snprintf(sql, sizeof(sql), "select id from %s where %s='%s' ",
         TABLE_FILE_MAPPING,
         FIELD_FILENAME,
         filename.c_str());
