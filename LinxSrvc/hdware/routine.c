@@ -77,7 +77,7 @@ static int read_frame(Callback callback, void* flag)
         if (data_buff == NULL || data_buff[0].start == NULL
             || data_buff[0].length == 0)
             break;
-        ssize_t rd = read(fd, data_buff[0].start, data_buff[0].length);
+        ssize_t rd = read(fd, data_buff[0].start, data_buff[0].length); /*Flawfinder: ignore*/
         if (-1 == rd) {
             switch (errno) {
             case EAGAIN:

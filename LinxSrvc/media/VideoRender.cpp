@@ -453,7 +453,7 @@ private:
                     // perform read with EINTR handling and allow partial reads
                     ssize_t bytes = 0;
                     while (true) {
-                        bytes = ::read(vi_fd, static_cast<uint8_t*>(ptr) + total, static_cast<size_t>(to_read));
+                        bytes = ::read(vi_fd, static_cast<uint8_t*>(ptr) + total, static_cast<size_t>(to_read)); /*Flawfinder: ignore*/
                         if (bytes < 0) {
                             if (errno == EINTR) continue; // retry on interruption
                             munmap(ptr, map_len);

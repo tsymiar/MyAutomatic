@@ -503,7 +503,7 @@ void GenericHandler(struct evhttp_request* req_ptr, void* param)
             // Close the write end first: otherwise read() never sees EOF if the child dies
             close(filedes[1]);
             int childStatus = 0;
-            const ssize_t stLen = read(filedes[0], &childStatus, sizeof(childStatus));
+            const ssize_t stLen = read(filedes[0], &childStatus, sizeof(childStatus)); /*Flawfinder: ignore*/
             if (stLen == (ssize_t)sizeof(childStatus)) {
                 status = childStatus; // 仅完整读取后才生效, 避免半包数据被当作状态
             } else {

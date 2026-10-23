@@ -44,9 +44,9 @@ check-mysql:
 ifeq ($(HAVE_MYSQL),yes)
 	@echo "-- MySQL: \033[32menabled\033[0m"
 else
-	@echo "-- MySQL/MariaDB 客户端开发库未找到，跳过 mysql 相关代码。"
-	@echo "   如需启用: Debian/Ubuntu: sudo apt install libmysql++-dev"
-	@echo "             RHEL/CentOS  : sudo yum install mariadb-devel"
+	@echo "-- MySQL/MariaDB client development libraries not found, skipping mysql code."
+	@echo "   To enable:  Debian/Ubuntu: sudo apt install libmysql++-dev"
+	@echo "               RHEL/CentOS  : sudo yum install mariadb-devel"
 endif
 
 $(TGT): $(OBJS)

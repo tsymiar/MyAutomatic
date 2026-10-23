@@ -615,12 +615,10 @@ void parseArgs(int argc, char** argv)
         usageExit(1, argvBase);
     }
 
-    argv += optind;
     argc -= optind;
 
     if (argc > 1) {
         fprintf(stderr, "[ERROR] invalid arguments.\n");
-        /* argv 已前移，程序名要从 argvBase 取 */
         usageExit(1, argvBase);
     }
 }

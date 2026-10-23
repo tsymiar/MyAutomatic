@@ -101,7 +101,7 @@ int processSearchFile(const std::string& filePath, const char* patternText)
     size_t found = kmp_get_frame(kmp, filePath.c_str(), frames, 1000);
     std::cout << (found > 0 ? "Has" : "Not") << " found pattern: [" << parseVector(vecBin) << "]" << std::endl;
     for (size_t i = 0; i < found; ++i) {
-        printf("At %zu, size: %zu, offset: 0x%08lx(%zu)\n", i + 1,
+        printf("At %zu, size: %zu, offset: 0x%08zx(%zu)\n", i + 1,
             frames[i].length,
             frames[i].offset,
             frames[i].offset);

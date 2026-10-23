@@ -297,7 +297,7 @@ int main(int argc, char* argv[])
         signal(SIGPIPE, pipesig_handler);
         prctl(PR_SET_NAME, "inst_mssg", 0, 0, 0);
         // 最严格掩码: 仅属主可读写执行, 必须早于 inst_mssg 创建任何文件/管道 (CWE-732)
-        umask(077);
+        umask(077); /*Flawfinder: ignore*/
         inst_mssg(argc, argv);
         setsid();
         chdir("/");
@@ -1342,7 +1342,7 @@ void func_waitpid(int signo)
         while (total >= 0 && total < expect) {
             const size_t remain = static_cast<size_t>(expect - total);
             // total ∈ [0, expect), remain = expect - total
-            ssize_t len = read(g_filedes[0], sock_0 + total, remain);
+            ssize_t len = read(g_filedes[0], sock_0 + total, remain); /*Flawfinder: ignore*/
             if (len > 0) {
                 if (len > static_cast<ssize_t>(remain)) {
                     fprintf(stderr, "Buffer overflow prevented: expects %zd, got %zd!\n", expect, total + len);
