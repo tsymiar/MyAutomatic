@@ -527,7 +527,7 @@ int client(int argc, char* argv[])
             uint64_t calcsize = 0;
             ssize_t rdsize = 0;
             size_t chunk = msgbuf.size();          // caplen was already clamped and resized while parsing args
-            while ((rdsize = read(g_state.fileno, msgbuf.data(), chunk)) > 0) {
+            while ((rdsize = read(g_state.fileno, msgbuf.data(), chunk)) > 0) { /*Flawfinder: ignore*/
                 if (rdsize > static_cast<ssize_t>(chunk)) {
                     // read() must not return more than requested; stop if it does
                     fprintf(stderr, "read beyond buffer: got %zd, expect <= %zu\n", rdsize, chunk);

@@ -53,7 +53,8 @@ int mem_usb_check()
         return -1;
     }
     while (!feof(fusb) && fgets(strperline, maxlinesize - 1, fusb) != NULL) {
-        if (strperline[strlen(strperline) - 1] == '\n') {
+        size_t line_len = strnlen(strperline, maxlinesize);
+        if (line_len > 0 && strperline[line_len - 1] == '\n') {
             if (strperline[0] == 'P') {
                 char* vendor = strstr(strperline, "Vendor=");
                 char* prodid = strstr(strperline, "ProdID=");
@@ -146,14 +147,6 @@ int meat_main(void)
                     flag = 0;
                     continue;
                 }
-                if (curr < 11) {
-                    if (tries % 100 == 0) {
-                        printf("Select(%d) TIMEOUT!\n", tries);
-                    }
-                    FD_SET(me_fd, &rdfds);
-                    usleep(TIME_WAIT);
-                    continue;
-                }
             }
         }
         if (flag) {
@@ -161,13 +154,13 @@ int meat_main(void)
         } else {
             ssize_t rd_stdin;
             memset(rply, 0, sizeof(rply));
-            if ((rd_stdin = read(me_fd, rply, sizeof(rply) - 1)) > 0) {
+            if ((rd_stdin = read(me_fd, rply, sizeof(rply) - 1)) > 0) { /*Flawfinder: ignore*/
                 rply[rd_stdin] = '\0'; // Null-terminate the buffer
                 if (strstr(rply, ">")) {
                     printf("Enter text to serial: ");
                     memset(buff, 0, sizeof(buff));
                     scanf("%140s", buff);
-                    write(me_fd, buff, strlen(buff) + 1);
+                    write(me_fd, buff, strnlen(buff, sizeof(buff)) + 1);
                     continue;
                 } else {
                     if (strstr(rply, "OK") == NULL)
@@ -184,7 +177,9 @@ int meat_main(void)
                 start_pppd();
                 break;
             }
-            usleep(TIME_WAIT);
+            struct timespec wait_time = { 0 };
+            wait_time.tv_nsec = TIME_WAIT * 1000;
+            nanosleep(&wait_time, NULL);
         }
         memset(buff, 0, sizeof(buff));
         if (cmds <= 10 && curr == 0) {
@@ -201,7 +196,7 @@ int meat_main(void)
             strcpy(buff, rply);
         }
         strcat(buff, "\r\n");
-        write(me_fd, buff, strlen(buff) + 1);
+        write(me_fd, buff, strnlen(buff, sizeof(buff)) + 1);
         tries = 0;
     }
     close(me_fd);

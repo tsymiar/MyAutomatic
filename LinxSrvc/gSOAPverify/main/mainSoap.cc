@@ -525,11 +525,6 @@ int api__login_by_key(struct soap* soap, char* usr, char* psw,
             sch.rslt.flag = -2;
             printf("[OUT]:\tqueryParam.rslt is null (ret=%d).\n", ret);
         }
-#else
-        // 未启用 MySQL，无法查库认证
-        param.msg.flag = false;
-        sch.rslt.flag = -4;
-#endif
         if (param.msg.flag) {
             // param 是栈上变量，直接保存它的数组成员地址会变成悬垂指针；
             // 必须用 soap 上下文分配，生命周期才覆盖到本次响应序列化结束。
@@ -541,6 +536,10 @@ int api__login_by_key(struct soap* soap, char* usr, char* psw,
                 cout << "tell:" << sch.rslt.tell;
             cout << endl;
         }
+#else
+        // 未启用 MySQL，无法查库认证
+        sch.rslt.flag = -4;
+#endif
     }
     return SOAP_OK;
 }

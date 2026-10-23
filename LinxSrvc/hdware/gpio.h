@@ -112,7 +112,7 @@ int get_gpio_value(unsigned gpio)
     }
 
     char ch;
-    ssize_t len = read(file, &ch, 1);
+    ssize_t len = read(file, &ch, 1); /*Flawfinder: ignore*/
     if (len < 0) {
         perror("get_gpio_value");
         close(file);

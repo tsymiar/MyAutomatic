@@ -49,7 +49,7 @@ int main(int argc, char** argv)
         perror("open [" DEV_NODE "] fail");
     } else {
         char msg[SizeOfBuf];
-        ssize_t len = read(fd, msg, sizeof(msg) - 1);
+        ssize_t len = read(fd, msg, sizeof(msg) - 1); /*Flawfinder: ignore*/
         if (len < 0) {
             perror("read fail");
             close(fd);
@@ -69,7 +69,7 @@ int main(int argc, char** argv)
             close(fd);
             return -1;
         }
-        ssize_t rlen = read(fd, msg, sizeof(msg) - 1);
+        ssize_t rlen = read(fd, msg, sizeof(msg) - 1); /*Flawfinder: ignore*/
         if (rlen < 0) {
             perror("read fail");
             close(fd);

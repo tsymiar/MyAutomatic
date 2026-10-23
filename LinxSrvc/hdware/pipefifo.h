@@ -157,10 +157,12 @@ int pipe_fifo_test(long long flag, int value)
         if (flag == 1) {
             pp0ff = read_fifo(flag);
             stat = pp0ff.flag;
-            printf("FIFO reads: { %d, %lld, %p }, ", pp0ff.value, pp0ff.flag, pp0ff.reserve);
+            printf("FIFO reads: { %d, %lld, %p }, stat = %d.\n",
+                pp0ff.value, pp0ff.flag, pp0ff.reserve, stat);
         } else if (flag == 2) {
             stat = write_fifo(&pp0ff);
-            printf("FIFO wrote: { %d, %lld, %p }, ", pp0ff.value, pp0ff.flag, pp0ff.reserve);
+            printf("FIFO wrote: { %d, %lld, %p }, stat = %d.\n",
+                pp0ff.value, pp0ff.flag, pp0ff.reserve, stat);
         } else {
             printf("stat=%d, %s.\n", stat, hint);
         }
