@@ -37,6 +37,9 @@ __pycache__
 *.pyc
 *.egg-info
 
+# gen by gSOAPverify/soap/gen_client_fix.py
+gSOAPverify/fix/soapClient_fix.cpp
+
 # Visual Studio
 .vs*
 *.user

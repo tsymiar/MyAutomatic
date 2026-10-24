@@ -33,7 +33,7 @@ OBJS := $(addprefix $(OBJ)/,$(patsubst %.cc,%.o,$(patsubst %.cpp,%.o,$(SRCS))))
 
 PREFIX ?= /usr/sbin
 
-.PHONY: all gSOAPverify check-mysql clean clear install
+.PHONY: all gSOAPverify check-mysql fix clean clear install
 
 all: gSOAPverify
 
@@ -62,6 +62,10 @@ $(OBJ)/%.o: %.cpp
 $(OBJ)/%.o: %.cc
 	@mkdir -p $(dir $@)
 	$(CXX) $(FLAG) -I.. $(MYSQL_CFLAGS) -c $< -o $@
+
+# Windows 侧编译的 fix/soapClient_fix.cpp 由 soap/soapClient.cpp 派生，编译前生成
+fix:
+	@python3 soap/gen_client_fix.py
 
 # 清理产物：../out/gSOAPverify 与 ../bin/gSOAPverify
 clean:

@@ -104,6 +104,11 @@
     <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
     <IntDir>$(SolutionDir)MFC\</IntDir>
   </PropertyGroup>
+  <ItemDefinitionGroup>
+    <PreBuildEvent>
+      <Command>python "$(ProjectDir)..\..\LinxSrvc\gSOAPverify\soap\gen_client_fix.py" || exit /b 0</Command>
+    </PreBuildEvent>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -145,10 +150,8 @@
     <ProjectReference>
       <UseLibraryDependencyInputs>true</UseLibraryDependencyInputs>
     </ProjectReference>
-    <PreBuildEvent />
     <PreBuildEvent>
-      <Command>
-      </Command>
+      <Command>python "$(ProjectDir)..\..\LinxSrvc\gSOAPverify\soap\gen_client_fix.py" || exit /b 0</Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>
