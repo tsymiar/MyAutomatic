@@ -93,6 +93,11 @@
     <IntDir>$(SolutionDir)cache\testUtils\</IntDir>
     <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
   </PropertyGroup>
+  <ItemDefinitionGroup>
+    <PreBuildEvent>
+      <Command>python "$(ProjectDir)..\..\LinxSrvc\gSOAPverify\soap\gen_client_fix.py" || exit /b 0</Command>
+    </PreBuildEvent>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>

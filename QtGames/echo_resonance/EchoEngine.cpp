@@ -1154,30 +1154,12 @@ bool EchoEngine::isSilenceMorseReady() const
 
 void EchoEngine::initSpirits()
 {
-    m_spirits = {
-        { SpiritKind::PrimeEcho, "原初嗡鸣", "万声之母", "它是起源，也是审判者。", 0.0f, false },
-        { SpiritKind::Mirror, "镜声灵", "反射之灵", "它渴求真相，哪怕真相刺穿你。", 0.0f, false },
-        { SpiritKind::Silence, "默声灵", "消除之灵", "它渴望寂静，代价是你的记忆。", 0.0f, false },
-        { SpiritKind::Lie, "谎声灵", "伪造之灵", "它以谎言为食，也会用谎言喂养你。", 0.0f, false },
-        { SpiritKind::Shattered, "碎璃声灵", "背叛之灵", "它附身于背叛者的脚步声。", 0.0f, false },
-        { SpiritKind::Wrath, "愤怒声灵", "暴怒之灵", "它煽动你的怒火，再从中取暖。", 0.0f, false },
-    };
+    m_spirits = defaultSpirits();
 }
 
 void EchoEngine::initSoulFragments()
 {
-    m_soulFragments.clear();
-    m_nextSoulFragmentId = 0;
-    const char* fragNames[] = { "眉骨", "左眼", "右眼", "鼻梁", "唇角", "下颌" };
-    for (const char* n : fragNames) {
-        SoulFragment f;
-        f.id = m_nextSoulFragmentId++;
-        f.name = QString::fromUtf8(n);
-        f.source = "割舍的声音";
-        f.collected = false;
-        f.glowing = false;
-        m_soulFragments.push_back(f);
-    }
+    resetSoulFragments(m_soulFragments, m_nextSoulFragmentId);
 }
 
 SpiritInfo* EchoEngine::findSpirit(SpiritKind kind)

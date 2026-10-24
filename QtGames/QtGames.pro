@@ -145,6 +145,9 @@ contains(DEFINES, ECHO_RESONANCE) {
                echo_resonance/DeductionBoardWidget.h
     SOURCES += echo_resonance/EchoEngine.cpp \
                echo_resonance/EchoMainWindow.cpp \
+               echo_resonance/EchoMainWindowRender.cpp \
+               echo_resonance/EchoMainWindowOverlay.cpp \
+               echo_resonance/EchoMainWindowGL.cpp \
                echo_resonance/DeductionEngine.cpp \
                echo_resonance/DeductionAudio.cpp \
                echo_resonance/DeductionBoardWidget.cpp

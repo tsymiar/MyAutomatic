@@ -169,6 +169,36 @@ struct SoulFragment {
     bool glowing = false; // 泛光状态
 };
 
+// 声灵库与灵魂碎片的默认数据由推演盘和回响引擎共用，避免两处各存一份副本
+inline std::vector<SpiritInfo> defaultSpirits()
+{
+    return {
+        { SpiritKind::PrimeEcho, "原初嗡鸣", "万声之母", "它是起源，也是审判者。", 0.0f, false },
+        { SpiritKind::Mirror, "镜声灵", "反射之灵", "它渴求真相，哪怕真相刺穿你。", 0.0f, false },
+        { SpiritKind::Silence, "默声灵", "消除之灵", "它渴望寂静，代价是你的记忆。", 0.0f, false },
+        { SpiritKind::Lie, "谎声灵", "伪造之灵", "它以谎言为食，也会用谎言喂养你。", 0.0f, false },
+        { SpiritKind::Shattered, "碎璃声灵", "背叛之灵", "它附身于背叛者的脚步声。", 0.0f, false },
+        { SpiritKind::Wrath, "愤怒声灵", "暴怒之灵", "它煽动你的怒火，再从中取暖。", 0.0f, false },
+    };
+}
+
+// 六块碎片拼成林薇母亲的脸，id 从 0 连续编号，收集逻辑按下标索引
+inline void resetSoulFragments(std::vector<SoulFragment>& fragments, int& nextId)
+{
+    fragments.clear();
+    nextId = 0;
+    const char* fragNames[] = { "眉骨", "左眼", "右眼", "鼻梁", "唇角", "下颌" };
+    for (const char* n : fragNames) {
+        SoulFragment f;
+        f.id = nextId++;
+        f.name = QString::fromUtf8(n);
+        f.source = "割舍的声音";
+        f.collected = false;
+        f.glowing = false;
+        fragments.push_back(f);
+    }
+}
+
 // ── 契约（与声灵缔结）──
 enum class ContractSpirit {
     None,
