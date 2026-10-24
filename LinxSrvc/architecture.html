@@ -95,9 +95,9 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <div class="cd"><h4>🔧 技术栈（按 linker / 依赖实际出现）</h4>
 <div class="tags"><span class="t tb">C</span><span class="t tb">C++11/17/20</span><span class="t ty">Python 3</span><span class="t to">Swift 5.9</span><span class="t tk">TypeScript</span><span class="t tc">Shell</span><span class="t tg2">libevent2</span><span class="t tg2">libwebsockets</span><span class="t tr">gSOAP 2.8.106</span><span class="t tp">SQLite3</span><span class="t tp">MySQL C API</span><span class="t to">cURL</span><span class="t tz">FFmpeg / SDL2</span><span class="t tz">DRM / GBM / EGL / V4L2</span><span class="t tc">librdmacm / libibverbs</span><span class="t tg2">pthread</span><span class="t tg2">GoogleTest + lcov</span><span class="t tp">PyTorch / PEFT</span><span class="t ty">OpenMP</span></div></div>
 <div class="cd"><h4>🏢 架构特性</h4>
-<div class="tags"><span class="t tg2">模块化分目录自治</span><span class="t tb">跨平台</span><span class="t ty">事件驱动 Reactor</span><span class="t ty">fork-per-connection</span><span class="t ty">线程池 / 环形队列</span><span class="t tr">内核模块（字符设备/FPGA/RDMA/物理内存）</span><span class="t tk">SwiftUI + C++ 桥接</span><span class="t tc">AI 原生（LoRA / DeepSeek / LSTM）</span></div>
+<div class="tags"><span class="t tg2">模块化分目录自治</span><span class="t tb">跨平台</span><span class="t ty">事件驱动 Reactor</span><span class="t ty">fork-per-connection</span><span class="t ty">线程池 / 环形队列</span><span class="t tr">内核模块（字符设备/FPGA/RDMA/物理内存）</span><span class="t tk">SwiftUI + C++ 桥接</span><span class="t tc">AI 原生（LoRA / DeepSeek / LSTM）</span><span class="t tz">静态扫描注解（Flawfinder / bandit nosec）</span></div>
 <div class="dv"></div>
-<p style="font-size:.68rem;color:var(--t2)">两大并行构建链：<b style="color:var(--bl2)">CMake</b>（e.g / media / dpsk / gn1 / diff / lookup / mock）与 <b style="color:var(--yl)">Make</b>（IM / hdware / thread / webevs / gSOAPverify + 转发 cmake + pyex / vs-extension），二者<b style="color:var(--rd2)">互不覆盖</b>，详见「构建地图」。</p></div>
+<p style="font-size:.68rem;color:var(--t2)">两大并行构建链：<b style="color:var(--bl2)">CMake</b>（e.g / media / dpsk / gn1 / diff / lookup / mock）与 <b style="color:var(--yl)">Make</b>（IM / hdware / thread / webevs / gSOAPverify + 转发 cmake + Mac/Transfer（仅 Darwin）+ pyex / vs-extension），二者<b style="color:var(--rd2)">互不覆盖</b>，详见「构建地图」。</p></div>
 </div>
 <div class="cd"><div class="cd2">
 <div style="text-align:center;margin-bottom:.4rem"><div class="n c1"><div class="lb" style="font-size:.72rem">LinxSrvc 双构建入口</div><div class="ln">根目录 build.sh（按目录有无 CMakeLists 分发） / 根目录 Makefile（串行编排全部）</div></div></div>
@@ -135,16 +135,17 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <div class="cd" style="margin-top:.7rem"><h3>📁 目录结构</h3>
 <pre>LinxSrvc/
 ├── CMakeLists.txt      # CMake 链入口：ADD_SUBDIRECTORY(e.g media dpsk gn1 diff lookup mock)
-├── Makefile            # Make 链入口：IM → hdware → thread → webevs → gSOAPverify → cmake → pyex → vs-extension
+├── Makefile            # Make 链入口：IM → hdware → thread → webevs → gSOAPverify → cmake → Mac/Transfer(仅 Darwin) → pyex → vs-extension
 ├── include/            # 公共头 (String_-inl.h, Structures.h, Utils.h 单头 inline 实现；Utils.h 亦被 lookup/common.h 复用)
-├── cyber/              # LLM LoRA 微调 (PyTorch + PEFT + BitsAndBytes 4bit)
+├── cyber/              # LLM LoRA 微调 (PyTorch + PEFT + BitsAndBytes 4bit；scripts/ + utils/ + data/ + params/)
 ├── dpsk/               # DeepSeek API 客户端 (cURL + nlohmann_json · 流式)
 ├── diff/               # 源码相似度 / 抄袭度分析 (单文件 C++17)
 ├── e.g/                # CMake 工程模板骨架
 ├── gSOAPverify/        # gSOAP 2.8.106 SOAP 服务 (soap/ sql/ sys/ main/ file/ fix/)
-├── hdware/             # 内核与硬件：chsdev / virtex / rdma / phm2f + GPIO/4G/v4l2 等
+│   └── fix/soapClient_fix.cpp 由 soap/gen_client_fix.py 生成，已 gitignore（Windows vcxproj 用）
+├── hdware/             # 内核与硬件：chsdev / virtex / rdma / phm2f + GPIO/4G/v4l2/pipe 等
 ├── IM/                 # IM.cc 聊天服务器 + KaiSocket pub/sub 库 + KaiTest CLI
-├── lookup/             # 按时间定位录制帧 (seek/ time/ tool/ sql/ test/)
+├── lookup/             # 按时间定位录制帧 (main.cc + seek/ time/ tool/ test/ sql/ + logging.h)
 ├── Mac/Transfer/       # macOS SwiftUI App + C++17 FTF 传输引擎 (SwiftPM)
 ├── media/              # VideoRender：Jetson DRM/EGL/V4L2 分支 + FFmpeg/SDL2 分支
 ├── mock/               # TCP / UDP / 组播吞吐压测工具
@@ -172,15 +173,16 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <div class="n e1"><div class="lb">clean</div><div class="ln">清理各 build/ 与产物目录</div></div>
 </div></div>
 <div class="ag"><div class="al">入口 B：根目录 make</div><div class="ao">
-<div class="n g1"><div class="lb">make all</div><div class="ln">串行 8 步全量构建</div></div>
+<div class="n g1"><div class="lb">make all</div><div class="ln">串行 9 步全量构建</div></div>
 <div class="n x1"><div class="lb">make cmake</div><div class="ln">rm -rf build/* → cmake → make -j4</div></div>
+<div class="n e1"><div class="lb">Mac/Transfer 步</div><div class="ln">非 Darwin 只打印 skipped</div></div>
 <div class="n r1"><div class="lb">build.sh clean</div><div class="ln">额外清理 ../build lib jniLibs 等</div></div>
 </div></div>
 </div>
 </div></div>
-<table style="margin-top:.6rem"><thead><tr><th>构建链</th><th>覆盖模块</th><th>典型产物（实测 gen/ 与 bin/）</th></tr></thead><tbody>
-<tr><td><b style="color:var(--bl2)">CMake</b>（顶层 CMakeLists.txt，要求 2.8…3.16）</td><td>e.g、media、dpsk、gn1、diff、lookup（挂 <code>time</code> / <code>seek</code> / <code>tool</code> / <code>test</code> 四个子目录）、mock</td><td><code>e.g</code> <code>diffs</code> <code>gn1</code> <code>dpsk_chat</code> <code>lookup</code> <code>genSeek</code> <code>seek_test</code> <code>lookup_test_v2</code> <code>libtimeUtil.so</code> <code>mocking_main</code> <code>mocking_client</code>（<b>均落在 ../gen/</b>）</td></tr>
-<tr><td><b style="color:var(--yl)">Make</b>（顶层 Makefile 的 all）</td><td>IM、hdware(all)、thread(all)、webevs(build)、gSOAPverify（<code>|| true</code> 失败不中断）、pyex、vs-extension</td><td><code>bin/IM.exe</code> <code>bin/kaics.exe</code> <code>bin/client.exe</code> <code>bin/pthdtest.exe</code> <code>bin/gSOAPverify</code> <code>bin/chigpio</code> <code>bin/mes909</code> <code>bin/pipefifo</code> <code>bin/rdma_server.exe</code> <code>bin/rdma_client.exe</code> <code>bin/imgfilesnap.exe</code> <code>bin/VideoCapture</code> <code>bin/dirtyhack</code> <code>gen/similarity-*.vsix</code> <code>gen/webevs_serve</code>（尚未产出，跑一次 <code>make -C webevs build</code> 或顶层 <code>make all</code> 后落入 <code>gen/</code>）</td></tr>
+<table style="margin-top:.6rem"><thead><tr><th>构建链</th><th>覆盖模块</th><th>典型产物（构建后落入 ../gen / ../bin）</th></tr></thead><tbody>
+<tr><td><b style="color:var(--bl2)">CMake</b>（顶层 CMakeLists.txt，要求 2.8…3.16）</td><td>e.g、media、dpsk、gn1、diff、lookup（挂 <code>time</code> / <code>seek</code> / <code>tool</code> / <code>test</code> 四个子目录）、mock</td><td><code>e.g</code> <code>video_render</code> <code>diffs</code> <code>gn1</code> <code>dpsk_chat</code> <code>lookup</code> <code>genSeek</code> <code>libseekUtil.so</code>（seek 默认，开关置 0 则出 <code>seek_test</code>）<code>timeTest</code> + <code>time.cfg</code>（time 默认，开关置 1 则出 <code>libtimeUtil.so</code>）<code>lookup_test_v2</code> <code>mocking_main</code> <code>mocking_client</code>（<b>均落在 ../gen/</b>）</td></tr>
+<tr><td><b style="color:var(--yl)">Make</b>（顶层 Makefile 的 all）</td><td>IM、hdware(all)、thread(all)、webevs(build)、gSOAPverify（<code>|| true</code> 失败不中断）、pyex、vs-extension、Mac/Transfer（仅 Darwin 走 <code>build_app.sh</code>，其它平台打印 skipped）</td><td><code>bin/IM.exe</code> <code>bin/kaics.exe</code> <code>bin/client.exe</code> <code>bin/pthdtest.exe</code> <code>bin/gSOAPverify</code> <code>bin/chigpio</code> <code>bin/mes909</code> <code>bin/pipefifo</code> <code>bin/rdma_server.exe</code> <code>bin/rdma_client.exe</code> <code>bin/imgfilesnap.exe</code> <code>bin/VideoCapture</code> <code>bin/dirtyhack</code> <code>bin/myweb.wsdl</code>（gSOAPverify 链接后拷出）<code>gen/similarity-*.vsix</code> <code>gen/*.whl</code> <code>gen/webevs_serve</code>（需跑一次 <code>make -C webevs build</code> 或顶层 <code>make all</code> 才落入 <code>gen/</code>）</td></tr>
 <tr><td><b style="color:var(--pk)">独立入口</b></td><td>Mac/Transfer（SwiftPM）、cyber（pip + python）、trade（pip + python）、pyex（python -m build）</td><td><code>FileTransfer.app</code>（build_app.sh）、<code>*.whl</code>（gen/）</td></tr>
 </tbody></table>
 <div class="rg rgf" style="margin-top:.6rem">
@@ -239,7 +241,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <section id="wb"><div class="ct">
 <div class="st"><h2>🌐 Webevs — libevent HTTP 服务 + WebSocket + 静态前端</h2><span class="tg">C++ / libevent2 / libwebsockets</span></div>
 <div class="cd"><div class="cd2">
-<div style="text-align:center;margin-bottom:.3rem"><div class="n s1" style="width:auto;padding:.3rem .8rem"><div class="lb" style="font-size:.68rem">evhttp 事件循环（<b>不是裸 epoll</b>）+ 可选 WS 独立端口 + git 分支导出的静态前端</div><div class="ln">WebevApi.cpp 808 ｜ WebMain.cpp 47 ｜ WsServe.cpp 148 ｜ ../include/Utils.h 146（单头 inline）</div></div></div>
+<div style="text-align:center;margin-bottom:.3rem"><div class="n s1" style="width:auto;padding:.3rem .8rem"><div class="lb" style="font-size:.68rem">evhttp 事件循环（<b>不是裸 epoll</b>）+ 可选 WS 独立端口 + git 分支导出的静态前端</div><div class="ln">WebevApi.cpp 836 ｜ WebMain.cpp 56 ｜ WsServe.cpp 153 ｜ ../include/Utils.h 200（单头 inline）</div></div></div>
 <div class="rw">
 <div class="ag"><div class="al">入口</div><div class="ao">
 <div class="n s1"><div class="lb">WebMain.cpp</div><div class="ln">参数解析 + 模式选择</div></div>
@@ -291,16 +293,17 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <section id="gs"><div class="ct">
 <div class="st"><h2>🔄 gSOAPverify — 多线程 SOAP 服务</h2><span class="tg">gSOAP 2.8.106 / MySQL / pthread</span></div>
 <div class="cd"><div class="cd2">
-<div style="text-align:center;margin-bottom:.3rem"><div class="n x1" style="width:auto;padding:.3rem .8rem"><div class="lb" style="font-size:.68rem">gSOAP 源码已内嵌（stdsoap2.h: GSOAP_VERSION 208106）· 真正参与编译只有 6 个翻译单元</div><div class="ln">soap/{soapC,stdsoap2,soapServer}.cpp + sys/status.cc + sql/sqlDbReq.cc + main/mainSoap.cc</div></div></div>
+<div style="text-align:center;margin-bottom:.3rem"><div class="n x1" style="width:auto;padding:.3rem .8rem"><div class="lb" style="font-size:.68rem">gSOAP 源码已内嵌（stdsoap2.h: GSOAP_VERSION 208106）· 真正参与编译 6 个翻译单元（探测不到 MySQL 开发库则降到 5 个）</div><div class="ln">soap/{soapC,stdsoap2,soapServer}.cpp + sys/status.cc(127) + sql/sqlDbReq.cc(298) + main/mainSoap.cc(570)</div></div></div>
 <div class="rw">
 <div class="ag"><div class="al">接口生成</div><div class="ao">
 <div class="n s1"><div class="lb">soap/rpcapi.h</div><div class="ln">真正的接口输入头</div></div>
 <div class="n x1"><div class="lb">soapcpp2 -S rpcapi.h</div><div class="ln">重生成存根</div></div>
 <div class="n e1"><div class="lb">soapC.cpp / soapH.h / soapStub.h</div><div class="ln">序列化代码（生成物）</div></div>
 <div class="n e1"><div class="lb">soap/myweb.wsdl + *.{req,res}.xml</div><div class="ln">契约与报文样例</div></div>
+<div class="n y1"><div class="lb">soap/gen_client_fix.py (141)</div><div class="ln">→ fix/soapClient_fix.cpp（生成物，已 gitignore）</div></div>
 </div></div>
 <div class="ag"><div class="al">服务核心 main/</div><div class="ao">
-<div class="n m1"><div class="lb">mainSoap.cc (408)</div><div class="ln">主循环 + 环形队列</div></div>
+<div class="n m1"><div class="lb">mainSoap.cc (570)</div><div class="ln">主循环 + 环形队列 + 守护化 / 信号退出</div></div>
 <div class="n x1"><div class="lb">MAX_THR 8</div><div class="ln">process_queue 工作线程</div></div>
 <div class="n x1"><div class="lb">MAX_QUEUE 1024</div><div class="ln">socket 环形缓冲</div></div>
 <div class="n e1"><div class="lb">BACKLOG 64 / TIMEOUT 20s</div><div class="ln">mainSoap.h 常量</div></div>
@@ -309,7 +312,14 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <div class="n g1"><div class="lb">sql/sqlDbReq.cc</div><div class="ln">MySQL 3306 + 看门狗</div></div>
 <div class="n i1"><div class="lb">sys/status.cc</div><div class="ln">内存 / 网线状态</div></div>
 <div class="n z1"><div class="lb">MYAUTO_MYSQL_PSW</div><div class="ln">口令走环境变量</div></div>
-<div class="n e1"><div class="lb">watch_connect()</div><div class="ln">最多重连 9 次</div></div>
+<div class="n e1"><div class="lb">watch_connect()</div><div class="ln">持续重试（仅前 9 次打日志）</div></div>
+<div class="n e1"><div class="lb">MAX_SQL_LEN 512</div><div class="ln">mysql_real_escape_string 转义</div></div>
+</div></div>
+<div class="ag"><div class="al">运行控制</div><div class="ao">
+<div class="n o1"><div class="lb">fork + setsid 守护化</div><div class="ln">父进程 waitpid 收尸并带回退出码</div></div>
+<div class="n o1"><div class="lb">SIGINT / SIGTERM</div><div class="ln">g_stop → shutdown + 通知子进程</div></div>
+<div class="n i1"><div class="lb">HTTP GET 状态接口</div><div class="ln">?get-server-status@req=100|ram|cpu</div></div>
+<div class="n x1"><div class="lb">accept/recv/send 超时 20s</div><div class="ln">accept 超时 continue 而非 break</div></div>
 </div></div>
 <div class="ag"><div class="al">3 个 SOAP API</div><div class="ao">
 <div class="n z1"><div class="lb">🔀 trans</div><div class="ln">通用数据转发</div></div>
@@ -320,54 +330,61 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 </div>
 <div class="dv"></div>
 <div class="fc">
-<div class="fd" style="background:rgba(59,130,246,.06)"><div class="dm">1</div><div><div class="lb" style="font-size:.6rem">soap_bind(port) → listen(BACKLOG=64)；WSDL 读取经 open_wsdl_safe() 做路径穿越拦截</div></div></div>
+<div class="fd" style="background:rgba(59,130,246,.06)"><div class="dm">1</div><div><div class="lb" style="font-size:.6rem">fork + setsid 守护化（父进程 waitpid）→ soap_bind(port) → listen(BACKLOG=64)；WSDL 读取经 open_wsdl_safe() 做路径穿越拦截</div></div></div>
 <div class="dx">↓</div>
-<div class="fd" style="background:rgba(139,92,246,.06)"><div class="dm">2</div><div><div class="lb" style="font-size:.6rem">soap_accept() → enqueue(sock, ip) 压入 1024 槽环形队列</div></div></div>
+<div class="fd" style="background:rgba(139,92,246,.06)"><div class="dm">2</div><div><div class="lb" style="font-size:.6rem">soap_accept()（超时 20s 只 continue）→ enqueue(sock, ip) 压入 1024 槽环形队列（满则 SOAP_EOM）</div></div></div>
 <div class="dx">↓</div>
-<div class="fd" style="background:rgba(16,185,129,.06)"><div class="dm">3</div><div><div class="lb" style="font-size:.6rem">8 个 pthread 工作线程 dequeue() → soap_serve() 分发到 3 个 API</div></div></div>
+<div class="fd" style="background:rgba(16,185,129,.06)"><div class="dm">3</div><div><div class="lb" style="font-size:.6rem">8 个 pthread 工作线程 dequeue(&ip)（一次加锁同时取 socket 与 IP）→ soap_serve() 分发到 3 个 API</div></div></div>
 <div class="dx">↓</div>
 <div class="fd" style="background:rgba(249,115,22,.06)"><div class="dm">4</div><div><div class="lb" style="font-size:.6rem">SQL 查询 / 状态采样 → 结果写回；字符串必须 soap_strdup 分配，业务状态放进参</div></div></div>
 </div>
 </div></div>
 <table style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现（代码实测）</th></tr></thead><tbody>
-<tr><td>并发模型</td><td>主线程 accept + 8 工作线程 + 1024 槽环形队列（<code>MAX_THR</code>/<code>MAX_QUEUE</code> 见 <code>main/mainSoap.h</code>）</td></tr>
+<tr><td>并发模型</td><td>主线程 accept + 8 工作线程 + 1024 槽环形队列（<code>MAX_THR</code>/<code>MAX_QUEUE</code>/<code>BACKLOG 64</code>/<code>TIMEOUT_SEC 20</code> 见 <code>main/mainSoap.h</code>）；<code>dequeue(&amp;ip)</code> 一次加锁同时取 socket 与 IP，退出时 <code>stop_workers</code> 给每个线程投一个 <code>SOAP_INVALID_SOCKET</code> 再 join</td></tr>
 <tr><td>返回约定</td><td>服务函数<b>必须返回 SOAP_OK(0)</b>；返回业务码会被 <code>soapServer.cpp</code> 的 <code>if (soap-&gt;error) return soap-&gt;error;</code> 吞掉响应体</td></tr>
 <tr><td>内存约定</td><td>出参字符串必须 <code>soap_strdup(soap, …)</code>，存栈变量地址会 stack-use-after-return</td></tr>
-<tr><td>数据库</td><td><code>SQL_PORT 3306</code>、口令读环境变量 <code>MYAUTO_MYSQL_PSW</code>、<code>watch_connect()</code> 守护线程最多重连 9 次；建库脚本 <code>file/myautomatic.sql</code></td></tr>
-<tr><td>状态监控</td><td><code>get_mem_stat()</code>（sysconf 取内存空闲率）与 <code>detect_eth_cable()</code>（ETHTOOL 网线检测）</td></tr>
+<tr><td>数据库</td><td><code>SQL_PORT 3306</code>、口令读环境变量 <code>MYAUTO_MYSQL_PSW</code>、<code>watch_connect()</code> 守护线程持续重试（<code>MAX_RECONNECT 9</code> 只控制日志打印）；SQL 经 <code>build_sql()</code> 用 <code>mysql_real_escape_string</code> 转义、<code>snprintf</code> 截断（<code>MAX_SQL_LEN 512</code>）、表名走 <code>[A-Za-z0-9_]</code> 白名单；建库脚本 <code>file/myautomatic.sql</code></td></tr>
+<tr><td>状态监控</td><td><code>get_mem_stat()</code>（sysconf 取内存空闲率）与 <code>detect_eth_cable()</code>（ETHTOOL 网线检测）；HTTP GET 与 SOAP 两路都支持 <code>req=100|ram|cpu</code>，<code>cpu</code> 模式额外带 <code>uname</code> 架构信息</td></tr>
 <tr><td>兼容处理</td><td><code>soap_socket_t</code> 解耦平台 socket 类型；AArch64 下常量放匿名 namespace</td></tr>
-<tr><td>本机限制</td><td>本机无 mysqld / mysql 客户端（只有 libmysqlclient），DB 成功路径需用 <code>extern "C"</code> mock 桩链接替换 <code>sqlDbReq.o</code> 才能端到端验证</td></tr>
+<tr><td>输入加固</td><td><code>trans</code> 改用 <code>strtok_r</code>（并发安全）+ 栈上 <code>msg_copy</code>/<code>strnlen</code>/<code>snprintf</code>（<code>TRANS_MAX_PARAM 8</code>、<code>TRANS_KEY_LEN/VAL_LEN 16</code>、<code>TRANS_BUF_LEN 128</code>）；<code>get_server_status</code> 用 <code>strcmp</code> 取代越界 <code>memcmp</code></td></tr>
+<tr><td>构建与产物</td><td>Makefile 探测 <code>HAVE_MYSQL</code>：缺开发库时打印告警（附 apt/yum 命令）并<b>照样产出 ELF</b>（5 个 TU，代码用 <code>#ifdef HAVE_MYSQL</code> 兜底）；产物 <code>../bin/gSOAPverify</code>，<code>.o</code> 落 <code>../out/gSOAPverify/</code>，链接后把 <code>myweb.wsdl</code> 拷进 <code>../bin/</code>；<code>make fix</code> 调 <code>soap/gen_client_fix.py</code></td></tr>
+<tr><td>调试与安装</td><td><code>FLAG</code> 默认带 <code>-DNS_DBG</code>，会打印明文口令与完整 SQL；<code>make install</code> 装到 <code>PREFIX=/usr/sbin</code>（需 root）</td></tr>
+<tr><td>本机环境</td><td>MySQL 8.0.46 已就位（<code>/usr/include/mysql/mysql.h</code> + <code>mysqld</code> + <code>mysql</code>），DB 路径可端到端验证；顶层 <code>make -C gSOAPverify || true</code> 仍会吞掉该模块的构建失败</td></tr>
 </tbody></table>
-<div class="tags" style="margin-top:.4rem"><span class="t tk">gSOAP 2.8.106</span><span class="t tk">WSDL / XSD</span><span class="t tg2">MySQL 8</span><span class="t to">pthread</span><span class="t tr">环形缓冲</span><span class="t tp">线程池</span><span class="t tc">env 密码</span><span class="t tz">路径穿越拦截</span></div>
+<div class="tags" style="margin-top:.4rem"><span class="t tk">gSOAP 2.8.106</span><span class="t tk">WSDL / XSD</span><span class="t tg2">MySQL 8</span><span class="t to">pthread</span><span class="t tr">环形缓冲</span><span class="t tp">线程池</span><span class="t tc">env 密码</span><span class="t tz">路径穿越拦截</span><span class="t tz">SQL 转义</span><span class="t to">守护进程</span><span class="t tr">HTTP GET 旁路</span></div>
 </div></section>
 
 <section id="lk"><div class="ct">
 <div class="st"><h2>🔍 Lookup — 录制数据帧按时间检索</h2><span class="tg">C++ / SQLite / KMP / Manacher</span></div>
 <div class="cd"><div class="cd2">
-<div style="text-align:center;margin-bottom:.3rem"><div class="n g1" style="width:auto;padding:.3rem .8rem"><div class="lb" style="font-size:.68rem">从具备帧结构的录制文件里，按时间段 / 字节模式定位数据</div><div class="ln">主 CLI：lookup &lt;file&gt; [pattern] —— 无 pattern 走 Manacher 找最长回文，有 pattern 走 KMP 搜帧</div></div></div>
+<div style="text-align:center;margin-bottom:.3rem"><div class="n g1" style="width:auto;padding:.3rem .8rem"><div class="lb" style="font-size:.68rem">从具备帧结构的录制文件里，按时间段 / 字节模式定位数据</div><div class="ln">主 CLI：lookup &lt;file&gt; [pattern]（-h/--help/help 打帮助）—— 无 pattern 走 Manacher 找最长回文，有 pattern 走 KMP 搜帧（pattern 支持 0x 前缀，偶数位校验）</div></div></div>
 <div class="rw">
 <div class="ag"><div class="al">主程序</div><div class="ao">
-<div class="n x1"><div class="lb">main.cc (93)</div><div class="ln">CLI 入口</div></div>
-<div class="n e1"><div class="lb">common.h (193)</div><div class="ln">帧结构 / 魔数 / SeekTimeValue；文件读取与变量解析复用 ../include/Utils.h</div></div>
+<div class="n x1"><div class="lb">main.cc (131)</div><div class="ln">CLI 入口（printUsage / hexStringToBinary）</div></div>
+<div class="n e1"><div class="lb">common.h (141)</div><div class="ln">帧结构 / 魔数 / SeekTimeValue；文件读取与变量解析复用 ../include/Utils.h</div></div>
+<div class="n e1"><div class="lb">logging.h (58)</div><div class="ln">LOG_DBG/INF/WRN/ERR 宏</div></div>
+<div class="n e1"><div class="lb">sql/DBComm.h (23)</div><div class="ln">表名 / 字段宏 + SQL_LEN + PR_SQL</div></div>
 <div class="n z1"><div class="lb">kmp.c (137)</div><div class="ln">字节模式匹配</div></div>
 <div class="n z1"><div class="lb">manacher.cxx (114)</div><div class="ln">跨块最长回文</div></div>
 </div></div>
 <div class="ag"><div class="al">seek/ V1 引擎</div><div class="ao">
-<div class="n s1"><div class="lb">SeekTime.cpp (498)</div><div class="ln">seekFileDataTime()</div></div>
-<div class="n m1"><div class="lb">SeekDbMgr.cpp (526)</div><div class="ln">索引 / 查询（std::mutex）</div></div>
+<div class="n s1"><div class="lb">SeekTime.cpp (502)</div><div class="ln">seekFileDataTime()</div></div>
+<div class="n m1"><div class="lb">SeekDbMgr.cpp (551)</div><div class="ln">索引 / 查询（std::mutex，SQL 走 %q 转义）</div></div>
 <div class="n e1"><div class="lb">windSize 0x10000</div><div class="ln">maxFrame 0x100000</div></div>
+<div class="n e1"><div class="lb">SeekComm.h (46)</div><div class="ln">SelectFileOffset / FileFrameData</div></div>
 </div></div>
 <div class="ag"><div class="al">time/ V2 引擎</div><div class="ao">
 <div class="n i1"><div class="lb">TimeSeek.cpp (382)</div><div class="ln">无 duration 参数版本</div></div>
 <div class="n y1"><div class="lb">TimeDbMgr.cpp (141)</div><div class="ln">V2 数据库层（connect 仍是桩，未实连 sqlite3）</div></div>
 <div class="n e1"><div class="lb">windSize 0x100000</div></div>
+<div class="n e1"><div class="lb">main.cpp (42) + time.cfg</div><div class="ln">timeTest 入口与运行时配置</div></div>
 </div></div>
 <div class="ag"><div class="al">配套工具</div><div class="ao">
-<div class="n y1"><div class="lb">tool/main.cpp (472)</div><div class="ln">genSeek v1.0.7 造数据</div></div>
-<div class="n g1"><div class="lb">seek/ → seek_test</div><div class="ln">BUILD_SEEK_TIME_LIB 关闭时出可执行</div></div>
-<div class="n g1"><div class="lb">time/ → libtimeUtil.so</div><div class="ln">BUILD_TIME_SEEK_LIB 打开时出库</div></div>
+<div class="n y1"><div class="lb">tool/main.cpp (624)</div><div class="ln">genSeek v1.0.7（getopt_long，同时写 .csv）</div></div>
+<div class="n g1"><div class="lb">seek/ → libseekUtil.so</div><div class="ln">BUILD_SEEK_TIME_LIB=1（默认）；置 0 出 seek_test</div></div>
+<div class="n g1"><div class="lb">time/ → timeTest + time.cfg</div><div class="ln">BUILD_TIME_SEEK_LIB=0（默认）；置 1 出 libtimeUtil.so</div></div>
 <div class="n g1"><div class="lb">test/ → lookup_test_v2</div><div class="ln">V2 分支端到端用例（-DTIMESEEK）</div></div>
-<div class="n g1"><div class="lb">sql/Sqlite.hxx (249)</div><div class="ln">header-only，有 USE_SQLITE3 才真连库；否则显式降级告警</div></div>
+<div class="n g1"><div class="lb">sql/Sqlite.hxx (249)</div><div class="ln">header-only，有 USE_SQLITE3 才真连库（含 queryParam 绑定参数）；否则显式降级告警</div></div>
 </div></div>
 </div>
 <div class="dv"></div>
@@ -384,19 +401,22 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <table style="margin-top:.6rem"><thead><tr><th>常量 / 约定</th><th>值</th><th>说明</th></tr></thead><tbody>
 <tr><td>CONST_FRAME_HEAD</td><td><code>0x1234567890abcdef</code></td><td>帧起始魔数（common.h）</td></tr>
 <tr><td>SEEK_FRAME_HEAD</td><td><code>0x1122334455667788</code></td><td>可检索帧魔数</td></tr>
-<tr><td>MIN_JUDGE_FRAME_SIZE</td><td><code>0x40</code> / PROJECT_FILE_OFFSET <code>80</code></td><td>最小判定帧长 / 起始扫描偏移</td></tr>
+<tr><td>MIN_JUDGE_FRAME_SIZE</td><td><code>0x40</code> / PROJECT_FILE_OFFSET <code>80</code></td><td>最小判定帧长 / 起始扫描偏移；另有 <code>MIN_FRAME_SIZE 0x10</code>、<code>MAX_NAME_LEN 128</code></td></tr>
 <tr><td>匹配结果上限</td><td><code>MatchedFrame frames[1000]</code></td><td>单次 KMP 返回帧数上限</td></tr>
 <tr><td>索引判据</td><td><code>queryFileIdbyName</code> 成败</td><td><b>不可提前登记</b> insertFileIdbyName，否则跳过建索引、永远查不到时间</td></tr>
 <tr><td>DB 层降级</td><td><code>USE_SQLITE3</code> 宏</td><td>未定义时 <code>Sqlite.hxx</code> 退化为 stub，但会<b>可见地失败</b>：编译期 <code>#warning</code>、首次调用 stderr 告警，<code>open()</code> 恒 false / <code>execute()</code> 恒 -1 / <code>query()</code> 恒 nullptr；CMake 侧降级也发 <code>message(WARNING)</code></td></tr>
-<tr><td>构建开关</td><td><code>BUILD_SEEK_TIME_LIB</code> / <code>BUILD_TIME_SEEK_LIB</code></td><td>决定产出可执行 <code>seek_test</code> 还是动态库 <code>libtimeUtil.so</code>（均 POST_BUILD 拷 <code>../gen</code>）</td></tr>
+<tr><td>构建开关（默认值）</td><td><code>BUILD_SEEK_TIME_LIB=1</code> / <code>BUILD_TIME_SEEK_LIB=0</code></td><td>默认产出 <code>libseekUtil.so</code> 与 <code>timeTest</code>+<code>time.cfg</code>；开关取反则出 <code>seek_test</code> / <code>libtimeUtil.so</code>（均 POST_BUILD 拷 <code>../gen</code>）</td></tr>
+<tr><td>sqlite3 探测</td><td><code>seek/</code> 与 <code>test/</code> 才有</td><td>探测失败会尝试 <code>sudo apt-get install libsqlite3-dev</code> 并重探，成功才加 <code>-DUSE_SQLITE3</code>（含 <code>message(WARNING)</code> 降级告警）；<code>time/</code> 没有该探测，故 <code>timeUtil</code>/<code>timeTest</code> 里的 <code>Sqlite.hxx</code> 恒为 stub</td></tr>
+<tr><td>测试链接</td><td><code>LOOKUP_ENGINE_LIB</code></td><td><code>test/</code> 的缓存变量，决定先链 <code>timeUtil</code> 还是 <code>seekUtil</code>；两个引擎都找不到时只跳过该目标并告警，并设置 <code>BUILD_RPATH/INSTALL_RPATH</code> 指向 <code>../gen</code></td></tr>
+<tr><td>版本标记</td><td><code>_GIT_COMMIT</code> / <code>_BUILT_TIME</code></td><td><code>seek/</code> 构建时由 <code>git rev-parse --short=8 HEAD</code> 与时间戳注入</td></tr>
 </tbody></table>
-<div class="tags" style="margin-top:.4rem"><span class="t tg2">SQLite3</span><span class="t tc">thread-safe</span><span class="t ty">KMP</span><span class="t tp">Manacher</span><span class="t tb">16MB 分块</span><span class="t tr">SQL 注入防护</span><span class="t tc">CMake</span></div>
+<div class="tags" style="margin-top:.4rem"><span class="t tg2">SQLite3</span><span class="t tc">thread-safe</span><span class="t ty">KMP</span><span class="t tp">Manacher</span><span class="t tb">16MB 分块</span><span class="t tr">SQL 注入防护</span><span class="t tc">CMake</span><span class="t tz">getopt_long</span><span class="t to">RPATH</span></div>
 </div></section>
 
 <section id="cy"><div class="ct">
 <div class="st"><h2>🧠 Cyber — 聊天语料 LoRA 微调与推理</h2><span class="tg">Python / PyTorch / PEFT</span></div>
 <div class="cd"><div class="cd2">
-<div style="text-align:center;margin-bottom:.3rem"><div class="n m1" style="width:auto;padding:.3rem .8rem"><div class="lb" style="font-size:.68rem">数据准备 → LoRA 微调 → 量化合并 → 推理 / 格式转换</div><div class="ln">llm_train.py(416) · ollama_to_hf.py(988) · inference.py(221) · prepare_data.py(67)</div></div></div>
+<div style="text-align:center;margin-bottom:.3rem"><div class="n m1" style="width:auto;padding:.3rem .8rem"><div class="lb" style="font-size:.68rem">数据准备 → LoRA 微调 → 量化合并 → 推理 / 格式转换</div><div class="ln">llm_train.py(416) · ollama_to_hf.py(1046) · inference.py(221) · prepare_data.py(67) · test.py(205)</div></div></div>
 <div class="rw">
 <div class="ag"><div class="al">数据层</div><div class="ao">
 <div class="n g1"><div class="lb">prepare_data.py</div><div class="ln">「我:/对方:」→ ShareGPT JSONL</div></div>
@@ -427,7 +447,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <tr><td>训练控制</td><td><code>get_linear_schedule_with_warmup</code> + EarlyStopping(patience 3) + 检查点保存 + TensorBoard</td></tr>
 <tr><td>推理</td><td><code>inference.py</code> 加载 adapter 与基座组合</td></tr>
 <tr><td>依赖</td><td>torch / transformers / datasets / accelerate / peft / trl / bitsandbytes / tensorboard / sentencepiece / tiktoken / llama-cpp-python / safetensors</td></tr>
-<tr><td>现状</td><td><code>data/processed/</code> 为空、<code>models/</code> 未落盘权重，需自备基座模型</td></tr>
+<tr><td>现状</td><td><code>data/processed/{train,check}.txt</code> 仍是 0 字节占位，<code>data/raw/chat.txt</code> 仅 27B 样例；<code>models/</code> 只有 <code>hf/qwen</code> 的 tokenizer（<code>qwen.tiktoken</code> 2.5MB），基座权重未落盘，需自备</td></tr>
 </tbody></table>
 <div class="tags" style="margin-top:.4rem"><span class="t tp">PyTorch</span><span class="t tp">Transformers</span><span class="t tp">PEFT/LoRA</span><span class="t tg2">4bit</span><span class="t ty">EarlyStopping</span><span class="t tc">TensorBoard</span><span class="t tp">Ollama</span><span class="t tp">HuggingFace</span><span class="t tz">llama.cpp</span></div>
 </div></section>
@@ -438,7 +458,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <div style="text-align:center;margin-bottom:.3rem"><div class="n g1" style="width:auto;padding:.3rem .8rem"><div class="lb" style="font-size:.68rem">SwiftPM 双 target：FileTransferCore（C++ 静态库 + C 桥）→ FileTransferMac（SwiftUI App）</div><div class="ln">链接分离的关键：Swift 侧只见 C ABI（FT_Handle + 回调 + void* userData）</div></div></div>
 <div class="rw">
 <div class="ag"><div class="al">C++ 引擎 FileTransferCore</div><div class="ao">
-<div class="n s1"><div class="lb">TransferEngine.cpp (~1000)</div><div class="ln">服务端 / 客户端收发</div></div>
+<div class="n s1"><div class="lb">TransferEngine.cpp (1034)</div><div class="ln">服务端 / 客户端收发</div></div>
 <div class="n i1"><div class="lb">TransferBridge.cpp (127)</div><div class="ln">C API 桥接</div></div>
 <div class="n z1"><div class="lb">CommLogger.h (62)</div><div class="ln">4KB 日志缓冲 → Swift</div></div>
 </div></div>
@@ -450,9 +470,11 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 </div></div>
 <div class="ag"><div class="al">SwiftUI 界面</div><div class="ao">
 <div class="n m1"><div class="lb">ContentView (134)</div><div class="ln">三页：Server/Client/History</div></div>
-<div class="n m1"><div class="lb">ServerView (244)</div><div class="ln">监听 + 齿轮设置</div></div>
+<div class="n m1"><div class="lb">ServerView (246)</div><div class="ln">监听 + 齿轮设置</div></div>
 <div class="n m1"><div class="lb">ClientView (201)</div><div class="ln">连接 + 拖拽发送</div></div>
-<div class="n i1"><div class="lb">TransferCore.swift (383)</div><div class="ln">@MainActor 状态中心</div></div>
+<div class="n m1"><div class="lb">HistoryViews (212)</div><div class="ln">History 页</div></div>
+<div class="n i1"><div class="lb">TransferCore.swift (158)</div><div class="ln">@MainActor 状态中心</div></div>
+<div class="n i1"><div class="lb">+Engine/Callbacks/Sending</div><div class="ln">104 / 97 / 76，拆成三个 extension</div></div>
 </div></div>
 <div class="ag"><div class="al">构建 / 分发</div><div class="ao">
 <div class="n y1"><div class="lb">build_app.sh</div><div class="ln">release → .app → ad-hoc 签名</div></div>
@@ -534,7 +556,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <section id="md"><div class="ct">
 <div class="st"><h2>🎬 Media — 视频解码渲染（双分支）</h2><span class="tg">C++20 / DRM / V4L2 / FFmpeg</span></div>
 <div class="cd"><div class="cd2">
-<div style="text-align:center;margin-bottom:.3rem"><div class="n z1" style="width:auto;padding:.3rem .8rem"><div class="lb" style="font-size:.68rem"><code>USE_JETSON_MULTIMEDIA_API</code> 决定两条完全不同的流水线</div><div class="ln">VideoRender.cpp(693) + CMakeLists.txt(204) + cmake/FindFFmpeg.cmake(41) + check.sh(15)</div></div></div>
+<div style="text-align:center;margin-bottom:.3rem"><div class="n z1" style="width:auto;padding:.3rem .8rem"><div class="lb" style="font-size:.68rem"><code>USE_JETSON_MULTIMEDIA_API</code> 决定两条完全不同的流水线</div><div class="ln">VideoRender.cpp(768) + CMakeLists.txt(204) + cmake/FindFFmpeg.cmake(41) + check.sh(15)</div></div></div>
 <div class="rw">
 <div class="ag"><div class="al">Jetson 分支（原生）</div><div class="ao">
 <div class="n i1"><div class="lb">init_drm()</div><div class="ln">/dev/dri/card* + CRTC</div></div>
@@ -617,7 +639,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <p style="font-size:.68rem;color:var(--t2)"><code>setup.py</code> 声明 <code>Extension('sudoku', sources=['extend.c','sudoku.c'])</code>：<code>extend.c</code>(28) 导出 <code>sudoku.game()</code>，<code>sudoku.c</code>(217) 用 <code>placeable()</code> 约束检查 + <code>backtrace()</code> 回溯求解 + <code>shuffle()</code> 出题。<code>make.sh</code> 走 <code>python -m build</code>，wheel 输出 <code>../gen</code>；脚本先探测解释器与 PEP 668 标记（<code>stdlib/EXTERNALLY-MANAGED</code>），命中时自动给 pip 加 <code>--break-system-packages</code>，旧版 pip 不识别该 flag 会降级重试。</p>
 <div class="tags"><span class="t ty">CPython C API</span><span class="t tp">回溯求解</span></div></div>
 <div class="cd"><h4>🌀 shell — 运维与交叉编译脚本</h4>
-<p style="font-size:.68rem;color:var(--t2)"><code>x64mk/</code>：QEMU 模拟 amd64 容器里 gradle 打 Device2Device APK（env.sh / Dockerfile / build-image.sh / build-apk.sh / kill-build.sh，JDK11+NDK23+Gradle7.0.2，gradle 堆 <code>-Xmx1500m</code> 适配本机 ~7.6GiB 内存）<br><code>expect/</code>：expect 自动登录 + pf 端口转发；另有 <code>blobs.sh</code>（Caffe prototxt 批处理）、<code>del_mac_icon.sh</code>、<code>sign_gdb.sh</code>、<code>gitbase.sh</code>、<code>cudaturch</code>（PyTorch nightly cu126）、<code>shadowsocks.sh</code>、Windows 自启动 bat/vbs。</p>
+<p style="font-size:.68rem;color:var(--t2)"><code>x64mk/</code>：QEMU 模拟 amd64 容器里 gradle 打 Device2Device APK（env.sh 纯变量配置，可被 <code>$DKQM_HOME/env.local</code> 覆盖；Dockerfile / build-image.sh / build-apk.sh / kill-build.sh，JDK11+NDK23+Gradle7.0.2，gradle 堆 <code>-Xmx1500m</code> 适配本机 ~7.6GiB 内存）<br><code>expect/</code>：expect 自动登录 + pf 端口转发；另有 <code>blobs.sh</code>（Caffe prototxt 批处理）、<code>del_mac_icon.sh</code>、<code>sign_gdb.sh</code>、<code>gitbase.sh</code>、<code>cudaturch</code>（PyTorch nightly cu126）、<code>shadowsocks.sh</code>、Windows 自启动 bat/vbs。</p>
 <div class="tags"><span class="t tb">QEMU/binfmt</span><span class="t to">gradle/APK</span><span class="t tk">expect</span><span class="t tr">含明文口令</span></div></div>
 <div class="cd"><h4>🧪 test — GoogleTest + lcov</h4>
 <p style="font-size:.68rem;color:var(--t2)">target <code>test</code>：<code>add_subdirectory(../3rd/googletest)</code>，链接 gtest/gmock，源码在 <code>tests/test*_*.c*</code>（test1_string 192 / test2_struct 141 / test3_event 88），其中 <code>test3_event.cpp</code> 覆盖 <code>../include/Utils.h</code> 的 6 个 inline 函数（<code>isNum</code> / <code>isIpAddr</code> / <code>sIP2long</code> / <code>parseUri</code> / <code>getVariable</code> / <code>getFileAsCstring</code>）。<code>./test.sh</code> = cmake+make+运行+lcov/genhtml 覆盖率。<br>注意：<b>它没有被顶层 CMakeLists 收录</b>，仍依赖 <code>3rd/googletest</code> 与 <code>../include</code>，脱离这两个目录无法构建——但已<b>不再依赖 webevs</b>。</p>
@@ -656,7 +678,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <section id="qt"><div class="ct">
 <div class="st"><h2>📈 Trade — 量化交易（双均线多周期）</h2><span class="tg">Python / pandas / backtrader</span></div>
 <div class="cd"><div class="cd2">
-<div style="text-align:center;margin-bottom:.3rem"><div class="n m1" style="width:auto;padding:.3rem .8rem"><div class="lb" style="font-size:.68rem">单文件策略 <code>dual_ma_strategy.py</code>（1600+ 行）+ <code>strategy.yaml</code></div><div class="ln">行情 → 多周期分析 → 风控 → 下单 → 终端面板（Rich）</div></div></div>
+<div style="text-align:center;margin-bottom:.3rem"><div class="n m1" style="width:auto;padding:.3rem .8rem"><div class="lb" style="font-size:.68rem">单文件策略 <code>dual_ma_strategy.py</code>（1631 行）+ <code>strategy.yaml</code></div><div class="ln">行情 → 多周期分析 → 风控 → 下单 → 终端面板（Rich）</div></div></div>
 <div class="rw">
 <div class="ag"><div class="al">数据 / 交易接口</div><div class="ao">
 <div class="n y1"><div class="lb">MarketDataAPI(ABC)</div><div class="ln">TushareAPI（1s 缓存）</div></div>
@@ -687,7 +709,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <section id="vs"><div class="ct">
 <div class="st"><h2>🔌 VS Extension — VSCode 文件夹相似度扩展</h2><span class="tg">TypeScript / Python</span></div>
 <div class="cd"><div class="cd2">
-<div style="text-align:center;margin-bottom:.3rem"><div class="n y1" style="width:auto;padding:.3rem .8rem"><div class="lb" style="font-size:.68rem">TS 前端负责交互与展示，Python 后端负责真正的比对计算</div><div class="ln">extension.ts(480) · parse_text.ts(168) · view_html.ts(241)</div></div></div>
+<div style="text-align:center;margin-bottom:.3rem"><div class="n y1" style="width:auto;padding:.3rem .8rem"><div class="lb" style="font-size:.68rem">TS 前端负责交互与展示，Python 后端负责真正的比对计算</div><div class="ln">extension.ts(484) · parse_text.ts(168) · view_html.ts(241) · scripts/similarity.py(658, 软链接)</div></div></div>
 <div class="rw">
 <div class="ag"><div class="al">TS 扩展</div><div class="ao">
 <div class="n y1"><div class="lb">similarity.compareFolders</div><div class="ln">右键多选比较</div></div>
@@ -711,7 +733,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <tr><td>命令</td><td><code>similarity.compareFolders</code> / <code>similarity.openResults</code> / <code>similarity.quickCompare</code></td></tr>
 <tr><td>Python 探测</td><td>extension.ts 依次探测 python3 / python 后再 spawn</td></tr>
 <tr><td>结果与展示</td><td>JSON 输出由 <code>parse_text.ts</code> 解析（含纯文本回退），<code>view_html.ts</code> 负责 HTML/CSS 模板</td></tr>
-<tr><td>注意</td><td>后端脚本是<b>软链接</b>，真实实现在仓库外的相对路径 <code>../../../toolset/similary.py</code>（该文件确实存在，22.8KB）；克隆时若缺少该路径，命令拿不到任何结果。扩展调用 <code>--detail</code> + <code>--ignore-ext=&lt;ext&gt;</code>，<code>similary.py</code> 已定义 <code>--ignore-ext</code>（可重复指定或逗号分隔，输入统一规范为小写带点，可写 <code>.LOG</code> / <code>log</code> / <code>*.log</code>），由 <code>build_index</code> 在两侧目录建索引时即过滤</td></tr>
+<tr><td>注意</td><td>后端脚本是<b>软链接</b>，真实实现在仓库外的相对路径 <code>../../../toolset/similary.py</code>（该文件确实存在，约 23KB）；克隆时若缺少该路径，命令拿不到任何结果。扩展调用 <code>--detail</code> + <code>--ignore-ext=&lt;ext&gt;</code>，<code>similary.py</code> 已定义 <code>--ignore-ext</code>（可重复指定或逗号分隔，输入统一规范为小写带点，可写 <code>.LOG</code> / <code>log</code> / <code>*.log</code>），由 <code>build_index</code> 在两侧目录建索引时即过滤</td></tr>
 </tbody></table>
 <div class="tags" style="margin-top:.4rem"><span class="t ty">TypeScript</span><span class="t tp">Python 3</span><span class="t tp">difflib</span><span class="t tc">SequenceMatcher</span><span class="t tg2">VSCode API</span><span class="t tk">Webview</span><span class="t to">child_process</span></div>
 </div></section>
@@ -770,9 +792,10 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <div class="rc rh"><h4>🔴 多套构建系统共用目录 <span class="sr sh2">High</span></h4><p>CMake 链与 Make 链各自为政，<code>LinxSrvc/build</code> 被两者共用，多个子项目同时以 <code>../gen</code> 为输出目录；一处 clean 可能清掉另一处的中间文件。</p></div>
 <div class="rc rm"><h4>🟡 IM 账号落盘格式脆弱 <span class="sr sm">Medium</span></h4><p>用户/群组表以<b>裸结构体</b> <code>fwrite</code> 写 <code>accounts</code> 文件，字段一改即不可读，且不跨平台（含 <code>MAX_ACTIVE</code> 差异）。</p></div>
 <div class="rc rm"><h4>🟡 IM 命令执行面 <span class="sr sm">Medium</span></h4><p><code>EXEC</code>/<code>IMAGE</code> 分支直接 <code>execvp("imgfilesnap.exe")</code>（RASPI 下为 raspistill），属于外部命令执行面，需约束输入。</p></div>
-<div class="rc rm"><h4>🟡 gSOAPverify 静默成功 / 误挪 .o <span class="sr sm">Medium</span></h4><p>缺 MySQL 库时 Makefile 仍打印 SUCCESS 但不产出 ELF；<code>mv $(CUR)/../*.o</code> 会把相邻工程的中间文件一起搬走；<code>make install</code> 会 <code>killall -9</code> 并写系统目录。</p></div>
+<div class="rc rm"><h4>🟡 gSOAPverify 调试宏默认打开 <span class="sr sm">Medium</span></h4><p><code>FLAG ?= -Wall -g -DNS_DBG -std=c++11</code>，<code>NS_DBG</code> 分支会打印明文口令与完整 SQL；<code>make install</code> 默认装到 <code>/usr/sbin</code>（需 root）。</p></div>
 <div class="rc rm"><h4>🟡 线程池共享同一块栈 <span class="sr sm">Medium</span></h4><p><code>thread/pthdpool.c</code> 把一整块 <code>pool->stack</code>（<code>STK_SIZE 10*4096</code>）传给所有 worker，不符合每线程独立栈的正常使用方式。</p></div>
-<div class="rc rm"><h4>🟡 脚本内明文口令 <span class="sr sm">Medium</span></h4><p><code>shell/expect/*</code>（autossh、8927 端口脚本）与 <code>shell/x64mk/env.sh</code> 残留明文口令 / token 占位，<code>shell/shadowsocks.sh</code> 使用了固定口令。</p></div>
+<div class="rc rm"><h4>🟡 脚本内口令 / token 占位 <span class="sr sm">Medium</span></h4><p><code>shell/expect/autossh.exp</code> 里 <code>set PWD xxxxx</code> 占位、<code>shell/gitbase.sh</code> 里 <code>https://[token]@github.com/…</code>、<code>shell/shadowsocks.sh</code> 使用固定 <code>port_password</code>。</p></div>
+<div class="rc rm"><h4>🟡 lookup V2 引擎未真正落库 <span class="sr sm">Medium</span></h4><p><code>time/TimeDbMgr.cpp</code> 的 <code>connect()</code> 仍是桩（只置 <code>m_connected=true</code>），且 <code>time/CMakeLists.txt</code> 不做 sqlite3 探测、不加 <code>-DUSE_SQLITE3</code>，V2 分支的 SQL 全部只经 <code>PR_SQL</code> 打印。</p></div>
 <div class="rc rm"><h4>🟡 WS 默认广播语义 <span class="sr sm">Medium</span></h4><p>未注册 <code>WsOnMessage</code> 时，WS 服务默认把收到的消息广播给全部连接；对外提供服务需显式注册并鉴权。</p></div>
 </div>
 <div class="cd" style="margin-top:.7rem"><h4>📌 建议的下一步（按性价比）</h4>
@@ -786,7 +809,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 </div></section>
 
 <footer>
-<div class="ct">LinxSrvc 架构分析 · 更新于 2026-10-08 · 基于工作区代码逐模块实测（含构建链、关键常量与已知缺陷）</div>
+<div class="ct">LinxSrvc 架构分析 · 更新于 2026-10-25 · 基于工作区代码逐模块实测（含构建链、关键常量与已知缺陷）</div>
 </footer>
 
 </body>
