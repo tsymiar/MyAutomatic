@@ -1,11 +1,17 @@
-#include <iostream>
-#include <fstream>
+#include <algorithm>
+#include <cctype>
+#include <cstdint>
 #include <cstdio>
-#include <string>
-#include <vector>
-#include <map>
-#include <unordered_set>
 #include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <map>
+#include <string>
+#include <system_error>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
+#include <vector>
 
 namespace fs = std::filesystem;
 
@@ -29,6 +35,12 @@ class FileAnalyzer {
     bool use_color_ = false;
     bool show_diff_ = false;
     std::vector<fs::path> exclude_paths_{};
+
+    // Cap for the Myers backtrack table (int32 cells); larger diffs fall back to line sync.
+    static constexpr size_t kMaxMyersCells = 4u << 20;
+
+    enum class DiffOp { Equal, Remove, Add };
+    struct DiffEntry { DiffOp op; size_t index; };
 
     static bool is_text_file(const fs::path& path)
     {
@@ -58,7 +70,7 @@ class FileAnalyzer {
         return lines;
     }
 
-    // Extract effective content: strip comments + whitespace in single pass
+    // Strip comments and whitespace in a single pass.
     static std::string get_effective_content(const std::string& line)
     {
         std::string content;
@@ -69,7 +81,7 @@ class FileAnalyzer {
             if (in_block_comment) {
                 if (c == '*' && i + 1 < line.size() && line[i + 1] == '/') {
                     in_block_comment = false;
-                    i++; // skip closing '/'
+                    i++; // skip the closing '/'
                 }
                 continue;
             }
@@ -79,7 +91,7 @@ class FileAnalyzer {
                     i++; // skip '*'
                     continue;
                 }
-                if (line[i + 1] == '/') break; // line comment → discard rest
+                if (line[i + 1] == '/') break; // line comment: drop the rest
             }
             if (!std::isspace(static_cast<unsigned char>(c))) {
                 content.push_back(c);
@@ -88,24 +100,182 @@ class FileAnalyzer {
         return content;
     }
 
-    std::string colorize(const std::string& text, const std::string& color) const
+    static std::vector<std::string> strip_lines(const std::vector<std::string>& lines)
     {
-        return use_color_ ? (color + text + RESET) : text;
+        std::vector<std::string> out;
+        out.reserve(lines.size());
+        for (const auto& line : lines) out.push_back(get_effective_content(line));
+        return out;
     }
 
-    bool is_excluded(const fs::path& path) const
+    // Fallback: walk both sides in lockstep, emitting - and + for every mismatch.
+    static void append_sync(std::vector<DiffEntry>& script,
+        const std::vector<std::string>& a, size_t a0, size_t n,
+        const std::vector<std::string>& b, size_t b0, size_t m)
     {
-        for (const auto& exclude_path : exclude_paths_) {
-            if (fs::equivalent(path, exclude_path) || fs::equivalent(path.parent_path(), exclude_path)) {
-                return true;
+        size_t i = 0, j = 0;
+        while (i < n && j < m) {
+            if (a[a0 + i] == b[b0 + j]) {
+                ++i;
+                ++j;
+            } else {
+                script.push_back({ DiffOp::Remove, a0 + i });
+                ++i;
+                script.push_back({ DiffOp::Add, b0 + j });
+                ++j;
+            }
+        }
+        while (i < n) { script.push_back({ DiffOp::Remove, a0 + i }); ++i; }
+        while (j < m) { script.push_back({ DiffOp::Add, b0 + j }); ++j; }
+    }
+
+    // Myers greedy: O((N+M)*D). Returns false if the backtrack table would blow the cap.
+    static bool myers_script(const std::vector<std::string>& a, size_t a0, size_t a1,
+        const std::vector<std::string>& b, size_t b0, size_t b1,
+        std::vector<DiffEntry>& out)
+    {
+        const int32_t n = static_cast<int32_t>(a1 - a0);
+        const int32_t m = static_cast<int32_t>(b1 - b0);
+        const int32_t max_d = n + m;
+        const int32_t offset = max_d;
+        std::vector<int32_t> v(static_cast<size_t>(2 * max_d + 1), 0);
+        std::vector<std::vector<int32_t>> trace;
+        size_t cells = 0;
+
+        for (int32_t d = 0; d <= max_d; ++d) {
+            const size_t width = static_cast<size_t>(2 * d + 1);
+            if (cells + width > kMaxMyersCells) return false;
+            trace.emplace_back();
+            trace.back().reserve(width);
+            for (int32_t k = -d; k <= d; ++k) trace.back().push_back(v[offset + k]);
+            cells += width;
+
+            for (int32_t k = -d; k <= d; k += 2) {
+                int32_t x = (k == -d || (k != d && v[offset + k - 1] < v[offset + k + 1]))
+                    ? v[offset + k + 1]
+                    : v[offset + k - 1] + 1;
+                int32_t y = x - k;
+                while (x < n && y < m && a[a0 + static_cast<size_t>(x)] == b[b0 + static_cast<size_t>(y)]) {
+                    ++x;
+                    ++y;
+                }
+                v[offset + k] = x;
+                if (x >= n && y >= m) {
+                    myers_backtrack(trace, x, y, a0, b0, d, out);
+                    return true;
+                }
             }
         }
         return false;
     }
+
+    // Walk back from the end: trace[d] is V before step d, which gives the previous position.
+    static void myers_backtrack(const std::vector<std::vector<int32_t>>& trace,
+        int32_t x, int32_t y, size_t a0, size_t b0, int32_t start_d,
+        std::vector<DiffEntry>& out)
+    {
+        for (int32_t d = start_d; d >= 1; --d) {
+            const auto& v = trace[static_cast<size_t>(d)];
+            const int32_t k = x - y;
+            const int32_t prev_k =
+                (k == -d || (k != d && v[k - 1 + d] < v[k + 1 + d])) ? k + 1 : k - 1;
+            const int32_t prev_x = v[prev_k + d];
+            const int32_t prev_y = prev_x - prev_k;
+            while (x > prev_x && y > prev_y) {
+                --x;
+                --y;
+                out.push_back({ DiffOp::Equal, a0 + static_cast<size_t>(x) });
+            }
+            if (x == prev_x) {
+                out.push_back({ DiffOp::Add, b0 + static_cast<size_t>(prev_y) });
+            } else {
+                out.push_back({ DiffOp::Remove, a0 + static_cast<size_t>(prev_x) });
+            }
+            x = prev_x;
+            y = prev_y;
+        }
+        // Whatever is left lies on the starting diagonal: all equal.
+        while (x > 0 && y > 0) {
+            --x;
+            --y;
+            out.push_back({ DiffOp::Equal, a0 + static_cast<size_t>(x) });
+        }
+    }
+
+    // Trim the common prefix/suffix, then diff the middle with Myers.
+    static std::vector<DiffEntry> build_edit_script(
+        const std::vector<std::string>& a, const std::vector<std::string>& b)
+    {
+        std::vector<DiffEntry> script;
+        script.reserve(a.size() + b.size());
+
+        size_t prefix = 0;
+        while (prefix < a.size() && prefix < b.size() && a[prefix] == b[prefix]) ++prefix;
+        size_t suffix = 0;
+        while (suffix < a.size() - prefix && suffix < b.size() - prefix &&
+               a[a.size() - 1 - suffix] == b[b.size() - 1 - suffix]) ++suffix;
+
+        const size_t n = a.size() - prefix - suffix;
+        const size_t m = b.size() - prefix - suffix;
+
+        for (size_t k = 0; k < prefix; ++k) script.push_back({ DiffOp::Equal, k });
+
+        if (n > 0 && m > 0) {
+            std::vector<DiffEntry> mid;
+            if (myers_script(a, prefix, prefix + n, b, prefix, prefix + m, mid)) {
+                std::reverse(mid.begin(), mid.end());
+                script.insert(script.end(), mid.begin(), mid.end());
+            } else {
+                append_sync(script, a, prefix, n, b, prefix, m);
+            }
+        } else {
+            append_sync(script, a, prefix, n, b, prefix, m);
+        }
+
+        for (size_t k = 0; k < suffix; ++k) script.push_back({ DiffOp::Equal, a.size() - suffix + k });
+        return script;
+    }
+
+    std::string colorize(const std::string& text, const char* color) const
+    {
+        return use_color_ ? (color + text + RESET) : text;
+    }
+
+    // Compare absolute paths so ./a, a and relative --exclude values all line up.
+    static fs::path normalize_path(const fs::path& path)
+    {
+        if (path.empty()) return path;
+        std::error_code ec;
+        fs::path canonical = fs::weakly_canonical(path, ec);
+        return ec ? fs::absolute(path) : canonical;
+    }
+
+    static bool is_sub_path(const fs::path& path, const fs::path& base)
+    {
+        auto pit = path.begin();
+        for (auto bit = base.begin(); bit != base.end(); ++bit, ++pit) {
+            if (pit == path.end() || *pit != *bit) return false;
+        }
+        return true;
+    }
+
+    bool is_excluded(const fs::path& path) const
+    {
+        if (exclude_paths_.empty()) return false;
+        const fs::path p = normalize_path(path);
+        for (const auto& exclude_path : exclude_paths_) {
+            if (p == exclude_path || is_sub_path(p, exclude_path)) return true;
+        }
+        return false;
+    }
+
 public:
     FileAnalyzer(bool use_color, bool show_diff, const std::vector<fs::path>& exclude_paths = {})
-        : use_color_(use_color), show_diff_(show_diff), exclude_paths_(exclude_paths)
-    {}
+        : use_color_(use_color), show_diff_(show_diff)
+    {
+        exclude_paths_.reserve(exclude_paths.size());
+        for (const auto& path : exclude_paths) exclude_paths_.push_back(normalize_path(path));
+    }
 
     FileResult compare_files(const fs::path& file1, const fs::path& file2) const
     {
@@ -113,60 +283,40 @@ public:
         const auto lines1 = read_lines(file1);
         const auto lines2 = read_lines(file2);
 
-        // Preprocessing: Extract effective content
-        std::vector<std::string> preprocessed_lines1;
-        preprocessed_lines1.reserve(lines1.size());
-        for (const auto& line : lines1) {
-            preprocessed_lines1.push_back(get_effective_content(line));
-        }
+        // Effective content: comments and whitespace removed.
+        const auto eff1 = strip_lines(lines1);
+        const auto eff2 = strip_lines(lines2);
 
-        std::vector<std::string> preprocessed_lines2;
-        preprocessed_lines2.reserve(lines2.size());
-        for (const auto& line : lines2) {
-            preprocessed_lines2.push_back(get_effective_content(line));
-        }
+        // Blank and comment-only lines reduce to empty; counting them inflates similarity.
+        std::unordered_map<std::string, size_t> counter1, counter2;
+        counter1.reserve(eff1.size());
+        counter2.reserve(eff2.size());
+        for (const auto& line : eff1) if (!line.empty()) { counter1[line]++; ++out.total1; }
+        for (const auto& line : eff2) if (!line.empty()) { counter2[line]++; ++out.total2; }
 
-        // Calculate similarity
-        std::map<std::string, int> counter1, counter2;
-        for (const auto& line : preprocessed_lines1) counter1[line]++;
-        for (const auto& line : preprocessed_lines2) counter2[line]++;
-
-        size_t common = 0;
-        for (const auto& [line, count] : counter1) {
-            auto it = counter2.find(line);
-            if (it != counter2.end()) {
-                common += std::min(count, it->second);
+        // Iterate the smaller map to keep lookups down.
+        const std::unordered_map<std::string, size_t>* smaller = &counter1;
+        const std::unordered_map<std::string, size_t>* larger = &counter2;
+        if (smaller->size() > larger->size()) std::swap(smaller, larger);
+        for (const auto& [line, count] : *smaller) {
+            auto it = larger->find(line);
+            if (it != larger->end()) {
+                out.duplicates += std::min(count, it->second);
             }
         }
 
-        const size_t max_lines = std::max(lines1.size(), lines2.size());
-        out.ratio = max_lines ? static_cast<double>(common) / max_lines : 0.0;
-        out.duplicates = common;
-        out.total1 = lines1.size();
-        out.total2 = lines2.size();
+        const size_t max_lines = std::max(out.total1, out.total2);
+        out.ratio = max_lines ? static_cast<double>(out.duplicates) / max_lines : 0.0;
         out.filename = file1.filename().string();
 
-        // Generate diff
+        // Emit the - / + lines.
         if (show_diff_) {
-            size_t i = 0, j = 0;
-            while (i < preprocessed_lines1.size() && j < preprocessed_lines2.size()) {
-                if (preprocessed_lines1[i] == preprocessed_lines2[j]) {
-                    ++i;
-                    ++j;
-                } else {
-                    out.diff.push_back(colorize("- " + lines1[i], RED));
-                    ++i;
-                    out.diff.push_back(colorize("+ " + lines2[j], GREEN));
-                    ++j;
+            for (const auto& entry : build_edit_script(eff1, eff2)) {
+                if (entry.op == DiffOp::Remove) {
+                    out.diff.push_back(colorize("- " + lines1[entry.index], RED));
+                } else if (entry.op == DiffOp::Add) {
+                    out.diff.push_back(colorize("+ " + lines2[entry.index], GREEN));
                 }
-            }
-            while (i < preprocessed_lines1.size()) {
-                out.diff.push_back(colorize("- " + lines1[i], RED));
-                ++i;
-            }
-            while (j < preprocessed_lines2.size()) {
-                out.diff.push_back(colorize("+ " + lines2[j], GREEN));
-                ++j;
             }
         }
 
@@ -178,18 +328,27 @@ public:
     {
         std::map<std::string, fs::path> files1, files2;
 
-        // Build file maps
+        // Relative path -> full path.
         auto build_index = [this](const fs::path& dir) {
             std::map<std::string, fs::path> index;
             try {
-                for (const auto& entry : fs::recursive_directory_iterator(dir)) {
-                    if (entry.is_regular_file() && is_text_file(entry.path()) && !is_excluded(entry.path())) {
-                        try {
-                            index[fs::relative(entry.path(), dir).string()] = entry.path();
-                        } catch (...) { }
+                fs::recursive_directory_iterator it(
+                    dir, fs::directory_options::skip_permission_denied), end;
+                for (; it != end; ++it) {
+                    const fs::path& path = it->path();
+                    // Prune excluded directories instead of walking the subtree.
+                    if (it->is_directory()) {
+                        if (is_excluded(path)) it.disable_recursion_pending();
+                        continue;
                     }
+                    if (!it->is_regular_file() || is_excluded(path)) continue;
+                    if (!is_text_file(path)) continue;
+                    std::error_code ec;
+                    std::string rel = fs::relative(path, dir, ec).string();
+                    if (ec) continue;
+                    index[rel] = path;
                 }
-            } catch (...) { }
+            } catch (const fs::filesystem_error&) { }
             return index;
             };
 
@@ -199,6 +358,7 @@ public:
         // Compare common files
         FileResult total;
         std::vector<FileResult> details;
+        details.reserve(std::min(files1.size(), files2.size()));
 
         for (const auto& [rel_path, path1] : files1) {
             auto it = files2.find(rel_path);
@@ -238,7 +398,7 @@ public:
         std::cout << colorize("\n=== FILES ===", CYAN) << "\n";
         char buf[64];
         for (const auto& res : details) {
-            const std::string& color = res.ratio > 0.8 ? GREEN :
+            const char* color = res.ratio > 0.8 ? GREEN :
                 res.ratio > 0.4 ? YELLOW : RED;
             snprintf(buf, sizeof(buf), "%-50s %d%%", res.filename.c_str(),
                 static_cast<int>(res.ratio * 100));
@@ -269,6 +429,9 @@ int main(int argc, char* argv[])
     // If no arguments or help requested, show usage
     if (argc < 3) {
         print_usage(argv[0]);
+        for (int i = 1; i < argc; ++i) {
+            if (std::string(argv[i]) == "--help" || std::string(argv[i]) == "-h") return 0;
+        }
         return 1;
     }
 
@@ -295,8 +458,12 @@ int main(int argc, char* argv[])
             return 0;
         } else if (source.empty()) {
             source = arg;
-        } else {
+        } else if (target.empty()) {
             target = arg;
+        } else {
+            std::cerr << "Error: unexpected argument '" << arg << "'\n";
+            print_usage(argv[0]);
+            return 1;
         }
     }
 

@@ -28,38 +28,38 @@
 
 static void* pthd_thrd_func(void* argument)
 {
-    pthd_task_t task_t;
     pthd_pool_t* pool = (pthd_pool_t*)argument;
     if (pool == null) {
         return (void*)-1;
     }
-    /* Lock must be token to wait on conditional variable */
+    /* Lock must be taken to wait on conditional variable */
     pthread_mutex_lock(&pool->queue_lock);
-    /* Wait on condition variable, check for spurious wakeups.
-       When returning from pthread_cond_wait(), we own the lock. */
-    while ((pool->cur_thrd_no == 0) && (!pool->dispose)) {
-        pthread_cond_wait(&pool->queue_cond, &pool->queue_lock);
-    }
-    if (pool->cur_thrd_no == 0) {
-        if (pthread_mutex_trylock(&pool->queue_lock) == EBUSY)
-            pthread_mutex_unlock(&pool->queue_lock);
-        return (void*)-1;//break;
-    }
-    /* Grab our task */
-    if (!pool->queue[pool->prev].func) {
+    for (;;) {
+        /* Wait for work, looping to absorb spurious wakeups */
+        while ((pool->cur_thrd_no == 0) && (!pool->dispose)) {
+            pthread_cond_wait(&pool->queue_cond, &pool->queue_lock);
+        }
+        /* Exit only when disposed and the queue is empty, else drain remaining tasks */
+        if (pool->cur_thrd_no == 0) {
+            break;
+        }
+        /* Grab our task */
+        pthd_task_t task_t = pool->queue[pool->prev];
+        pool->queue[pool->prev].func = null;
+        pool->queue[pool->prev].arg = null;
+        pool->prev += 1;
+        pool->prev = (pool->prev >= pool->queue_size) ? 0 : pool->prev;
+        pool->cur_thrd_no -= 1;
+        pool->busy_thrd_no += 1;
+        /* Unlock while running the task */
         pthread_mutex_unlock(&pool->queue_lock);
-        return (void*)-2;//break;
+        /* Get to work */
+        (*(task_t.func))(task_t.arg);
+        pthread_mutex_lock(&pool->queue_lock);
+        pool->busy_thrd_no -= 1;
+        /* Queue empty and nothing running: broadcast also wakes pthd_pool_wait */
+        pthread_cond_broadcast(&pool->queue_cond);
     }
-    task_t.func = pool->queue[pool->prev].func;
-    task_t.arg = pool->queue[pool->prev].arg;
-    pool->prev += 1;
-    pool->prev = (pool->prev >= pool->queue_size) ? 0 : pool->prev;
-    pool->cur_thrd_no -= 1;
-    /* Unlock */
-    if ((!pool->queue[pool->prev].func) && (pthread_mutex_trylock(&pool->queue_lock) == EBUSY))
-        pthread_mutex_unlock(&pool->queue_lock);
-    /* Get to work */
-    (*(task_t.func))(task_t.arg);
     pthread_mutex_unlock(&pool->queue_lock);
     pthread_exit(null);
     return 0;
@@ -69,7 +69,7 @@ int pthd_pool_free(pthd_pool_t* pool) {
     if (pool == null || pool->dispose) {
         return -1;
     }
-    /* 释放线程 任务队列 互斥锁 条件变量 线程池所占内存资源 */
+    /* Free threads, queue, locks, condvars and the pool itself */
     if (pool->stack) {
         pthread_attr_destroy(&pool->attr);
         free(pool->stack);
@@ -86,7 +86,7 @@ int pthd_pool_free(pthd_pool_t* pool) {
 
 pthd_pool_t* pthd_pool_init(int sz_que, int thrd_num)
 {
-    //从动态内存存储区中分配1个pthd_pool_t单位长度连续空间
+    // Allocate the pool struct
     pthd_pool_t* pool = (pthd_pool_t*)calloc(1, sizeof(pthd_pool_t));
     pool->dispose = false;
     if (thrd_num < 1)
@@ -94,7 +94,7 @@ pthd_pool_t* pthd_pool_init(int sz_que, int thrd_num)
     pool->thrd_num = thrd_num;
     pool->queue_size = sz_que;
     pool->cur_thrd_no = 0;
-    //为thrd_id分配thrd_num个pthread_t空间
+    // Allocate the thread ids and the task queue
     int thd_len = sizeof(pthread_t) * thrd_num;
     int que_len = sizeof(pthd_task_t) * sz_que;
     pool->thrd_id = (pthread_t*)malloc(thd_len);
@@ -108,12 +108,7 @@ pthd_pool_t* pthd_pool_init(int sz_que, int thrd_num)
         pool->thrd_id == null || pool->queue == null) {
         goto failure;
     }
-    {
-#define STK_SIZE (10 * 4096)
-        posix_memalign(&pool->stack, 4096, STK_SIZE);
-        pthread_attr_init(&pool->attr);
-        pthread_attr_setstack(&pool->attr, &pool->stack, STK_SIZE);
-    }
+    /* No custom stack: the old code shared one stack across threads, causing corruption */
     int i, j;
     for (i = j = 0; i < pool->thrd_num; i++) {
         if (pthread_create(&(pool->thrd_id[i]), null,
@@ -121,7 +116,6 @@ pthd_pool_t* pthd_pool_init(int sz_que, int thrd_num)
             goto failure;
         } else {
             threads[j] = i;
-            pool->cur_thrd_no += 1;
             j++;
         }
     }
@@ -158,8 +152,8 @@ int pthd_pool_add_task(pthd_pool_t* pool, pthd_func_t func, void* args)
         pool->queue[pool->tail].arg = args;
         pool->tail = next;
         pool->cur_thrd_no += 1;
-        /* pthread_cond_broadcast */
-        if (pthread_cond_signal(&(pool->queue_cond)) != 0) {
+        /* Workers and pthd_pool_wait share this condvar, so only broadcast works */
+        if (pthread_cond_broadcast(&(pool->queue_cond)) != 0) {
             err = -2;
             break;
         }
@@ -179,31 +173,27 @@ int pthd_pool_destroy(pthd_pool_t* pool)
     if (pthread_mutex_lock(&pool->queue_lock) != 0) {
         return -2;
     }
-    do {
-        if (pool->dispose) {
-            err = -4;
-            break;
+    if (pool->dispose) {
+        pthread_mutex_unlock(&pool->queue_lock);
+        return -4;
+    }
+    /* Set the dispose flag before waking, or workers would never exit */
+    pool->dispose = true;
+    /* Wake up all worker threads */
+    if ((pthread_cond_broadcast(&pool->queue_cond) != 0) ||
+        (pthread_mutex_unlock(&pool->queue_lock) != 0)) {
+        err = -2;
+    }
+    /* Join all worker thread */
+    int i = 0;
+    for (; i < pool->thrd_num; i++) {
+        /* pthread_t is unsigned on Linux; the old int<0 guard skipped the join */
+        if (pthread_join(pool->thrd_id[threads[i]], null) != 0) {
+            err = -3;
         }
-        /* Wake up all worker threads */
-        if ((pthread_cond_broadcast(&pool->queue_cond) != 0) ||
-            (pthread_mutex_unlock(&pool->queue_lock) != 0)) {
-            err = -2;
-            break;
-        }
-        /* Join all worker thread */
-        int i = 0;
-        for (; i < pool->thrd_num; i++) {
-            pthread_t thrd = pool->thrd_id[threads[i]];
-            if ((int)thrd < 0 || pthread_join(thrd, null) != 0) {
-                err = -3;
-            }
-        }
-        if (err == 0) {
-            pool->dispose = true;
-        }
-        /* do{...} while(0) */
-    } while (0);
-    /* Only if everything went well do we deallocate the pool */
+    }
+    /* pthd_pool_free refuses a disposed pool, so clear the flag first */
+    pool->dispose = false;
     if (pthd_pool_free(pool) != 0)
         err = -5;
     return err;
@@ -213,8 +203,12 @@ int pthd_pool_wait(pthd_pool_t* pool)
 {
     if (pool == null)
         return -1;
-    int err = 0;
-    if (pool->thrd_id == null || pthread_join(*pool->thrd_id, null) != 0)
-        err = -3;
-    return err;
+    if (pthread_mutex_lock(&pool->queue_lock) != 0)
+        return -2;
+    /* Done only when the queue is empty and no task is running */
+    while ((pool->cur_thrd_no > 0) || (pool->busy_thrd_no > 0)) {
+        pthread_cond_wait(&pool->queue_cond, &pool->queue_lock);
+    }
+    pthread_mutex_unlock(&pool->queue_lock);
+    return 0;
 }

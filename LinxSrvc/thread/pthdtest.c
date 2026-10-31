@@ -1,36 +1,30 @@
 #include <stdio.h>
 #include "pthdpool.h"
 
-volatile int value = 0;
-
+/* 任务并发执行，各自用独立计数器，避免 test1/test2 互相改对方的终止条件。 */
 void* pthd_test1(void* arg)
 {
     int* th = (int*)arg;
-    while (value < 10) {
+    for (int value = 0; value < 10; value++) {
         printf("thrd1: %d, [val=%d]\n", *th, value);
-        value++;
     }
     return NULL;
 }
 
 void* pthd_test2(void* arg)
 {
-    value = 10;
     int* th = (int*)arg;
-    while (value > 0) {
+    for (int value = 10; value > 0; value--) {
         printf("thrd2: %d, [val=%d]\n", *th, value);
-        value--;
     }
     return NULL;
 }
 
 void* pthd_test3(void* arg)
 {
-    value = 0x11111;
     int* th = (int*)arg;
-    while (value > 0) {
+    for (int value = 0x11111; value > 0; value = value >> 2) {
         printf("thrd3: %d, [val=%d]\n", *th, value);
-        value = value >> 2;
     }
     return NULL;
 }
