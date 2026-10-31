@@ -30,7 +30,8 @@ typedef struct Pool {
   bool               dispose;        /* 标志线程池是否销毁 */
   int                thrd_num;       /* 最大线程数 */
   int                queue_size;     /* 线程队列长度 */
-  int                cur_thrd_no;    /* 线程池中活动线程数 */
+  int                cur_thrd_no;    /* 队列中待处理任务数 */
+  int                busy_thrd_no;   /* 正在执行任务的线程数 */
   int                prev;           /* 队首编号 */
   int                tail;           /* 队尾编号 */
   pthread_t* thrd_id;            /* 线程ID数组首指针 */
@@ -78,9 +79,9 @@ int pthd_pool_add_task(pthd_pool_t* pool, pthd_func_t func, void* args);
   */
 int pthd_pool_destroy(pthd_pool_t* pool);
 /**
-  * @brief     等待线程池执行
+  * @brief     等待队列中的任务全部执行完毕
   * @param     pool: 操作对象
-  * @retval    0, success; -3, pthread join error;
+  * @retval    0, success; -1, pool null; -2, mutex error;
   */
 int pthd_pool_wait(pthd_pool_t* pool);
 

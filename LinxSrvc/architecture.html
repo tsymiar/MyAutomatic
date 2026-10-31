@@ -463,7 +463,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <div class="n z1"><div class="lb">CommLogger.h (62)</div><div class="ln">4KB 日志缓冲 → Swift</div></div>
 </div></div>
 <div class="ag"><div class="al">协议（64B 定长头）</div><div class="ao">
-<div class="n x1"><div class="lb">magic "FTF"+NUL</div><div class="ln">大端序 htonl</div></div>
+<div class="n x1"><div class="lb">magic 'F','T',0xF0+ver,NUL</div><div class="ln">大端序 htonl</div></div>
 <div class="n x1"><div class="lb">CMD 1..5</div><div class="ln">请求/响应/数据/完成/取消</div></div>
 <div class="n e1"><div class="lb">MAX_CHUNK_SIZE 64KB</div><div class="ln">MAX_FILE_NAME_LEN 1024</div></div>
 <div class="n e1"><div class="lb">DEFAULT_PORT 8800</div><div class="ln">超时 3s / 5s / 30s</div></div>

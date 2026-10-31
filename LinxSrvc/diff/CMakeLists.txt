@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8...3.16)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8...3.16)
 
 set(PROJ_NAME diffs)
 project(${PROJ_NAME} LANGUAGES CXX)
@@ -6,12 +6,14 @@ project(${PROJ_NAME} LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -ggdb")
-
-file(GLOB SRC_FILE_LIST "*[^.h]*.c*[^.txt]*" "*.hpp")
+# CONFIGURE_DEPENDS: re-glob when sources are added or removed.
+file(GLOB SRC_FILE_LIST CONFIGURE_DEPENDS "*.c" "*.cc" "*.cpp" "*.cxx")
 
 add_executable(${PROJ_NAME} ${SRC_FILE_LIST})
-target_link_libraries(${PROJ_NAME} PRIVATE -pthread ${EXTERNAL_LIBS})
+target_compile_options(${PROJ_NAME} PRIVATE -fPIC -Wall -ggdb)
+
+find_package(Threads REQUIRED)
+target_link_libraries(${PROJ_NAME} PRIVATE Threads::Threads ${EXTERNAL_LIBS})
 
 set(EXEC_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../gen)
 add_custom_command(

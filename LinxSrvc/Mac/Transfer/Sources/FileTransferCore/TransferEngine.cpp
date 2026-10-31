@@ -28,8 +28,8 @@ LogOutputFunc g_logOutputFunc = nullptr;
 // --- Helper: fill FileHeader with common defaults ---
 static inline void fillHeader(FileHeader& h, uint16_t cmd) {
     memset(&h, 0, sizeof(h));
-    memcpy(h.magic, "FTF\0", 4);
-    h.version = 1;
+    memcpy(h.magic, kProtocolMagic, sizeof(kProtocolMagic));
+    h.version = PROTOCOL_VERSION;
     h.cmd = cmd;
 }
 
@@ -649,8 +649,8 @@ void TransferEngine::clientHandler(int sock, const std::string& clientIp, unsign
         headerToHost(header);
 
         // 验证魔数
-        if (memcmp(header.magic, "FTF\0", 4) != 0) {
-            LOG_ERR("%s invalid magic number: 0x%08x, client disconnected", statusPrefix.c_str(), *(uint32_t*)header.magic);
+        if (memcmp(header.magic, kProtocolMagic, sizeof(kProtocolMagic)) != 0) {
+            LOG_ERR("%s invalid magic number: 0x%08x, expect 0x%08x, client disconnected", statusPrefix.c_str(), *(uint32_t*)header.magic, *(uint32_t*)kProtocolMagic);
             break;
         }
 

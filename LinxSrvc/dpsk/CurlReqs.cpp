@@ -103,20 +103,29 @@ std::string CurlReqs::getBalance()
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 static char g_status = 0;
+// One renderer for the whole stream; ** and ` survive chunk splits.
+static Markdown g_markdown;
+// SSE lines can straddle curl chunk boundaries, so accumulate and only parse
+// the ones that arrived in full (terminated by '\n'); the partial tail waits.
+static std::string g_stream_buf;
 
 std::string extract_content(const std::string& stream, size_t len)
 {
+    (void)len;
     using namespace std;
+    g_stream_buf += stream;
     string content = "";
-    size_t pos = 0;
-    Markdown mk;
-    while ((pos = stream.find("data: ", pos)) != string::npos) {
-        size_t new_line = stream.find("\n", pos);
-        string _json = stream.substr(pos + 6, new_line - pos - 6);
+    size_t idx = 0;
+    while ((idx = g_stream_buf.find("data: ", idx)) != string::npos) {
+        size_t new_line = g_stream_buf.find("\n", idx);
+        if (new_line == string::npos) break; // trailing partial line; keep for next chunk
+        string _json = g_stream_buf.substr(idx + 6, new_line - idx - 6);
+        idx = new_line + 1;
         if (_json.find("[DONE]") != string::npos) {
-            return std::string("DONE\n--------\n");
+            g_stream_buf.clear();
+            content += g_markdown.flush();
+            return "DONE" + content + "\n--------\n";
         }
-        pos = new_line + 1;
         try {
             json j = json::parse(_json);
             if (j.contains("choices") &&
@@ -142,22 +151,19 @@ std::string extract_content(const std::string& stream, size_t len)
                         g_status = 2;
                     }
                 }
-                content += mk.process_chunk(chunk);
+                content += g_markdown.process_chunk(chunk);
                 m_assistant.push(chunk);
-                mk.flush();
             }
-        } catch (const json::exception& e) {
-            if (_json.size() < len && _json.find("choices") != std::string::npos) {
-                return std::string("\r\033[1mOK\033[0m");
-            } else {
-                cerr << "JSON parse with issue: " << e.what()
-                    << "\nmessage was: " << _json << endl;
-                return std::string("\r\033[1mNULL\033[0m\n--------\n");
-            }
+        } catch (const json::exception&) {
+            // A fully received line that still won't parse is unexpected, but
+            // dumping the payload on every chunk floods the terminal. Skip it.
+            continue;
         } catch (...) {
-            cerr << "Unknown exception" << endl;
+            continue;
         }
     }
+    // Drop consumed lines, keep the partial tail for the next chunk.
+    if (idx > 0) g_stream_buf.erase(0, idx);
     return content;
 }
 
@@ -272,6 +278,8 @@ std::string CurlReqs::processChat(const std::string& text, const ReqsPara& para)
 #endif
 
     g_status = 0;
+    g_markdown.reset();
+    g_stream_buf.clear();
     std::queue<std::string> k{};
     std::swap(m_answer, k);
     g_deltaContent = para.apiPara.stream;
