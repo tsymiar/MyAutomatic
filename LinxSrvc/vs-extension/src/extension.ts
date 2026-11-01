@@ -4,7 +4,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as os from 'os';
 import {
-    parseComparisonResult, ComparisonFolderResults
+    parseComparisonOutput, ComparisonFolderResults
 } from './parse_text';
 import { webviewRender } from './view_html';
 
@@ -283,6 +283,8 @@ async function runFolderComparison(
             `"${source}"`,
             `"${target}"`,
             "--detail",
+            "--json",
+            "--no-color",
             ...ignoreExt.map(ext => `--ignore-ext=${ext}`)
         ];
 
@@ -318,36 +320,19 @@ async function runFolderComparison(
                 return;
             }
 
-            let outJson = null;
             try {
-                // Sanitize the JSON string
-                let cleanOutput = output.replace(/[\x00-\x1F]/g, '');
-                cleanOutput = cleanOutput.trim();
-
-                // Validate the JSON envelope
-                if (!cleanOutput.startsWith('{') || !cleanOutput.endsWith('}')) {
-                    // Try to extract the valid JSON slice
-                    const jsonStart = cleanOutput.indexOf('{');
-                    const jsonEnd = cleanOutput.lastIndexOf('}') + 1;
-
-                    if (jsonStart !== -1 && jsonEnd > jsonStart) {
-                        cleanOutput = cleanOutput.substring(jsonStart, jsonEnd);
-                        outChannel.appendLine(`Extracted JSON from output: ${cleanOutput.substring(0, 100)}...`);
-                    } else {
-                        const jsonOut = parseComparisonResult(output, source, target);
-                        cleanOutput = JSON.stringify(jsonOut, null, 2);
-                    }
-                }
-                // Parse the JSON
-                outJson = cleanOutput;
-                const result = JSON.parse(cleanOutput) as ComparisonFolderResults;
-                outChannel.appendLine(`Parsed JSON output: ${JSON.stringify(result, null, 2)}`);
+                // similary.py emits structured JSON (--json) when available and
+                // falls back to human-readable text; parseComparisonOutput handles both.
+                const result = parseComparisonOutput(output, source, target);
+                outChannel.appendLine(`Parsed output: ${JSON.stringify(result, null, 2)}`);
                 if (result && result.source && result.target) {
                     resolve(result);
+                } else {
+                    reject(new Error('Parsed comparison result is incomplete'));
                 }
-            } catch (e) {
+            } catch (e: any) {
                 outChannel.appendLine(`Raw output from Python:\n${output}`);
-                reject(new Error(`Failed to parse JSON output: ${e}\nCleaned output: ${outJson}`));
+                reject(new Error(`Failed to parse output: ${e?.message ?? e}`));
             }
         });
 
