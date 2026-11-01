@@ -272,7 +272,7 @@ int TransferEngine::createServerSocket(unsigned short port)
     addr.sin_port = htons(port);
     addr.sin_addr.s_addr = INADDR_ANY;
 
-    if (bind(sock, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
+    if (bind(sock, reinterpret_cast<struct sockaddr*>(&addr), sizeof(addr)) < 0) {
         LOG_ERR("bind() failed: %s", strerror(errno));
         close(sock);
         return -2;
@@ -339,7 +339,7 @@ int TransferEngine::createClientSocket(const std::string& ip, unsigned short por
     }
     fcntl(sock, F_SETFL, origFlags | O_NONBLOCK);
 
-    int ret = connect(sock, (struct sockaddr*)&addr, sizeof(addr));
+    int ret = connect(sock, reinterpret_cast<struct sockaddr*>(&addr), sizeof(addr));
     if (ret < 0 && errno != EINPROGRESS) {
         LOG_ERR("connect() to %s:%u immediate fail: %s", ip.c_str(), port, strerror(errno));
         close(sock);
@@ -479,7 +479,7 @@ void TransferEngine::fileServerProcess()
     socklen_t addrLen = sizeof(clientAddr);
 
     while (m_serverRunning.load()) {
-        int clientSock = accept(m_serverSock, (struct sockaddr*)&clientAddr, &addrLen);
+        int clientSock = accept(m_serverSock, reinterpret_cast<struct sockaddr*>(&clientAddr), &addrLen);
         if (clientSock < 0) {
             if (m_serverRunning.load()) {
                 LOG_ERR("accept() failed: %s", strerror(errno));
@@ -650,7 +650,7 @@ void TransferEngine::clientHandler(int sock, const std::string& clientIp, unsign
 
         // 验证魔数
         if (memcmp(header.magic, kProtocolMagic, sizeof(kProtocolMagic)) != 0) {
-            LOG_ERR("%s invalid magic number: 0x%08x, expect 0x%08x, client disconnected", statusPrefix.c_str(), *(uint32_t*)header.magic, *(uint32_t*)kProtocolMagic);
+            LOG_ERR("%s invalid magic number: 0x%08x, expect 0x%08x, client disconnected", statusPrefix.c_str(), *reinterpret_cast<uint32_t*>(header.magic), *reinterpret_cast<const uint32_t*>(kProtocolMagic));
             break;
         }
 

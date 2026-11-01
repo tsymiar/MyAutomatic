@@ -45,7 +45,7 @@ class ConversationDataset(Dataset):
                             try:
                                 examples.append(json.loads(line))
                             except json.JSONDecodeError as e:
-                                raise ValueError(f"第 {line_num} 行 JSON 解析失败: {e}")
+                                raise ValueError(f"第 {line_num} 行 JSON 解析失败: {e}") from e
                     return examples
                 elif self.data_format == 'alpaca':
                     # 每行是一个JSON对象
@@ -55,15 +55,15 @@ class ConversationDataset(Dataset):
                             try:
                                 examples.append(json.loads(line))
                             except json.JSONDecodeError as e:
-                                raise ValueError(f"第 {line_num} 行 JSON 解析失败: {e}")
+                                raise ValueError(f"第 {line_num} 行 JSON 解析失败: {e}") from e
                     return examples
                 else:
                     # raw 格式：每行是一个文本
                     return [line.strip() for line in f if line.strip()]
         except UnicodeDecodeError as e:
-            raise ValueError(f"文件编码错误: {e}")
+            raise ValueError(f"文件编码错误: {e}") from e
         except IOError as e:
-            raise IOError(f"读取文件失败: {e}")
+            raise IOError(f"读取文件失败: {e}") from e
 
     def __len__(self):
         return len(self.examples)
@@ -78,7 +78,7 @@ class ConversationDataset(Dataset):
             else:
                 return self._process_raw(idx)
         except Exception as e:
-            raise ValueError(f"处理第 {idx} 个样本时出错: {e}")
+            raise ValueError(f"处理第 {idx} 个样本时出错: {e}") from e
 
     def _process_raw(self, idx):
         """处理 raw 格式数据"""

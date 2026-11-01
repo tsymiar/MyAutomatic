@@ -114,8 +114,8 @@ int SeekTime::findFileFragmentDetail(FILE* file, FileFrameData& startframe, File
         LOG_DBG("000 fread bytes=%u buffer size=%u.", bytes, buffSize);
         if (bytes < sizeof(key_size_t)) break;
         for (size_t i = 0; i < (bytes - sizeof(key_size_t)); i++) {
-            if (*(key_size_t*)(buffer + i) == SEEK_FRAME_HEAD) {
-                StruFrameHeader* header = (StruFrameHeader*)(buffer + i);
+            if (*reinterpret_cast<key_size_t*>(buffer + i) == SEEK_FRAME_HEAD) {
+                StruFrameHeader* header = reinterpret_cast<StruFrameHeader*>(buffer + i);
                 if (FRAME_TIME == startframe.target.timestamp) {
                     startframe.target.offset = curpos + i;
                     startframe.target.timestamp = FRAME_TIME;
@@ -192,8 +192,8 @@ int SeekTime::findFileFragmentDetail(FILE* file, FileFrameData& startframe, File
         LOG_DBG("fread %u bytes, buffsize=%u.", bytes, buffSize);
         if (bytes < sizeof(key_size_t)) break;
         for (size_t i = 0; i < bytes - sizeof(key_size_t); i++) {
-            if (*(key_size_t*)(buffer + i) == SEEK_FRAME_HEAD) {
-                StruFrameHeader* header = (StruFrameHeader*)(buffer + i);
+            if (*reinterpret_cast<key_size_t*>(buffer + i) == SEEK_FRAME_HEAD) {
+                StruFrameHeader* header = reinterpret_cast<StruFrameHeader*>(buffer + i);
                 if (FRAME_TIME == tailframe.target.timestamp) {
                     tailframe.target.offset = curpos + i;
                     tailframe.target.timestamp = FRAME_TIME;
@@ -255,8 +255,8 @@ bool getFirstFrame(FILE* file, uint32_t winsize, SeekTimeContent& headIdx, uint3
     while ((bytes = fread(buffer, 1, buffSize, file)) > 0) {
         if (bytes < sizeof(key_size_t)) break;
         for (size_t i = 0; i < bytes - sizeof(key_size_t); i++) {
-            if (*(key_size_t*)(buffer + i) == SEEK_FRAME_HEAD) {
-                StruFrameHeader* header = (StruFrameHeader*)(buffer + i);
+            if (*reinterpret_cast<key_size_t*>(buffer + i) == SEEK_FRAME_HEAD) {
+                StruFrameHeader* header = reinterpret_cast<StruFrameHeader*>(buffer + i);
                 headIdx.value.timestamp = FRAME_TIME;
                 headIdx.duration = -1;
                 headIdx.value.offset = offset + position + i;
@@ -301,8 +301,8 @@ bool getTailFrame(FILE* file, uint32_t winsize, SeekTimeContent& tailIdx)
         if (bytes > 0) {
             if (bytes < sizeof(key_size_t)) break;
             for (size_t i = bytes - sizeof(key_size_t); i > 0; i--) {
-                if (*(key_size_t*)(buffer + i) == SEEK_FRAME_HEAD) {
-                    StruFrameHeader* header = (StruFrameHeader*)(buffer + i);
+                if (*reinterpret_cast<key_size_t*>(buffer + i) == SEEK_FRAME_HEAD) {
+                    StruFrameHeader* header = reinterpret_cast<StruFrameHeader*>(buffer + i);
                     tailIdx.value.timestamp = FRAME_TIME;
                     tailIdx.duration = -1;
                     tailIdx.value.offset = position + i;

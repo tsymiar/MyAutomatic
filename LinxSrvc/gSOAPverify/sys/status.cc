@@ -43,7 +43,7 @@ int get_mem_stat(const char* ip, st_sys* sys)
         sa.sin_addr = addr;
         // 与 sys->s_host 同长，getnameinfo 结果不会超出目标缓冲
         char hostname[SYS_HOST_LEN] = { 0 };
-        rtn = getnameinfo((const struct sockaddr*)&sa, sizeof(sa),
+        rtn = getnameinfo(reinterpret_cast<const struct sockaddr*>(&sa), sizeof(sa),
             hostname, sizeof(hostname), NULL, 0, 0);
         if (rtn == 0) {
             // 定长数组 + snprintf，调用方无需 free

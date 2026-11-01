@@ -171,7 +171,7 @@ size_t CurlReqs::writeCallback(void* contents, size_t size, size_t nmemb, void* 
 {
     size_t len = size * nmemb;
     if (g_deltaContent) {
-        std::string message((char*)contents, len);
+        std::string message(static_cast<char*>(contents), len);
         // std::cout << message << std::endl;
         std::string content = extract_content(message, len);
         {
@@ -180,7 +180,7 @@ size_t CurlReqs::writeCallback(void* contents, size_t size, size_t nmemb, void* 
             g_isRunning = false;
         }
     } else {
-        ((std::string*)userp)->append((char*)contents, size * nmemb);
+        static_cast<std::string*>(userp)->append(static_cast<char*>(contents), size * nmemb);
     }
     return len;
 }
@@ -314,7 +314,7 @@ std::string CurlReqs::processChat(const std::string& text, const ReqsPara& para)
         return std::string();
     }
 
-    std::string content = "";
+    std::string content;
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - start);
     double seconds = duration.count() / 1000000.0;
     std::stringstream ss;
@@ -337,8 +337,8 @@ std::string CurlReqs::processChat(const std::string& text, const ReqsPara& para)
                 content += "(\n" + Markdown::Parse(think) + ")\n";
             }
         }
-        std::string json = jsonResponse["choices"][0]["message"]["content"];
-        content += ("\r--------\n" + Markdown::Parse(json) + "\n--------");
+        std::string msg = jsonResponse["choices"][0]["message"]["content"];
+        content += ("\r--------\n" + Markdown::Parse(msg) + "\n--------");
     } catch (const std::exception& e) {
         std::cerr << "JSON parse exception: " << e.what() << std::endl;
         if (para.multi) {

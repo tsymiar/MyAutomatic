@@ -15,7 +15,7 @@ def load_tokenizer(model_path):
         )
         return tokenizer
     except Exception as e:
-        raise RuntimeError(f"加载 tokenizer 失败: {e}")
+        raise RuntimeError(f"加载 tokenizer 失败: {e}") from e
 
 
 def load_base_model(model_path, load_in_4bit=False, torch_dtype=torch.float16):
@@ -51,9 +51,9 @@ def load_base_model(model_path, load_in_4bit=False, torch_dtype=torch.float16):
         raise RuntimeError(
             "加载 4-bit 模型需要 bitsandbytes 库。"
             "请运行: pip install bitsandbytes"
-        )
+        ) from None
     except Exception as e:
-        raise RuntimeError(f"加载模型失败: {e}")
+        raise RuntimeError(f"加载模型失败: {e}") from e
 
 
 def load_lora_model(base_model_path, lora_path=None, load_in_4bit=False):
@@ -80,7 +80,7 @@ def load_lora_model(base_model_path, lora_path=None, load_in_4bit=False):
                     # 如果模型不支持合并，则继续使用原始 PEFT 模型
                     model.eval()
                 except Exception as e:
-                    raise RuntimeError(f"合并 LoRA 权重失败: {e}")
+                    raise RuntimeError(f"合并 LoRA 权重失败: {e}") from e
             except Exception as e:
-                raise RuntimeError(f"加载 LoRA 权重失败: {e}")
+                raise RuntimeError(f"加载 LoRA 权重失败: {e}") from e
     return model, tokenizer

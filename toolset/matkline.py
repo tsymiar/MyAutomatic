@@ -399,7 +399,7 @@ def parse_date_arg(text):
     try:
         datetime.strptime(day, "%Y-%m-%d")
     except ValueError:
-        raise ValueError("无效日期：%s" % text)
+        raise ValueError("无效日期：%s" % text) from None
     return day
 
 

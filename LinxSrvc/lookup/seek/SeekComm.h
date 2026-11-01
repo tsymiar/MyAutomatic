@@ -41,6 +41,9 @@ struct FileFrameData {
     FileFrameData()
     {
         id = target.timestamp = target.offset = 0;
+        memset(fileName, 0, sizeof(fileName));
         memset(fileSign, 0, sizeof(fileSign));
+        memset(&ftime, 0, sizeof(ftime));
+        memset(&offset, 0, sizeof(offset));
     }
 };

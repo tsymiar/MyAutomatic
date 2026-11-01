@@ -28,7 +28,7 @@ parseRcvMsg(void* lprcv)
             continue;
         }
         EnterCriticalSection(&wrcon);
-        StMsgContent* msg = (StMsgContent*)rcv_buf;
+        StMsgContent* msg = reinterpret_cast<StMsgContent*>(rcv_buf);
         ui_val = msg->uiCmdMsg;
 #ifdef _DEBUG
         if ((ui_val != NETNDT) && (ui_val != GETIMAGE)) {
@@ -71,7 +71,7 @@ parseRcvMsg(void* lprcv)
 #endif
         if (ui_val == PEER2P) {
             int ip = atoi((const char*)msg->peerIP);
-            unsigned char* val = (unsigned char*)&ip;
+            unsigned char* val = reinterpret_cast<unsigned char*>(&ip);
             int port = atoi((const char*)msg->peer_port);
             fprintf(stdout, "User:\t%s\nIP:\t%u.%u.%u.%u\nPORT:\t%d\n",
                 msg->username, val[3], val[2], val[1], val[0], port);
@@ -82,7 +82,7 @@ parseRcvMsg(void* lprcv)
                 memset(&p2pMsg, 0, sizeof(ExtraMessage));
                 p2pMsg.cmd[0] = msg->uiCmdMsg;
                 memcpy(&p2pMsg.msg, "hello", 6);
-                int parse = p2pMessage(msg->username, ip, port, (char*)&p2pMsg);
+                int parse = p2pMessage(msg->username, ip, port, reinterpret_cast<char*>(&p2pMsg));
                 if (parse == 0) {
                     SetRecvState(RCV_P2P);
                 }
@@ -146,7 +146,7 @@ parseRcvMsg(void* lprcv)
         LeaveCriticalSection(&wrcon);
         if (size <= 0 || (msg->value[0] == 'e' && msg->value[1] == '8')) {
             char detail[64];
-            snprintf(detail, 38 + 16, "Connection lost!\n\tsocket: %s, size=%d", _itoa((int)client->sock, (char*)msg, 10), size);
+            snprintf(detail, 38 + 16, "Connection lost!\n\tsocket: %s, size=%d", _itoa((int)client->sock, reinterpret_cast<char*>(msg), 10), size);
             char title[32];
             snprintf(title, 32, "%s:%d", inet_ntoa(client->srvaddr.sin_addr), client->srvaddr.sin_port);
             MessageBox(0, detail, title, MB_OK);

@@ -82,16 +82,16 @@ enum class PlayerChoice {
 
 // ── 单个声音碎片 ──
 struct CommonFragment {
-    FragmentType type;
+    FragmentType type = FragmentType::Footstep;
     QString name;
     QString description;
-    Credibility credibility;
-    float durationSec;
-    float frequencyHz;
-    float amplitude;
+    Credibility credibility = Credibility::Real;
+    float durationSec = 0.0f;
+    float frequencyHz = 0.0f;
+    float amplitude = 0.0f;
     bool isPlaced = false;
     int timelineSlot = -1;
-    int id;
+    int id = 0;
     std::vector<float> spectrumSamples;
     bool isAnchor = false;        // 是否为锚点音
     AnchorType anchorType = AnchorType::None;
@@ -122,7 +122,7 @@ struct CommonFragment {
 
 // ── 时间轴槽位 ──
 struct TimelineSlot {
-    int index;
+    int index = 0;
     int fragmentId = -1;
     bool isLocked = false;
     bool isAnchorSlot = false;     // 是否为锚点槽位
@@ -133,7 +133,7 @@ struct TimelineSlot {
 struct AudioScene {
     QString name;
     QString description;
-    int sceneId;
+    int sceneId = 0;
     bool isDistorted = false;
     float coherenceScore = 0.0f;
 };
@@ -148,7 +148,7 @@ struct CharacterInfo {
 
 // ── 结局信息 ──
 struct EndingInfo {
-    EndingType type;
+    EndingType type = EndingType::None;
     QString title;
     QString description;
     QString condition;  // 达成条件描述
@@ -157,8 +157,8 @@ struct EndingInfo {
 
 // ── 选择记录 ──
 struct ChoiceRecord {
-    PlayerChoice choice;
-    GameChapter chapter;
+    PlayerChoice choice = PlayerChoice::None;
+    GameChapter chapter = GameChapter::Prologue;
     QString description;
 };
 
@@ -173,7 +173,7 @@ struct EchoFragment {
 
 // ── 结局余波录音 ──
 struct EpilogueRecord {
-    EndingType ending;
+    EndingType ending = EndingType::None;
     QString content;       // 余波录音文本（约90秒旁白）
 };
 
@@ -202,7 +202,7 @@ struct FragmentEcho {
 // ── 老刘静默摩斯（沉默中浮现的声音）──
 struct SilenceMorse {
     QString message;    // 摩斯信息
-    float threshold;    // 需要的静默时长
+    float threshold = 0.0f;    // 需要的静默时长
     bool revealed = false;
 };
 
@@ -217,7 +217,7 @@ enum class ChoicePoint {
 // ── 动态文案模板 ──
 // 用 {player} 占位玩家名，用 {suffix} 占位根据状态动态拼接的附加段落
 struct ChoiceTemplate {
-    ChoicePoint point;
+    ChoicePoint point = ChoicePoint::PrologueSigh;
     QString promptBase;      // 提示基础文本（含 {player} 占位符）
     QStringList options;     // 选项（含 {player} 占位符）
 };
