@@ -1,5 +1,6 @@
 <h1 align="center">MyAutomatic</h1>
 
+![MyAutomatic](assets/myautomatic-badge.svg)
 [![CMake on multiple platforms](https://github.com/tsymiar/MyAutomatic/actions/workflows/cmake-multi-platform.yml/badge.svg?branch=auto-dev)](https://github.com/tsymiar/MyAutomatic/actions/workflows/cmake-multi-platform.yml)
 [![Build Status](https://tsymiar.visualstudio.com/MyAutomatic/_apis/build/status%2Ftsymiar.MyAutomatic?branchName=auto-dev)](https://tsymiar.visualstudio.com/MyAutomatic/_build/latest?definitionId=70&branchName=auto-dev)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
@@ -39,7 +40,7 @@ Windows-only helpers live at the root: `choose.bat` / `choose.ps1` set the depen
 
 Static analysis of the whole repository is tracked: [![Codacy Badge](https://app.codacy.com/project/badge/Grade/af21f03e75a14429a74a0ec437d41993)](https://app.codacy.com/gh/tsymiar/MyAutomatic/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade).
 
-Third-party sources sit in `LinxSrvc/3rd/` as submodules ([![googletest](https://img.shields.io/badge/3rd-googletest%20v1.8.0-blue)](https://github.com/google/googletest), [![rdma-core](https://img.shields.io/badge/3rd-rdma--core%20v57.0-blue)](https://github.com/linux-rdma/rdma-core), [![rxe-dev](https://img.shields.io/badge/3rd-rxe--dev%20v3.18-blue)](https://github.com/SoftRoCE/rxe-dev), `json`, `lcov`); `./build.sh test` fetches the ones it needs (`librdmacm`/`libverbs`, `libevent`, `libwebsockets`, SQLite, `ffmpeg`, `SDL2` and friends are expected on the host and pulled in by the sub-projects when missing).
+Third-party sources sit in `LinxSrvc/3rd/` as submodules ([![googletest](https://img.shields.io/badge/3rd-googletest%20v1.8.0-blue)](https://github.com/google/googletest), [![rdma-core](https://img.shields.io/badge/3rd-rdma--core%20v57.0-blue)](https://github.com/linux-rdma/rdma-core), [![rxe-dev](https://img.shields.io/badge/3rd-rxe--dev%20v3.18-blue)](https://github.com/SoftRoCE/rxe-dev), `json` (declared in `.gitmodules` but not checked out), `lcov`); `./build.sh test` fetches the ones it needs (`librdmacm`/`libverbs`, `libevent`, `libwebsockets`, SQLite, `ffmpeg`, `SDL2` and friends are expected on the host and pulled in by the sub-projects when missing).
 
 ---
 
@@ -54,7 +55,14 @@ LinxSrvc
 | `gen/` (CMake chain) | `lookup`, `genSeek`, `libseekUtil.so`, `timeTest` (`time.cfg`), `lookup_test_v2`, `diffs`, `gn1`, `e.g`, `webevs_serve`, `mocking_main`, `mocking_client`, `dpsk_chat` (`params.txt`), `video_render` (`check.sh`), `sudoku-*.whl`, `similarity-*.vsix` |
 | `kos/` | `chsdev.ko`, `virtexdrv.ko`, `phy_mem.ko` — kernel modules copied there by `hdware` (Linux + kernel headers only) |
 
-A module-by-module walkthrough — build chains, key constants and known defects — lives in [`LinxSrvc/architecture.html`](LinxSrvc/architecture.html).
+A module-by-module walkthrough — build chains, key constants and known
+defects — lives in [`architecture.html`][arch-raw]. Click the
+button to view the rendered page:
+[![architecture walkthrough][arch-badge]][arch-preview]
+
+[arch-badge]: https://img.shields.io/badge/architecture-view-blue
+[arch-preview]: https://htmlpreview.github.io/?https://raw.githubusercontent.com/tsymiar/MyAutomatic/auto-dev/LinxSrvc/architecture.html
+[arch-raw]: https://raw.githubusercontent.com/tsymiar/MyAutomatic/auto-dev/LinxSrvc/architecture.html
 
 ### 💬 Messaging &amp; networking
 
@@ -74,7 +82,7 @@ A module-by-module walkthrough — build chains, key constants and known defects
 
 * **gSOAPverify**
 
-    A `SOAP` server that verifies logins against the contract in `myweb.wsdl`. One acceptor thread plus 8 workers over a 1024-slot ring of sockets; it daemonizes itself (`fork` + `setsid`), shuts down cleanly on `SIGINT` / `SIGTERM`, and exposes three APIs — `trans`, `get-server-status`, `login-by-key` (the first two are also reachable as plain `HTTP GET`, e.g. `?get-server-status@req=ram`). MySQL 8 on port `3306` is guarded by a reconnect watchdog, with the password taken from `MYAUTO_MYSQL_PSW`; without the MySQL dev package it still links, but every DB call degrades to a stub.
+    A `SOAP` server that verifies logins against the contract in `myweb.wsdl`. One acceptor thread plus 8 workers over a 1024-slot ring of sockets; it daemonizes itself (`fork` + `setsid`), shuts down cleanly on `SIGINT` / `SIGTERM`, and exposes three APIs — `trans`, `get-server-status`, `login-by-key`; of these only `get-server-status` doubles as a plain `HTTP GET` (`?get-server-status@req=ram`), `trans` and `login-by-key` are SOAP-only. MySQL 8 on port `3306` is guarded by a reconnect watchdog, with the password taken from `MYAUTO_MYSQL_PSW`; without the MySQL dev package it still links, but every DB call degrades to a stub.
 
 * **mocking_main | mocking_client**
 
@@ -88,7 +96,7 @@ A module-by-module walkthrough — build chains, key constants and known defects
 
 * **lookup | genSeek | libseekUtil.so | timeTest | lookup_test_v2**
 
-    _lookup_ searches recorded streams with `kmp` / `manacher` (`lookup <filePath> [pattern]`, `-h` for help; a `0x`-prefixed pattern is read as hex, otherwise the default run looks for the longest palindrome). _genSeek_ emits synthetic frames to test with. The two engines are built as libraries by default: `libseekUtil.so` for generation V1 (`seek/`) and `timeTest` + `time.cfg` for V2 (`time/`); flipping `BUILD_SEEK_TIME_LIB` / `BUILD_TIME_SEEK_LIB` produces the `seek_test` binary or `libtimeUtil.so` instead. _lookup_test_v2_ is the V2 end-to-end case (`lookup/test/main.cpp`, built with `-DTIMESEEK`). Index/query go through SQLite and become visible no-ops when built without `USE_SQLITE3` (the -dev package is auto-installed when `apt-get` exists; otherwise every DB call fails).
+    _lookup_ searches recorded streams with `kmp` / `manacher` (`lookup <filePath> [pattern]`, `-h` for help; a `0x`-prefixed pattern is read as hex, otherwise the default run looks for the longest palindrome). _genSeek_ emits synthetic frames to test with. The two engines are built as libraries by default: `libseekUtil.so` for generation V1 (`seek/`) and `timeTest` + `time.cfg` for V2 (`time/`); flipping `BUILD_SEEK_TIME_LIB` / `BUILD_TIME_SEEK_LIB` inside the sub-directory `CMakeLists.txt` produces the `seek_test` binary or `libtimeUtil.so` instead (both are plain `SET`, not cache variables, so passing `-D…` to cmake has no effect). _lookup_test_v2_ is the V2 end-to-end case (`lookup/test/main.cpp`, built with `-DTIMESEEK`). Index/query go through SQLite and become visible no-ops when built without `USE_SQLITE3` (the -dev package is auto-installed when `apt-get` exists; otherwise every DB call fails).
 
 * **gn1**
 
@@ -184,3 +192,7 @@ Market
 Prebuilt demo binaries kept as they were produced; the impact of one of them:
 
 <img src="assets/impact.png" title="impact" height="80%" width="80%" align="middle" />
+
+---
+
+![stack](assets/stack.svg)

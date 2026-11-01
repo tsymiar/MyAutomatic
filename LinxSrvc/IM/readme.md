@@ -171,7 +171,7 @@ PUBLISH → PRODUCER → m_msgQue → CONSUMER → SUBSCRIBE
 
 | Field | Layout |
 |-------|--------|
-| Header (48B, 4-aligned) | `rsv(1B)` \| `etag(4B)` \| `ssid(8B)` \| `text[32]` \| `size(4B)` |
+| Header (52B, 4-aligned) | `rsv(1B)` \| `pad(3B)` \| `etag(4B)` \| `ssid(8B)` \| `text[32]` \| `size(4B)` |
 | Payload (1-packed) | `stat[8]` \| `body[0..64K]` |
 
 `ssid = PORT<<16 | socket<<8 | IP` | `etag = KaiRoles enum`

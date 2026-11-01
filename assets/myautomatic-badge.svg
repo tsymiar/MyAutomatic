@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="332" height="20" role="img" aria-label="MyAutomatic: systems playground, Linux/C++">
+  <title>MyAutomatic — systems playground — Linux/C++</title>
+  <linearGradient id="mya-label" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#2B3D57" />
+    <stop offset="1" stop-color="#151E2B" />
+  </linearGradient>
+  <linearGradient id="mya-shade" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#FFFFFF" stop-opacity=".16" />
+    <stop offset=".5" stop-color="#FFFFFF" stop-opacity=".03" />
+    <stop offset="1" stop-color="#000000" stop-opacity=".14" />
+  </linearGradient>
+  <clipPath id="mya-clip">
+    <rect width="332" height="20" rx="3" />
+  </clipPath>
+  <g clip-path="url(#mya-clip)">
+    <rect width="116" height="20" fill="url(#mya-label)" />
+    <rect x="116" width="132" height="20" fill="#2EA043" />
+    <rect x="248" width="84" height="20" fill="#FCC624" />
+    <rect width="332" height="20" fill="url(#mya-shade)" />
+  </g>
+  <g transform="translate(17,10)" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round">
+    <rect x="-4" y="-4" width="8" height="8" rx="1.4" />
+    <path d="M-2.2 -7v3M2.2 -7v3M-2.2 7v-3M2.2 7v-3M-7 -2.2h3M-7 2.2h3M7 -2.2h-3M7 2.2h-3" />
+    <rect x="-1.1" y="-1.1" width="2.2" height="2.2" rx=".6" fill="#FFFFFF" stroke="none" />
+  </g>
+  <g font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11" text-anchor="middle">
+    <text x="64" y="15" fill="#010101" fill-opacity=".3">MyAutomatic</text>
+    <text x="64" y="14" fill="#FFFFFF">MyAutomatic</text>
+    <text x="182" y="15" fill="#010101" fill-opacity=".3">systems playground</text>
+    <text x="182" y="14" fill="#FFFFFF">systems playground</text>
+    <text x="290" y="15" fill="#FFFFFF" fill-opacity=".35" font-weight="600">Linux/C++</text>
+    <text x="290" y="14" fill="#0B2545" font-weight="600">Linux/C++</text>
+  </g>
+</svg>

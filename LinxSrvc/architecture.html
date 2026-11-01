@@ -156,7 +156,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 ├── trade/              # 量化交易（单文件 dual_ma_strategy.py + strategy.yaml）
 ├── vs-extension/       # VSCode 文件夹相似度扩展 (TS + Python 后端)
 ├── webevs/             # libevent HTTP 服务 + libwebsockets WS + git 静态前端
-├── 3rd/                # 第三方源码 (googletest, rdma-core, llama.cpp-to-hf ...)
+├── 3rd/                # 第三方源码 (googletest, rdma-core, rxe-dev, lcov；json 已在 .gitmodules 声明但未检出)
 └── bin/ gen/ build/ out/ kos/   # 产物（运行时生成，均被 .gitignore 忽略）</pre>
 </div>
 </div></section>
@@ -183,7 +183,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <table style="margin-top:.6rem"><thead><tr><th>构建链</th><th>覆盖模块</th><th>典型产物（构建后落入 ../gen / ../bin）</th></tr></thead><tbody>
 <tr><td><b style="color:var(--bl2)">CMake</b>（顶层 CMakeLists.txt，要求 2.8…3.16）</td><td>e.g、media、dpsk、gn1、diff、lookup（挂 <code>time</code> / <code>seek</code> / <code>tool</code> / <code>test</code> 四个子目录）、mock</td><td><code>e.g</code> <code>video_render</code> <code>diffs</code> <code>gn1</code> <code>dpsk_chat</code> <code>lookup</code> <code>genSeek</code> <code>libseekUtil.so</code>（seek 默认，开关置 0 则出 <code>seek_test</code>）<code>timeTest</code> + <code>time.cfg</code>（time 默认，开关置 1 则出 <code>libtimeUtil.so</code>）<code>lookup_test_v2</code> <code>mocking_main</code> <code>mocking_client</code>（<b>均落在 ../gen/</b>）</td></tr>
 <tr><td><b style="color:var(--yl)">Make</b>（顶层 Makefile 的 all）</td><td>IM、hdware(all)、thread(all)、webevs(build)、gSOAPverify（<code>|| true</code> 失败不中断）、pyex、vs-extension、Mac/Transfer（仅 Darwin 走 <code>build_app.sh</code>，其它平台打印 skipped）</td><td><code>bin/IM.exe</code> <code>bin/kaics.exe</code> <code>bin/client.exe</code> <code>bin/pthdtest.exe</code> <code>bin/gSOAPverify</code> <code>bin/chigpio</code> <code>bin/mes909</code> <code>bin/pipefifo</code> <code>bin/rdma_server.exe</code> <code>bin/rdma_client.exe</code> <code>bin/imgfilesnap.exe</code> <code>bin/VideoCapture</code> <code>bin/dirtyhack</code> <code>bin/myweb.wsdl</code>（gSOAPverify 链接后拷出）<code>gen/similarity-*.vsix</code> <code>gen/*.whl</code> <code>gen/webevs_serve</code>（需跑一次 <code>make -C webevs build</code> 或顶层 <code>make all</code> 才落入 <code>gen/</code>）</td></tr>
-<tr><td><b style="color:var(--pk)">独立入口</b></td><td>Mac/Transfer（SwiftPM）、cyber（pip + python）、trade（pip + python）、pyex（python -m build）</td><td><code>FileTransfer.app</code>（build_app.sh）、<code>*.whl</code>（gen/）</td></tr>
+<tr><td><b style="color:var(--pk)">独立入口</b></td><td>Mac/Transfer（SwiftPM）、cyber（pip + python）、trade（pip + python）、pyex（python -m build）</td><td><code>FileTransferMac.app</code>（build_app.sh）、<code>*.whl</code>（gen/）</td></tr>
 </tbody></table>
 <div class="rg rgf" style="margin-top:.6rem">
 <div class="rc rm"><h4>webevs 的构建：两个入口两套落点，且规则挂在文件上</h4><p><code>./build.sh webevs</code> 因目录内有 CMakeLists 而在 <code>webevs/build/</code> 就地构建；<code>make -C webevs build</code>（顶层 <code>all</code> 的第 4 步）才走该 Makefile，用共用的 <code>LinxSrvc/build</code> 并把二进制拷进 <code>gen/</code>。又因为构建规则的目标是目录里的 <code>Makefile</code> 文件本身，一旦生成过，<code>make -C webevs make-all</code> 会判为「已最新」空转，仍需用 <code>make -C webevs build</code>（= clean + make-all）强制重建。</p></div>
@@ -196,7 +196,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <div style="text-align:center;margin-bottom:.3rem"><div class="n s1" style="width:auto;padding:.3rem .8rem"><div class="lb" style="font-size:.68rem">同一目录下的两套东西：独立聊天服务器 + 可复用 pub/sub 库</div><div class="ln">IM.cc（1796 行）｜ KaiSocket.cc/.h（956/146）｜ KaiTest.cxx（168）</div></div></div>
 <div class="rw">
 <div class="ag"><div class="al">IM.cc — 聊天服务器</div><div class="ao">
-<div class="n s1"><div class="lb">守护化</div><div class="ln">umask 077 → setsid → chdir /</div></div>
+<div class="n s1"><div class="lb">守护化</div><div class="ln">umask 077 → inst_mssg() 主循环；setsid / chdir / 在循环返回后</div></div>
 <div class="n s1"><div class="lb">fork-per-conn</div><div class="ln">accept → fork → monitor()</div></div>
 <div class="n x1"><div class="lb">SysV shm IPC</div><div class="ln">IPC_KEY 0x520607</div></div>
 <div class="n y1"><div class="lb">控制台线程</div><div class="ln">quit / kick / cls</div></div>
@@ -204,7 +204,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 </div></div>
 <div class="ag"><div class="al">KaiSocket — 异步传输库</div><div class="ao">
 <div class="n m1"><div class="lb">SERVER/BROKER/CLIENT</div><div class="ln">三角色</div></div>
-<div class="n i1"><div class="lb">Header 48B</div><div class="ln">rsv/etag/ssid/text[32]/size</div></div>
+<div class="n i1"><div class="lb">Header 52B</div><div class="ln">rsv/pad/etag/ssid/text[32]/size</div></div>
 <div class="n i1"><div class="lb">Payload</div><div class="ln">stat[8] + 变长 body</div></div>
 <div class="n g1"><div class="lb">m_msgQue</div><div class="ln">deque 消息队列</div></div>
 <div class="n x1"><div class="lb">USE_EPOLL</div><div class="ln">Linux 真 epoll，否则退化</div></div>
@@ -230,7 +230,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <table style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现（代码实测）</th></tr></thead><tbody>
 <tr><td>进程模型</td><td>IM.cc 主进程 accept + 每连接 <code>fork()</code>；<code>prctl(PR_SET_NAME,"inst_mssg")</code></td></tr>
 <tr><td>并发 / IPC</td><td>System V 共享内存在线表（<code>IPC_KEY 0x520607</code>），<code>select()</code> 做 socket 就绪探活，<code>set_n_get_mem</code> 带长度夹紧</td></tr>
-<tr><td>KaiSocket 传输</td><td>48B 定长头 + 变长负载，<code>ssid = PORT&lt;&lt;16 | socket&lt;&lt;8 | IP</code>；Linux 走 <code>USE_EPOLL</code>，其它平台退化为阻塞 accept + select/sleep</td></tr>
+<tr><td>KaiSocket 传输</td><td>52B 定长头 + 变长负载，<code>ssid = PORT&lt;&lt;16 | socket&lt;&lt;8 | IP</code>；Linux 走 <code>USE_EPOLL</code>，其它平台退化为阻塞 accept + select/sleep</td></tr>
 <tr><td>运维参数</td><td><code>./IM.exe -m</code> 打印共享内存在线表，<code>./IM.exe -x</code> 清空在线表（与端口参数位冲突）</td></tr>
 <tr><td>消息/文件</td><td><code>-SS topic</code> 订阅、<code>-PB topic msg</code> 发布、<code>-TF topic file</code> 文件传输</td></tr>
 <tr><td>构建产物</td><td>Makefile → <code>bin/IM.exe</code> + <code>bin/kaics.exe</code>；CMake → 共享库 <code>kaics</code>（<code>../../lib/libkaics.so</code>）</td></tr>
@@ -283,8 +283,8 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <tr><td>事件框架</td><td>libevent2 <code>event2/http.h</code>（evhttp + event_base_dispatch），非裸 epoll</td></tr>
 <tr><td>允许方法</td><td>GET｜POST｜HEAD｜OPTIONS｜PUT｜DELETE；OPTIONS 强制回 200</td></tr>
 <tr><td>WebSocket</td><td>libwebsockets 独立端口 + 独立线程；CMake <code>find_library(websockets)</code> 命中才加 <code>-DWITH_WEBSOCKETS</code>，缺失时 <code>WsServe.h</code> 提供空桩</td></tr>
-<tr><td>静态前端</td><td>默认 <code>gh-pages:./webevs-frontend</code>，启动时 <code>rm -rf</code> 后用 <code>git archive | tar -x</code> 导出；先从 <code>WEBEV_REPO</code> 或 <code>git rev-parse --show-toplevel</code> 定位仓库</td></tr>
-<tr><td>可选 LevelDB</td><td>环境变量 <code>WITH_LEVELDB</code> 指向根目录时追加头文件路径与 leveldb 链接</td></tr>
+<tr><td>静态前端</td><td>默认 <code>gh-pages:./webevs-frontend</code>，启动时 <code>rm -rf</code> 后用 <code>git archive</code> 出 tar 再 <code>tar -xf</code> 解包；先从 <code>WEBEV_REPO</code> 或 <code>git rev-parse --show-toplevel</code> 定位仓库</td></tr>
+<tr><td>可选 LevelDB</td><td>环境变量 <code>WITH_LEVELDB</code> 指向根目录时追加头文件路径与 leveldb 链接（CMake 内取的是 <code>${WITH_LEVELDB}</code> 而非 <code>$ENV{}</code>，未导出时路径退化为 <code>/include</code>）</td></tr>
 <tr><td>启动方式</td><td><code>./webevs_serve &lt;port&gt; [ws_port]</code> 或 <code>./webevs_serve http://…</code>（客户端），WS 端口可来自 <code>WEBEV_WS_PORT</code></td></tr>
 </tbody></table>
 <div class="tags" style="margin-top:.4rem"><span class="t tb">libevent2</span><span class="t tb">evhttp</span><span class="t tg2">libwebsockets</span><span class="t tc">Reactor</span><span class="t tp">JSON</span><span class="t ty">git archive 前端</span></div>
@@ -330,7 +330,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 </div>
 <div class="dv"></div>
 <div class="fc">
-<div class="fd" style="background:rgba(59,130,246,.06)"><div class="dm">1</div><div><div class="lb" style="font-size:.6rem">fork + setsid 守护化（父进程 waitpid）→ soap_bind(port) → listen(BACKLOG=64)；WSDL 读取经 open_wsdl_safe() 做路径穿越拦截</div></div></div>
+<div class="fd" style="background:rgba(59,130,246,.06)"><div class="dm">1</div><div><div class="lb" style="font-size:.6rem">fork + setsid 守护化（父进程 waitpid）→ soap_bind(port) → listen(BACKLOG=64)；WSDL 读取经 open_wsdl_safe() 做路径穿越拦截（默认构建传的是固定字面量 myweb.wsdl，该拦截只对 NS_HTTPPOST 构建下的请求文件名生效）</div></div></div>
 <div class="dx">↓</div>
 <div class="fd" style="background:rgba(139,92,246,.06)"><div class="dm">2</div><div><div class="lb" style="font-size:.6rem">soap_accept()（超时 20s 只 continue）→ enqueue(sock, ip) 压入 1024 槽环形队列（满则 SOAP_EOM）</div></div></div>
 <div class="dx">↓</div>
@@ -344,7 +344,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <tr><td>返回约定</td><td>服务函数<b>必须返回 SOAP_OK(0)</b>；返回业务码会被 <code>soapServer.cpp</code> 的 <code>if (soap-&gt;error) return soap-&gt;error;</code> 吞掉响应体</td></tr>
 <tr><td>内存约定</td><td>出参字符串必须 <code>soap_strdup(soap, …)</code>，存栈变量地址会 stack-use-after-return</td></tr>
 <tr><td>数据库</td><td><code>SQL_PORT 3306</code>、口令读环境变量 <code>MYAUTO_MYSQL_PSW</code>、<code>watch_connect()</code> 守护线程持续重试（<code>MAX_RECONNECT 9</code> 只控制日志打印）；SQL 经 <code>build_sql()</code> 用 <code>mysql_real_escape_string</code> 转义、<code>snprintf</code> 截断（<code>MAX_SQL_LEN 512</code>）、表名走 <code>[A-Za-z0-9_]</code> 白名单；建库脚本 <code>file/myautomatic.sql</code></td></tr>
-<tr><td>状态监控</td><td><code>get_mem_stat()</code>（sysconf 取内存空闲率）与 <code>detect_eth_cable()</code>（ETHTOOL 网线检测）；HTTP GET 与 SOAP 两路都支持 <code>req=100|ram|cpu</code>，<code>cpu</code> 模式额外带 <code>uname</code> 架构信息</td></tr>
+<tr><td>状态监控</td><td><code>get_mem_stat()</code>（sysconf 取内存空闲率）与 <code>detect_eth_cable()</code>（ETHTOOL 网线检测）；<code>get-server-status</code> 同时支持 HTTP GET 与 SOAP 两路（<code>req=100|ram|cpu</code>），<code>trans</code> 仅走 SOAP，<code>cpu</code> 模式额外带 <code>uname</code> 架构信息</td></tr>
 <tr><td>兼容处理</td><td><code>soap_socket_t</code> 解耦平台 socket 类型；AArch64 下常量放匿名 namespace</td></tr>
 <tr><td>输入加固</td><td><code>trans</code> 改用 <code>strtok_r</code>（并发安全）+ 栈上 <code>msg_copy</code>/<code>strnlen</code>/<code>snprintf</code>（<code>TRANS_MAX_PARAM 8</code>、<code>TRANS_KEY_LEN/VAL_LEN 16</code>、<code>TRANS_BUF_LEN 128</code>）；<code>get_server_status</code> 用 <code>strcmp</code> 取代越界 <code>memcmp</code></td></tr>
 <tr><td>构建与产物</td><td>Makefile 探测 <code>HAVE_MYSQL</code>：缺开发库时打印告警（附 apt/yum 命令）并<b>照样产出 ELF</b>（5 个 TU，代码用 <code>#ifdef HAVE_MYSQL</code> 兜底）；产物 <code>../bin/gSOAPverify</code>，<code>.o</code> 落 <code>../out/gSOAPverify/</code>，链接后把 <code>myweb.wsdl</code> 拷进 <code>../bin/</code>；<code>make fix</code> 调 <code>soap/gen_client_fix.py</code></td></tr>
@@ -371,7 +371,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <div class="n s1"><div class="lb">SeekTime.cpp (502)</div><div class="ln">seekFileDataTime()</div></div>
 <div class="n m1"><div class="lb">SeekDbMgr.cpp (551)</div><div class="ln">索引 / 查询（std::mutex，SQL 走 %q 转义）</div></div>
 <div class="n e1"><div class="lb">windSize 0x10000</div><div class="ln">maxFrame 0x100000</div></div>
-<div class="n e1"><div class="lb">SeekComm.h (46)</div><div class="ln">SelectFileOffset / FileFrameData</div></div>
+<div class="n e1"><div class="lb">SeekComm.h (49)</div><div class="ln">SelectFileOffset / FileFrameData</div></div>
 </div></div>
 <div class="ag"><div class="al">time/ V2 引擎</div><div class="ao">
 <div class="n i1"><div class="lb">TimeSeek.cpp (382)</div><div class="ln">无 duration 参数版本</div></div>
@@ -381,7 +381,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 </div></div>
 <div class="ag"><div class="al">配套工具</div><div class="ao">
 <div class="n y1"><div class="lb">tool/main.cpp (624)</div><div class="ln">genSeek v1.0.7（getopt_long，同时写 .csv）</div></div>
-<div class="n g1"><div class="lb">seek/ → libseekUtil.so</div><div class="ln">BUILD_SEEK_TIME_LIB=1（默认）；置 0 出 seek_test</div></div>
+<div class="n g1"><div class="lb">seek/ → libseekUtil.so</div><div class="ln">BUILD_SEEK_TIME_LIB=1（默认，普通 SET）；改文件置 0 出 seek_test</div></div>
 <div class="n g1"><div class="lb">time/ → timeTest + time.cfg</div><div class="ln">BUILD_TIME_SEEK_LIB=0（默认）；置 1 出 libtimeUtil.so</div></div>
 <div class="n g1"><div class="lb">test/ → lookup_test_v2</div><div class="ln">V2 分支端到端用例（-DTIMESEEK）</div></div>
 <div class="n g1"><div class="lb">sql/Sqlite.hxx (249)</div><div class="ln">header-only，有 USE_SQLITE3 才真连库（含 queryParam 绑定参数）；否则显式降级告警</div></div>
@@ -405,7 +405,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <tr><td>匹配结果上限</td><td><code>MatchedFrame frames[1000]</code></td><td>单次 KMP 返回帧数上限</td></tr>
 <tr><td>索引判据</td><td><code>queryFileIdbyName</code> 成败</td><td><b>不可提前登记</b> insertFileIdbyName，否则跳过建索引、永远查不到时间</td></tr>
 <tr><td>DB 层降级</td><td><code>USE_SQLITE3</code> 宏</td><td>未定义时 <code>Sqlite.hxx</code> 退化为 stub，但会<b>可见地失败</b>：编译期 <code>#warning</code>、首次调用 stderr 告警，<code>open()</code> 恒 false / <code>execute()</code> 恒 -1 / <code>query()</code> 恒 nullptr；CMake 侧降级也发 <code>message(WARNING)</code></td></tr>
-<tr><td>构建开关（默认值）</td><td><code>BUILD_SEEK_TIME_LIB=1</code> / <code>BUILD_TIME_SEEK_LIB=0</code></td><td>默认产出 <code>libseekUtil.so</code> 与 <code>timeTest</code>+<code>time.cfg</code>；开关取反则出 <code>seek_test</code> / <code>libtimeUtil.so</code>（均 POST_BUILD 拷 <code>../gen</code>）</td></tr>
+<tr><td>构建开关（默认值）</td><td><code>BUILD_SEEK_TIME_LIB=1</code> / <code>BUILD_TIME_SEEK_LIB=0</code></td><td>默认产出 <code>libseekUtil.so</code> 与 <code>timeTest</code>+<code>time.cfg</code>；开关取反则出 <code>seek_test</code> / <code>libtimeUtil.so</code>（均 POST_BUILD 拷 <code>../gen</code>；两处都是普通 SET 而非缓存变量，只能改 CMakeLists，命令行 <code>-D</code> 无效）</td></tr>
 <tr><td>sqlite3 探测</td><td><code>seek/</code> 与 <code>test/</code> 才有</td><td>探测失败会尝试 <code>sudo apt-get install libsqlite3-dev</code> 并重探，成功才加 <code>-DUSE_SQLITE3</code>（含 <code>message(WARNING)</code> 降级告警）；<code>time/</code> 没有该探测，故 <code>timeUtil</code>/<code>timeTest</code> 里的 <code>Sqlite.hxx</code> 恒为 stub</td></tr>
 <tr><td>测试链接</td><td><code>LOOKUP_ENGINE_LIB</code></td><td><code>test/</code> 的缓存变量，决定先链 <code>timeUtil</code> 还是 <code>seekUtil</code>；两个引擎都找不到时只跳过该目标并告警，并设置 <code>BUILD_RPATH/INSTALL_RPATH</code> 指向 <code>../gen</code></td></tr>
 <tr><td>版本标记</td><td><code>_GIT_COMMIT</code> / <code>_BUILT_TIME</code></td><td><code>seek/</code> 构建时由 <code>git rev-parse --short=8 HEAD</code> 与时间戳注入</td></tr>
@@ -495,7 +495,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 </div></div>
 <table style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现（代码实测）</th></tr></thead><tbody>
 <tr><td>工程结构</td><td><code>Package.swift</code>（swift-tools 5.9，macOS 13+）：<code>FileTransferCore</code>(C++17, libc++) 被 <code>FileTransferMac</code> 依赖</td></tr>
-<tr><td>桥接方式</td><td><code>include/TransferBridge.h</code> 提供 <code>extern "C"</code> 接口（<code>ft_create/ft_start_server/ft_send_local_file/ft_set_save_path/ft_set_backoff_enabled…</code>），Swift 用 <code>Unmanaged</code> 传 self 作回调 userData</td></tr>
+<tr><td>桥接方式</td><td><code>include/TransferBridge.h</code> 提供 <code>extern "C"</code> 接口（<code>ft_create/ft_start_server/ft_send_file/ft_set_save_path/ft_set_backoff_enabled…</code>），Swift 用 <code>Unmanaged</code> 传 self 作回调 userData</td></tr>
 <tr><td>健壮性</td><td>文件名长度上限 + 路径穿越过滤；空文件支持（分片按剩余字节算）；SO_SNDTIMEO + sendAll 超时不忙等；接收端 accept 后 <code>recv(MSG_PEEK)</code> 探测「到达即死」连接</td></tr>
 <tr><td>可选项</td><td>指数退避开关（构造默认关闭=快速判死）、保存路径、默认端口、日志控制台显示，均 UserDefaults 持久化</td></tr>
 <tr><td>本机限制</td><td><b>Linux 无法构建 SwiftUI 部分</b>（无 SwiftUI/AppKit/Combine）；C++ core 可 <code>g++ -fsyntax-only -std=c++17</code> 校验，Swift 层只能 <code>swiftc -typecheck</code> + 手写 modulemap 顶替</td></tr>
@@ -522,7 +522,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 </div></div>
 <div class="ag"><div class="al">rdma/</div><div class="ao">
 <div class="n i1"><div class="lb">server.c (231) / client.c (132)</div><div class="ln">Soft-RoCE 用户态</div></div>
-<div class="n x1"><div class="lb">端口 12345</div><div class="ln">QP depth 5 / buf 1024</div></div>
+<div class="n x1"><div class="lb">端口 12345</div><div class="ln">QP depth 5（仅服务端）/ buf 1024</div></div>
 <div class="n e1"><div class="lb">-lrdmacm -libverbs</div><div class="ln">RDMA_WRITE</div></div>
 <div class="n g1"><div class="lb">set_sw-rxe.sh</div><div class="ln">环境配置</div></div>
 </div></div>
@@ -591,12 +591,12 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <section id="th"><div class="ct">
 <div class="st"><h2>🧵 Thread — 纯 C 线程池</h2><span class="tg">C / pthread</span></div>
 <div class="cd"><div class="cd2">
-<div style="text-align:center;margin-bottom:.3rem"><div class="n o1" style="width:auto;padding:.3rem .8rem"><div class="lb" style="font-size:.68rem">零 C++ 依赖的 pthdpool：预创建固定 worker + FIFO 任务队列</div><div class="ln">pthdpool.c(220) · pthdpool.h(90) · pthdtest.c(74)</div></div></div>
+<div style="text-align:center;margin-bottom:.3rem"><div class="n o1" style="width:auto;padding:.3rem .8rem"><div class="lb" style="font-size:.68rem">零 C++ 依赖的 pthdpool：预创建固定 worker + FIFO 任务队列</div><div class="ln">pthdpool.c(216) · pthdpool.h(91) · pthdtest.c(68)</div></div></div>
 <div class="rw">
 <div class="ag"><div class="al">核心结构</div><div class="ao">
 <div class="n o1"><div class="lb">pthd_pool_t</div><div class="ln">队列头尾 + 线程表</div></div>
 <div class="n y1"><div class="lb">MAX_THRD_NUM 1024</div></div>
-<div class="n e1"><div class="lb">STK_SIZE 10*4096</div></div>
+<div class="n e1"><div class="lb">线程栈</div><div class="ln">pthread 默认 attr，无共享/自定义栈</div></div>
 </div></div>
 <div class="ag"><div class="al">API</div><div class="ao">
 <div class="n g1"><div class="lb">pthd_pool_init(sz_que, thrd_num)</div></div>
@@ -620,23 +620,23 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <div class="fd" style="background:rgba(139,92,246,.06)"><div class="dm">4</div><div><div class="lb" style="font-size:.6rem">pthd_pool_destroy() 广播退出 + join，错误码 -1..-5</div></div></div>
 </div>
 </div></div>
-<div class="tags" style="margin-top:.4rem"><span class="t o1">pthread</span><span class="t o1">互斥锁</span><span class="t o1">条件变量</span><span class="t tr">共享栈区</span></div>
+<div class="tags" style="margin-top:.4rem"><span class="t o1">pthread</span><span class="t o1">互斥锁</span><span class="t o1">条件变量</span><span class="t tc">FIFO 队列</span></div>
 </div></section>
 
 <section id="tl"><div class="ct">
 <div class="st"><h2>🛠 工具集 — mock / diff / gn1 / pyex / shell / test</h2><span class="tg">Utilities</span></div>
 <div class="g2">
 <div class="cd"><h4>🚀 mock — 网络吞吐压测</h4>
-<p style="font-size:.68rem;color:var(--t2)">同一份 <code>socket.cpp</code>(649) 编译出 <code>mocking_main</code>(服务端) 与 <code>mocking_client</code>(<code>-DCLIENT</code>)：TCP / UDP / 组播三种模式，可落盘校验。发送侧「队列 + 最多 64 worker」，<code>Message</code> 自持内存 move-only；<code>SIGINT</code> 触发统计。<br>常量：MAX_PKG_SIZE 4M · MAX_WORK_THREADS 64 · MAX_QUEUE_SIZE 1000 · 默认端口 8899；组播地址判定 224.0.0.0–239.255.255.255。</p>
+<p style="font-size:.68rem;color:var(--t2)">同一份 <code>socket.cpp</code>(657) 编译出 <code>mocking_main</code>(服务端) 与 <code>mocking_client</code>(<code>-DCLIENT</code>)：TCP / UDP / 组播三种模式，可落盘校验。发送侧「队列 + 最多 64 worker」，<code>Message</code> 自持内存 move-only；统计在连接断开与每秒 <code>tickRate</code> 处输出，<code>SIGINT</code> 只做清理并退出。<br>常量：MAX_PKG_SIZE 4M · MAX_WORK_THREADS 64 · MAX_QUEUE_SIZE 1000 · 默认端口 8899；组播地址判定 224.0.0.0–239.255.255.255。</p>
 <div class="tags"><span class="t tb">TCP/UDP/组播</span><span class="t ty">多线程发送</span><span class="t tg2">吞吐统计</span></div></div>
 <div class="cd"><h4>📊 diff — 源码相似度 / 抄袭度</h4>
-<p style="font-size:.68rem;color:var(--t2)"><code>analyzing.cc</code>(327，C++17，无第三方库)：只对 24 种文本后缀取 UTF 文件 → <code>get_effective_content()</code> 去注释与空白 → 逐行入 <code>map&lt;string,int&gt;</code> 求交集 <code>Σmin</code> → <code>ratio = duplicates / max(行数)</code>（&gt;0.8 绿 / &gt;0.4 黄 / 否则红）。支持 <code>--exclude</code>（可多次）、<code>--diff</code>、<code>--no-color</code>；源与目标必须同为文件或同为目录。</p>
-<div class="tags"><span class="t tc">多重集交集</span><span class="t ty">去注释去空白</span><span class="t tg2">24 种后缀</span></div></div>
+<p style="font-size:.68rem;color:var(--t2)"><code>analyzing.cc</code>(498，C++17，无第三方库)：只对 25 种文本后缀取 UTF 文件 → <code>get_effective_content()</code> 去注释与空白 → 逐行入 <code>unordered_map&lt;string,size_t&gt;</code> 求交集 <code>Σmin</code> → <code>ratio = duplicates / max(行数)</code>（&gt;0.8 绿 / &gt;0.4 黄 / 否则红）。支持 <code>--exclude</code>（可多次）、<code>--diff</code>、<code>--no-color</code>；源与目标必须同为文件或同为目录。</p>
+<div class="tags"><span class="t tc">多重集交集</span><span class="t ty">去注释去空白</span><span class="t tg2">25 种后缀</span></div></div>
 <div class="cd"><h4>🧪 gn1 — 测试数据生成器</h4>
-<p style="font-size:.68rem;color:var(--t2)"><code>main.cxx</code>(547)：按帧描述语法 <code>name:length[=fixed_value]</code> 生成按规律递增/递减的大文件，<code>size</code> 字段自动回填帧长，可选 8/16/32/64bit 与大小端，收尾打印平均 MB/s。另有 detached 线程每 100ms 打百分比进度。<br>默认：<code>g_file=test</code>、<code>g_total=1048576</code>、<code>g_bits=32</code>；Linux 下 root 时产物装到 <code>/usr/local/bin</code>，否则 <code>../gen</code>。</p>
+<p style="font-size:.68rem;color:var(--t2)"><code>main.cxx</code>(547)：按帧描述语法 <code>name:length[=fixed_value]</code> 生成按规律递增/递减的大文件，<code>size</code> 字段自动回填帧长，可选 8/16/32/64bit 与大小端，收尾打印平均 MB/s。另有 detached 线程每 100ms 打百分比进度。<br>默认：<code>g_file=test</code>、<code>g_total=1048576</code>、<code>g_bits=32</code>；Linux 下 root 且 <code>/usr/local/bin</code> 可写时产物装到该目录，否则 <code>../gen</code>。</p>
 <div class="tags"><span class="t tp">帧模板语法</span><span class="t tb">大小端可配</span><span class="t ty">吞吐统计</span></div></div>
 <div class="cd"><h4>🐍 pyex — 数独 C 扩展</h4>
-<p style="font-size:.68rem;color:var(--t2)"><code>setup.py</code> 声明 <code>Extension('sudoku', sources=['extend.c','sudoku.c'])</code>：<code>extend.c</code>(28) 导出 <code>sudoku.game()</code>，<code>sudoku.c</code>(217) 用 <code>placeable()</code> 约束检查 + <code>backtrace()</code> 回溯求解 + <code>shuffle()</code> 出题。<code>make.sh</code> 走 <code>python -m build</code>，wheel 输出 <code>../gen</code>；脚本先探测解释器与 PEP 668 标记（<code>stdlib/EXTERNALLY-MANAGED</code>），命中时自动给 pip 加 <code>--break-system-packages</code>，旧版 pip 不识别该 flag 会降级重试。</p>
+<p style="font-size:.68rem;color:var(--t2)"><code>setup.py</code> 声明 <code>Extension('sudoku', sources=['extend.c','sudoku.c'])</code>：<code>extend.c</code>(28) 导出 <code>sudoku.game()</code>，<code>sudoku.c</code>(217) 用 <code>placeable()</code> 约束检查 + <code>backtrace()</code> 回溯求解 + <code>shuffle()</code> 出题。<code>make.sh</code> 走 <code>python -m build</code>（wheel 留在项目根；「拷进 <code>../gen</code>」的规则写在 <code>Makefile</code> 里，其判断式 <code>[ -f $(ls -1 *.whl) ]</code> 语法无效，实际不会执行）；脚本先探测解释器与 PEP 668 标记（<code>stdlib/EXTERNALLY-MANAGED</code>），命中时自动给 pip 加 <code>--break-system-packages</code>，旧版 pip 不识别该 flag 会降级重试。</p>
 <div class="tags"><span class="t ty">CPython C API</span><span class="t tp">回溯求解</span></div></div>
 <div class="cd"><h4>🌀 shell — 运维与交叉编译脚本</h4>
 <p style="font-size:.68rem;color:var(--t2)"><code>x64mk/</code>：QEMU 模拟 amd64 容器里 gradle 打 Device2Device APK（env.sh 纯变量配置，可被 <code>$DKQM_HOME/env.local</code> 覆盖；Dockerfile / build-image.sh / build-apk.sh / kill-build.sh，JDK11+NDK23+Gradle7.0.2，gradle 堆 <code>-Xmx1500m</code> 适配本机 ~7.6GiB 内存）<br><code>expect/</code>：expect 自动登录 + pf 端口转发；另有 <code>blobs.sh</code>（Caffe prototxt 批处理）、<code>del_mac_icon.sh</code>、<code>sign_gdb.sh</code>、<code>gitbase.sh</code>、<code>cudaturch</code>（PyTorch nightly cu126）、<code>shadowsocks.sh</code>、Windows 自启动 bat/vbs。</p>
@@ -653,7 +653,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <section id="dp"><div class="ct">
 <div class="st"><h2>🤖 dpsk — DeepSeek API 客户端</h2><span class="tg">C++11 / cURL / nlohmann_json</span></div>
 <div class="cd"><div class="cd2">
-<div style="text-align:center;margin-bottom:.3rem"><div class="n x1" style="width:auto;padding:.3rem .8rem"><div class="lb" style="font-size:.68rem">命令行聊天：<code>Chat.cc</code> 状态机 + <code>CurlReqs.cpp</code> 网络层</div><div class="ln">CurlReqs.cpp(342) · CurlReqs.h(59) · Chat.cc(69) · Utils.hpp(792)</div></div></div>
+<div style="text-align:center;margin-bottom:.3rem"><div class="n x1" style="width:auto;padding:.3rem .8rem"><div class="lb" style="font-size:.68rem">命令行聊天：<code>Chat.cc</code> 状态机 + <code>CurlReqs.cpp</code> 网络层</div><div class="ln">CurlReqs.cpp(350) · CurlReqs.h(59) · Chat.cc(69) · Utils.hpp(846)</div></div></div>
 <div class="rw">
 <div class="ag"><div class="al">接口</div><div class="ao">
 <div class="n g1"><div class="lb">/chat/completions</div><div class="ln">POST 对话</div></div>
@@ -709,7 +709,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <section id="vs"><div class="ct">
 <div class="st"><h2>🔌 VS Extension — VSCode 文件夹相似度扩展</h2><span class="tg">TypeScript / Python</span></div>
 <div class="cd"><div class="cd2">
-<div style="text-align:center;margin-bottom:.3rem"><div class="n y1" style="width:auto;padding:.3rem .8rem"><div class="lb" style="font-size:.68rem">TS 前端负责交互与展示，Python 后端负责真正的比对计算</div><div class="ln">extension.ts(484) · parse_text.ts(168) · view_html.ts(241) · scripts/similarity.py(658, 软链接)</div></div></div>
+<div style="text-align:center;margin-bottom:.3rem"><div class="n y1" style="width:auto;padding:.3rem .8rem"><div class="lb" style="font-size:.68rem">TS 前端负责交互与展示，Python 后端负责真正的比对计算</div><div class="ln">extension.ts(469) · parse_text.ts(289) · view_html.ts(241) · scripts/similarity.py(663, 软链接)</div></div></div>
 <div class="rw">
 <div class="ag"><div class="al">TS 扩展</div><div class="ao">
 <div class="n y1"><div class="lb">similarity.compareFolders</div><div class="ln">右键多选比较</div></div>
@@ -790,10 +790,10 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <div class="st"><h2>⚠️ 风险与待办清单</h2><span class="tg">Risk Register</span></div>
 <div class="rg">
 <div class="rc rh"><h4>🔴 多套构建系统共用目录 <span class="sr sh2">High</span></h4><p>CMake 链与 Make 链各自为政，<code>LinxSrvc/build</code> 被两者共用，多个子项目同时以 <code>../gen</code> 为输出目录；一处 clean 可能清掉另一处的中间文件。</p></div>
-<div class="rc rm"><h4>🟡 IM 账号落盘格式脆弱 <span class="sr sm">Medium</span></h4><p>用户/群组表以<b>裸结构体</b> <code>fwrite</code> 写 <code>accounts</code> 文件，字段一改即不可读，且不跨平台（含 <code>MAX_ACTIVE</code> 差异）。</p></div>
-<div class="rc rm"><h4>🟡 IM 命令执行面 <span class="sr sm">Medium</span></h4><p><code>EXEC</code>/<code>IMAGE</code> 分支直接 <code>execvp("imgfilesnap.exe")</code>（RASPI 下为 raspistill），属于外部命令执行面，需约束输入。</p></div>
+<div class="rc rm"><h4>🟡 IM 账号落盘格式脆弱 <span class="sr sm">Medium</span></h4><p>用户/群组表以<b>裸结构体</b> <code>fwrite</code> 写 <code>accounts</code> 文件，字段一改即不可读，且不跨平台（落盘尺寸由 <code>MAX_USERS</code> / <code>MAX_ZONES</code> 决定）。</p></div>
+<div class="rc rm"><h4>🟡 IM 命令执行面 <span class="sr sm">Medium</span></h4><p><code>EXEC</code> 分支在 <code>vfork()</code> 子进程里 <code>execvp("imgfilesnap.exe")</code>（RASPI 下为 raspistill），属于外部命令执行面，需约束输入；<code>IMAGE</code> 分支只读取图片文件。</p></div>
 <div class="rc rm"><h4>🟡 gSOAPverify 调试宏默认打开 <span class="sr sm">Medium</span></h4><p><code>FLAG ?= -Wall -g -DNS_DBG -std=c++11</code>，<code>NS_DBG</code> 分支会打印明文口令与完整 SQL；<code>make install</code> 默认装到 <code>/usr/sbin</code>（需 root）。</p></div>
-<div class="rc rm"><h4>🟡 线程池共享同一块栈 <span class="sr sm">Medium</span></h4><p><code>thread/pthdpool.c</code> 把一整块 <code>pool->stack</code>（<code>STK_SIZE 10*4096</code>）传给所有 worker，不符合每线程独立栈的正常使用方式。</p></div>
+
 <div class="rc rm"><h4>🟡 脚本内口令 / token 占位 <span class="sr sm">Medium</span></h4><p><code>shell/expect/autossh.exp</code> 里 <code>set PWD xxxxx</code> 占位、<code>shell/gitbase.sh</code> 里 <code>https://[token]@github.com/…</code>、<code>shell/shadowsocks.sh</code> 使用固定 <code>port_password</code>。</p></div>
 <div class="rc rm"><h4>🟡 lookup V2 引擎未真正落库 <span class="sr sm">Medium</span></h4><p><code>time/TimeDbMgr.cpp</code> 的 <code>connect()</code> 仍是桩（只置 <code>m_connected=true</code>），且 <code>time/CMakeLists.txt</code> 不做 sqlite3 探测、不加 <code>-DUSE_SQLITE3</code>，V2 分支的 SQL 全部只经 <code>PR_SQL</code> 打印。</p></div>
 <div class="rc rm"><h4>🟡 WS 默认广播语义 <span class="sr sm">Medium</span></h4><p>未注册 <code>WsOnMessage</code> 时，WS 服务默认把收到的消息广播给全部连接；对外提供服务需显式注册并鉴权。</p></div>
@@ -809,7 +809,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 </div></section>
 
 <footer>
-<div class="ct">LinxSrvc 架构分析 · 更新于 2026-10-25 · 基于工作区代码逐模块实测（含构建链、关键常量与已知缺陷）</div>
+<div class="ct">LinxSrvc 架构分析 · 更新于 2026-11-01 · 基于工作区代码逐模块实测（含构建链、关键常量与已知缺陷）</div>
 </footer>
 
 </body>
