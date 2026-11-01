@@ -1518,7 +1518,7 @@ class Dashboard:
             price = get_latest_price(sym, self.strategy.data_api)
             trend_score = analyzer.get_trend_score()
 
-            for _tf, ind in indicators.items():
+            for tf, ind in indicators.items():
                 if not ind:
                     continue
                 ma_status = (

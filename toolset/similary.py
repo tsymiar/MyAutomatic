@@ -14,13 +14,13 @@ init(autoreset=True)
 
 COMMENT_TYPES = {
     "line": [
-        (r"#.*$", re.MULTILINE),  # Python, Perl, Ruby等
-        (r"//.*$", re.MULTILINE),  # C/C++/Java/JavaScript等
+        re.compile(r"#.*$", re.MULTILINE),  # Python, Perl, Ruby等
+        re.compile(r"//.*$", re.MULTILINE),  # C/C++/Java/JavaScript等
     ],
     "block": [
-        (r"(\'\'\'(.*?)\'\'\'|\"\"\"(.*?)\"\"\")", re.DOTALL),  # Python
-        (r"/\*.*?\*/", re.DOTALL),  # C/C++/Java/JavaScript等
-        (r"<!--.*?-->", re.DOTALL),  # HTML/XML
+        re.compile(r"(\'\'\'(.*?)\'\'\'|\"\"\"(.*?)\"\"\")", re.DOTALL),  # Python
+        re.compile(r"/\*.*?\*/", re.DOTALL),  # C/C++/Java/JavaScript等
+        re.compile(r"<!--.*?-->", re.DOTALL),  # HTML/XML
     ],
 }
 COMMENT_PATTERNS = {
@@ -180,14 +180,16 @@ def deal_comments_by_state_machine(code, file_ext):
             out_orig_idxs.append(idx)
     return out_lines, out_orig_idxs
 
+_STRING_PATTERNS = [
+    re.compile(r"'[^'\\]*(?:\\.[^'\\]*)*'"),
+    re.compile(r'"[^"\\]*(?:\\.[^"\\]*)*"'),
+]
+
+
 def _get_string_ranges(line):
-    string_patterns = [
-        (r"'[^'\\]*(?:\\.[^'\\]*)*'", 0),
-        (r'"[^"\\]*(?:\\.[^"\\]*)*"', 0),
-    ]
     ranges = []
-    for pattern, _ in string_patterns:
-        for match in re.finditer(pattern, line):
+    for pattern in _STRING_PATTERNS:
+        for match in pattern.finditer(line):
             ranges.append((match.start(), match.end()))
     return sorted(ranges)
 
@@ -206,8 +208,8 @@ def _non_string_ranges(line, string_ranges):
     return result
 
 
-def _is_comment_in_non_string(line, pattern, flags, non_str_ranges):
-    for match in re.finditer(pattern, line, flags=flags):
+def _is_comment_in_non_string(line, rx, non_str_ranges):
+    for match in rx.finditer(line):
         start_pos, end_pos = match.start(), match.end()
         for range_start, range_end in non_str_ranges:
             if range_start <= start_pos < end_pos <= range_end:
@@ -220,17 +222,19 @@ def _mark_comment_lines(code_lines, patterns):
     for idx, line in enumerate(code_lines):
         string_ranges = _get_string_ranges(line)
         non_str_ranges = _non_string_ranges(line, string_ranges)
-        for pattern, flags in patterns:
-            if _is_comment_in_non_string(line, pattern, flags, non_str_ranges):
+        for rx in patterns:
+            if _is_comment_in_non_string(line, rx, non_str_ranges):
                 line_marker[idx] = False
                 break
     return line_marker
 
 
+_SINGLE_LINE_COMMENT = re.compile(r'^\s*//.*$', re.MULTILINE)
+
+
 def _deal_single_line_comments(code_lines, line_marker):
-    single_line_comment_pattern = re.compile(r'^\s*//.*$', re.MULTILINE)
     for i, line in enumerate(code_lines):
-        if single_line_comment_pattern.match(line):
+        if _SINGLE_LINE_COMMENT.match(line):
             line_marker[i] = False
 
 

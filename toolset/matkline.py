@@ -192,6 +192,11 @@ COMMODITY_PREFIXES = (
     (re.compile(r"^(?:udi|dxy|usdx|美元)", re.IGNORECASE), ["usd"]),
 )
 
+# 预编译：以下匹配在解析路径中反复使用，避免每次重新编译
+_NON_DIGITS = re.compile(r"[^0-9]")
+_JSONP_SHELL = re.compile(r"\((.*)\)\s*;?\s*$", re.S)
+_SINA_SNAPSHOT = re.compile(r'="([^"]*)"')
+
 # 新浪：国内期货(沪金/沪银) 与 国际期货(黄金/原油/天然气) 的K线服务
 SINA_INNER_URL = ("https://stock2.finance.sina.com.cn/futures/api/jsonp.php/"
                   "var%%20_%s/InnerFuturesNewService.%s")
@@ -392,7 +397,7 @@ def parse_date_arg(text):
     """把 YYYY-MM-DD / YYYYMMDD / YYYY/MM/DD 校验并统一成 YYYY-MM-DD。"""
     if text is None or str(text).strip() == "":
         return None
-    digits = re.sub(r"[^0-9]", "", str(text))
+    digits = _NON_DIGITS.sub("", str(text))
     if len(digits) != 8:
         raise ValueError("日期格式应为 YYYY-MM-DD 或 YYYYMMDD：%s" % text)
     day = "%s-%s-%s" % (digits[:4], digits[4:6], digits[6:8])
@@ -662,7 +667,7 @@ def millisecond_time(stamp):
 
 def parse_jsonp(text):
     """剥离新浪 JSONP 外壳 var _XAU(...);，取出其中的 JSON。"""
-    match = re.search(r"\((.*)\)\s*;?\s*$", text, re.S)
+    match = _JSONP_SHELL.search(text)
     if not match:
         raise ValueError("JSONP 响应格式异常")
     return json.loads(match.group(1))
@@ -782,7 +787,7 @@ def parse_sina_global(payload, code):
 
 def parse_sina_snapshot(text, code):
     """新浪快照: var hq_str_hf_XAU="最新价,...,时间,昨收,昨结,..,日期,名称";"""
-    match = re.search(r'="([^"]*)"', text)
+    match = _SINA_SNAPSHOT.search(text)
     if not match or not match.group(1):
         raise ValueError("未取到 %s 快照" % code)
     parts = match.group(1).split(",")

@@ -13,27 +13,27 @@ class TerminalRenderer:
         """Initialize regular expressions for markdown formatting"""
         self.format_patterns = [
             (
-                r"~~(.+?)~~",
+                re.compile(r"~~(.+?)~~"),
                 lambda m: f"{Style.DIM}{m.group(1)}{Style.RESET_ALL}",
             ),  # Strikethrough
             (
-                r"\*\*(.+?)\*\*",
+                re.compile(r"\*\*(.+?)\*\*"),
                 lambda m: f"{Style.BRIGHT}{m.group(1)}{Style.RESET_ALL}",
             ),  # Bold
             (
-                r"\*(.+?)\*",
+                re.compile(r"\*(.+?)\*"),
                 lambda m: f"{Style.DIM}{m.group(1)}{Style.RESET_ALL}",
             ),  # Italic *
             (
-                r"_(.+?)_",
+                re.compile(r"_(.+?)_"),
                 lambda m: f"{Style.DIM}{m.group(1)}{Style.RESET_ALL}",
             ),  # Italic _
             (
-                r"`(.+?)`",
+                re.compile(r"`(.+?)`"),
                 lambda m: f"{Fore.GREEN}{m.group(1)}{Style.RESET_ALL}",
             ),  # Inline code
             (
-                r"\[!\[(.*?)\]\((.*?)\)\]\((.*?)\)",  # Image links
+                re.compile(r"\[!\[(.*?)\]\((.*?)\)\]\((.*?)\)"),  # Image links
                 lambda m: f"{Style.BRIGHT}{m.group(1)} ({Fore.BLUE}{m.group(3)}{Style.RESET_ALL})",
             ),
         ]
@@ -41,7 +41,7 @@ class TerminalRenderer:
     def format_markdown(self, text):
         """Apply markdown formatting to text"""
         for pattern, replacement in self.format_patterns:
-            text = re.sub(pattern, replacement, text)
+            text = pattern.sub(replacement, text)
         return text
 
     def render_heading(self, element):

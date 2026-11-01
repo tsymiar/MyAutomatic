@@ -21,9 +21,9 @@
 
 using namespace std;
 
-const int MAX_PKG_SIZE = 0x400000;      // max size of one packet / one read: 4M
-const int MAX_WORK_THREADS = 64;        // max number of sender threads
-const int MAX_QUEUE_SIZE = 1000;        // send queue capacity
+const int MAX_PKG_SIZE = 0x400000;      // Max bytes per packet / single read: 4M
+const int MAX_WORK_THREADS = 64;        // Upper bound on sender worker threads
+const int MAX_QUEUE_SIZE = 1000;        // Send queue capacity
 
 enum TCPUDP {
     TCP = 1,
@@ -44,8 +44,7 @@ struct RuntimeState {
     int port = 8899;
 } g_state;
 
-// Queue element owns its own copy of the payload (deep copied on push) and is
-// released by the worker after sending, so caller buffers are never borrowed
+// Owns its own copy of the payload, freed after send; caller's buffer is never borrowed
 struct Message {
     char* addr;
     int size;
@@ -101,7 +100,7 @@ struct Message {
 
 mutex g_mutex{ };
 queue<Message> g_msgQue{ };
-atomic<bool> g_sentOver(false);         // set by the sender when the file is queued; workers exit on it
+atomic<bool> g_sentOver(false);         // Set once the sender finishes queuing; workers exit on this
 
 uint64_t getUsecTime()
 {
@@ -110,7 +109,7 @@ uint64_t getUsecTime()
     return static_cast<uint64_t>(tv.tv_sec) * 1000000ULL + static_cast<uint64_t>(tv.tv_usec);
 }
 
-// refresh the rate counter once per second
+// Refresh the throughput roughly once per second
 void tickRate(uint64_t& stamp, uint64_t& bytes)
 {
     uint64_t now = getUsecTime();
@@ -148,7 +147,7 @@ void wait(unsigned int tms)
 {
     struct timespec ts;
     ts.tv_sec = tms / 1000;
-    ts.tv_nsec = static_cast<long>(tms % 1000) * 1000000L;   // split into sec + nsec, avoids tv_nsec overflow
+    ts.tv_nsec = static_cast<long>(tms % 1000) * 1000000L;   // Split into sec + nsec to avoid tv_nsec overflow
     while (nanosleep(&ts, &ts) < 0 && errno == EINTR) {
     }
 }
@@ -175,7 +174,7 @@ static bool is_multicast_addr(const char* ip)
     in_addr_t a = inet_addr(ip);
     if (a == INADDR_NONE) return false;
     uint32_t h = ntohl(a);
-    return (h >= 0xE0000000 && h <= 0xEFFFFFFF); // 224.0.0.0 - 239.255.255.255
+    return (h >= 0xE0000000 && h <= 0xEFFFFFFF); // Multicast range: 224.0.0.0 - 239.255.255.255
 }
 
 int server(int argc, char* argv[])
@@ -201,7 +200,7 @@ int server(int argc, char* argv[])
             cout << "message size too big, fixed to 4M." << endl;
         }
         if (pkgsize <= 0) {
-            pkgsize = 1024;                     // negative input would become a huge size_t length, clamp it
+            pkgsize = 1024;                     // Negative value would yield a huge size_t; clamp it
             cout << "message size invalid, fixed to 1024." << endl;
         }
     }
@@ -226,11 +225,11 @@ int server(int argc, char* argv[])
             perror("socket");
             return -4;
         }
-        // Allow multiple listeners on same machine/port (needed for multicast)
+        // Allow multiple listeners to share the port (required for multicast)
         int reuse = 1;
         if (setsockopt(ssock, SOL_SOCKET, SO_REUSEADDR, (const void*)&reuse, sizeof(reuse)) < 0) {
             perror("setsockopt SO_REUSEADDR");
-            // non-fatal
+            // Non-fatal
         }
     }
     g_state.sock = ssock;
@@ -247,7 +246,7 @@ int server(int argc, char* argv[])
         return -5;
     }
 
-    // If multicast group specified and IPv4 multicast, join the group
+    // Join the IPv4 multicast group if one was given
     if (g_state.how == MCAST && mgroup != NULL && is_multicast_addr(mgroup)) {
         struct ip_mreq mreq;
         memset(&mreq, 0, sizeof(mreq));
@@ -255,7 +254,7 @@ int server(int argc, char* argv[])
         mreq.imr_interface.s_addr = htonl(INADDR_ANY);
         if (setsockopt(ssock, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq)) < 0) {
             perror("setsockopt IP_ADD_MEMBERSHIP");
-            // proceed anyway
+            // Failure is non-fatal
         } else {
             cout << "joined multicast group " << mgroup << endl;
         }
@@ -298,7 +297,7 @@ int server(int argc, char* argv[])
             inet_ntop(AF_INET, (void*)&local.sin_addr, ip, 16);
             cout << "socket accept from " << ip << ":" << ntohs(local.sin_port) << ", waiting message..." << endl;
             while (g_state.running) {
-                FD_ZERO(&fds);                      // rebuild the fd set every round; select rewrites timeout too
+                FD_ZERO(&fds);                      // Rebuild fd set each loop (select mutates timeout)
                 FD_SET(csock, &fds);
                 timeout.tv_sec = 0;
                 timeout.tv_usec = 3000;
@@ -325,7 +324,7 @@ int server(int argc, char* argv[])
                             fclose(g_state.filep);
                             g_state.filep = NULL;
                         } else if (rcvlen < 0x10000) {
-                            fsync(fileno(g_state.filep));   // flush small packets; filep is NULL after a write error
+                            fsync(fileno(g_state.filep));   // Flush small packets; filep cleared on error
                         }
                     }
                 } else if (rcvlen == 0) {
@@ -362,12 +361,21 @@ int server(int argc, char* argv[])
                     tickRate(start, calclen);
                     inet_ntop(AF_INET, (void*)&loc.sin_addr, ip, sizeof(ip));
                     printf("recv from %s:%d size=%zd\n", ip, ntohs(loc.sin_port), rcvlen);
-                    for (ssize_t i = 0; i < rcvlen; i++) {
-                        if ((i % 32 == 0) && (i > 0))
-                            printf("\n");
-                        printf("%02x ", msgbuf[static_cast<size_t>(i)]);
+                    // Batch-print in 32-byte lines via a buffer instead of per-byte printf
+                    for (ssize_t i = 0; i < rcvlen; ) {
+                        char line[3 * 32 + 1];
+                        char* p = line;
+                        ssize_t end = i + 32 < rcvlen ? i + 32 : rcvlen;
+                        for (; i < end; ++i) {
+                            p += snprintf(p, sizeof(line) - static_cast<size_t>(p - line),
+                                          "%02x ", msgbuf[static_cast<size_t>(i)]);
+                        }
+                        printf("%s\n", line);
                     }
-                    printf("\nrecv[%d] size %zd ok.\n", ssock, rcvlen);
+                    if (rcvlen == 0) {
+                        printf("\n");
+                    }
+                    printf("recv[%d] size %zd ok.\n", ssock, rcvlen);
                 }
             }
         }
@@ -422,7 +430,7 @@ int client(int argc, char* argv[])
             caplen = static_cast<int>(msgbuf.size());
             cout << "message caplen invalid, fixed to " << caplen << "." << endl;
         }
-        msgbuf.resize(static_cast<size_t>(caplen));   // let --package size really drive the per-send packet size
+        msgbuf.resize(static_cast<size_t>(caplen));   // Let --package size govern the per-send size
     }
     if (argc > 5) {
         file = argv[5];
@@ -440,14 +448,14 @@ int client(int argc, char* argv[])
             cout << "thread count too big, fixed to " << MAX_WORK_THREADS << "." << endl;
         }
     }
-    if (thrds > 1 && g_state.how == TCP) {      // UDP sends via sendto directly, no worker threads needed
+    if (thrds > 1 && g_state.how == TCP) {      // UDP uses sendto directly; no worker threads needed
         vecstat.assign(thrds, 0);
         thread* works = new thread[thrds];
         for (size_t i = 0; i < thrds; i++) {
             works[i] = thread([&](size_t index) -> void {
                 Message msg;
                 uint64_t total = 0;
-                while (!g_sentOver || queueSize() > 0) {   // exit only after the sender is done and the queue drains
+                while (!g_sentOver || queueSize() > 0) {   // Exit only after sender done and queue drained
                     if (queuePop(msg) < 0) {
                         wait(1);
                         continue;
@@ -462,7 +470,7 @@ int client(int argc, char* argv[])
                     }
                     msg.release();
                 }
-                vecstat[index] = 1;             // separate storage per element, avoids vector<bool> bit sharing
+                vecstat[index] = 1;             // Store per element to avoid vector<bool> bit sharing
                 cout << "work thread[" << index << "] total size = " << total << endl;
                 },
                 i);
@@ -488,13 +496,13 @@ int client(int argc, char* argv[])
             perror("socket");
             return -1;
         }
-        // If sending to multicast group, set TTL and optionally enable loopback if desired
+        // Multicast: set TTL (loopback left at default)
         if (is_mcast) {
-            unsigned char ttl = 32; // Set multicast TTL to 32
+            unsigned char ttl = 32; // Multicast TTL = 32
             if (setsockopt(ssock, IPPROTO_IP, IP_MULTICAST_TTL, &ttl, sizeof(ttl)) < 0) {
                 perror("setsockopt IP_MULTICAST_TTL");
             }
-            // Ensure sender's packets are allowed to loop back - optional, leave default
+            // loopback left at default (optionally enabled)
             // unsigned char loop = 1;
             // setsockopt(ssock, IPPROTO_IP, IP_MULTICAST_LOOP, &loop, sizeof(loop));
         }
@@ -503,7 +511,7 @@ int client(int argc, char* argv[])
         cout << "type message to send:" << endl;
         while (cin >> msgbuf.data()) {
             size_t len = strnlen(msgbuf.data(), msgbuf.size() - 1) + 1;
-            msgbuf[msgbuf.size() - 1] = '\0'; // Ensure null-termination
+            msgbuf[msgbuf.size() - 1] = '\0'; // Ensure null termination
             if (g_state.how == TCP) {
                 ssize_t bytes = send(ssock, msgbuf.data(), len, 0);
                 if (bytes < 0) {
@@ -526,10 +534,10 @@ int client(int argc, char* argv[])
             uint64_t current = start;
             uint64_t calcsize = 0;
             ssize_t rdsize = 0;
-            size_t chunk = msgbuf.size();          // caplen was already clamped and resized while parsing args
+            size_t chunk = msgbuf.size();          // caplen already clamped and resized during parsing
             while ((rdsize = read(g_state.fileno, msgbuf.data(), chunk)) > 0) { /*Flawfinder: ignore*/
                 if (rdsize > static_cast<ssize_t>(chunk)) {
-                    // read() must not return more than requested; stop if it does
+                    // read should never return more than requested; bail out if it does
                     fprintf(stderr, "read beyond buffer: got %zd, expect <= %zu\n", rdsize, chunk);
                     break;
                 }
@@ -539,7 +547,7 @@ int client(int argc, char* argv[])
                 if (g_state.how == TCP) {
                     if (thrds > 1) {
                         while (queueSize() >= static_cast<size_t>(MAX_QUEUE_SIZE)) {
-                            wait(1);                    // back-pressure: wait for workers when the queue is full
+                            wait(1);                    // Backpressure: wait for workers when queue is full
                         }
                         Message msg;
                         if (!msg.assign(msgbuf.data(), static_cast<size_t>(rdsize), ssock)) {
@@ -572,7 +580,7 @@ int client(int argc, char* argv[])
                     }
                 }
             }
-            g_sentOver = true;                  // everything is queued, tell the workers they may exit
+            g_sentOver = true;                  // All queued; signal workers they may exit
             while (thrds > 1 && g_state.how == TCP) {
                 bool status = true;
                 for (size_t i = 0; i < vecstat.size(); i++) {
@@ -581,7 +589,7 @@ int client(int argc, char* argv[])
                 if (status) {
                     break;
                 }
-                wait(1);                        // sleep instead of spinning, keep the CPU free
+                wait(1);                        // Sleep instead of spinning to save CPU
             }
             fprintf(stdout, "sent %.3fM over, average speed is %.3f MB/s\n",
                 static_cast<double>(sentSize) / 1048576.0,
@@ -589,7 +597,7 @@ int client(int argc, char* argv[])
             close(g_state.fileno);
         } else {
             perror("open");
-            g_sentOver = true;              // nothing to send, do not keep the workers waiting
+            g_sentOver = true;              // Nothing to send; don't leave workers idle-waiting
         }
     }
     close(ssock);

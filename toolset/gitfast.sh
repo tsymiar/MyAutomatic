@@ -17,6 +17,6 @@ git config --global fetch.writeCommitGraph true
 git config --global core.commitGraph true
 git config --global core.compression 0
 git config --global http.sslVerify true
-# fatch little tag / https to SSH
+# fetch little tag / https to SSH
 # git config --global remote.origin.tagOpt --no-tags
 # git config --global url."git@github.com:".insteadOf "https://github.com/"

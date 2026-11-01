@@ -6,8 +6,9 @@ project(${PROJ_NAME} LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -ggdb")
 # CONFIGURE_DEPENDS: re-glob when sources are added or removed.
-file(GLOB SRC_FILE_LIST CONFIGURE_DEPENDS "*.c" "*.cc" "*.cpp" "*.cxx")
+file(GLOB SRC_FILE_LIST CONFIGURE_DEPENDS "*[^.h]*.c*[^.txt]*" "*.hpp")
 
 add_executable(${PROJ_NAME} ${SRC_FILE_LIST})
 target_compile_options(${PROJ_NAME} PRIVATE -fPIC -Wall -ggdb)

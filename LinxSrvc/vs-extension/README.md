@@ -35,7 +35,7 @@ When prompted, you may enter comma-separated **file extensions to ignore**
 
 ```text
 src/extension.ts      picks the two folders + ignore extensions, spawns Python
-   └─ python3 scripts/similarity.py "<source>" "<target>" --detail [--ignore-ext=…]
+   └─ python3 scripts/similarity.py "<source>" "<target>" --detail --json --no-color [--ignore-ext=…]
         └─ src/parse_text.ts   parses JSON output (falls back to plain text)
              └─ src/view_html.ts  renders the Webview report
 ```
