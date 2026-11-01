@@ -211,12 +211,16 @@ class FileAnalyzer {
 
         size_t prefix = 0;
         while (prefix < a.size() && prefix < b.size() && a[prefix] == b[prefix]) ++prefix;
+        // Clamp the remainders to avoid unsigned underflow (size_t) when one
+        // sequence is a prefix/suffix of the other.
+        const size_t a_mid = a.size() > prefix ? a.size() - prefix : 0;
+        const size_t b_mid = b.size() > prefix ? b.size() - prefix : 0;
         size_t suffix = 0;
-        while (suffix < a.size() - prefix && suffix < b.size() - prefix &&
+        while (suffix < a_mid && suffix < b_mid &&
                a[a.size() - 1 - suffix] == b[b.size() - 1 - suffix]) ++suffix;
 
-        const size_t n = a.size() - prefix - suffix;
-        const size_t m = b.size() - prefix - suffix;
+        const size_t n = a_mid > suffix ? a_mid - suffix : 0;
+        const size_t m = b_mid > suffix ? b_mid - suffix : 0;
 
         for (size_t k = 0; k < prefix; ++k) script.push_back({ DiffOp::Equal, k });
 

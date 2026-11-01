@@ -88,6 +88,8 @@ pthd_pool_t* pthd_pool_init(int sz_que, int thrd_num)
 {
     // Allocate the pool struct
     pthd_pool_t* pool = (pthd_pool_t*)calloc(1, sizeof(pthd_pool_t));
+    if (!pool)
+        return null;
     pool->dispose = false;
     if (thrd_num < 1)
         thrd_num = 1;
