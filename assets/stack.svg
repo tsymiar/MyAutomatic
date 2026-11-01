@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="694" height="46" role="img" aria-label="MyAutomatic tech stack: C++17, CMake, Qt, Linux, OpenGL, SDL2, FFmpeg, libevent, WebSocket, SQLite, MySQL, RDMA, Python, Swift, C#, gSOAP">
+  <title>MyAutomatic — systems playground — tech stack</title>
+  <linearGradient id="stk-edge" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#10B981" />
+    <stop offset="1" stop-color="#0EA5A9" />
+  </linearGradient>
+  <linearGradient id="stk-label" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#2B3D57" />
+    <stop offset="1" stop-color="#141C28" />
+  </linearGradient>
+  <clipPath id="stk-clip">
+    <rect width="158" height="46" rx="5" />
+  </clipPath>
+  <g clip-path="url(#stk-clip)">
+    <rect width="158" height="46" fill="url(#stk-label)" />
+    <rect width="4" height="46" fill="url(#stk-edge)" />
+  </g>
+  <g transform="translate(22,23) scale(1.2)" fill="none" stroke="#5EEAD4" stroke-width="1.5" stroke-linecap="round">
+    <rect x="-4" y="-4" width="8" height="8" rx="1.4" />
+    <path d="M-2.2 -7v3M2.2 -7v3M-2.2 7v-3M2.2 7v-3M-7 -2.2h3M-7 2.2h3M7 -2.2h-3M7 2.2h-3" />
+    <rect x="-1.1" y="-1.1" width="2.2" height="2.2" rx=".6" fill="#5EEAD4" stroke="none" />
+  </g>
+  <g font-family="DejaVu Sans,Verdana,Geneva,sans-serif">
+    <text x="38" y="20" fill="#FFFFFF" font-size="13" font-weight="700">MyAutomatic</text>
+    <text x="38" y="34" fill="#93C5B4" font-size="10">systems playground</text>
+  </g>
+  <g font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11" font-weight="600" text-anchor="middle">
+    <rect x="166" y="3" width="58" height="18" rx="3" fill="#00599C" />
+    <text x="195" y="16" fill="#FFFFFF">C++17</text>
+    <rect x="230" y="3" width="60" height="18" rx="3" fill="#064F8C" />
+    <text x="260" y="16" fill="#FFFFFF">CMake</text>
+    <rect x="296" y="3" width="44" height="18" rx="3" fill="#41CD52" />
+    <text x="318" y="16" fill="#073B15">Qt</text>
+    <rect x="346" y="3" width="54" height="18" rx="3" fill="#FCC624" />
+    <text x="373" y="16" fill="#3B2A00">Linux</text>
+    <rect x="406" y="3" width="68" height="18" rx="3" fill="#5586A4" />
+    <text x="440" y="16" fill="#FFFFFF">OpenGL</text>
+    <rect x="480" y="3" width="50" height="18" rx="3" fill="#A1C342" />
+    <text x="505" y="16" fill="#22300A">SDL2</text>
+    <rect x="536" y="3" width="68" height="18" rx="3" fill="#007808" />
+    <text x="570" y="16" fill="#FFFFFF">FFmpeg</text>
+    <rect x="610" y="3" width="69" height="18" rx="3" fill="#3B5BDB" />
+    <text x="645" y="16" fill="#FFFFFF">libevent</text>
+
+    <rect x="166" y="25" width="87" height="18" rx="3" fill="#6C5CE7" />
+    <text x="210" y="38" fill="#FFFFFF">WebSocket</text>
+    <rect x="259" y="25" width="58" height="18" rx="3" fill="#003B57" />
+    <text x="288" y="38" fill="#FFFFFF">SQLite</text>
+    <rect x="323" y="25" width="60" height="18" rx="3" fill="#4479A1" />
+    <text x="353" y="38" fill="#FFFFFF">MySQL</text>
+    <rect x="389" y="25" width="56" height="18" rx="3" fill="#0F7DC2" />
+    <text x="417" y="38" fill="#FFFFFF">RDMA</text>
+    <rect x="451" y="25" width="63" height="18" rx="3" fill="#3776AB" />
+    <text x="483" y="38" fill="#FFFFFF">Python</text>
+    <rect x="520" y="25" width="50" height="18" rx="3" fill="#F05138" />
+    <text x="545" y="38" fill="#FFFFFF">Swift</text>
+    <rect x="576" y="25" width="44" height="18" rx="3" fill="#512BD4" />
+    <text x="598" y="38" fill="#FFFFFF">C#</text>
+    <rect x="626" y="25" width="58" height="18" rx="3" fill="#6E7F8D" />
+    <text x="655" y="38" fill="#FFFFFF">gSOAP</text>
+  </g>
+</svg>
