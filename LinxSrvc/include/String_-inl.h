@@ -414,9 +414,13 @@ inline int String_s::strcut_(unsigned char* src, char ch, char* left, char* righ
         right[0] = '\0';
         return -1;
     }
-    sprintf_s(s1, 16, "%s", (char*)strsub_(src, 0, i));
+    unsigned char* sub1 = strsub_(src, 0, i);
+    sprintf_s(s1, 16, "%s", (char*)sub1);
+    free(sub1);
     strcpy_(left, s1, (int)strlen_(s1) + 1);
-    sprintf_s(s2, 16, "%s", (char*)strsub_(src, i + 1, (int)strlen_((char*)src) + 1 - i));
+    unsigned char* sub2 = strsub_(src, i + 1, (int)strlen_((char*)src) + 1 - i);
+    sprintf_s(s2, 16, "%s", (char*)sub2);
+    free(sub2);
     strcpy_(right, s2, (int)strlen_(s2) + 1);
     return i;
 }
@@ -427,6 +431,7 @@ inline unsigned char* String_s::strsub_(unsigned char* src, int pos, int len)
     unsigned char* pch = src;
     //通过calloc来分配一个len长度的字符数组，返回的是字符指针
     unsigned char* sub = (unsigned char*)calloc(sizeof(unsigned char), (size_t)(len + 1));
+    if (!sub) return NULL;
     int i;
     //只有在C99下for循环中才可以声明变量，这里写在外面，提高兼容性
     pch = pch + pos;

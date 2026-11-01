@@ -24,8 +24,8 @@ struct SrvCallbacks {
 typedef void(*DEALRES_CALLBACK)(const HookDetail&, size_t);
 
 struct DealHooks {
-    evhttp_cmd_type method;
-    DEALRES_CALLBACK callback;
+    evhttp_cmd_type method = EVHTTP_REQ_GET;
+    DEALRES_CALLBACK callback = nullptr;
 };
 
 int StartServer(int, struct SrvCallbacks* = nullptr);

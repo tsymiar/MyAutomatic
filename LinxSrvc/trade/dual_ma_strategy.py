@@ -467,7 +467,7 @@ class MultiTimeframeAnalyzer:
             return 0.0
 
         scores = []
-        for tf, ind in indicators.items():
+        for _tf, ind in indicators.items():
             tf_score = 0.0
             # MA 排列
             if ind.get("MA5", 0) > ind.get("MA20", 0) > ind.get("MA60", 0):
@@ -1518,7 +1518,7 @@ class Dashboard:
             price = get_latest_price(sym, self.strategy.data_api)
             trend_score = analyzer.get_trend_score()
 
-            for tf, ind in indicators.items():
+            for _tf, ind in indicators.items():
                 if not ind:
                     continue
                 ma_status = (

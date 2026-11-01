@@ -12,9 +12,9 @@ static std::vector<std::string> Models = {
 };
 
 struct ReqsPara {
-    bool json;
-    bool multi;
-    bool balance;
+    bool isJson = true;
+    bool multi = true;
+    bool balance = false;
     struct ApiPara {
         bool stream;
         float temperature;
@@ -28,9 +28,9 @@ struct ReqsPara {
         ApiPara() : stream(true), temperature(0.7), max_tokens(3000), top(0.9) { }
     };
     ApiPara apiPara;
-    ReqsPara() : json(true), multi(true), balance(false) { }
+    ReqsPara() : isJson(true), multi(true), balance(false), apiPara() { }
     void setModel(int model) { apiPara.model = Models[model]; }
-    void unset() { json = multi = true; balance = false; apiPara = ApiPara(); }
+    void unset() { isJson = multi = true; balance = false; apiPara = ApiPara(); }
 };
 
 class CurlReqs {

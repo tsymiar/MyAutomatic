@@ -119,9 +119,9 @@ def chat(model, tokenizer, message, history=None, max_new_tokens=512, temperatur
         return response
 
     except torch.cuda.OutOfMemoryError:
-        raise RuntimeError("显存不足，请尝试减小 max_new_tokens 或使用更小的模型")
+        raise RuntimeError("显存不足，请尝试减小 max_new_tokens 或使用更小的模型") from None
     except Exception as e:
-        raise RuntimeError(f"推理失败: {e}")
+        raise RuntimeError(f"推理失败: {e}") from e
 
 def build_cli_parser():
     parser = argparse.ArgumentParser(description="数字分身推理脚本")

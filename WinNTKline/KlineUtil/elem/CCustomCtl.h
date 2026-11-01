@@ -36,10 +36,10 @@ class CMyMenu : public CMenu
 #define COLOR_SEL RGB(0,0,0)
     struct ItemInfo
     {
-        int m_id;
-        int m_nFlag;
-        int m_itemState;
-        HICON m_icon;
+        int m_id = 0;
+        int m_nFlag = 0;
+        int m_itemState = 0;
+        HICON m_icon = NULL;
         CString m_text;
         CString m_shortcut;
     };

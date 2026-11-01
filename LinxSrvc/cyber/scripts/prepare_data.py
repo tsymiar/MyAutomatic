@@ -24,15 +24,15 @@ def prepare_txt(input_file, output_file, self_name='我', other_name='对方'):
         with open(input_file, 'r', encoding='utf-8') as f:
             lines = f.readlines()
     except UnicodeDecodeError as e:
-        raise ValueError(f"文件编码错误: {e}")
+        raise ValueError(f"文件编码错误: {e}") from e
     except IOError as e:
-        raise IOError(f"读取文件失败: {e}")
+        raise IOError(f"读取文件失败: {e}") from e
 
     # 转换为ShareGPT格式
     try:
         conversations = convert_raw_to_sharegpt(lines, self_name, other_name)
     except Exception as e:
-        raise ValueError(f"数据转换失败: {e}")
+        raise ValueError(f"数据转换失败: {e}") from e
 
     # 写入输出文件
     try:
@@ -40,7 +40,7 @@ def prepare_txt(input_file, output_file, self_name='我', other_name='对方'):
             for conv in conversations:
                 f.write(json.dumps(conv, ensure_ascii=False) + '\n')
     except IOError as e:
-        raise IOError(f"写入输出文件失败: {e}")
+        raise IOError(f"写入输出文件失败: {e}") from e
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='将原始对话文本转换为ShareGPT格式')

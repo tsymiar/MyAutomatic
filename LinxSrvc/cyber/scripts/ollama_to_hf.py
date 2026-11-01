@@ -631,7 +631,7 @@ def convert_gguf_to_hf(
             "请运行: pip install llama-cpp-python\n"
             "或者: CMAKE_ARGS=\"-DGGML_CUDA=on\" pip install "
             "llama-cpp-python (支持 CUDA)"
-        )
+        ) from None
     except Exception as e:
         logging.error(f"GGUF 转换失败: {e}")
         raise
