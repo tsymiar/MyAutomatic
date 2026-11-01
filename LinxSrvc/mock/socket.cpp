@@ -241,7 +241,7 @@ int server(int argc, char* argv[])
     local.sin_family = AF_INET;
     local.sin_port = htons(static_cast<uint16_t>(g_state.port));
     local.sin_addr.s_addr = htonl(INADDR_ANY);
-    if (::bind(ssock, (struct sockaddr*)&local, sizeof(local)) < 0) {
+    if (::bind(ssock, reinterpret_cast<struct sockaddr*>(&local), sizeof(local)) < 0) {
         close(ssock);
         perror("bind");
         return -5;
@@ -281,7 +281,7 @@ int server(int argc, char* argv[])
     FD_ZERO(&fds);
     while (g_state.running) {
         if (g_state.how == TCP) {
-            int csock = accept(ssock, (struct sockaddr*)&local, &locsize);
+            int csock = accept(ssock, reinterpret_cast<struct sockaddr*>(&local), &locsize);
             if (csock < 0) {
                 if (errno == EINTR) {
                     continue;
@@ -313,7 +313,7 @@ int server(int argc, char* argv[])
                 if (ready == 0 || !FD_ISSET(csock, &fds)) {
                     continue;
                 }
-                ssize_t rcvlen = ::recv(csock, (char*)msgbuf.data(), static_cast<size_t>(pkgsize), 0);
+                ssize_t rcvlen = ::recv(csock, reinterpret_cast<char*>(msgbuf.data()), static_cast<size_t>(pkgsize), 0);
                 if (rcvlen > 0) {
                     calclen += static_cast<uint64_t>(rcvlen);
                     total += static_cast<uint64_t>(rcvlen);
@@ -355,7 +355,7 @@ int server(int argc, char* argv[])
                     ssize_t rcvlen = 0;
                     struct sockaddr_in loc;
                     socklen_t loclen = sizeof(loc);
-                    if ((rcvlen = ::recvfrom(ssock, (char*)msgbuf.data(), static_cast<size_t>(pkgsize), 0, (struct sockaddr*)&loc, &loclen)) < 0) {
+                    if ((rcvlen = ::recvfrom(ssock, reinterpret_cast<char*>(msgbuf.data()), static_cast<size_t>(pkgsize), 0, reinterpret_cast<struct sockaddr*>(&loc), &loclen)) < 0) {
                         continue;
                     }
                     calclen += static_cast<uint64_t>(rcvlen);
@@ -477,7 +477,7 @@ int client(int argc, char* argv[])
             perror("socket");
             return -1;
         }
-        int ret = connect(ssock, (struct sockaddr*)&local, sizeof(local));
+        int ret = connect(ssock, reinterpret_cast<struct sockaddr*>(&local), sizeof(local));
         if (ret == -1) {
             perror("connect");
             return -1;
@@ -511,7 +511,7 @@ int client(int argc, char* argv[])
                     continue;
                 }
             } else {
-                ::sendto(ssock, msgbuf.data(), len, 0, (struct sockaddr*)&local, sizeof(local));
+                ::sendto(ssock, msgbuf.data(), len, 0, reinterpret_cast<struct sockaddr*>(&local), sizeof(local));
             }
             cout << "sent [" << msgbuf.data() << "] to " << ip << endl;
         }
@@ -564,7 +564,7 @@ int client(int argc, char* argv[])
                     }
                 } else {
                     ssize_t sent = ::sendto(ssock, msgbuf.data(), static_cast<size_t>(rdsize), 0,
-                        (struct sockaddr*)&local, sizeof(local));
+                        reinterpret_cast<struct sockaddr*>(&local), sizeof(local));
                     if (sent < 0) {
                         perror("sendto");
                     } else {

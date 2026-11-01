@@ -264,6 +264,8 @@ private:
         std::string close;
         const char* style;
         bool verbatim;
+        InlineSpan(std::string o, std::string c, const char* s, bool v)
+            : open(std::move(o)), close(std::move(c)), style(s), verbatim(v) {}
     };
 
     std::string m_buffer{};
@@ -811,7 +813,7 @@ private:
                 val = val.substr(pos + 1, org - pos - 1);
             }
         }
-        if (val.back() == '\n') {
+        if (!val.empty() && val.back() == '\n') {
             val.pop_back();
         }
         return val;
