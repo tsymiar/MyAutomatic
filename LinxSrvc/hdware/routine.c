@@ -430,7 +430,7 @@ static void init_userp(unsigned int buffer_size)
     for (n_buffers = 0; n_buffers < req.count/*4*/; ++n_buffers) {
         set2pow(&buffer_size);
         data_buff[n_buffers].length = buffer_size;
-        if (posix_memalign(data_buff[n_buffers].start, /* boundary */page_size, buffer_size) != 0) {
+        if (posix_memalign(&data_buff[n_buffers].start, /* boundary */page_size, buffer_size) != 0) {
             fprintf(stderr, "posix_memalign: %s\n", strerror(errno));
             exit(EXIT_FAILURE);
         }

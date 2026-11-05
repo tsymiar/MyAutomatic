@@ -564,7 +564,10 @@ type_thread_func monitor(void* arg)
                             goto comm_err0;
                         }
                     }
-                    memcpy(&g_usrMsg, rcv_txt, flg);
+                    // flg is peer-controlled; never copy past sizeof(g_usrMsg)
+                    size_t cp_len = flg < static_cast<ssize_t>(sizeof(g_usrMsg))
+                        ? static_cast<size_t>(flg) : sizeof(g_usrMsg);
+                    memcpy(&g_usrMsg, rcv_txt, cp_len);
                 }
                 if (flg > 0) {
                     PRINT_RECV("2-RCV", g_usrMsg.uiCmdMsg, g_usrMsg.rtn, g_usrMsg.chk, g_usrMsg.usr, flg, THREAD_NUM - g_threadNo_, rcv_txt);
@@ -611,6 +614,9 @@ type_thread_func monitor(void* arg)
                         snprintf((sd_bufs + offset), 22, "%s", "Users on-line list:\n");
                         char n = 0;
                         for (c = 0; c < MAX_ACTIVE; c++) {
+                            // entry c spans offset*(c+4) .. +FiledSize+1
+                            if (offset * (c + 4) + FiledSize + 1 > BUFF_SIZE)
+                                break;
                             set_n_get_mem(&active[c], c);
                             if (active[c].user[0] != '\0') {
                                 snprintf(sd_bufs + 2, 9, "%08x", c);
@@ -625,7 +631,10 @@ type_thread_func monitor(void* arg)
                         };
                         *(sd_bufs + 2) = '0';
                         snprintf(sd_bufs + 4, 2, "%x", n);
-                        *length = total = static_cast<unsigned short>(offset * (c + 4 + 4));
+                        unsigned short list_len = static_cast<unsigned short>(offset * (c + 4 + 4));
+                        if (list_len > BUFF_SIZE)
+                            list_len = BUFF_SIZE;
+                        *length = total = list_len;
                     } break;
                     case P2P:
                     {
@@ -1744,7 +1753,8 @@ int join_zone(int at, char usr[FiledSize], char zone[FiledSize], char* cert)
         if (zones[at].zone.members[i][0] == '\0') {
             if (strcmp(zones[at].zone.name, z) == 0) {
                 memcpy(zones[at].zone.members[i], m, FiledSize);
-                memcpy(zones[at].zone.cert, cert, FiledSize);
+                if (cert != NULL)
+                    memcpy(zones[at].zone.cert, cert, FiledSize);
                 zones[at].zone.ciUsr += 1;
                 return i;
             } else {

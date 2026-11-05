@@ -138,12 +138,12 @@ namespace {
             cerr << "[DB] not connected, skip building SQL." << endl;
             return false;
         }
-        // 转义用户输入（转义结果最长为输入的 2 倍，故输入限半缓冲）
+        // 转义用户输入（转义输出最长为 2N+1，故输入限半缓冲再减 1）
         char esc_usr[128] = { 0 };
         char esc_psw[128] = { 0 };
-        size_t usr_len = strnlen(usr, sizeof(esc_usr) / 2 + 1);
-        size_t psw_len = strnlen(psw, sizeof(esc_psw) / 2 + 1);
-        if (usr_len > sizeof(esc_usr) / 2 || psw_len > sizeof(esc_psw) / 2) {
+        size_t usr_len = strnlen(usr, sizeof(esc_usr) / 2 - 1);
+        size_t psw_len = strnlen(psw, sizeof(esc_psw) / 2 - 1);
+        if (usr_len > sizeof(esc_usr) / 2 - 1 || psw_len > sizeof(esc_psw) / 2 - 1) {
             cerr << "[SEC] user or password too long" << endl;
             return false;
         }
@@ -193,14 +193,16 @@ namespace {
         }
 
         MYSQL_ROW row = mysql_fetch_row(res);
-        int col = 0;
-        while (row != nullptr) {
-            if (col == 0 && row[0] != nullptr)
-                memcpy(param.msg.email, row[0], sizeof(param.msg.email) - 1);
-            else if (col == 1 && row[1] != nullptr)
-                memcpy(param.msg.tell, row[1], sizeof(param.msg.tell) - 1);
-            col++;
-            row = mysql_fetch_row(res);
+        if (row != nullptr) {
+            // row[0]=email, row[1]=tell；按源串长度拷贝（目标已清零，截断仍 '\0' 结尾）
+            if (row[0] != nullptr) {
+                size_t n = strnlen(row[0], sizeof(param.msg.email) - 1);
+                memcpy(param.msg.email, row[0], n);
+            }
+            if (field_cnt > 1 && row[1] != nullptr) {
+                size_t n = strnlen(row[1], sizeof(param.msg.tell) - 1);
+                memcpy(param.msg.tell, row[1], n);
+            }
             param.msg.flag = true;
         }
         mysql_free_result(res);

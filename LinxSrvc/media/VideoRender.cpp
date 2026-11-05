@@ -538,8 +538,13 @@ void convertNV12toRGB(NvBufSurface* src, uint8_t* dst)
 
     // Map memory
     NvBufSurfaceMap(dstSurface, 0, 0, NVBUF_MAP_READ);
-    memcpy(dst, dstSurface->surfaceList[0].dataPtr,
-        dstSurface->surfaceList[0].dataSize);
+    size_t copy_size = static_cast<size_t>(dstSurface->surfaceList[0].dataSize);
+    // pitch padding may exceed w*h*3; never copy past dst
+    if (copy_size > static_cast<size_t>(dstSurface->surfaceList[0].width)
+        * dstSurface->surfaceList[0].height * 3)
+        copy_size = static_cast<size_t>(dstSurface->surfaceList[0].width)
+        * dstSurface->surfaceList[0].height * 3;
+    memcpy(dst, dstSurface->surfaceList[0].dataPtr, copy_size);
 
     // Clean up resources
     NvBufSurfaceUnMap(dstSurface, 0, 0);
@@ -608,7 +613,12 @@ void videoDecodeRender(const char* filename)
             NvBufSurface* buffer = decoder.getFrame();
             if (!buffer) break;
 
-            uint8_t* rgb = new uint8_t[video_width * video_height * 3];
+            // decode surface carries the frame size; mirror into the globals
+            video_width = static_cast<int>(buffer->surfaceList[0].width);
+            video_height = static_cast<int>(buffer->surfaceList[0].height);
+            size_t rgb_size = static_cast<size_t>(video_width) * video_height * 3;
+
+            uint8_t* rgb = new uint8_t[rgb_size];
             convertNV12toRGB(buffer, rgb);
             if (!pushFrame(rgb)) break;
         }

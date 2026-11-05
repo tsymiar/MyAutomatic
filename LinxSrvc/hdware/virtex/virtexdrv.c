@@ -148,6 +148,7 @@ static void set_chan(uint32_t* chan)
 static ssize_t virtex_dev_read(struct file* flip, char* buf, size_t len, loff_t* off)
 {
     ST_UsrMsg* msg = NULL;
+    uint32_t notify = 0;
     if (!(flip->f_flags & O_NONBLOCK)) {
         // wait_event_interruptible(select_waitq, ev_ok);
     }
@@ -158,10 +159,12 @@ static ssize_t virtex_dev_read(struct file* flip, char* buf, size_t len, loff_t*
     if (mq_size(&g_queue) > 0) {
         msg = msg_front(&g_queue);
         if (msg) {
+            // read before pop frees the node
+            notify = msg->notify;
             msg_pop(&g_queue);
         }
     }
-    printk("virtex_dev_read [%08x, %lu, %d].\n", flip->f_flags, len, msg ? msg->notify : 0);
+    printk("virtex_dev_read [%08x, %lu, %d].\n", flip->f_flags, len, notify);
     return sizeof(ST_UsrMsg);
 }
 

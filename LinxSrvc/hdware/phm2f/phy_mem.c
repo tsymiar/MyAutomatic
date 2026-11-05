@@ -224,8 +224,9 @@ static long device_ioctl(struct file* file, unsigned int cmd, unsigned long arg)
             return -EINVAL;
         }
 
-        // Check memory range validity
-        if (params.mem_offset + params.chunk_size > priv->total_size) {
+        // subtraction form: offset+size cannot wrap past the check
+        if (params.chunk_size > priv->total_size
+            || params.mem_offset > priv->total_size - params.chunk_size) {
             mutex_unlock(&priv->global_lock);
             return -EINVAL;
         }
