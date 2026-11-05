@@ -12,6 +12,8 @@
 #include <unordered_map>
 #include <chrono>
 #include <thread>
+#include <mutex>
+#include <atomic>
 
 #include "event2/http_struct.h"
 #include "event2/event.h"
@@ -39,6 +41,10 @@ namespace {
     static unordered_map<string, string> g_extraOpts = {};
     static unordered_map<string, DealHooks> g_dealHooks = {};
     static string g_frontendRoot = { };      // frontend static root; empty means frontend disabled
+    // g_msgRecv: written by the event thread, read by the requester
+    static mutex g_msgMtx;
+    // set by HttpClient before dispatching, guards reading detail.base
+    static atomic<bool> g_clientBaseReady{ false };
 }
 
 void Response(struct evhttp_request* request, HookDetail detail = {});
@@ -107,16 +113,22 @@ void ReadChunkCallback(struct evhttp_request* resp, void* base)
     char data[len];
     struct evbuffer* evbuf = evhttp_request_get_input_buffer(resp);
     size_t size = 0;
+    string last;
     int n = 0;
     while ((n = evbuffer_remove(evbuf, data, len)) > 0) {
         fwrite(data, n, 1, stdout);
-        size += n;
+        // append by length: data is not NUL-terminated, and chunks accumulate
+        {
+            lock_guard<mutex> lock(g_msgMtx);
+            g_msgRecv[base].append(data, static_cast<size_t>(n));
+        }
+        last.assign(data, static_cast<size_t>(n));
+        size += static_cast<size_t>(n);
     }
-    g_msgRecv[base] = string(data);
     DEALRES_CALLBACK func = g_dealHooks["handleResponse"].callback;
-    if (func != nullptr) {
+    if (func != nullptr && !last.empty()) {
         HookDetail detail;
-        detail.payload = data;
+        detail.payload = last.c_str(); // terminated, alive during the call
         func(detail, size);
     }
     fwrite("\n", 1, 1, stdout);
@@ -532,8 +544,13 @@ void GenericHandler(struct evhttp_request* req_ptr, void* param)
 void WaitMsgTask(event_base* base)
 {
     unsigned int count = 0;
-    while (base == nullptr || g_msgRecv[base].empty()) {
-        if (count > 3)
+    while (true) {
+        bool empty;
+        {
+            lock_guard<mutex> lock(g_msgMtx);
+            empty = (base == nullptr) || g_msgRecv[base].empty();
+        }
+        if (!empty || count > 3)
             break;
         this_thread::sleep_for(chrono::microseconds(g_wait100ms));
         Message("dispatch timeout %us to exit", count);
@@ -594,6 +611,7 @@ int HttpClient(HookDetail& detail)
     evhttp_connection_set_closecb(connect, RemoteConnectionCloseCallback, base);
     if (request->evcon != nullptr) evhttp_connection_set_timeout(request->evcon, 300);
     detail.base = base;
+    g_clientBaseReady.store(true, memory_order_release);
     Message("http success connects!");
 
     const char* user_agent = "Mozilla/5.0 (Macintosh;"
@@ -720,22 +738,26 @@ int StartServer(int port, struct SrvCallbacks* callbacks)
 int RequestClient(const char* url, HookDetail& detail, DEALRES_CALLBACK hook)
 {
     int stat = -1;
+    // register before the thread starts; null hook means no per-chunk handling
+    g_dealHooks["handleResponse"].callback = hook;
+    g_clientBaseReady.store(false, memory_order_relaxed);
     thread client([&stat, &detail](const char* target) {
         detail.url = target;
         stat = HttpClient(detail);
         }, url);
-    if (hook != nullptr) {
-        WaitMsgTask(detail.base);
-        if (client.joinable())
-            client.join();
-    } else {
-        g_dealHooks["handleResponse"].callback = hook;
-        client.detach();
+    // bounded wait for the base publication (error paths never publish)
+    for (int i = 0; i < 10 && !g_clientBaseReady.load(memory_order_acquire); ++i)
         this_thread::sleep_for(chrono::microseconds(g_wait100ms));
-    }
-    for (auto msg : g_msgRecv) {
-        if (!msg.second.empty()) {
-            detail.msg = msg.second;
+    // break the dispatch once a message lands
+    if (g_clientBaseReady.load(memory_order_acquire))
+        WaitMsgTask(detail.base);
+    client.join();
+    {
+        lock_guard<mutex> lock(g_msgMtx);
+        for (auto msg : g_msgRecv) {
+            if (!msg.second.empty()) {
+                detail.msg = msg.second;
+            }
         }
     }
     return stat;

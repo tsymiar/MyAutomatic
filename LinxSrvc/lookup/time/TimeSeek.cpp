@@ -71,6 +71,8 @@ static SeekTimeContent parseFrameFirst(FILE* file, TimeDbMgr* dbMgr, int positio
     int current = 0;
     bool once = true;
     while ((bytes = fread(buffer, 1, sizeof(buffer), file)) > 0) {
+        if (bytes < sizeof(uint64_t))
+            break;
         for (size_t i = 0; i <= bytes - sizeof(uint64_t); i++) {
             if (*reinterpret_cast<uint64_t*>(buffer + i) == targetHeader) {
                 UserFileFrame* header = reinterpret_cast<UserFileFrame*>(buffer + i);
@@ -108,13 +110,15 @@ static SeekTimeContent parseFrameBack(FILE* file, uint32_t windSize)
     }
     fseek(file, 0, SEEK_END);
     uint64_t fileSize = ftell(file);
-    uint64_t curpos = fileSize - windSize;
+    uint64_t curpos = fileSize > windSize ? fileSize - windSize : 0;
     uint32_t size = fileSize > windSize ? windSize : fileSize;
     uint8_t buff[size];
     do {
         size_t bytes = 0;
         fseek(file, curpos, SEEK_SET);
         while ((bytes = fread(buff, 1, size, file)) > 0) {
+            if (bytes < sizeof(uint64_t))
+                break;
             for (size_t i = bytes - sizeof(uint64_t); i > 0; i--) {
                 if (*reinterpret_cast<uint64_t*>(buff + i) == CONST_FRAME_HEAD) {
                     UserFileFrame* header = reinterpret_cast<UserFileFrame*>(buff + i);
@@ -131,7 +135,7 @@ static SeekTimeContent parseFrameBack(FILE* file, uint32_t windSize)
                 }
             }
         }
-        curpos -= size;
+        curpos = curpos > size ? curpos - size : 0;
     } while (curpos > 0);
     return {};
 }
@@ -157,6 +161,8 @@ SeekTimeContent TimeSeek::parseFileFrame(SelectOffset position, int64_t timestam
     SeekTimeValue lastValue{};
     SeekTimeValue calcValue{};
     while ((bytes = fread(buffer, 1, sizeof(buffer), m_file)) > 0) {
+        if (bytes < sizeof(uint64_t))
+            break;
         for (size_t i = 0; i <= bytes - sizeof(uint64_t); i++) {
             size_t idx = i;
             if (*reinterpret_cast<uint64_t*>(buffer + idx) == CONST_FRAME_HEAD) {
@@ -337,6 +343,8 @@ std::vector<SeekTimeContent> TimeSeek::sortFramebyTime(SelectOffset selectOffset
         size_t bytes = 0;
         int current = 0;
         while ((bytes = fread(frmBuff, 1, sizeof(frmBuff), m_file)) > 0) {
+            if (bytes < sizeof(uint64_t))
+                break;
             for (size_t i = 0; i <= bytes - sizeof(uint64_t); i++) {
                 if (*reinterpret_cast<uint64_t*>(frmBuff + i) == CONST_FRAME_HEAD) {
                     UserFileFrame* header = reinterpret_cast<UserFileFrame*>(frmBuff + i);

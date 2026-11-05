@@ -363,7 +363,7 @@ int server(int argc, char* argv[])
                     printf("recv from %s:%d size=%zd\n", ip, ntohs(loc.sin_port), rcvlen);
                     // Batch-print in 32-byte lines via a buffer instead of per-byte printf
                     for (ssize_t i = 0; i < rcvlen; ) {
-                        char line[3 * 32 + 1];
+                        char line[3 * 32 + 1] = "";
                         char* p = line;
                         ssize_t end = i + 32 < rcvlen ? i + 32 : rcvlen;
                         for (; i < end; ++i) {

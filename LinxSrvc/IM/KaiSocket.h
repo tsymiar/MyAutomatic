@@ -126,7 +126,8 @@ private:
         bool client = false;
         Header flag;
     } m_network;
-    std::mutex m_lock = {};
+    // recursive: recv() re-locks it via checkSsid/produce/consume
+    std::recursive_mutex m_lock = {};
     std::vector<Network> m_networks{};
     std::vector<int(*)(KaiSocket*)> m_callbacks{};
     static std::deque<const Message*>* m_msgQue;

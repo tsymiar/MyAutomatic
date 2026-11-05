@@ -364,7 +364,7 @@ ssize_t KaiSocket::recv(uint8_t* buff, size_t size)
     if (res != len) {
         std::cout << __FUNCTION__ << ": stream caught [" << res << "], expect size = " << len << std::endl;
     }
-    std::lock_guard<std::mutex> lock(m_lock);
+    std::lock_guard<std::recursive_mutex> lock(m_lock);
     // get ssid set to 'm_network', also repeat to server as a mark for search clients
     unsigned long long ssid = header.ssid;
     static uint64_t prsid;
@@ -530,7 +530,7 @@ ssize_t KaiSocket::broadcast(const uint8_t* data, size_t len)
         std::cerr << __FUNCTION__ << ": no network is to send!" << std::endl;
         return -2;
     }
-    std::lock_guard<std::mutex> lock(m_lock);
+    std::lock_guard<std::recursive_mutex> lock(m_lock);
     ssize_t bytes = 0;
     for (auto& network : m_networks) {
         ssize_t stat = writes(network, data, len);
@@ -564,7 +564,7 @@ void KaiSocket::handleNotify(Network& network)
         std::cerr << __FUNCTION__ << ": " << strerror(errno) << std::endl;
         return;
     }
-    std::lock_guard<std::mutex> lock(m_lock);
+    std::lock_guard<std::recursive_mutex> lock(m_lock);
     bool exist = false;
     auto at = m_networks.begin();
     for (; at != m_networks.end(); ++at) {
@@ -670,7 +670,7 @@ uint64_t KaiSocket::setSsid(const Network& network, SOCKET socket)
 
 bool KaiSocket::checkSsid(SOCKET key, uint64_t ssid)
 {
-    std::lock_guard<std::mutex> lock(m_lock);
+    std::lock_guard<std::recursive_mutex> lock(m_lock);
     return ((int)((ssid >> 8) & 0x00ff) == key);
 }
 
@@ -722,7 +722,7 @@ int KaiSocket::produce(const Message& msg)
         std::cout << __FUNCTION__ << ": msgQue pool is null." << std::endl;
         return -1;
     }
-    std::lock_guard<std::mutex> lock(m_lock);
+    std::lock_guard<std::recursive_mutex> lock(m_lock);
     size_t size = m_msgQue->size();
     if (msg.head.ssid != 0 || msg.head.etag == PRODUCER) {
         Message* _msg = new(std::nothrow) Message(msg);
@@ -740,7 +740,7 @@ ssize_t KaiSocket::consume(Message& msg)
         std::cout << __FUNCTION__ << ": message pool has no elem(s)." << std::endl;
         return -1;
     }
-    std::lock_guard<std::mutex> lock(m_lock);
+    std::lock_guard<std::recursive_mutex> lock(m_lock);
     size_t size = m_msgQue->size();
     Message* msgQ = nullptr;
     do {
@@ -811,7 +811,7 @@ void KaiSocket::setTopic(const std::string& topic, Header* header)
         std::cerr << __FUNCTION__ << ": header is null." << std::endl;
         return;
     }
-    std::lock_guard<std::mutex> lock(m_lock);
+    std::lock_guard<std::recursive_mutex> lock(m_lock);
     size_t size = topic.size();
     if (size > sizeof(header->text)) {
         std::cerr << __FUNCTION__ << ": topic length " << size << " out of bounds." << std::endl;
