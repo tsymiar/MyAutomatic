@@ -8,10 +8,7 @@
 #include "DeductionAudio.h"
 #include <vector>
 
-// ═══════════════════════════════════════════════════════════════
-//  声纹推演盘 —— 主界面
-//  三槽拖拽（样本+动作+锚点）+ 心理变量滑块 + 命题展示
-// ═══════════════════════════════════════════════════════════════
+// 声纹推演盘 —— 主界面 三槽拖拽（样本+动作+锚点）+ 心理变量滑块 + 命题展示
 class DeductionBoardWidget : public QOpenGLWidget, protected QOpenGLFunctions {
     Q_OBJECT
 public:
@@ -29,7 +26,6 @@ protected:
     void mousePressEvent(QMouseEvent* e) override;
     void mouseMoveEvent(QMouseEvent* e) override;
     void mouseReleaseEvent(QMouseEvent* e) override;
-    void wheelEvent(QWheelEvent* e) override;
 
 private slots:
     void tick();

@@ -13,6 +13,9 @@ public:
 
     // ── 章节管理 ──
     void generateFragments(GameChapter chapter);
+    // 开启新一周目：重置单局状态（选择、分支、机制数值），
+    // 保留跨周目收集（结局图鉴、回声碎片档案、角色揭示）
+    void startNewGame();
     GameChapter currentChapter() const { return m_currentChapter; }
     QString chapterName() const;
     QString chapterDescription() const;

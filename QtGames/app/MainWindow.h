@@ -1,7 +1,6 @@
 #ifndef MainWindow_H
 #define MainWindow_H
 
-// #include "ui_mainwindow.h"
 #include "OglMaterial.h"
 
 class MainWindow : public QOglMaterial {

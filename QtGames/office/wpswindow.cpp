@@ -101,10 +101,9 @@ IKRpcClient* WPSWindow::initWpsApplication()
 
 void WPSWindow::destroyWpsApplication()
 {
-	if (m_rpcClient) {
-		m_rpcClient->Release();
-		m_rpcClient = NULL;
-	}
+	// bundled SDK（third_party/wps_sdk）的 IKRpcClient 未定义 Release/Destroy 接口，
+	// 实例由 librpcwpsapi 内部管理，WPS 进程随 Quit 退出，仅断开引用
+	m_rpcClient = NULL;
 }
 
 void WPSWindow::addHotKey(const QString& hotKey, bool isEnable)
@@ -525,7 +524,6 @@ void WPSMainWindow::hideToolBtn()
 					spControls->get_Item(vControlIndex, &spControl);
 					if (spControl) {
 						spControl->put_Visible(enable ? VARIANT_TRUE : VARIANT_FALSE);
-						//button对应的index和name，用户可根据index隐藏自己所需按钮
 						//ks_bstr ksName;
 						//spControl->get_Caption(&ksName);
 						//qDebug() << "index, name: " << i << QString::fromUtf16(ksName);
@@ -538,64 +536,53 @@ void WPSMainWindow::hideToolBtn()
 	m_mainArea->setFocus();
 }
 
+bool WPSMainWindow::checkHr(HRESULT hr, const QString& what)
+{
+	if (SUCCEEDED(hr))
+		return true;
+	QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"),
+		QString::fromUtf8("%1失败 (0x%2)").arg(what).arg(static_cast<unsigned>(hr), 8, 16, QChar('0')));
+	message.exec();
+	return false;
+}
+
 void WPSMainWindow::listTemplates()
 {
 	if (m_spApplication) {
 		ks_stdptr<wpsapi::Selection> spSelection;
 		HRESULT hr = m_spApplication->get_Selection(&spSelection);
-		if (FAILED(hr)) {
-			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("获取Selection对象失败"));
-			message.exec();
+		if (!checkHr(hr, QString::fromUtf8("获取Selection对象")))
 			return;
-		}
 
 		ks_bstr context(__X("编号一"));
 		hr = spSelection->TypeText(context);
-		if (FAILED(hr)) {
-			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("输入文字失败"));
-			message.exec();
+		if (!checkHr(hr, QString::fromUtf8("输入文字")))
 			return;
-		}
 
 		ks_stdptr<wpsapi::Range> spRange;
 		hr = spSelection->get_Range(&spRange);
-		if (FAILED(hr)) {
-			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("获取Range对象失败"));
-			message.exec();
+		if (!checkHr(hr, QString::fromUtf8("获取Range对象")))
 			return;
-		}
 
 		ks_stdptr<wpsapi::ListFormat> spListFormat;
 		hr = spRange->get_ListFormat(&spListFormat);
-		if (FAILED(hr)) {
-			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("回去ListFormat对象失败"));
-			message.exec();
+		if (!checkHr(hr, QString::fromUtf8("获取ListFormat对象")))
 			return;
-		}
 
 		ks_stdptr<wpsapi::ListGalleries> spListGalleries;
 		hr = m_spApplication->get_ListGalleries(&spListGalleries);
-		if (FAILED(hr)) {
-			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("获取ListGalleries对象失败"));
-			message.exec();
+		if (!checkHr(hr, QString::fromUtf8("获取ListGalleries对象")))
 			return;
-		}
 
 		ks_stdptr<wpsapi::ListGallery> spListGallery;
 		hr = spListGalleries->Item(wpsapi::wdNumberGallery, &spListGallery);
-		if (FAILED(hr)) {
-			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("获取ListGallerie对象失败"));
-			message.exec();
+		if (!checkHr(hr, QString::fromUtf8("获取ListGallery对象")))
 			return;
-		}
 
 		ks_stdptr<wpsapi::ListTemplates> spListTemplates;
 		hr = spListGallery->get_ListTemplates(&spListTemplates);
-		if (FAILED(hr)) {
-			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("获取ListTemplates对象失败"));
-			message.exec();
+		if (!checkHr(hr, QString::fromUtf8("获取ListTemplates对象")))
 			return;
-		}
 
 		KComVariant Index(1);
 		ks_stdptr<wpsapi::ListTemplate> spListTemplate;
@@ -605,11 +592,8 @@ void WPSMainWindow::listTemplates()
 		KComVariant ContinuePreviousList(wdContinueList);
 		KComVariant DefaultListBehavior(262144);
 		hr = spListFormat->ApplyListTemplate(spListTemplate, &ContinuePreviousList, &ApplyTo, &DefaultListBehavior);
-		if (FAILED(hr)) {
-			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("添加列表失败"));
-			message.exec();
+		if (!checkHr(hr, QString::fromUtf8("添加列表")))
 			return;
-		}
 	}
 	m_mainArea->setFocus();
 }
@@ -619,35 +603,23 @@ void WPSMainWindow::hyperlinks()
 	if (m_spApplication) {
 		ks_stdptr<wpsapi::_Document> spActiveDoc;
 		HRESULT hr = m_spApplication->get_ActiveDocument((wpsapi::Document**)&spActiveDoc);
-		if (FAILED(hr)) {
-			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("获取document对象失败"));
-			message.exec();
+		if (!checkHr(hr, QString::fromUtf8("获取Document对象")))
 			return;
-		}
 
 		ks_stdptr<wpsapi::Selection> spSelection;
 		hr = m_spApplication->get_Selection(&spSelection);
-		if (FAILED(hr)) {
-			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("获取selection对象失败"));
-			message.exec();
+		if (!checkHr(hr, QString::fromUtf8("获取Selection对象")))
 			return;
-		}
 
 		ks_stdptr<wpsapi::Range> spRange;
 		hr = spSelection->get_Range(&spRange);
-		if (FAILED(hr)) {
-			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("获取range对象失败"));
-			message.exec();
+		if (!checkHr(hr, QString::fromUtf8("获取Range对象")))
 			return;
-		}
 
 		ks_stdptr<wpsapi::Hyperlinks> spHyperlinks;
 		hr = spActiveDoc->get_Hyperlinks(&spHyperlinks);
-		if (FAILED(hr)) {
-			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("获取Hyperlinks对象失败"));
-			message.exec();
+		if (!checkHr(hr, QString::fromUtf8("获取Hyperlinks对象")))
 			return;
-		}
 
 		ks_stdptr<wpsapi::Hyperlink> spHyperlink;
 		QString strAddress = QFileDialog::getOpenFileName(this, QString::fromUtf8("选择一个文件"));
@@ -657,11 +629,8 @@ void WPSMainWindow::hyperlinks()
 		V_VT(&varEmpty) = VT_ERROR;
 		V_ERROR(&varEmpty) = DISP_E_PARAMNOTFOUND;
 		hr = spHyperlinks->Add((IDispatch*)spRange, &Address, &varEmpty, &varEmpty, &varEmpty, &varEmpty, &spHyperlink);
-		if (FAILED(hr)) {
-			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("添加超链接失败"));
-			message.exec();
+		if (!checkHr(hr, QString::fromUtf8("添加超链接")))
 			return;
-		}
 	}
 	m_mainArea->setFocus();
 }
@@ -671,11 +640,8 @@ void WPSMainWindow::highlight()
 	if (m_spApplication) {
 		ks_stdptr<wpsapi::Selection> spSelection;
 		HRESULT hr = m_spApplication->get_Selection(&spSelection);
-		if (FAILED(hr)) {
-			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("获取selection对象失败"));
-			message.exec();
+		if (!checkHr(hr, QString::fromUtf8("获取Selection对象")))
 			return;
-		}
 
 		ks_bstr context(__X("突出显示"));
 		spSelection->TypeText(context);
@@ -686,18 +652,12 @@ void WPSMainWindow::highlight()
 
 		ks_stdptr<wpsapi::Range> spRange;
 		hr = spSelection->get_Range(&spRange);
-		if (FAILED(hr)) {
-			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("获取range对象失败"));
-			message.exec();
+		if (!checkHr(hr, QString::fromUtf8("获取Range对象")))
 			return;
-		}
 
 		hr = spRange->put_HighlightColorIndex(wpsapi::wdYellow);
-		if (FAILED(hr)) {
-			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("设置突出显示失败"));
-			message.exec();
+		if (!checkHr(hr, QString::fromUtf8("设置突出显示")))
 			return;
-		}
 	}
 	m_mainArea->setFocus();
 }
@@ -707,27 +667,18 @@ void WPSMainWindow::inserttable()
 	if (m_spApplication) {
 		ks_stdptr<wpsapi::_Document> spActiveDoc;
 		HRESULT hr = m_spApplication->get_ActiveDocument((wpsapi::Document**)&spActiveDoc);
-		if (FAILED(hr)) {
-			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("获取Document对象失败"));
-			message.exec();
+		if (!checkHr(hr, QString::fromUtf8("获取Document对象")))
 			return;
-		}
 
 		ks_stdptr<wpsapi::Range> spRange;
 		hr = spActiveDoc->get_Content(&spRange);
-		if (FAILED(hr)) {
-			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("获取Range对象失败"));
-			message.exec();
+		if (!checkHr(hr, QString::fromUtf8("获取Range对象")))
 			return;
-		}
 
 		ks_stdptr<wpsapi::Tables> spTables;
 		hr = spActiveDoc->get_Tables(&spTables);
-		if (FAILED(hr)) {
-			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("获取Tables对象失败"));
-			message.exec();
+		if (!checkHr(hr, QString::fromUtf8("获取Tables对象")))
 			return;
-		}
 
 		long NumRows = 3;
 		long NumColumns = 5;
@@ -735,11 +686,8 @@ void WPSMainWindow::inserttable()
 		KComVariant AutoFitBehavior;
 		ks_stdptr<wpsapi::Table> spTable;
 		hr = spTables->Add(spRange, NumRows, NumColumns, &DefaultTableBehavior, &AutoFitBehavior, &spTable);
-		if (FAILED(hr)) {
-			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("添加表格失败"));
-			message.exec();
+		if (!checkHr(hr, QString::fromUtf8("添加表格")))
 			return;
-		}
 	}
 	m_mainArea->setFocus();
 }
@@ -749,26 +697,17 @@ void WPSMainWindow::setFontSize()
 	if (m_spApplication) {
 		ks_stdptr<wpsapi::Selection> spSelection;
 		HRESULT hr = m_spApplication->get_Selection(&spSelection);
-		if (FAILED(hr)) {
-			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("获取Selection对象失败"));
-			message.exec();
+		if (!checkHr(hr, QString::fromUtf8("获取Selection对象")))
 			return;
-		}
 
 		ks_stdptr<wpsapi::_Font> spFont;
 		hr = spSelection->get_Font((wpsapi::Font**)&spFont);
-		if (FAILED(hr)) {
-			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("获取Font对象失败"));
-			message.exec();
+		if (!checkHr(hr, QString::fromUtf8("获取Font对象")))
 			return;
-		}
 
 		hr = spFont->put_Size(36);
-		if (FAILED(hr)) {
-			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("设置字体大小失败"));
-			message.exec();
+		if (!checkHr(hr, QString::fromUtf8("设置字体大小")))
 			return;
-		}
 
 		ks_bstr context(__X("字体设为36"));
 		spSelection->TypeText(context);
@@ -781,19 +720,13 @@ void WPSMainWindow::insertEllipse()
 	if (m_spApplication) {
 		ks_stdptr<wpsapi::_Document> spDocumment;
 		HRESULT hr = m_spApplication->get_ActiveDocument((wpsapi::Document**)&spDocumment);
-		if (FAILED(hr)) {
-			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("获取Document对象失败"));
-			message.exec();
+		if (!checkHr(hr, QString::fromUtf8("获取Document对象")))
 			return;
-		}
 
 		ks_stdptr<wpsapi::Shapes> spShapes;
 		hr = spDocumment->get_Shapes(&spShapes);
-		if (FAILED(hr)) {
-			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("获取shapes对象失败"));
-			message.exec();
+		if (!checkHr(hr, QString::fromUtf8("获取Shapes对象")))
 			return;
-		}
 
 		long Type = (long)msoShapeOval;
 		single Left = 150;
@@ -803,11 +736,8 @@ void WPSMainWindow::insertEllipse()
 		KComVariant Anchor;
 		ks_stdptr<wpsapi::Shape> spShape;
 		hr = spShapes->AddShape(Type, Left, Top, Width, Height, &Anchor, &spShape);
-		if (FAILED(hr)) {
-			QMessageBox message(QMessageBox::NoIcon, QString::fromUtf8("提示"), QString::fromUtf8("添加图形失败"));
-			message.exec();
+		if (!checkHr(hr, QString::fromUtf8("添加图形")))
 			return;
-		}
 	}
 	m_mainArea->setFocus();
 }

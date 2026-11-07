@@ -9,9 +9,7 @@ DeductionEngine::DeductionEngine(QObject* parent) : QObject(parent)
     initSoulFragments();
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  声灵库 / 灵魂碎片初始化
-// ═══════════════════════════════════════════════════════════════
+// 声灵库 / 灵魂碎片初始化
 
 void DeductionEngine::initSpirits()
 {
@@ -23,9 +21,7 @@ void DeductionEngine::initSoulFragments()
     resetSoulFragments(m_soulFragments, m_nextSoulFragmentId);
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  样本库构建
-// ═══════════════════════════════════════════════════════════════
+// 样本库构建
 
 DeductionSample DeductionEngine::addSample(const QString& name, const QString& desc,
     SampleKind kind, const QString& source, SpiritKind spiritKind)
@@ -51,9 +47,7 @@ Proposition DeductionEngine::addProposition(const QString& text, const QStringLi
     return p;
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  序章：例行推演
-// ═══════════════════════════════════════════════════════════════
+// 序章：例行推演
 
 void DeductionEngine::setupPrologue()
 {
@@ -70,9 +64,7 @@ void DeductionEngine::setupPrologue()
         { "碎璃声灵放在'过去'是偶然杂音，放在'未来'预示背叛者逼近" });
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  第一章：推演他人
-// ═══════════════════════════════════════════════════════════════
+// 第一章：推演他人
 
 void DeductionEngine::setupChapter1()
 {
@@ -92,9 +84,7 @@ void DeductionEngine::setupChapter1()
         { "老刘是否知道核心盘位置？", "何悦哼的歌里是否藏有密钥负片？", "陈远山的右耳是否被声灵诅咒？" });
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  第二章：推演自我
-// ═══════════════════════════════════════════════════════════════
+// 第二章：推演自我
 
 void DeductionEngine::setupChapter2()
 {
@@ -114,9 +104,7 @@ void DeductionEngine::setupChapter2()
         { "心电图停止音与林薇哭泣的先后，决定她是救助者还是诱因", "仪器滴声的变速暗示割魂是否仓促" });
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  第三章：推演关系（博弈模拟）
-// ═══════════════════════════════════════════════════════════════
+// 第三章：推演关系（博弈模拟）
 
 void DeductionEngine::setupChapter3()
 {
@@ -134,9 +122,7 @@ void DeductionEngine::setupChapter3()
         { "镜声灵契约：预知他的第一反应呼吸频率", "默声灵契约：预知静默持续时长", "谎声灵契约：预知你最不愿面对的结局" });
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  终章：推演未来
-// ═══════════════════════════════════════════════════════════════
+// 终章：推演未来
 
 void DeductionEngine::setupFinale()
 {
@@ -156,9 +142,7 @@ void DeductionEngine::setupFinale()
         { "第一供品：牺牲（释放一只声灵回归原初）", "第二供品：传递（把真相注入某人的梦）", "第三供品：定义（念出陈远山的灵魂基频）" });
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  样本查找 / 锁存
-// ═══════════════════════════════════════════════════════════════
+// 样本查找 / 锁存
 
 DeductionSample* DeductionEngine::findSample(int id)
 {
@@ -178,9 +162,7 @@ bool DeductionEngine::isSampleLocked(int id) const
     return false;
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  命题
-// ═══════════════════════════════════════════════════════════════
+// 命题
 
 Proposition* DeductionEngine::currentProposition()
 {
@@ -195,9 +177,7 @@ void DeductionEngine::resolveProposition(int id)
     emit propositionResolved(id);
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  推演核心：由样本+动作+锚点+关系合成推演结果
-// ═══════════════════════════════════════════════════════════════
+// 推演核心：由样本+动作+锚点+关系合成推演结果
 
 DeductionResult DeductionEngine::deduce(const std::vector<DeductionSlot>& boardSlots,
     const std::vector<Relation>& relations)
@@ -280,9 +260,7 @@ DeductionResult DeductionEngine::deduce(const std::vector<DeductionSlot>& boardS
     return r;
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  心理变量
-// ═══════════════════════════════════════════════════════════════
+// 心理变量
 
 void DeductionEngine::setGreedFear(float greed, float fear)
 {
@@ -306,9 +284,7 @@ void DeductionEngine::recordEmotion(bool fearPreferred)
     else m_profile.nostalgiaCount++;
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  心理陷阱 1：回声强化
-// ═══════════════════════════════════════════════════════════════
+// 心理陷阱 1：回声强化
 
 void DeductionEngine::applyEchoReinforcement(int sampleId, bool convicted)
 {
@@ -328,9 +304,7 @@ void DeductionEngine::applyEchoReinforcement(int sampleId, bool convicted)
     }
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  心理陷阱 2：负片记忆覆盖
-// ═══════════════════════════════════════════════════════════════
+// 心理陷阱 2：负片记忆覆盖
 
 QStringList DeductionEngine::negativeOverwrite(int sampleId, const QString& newMemory)
 {
@@ -348,9 +322,7 @@ QStringList DeductionEngine::negativeOverwrite(int sampleId, const QString& newM
     return effects;
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  心理陷阱 3：自主学习（人格侧写）
-// ═══════════════════════════════════════════════════════════════
+// 心理陷阱 3：自主学习（人格侧写）
 
 PersonalityProfile DeductionEngine::generatePersonalityProfile() const
 {
@@ -382,9 +354,7 @@ PersonalityProfile DeductionEngine::generatePersonalityProfile() const
     return pp;
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  终章三槽推演
-// ═══════════════════════════════════════════════════════════════
+// 终章三槽推演
 
 QString DeductionEngine::generateFinalAudioDescription(const std::vector<DeductionSlot>& boardSlots)
 {
@@ -401,9 +371,7 @@ QString DeductionEngine::generateFinalAudioDescription(const std::vector<Deducti
     return ret;
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  离奇魔幻基因：声灵系统实现
-// ═══════════════════════════════════════════════════════════════
+// 离奇魔幻基因：声灵系统实现
 
 SpiritInfo* DeductionEngine::findSpirit(SpiritKind kind)
 {

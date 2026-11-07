@@ -9,13 +9,9 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
-// ═══════════════════════════════════════════
-//  OpenGL 初始化与图元绘制辅助
-// ═══════════════════════════════════════════
+// OpenGL 初始化与图元绘制辅助
 
-// ═══════════════════════════════════════════
-//  OpenGL 初始化
-// ═══════════════════════════════════════════
+// OpenGL 初始化
 
 void EchoMainWindow::initializeGL()
 {
@@ -38,16 +34,19 @@ void EchoMainWindow::resizeGL(int w, int h)
     glMatrixMode(GL_MODELVIEW);
 }
 
-// ═══════════════════════════════════════════
-//  绘制辅助
-// ═══════════════════════════════════════════
+// 绘制辅助
 
 void EchoMainWindow::drawTextGL(float x, float y, const QString& t, const QColor& c, float s)
 {
     QPainter p(this); p.setPen(c);
-    QFont f("Monospace", 10); f.setStyleHint(QFont::Monospace); p.setFont(f);
-    float asp = float(m_winWidth) / float(m_winHeight), ghw, ghh;
-    if (asp > 1.0f) { ghw = asp;ghh = 1.0f; } else { ghw = 1.0f;ghh = 1.0f / asp; }
+    // 每帧几十次调用，字体对象复用，避免反复查字体库
+    static const QFont kFont = [] {
+        QFont f("Monospace", 10);
+        f.setStyleHint(QFont::Monospace);
+        return f;
+        }();
+    p.setFont(kFont);
+    float ghw = glHalfWidth(), ghh = glHalfHeight();
     int sx = int((x + ghw) / (2.0f * ghw) * m_winWidth), sy = int((ghh - y) / (2.0f * ghh) * m_winHeight);
     p.save(); p.translate(sx, sy); p.scale(s, s);
     // 支持多行：逐行绘制，行高约 14px（相对未缩放字体）

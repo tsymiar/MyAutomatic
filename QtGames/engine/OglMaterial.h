@@ -37,7 +37,6 @@ public:
     QOglMaterial(QWidget* parent = 0);
     virtual ~QOglMaterial();
 protected:
-    // virtual functions
     void initializeGL();
     void paintGL();
     void resizeGL(int width, int height);
@@ -45,20 +44,11 @@ protected:
     void initVbo();
     inline QMatrix4x4 getProject() const { return m_projection; }
 private:
-    /* [1] 定义着色器和片段着色器，否则做不了任何渲染 */
-    /* 定义一个着色器[顶点着色器、片段着色器]编译对象 */
     QOpenGLShaderProgram* program;
-    ///< 视图矩阵、投影矩阵、MVP矩阵
-    ///< 分三个矩阵，分别是模型矩阵、视图矩阵、透视矩阵:
-    ///  1. 单独控制模型灯光跟随，shader要传入除了mvp矩阵外的模型矩阵*视图矩阵
+    // 透视投影矩阵
     QMatrix4x4 m_projection;
-    ///< 可以根据programid，利用glGetUniformLocation等方法获取shader属性
     GLuint programid;
-
-    ///< 矩阵、顶点、颜色在着色器里的位置
     GLuint matrixLocation, vertexLocation, clorLocation;
-
-    ///< 顶点、索引、颜色 -> buffer的标识
     GLuint verVbo, v_indexVbo, colorVbo;
 #else
 private:

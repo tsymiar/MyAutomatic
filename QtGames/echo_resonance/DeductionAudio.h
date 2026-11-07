@@ -5,19 +5,11 @@
 #include <QByteArray>
 #include <cmath>
 
-// ═══════════════════════════════════════════════════════════════
-//  推演音频合成器
-//  程序实时合成推演音频（变调 + 叠加）
-//  若目标环境缺少 Qt Multimedia，退化为纯参数描述（不播放声音）
-// ═══════════════════════════════════════════════════════════════
-
-// 检测是否启用 Qt Multimedia 真实音频合成。
-// 默认关闭（纯视觉/文字模拟），在 .pro 中定义 DEDUCTION_AUDIO 后启用。
-#ifdef DEDUCTION_AUDIO
-#include <QAudioSink>
-#include <QAudioFormat>
-#include <QMediaDevices>
-#endif
+// 推演音频合成器：实时合成推演音频（变调 + 叠加）
+// 目标环境缺少 Qt Multimedia 时，退化为纯参数描述（不播放声音）
+// DEDUCTION_AUDIO 由 .pro 按 qtHaveModule(multimedia) 自动定义
+// 本头文件只声明接口，不依赖 Qt Multimedia 的具体类，
+// 以便同时兼容 Qt5（QAudioOutput）与 Qt6（QAudioSink）。
 
 // 单一声纹层（用于叠加合成）
 struct AudioLayer {

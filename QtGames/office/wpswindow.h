@@ -106,6 +106,8 @@ public:
 
 	void slotButtonClick(const QString& name);
 private:
+	// COM 调用失败时弹出统一提示并返回 false（配合 if (!checkHr(hr, "...")) return; 使用）
+	bool checkHr(HRESULT hr, const QString& what);
 	IKRpcClient* m_rpcClient;
 	WPSWindow* m_mainArea;
 	kfc::ks_stdptr<wpsapi::_Application> m_spApplication;

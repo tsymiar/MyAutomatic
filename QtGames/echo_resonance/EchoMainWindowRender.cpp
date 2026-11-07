@@ -9,13 +9,9 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
-// ═══════════════════════════════════════════
-//  主场景渲染（标题 → 玩家选择）
-// ═══════════════════════════════════════════
+// 主场景渲染（标题 → 玩家选择）
 
-// ═══════════════════════════════════════════
-//  渲染主入口
-// ═══════════════════════════════════════════
+// 渲染主入口
 
 void EchoMainWindow::paintGL()
 {
@@ -54,9 +50,7 @@ void EchoMainWindow::paintGL()
     if (m_tinnitusActive) renderTinnitusGuide();
 }
 
-// ═══════════════════════════════════════════
-//  标题画面
-// ═══════════════════════════════════════════
+// 标题画面
 
 void EchoMainWindow::renderTitle()
 {
@@ -74,9 +68,7 @@ void EchoMainWindow::renderTitle()
     }
 }
 
-// ═══════════════════════════════════════════
-//  角色名输入
-// ═══════════════════════════════════════════
+// 角色名输入
 
 void EchoMainWindow::renderNameInput()
 {
@@ -99,9 +91,7 @@ void EchoMainWindow::renderNameInput()
     }
 }
 
-// ═══════════════════════════════════════════
-//  教程界面
-// ═══════════════════════════════════════════
+// 教程界面
 
 void EchoMainWindow::renderTutorial()
 {
@@ -122,9 +112,7 @@ void EchoMainWindow::renderTutorial()
     drawTextGL(0.1f, -0.85f, "按 TAB 开始拼接 | ESC 退出", QColor(100, 120, 140, 120), 0.4f);
 }
 
-// ═══════════════════════════════════════════
-//  章节介绍
-// ═══════════════════════════════════════════
+// 章节介绍
 
 void EchoMainWindow::renderChapterIntro()
 {
@@ -137,14 +125,12 @@ void EchoMainWindow::renderChapterIntro()
     if (a > 0.8f) { float b = 0.6f + 0.4f * sinf(m_gameTime * 3.0f);drawTextGL(-0.3f, -0.5f, "按 ENTER 继续", QColor(0, 200, 255, int(b * 200)), 0.6f); }
 }
 
-// ═══════════════════════════════════════════
-//  碎片选择界面
-// ═══════════════════════════════════════════
+// 碎片选择界面
 
 void EchoMainWindow::renderFragmentSelect()
 {
     drawTextGL(-0.9f, 0.85f, m_engine->chapterName(), QColor(0, 200, 255, 220), 1.1f);
-    // 章节描述直接使用引擎返回的 \n 换行，不再手动切行
+    // 章节描述使用引擎返回的 \n 换行
     QString desc = m_engine->chapterDescription();
     drawTextGL(-0.9f, 0.72f, desc, QColor(150, 180, 200, 180), 0.4f);
     // 碎片列表起始位置根据描述行数动态下移，避免重叠
@@ -195,9 +181,7 @@ void EchoMainWindow::renderFragmentSelect()
     }
 }
 
-// ═══════════════════════════════════════════
-//  时间轴拼图
-// ═══════════════════════════════════════════
+// 时间轴拼图
 
 void EchoMainWindow::renderTimelinePuzzle()
 {
@@ -248,9 +232,7 @@ void EchoMainWindow::renderTimelinePuzzle()
     drawTextGL(-0.9f, -0.9f, "ESC: 返回碎片选择 | R: 重置 | 右键槽位移除 | TAB: 逆向播放选中", QColor(100, 120, 140, 120), 0.35f);
 }
 
-// ═══════════════════════════════════════════
-//  场景完成
-// ═══════════════════════════════════════════
+// 场景完成
 
 void EchoMainWindow::renderSceneComplete()
 {
@@ -282,9 +264,7 @@ void EchoMainWindow::renderSceneComplete()
     if (d) { float b = sinf(m_gameTime * 4.0f) > 0 ? 1.0f : 0.3f;drawTextGL(-0.2f, -0.6f, "提示：扭曲版本可能揭示了隐藏线索", QColor(255, 80, 40, int(b * 200)), 0.4f); }
 }
 
-// ═══════════════════════════════════════════
-//  导师信息
-// ═══════════════════════════════════════════
+// 导师信息
 
 void EchoMainWindow::renderMentorMessage()
 {
@@ -303,9 +283,7 @@ void EchoMainWindow::renderMentorMessage()
     }
 }
 
-// ═══════════════════════════════════════════
-//  玩家选择界面
-// ═══════════════════════════════════════════
+// 玩家选择界面
 
 void EchoMainWindow::renderPlayerChoice()
 {

@@ -18,9 +18,7 @@ bool DeductionAudio::hasAudioOutput() const
     return m_audioAvailable;
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  PCM 合成：多层正弦波叠加 + 变调 + 指数衰减包络
-// ═══════════════════════════════════════════════════════════════
+// PCM 合成：多层正弦波叠加 + 变调 + 指数衰减包络
 
 QByteArray DeductionAudio::generatePCM(const std::vector<AudioLayer>& layers, int sampleRate)
 {
@@ -66,9 +64,7 @@ QByteArray DeductionAudio::generatePCM(const std::vector<AudioLayer>& layers, in
     return pcm;
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  合成 + 描述
-// ═══════════════════════════════════════════════════════════════
+// 合成 + 描述
 
 QString DeductionAudio::synthesize(const std::vector<AudioLayer>& layers, bool play)
 {

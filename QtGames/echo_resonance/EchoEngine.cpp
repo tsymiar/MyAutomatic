@@ -21,9 +21,33 @@ EchoEngine::EchoEngine(QObject* parent) : QObject(parent)
 
 EchoEngine::~EchoEngine() {}
 
-// ═══════════════════════════════════════════
-//  初始化：角色、结局、对话
-// ═══════════════════════════════════════════
+void EchoEngine::startNewGame()
+{
+    m_currentChapter = GameChapter::Prologue;
+    m_choices.clear();
+    m_heYueState = HeYueState::Unknown;
+    m_reverseUnlocked = false;
+    m_hardMode = false;
+    m_morseActive = false;
+    m_useOfficialAnchor = true;
+    m_paranoiaLevel = 0.3f;
+    m_anxietyLevel = 0.1f;
+    m_lowFreqIntensity = 0.05f;
+    m_silenceTriggered = false;
+    m_resonanceLevel = 0.0f;
+    m_silenceTendency = 0.0f;
+    m_rightEarSilenced = false;
+    m_echoes.clear();
+    m_fragmentPlaceCount.clear();
+    m_silenceIdleAccum = 0.0f;
+    m_silenceMorseRevealed = false;
+    m_silenceMorse.revealed = false;
+    for (auto& s : m_spirits) { s.affinity = 0.0f; s.manifested = false; }
+    m_deviation = DeviationEnergy{};
+    resetSoulFragments(m_soulFragments, m_nextSoulFragmentId);
+}
+
+// 初始化：角色、结局、对话
 
 void EchoEngine::initCharacters()
 {
@@ -97,7 +121,7 @@ void EchoEngine::initEndings()
     m_endings[EndingType::Matricide] = {
         EndingType::Matricide, "弑母",
         "你删除林薇肉体的低频录音。她平静死去，密钥消失。你成为了A-Lab新主任，但你每次听到'安静'二字都会剧烈头痛——因为那是她死前说的最后一个词。",
-        "第三章选择拒绝融合，第四章关闭生命维持"
+        "第三章选择拒绝融合，第四章删除生命维持"
     };
     m_endings[EndingType::Rewinder] = {
         EndingType::Rewinder, "倒带者",
@@ -221,9 +245,7 @@ void EchoEngine::initEpilogues()
     };
 }
 
-// ═══════════════════════════════════════════
-//  碎片生成
-// ═══════════════════════════════════════════
+// 碎片生成
 
 void EchoEngine::initFragmentTypes()
 {
@@ -336,9 +358,7 @@ void EchoEngine::generateFragments(GameChapter chapter)
     }
 }
 
-// ═══════════════════════════════════════════
-//  各章节碎片配置
-// ═══════════════════════════════════════════
+// 各章节碎片配置
 
 void EchoEngine::setupChapterPrologue()
 {
@@ -389,7 +409,7 @@ void EchoEngine::setupChapter1()
         Credibility c = (rand() % 100 < 40) ? Credibility::Suspicious : Credibility::Noise;
         m_fragments.push_back(createFragment(t, c, 1.0f + (rand() % 30) / 10.0f));
     }
-    // 第一章结束后解锁逆向播放
+    // 进入第一章即解锁逆向播放
     unlockReverse();
 }
 
@@ -488,9 +508,7 @@ void EchoEngine::setupFinale()
     increaseLowFreq(); increaseLowFreq(); increaseLowFreq();
 }
 
-// ═══════════════════════════════════════════
-//  时间轴操作
-// ═══════════════════════════════════════════
+// 时间轴操作
 
 bool EchoEngine::placeFragment(int fragmentId, int slotIndex)
 {
@@ -646,9 +664,7 @@ void EchoEngine::resetCurrentChapter()
     m_paranoiaLevel = 0.3f; m_anxietyLevel = 0.1f;
 }
 
-// ═══════════════════════════════════════════
-//  锚点音
-// ═══════════════════════════════════════════
+// 锚点音
 
 bool EchoEngine::isAnchorCorrect() const
 {
@@ -660,9 +676,7 @@ bool EchoEngine::isAnchorCorrect() const
     return false;
 }
 
-// ═══════════════════════════════════════════
-//  逆向播放
-// ═══════════════════════════════════════════
+// 逆向播放
 
 void EchoEngine::unlockReverse()
 {
@@ -699,9 +713,7 @@ QString EchoEngine::getReverseDescription(int fragmentId) const
     return "";
 }
 
-// ═══════════════════════════════════════════
-//  导师/幻觉/底噪/摩斯
-// ═══════════════════════════════════════════
+// 导师/幻觉/底噪/摩斯
 
 QString EchoEngine::applyPlayerName(const QString& text) const
 {
@@ -772,9 +784,7 @@ void EchoEngine::revealCharacter(int index)
         m_characters[index].isRevealed = true;
 }
 
-// ═══════════════════════════════════════════
-//  选择系统
-// ═══════════════════════════════════════════
+// 选择系统
 
 void EchoEngine::recordChoice(PlayerChoice choice)
 {
@@ -794,9 +804,7 @@ PlayerChoice EchoEngine::getChapterChoice(GameChapter chapter) const
     return PlayerChoice::None;
 }
 
-// ═══════════════════════════════════════════
-//  结局系统
-// ═══════════════════════════════════════════
+// 结局系统
 
 EndingType EchoEngine::calculateEnding() const
 {
@@ -808,7 +816,7 @@ EndingType EchoEngine::calculateEnding() const
     int reversedCount = 0;
     for (auto& f : m_fragments) if (f.isReversed) reversedCount++;
 
-    // ═══ 隐藏/真结局（独立于选择，由行为触发）═══
+    // 隐藏/真结局（独立于选择，由行为触发）
     // ZeroDecibel 真结局：大量伪造碎片 + 高底噪 + 高偏执（玩家"相信伪造声音"的终极代价）
     int placedCount = placedFragmentCount();
     float fakeRatio = placedCount > 0 ? float(fakeCount) / float(placedCount) : 0.0f;
@@ -817,7 +825,7 @@ EndingType EchoEngine::calculateEnding() const
     // Rewinder 倒带者：大量逆向播放（玩家"怀疑一切声音"的终极选择）
     if (reversedCount >= 5) return EndingType::Rewinder;
 
-    // ═══ 主结局：第三章×第四章选择组合，每个组合导向不同结局 ═══
+    // 主结局：第三章×第四章选择组合，每个组合导向不同结局
     // 第三章（3 选）：AcceptFusion 接受融合 / RejectFusion 拒绝融合 / SeparateVoices 分离
     // 第四章（2 选）：TransferBack 转录回林薇 / DeleteLifeSupport 删除生命维持
 
@@ -840,7 +848,7 @@ EndingType EchoEngine::calculateEnding() const
         return EndingType::ZeroDecibel;        // 分离 + 删生命维持 → 彻底否定，真结局
     }
 
-    // ═══ 兜底：未做关键选择时，按信任主任/官方锚点导向 ═══
+    // 兜底：未做关键选择时，按信任主任/官方锚点导向
     if (m_rightEarSilenced && trustDirector) return EndingType::SilentArchive;
     if (trustDirector) return EndingType::SilentArchive;
     return EndingType::Duet;
@@ -871,9 +879,7 @@ void EchoEngine::unlockEnding(EndingType type)
     if (it != m_endings.end()) it->unlocked = true;
 }
 
-// ═══════════════════════════════════════════
-//  章节信息
-// ═══════════════════════════════════════════
+// 章节信息
 
 QString EchoEngine::chapterName() const
 {
@@ -918,24 +924,20 @@ QColor EchoEngine::credibilityToSpectrumColor(Credibility c)
     return Qt::white;
 }
 
-// ═══════════════════════════════════════════
-//  共鸣度系统（耳蜗共鸣）
-// ═══════════════════════════════════════════
+// 共鸣度系统（耳蜗共鸣）
 
 void EchoEngine::addResonance(float delta)
 {
     m_resonanceLevel += delta;
     if (m_resonanceLevel < 0.0f) m_resonanceLevel = 0.0f;
     if (m_resonanceLevel > 1.0f) m_resonanceLevel = 1.0f;
-    // 共鸣度满时自动解锁隐藏关「第一声」（接入 unlockFirstSound）
+    // 共鸣度满时解锁隐藏关「第一声」
     if (m_resonanceLevel >= 1.0f && !m_firstSoundUnlocked) {
         m_firstSoundUnlocked = true;
     }
 }
 
-// ═══════════════════════════════════════════
-//  回声碎片（支线）
-// ═══════════════════════════════════════════
+// 回声碎片（支线）
 
 void EchoEngine::unlockEchoFragment(int index)
 {
@@ -991,9 +993,7 @@ QString EchoEngine::forgottenListText() const
     return text;
 }
 
-// ═══════════════════════════════════════════
-//  结局余波
-// ═══════════════════════════════════════════
+// 结局余波
 
 QString EchoEngine::getEpilogue(EndingType type) const
 {
@@ -1002,9 +1002,7 @@ QString EchoEngine::getEpilogue(EndingType type) const
     return it->content;
 }
 
-// ═══════════════════════════════════════════
-//  动态文案组合系统（减少硬编码）
-// ═══════════════════════════════════════════
+// 动态文案组合系统（减少硬编码）
 
 QString EchoEngine::noiseConsciousnessLine() const
 {
@@ -1028,9 +1026,9 @@ EchoEngine::ChoiceContent EchoEngine::buildChoice(ChoicePoint point) const
         cc.prompt = QString(
             "你拼出来的对话中，林薇对陈远山说：'核心盘我藏好了，你没机会的。'\n"
             "陈远山冷笑：'你藏在一段声音里对吧？那我毁掉所有声音。'\n\n"
-            "拼完后，耳机里传来一声不属于这段录音的叹息（老刘在门外敲了三下桌子）。\n"
+            "拼完后，耳机里传来一声不属于这段录音的叹息，紧接着是三下叩门的闷响——门外站着的，是从不说话的老刘。\n"
             "你选择：");
-        cc.options = { "忽略叹息，按标准流程提交报告",
+        cc.options = QStringList{ "忽略叹息，按标准流程提交报告",
                       "记录叹息，今晚加班重听所有录音" };
         break;
     }
@@ -1039,7 +1037,7 @@ EchoEngine::ChoiceContent EchoEngine::buildChoice(ChoicePoint point) const
             "你回到家，白噪音设备里传来何悦的惨叫。你赶回实验室，发现陈远山以'协助调查'名义"
             "把她关进了声纹隔离室——因为何悦无意中录下了陈远山打给军方的加密电话。\n"
             "你选择：");
-        cc.options = { "先用重构仪破解门禁救何悦",
+        cc.options = QStringList{ "先用重构仪破解门禁救何悦",
                       "先继续追查林薇线索，回头再救" };
         break;
     }
@@ -1056,15 +1054,16 @@ EchoEngine::ChoiceContent EchoEngine::buildChoice(ChoicePoint point) const
                 "（她将成为你后期必须面对的敌人）\n\n");
         }
         cc.prompt = prefix + noiseConsciousnessLine() + "\n你选择：";
-        cc.options = { QString("接受自己是'林薇+%1'的融合体").arg(name),
+        cc.options = QStringList{ QString("接受自己是'林薇+%1'的融合体").arg(name),
                       QString("拒绝融合，用'纯粹%1'身份继续（困难模式）").arg(name),
                       "尝试彻底分离两人声音——逆向播放+高频阻断" };
         break;
     }
     case ChoicePoint::LifeTransfer: {
         cc.prompt = QString(
-            "林薇的肉身就在隔离室里，极度虚弱。你面前只有一个操作：");
-        cc.options = { "将林薇的完整人格声纹从你脑中转录回她体内",
+            "林薇的肉身就躺在隔离室的维生舱里，靠一段循环播放的低频录音维系着最后的心跳。\n"
+            "她的意识在你脑中，陈远山要的密钥也在你脑中。你面前只有一次操作：");
+        cc.options = QStringList{ "将林薇的完整人格声纹从你脑中转录回她体内",
                       "删除林薇肉体的生命维持系统录音，让密钥彻底消失" };
         break;
     }
@@ -1074,10 +1073,7 @@ EchoEngine::ChoiceContent EchoEngine::buildChoice(ChoicePoint point) const
     return cc;
 }
 
-// ═══════════════════════════════════════════
-//  巧妙机制 1：陈远山的"静音惩罚"
-//  （他右耳失聪，你每放一个伪造碎片，就离"被静音"更近一步）
-// ═══════════════════════════════════════════
+// 巧妙机制 1：陈远山的"静音惩罚"（他右耳失聪，你每放一个伪造碎片，就离"被静音"更近一步）
 
 void EchoEngine::resetSilencePunishment()
 {
@@ -1085,10 +1081,7 @@ void EchoEngine::resetSilencePunishment()
     m_rightEarSilenced = false;
 }
 
-// ═══════════════════════════════════════════
-//  巧妙机制 2：何悦"绝对参考系"（照妖镜）
-//  救出何悦后，伪造碎片在她干净声纹的对照下原形毕露
-// ═══════════════════════════════════════════
+// 巧妙机制 2：何悦"绝对参考系"（照妖镜）——救出何悦后，伪造碎片在她干净声纹的对照下原形毕露
 
 bool EchoEngine::isCredibilityExposed(const CommonFragment& f) const
 {
@@ -1098,9 +1091,7 @@ bool EchoEngine::isCredibilityExposed(const CommonFragment& f) const
     return f.credibility == Credibility::Fake;
 }
 
-// ═══════════════════════════════════════════
-//  巧妙机制 3：碎片回声（衰减回声，回声迷宫）
-// ═══════════════════════════════════════════
+// 巧妙机制 3：碎片回声（衰减回声，回声迷宫）
 
 void EchoEngine::updateEchoes(float dt)
 {
@@ -1115,10 +1106,7 @@ void EchoEngine::updateEchoes(float dt)
     }
 }
 
-// ═══════════════════════════════════════════
-//  巧妙机制 4：老刘的静默摩斯
-//  （你越安静，越能听见那个不再说话的人）
-// ═══════════════════════════════════════════
+// 巧妙机制 4：老刘的静默摩斯（你越安静，越能听见那个不再说话的人）
 
 void EchoEngine::updateSilenceMorse(float idleSeconds)
 {
@@ -1147,10 +1135,7 @@ bool EchoEngine::isSilenceMorseReady() const
     return m_silenceMorseRevealed;
 }
 
-// ═══════════════════════════════════════════
-//  离奇魔幻基因：声灵系统
-//  （每个声音碎片都寄宿着一只声灵，拼图即召唤）
-// ═══════════════════════════════════════════
+// 离奇魔幻基因：声灵系统（每个声音碎片都寄宿着一只声灵，拼图即召唤）
 
 void EchoEngine::initSpirits()
 {

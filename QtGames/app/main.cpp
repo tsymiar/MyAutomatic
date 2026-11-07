@@ -1,17 +1,13 @@
 #include "MainWindow.h"
-#include <QMessageBox>
 #include <QApplication>
 #include <QCommandLineParser>
 #include <QDir>
-#include <iostream>
 #ifdef SHOW_OFFICE
 #include "OfficeWidget.h"
 #endif
 #ifdef ECHO_RESONANCE
 #include "EchoMainWindow.h"
 #endif
-// #include <QtPlugin>
-// Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)
 
 #ifdef _WIN32
 #ifdef main
@@ -22,18 +18,6 @@ extern "C" __declspec(dllexport)
 
 int main(int argc, char* argv[])
 {
-    // 未传参数时打印启动方法
-    const QString usage = QString(argv[0]) + " [参数]\n"
-        "  --flappy\t启动 flappy TRIANGLE\n"
-#ifdef ECHO_RESONANCE
-        "  --echo\t启动「余音回响」(Echo Resonance)\n"
-#endif
-#ifdef SHOW_OFFICE
-        "  --office\t启动 WPS Office 集成\n"
-#endif
-        "  --help\t帮助";
-    if (argc < 2) std::cout << "Usage:\t" << qPrintable(usage) << std::endl;
-
     QApplication a(argc, argv);
 
     // 向上查找包含 external/kline/image 目录
@@ -62,18 +46,18 @@ int main(int argc, char* argv[])
 #endif
     parser.process(a);
 
+    // 模式互斥：一次只启动一个窗口，取第一个命中的选项
     bool launched = false;
-
     if (parser.isSet("flappy")) {
         MainWindow* w = new MainWindow("flappy TRIANGLE");
-        a.setActiveWindow(w);
         w->setAttribute(Qt::WA_DeleteOnClose);
         w->setSdlWin();
         w->show();
+        w->activateWindow();
         launched = true;
     }
 #ifdef ECHO_RESONANCE
-    if (parser.isSet("echo")) {
+    else if (parser.isSet("echo")) {
         EchoMainWindow* echoWin = new EchoMainWindow;
         echoWin->setAttribute(Qt::WA_DeleteOnClose);
         echoWin->show();
@@ -81,7 +65,7 @@ int main(int argc, char* argv[])
     }
 #endif
 #ifdef SHOW_OFFICE
-    if (parser.isSet("office")) {
+    else if (parser.isSet("office")) {
         OfficeWidget* office = new OfficeWidget;
         office->setAttribute(Qt::WA_DeleteOnClose);
         office->showWidget();
@@ -93,6 +77,7 @@ int main(int argc, char* argv[])
     if (launched)
         return a.exec();
 
-    QMessageBox::information(nullptr, "QtGames 启动方法：", usage);
+    // 无匹配模式：打印用法（与 --help 输出同源，避免两处维护）
+    parser.showHelp();
     return 0;
 }

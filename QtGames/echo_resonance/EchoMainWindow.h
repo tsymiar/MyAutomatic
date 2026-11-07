@@ -44,6 +44,7 @@ protected:
     void resizeGL(int w, int h) override;
     void paintGL() override;
     void keyPressEvent(QKeyEvent* e) override;
+    void wheelEvent(QWheelEvent* e) override;
     void mousePressEvent(QMouseEvent* e) override;
     void mouseMoveEvent(QMouseEvent* e) override;
     void mouseReleaseEvent(QMouseEvent* e) override;
@@ -95,12 +96,17 @@ private:
     void drawLineGL(float x1, float y1, float x2, float y2, const QColor& color, float width = 1.0f);
     void drawCircleGL(float cx, float cy, float r, const QColor& color, int segments = 32);
     QPointF screenToGL(const QPoint& screenPos) const;
+    // GL 可视区域的半宽/半高（随窗口宽高比变化，供坐标换算与边缘元素布局）
+    float glHalfWidth() const;
+    float glHalfHeight() const;
     int hitTestFragment(const QPointF& glPos) const;
     int hitTestTimelineSlot(const QPointF& glPos) const;
 
     // ── 选择界面辅助 ──
     void showChoice(const QString& prompt, const QStringList& options);
     void showChapterIntro();
+    // 推进到下一章节（生成碎片 + 章节介绍；终章之后进入结局）
+    void advanceToNextChapter();
 
     // ── 引擎 ──
     EchoEngine* m_engine;

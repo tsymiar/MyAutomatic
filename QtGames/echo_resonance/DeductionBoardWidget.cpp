@@ -1,15 +1,12 @@
 #include "DeductionBoardWidget.h"
 #include <QKeyEvent>
 #include <QMouseEvent>
-#include <QWheelEvent>
 #include <QPainter>
 #include <QFont>
 #include <cmath>
 #include <GL/gl.h>
 
-// ═══════════════════════════════════════════════════════════════
-//  构造 / 析构
-// ═══════════════════════════════════════════════════════════════
+// 构造 / 析构
 
 DeductionBoardWidget::DeductionBoardWidget(QWidget* parent)
     : QOpenGLWidget(parent)
@@ -53,9 +50,7 @@ void DeductionBoardWidget::loadChapter(int chapter)
     }
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  OpenGL
-// ═══════════════════════════════════════════════════════════════
+// OpenGL
 
 void DeductionBoardWidget::initializeGL()
 {
@@ -102,9 +97,7 @@ void DeductionBoardWidget::paintGL()
     if (m_chapter == 4 && m_hasResult) renderPersonality();
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  样本库（左侧）
-// ═══════════════════════════════════════════════════════════════
+// 样本库（左侧）
 
 void DeductionBoardWidget::renderSamples()
 {
@@ -129,9 +122,7 @@ void DeductionBoardWidget::renderSamples()
     drawTextGL(-0.95f, -0.9f, "L: 锁存选中样本（防负片覆盖）", QColor(100, 130, 160, 140), 0.3f);
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  推演盘三槽（中部）
-// ═══════════════════════════════════════════════════════════════
+// 推演盘三槽（中部）
 
 void DeductionBoardWidget::renderBoard()
 {
@@ -176,9 +167,7 @@ void DeductionBoardWidget::renderBoard()
     drawTextGL(bx, by - 3 * (bh + gap) - 0.2f, "ENTER: 执行推演  |  数字1-4切换关系  |  Tab: 切换动作/锚点", QColor(0, 220, 200, int(blink * 200)), 0.35f);
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  命题 + 心理变量滑块（顶部右侧）
-// ═══════════════════════════════════════════════════════════════
+// 命题 + 心理变量滑块（顶部右侧）
 
 void DeductionBoardWidget::renderProposition()
 {
@@ -203,9 +192,7 @@ void DeductionBoardWidget::renderProposition()
     }
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  推演结果
-// ═══════════════════════════════════════════════════════════════
+// 推演结果
 
 void DeductionBoardWidget::renderResult()
 {
@@ -226,9 +213,7 @@ void DeductionBoardWidget::renderPersonality()
     drawTextGL(0.5f, -0.6f, pp.summary, QColor(200, 190, 170, 180), 0.35f);
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  声灵光晕 + 好感度（离奇魔幻基因）
-// ═══════════════════════════════════════════════════════════════
+// 声灵光晕 + 好感度（离奇魔幻基因）
 
 void DeductionBoardWidget::renderSpirits()
 {
@@ -258,9 +243,7 @@ void DeductionBoardWidget::renderSpirits()
     }
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  灵魂碎片收集进度（离奇魔幻基因）
-// ═══════════════════════════════════════════════════════════════
+// 灵魂碎片收集进度（离奇魔幻基因）
 
 void DeductionBoardWidget::renderSoulFragments()
 {
@@ -290,9 +273,7 @@ void DeductionBoardWidget::renderSoulFragments()
     }
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  原初嗡鸣偏差能量倒计时（离奇魔幻基因）
-// ═══════════════════════════════════════════════════════════════
+// 原初嗡鸣偏差能量倒计时（离奇魔幻基因）
 
 void DeductionBoardWidget::renderDeviation()
 {
@@ -305,9 +286,7 @@ void DeductionBoardWidget::renderDeviation()
     }
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  执行推演
-// ═══════════════════════════════════════════════════════════════
+// 执行推演
 
 void DeductionBoardWidget::performDeduction()
 {
@@ -352,9 +331,7 @@ void DeductionBoardWidget::performDeduction()
     if (p) m_engine.resolveProposition(p->id);
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  输入处理
-// ═══════════════════════════════════════════════════════════════
+// 输入处理
 
 QPointF DeductionBoardWidget::screenToGL(const QPoint& p) const
 {
@@ -416,10 +393,6 @@ void DeductionBoardWidget::keyPressEvent(QKeyEvent* e)
     case Qt::Key_Down: m_fear = std::max(0.0f, m_fear - 0.05f); break;
     case Qt::Key_Left: m_greed = std::max(0.0f, m_greed - 0.05f); break;
     case Qt::Key_Right: m_greed = std::min(1.0f, m_greed + 0.05f); break;
-    case Qt::Key_C:
-        // 缔结声灵契约（第三章）：5=镜 6=默 7=谎
-        // 仅提示，具体缔结用 5/6/7 键
-        break;
     case Qt::Key_5:
         if (m_chapter == 3) m_engine.makeContract(ContractSpirit::Mirror);
         break;
@@ -495,22 +468,19 @@ void DeductionBoardWidget::mouseReleaseEvent(QMouseEvent* e)
     m_draggingFear = false;
 }
 
-void DeductionBoardWidget::wheelEvent(QWheelEvent* e)
-{
-    (void)e;
-}
-
-// ═══════════════════════════════════════════════════════════════
-//  绘制辅助
-// ═══════════════════════════════════════════════════════════════
+// 绘制辅助
 
 void DeductionBoardWidget::drawTextGL(float x, float y, const QString& t, const QColor& c, float s)
 {
     QPainter p(this);
     p.setPen(c);
-    QFont f("Monospace", 10);
-    f.setStyleHint(QFont::Monospace);
-    p.setFont(f);
+    // 每帧多次调用，字体对象复用，避免反复查字体库
+    static const QFont kFont = [] {
+        QFont f("Monospace", 10);
+        f.setStyleHint(QFont::Monospace);
+        return f;
+        }();
+    p.setFont(kFont);
     float aspect = float(m_winW) / float(m_winH);
     float ghw, ghh;
     if (aspect > 1.0f) { ghw = aspect; ghh = 1.0f; } else { ghw = 1.0f; ghh = 1.0f / aspect; }

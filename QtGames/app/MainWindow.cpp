@@ -19,16 +19,15 @@ MainWindow::MainWindow(const char* title, bool fs)
         showFullScreen();
     tick = new QTimer(this);
     connect(tick, SIGNAL(timeout()), this, SLOT(timeTrigger()));
-    tick->start(100 / 24);
+    tick->start(1000 / 24);  // 24FPS
     setMouseTracking(true);
 }
 
 MainWindow::~MainWindow()
 {
-    if (tick != NULL && tick->isActive()) {
+    // tick 以 this 为父对象，随窗口自动销毁，无需 delete
+    if (tick != NULL && tick->isActive())
         tick->stop();
-        delete tick;
-    }
 }
 
 void MainWindow::keyPressEvent(QKeyEvent* e)
@@ -139,8 +138,8 @@ void MainWindow::timeTrigger()
         setText("bingo!");
         setBingo();
     }
-    // 背景滚动：循环前进，到达最大滚动范围后回绕，模拟愤怒的小鸟式背景平移
-    bgScrollU += 0.003f * 0.5f; // 速度可调
+    // 背景滚动：循环前进，到达最大滚动范围后回绕
+    bgScrollU += 0.003f * 0.5f;
     if (bgScrollU >= BG_MAX_SCROLL) {
         bgScrollU = 0.0f;
     }

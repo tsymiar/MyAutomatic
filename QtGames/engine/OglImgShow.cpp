@@ -37,7 +37,6 @@ int OglImgShow::setPixels(const char* filename)
 
     qDebug() << QString("lpng16( v%1 ), zlib( v%2 ), sdl( v%3 )").arg(PNG_LIBPNG_VER_STRING).arg(ZLIB_VERSION).arg(SDL_GetRevisionNumber());
 
-    // 释放旧像素数据
     if (m_pixels != nullptr) {
         free(m_pixels);
         m_pixels = nullptr;
@@ -68,29 +67,30 @@ int OglImgShow::setPixels(const char* filename)
         /* If we get here, we had a problem reading the file */
         return EXIT_FAILURE;
     }
-    /* Set up the input control if you are using standard C streams */
     png_init_io(png_ptr, fp);
-    // 读取PNG文件
     png_read_png(png_ptr, info_ptr, PNG_TRANSFORM_EXPAND, 0);
-    // 获取PNG图片信息数据
     png_get_IHDR(png_ptr, info_ptr, &m_width, &m_height, &bit_depth, &m_colour,
         NULL, NULL, NULL);
     qDebug() << "[" << m_width << "*" << m_height << "]";
 
     png_bytep* row_pointers = png_get_rows(png_ptr, info_ptr);
-    // 计算pixel大小
     unsigned int size = 0;
     if (m_colour == PNG_COLOR_TYPE_RGB) {
         size = getRowBytes(m_width) * m_height;
     } else if (m_colour == PNG_COLOR_TYPE_RGBA) {
         size = m_width * m_height * 4;
     } else {
+        // 不支持的色彩类型：释放 libpng 结构与文件句柄后返回
+        png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+        fclose(fp);
         return EXIT_FAILURE;
     }
-    // 申请堆空间
     m_pixels = (unsigned char*)malloc(size);
-    if (m_pixels == NULL)
+    if (m_pixels == NULL) {
+        png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+        fclose(fp);
         return EXIT_FAILURE;
+    }
     unsigned int i;
     for (i = 0; i < m_height; i++) {
         // 拷贝每行数据给pixel，
@@ -131,63 +131,57 @@ GLuint OglImgShow::CreateTextureFromPng(const char* filename)
         printf("error: %s\n", strerror(errno)); // 关闭打开的文件给出默认贴图
         return 0;
     }
-    // 读取文件头判断是否是PNG格式图片.
     fread(header, 1, 8, fp);
     if (png_sig_cmp(header, 0, 8)) {
         fclose(fp);
         return 0;
     }
-    // 根据libpng的libpng-manual.txt说明使用文档 
-    // 必须初始化png_structp 和 png_infop
-    png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL); // 最后三个参数表示绑定错误以及警告的函数
+    png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     if (!png_ptr) {
         fclose(fp);
         return 0;
     }
-    // 根据已初始化的png_ptr初始化png_infop
     info_ptr = png_create_info_struct(png_ptr);
-
     if (!info_ptr) {
-        // 初始化失败 销毁png_structp
         png_destroy_read_struct(&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
         fclose(fp);
         return 0;
     }
     if (setjmp(png_jmpbuf(png_ptr))) {
-        // 释放占用内存
-        png_destroy_read_struct(&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
+        // 释放占用内存（info_ptr 一并销毁）
+        png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
         fclose(fp);
         return 0;
     }
-    // 通过i/o定制函数png_init_io打开文件
     png_init_io(png_ptr, fp);
-    // 告诉libpng文件从第几个开始missing
     png_set_sig_bytes(png_ptr, 8);
-    // 读取实际图片信息
     png_read_info(png_ptr, info_ptr);
-    // 获得图片信息： width height 颜色类型  字节深度
     width = png_get_image_width(png_ptr, info_ptr);
     height = png_get_image_height(png_ptr, info_ptr);
     color_type = png_get_color_type(png_ptr, info_ptr);
-    // 如果图片带有alpha通道调用以下语句
     if (color_type == PNG_COLOR_TYPE_RGB_ALPHA) {
         png_set_swap_alpha(png_ptr);
     }
     bit_depth = png_get_bit_depth(png_ptr, info_ptr);
-    // 隔行扫描图片
     number_of_passes = png_set_interlace_handling(png_ptr);
     qDebug() << "bit depth = " << bit_depth << ", passes number = " << number_of_passes << ".";
-    // 将读取到的信息更新到info_ptr
     png_read_update_info(png_ptr, info_ptr);
-    // 读文件  
     if (setjmp(png_jmpbuf(png_ptr))) {
+        // 读取失败：释放 libpng 结构与文件句柄
+        png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
         fclose(fp);
         return 0;
     }
     rgba = (GLubyte*)malloc(width * height * 4);
     row_pointers = (png_bytep*)malloc(sizeof(png_bytep) * height);
+    if (rgba == NULL || row_pointers == NULL) {
+        free(rgba);
+        free(row_pointers);
+        png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+        fclose(fp);
+        return 0;
+    }
 
-    // 通过扫描图片信息流中每一行，将数据赋值给动态数组
     for (k = 0; k < height; k++)
         row_pointers[k] = (png_bytep)png_malloc(png_ptr, png_get_rowbytes(png_ptr,
             info_ptr));
@@ -205,20 +199,15 @@ GLuint OglImgShow::CreateTextureFromPng(const char* filename)
         }
     }
 
-    // 释放 png_malloc 分配的行内存
     for (k = 0; k < height; k++)
         png_free(png_ptr, row_pointers[k]);
 
-    // 开启纹理贴图特效
     glEnable(GL_TEXTURE_2D);
-    // 创建纹理
     glGenTextures(1, &textureID);
-    // 绑定纹理
     glBindTexture(GL_TEXTURE_2D, textureID);
-    // 设置贴图和纹理的混合效果：GL_REPLACE 用纹理颜色替换片段颜色，
-    // 配合 alpha 混合使透明像素真正透明（GL_DECAL 对 RGBA 会忽略 alpha 导致透明区显示异常）
+    // GL_REPLACE 用纹理颜色替换片段颜色，配合 alpha 混合使透明像素真正透明
+    //（GL_DECAL 对 RGBA 会忽略 alpha 导致透明区显示异常）
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-    // 设置纹理所需图片数据
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -248,7 +237,10 @@ void OglImgShow::loadGLTextures(const char* filename)
 #ifdef QGL_H
         tex = QGLWidget::convertToGLFormat(img);
 #endif
-        glGenTextures(3, &texture[0]);
+        // 重复调用前先删除旧纹理，避免 GPU 纹理累积泄漏
+        if (texture[0] != 0)
+            glDeleteTextures(3, texture);
+        glGenTextures(2, &texture[0]);
         glBindTexture(GL_TEXTURE_2D, texture[0]);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -259,9 +251,6 @@ void OglImgShow::loadGLTextures(const char* filename)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexImage2D(GL_TEXTURE_2D, 0, 3, tex.width(), tex.height(), 0,
             GL_RGBA, GL_UNSIGNED_BYTE, tex.bits());
-        glBindTexture(GL_TEXTURE_2D, texture[2]);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
 #endif
     } else {
         qFatal("image is null");

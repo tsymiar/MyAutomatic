@@ -2,6 +2,7 @@
 #include "DeductionBoardWidget.h"
 #include <QKeyEvent>
 #include <QMouseEvent>
+#include <QWheelEvent>
 #include <QPainter>
 #include <QFont>
 #include <cmath>
@@ -9,9 +10,7 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
-// ═══════════════════════════════════════════
-//  构造/析构
-// ═══════════════════════════════════════════
+// 构造/析构
 
 EchoMainWindow::EchoMainWindow(QWidget* parent) : QOpenGLWidget(parent)
 {
@@ -34,9 +33,6 @@ EchoMainWindow::EchoMainWindow(QWidget* parent) : QOpenGLWidget(parent)
         });
     connect(m_engine, &EchoEngine::endingReached, this, [this](EndingType) {
         m_state = GameState::EndingScreen;
-        });
-    connect(m_engine, &EchoEngine::morseMessage, this, [this](const QString&) {
-        // 摩斯电码消息由 renderMorseIndicator 定时轮询 getMorseMessage() 显示
         });
     connect(m_engine, &EchoEngine::silenceMode, this, [this](bool active) {
         m_silenceMode = active;
@@ -83,9 +79,7 @@ EchoMainWindow::~EchoMainWindow()
     if (m_tickTimer && m_tickTimer->isActive()) m_tickTimer->stop();
 }
 
-// ═══════════════════════════════════════════
-//  游戏循环
-// ═══════════════════════════════════════════
+// 游戏循环
 
 void EchoMainWindow::gameTick()
 {
@@ -158,9 +152,7 @@ void EchoMainWindow::gameTick()
     update();
 }
 
-// ═══════════════════════════════════════════
-//  切换选项
-// ═══════════════════════════════════════════
+// 切换选项
 
 void EchoMainWindow::showChapterIntro()
 {
@@ -186,14 +178,56 @@ void EchoMainWindow::showChoice(const QString& prompt, const QStringList& option
     m_prevState = m_state; m_state = GameState::PlayerChoice;
 }
 
-// ═══════════════════════════════════════════
-//  坐标换算与命中测试
-// ═══════════════════════════════════════════
+void EchoMainWindow::advanceToNextChapter()
+{
+    GameChapter next = static_cast<GameChapter>(static_cast<int>(m_engine->currentChapter()) + 1);
+    if (next <= GameChapter::Finale) {
+        m_engine->generateFragments(next);
+        showChapterIntro();
+    } else {
+        m_state = GameState::EndingScreen;
+    }
+    m_selectedFragmentIndex = -1;
+}
+
+void EchoMainWindow::wheelEvent(QWheelEvent* e)
+{
+    m_idleTime = 0.0f;  // 玩家操作打断静默
+    float step = e->angleDelta().y() > 0 ? 0.08f : -0.08f;
+    if (m_state == GameState::FragmentSelect || m_state == GameState::Tutorial) {
+        // 列表向下延伸：向上滚 = 内容上移（scrollY 减小），钳制不越过列表首尾
+        float contentH = float(m_engine->fragments().size()) * 0.13f;
+        float maxScroll = std::max(0.0f, contentH - 1.6f);
+        m_fragmentScrollY = std::min(0.0f, std::max(-maxScroll, m_fragmentScrollY + step));
+    } else if (m_state == GameState::EchoArchive) {
+        // 档案向下延伸：向下滚 = 内容上移（scrollY 增大）
+        float contentH = float(m_engine->echoFragments().size()) * 0.38f;
+        float maxScroll = std::max(0.0f, contentH - 1.6f);
+        m_echoArchiveScroll = std::max(0.0f, std::min(maxScroll, m_echoArchiveScroll - step));
+    } else {
+        e->ignore();
+        return;
+    }
+    update();
+}
+
+// 坐标换算与命中测试
+
+float EchoMainWindow::glHalfWidth() const
+{
+    float asp = float(m_winWidth) / float(m_winHeight);
+    return asp > 1.0f ? asp : 1.0f;
+}
+
+float EchoMainWindow::glHalfHeight() const
+{
+    float asp = float(m_winWidth) / float(m_winHeight);
+    return asp > 1.0f ? 1.0f : 1.0f / asp;
+}
 
 QPointF EchoMainWindow::screenToGL(const QPoint& sp) const
 {
-    float asp = float(m_winWidth) / float(m_winHeight), ghw, ghh;
-    if (asp > 1.0f) { ghw = asp;ghh = 1.0f; } else { ghw = 1.0f;ghh = 1.0f / asp; }
+    float ghw = glHalfWidth(), ghh = glHalfHeight();
     return QPointF((sp.x() / float(m_winWidth)) * 2.0f * ghw - ghw, ghh - (sp.y() / float(m_winHeight)) * 2.0f * ghh);
 }
 
@@ -222,16 +256,14 @@ int EchoMainWindow::hitTestTimelineSlot(const QPointF& gp) const
     return -1;
 }
 
-// ═══════════════════════════════════════════
-//  输入处理
-// ═══════════════════════════════════════════
+// 输入处理
 
 void EchoMainWindow::keyPressEvent(QKeyEvent* e)
 {
     m_idleTime = 0.0f;  // 玩家操作打断静默
     switch (m_state) {
     case GameState::Title:
-        if (e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter) { m_playerName.clear();m_state = GameState::NameInput; } else if (e->key() == Qt::Key_D) {
+        if (e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter) { m_playerName.clear();m_state = GameState::NameInput; } else if (e->key() == Qt::Key_Escape) { close(); } else if (e->key() == Qt::Key_D) {
             // 进入声纹推演盘（统一入口，从标题画面切换）
             if (!m_deductionBoard) {
                 m_deductionBoard = new DeductionBoardWidget;
@@ -306,6 +338,7 @@ void EchoMainWindow::keyPressEvent(QKeyEvent* e)
                 } else {
                     m_state = GameState::EndingScreen;
                 }
+                m_selectedFragmentIndex = -1;
             }
         } else if (e->key() == Qt::Key_R) { m_engine->resetCurrentChapter();m_selectedFragmentIndex = -1;m_glitchIntensity = 0.0f;m_state = GameState::FragmentSelect; }
         break;
@@ -313,16 +346,10 @@ void EchoMainWindow::keyPressEvent(QKeyEvent* e)
         if (m_showMentorInput) {
             if (e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter) {
                 m_showMentorInput = false;
-                GameChapter next = static_cast<GameChapter>(static_cast<int>(m_engine->currentChapter()) + 1);
-                if (next <= GameChapter::Finale) { m_engine->generateFragments(next);showChapterIntro(); } else { m_state = GameState::EndingScreen; }
-                m_selectedFragmentIndex = -1;
+                advanceToNextChapter();
             } else if (e->key() == Qt::Key_Backspace) { if (!m_playerReply.isEmpty())m_playerReply.chop(1); } else if (!e->text().isEmpty() && e->text().at(0).isPrint())m_playerReply += e->text();
         } else {
-            if (e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter) {
-                GameChapter next = static_cast<GameChapter>(static_cast<int>(m_engine->currentChapter()) + 1);
-                if (next <= GameChapter::Finale) { m_engine->generateFragments(next);showChapterIntro(); } else { m_state = GameState::EndingScreen; }
-                m_selectedFragmentIndex = -1;
-            }
+            if (e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter) advanceToNextChapter();
         }break;
     case GameState::PlayerChoice:
         if (e->key() == Qt::Key_Up || e->key() == Qt::Key_W) { if (m_choiceSelectedIndex > 0)m_choiceSelectedIndex--; } else if (e->key() == Qt::Key_Down || e->key() == Qt::Key_S) { if (m_choiceSelectedIndex < m_choiceOptions.size() - 1)m_choiceSelectedIndex++; } else if (e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter) {
@@ -382,10 +409,18 @@ void EchoMainWindow::keyPressEvent(QKeyEvent* e)
         break;
     case GameState::EchoArchive:
         if (e->key() == Qt::Key_Escape) m_state = GameState::FragmentSelect;
-        else if (e->key() == Qt::Key_Up || e->key() == Qt::Key_W) { m_echoArchiveScroll += 0.2f; } else if (e->key() == Qt::Key_Down || e->key() == Qt::Key_S) { m_echoArchiveScroll -= 0.2f; }
+        else if (e->key() == Qt::Key_Up || e->key() == Qt::Key_W) { m_echoArchiveScroll = std::max(0.0f, m_echoArchiveScroll - 0.2f); } else if (e->key() == Qt::Key_Down || e->key() == Qt::Key_S) {
+            float contentH = float(m_engine->echoFragments().size()) * 0.38f;
+            float maxScroll = std::max(0.0f, contentH - 1.6f);
+            m_echoArchiveScroll = std::min(maxScroll, m_echoArchiveScroll + 0.2f);
+        }
         break;
     case GameState::GameOver:
-        if (e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter) { m_engine->generateFragments(GameChapter::Prologue);showChapterIntro();m_selectedFragmentIndex = -1;m_mentorMessageIndex = 0;m_playerReply.clear(); }
+        if (e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter) {
+            // 新周目：重置引擎单局状态（保留结局/档案收集）
+            m_engine->startNewGame();
+            m_state = GameState::Title;m_selectedFragmentIndex = -1;m_mentorMessageIndex = 0;m_playerReply.clear();
+        }
         break;
     }
     update();
@@ -414,9 +449,7 @@ void EchoMainWindow::mouseReleaseEvent(QMouseEvent* e)
     if (e->button() == Qt::RightButton && m_state == GameState::TimelinePuzzle) { QPointF gp = screenToGL(e->pos());int si = hitTestTimelineSlot(gp);if (si >= 0)m_engine->removeFragment(si); }
 }
 
-// ═══════════════════════════════════════════
-//  信号槽
-// ═══════════════════════════════════════════
+// 信号槽
 
 void EchoMainWindow::onFragmentPlaced(int, int)
 {

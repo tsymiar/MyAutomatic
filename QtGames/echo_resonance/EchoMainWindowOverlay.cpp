@@ -9,13 +9,9 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
-// ═══════════════════════════════════════════
-//  结局 / 档案 / 机制特效渲染
-// ═══════════════════════════════════════════
+// 结局 / 档案 / 机制特效渲染
 
-// ═══════════════════════════════════════════
-//  结局画面
-// ═══════════════════════════════════════════
+// 结局画面
 
 void EchoMainWindow::renderEndingScreen()
 {
@@ -47,9 +43,7 @@ void EchoMainWindow::renderEndingScreen()
     drawTextGL(-0.3f, -0.55f, "按 ENTER 聆听余波录音", QColor(0, 200, 255, int(b * 200)), 0.6f);
 }
 
-// ═══════════════════════════════════════════
-//  结局余波录音
-// ═══════════════════════════════════════════
+// 结局余波录音
 
 void EchoMainWindow::renderEpilogueScreen()
 {
@@ -62,9 +56,7 @@ void EchoMainWindow::renderEpilogueScreen()
     if (m_epilogueFinished) { float b = 0.6f + 0.4f * sinf(m_gameTime * 3.0f);drawTextGL(-0.3f, -0.7f, "按 ENTER 返回标题", QColor(0, 200, 255, int(b * 200)), 0.6f); } else { drawTextGL(-0.2f, -0.7f, "……", QColor(80, 100, 130, int(a * 120)), 0.6f); }
 }
 
-// ═══════════════════════════════════════════
-//  回声碎片档案
-// ═══════════════════════════════════════════
+// 回声碎片档案
 
 void EchoMainWindow::renderEchoArchive()
 {
@@ -109,9 +101,7 @@ void EchoMainWindow::renderEchoArchive()
     }
 }
 
-// ═══════════════════════════════════════════
-//  共鸣度金色波纹（耳蜗共鸣）
-// ═══════════════════════════════════════════
+// 共鸣度金色波纹（耳蜗共鸣）
 
 void EchoMainWindow::renderResonanceAura()
 {
@@ -124,23 +114,19 @@ void EchoMainWindow::renderResonanceAura()
         drawCircleGL(0, 0, rr, QColor(255, 200, 80, int(al * 255)), 96);
     }
     // 左上角共鸣度指示（基于可见范围，避免窄屏裁切）
-    float asp = float(m_winWidth) / float(m_winHeight);
-    float leftEdge = asp > 1.0f ? -asp : -1.0f;
+    float leftEdge = -glHalfWidth();
     drawTextGL(leftEdge + 0.05f, 0.95f, QString("共鸣度 %1%").arg(int(level * 100)), QColor(255, 210, 100, 180), 0.4f);
 }
 
-// ═══════════════════════════════════════════
-//  巧妙机制 1：陈远山的"静音惩罚"（右耳失聪）
-// ═══════════════════════════════════════════
+// 巧妙机制 1：陈远山的"静音惩罚"（右耳失聪）
 
 void EchoMainWindow::renderSilencePunishment()
 {
     // 右侧频谱被"静音"——右耳失聪的视觉隐喻
-    float aspect = float(m_winWidth) / float(m_winHeight);
     // 覆盖右侧半屏的暗色遮罩，带微弱噪点，暗示右声道消失
     float x0 = 0.0f;  // 从屏幕中心开始，覆盖右半
-    float w = (aspect > 1.0f ? aspect : 1.0f);
-    float h = (aspect > 1.0f ? 1.0f : 1.0f / aspect);
+    float w = glHalfWidth();
+    float h = glHalfHeight();
     // 极暗遮罩
     drawRectGL(x0, -h, w, 2.0f * h, QColor(2, 2, 4, 210), true);
     // 稀疏噪点（残存的声音碎屑）
@@ -156,9 +142,7 @@ void EchoMainWindow::renderSilencePunishment()
     drawTextGL(x0 + 0.05f, 0.02f, "一半的声音", QColor(160, 80, 80, 160), 0.45f);
 }
 
-// ═══════════════════════════════════════════
-//  巧妙机制 3：碎片回声（衰减波纹）
-// ═══════════════════════════════════════════
+// 巧妙机制 3：碎片回声（衰减波纹）
 
 void EchoMainWindow::renderFragmentEchoes()
 {
@@ -175,9 +159,7 @@ void EchoMainWindow::renderFragmentEchoes()
     }
 }
 
-// ═══════════════════════════════════════════
-//  巧妙机制 4：老刘的静默摩斯
-// ═══════════════════════════════════════════
+// 巧妙机制 4：老刘的静默摩斯
 
 void EchoMainWindow::renderSilenceMorse()
 {
@@ -189,9 +171,7 @@ void EchoMainWindow::renderSilenceMorse()
     drawTextGL(-0.65f, -0.55f, text, QColor(180, 200, 220, int(alpha * 200)), 0.4f);
 }
 
-// ═══════════════════════════════════════════
-//  视觉效果
-// ═══════════════════════════════════════════
+// 视觉效果
 
 void EchoMainWindow::renderGlitchEffects()
 {
@@ -204,9 +184,8 @@ void EchoMainWindow::renderGlitchEffects()
 void EchoMainWindow::renderParanoiaMeter()
 {
     // 右侧指示器，基于可见宽度自适应，避免窄屏溢出
-    float asp = float(m_winWidth) / float(m_winHeight);
-    float rightEdge = asp > 1.0f ? asp : 1.0f;
-    float mx = rightEdge - 0.08f, my = 0.8f, mw = 0.04f, mh = 0.3f;
+    // 右侧指示器，基于可见宽度自适应，避免窄屏溢出
+    float mx = glHalfWidth() - 0.08f, my = 0.8f, mw = 0.04f, mh = 0.3f;
     drawRectGL(mx, my - mh, mw, mh, QColor(10, 10, 20, 120), true); drawRectGL(mx, my - mh, mw, mh, QColor(60, 80, 120, 40), false);
     float fh = mh * m_paranoiaDisplay;
     QColor fc = m_paranoiaDisplay < 0.3f ? QColor(0, 180, 255, 150) : (m_paranoiaDisplay < 0.6f ? QColor(255, 200, 0, 150) : QColor(255, 40, 40, 180));
@@ -217,9 +196,7 @@ void EchoMainWindow::renderParanoiaMeter()
 
 void EchoMainWindow::renderAnxietyMeter()
 {
-    float asp = float(m_winWidth) / float(m_winHeight);
-    float rightEdge = asp > 1.0f ? asp : 1.0f;
-    float mx = rightEdge - 0.08f, my = 0.35f, mw = 0.04f, mh = 0.3f;
+    float mx = glHalfWidth() - 0.08f, my = 0.35f, mw = 0.04f, mh = 0.3f;
     drawRectGL(mx, my - mh, mw, mh, QColor(10, 10, 20, 120), true); drawRectGL(mx, my - mh, mw, mh, QColor(120, 60, 60, 40), false);
     float fh = mh * m_anxietyDisplay;
     QColor fc = m_anxietyDisplay < 0.4f ? QColor(0, 200, 150, 120) : (m_anxietyDisplay < 0.7f ? QColor(255, 180, 0, 150) : QColor(255, 40, 40, 180));
@@ -237,7 +214,7 @@ void EchoMainWindow::renderSpectrumVisualization()
 void EchoMainWindow::renderHallucinations()
 {
     for (auto& h : m_hallucinations) drawTextGL(h.x, h.y, h.text, QColor(255, 200, 100, int(h.alpha * 150)), 0.5f);
-    // 高偏执时周期性浮现幻觉（接入 getHallucinationText，不再只依赖信号）
+    // 高偏执时周期性浮现幻觉（getHallucinationText）
     QString ht = m_engine->getHallucinationText();
     if (!ht.isEmpty() && (rand() % 100) < 8) {
         float x = (rand() % 160 - 80) / 100.0f, y = (rand() % 120 - 60) / 100.0f;
@@ -267,9 +244,7 @@ void EchoMainWindow::renderSilenceOverlay()
     if (a > 0.5f) { float b = 0.5f + 0.3f * sinf(m_gameTime * 2.0f);drawTextGL(-0.3f, 0.0f, "静默中……", QColor(255, 255, 255, int(b * 150)), 0.8f); }
 }
 
-// ═══════════════════════════════════════════
-//  声灵显形光晕（离奇魔幻基因：拼图即召唤）
-// ═══════════════════════════════════════════
+// 声灵显形光晕（离奇魔幻基因：拼图即召唤）
 
 void EchoMainWindow::renderSpiritAura()
 {
@@ -299,14 +274,11 @@ void EchoMainWindow::renderSpiritAura()
     }
 }
 
-// ═══════════════════════════════════════════
-//  耳鸣指引（林薇的潜意识引导）
-// ═══════════════════════════════════════════
+// 耳鸣指引（林薇的潜意识引导）
 
 void EchoMainWindow::renderTinnitusGuide()
 {
-    float asp = float(m_winWidth) / float(m_winHeight);
-    float ghw = (asp > 1.0f ? asp : 1.0f), ghh = (asp > 1.0f ? 1.0f : 1.0f / asp);
+    float ghw = glHalfWidth(), ghh = glHalfHeight();
     // 1) 耳鸣波纹：屏幕中央向外扩散的极淡同心圆
     float ringPhase = m_tinnitusPhase * 2.0f;
     for (int i = 0;i < 3;++i) {
