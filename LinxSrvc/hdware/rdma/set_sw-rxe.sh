@@ -31,11 +31,11 @@ if [ $(ls . | wc -l) -le 1 ]
 then
   git submodule update --init --recursive
 fi
-if [ "$(git status | grep v57.0)" == "" ]; then
+if [ "$(git status | grep v65.0)" == "" ]; then
   git config pull.rebase false
-  git checkout v57.0
+  git checkout v65.0
 else
-  echo "-- pulled v57.0"
+  echo "-- pulled v65.0"
 fi
 if [ -d "build" ]; then rm -rf build/*; else mkdir build; fi;
 cd build

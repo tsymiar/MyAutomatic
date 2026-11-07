@@ -24,29 +24,28 @@ steps:
 
   - script: |
       set -e
-      export DEBIAN_FRONTEND=noninteractive
-      sudo apt-get update
-      sudo apt-get install -y --no-install-recommends \
-        qtbase5-dev \
-        qt5-qmake \
-        qtbase5-dev-tools \
-        libqt5opengl5-dev \
-        qtmultimedia5-dev \
-        libgl1-mesa-dev \
-        libglu1-mesa-dev \
-        freeglut3-dev \
-        libpng-dev \
-        libsdl2-dev \
-        libsdl2-image-dev \
-        libsdl2-ttf-dev
-      # build.sh builds Qt* targets only when /usr/bin/qmake is executable.
-      # The runner image ships both Qt5 and Qt6, so pin it to Qt5.
-      sudo ln -sf "$(dpkg -L qt5-qmake | grep -m1 '/qt5/bin/qmake$')" /usr/bin/qmake
-      qmake --version | grep -q 'Qt version 5'
-    displayName: 'Install Qt5 and dependencies'
-
-  - script: |
-      set -e
+      # build.sh builds Qt* targets only when /usr/bin/qmake is executable,
+      # so Qt5 must be installed and pinned before building QtGames.
+      if ! command -v qmake >/dev/null 2>&1 \
+         || ! qmake --version | grep -q 'Qt version 5'; then
+        export DEBIAN_FRONTEND=noninteractive
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends \
+          qtbase5-dev \
+          qt5-qmake \
+          qtbase5-dev-tools \
+          libqt5opengl5-dev \
+          qtmultimedia5-dev \
+          libgl1-mesa-dev \
+          libglu1-mesa-dev \
+          freeglut3-dev \
+          libpng-dev \
+          libsdl2-dev \
+          libsdl2-image-dev \
+          libsdl2-ttf-dev
+        sudo ln -sf "$(dpkg -L qt5-qmake | grep -m1 '/qt5/bin/qmake$')" /usr/bin/qmake
+      fi
+      qmake --version
       ./build.sh QtGames/
     displayName: 'Build QtGames'
 
