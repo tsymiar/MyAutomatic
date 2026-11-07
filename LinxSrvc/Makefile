@@ -32,7 +32,7 @@ clean:
 	@make -C IM clean
 	@make -C pyex clean
 	@make -C vs-extension clean
-	@ if [ -d "$(pwd)../lib" ]; then rm -rvf $(pwd)../lib; fi;
+	@ if [ -d "../lib" ]; then rm -rvf ../lib; fi;
 	@ rm -rvf cyber/__pycache__ cyber/.llama-tools cyber/outputs
 	@ rm -rvf trade/__pycache__
 	@ rm -rvf bin/*.exe* ./*.o */.vs vs

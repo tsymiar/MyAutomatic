@@ -5,14 +5,15 @@ CONFIG += qt warn_on debug \
 
 QT += core gui network
 QT += opengl
-greaterThan(QT_MAJOR_VERSION, 5) {
-    QT += openglwidgets
-    CONFIG += c++17
-    QMAKE_CXXFLAGS += -std=c++17
-} else {
-    QMAKE_CXXFLAGS += -std=c++0x -Wno-attributes
+greaterThan(QT_MAJOR_VERSION, 4) {
+    QT += widgets
+    greaterThan(QT_MAJOR_VERSION, 5) {
+        QT += openglwidgets
+    }
 }
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+# Require C++17 for inline variables (CommonFragment.h) and NSDMI aggregates (SpiritInfo).
+CONFIG += c++17
+QMAKE_CXXFLAGS += -std=c++17
 
 # ── check WPS SDK ──
 unix {
@@ -153,10 +154,7 @@ contains(DEFINES, ECHO_RESONANCE) {
                echo_resonance/DeductionBoardWidget.cpp
 }
 
-# ── 声纹推演盘：自动检测 Qt Multimedia 并启用真实音频合成 ──
-#   自动判断目标环境是否安装了 Qt Multimedia：
-#   已安装 → 链接 multimedia 模块 + 定义 DEDUCTION_AUDIO（真实变调/叠加合成）
-#   未安装 → 输出提示，DeductionAudio 自动退化为纯视觉/文字模拟
+# 有 Qt Multimedia 则链接并启用真实音频合成，否则 DeductionAudio 退化为视觉模拟
 qtHaveModule(multimedia) {
     QT += multimedia
     DEFINES += DEDUCTION_AUDIO

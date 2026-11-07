@@ -62,8 +62,13 @@ jobs:
       run: ./build.sh all -j
 
     - name: Building - make game
+      if: runner.os == 'Linux'
       working-directory: ${{ github.workspace }}
-      run: ./build.sh QtGames
+      shell: bash
+      run: |
+        # Checkout and pin Qt5 on demand when qmake is missing or not Qt5
+        ./ci/checkout-qt5.sh
+        ./build.sh QtGames
 
     - name: Test
       working-directory: ${{ github.workspace }}
