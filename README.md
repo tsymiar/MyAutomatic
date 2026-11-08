@@ -40,7 +40,7 @@ Windows-only helpers live at the root: `choose.bat` / `choose.ps1` set the depen
 
 Static analysis of the whole repository is tracked: [![Codacy Badge](https://app.codacy.com/project/badge/Grade/af21f03e75a14429a74a0ec437d41993)](https://app.codacy.com/gh/tsymiar/MyAutomatic/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade).
 
-Third-party sources sit in `LinxSrvc/3rd/` as submodules ([![googletest](https://img.shields.io/badge/3rd-googletest%20v1.8.0-blue)](https://github.com/google/googletest), [![rdma-core](https://img.shields.io/badge/3rd-rdma--core%20v57.0-blue)](https://github.com/linux-rdma/rdma-core), [![rxe-dev](https://img.shields.io/badge/3rd-rxe--dev%20v3.18-blue)](https://github.com/SoftRoCE/rxe-dev), `json` (declared in `.gitmodules` but not checked out), `lcov`); `./build.sh test` fetches the ones it needs (`librdmacm`/`libverbs`, `libevent`, `libwebsockets`, SQLite, `ffmpeg`, `SDL2` and friends are expected on the host and pulled in by the sub-projects when missing).
+Third-party sources sit in `LinxSrvc/3rd/` as submodules ([![googletest](https://img.shields.io/badge/3rd-googletest%20v1.18.0-blue)](https://github.com/google/googletest), [![rdma-core](https://img.shields.io/badge/3rd-rdma--core%20v65.0-blue)](https://github.com/linux-rdma/rdma-core), [![rxe-dev](https://img.shields.io/badge/3rd-rxe--dev%20v3.9-blue)](https://github.com/SoftRoCE/rxe-dev), `json` (declared in `.gitmodules` but not checked out), `lcov`); `./build.sh test` fetches the ones it needs (`librdmacm`/`libverbs`, `libevent`, `libwebsockets`, SQLite, `ffmpeg`, `SDL2` and friends are expected on the host and pulled in by the sub-projects when missing).
 
 ---
 
@@ -160,9 +160,9 @@ One Qt Widgets desktop app ([_`QtGames`_](https://github.com/tsymiar/MyAutomatic
 
 | Directory | What it holds |
 | :-- | :-- |
-| `app/` | entry point and main window; `--flappy` renders the flappy-triangle scene, `--echo` opens _Echo Resonance_ (the default build) |
+| `app/` | entry point and main window; `--flappy` renders the flappy-triangle scene, `--echo` opens _Echo Resonance_ (on by default in the qmake build), `--office` the WPS view (`CONFIG+=wps_support`) — mode flags are mutually exclusive (first one wins); no flag prints usage |
 | `engine/` | `OglMaterial` (the QGLWidget base) and `OglImgShow` for image rendering |
-| `echo_resonance/` | the narrative puzzle game — echo fragments, deduction board and its audio layer (falls back to visual cues without `Qt Multimedia`) |
+| `echo_resonance/` | the narrative puzzle game — echo fragments, deduction board, mouse-wheel / `Esc` controls and its audio layer (falls back to visual cues without `Qt Multimedia`) |
 | `office/` | WPS embedding UI, compiled only when the WPS SDK is available |
 | `wpsapi/`, `third_party/wps_sdk/` | vendored Kingsoft WPS headers used by `office/` |
 | `resources/` | icons and `.ui` resources |
