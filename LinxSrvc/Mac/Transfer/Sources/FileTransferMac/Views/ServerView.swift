@@ -5,7 +5,6 @@ import AppKit
 struct ServerView: View {
     @EnvironmentObject var core: TransferCore
     @State private var portText = UserDefaults.standard.string(forKey: "defaultPort") ?? "8800"
-    @State private var pollTimer: Timer?
     @State private var showSettings = false
 
     var body: some View {
@@ -20,8 +19,7 @@ struct ServerView: View {
                         .font(.title2.bold())
                     Spacer()
 
-                    // Settings gear — opens a popover with the backoff switch
-                    // and the received-file save location picker.
+                    // Settings: backoff switch + save location picker.
                     Button {
                         showSettings.toggle()
                     } label: {
@@ -80,7 +78,7 @@ struct ServerView: View {
                       ? "antenna.radiowaves.left.and.right"
                       : "antenna.radiowaves.left.and.right.slash")
                     .foregroundColor(core.isServerRunning ? .green : .secondary)
-                Text(core.transferStatus)
+                Text(shortTransferStatus(core.transferStatus))
                     .font(.caption)
                     .foregroundColor(.secondary)
                 Spacer()
@@ -88,7 +86,6 @@ struct ServerView: View {
                 if core.isServerRunning {
                     Button(role: .destructive) {
                         core.stopServer()
-                        pollTimer?.invalidate()
                     } label: {
                         Label("STOP", systemImage: "stop.fill")
                     }
@@ -101,11 +98,6 @@ struct ServerView: View {
                             return
                         }
                         core.startServer(port: port)
-                        pollTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: true) { _ in
-                            MainActor.assumeIsolated {
-                                core.updateClientCount()
-                            }
-                        }
                     } label: {
                         Label("Start Listening", systemImage: "play.fill")
                     }
@@ -121,7 +113,8 @@ struct ServerView: View {
             if core.isServerRunning {
                 if core.totalBytes > 0 {
                     TransferProgressBar(status: core.transferStatus, progress: core.progress,
-                                        transferred: core.transferredBytes, total: core.totalBytes)
+                                        transferred: core.transferredBytes, total: core.totalBytes,
+                                        fileName: core.transferFileName)
                 }
 
                 List {
@@ -186,8 +179,13 @@ struct ServerView: View {
                 .frame(maxHeight: .infinity)
             }
         }
-        .onDisappear {
-            pollTimer?.invalidate()
+        // Poll client count; .task restarts on every appear — a @State Timer
+        // would die on tab switches and leave the count frozen at 0.
+        .task(id: core.isServerRunning) {
+            while core.isServerRunning && !Task.isCancelled {
+                core.updateClientCount()
+                try? await Task.sleep(nanoseconds: 1_500_000_000)
+            }
         }
     }
 

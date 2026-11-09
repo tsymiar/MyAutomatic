@@ -5,6 +5,7 @@
 **/dist
 **/lcov
 .build
+received
 
 # Compiled object files
 bin

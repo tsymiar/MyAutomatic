@@ -13,10 +13,8 @@ all:
 	@make -C gSOAPverify || true
 	@echo "\033[4;3mMaking CMake targets\033[0m"
 	@make cmake
-	@echo "\033[4;3mMaking macOS Transfer\033[0m"
-	@if [ "$(UNAME_S)" = "Darwin" ]; then \
-		cd Mac/Transfer && ./build_app.sh; \
-	else echo "\t skipped: requires macOS (Darwin), current = $(UNAME_S)"; fi
+	@echo "\033[4;3mMaking $(UNAME_S) Transfer\033[0m"
+	@cd Mac/Transfer && ./build_app.sh; cd -
 	@echo "\033[4;3mMaking python extensions\033[0m"
 	@make -C pyex all
 	@echo "\033[4;3mMaking vscode extensions\033[0m"
@@ -33,6 +31,7 @@ clean:
 	@make -C pyex clean
 	@make -C vs-extension clean
 	@ if [ -d "../lib" ]; then rm -rvf ../lib; fi;
+	@ cd Mac/Transfer && ./build_app.sh clean; cd -
 	@ rm -rvf cyber/__pycache__ cyber/.llama-tools cyber/outputs
 	@ rm -rvf trade/__pycache__
 	@ rm -rvf bin/*.exe* ./*.o */.vs vs

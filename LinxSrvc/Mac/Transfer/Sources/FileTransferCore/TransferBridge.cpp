@@ -67,6 +67,23 @@ int ft_send_file(FT_Handle handle, const char* filePath) {
     return static_cast<TransferEngine*>(handle)->postLocalFile(std::string(filePath ? filePath : ""));
 }
 
+int ft_request_file(FT_Handle handle, const char* ip, uint16_t port, const char* fileName) {
+    if (!handle) return -1;
+    return static_cast<TransferEngine*>(handle)->requestFile(
+        std::string(ip ? ip : ""), port, std::string(fileName ? fileName : ""));
+}
+
+void ft_cancel_transfer(FT_Handle handle) {
+    if (!handle) return;
+    static_cast<TransferEngine*>(handle)->cancelTransfer();
+}
+
+int ft_delete_file(FT_Handle handle, const char* fileName) {
+    if (!handle) return -1;
+    return static_cast<TransferEngine*>(handle)->deletePartialFile(
+        std::string(fileName ? fileName : ""));
+}
+
 // ---------------------------------------------------------------------------
 //  Configuration
 // ---------------------------------------------------------------------------
@@ -88,8 +105,9 @@ void ft_set_progress_callback(FT_Handle handle, FT_ProgressCallback callback, vo
         // Capture both the C function pointer and userData in the std::function
         // so the C++ core can call it from any thread.
         static_cast<TransferEngine*>(handle)->setProgressCallback(
-            [callback, userData](uint64_t current, uint64_t total, const std::string& status) {
-                callback(userData, current, total, status.c_str());
+            [callback, userData](uint64_t current, uint64_t total,
+                                 const std::string& status, uint8_t event) {
+                callback(userData, current, total, status.c_str(), event);
             });
     } else {
         static_cast<TransferEngine*>(handle)->setProgressCallback(nullptr);

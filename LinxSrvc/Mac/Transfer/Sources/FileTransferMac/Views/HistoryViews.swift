@@ -106,9 +106,14 @@ struct TransferRow: View {
             }
             Spacer()
             if task.status == .transferring {
-                Text("\(Int(task.progress * 100))%")
-                    .font(.caption.monospacedDigit())
-                    .foregroundColor(.accentColor)
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text("\(Int(task.progress * 100))%")
+                        .font(.caption.monospacedDigit())
+                        .foregroundColor(.accentColor)
+                    ProgressView(value: task.progress)
+                        .progressViewStyle(.linear)
+                        .frame(width: 120)
+                }
             } else if task.status == .completed {
                 Text("Done")
                     .font(.caption)

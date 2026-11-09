@@ -40,7 +40,8 @@ struct TransferTask: Identifiable, Equatable {
         return "\(fileSize) B"
     }
 
-    static func == (lhs: TransferTask, rhs: TransferTask) -> Bool { lhs.id == rhs.id }
+    // No custom ==: SwiftUI List row diffing compares fields — an id-only ==
+    // would make changed-progress rows look unchanged and never re-render.
 }
 
 /// Received file record

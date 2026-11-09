@@ -59,16 +59,35 @@ struct MacTextField: NSViewRepresentable {
 //  Shared: progress bar used by ServerView & ClientView
 // ──────────────────────────────────────────────────────────────────────────────
 
+/// Short status for UI display: strips the "[ip:port] " prefix and the
+/// "|on-disk path" suffix from raw C++ status strings — the log console and
+/// file list already show those details.
+func shortTransferStatus(_ status: String) -> String {
+    var s = status
+    if let pipe = s.firstIndex(of: "|") {
+        s = String(s[..<pipe])
+    }
+    if s.hasPrefix("["), let bracket = s.firstIndex(of: "]") {
+        s = s[s.index(after: bracket)...].trimmingCharacters(in: .whitespaces)
+    }
+    return s
+}
+
 struct TransferProgressBar: View {
     let status: String
     let progress: Double
     let transferred: UInt64
     let total: UInt64
+    var compact: Bool = false
+    // Left label prefers the file name: the status bar above already shows
+    // the verb ("Transfer complete!"), so the two displays stay distinct.
+    var fileName: String = ""
 
     var body: some View {
         ProgressView(value: progress) {
             HStack {
-                Text(status).font(.caption)
+                Text(fileName.isEmpty ? shortTransferStatus(status) : fileName)
+                    .font(.caption)
                 Spacer()
                 Text("\(formatBytes(transferred)) / \(formatBytes(total))")
                     .font(.caption.monospacedDigit())
@@ -76,7 +95,7 @@ struct TransferProgressBar: View {
             }
         }
         .progressViewStyle(.linear)
-        .padding()
+        .padding(compact ? 6 : 16)
     }
 }
 
@@ -90,14 +109,9 @@ struct ContentView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Use Picker + conditional content instead of TabView.
-            // macOS NSTabView (backing SwiftUI TabView) sets
-            // refusesFirstResponder=YES on its content, which breaks
-            // all TextField / NSTextField focus.
-            //
-            // All text fields use MacTextField (native NSTextField via
-            // NSViewRepresentable), which bypasses SwiftUI responder-chain
-            // issues entirely.
+            // Picker + conditional content instead of TabView: macOS NSTabView
+            // sets refusesFirstResponder=YES, breaking TextField focus. All text
+            // fields use MacTextField (native NSTextField), bypassing the issue.
             Picker("", selection: $selectedTab) {
                 Label("Server", systemImage: "arrow.down.circle").tag(0)
                 Label("Client", systemImage: "arrow.up.circle").tag(1)
@@ -110,9 +124,8 @@ struct ContentView: View {
             Divider()
                 .padding(.top, 8)
 
-            // Client-side text field state lives in TransferCore so
-            // values persist across tab switches even when the view
-            // is recreated via switch.
+            // Client text field state lives in TransferCore: values persist
+            // across tab switches even when the view is recreated.
             Group {
                 switch selectedTab {
                 case 0: ServerView()

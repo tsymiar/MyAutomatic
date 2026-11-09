@@ -22,7 +22,21 @@ typedef void* FT_Handle;
 ///   current  – bytes transferred so far
 ///   total    – total file size in bytes
 ///   status   – human-readable status string (UTF-8, null-terminated)
-typedef void (*FT_ProgressCallback)(void* userData, uint64_t current, uint64_t total, const char* status);
+///   event    – FT_EVT_* code; 0 (FT_EVT_NONE) means a routine progress update
+typedef void (*FT_ProgressCallback)(void* userData, uint64_t current, uint64_t total,
+                                    const char* status, uint8_t event);
+
+/// Event codes carried in the `event` argument of FT_ProgressCallback.
+/// Mirrors the FT_EVT_* enum in TransferEngine.h.
+enum {
+    FT_EVT_NONE               = 0,  ///< routine progress update
+    FT_EVT_CONNECTED          = 1,  ///< peer connected
+    FT_EVT_DISCONNECTED       = 2,  ///< connection closed
+    FT_EVT_RECEIVE_START      = 3,  ///< new incoming transfer request
+    FT_EVT_TRANSFER_COMPLETE  = 4,  ///< transfer finished
+    FT_EVT_TRANSFER_CANCELLED = 5,  ///< transfer cancelled
+    FT_EVT_REQUEST_PULL       = 6   ///< incoming file pull request (CMD_REQUEST)
+};
 
 // ── Lifetime ──────────────────────────────────────────
 
@@ -53,6 +67,24 @@ void ft_disconnect(FT_Handle handle);
 /// Send a file (client mode, must be connected).  Blocks until transfer completes or fails.
 /// Returns 0 on success, <0 on error.
 int ft_send_file(FT_Handle handle, const char* filePath);
+
+/// Request a file from a remote server (pull mode).  Connects to ip:port and
+/// blocks until the file has been received into the save path or fails.
+/// The peer only serves regular files from its own save path; a missing file
+/// is rejected with return code -5.
+/// Returns 0 on success, <0 on error.
+int ft_request_file(FT_Handle handle, const char* ip, uint16_t port, const char* fileName);
+
+/// Request cancellation of the ongoing transfer (send or pull).  Takes effect
+/// at the next chunk boundary; a cancelled send notifies the peer with
+/// CMD_CANCEL so it stops receiving and treats the file as cancelled.
+void ft_cancel_transfer(FT_Handle handle);
+
+/// Ask the peer to delete the partial file left by a previously cancelled
+/// send, matched by the original file name.  The peer only removes files it
+/// recorded when handling CMD_CANCEL; unknown names are ignored.
+/// Returns 0 on success, <0 on error.
+int ft_delete_file(FT_Handle handle, const char* fileName);
 
 // ── Configuration ─────────────────────────────────────
 

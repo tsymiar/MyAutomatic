@@ -41,13 +41,15 @@ final class TransferCore: ObservableObject {
     }
 
     @Published var transferStatus: String = ""
+    @Published var transferFileName = ""          // file shown on the progress bar
     @Published var transferredBytes: UInt64 = 0
     @Published var totalBytes: UInt64 = 0
     @Published var progress: Double = 0           // 0.0 … 1.0
 
     @Published var isBusy = false                 // true while sending
+    @Published var pendingDeleteFile: String?     // cancelled send awaiting partial-file deletion
 
-    /// ENOTCONN retry policy: exponential backoff (legacy) vs. short grace then close.
+    /// ENOTCONN retry policy: exponential backoff vs. short grace then close.
     /// Persisted in UserDefaults; pushed to the engine on change and on every new engine.
     @Published var backoffEnabled: Bool = UserDefaults.standard.bool(forKey: "backoffEnabled") {
         didSet {
