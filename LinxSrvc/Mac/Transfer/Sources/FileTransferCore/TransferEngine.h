@@ -1,5 +1,5 @@
 //
-// Created by Shenyrion on 2025.
+// By Shenyrion, 2025.
 //
 
 #ifndef DEVICE2DEVICE_TRANSFER_ENGINE_H
@@ -47,15 +47,39 @@ struct FileHeader {
 // 协议头必须 64 字节（字段 55 字节 + reserved 补齐）；改动字段会在此编译失败。
 static_assert(sizeof(FileHeader) == 64, "FileHeader must be exactly 64 bytes");
 
-// 事件码 FT_EVT_* 只在 include/TransferBridge.h 定义一份（C 兼容，C++/Swift 共用）；
-// 随 FileHeader.event 传输（占用 reserved[0]，线上格式向后兼容）。
+// FT_EVT_* 仅在 TransferBridge.h 定义（C/C++/Swift 共用），经 FileHeader.event 的 reserved[0] 传输，线上格式兼容。
 #include "include/TransferBridge.h"
 
 // 传输进度回调。event 取 FT_EVT_*；event==FT_EVT_NONE 时为常规进度刷新。
 using ProgressCallback = std::function<void(uint64_t current, uint64_t total,
-                                            const std::string& status, uint8_t event)>;
+    const std::string& status, uint8_t event)>;
 
-// 客户端会话结构 - 管理每个客户端的文件接收状态
+// setter 与工作线程并发时用 shared_ptr 快照，避免 std::function 在被替换析构的同时被调用。
+class ThreadSafeProgressCallback {
+public:
+    void set(ProgressCallback cb)
+    {
+        auto next = cb ? std::make_shared<ProgressCallback>(std::move(cb)) : nullptr;
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_cb = std::move(next);
+    }
+    explicit operator bool() const { return static_cast<bool>(snapshot()); }
+    void operator()(uint64_t current, uint64_t total,
+        const std::string& status, uint8_t event) const
+    {
+        auto cb = snapshot();
+        if (cb && *cb) (*cb)(current, total, status, event);
+    }
+private:
+    std::shared_ptr<ProgressCallback> snapshot() const
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        return m_cb;
+    }
+    mutable std::mutex m_mutex;
+    std::shared_ptr<ProgressCallback> m_cb;
+};
+
 struct ClientSession {
     int sock;
     std::string clientIp;
@@ -71,7 +95,18 @@ struct ClientSession {
     ClientSession() : sock(-1), clientPort(0), pendingFileSize(0), transSize(0), active(false) {}
 };
 
-// 客户端会话管理类
+// 设备快照：短连接断开后仍保留最近一次连接记录，UI 才能稳定显示设备
+struct ClientInfo {
+    std::string ip;
+    unsigned short port = 0;
+    bool online = false;
+    uint64_t lastSeenMs = 0;
+    // 会话正在接收的文件与进度；file 为空表示空闲（以 recvFile 是否打开为准，完成/取消后即关闭）
+    std::string transferringFile;
+    uint64_t transferredBytes = 0;
+    uint64_t totalBytes = 0;
+};
+
 class ClientSessionMgr {
 public:
     void addSession(int sock, const std::string& ip, unsigned short port);
@@ -80,9 +115,14 @@ public:
     void forEachSession(const std::function<void(ClientSession&)>& func);
     void closeAllSockets();
     size_t size() const;
+    // 按最近连接时间倒序返回设备快照（在线与最近离线均包含）
+    std::vector<ClientInfo> recentClients() const;
+    // 快照条目数（m_recent 大小）；调用方按它分配快照缓冲，用会话数会截断离线条目
+    size_t recentCount() const;
 
 private:
     std::map<int, std::unique_ptr<ClientSession>> m_sessions;
+    std::vector<ClientInfo> m_recent;
     mutable std::mutex m_mutex;
 };
 
@@ -94,6 +134,9 @@ public:
     static constexpr uint16_t CMD_COMPLETE = 4;  // 传输完成
     static constexpr uint16_t CMD_CANCEL = 5;  // 传输取消
     static constexpr uint16_t CMD_DELETE = 6;  // 删除对端取消传输残留的半截文件
+
+    // CMD_RESPONSE.event 的接受标记：fileSize 不再兼任拒绝状态，空文件也能被接受。
+    static constexpr uint8_t RESP_ACCEPT = 1;
 
     // 256KB：局域网下 64KB 分片会被逐片 RTT/ACK 限住吞吐；chunkSize 为 32 位，上限充足
     static constexpr uint32_t MAX_CHUNK_SIZE = 256 * 1024;
@@ -107,43 +150,35 @@ public:
     TransferEngine();
     ~TransferEngine();
 
-    // 服务器模式
     int startServer(unsigned short port = DEFAULT_PORT);
     void closeServer();
 
-    // 客户端模式
     int connectToServer(const std::string& ip, unsigned short port);
     void disconnect();
 
-    // 请求取消当前传输（发送/拉取），在下一个分片边界生效。
-    // 取消发送会向对端发 CMD_CANCEL，对端停止接收并按取消语义清理；
-    // 取消拉取则本端直接停止落盘。
+    // 取消当前传输，下个分片边界生效：发送侧向对端发 CMD_CANCEL 令其清理；拉取侧本端停止落盘。
     void cancelTransfer();
 
-    // 请求对端删除此前取消传输残留的半截文件（按原始文件名匹配）。
-    // 对端只在收到 CMD_CANCEL 时记录的路径里找，没有记录则忽略。
+    // 请对端删除取消残留的半截文件（按原名匹配）；只删 CMD_CANCEL 记录过的路径，无记录则忽略。
     int deletePartialFile(const std::string& fileName);
 
-    // 文件接收
     void setSavePath(const std::string& path);
     void setProgressCallback(ProgressCallback callback);
 
-    // ENOTCONN 重试策略：true = 指数退避（最多 16 次、间隔翻倍、累计约 655s）；
-    // false = 默认，3 次固定 20ms 宽限后判死关闭。可在 UI 里切换。
+    // ENOTCONN 重试：true=指数退避（≤16 次、翻倍、约 655s）；false=默认 3×20ms 宽限后关闭，UI 可切换。
     void setBackoffEnabled(bool enabled);
     bool isBackoffEnabled() const { return m_backoffEnabled.load(); }
 
-    // 文件发送
     int postLocalFile(const std::string& filePath);
 
-    // 拉取模式：连接对端请求取回文件，阻塞直到接收完成或失败。
-    // 对端只在其 m_savePath 下找同名普通文件；找不到回 fileSize=0，本端返回 -5。
+    // 拉取模式：连对端取回文件并阻塞至完成；对端仅在 m_savePath 找同名普通文件，找不到本端返回 -5。
     int requestFile(const std::string& ip, unsigned short port, const std::string& fileName);
 
-    // 状态查询
     bool isConnected() const { return m_connected.load(); }
     bool isServerRunning() const { return m_serverRunning.load(); }
-    int getClientCount() const { return (int)m_sessionMgr.size(); }
+    // 与 getClients() 同源：快照条数（含离线设备），而非当前活跃会话数
+    int getClientCount() const { return (int)m_sessionMgr.recentCount(); }
+    std::vector<ClientInfo> getClients() const { return m_sessionMgr.recentClients(); }
 
 private:
     int createServerSocket(unsigned short port);
@@ -152,41 +187,50 @@ private:
     void fileServerProcess();
     void clientHandler(int sock, const std::string& clientIp, unsigned short clientPort);
 
-    // 分片循环停止条件：push 用 m_connected，服务端代发（pull）用 session->active
+    // 停止条件：push 用 m_connected，服务端代发用 session->active；cancelFlag 按传输独立，代发传 nullptr 不消费客户端取消。
     int sendSliceData(int sock, const std::string& filePath, uint64_t fileSize,
-                      const std::atomic<bool>& runFlag);
+        const std::atomic<bool>& runFlag,
+        std::shared_ptr<std::atomic<bool>> cancelFlag);
     // 拉取模式的客户端接收循环：与服务端 CMD_DATA 相同的分片语义落盘
-    int receivePullData(int sock, const std::string& fileName, uint64_t fileSize);
+    int receivePullData(int sock, const std::string& fileName, uint64_t fileSize,
+        std::shared_ptr<std::atomic<bool>> cancelFlag);
+    // 为一次客户端传输创建独立取消标志；weak_ptr 不延寿，传输结束即自动过期。
+    std::shared_ptr<std::atomic<bool>> beginTransfer();
     int sendHeader(int sock, const void* data, size_t len);
     int sendHeader(int sock, const FileHeader& header);
     int recvHeader(int sock, FileHeader& header);
 
+    std::string savePath() const;
+
 private:
     int m_serverSock;
-    int m_clientSock;
+    std::atomic<int> m_clientSock;
 
     std::atomic<bool> m_serverRunning;
     std::atomic<bool> m_connected;
     std::atomic<bool> m_backoffEnabled;  // ENOTCONN 是否走指数退避（默认 false）
-    std::atomic<bool> m_cancelRequested; // 取消请求：发送/拉取在下一个分片边界生效
+
+    // 每次客户端传输一个独立标志，避免服务端并发代发互相消费，也避免新传输清掉刚发出的取消。
+    std::mutex m_cancelMutex;
+    std::weak_ptr<std::atomic<bool>> m_activeCancel;
 
     // CMD_CANCEL 时记录的半截文件：原始文件名 -> 磁盘完整路径，等待对端 CMD_DELETE
     std::map<std::string, std::string> m_cancelledPartials;
     std::mutex m_partialMutex;
 
     std::thread m_serverThread;
-    // 每个客户端一个异步任务。已结束的任务会在 accept 新连接时被回收，
-    // 避免长时间运行的 server 持续堆积线程对象。
+    // 每客户端一个异步任务；结束的任务在 accept 新连接时回收，避免长期运行的 server 堆积线程对象。
     std::vector<std::future<void>> m_clientFutures;
 
     std::mutex m_sendMutex;
     std::mutex m_clientThreadMutex;
+    mutable std::mutex m_stateMutex;   // 保护 m_savePath / m_serverIp / m_serverPort / 回调
 
     std::string m_savePath;
     std::string m_serverIp;
     unsigned short m_serverPort;
 
-    ProgressCallback m_progressCallback;
+    ThreadSafeProgressCallback m_progressCallback;
 
     ClientSessionMgr m_sessionMgr;
 };

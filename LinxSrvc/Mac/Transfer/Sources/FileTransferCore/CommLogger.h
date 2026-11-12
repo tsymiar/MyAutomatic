@@ -5,6 +5,8 @@
 #include <stdarg.h>
 #include <string.h>
 #include <libgen.h>
+#include <vector>
+#include <atomic>
 
 #ifndef LOG_TAG
 #define LOG_TAG "Transfer"
@@ -12,11 +14,9 @@
 
 #pragma GCC diagnostic ignored "-Wformat"
 
-// ── Log output redirection ────────────────────────────────────────────────────
-// Set by the C bridge (TransferBridge.cpp) to forward C++ logs to Swift/SwiftUI.
-// When NULL (default), logs only go to stdout.
+// Log sink: TransferBridge.cpp points it at the Swift UI; NULL (default) keeps logs on stdout only.
 typedef void (*LogOutputFunc)(const char* msg);
-extern LogOutputFunc g_logOutputFunc;
+extern std::atomic<LogOutputFunc> g_logOutputFunc;
 
 #ifdef NOLOG
 #define LOG_INF(fmt, ...)  ((void)0)
@@ -24,39 +24,56 @@ extern LogOutputFunc g_logOutputFunc;
 #define LOG_ERR(fmt, ...)  ((void)0)
 #define LOG_DBG(fmt, ...)  ((void)0)
 #else
-#ifdef NOTIME
-#define TIME_ARGS(_ptm)
-#define TIME_FORMAT
-#else
-#define TIME_ARGS(_ptm) ((_ptm)->tm_year + 1900), ((_ptm)->tm_mon + 1), (_ptm)->tm_mday, (_ptm)->tm_hour, (_ptm)->tm_min, (_ptm)->tm_sec
-#define TIME_FORMAT "[%d-%d-%d/%02d:%02d:%02d]"
-#endif
-
 #define LOCATE_ARGS(_module) _module, basename(const_cast<char*>(__FILE__)), __LINE__, __FUNCTION__
 #define LOCATE_FORMAT "[%s](%s:%d)[%s]: "
 
-inline struct tm* log_times() { static thread_local struct tm tm_loc; time_t now = time(NULL); localtime_r(&now, &tm_loc); return &tm_loc; }
-inline void logger(const char* fm, ...)
+// Format the timestamp once so a log line spanning a second boundary cannot mix fields from two seconds.
+inline const char* log_time_str()
 {
-  char buf[4096];
-  va_list args;
-  va_start(args, fm);
-  int n = vsnprintf(buf, sizeof(buf), fm, args);
-  va_end(args);
-
-  if (n > 0) {
-    if (g_logOutputFunc) { g_logOutputFunc(buf); }
-    printf("%s\n", buf);
-    // When stdout is not connected to a terminal, it defaults to fully buffered;
-    // we must explicitly flush to ensure log lines are written out promptly.
-    fflush(stdout);
-  }
+  static thread_local char buf[64];
+  time_t now = time(NULL);
+  struct tm tm_loc;
+  localtime_r(&now, &tm_loc);
+  snprintf(buf, sizeof(buf), "[%d-%d-%d/%02d:%02d:%02d]",
+           tm_loc.tm_year + 1900, tm_loc.tm_mon + 1, tm_loc.tm_mday,
+           tm_loc.tm_hour, tm_loc.tm_min, tm_loc.tm_sec);
+  return buf;
 }
 
-#define LOG_INF(fmt, ...) logger(TIME_FORMAT "[INFO]" LOCATE_FORMAT fmt, TIME_ARGS(log_times()), LOCATE_ARGS(LOG_TAG), ##__VA_ARGS__)
-#define LOG_WRN(fmt, ...) logger(TIME_FORMAT "[WARN]" LOCATE_FORMAT fmt, TIME_ARGS(log_times()), LOCATE_ARGS(LOG_TAG), ##__VA_ARGS__)
-#define LOG_ERR(fmt, ...) logger(TIME_FORMAT "[ERROR]" LOCATE_FORMAT fmt, TIME_ARGS(log_times()), LOCATE_ARGS(LOG_TAG), ##__VA_ARGS__)
-#define LOG_DBG(fmt, ...) logger(TIME_FORMAT "[DEBUG]" LOCATE_FORMAT fmt, TIME_ARGS(log_times()), LOCATE_ARGS(LOG_TAG), ##__VA_ARGS__)
+#ifdef NOTIME
+#define TIME_PREFIX
+#define TIME_PREFIX_ARG
+#else
+#define TIME_PREFIX "%s"
+#define TIME_PREFIX_ARG log_time_str(),
+#endif
+
+inline void logger(const char* fm, ...)
+{
+  va_list args;
+  va_start(args, fm);
+  va_list probe;
+  va_copy(probe, args);
+  int n = vsnprintf(nullptr, 0, fm, probe);
+  va_end(probe);
+
+  if (n > 0) {
+    // Allocate by actual length so long log lines with full paths are not silently truncated.
+    std::vector<char> buf((size_t)n + 1);
+    vsnprintf(buf.data(), buf.size(), fm, args);
+    LogOutputFunc sink = g_logOutputFunc.load(std::memory_order_acquire);
+    if (sink) { sink(buf.data()); }
+    printf("%s\n", buf.data());
+    // Non-TTY stdout is fully buffered; flush explicitly so log lines appear promptly.
+    fflush(stdout);
+  }
+  va_end(args);
+}
+
+#define LOG_INF(fmt, ...) logger(TIME_PREFIX "[INFO]" LOCATE_FORMAT fmt, TIME_PREFIX_ARG LOCATE_ARGS(LOG_TAG), ##__VA_ARGS__)
+#define LOG_WRN(fmt, ...) logger(TIME_PREFIX "[WARN]" LOCATE_FORMAT fmt, TIME_PREFIX_ARG LOCATE_ARGS(LOG_TAG), ##__VA_ARGS__)
+#define LOG_ERR(fmt, ...) logger(TIME_PREFIX "[ERROR]" LOCATE_FORMAT fmt, TIME_PREFIX_ARG LOCATE_ARGS(LOG_TAG), ##__VA_ARGS__)
+#define LOG_DBG(fmt, ...) logger(TIME_PREFIX "[DEBUG]" LOCATE_FORMAT fmt, TIME_PREFIX_ARG LOCATE_ARGS(LOG_TAG), ##__VA_ARGS__)
 #endif
 
 #endif // FILE_TRANSFER_COMLOG_H

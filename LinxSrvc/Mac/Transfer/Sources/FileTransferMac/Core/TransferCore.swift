@@ -22,16 +22,19 @@ final class TransferCore: ObservableObject {
 
     @Published var isServerRunning = false
     @Published var isConnected = false
-    @Published var clientCount = 0
+    @Published var devices: [ConnectedDevice] = []
     @Published var serverIP = TransferCore.resolveLocalIP()
 
     // Client-mode text field state (persists across tab switches)
     @Published var targetIP = ""
     @Published var targetPort: String = UserDefaults.standard.string(forKey: "defaultPort") ?? "8800"
 
-    /// Default port pre-filled into the Server / Client port fields. Persisted.
+    /// Default port pre-filled into the Client port field. Persisted and applied immediately.
     @Published var defaultPort: String = UserDefaults.standard.string(forKey: "defaultPort") ?? "8800" {
-        didSet { UserDefaults.standard.set(defaultPort, forKey: "defaultPort") }
+        didSet {
+            UserDefaults.standard.set(defaultPort, forKey: "defaultPort")
+            targetPort = defaultPort
+        }
     }
 
     /// Whether the bottom log console is shown (default true). Persisted.
@@ -47,7 +50,8 @@ final class TransferCore: ObservableObject {
     @Published var progress: Double = 0           // 0.0 … 1.0
 
     @Published var isBusy = false                 // true while sending
-    @Published var pendingDeleteFile: String?     // cancelled send awaiting partial-file deletion
+    @Published var isConnecting = false           // true while ft_connect is in flight
+    @Published var pendingPartialNames: [String] = []  // cancelled sends awaiting partial-file deletion
 
     /// ENOTCONN retry policy: exponential backoff vs. short grace then close.
     /// Persisted in UserDefaults; pushed to the engine on change and on every new engine.
@@ -58,14 +62,27 @@ final class TransferCore: ObservableObject {
         }
     }
 
-    /// Directory for received files.
+    /// Directory for received files; changing it updates the running engine too. Persisted.
     @Published var savePath: String = {
-        let uri = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Downloads")
-            .appendingPathComponent("FileTransfer")
+        let saved = UserDefaults.standard.string(forKey: "savePath")
+        let uri = saved.map { URL(fileURLWithPath: $0) }
+            ?? FileManager.default.homeDirectoryForCurrentUser
+                .appendingPathComponent("Downloads")
+                .appendingPathComponent("FileTransfer")
         try? FileManager.default.createDirectory(at: uri, withIntermediateDirectories: true)
         return uri.path
-    }()
+    }() {
+        didSet {
+            do {
+                try FileManager.default.createDirectory(atPath: savePath,
+                                                        withIntermediateDirectories: true)
+            } catch {
+                appendLog("ERROR: Cannot create receive directory \(savePath): \(error.localizedDescription)")
+            }
+            UserDefaults.standard.set(savePath, forKey: "savePath")
+            if let engine = handle { ft_set_save_path(engine, savePath) }
+        }
+    }
 
     // MARK: - Internal state
 
@@ -77,12 +94,11 @@ final class TransferCore: ObservableObject {
     var callbackRef: FT_ProgressCallback?
     var logCallbackRef: FT_LogCallback?
 
-    // View models
     @Published var receivedFiles: [ReceivedFile] = []
     @Published var transferTasks: [TransferTask] = []
 
     /// Console-style log messages (capped at 200 entries).
-    @Published var logMessages: [String] = []
+    @Published var logMessages: [LogEntry] = []
 
     /// Queue of files waiting to be sent. Multiple files must go one after
     /// another: sending two files at once over a single connection interleaves
@@ -93,24 +109,41 @@ final class TransferCore: ObservableObject {
 
     // MARK: - Lifetime
 
+    /// Tasks currently transferring; completion events bind only to these, never replay history.
+    var inFlightTaskIDs: [UUID] = []
+
+    /// Detached C calls holding the raw engine pointer; teardown waits for them.
+    var inflightCalls = 0
+    /// Teardown requested while calls were in flight.
+    var pendingTeardown = false
+    /// Invalidates a pending auto-disconnect timer when a new transfer starts.
+    var disconnectToken: UInt64 = 0
+
     deinit {
-        if let engine = handle { ft_destroy(engine); handle = nil }
+        // ~TransferEngine emits logs; clear both callbacks before destroying so
+        // no C log can reach a deinitialising self.
+        ft_set_log_callback(nil, nil)
+        if let engine = handle {
+            ft_set_progress_callback(engine, nil, nil)
+            ft_destroy(engine)
+        }
     }
 
     // MARK: - Logging helper
 
     func appendLog(_ msg: String) {
-        let line = "[\(timeFormatter.string(from: Date()))] \(msg)"
-        logMessages.append(line)
-        if logMessages.count > 200 {
-            logMessages.removeFirst(50)
-        }
+        appendLine("[\(timeFormatter.string(from: Date()))] \(msg)")
     }
 
     /// Append a log line that already has a timestamp prefix (e.g. from C++ LOG_* macros).
     /// Avoids double-timestamping.
     func appendTimestampedLog(_ msg: String) {
-        logMessages.append(msg)
+        appendLine(msg)
+    }
+
+    private func appendLine(_ line: String) {
+        guard logMessages.last?.text != line else { return }
+        logMessages.append(LogEntry(text: line))
         if logMessages.count > 200 {
             logMessages.removeFirst(50)
         }
@@ -125,6 +158,20 @@ final class TransferCore: ObservableObject {
         totalBytes = 0
         progress = 0
         isBusy = false
+        transferFileName = ""
+        transferStatus = ""
+    }
+
+    /// Reset the progress bar only when no client send/pull is in flight.
+    /// Server start/stop must not clobber the progress of a concurrent client
+    /// transfer now that both roles share one engine; isBusy also guards the
+    /// disconnect button, so it is never touched here.
+    func resetProgressIfIdle() {
+        guard !isBusy else { return }
+        transferredBytes = 0
+        totalBytes = 0
+        progress = 0
+        transferFileName = ""
         transferStatus = ""
     }
 
@@ -139,18 +186,19 @@ final class TransferCore: ObservableObject {
 
         for ptr in sequence(first: first, next: { $0.pointee.ifa_next }) {
             let flags = Int32(ptr.pointee.ifa_flags)
-            let name = String(cString: ptr.pointee.ifa_name)
-            let family = ptr.pointee.ifa_addr.pointee.sa_family
+            guard let ifaName = ptr.pointee.ifa_name, let sa = ptr.pointee.ifa_addr else { continue }
+            let name = String(cString: ifaName)
 
-            guard family == UInt8(AF_INET),
-                  (flags & IFF_UP) != 0,
+            guard sa.pointee.sa_family == UInt8(AF_INET),
+                  (flags & Int32(IFF_UP)) != 0,
                   !name.hasPrefix("lo"),
                   !name.hasPrefix("utun"),
                   !name.hasPrefix("llw") else { continue }
 
             var host = [CChar](repeating: 0, count: Int(NI_MAXHOST))
-            if getnameinfo(ptr.pointee.ifa_addr, socklen_t(ptr.pointee.ifa_addr.pointee.sa_len),
-                           &host, socklen_t(host.count), nil, 0, NI_NUMERICHOST) == 0 {
+            // Use the struct size instead of BSD-only sa_len so this compiles for both IPv4 and IPv6.
+            let saLen = socklen_t(MemoryLayout<sockaddr_in>.size)
+            if getnameinfo(sa, saLen, &host, socklen_t(host.count), nil, 0, NI_NUMERICHOST) == 0 {
                 addr = String(cString: host)
                 if name == "en0" { break }
             }

@@ -5,7 +5,7 @@ let package = Package(
     name: "FileTransfer",
     platforms: [.macOS(.v13)],
     targets: [
-        // ── C++ core library ──────────────────────────
+        // C++ core library
         .target(
             name: "FileTransferCore",
             path: "Sources/FileTransferCore",
@@ -15,18 +15,18 @@ let package = Package(
             ],
             publicHeadersPath: "include",
             cxxSettings: [
-                .define("LOG_TAG", to: "\"FileTransfer\""),
-                .unsafeFlags(["-std=c++17"])
+                .define("LOG_TAG", to: "\"FileTransfer\"")
             ],
             linkerSettings: [
                 .linkedLibrary("c++")
             ]
         ),
-        // ── Swift UI application ──────────────────────
+        // Swift UI application
         .executableTarget(
             name: "FileTransferMac",
             dependencies: ["FileTransferCore"],
             path: "Sources/FileTransferMac"
         )
-    ]
+    ],
+    cxxLanguageStandard: .cxx17
 )

@@ -9,7 +9,6 @@ struct ServerView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Header
             VStack(spacing: 8) {
                 HStack {
                     Image(systemName: core.isServerRunning ? "arrow.down.circle.fill" : "arrow.down.circle")
@@ -19,7 +18,6 @@ struct ServerView: View {
                         .font(.title2.bold())
                     Spacer()
 
-                    // Settings: backoff switch + save location picker.
                     Button {
                         showSettings.toggle()
                     } label: {
@@ -29,6 +27,7 @@ struct ServerView: View {
                     }
                     .buttonStyle(.plain)
                     .help("Settings")
+                    .accessibilityLabel("Settings")
                     .popover(isPresented: $showSettings, arrowEdge: .bottom) {
                         TransferSettingsPanel()
                     }
@@ -54,17 +53,6 @@ struct ServerView: View {
                     }
 
                     Spacer()
-
-                    if core.isServerRunning {
-                        HStack(spacing: 4) {
-                            Circle()
-                                .fill(.green)
-                                .frame(width: 8, height: 8)
-                            Text("\(core.clientCount) client(s)")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                    }
                 }
             }
             .padding()
@@ -72,11 +60,11 @@ struct ServerView: View {
 
             Divider()
 
-            // Status bar
             HStack {
                 Image(systemName: core.isServerRunning
                       ? "antenna.radiowaves.left.and.right"
                       : "antenna.radiowaves.left.and.right.slash")
+                    .font(.title3)
                     .foregroundColor(core.isServerRunning ? .green : .secondary)
                 Text(shortTransferStatus(core.transferStatus))
                     .font(.caption)
@@ -90,6 +78,7 @@ struct ServerView: View {
                         Label("STOP", systemImage: "stop.fill")
                     }
                     .buttonStyle(.borderedProminent)
+                    .help("Stop listening and disconnect all clients")
                 } else {
                     Button {
                         guard let port = UInt16(portText), port > 0 else {
@@ -102,6 +91,7 @@ struct ServerView: View {
                         Label("Start Listening", systemImage: "play.fill")
                     }
                     .buttonStyle(.borderedProminent)
+                    .accessibilityLabel("Start server")
                 }
             }
             .padding(.horizontal)
@@ -109,7 +99,6 @@ struct ServerView: View {
 
             Divider()
 
-            // Content
             if core.isServerRunning {
                 if core.totalBytes > 0 {
                     TransferProgressBar(status: core.transferStatus, progress: core.progress,
@@ -118,49 +107,66 @@ struct ServerView: View {
                 }
 
                 List {
-                    Section("Connected Devices") {
-                        if core.clientCount == 0 {
+                    Section {
+                        if core.devices.isEmpty {
                             HStack {
                                 Image(systemName: "info.circle")
                                     .foregroundColor(.secondary)
-                                Text("Waiting for device to connect to \(core.serverIP):\(portText)")
+                                Text("Waiting at \(core.serverIP):\(portText)")
                                     .foregroundColor(.secondary)
                             }
                         } else {
-                            HStack {
-                                Image(systemName: "iphone.gen2")
-                                Text("\(core.clientCount) device(s) connected")
-                                Spacer()
-                                Text("●")
-                                    .foregroundColor(.green)
-                                    .font(.caption)
-                            }
-                        }
-                    }
-
-                    if !core.receivedFiles.isEmpty {
-                        Section("Received Files") {
-                            ForEach(core.receivedFiles) { file in
-                                HStack {
-                                    Image(systemName: "doc.fill")
-                                        .foregroundColor(.blue)
-                                    VStack(alignment: .leading) {
-                                        Text(file.fileName)
-                                            .lineLimit(1)
-                                        Text("\(formatBytes(file.fileSize)) • from \(file.fromIP)")
+                            ForEach(core.devices) { device in
+                                VStack(alignment: .leading, spacing: 2) {
+                                    HStack(spacing: 8) {
+                                        Circle()
+                                            .fill(device.online
+                                                  ? Color.green
+                                                  : Color.secondary.opacity(0.5))
+                                            .frame(width: 8, height: 8)
+                                        Text("\(device.ip):\(device.port)")
+                                            .font(.system(.body, design: .monospaced))
+                                        Spacer()
+                                        Text(device.online ? "Connected"
+                                             : "Last seen " + timeFormatter.string(from: device.lastSeen))
                                             .font(.caption)
                                             .foregroundColor(.secondary)
                                     }
-                                    Spacer()
-                                    Button {
-                                        revealInFinder(file)
-                                    } label: {
-                                        Image(systemName: "folder.fill")
-                                            .foregroundColor(.accentColor)
+                                    // Live receive state for this client; empty name means idle.
+                                    if !device.transferringFile.isEmpty {
+                                        HStack(spacing: 6) {
+                                            Image(systemName: "arrow.down.doc")
+                                                .font(.caption2)
+                                                .foregroundColor(.blue)
+                                            Text(device.transferringFile)
+                                                .font(.caption)
+                                                .lineLimit(1)
+                                                .truncationMode(.middle)
+                                            Spacer()
+                                            if device.total > 0 {
+                                                let pct = Int(Double(device.transferred)
+                                                              / Double(device.total) * 100)
+                                                Text("\(formatBytes(device.transferred)) / "
+                                                     + "\(formatBytes(device.total)) (\(pct)%)")
+                                                    .font(.caption.monospacedDigit())
+                                                    .foregroundColor(.secondary)
+                                            }
+                                        }
+                                        .padding(.leading, 16)
                                     }
-                                    .buttonStyle(.plain)
-                                    .help("Show in Finder")
                                 }
+                            }
+                        }
+                    } header: {
+                        // Connection count summary: online sessions vs. every known device.
+                        let onlineCount = core.devices.filter(\.online).count
+                        Text("Devices — \(onlineCount) connected, \(core.devices.count) total")
+                    }
+
+                    if !core.receivedFiles.isEmpty {
+                        Section("Received Files — \(core.receivedFiles.count)") {
+                            ForEach(core.receivedFiles) { file in
+                                ReceivedFileRow(file: file)
                             }
                         }
                     }
@@ -171,29 +177,22 @@ struct ServerView: View {
                     Image(systemName: "arrow.down.doc")
                         .font(.system(size: 48))
                         .foregroundColor(.secondary)
-                    Text("Start the server to receive files from another device.\n"
-                         + "The peer device should connect to the IP and port shown above.")
-                        .multilineTextAlignment(.center)
+                    Text("Start listening to receive files.")
                         .foregroundColor(.secondary)
                 }
                 .frame(maxHeight: .infinity)
             }
         }
-        // Poll client count; .task restarts on every appear — a @State Timer
-        // would die on tab switches and leave the count frozen at 0.
+        // Connection events refresh devices immediately; this low-frequency reconcile guards against missed events.
         .task(id: core.isServerRunning) {
             while core.isServerRunning && !Task.isCancelled {
-                core.updateClientCount()
-                try? await Task.sleep(nanoseconds: 1_500_000_000)
+                core.refreshDevices()
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
             }
         }
-    }
-
-    private func revealInFinder(_ file: ReceivedFile) {
-        if FileManager.default.fileExists(atPath: file.savedPath.path) {
-            NSWorkspace.shared.activateFileViewerSelecting([file.savedPath])
-        } else {
-            NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: core.savePath)
+        .onChange(of: core.defaultPort) { newValue in
+            // Settings changes take effect immediately; never override a running server's port.
+            if !core.isServerRunning { portText = newValue }
         }
     }
 }

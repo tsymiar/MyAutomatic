@@ -65,7 +65,7 @@ static int cmd_server(int argc, char** argv, int i)
             port = (uint16_t)atoi(argv[++i]);
         } else if (strcmp(argv[i], "-d") == 0 && i + 1 < argc) {
             saveDir = argv[++i];
-        }  // other args ignored
+        }
     }
 
     FT_Handle h = create_engine(saveDir);
@@ -101,7 +101,7 @@ static int cmd_send(int argc, char** argv, int i)
         if (npos < 3) {
             positional[npos++] = argv[i];
         } else if (npos == 3) {
-            cancelMs = atoi(argv[i]);  // optional 4th positional
+            cancelMs = atoi(argv[i]);
             ++npos;
         }
     }
@@ -152,7 +152,7 @@ static int cmd_pull(int argc, char** argv, int i)
             saveDir = argv[++i];
         } else if (npos < 3) {
             positional[npos++] = argv[i];
-        }  // other args ignored
+        }
     }
     if (npos < 3) {
         fprintf(stderr, "Usage: %s pull [-d save_dir] <ip> <port> <name>\n", argv[0]);
@@ -195,8 +195,7 @@ static int cmd_delete(int argc, char** argv, int i)
 
 int main(int argc, char** argv)
 {
-    // Linux has no SO_NOSIGPIPE: ignore SIGPIPE so a closed peer returns
-    // EPIPE instead of killing the process.
+    // Linux has no SO_NOSIGPIPE: ignore SIGPIPE so a closed peer yields EPIPE instead of killing the process.
     signal(SIGPIPE, SIG_IGN);
     signal(SIGINT, on_signal);
     signal(SIGTERM, on_signal);

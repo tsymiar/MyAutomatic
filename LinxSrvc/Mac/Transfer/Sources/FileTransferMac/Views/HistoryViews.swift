@@ -17,11 +17,20 @@ struct TransferLogView: View {
 
                 if !core.transferTasks.isEmpty || !core.receivedFiles.isEmpty {
                     Button("Clear") {
-                        core.transferTasks.removeAll()
+                        // Keep in-flight rows so the completion callback can still find its task by id.
+                        core.transferTasks.removeAll { task in
+                            !core.inFlightTaskIDs.contains(task.id)
+                        }
+                        core.inFlightTaskIDs.removeAll { id in
+                            !core.transferTasks.contains { $0.id == id }
+                        }
                         core.receivedFiles.removeAll()
                     }
                     .buttonStyle(.borderless)
                     .font(.caption)
+                    .disabled(core.isBusy)
+                    .help("Clear finished transfer history")
+                    .accessibilityLabel("Clear transfer history")
                 }
             }
             .padding()
@@ -50,17 +59,7 @@ struct TransferLogView: View {
                     if !core.receivedFiles.isEmpty {
                         Section("Received") {
                             ForEach(core.receivedFiles) { file in
-                                HStack {
-                                    Image(systemName: "doc.fill")
-                                        .foregroundColor(.blue)
-                                    VStack(alignment: .leading) {
-                                        Text(file.fileName).lineLimit(1)
-                                        Text("\(formatBytes(file.fileSize)) • \(file.fromIP) • "
-                                             + "\(timeFormatter.string(from: file.receivedAt))")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                    }
-                                }
+                                ReceivedFileRow(file: file)
                             }
                         }
                     }
@@ -69,9 +68,54 @@ struct TransferLogView: View {
             }
         }
     }
+
+    private func revealInFinder(_ file: ReceivedFile) {
+        if FileManager.default.fileExists(atPath: file.savedPath.path) {
+            NSWorkspace.shared.activateFileViewerSelecting([file.savedPath])
+        } else {
+            NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: core.savePath)
+        }
+    }
 }
 
 // MARK: - Shared Views
+
+struct ReceivedFileRow: View {
+    @EnvironmentObject var core: TransferCore
+    let file: ReceivedFile
+
+    var body: some View {
+        HStack {
+            Image(systemName: "doc.fill")
+                .foregroundColor(.blue)
+            VStack(alignment: .leading) {
+                Text(file.fileName).lineLimit(1)
+                Text("\(formatBytes(file.fileSize)) • "
+                     + "\(timeFormatter.string(from: file.receivedAt))")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            Spacer()
+            Button {
+                revealInFinder()
+            } label: {
+                Image(systemName: "folder.fill")
+                    .foregroundColor(.accentColor)
+            }
+            .buttonStyle(.plain)
+            .help("Show in Finder")
+            .accessibilityLabel("Show in Finder")
+        }
+    }
+
+    private func revealInFinder() {
+        if FileManager.default.fileExists(atPath: file.savedPath.path) {
+            NSWorkspace.shared.activateFileViewerSelecting([file.savedPath])
+        } else {
+            NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: core.savePath)
+        }
+    }
+}
 
 struct TransferRow: View {
     let task: TransferTask
@@ -97,9 +141,8 @@ struct TransferRow: View {
                     .lineLimit(1)
                 HStack(spacing: 8) {
                     Text(formatBytes(task.fileSize))
-                    Text("•")
                     Text(task.direction == .sending ? "→" : "←")
-                    Text(task.peerIP)
+                    if !task.peerIP.isEmpty { Text(task.peerIP) }
                 }
                 .font(.caption)
                 .foregroundColor(.secondary)
@@ -114,14 +157,6 @@ struct TransferRow: View {
                         .progressViewStyle(.linear)
                         .frame(width: 120)
                 }
-            } else if task.status == .completed {
-                Text("Done")
-                    .font(.caption)
-                    .foregroundColor(.green)
-            } else if task.status == .failed {
-                Text("Failed")
-                    .font(.caption)
-                    .foregroundColor(.red)
             }
         }
         .padding(.vertical, 2)
@@ -131,7 +166,7 @@ struct TransferRow: View {
 // MARK: - Console Log View
 
 struct LogConsole: View {
-    let messages: [String]
+    let messages: [LogEntry]
     var onClear: (() -> Void)?
 
     var body: some View {
@@ -144,9 +179,6 @@ struct LogConsole: View {
                     .font(.caption.bold())
                     .foregroundColor(.secondary)
                 Spacer()
-                Text("\(messages.count) entries")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
 
                 Button {
                     copyAll()
@@ -156,6 +188,7 @@ struct LogConsole: View {
                 }
                 .buttonStyle(.borderless)
                 .help("Copy all")
+                .accessibilityLabel("Copy all logs")
 
                 Button {
                     onClear?()
@@ -165,6 +198,7 @@ struct LogConsole: View {
                 }
                 .buttonStyle(.borderless)
                 .help("Clear logs")
+                .accessibilityLabel("Clear logs")
             }
             .padding(.horizontal)
             .padding(.vertical, 4)
@@ -172,37 +206,42 @@ struct LogConsole: View {
             ScrollViewReader { proxy in
                 ScrollView(.vertical) {
                     LazyVStack(alignment: .leading, spacing: 2) {
-                        ForEach(Array(messages.enumerated()), id: \.offset) { idx, msg in
+                        ForEach(messages) { entry in
                             HStack(spacing: 4) {
                                 Circle()
-                                    .fill(logColor(msg))
+                                    .fill(logColor(entry.text))
                                     .frame(width: 5, height: 5)
-                                Text(msg)
+                                Text(entry.text)
                                     .font(.system(size: 10, design: .monospaced))
                                     .lineLimit(2)
-                                    .foregroundColor(logColor(msg).opacity(0.8))
+                                    .foregroundColor(logColor(entry.text).opacity(0.8))
                                     .textSelection(.enabled)
                                 Spacer(minLength: 0)
                             }
                             .padding(.horizontal, 10)
                             .padding(.vertical, 1)
-                            .id(idx)
+                            .id(entry.id)
                         }
                     }
                 }
-                .onChange(of: messages.count) { _ in
-                    if let lastIdx = messages.indices.last {
-                        withAnimation {
-                            proxy.scrollTo(lastIdx, anchor: .bottom)
-                        }
+                .onChange(of: messages.last?.id) { _ in
+                    if let last = messages.last {
+                        proxy.scrollTo(last.id, anchor: .bottom)
                     }
+                }
+            }
+            .overlay {
+                if messages.isEmpty {
+                    Text("No log entries")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                 }
             }
         }
     }
 
     private func copyAll() {
-        let all = messages.joined(separator: "\n")
+        let all = messages.map(\.text).joined(separator: "\n")
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(all, forType: .string)
     }

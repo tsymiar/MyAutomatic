@@ -1,7 +1,5 @@
-// TransferBridge.h — C bridging API for Swift interop
-// Wraps TransferEngine (C++) behind opaque handle + C function pointers.
-// Callbacks carry a userData pointer so Swift can pass an instance reference
-// without relying on global state.
+// TransferBridge.h - C bridging API for Swift interop: opaque handle + C function pointers.
+// Callbacks carry userData so Swift can pass an instance reference without global state.
 
 #ifndef TransferBridge_h
 #define TransferBridge_h
@@ -30,15 +28,15 @@ typedef void (*FT_ProgressCallback)(void* userData, uint64_t current, uint64_t t
 /// Mirrors the FT_EVT_* enum in TransferEngine.h.
 enum {
     FT_EVT_NONE               = 0,  ///< routine progress update
-    FT_EVT_CONNECTED          = 1,  ///< peer connected
-    FT_EVT_DISCONNECTED       = 2,  ///< connection closed
+    FT_EVT_SESSION_OPENED     = 1,  ///< a client session started (short-lived connection accepted)
+    FT_EVT_SESSION_CLOSED     = 2,  ///< a client session ended (not necessarily the device gone)
     FT_EVT_RECEIVE_START      = 3,  ///< new incoming transfer request
     FT_EVT_TRANSFER_COMPLETE  = 4,  ///< transfer finished
     FT_EVT_TRANSFER_CANCELLED = 5,  ///< transfer cancelled
     FT_EVT_REQUEST_PULL       = 6   ///< incoming file pull request (CMD_REQUEST)
 };
 
-// ── Lifetime ──────────────────────────────────────────
+// Lifetime
 
 /// Create a new transfer instance.  Returns NULL on allocation failure.
 FT_Handle ft_create(void);
@@ -46,7 +44,7 @@ FT_Handle ft_create(void);
 /// Destroy the instance and release all resources (stops server / disconnects).
 void ft_destroy(FT_Handle handle);
 
-// ── Server mode ───────────────────────────────────────
+// Server mode
 
 /// Start listening on `port` (default 8800).  Returns 0 on success, <0 on error.
 int ft_start_server(FT_Handle handle, uint16_t port);
@@ -54,7 +52,7 @@ int ft_start_server(FT_Handle handle, uint16_t port);
 /// Stop listening and disconnect all clients.
 void ft_stop_server(FT_Handle handle);
 
-// ── Client mode ───────────────────────────────────────
+// Client mode
 
 /// Connect to `ip`:`port`.  Returns 0 on success, <0 on error.
 int ft_connect(FT_Handle handle, const char* ip, uint16_t port);
@@ -62,7 +60,7 @@ int ft_connect(FT_Handle handle, const char* ip, uint16_t port);
 /// Disconnect from the server.
 void ft_disconnect(FT_Handle handle);
 
-// ── File operations ───────────────────────────────────
+// File operations
 
 /// Send a file (client mode, must be connected).  Blocks until transfer completes or fails.
 /// Returns 0 on success, <0 on error.
@@ -86,7 +84,7 @@ void ft_cancel_transfer(FT_Handle handle);
 /// Returns 0 on success, <0 on error.
 int ft_delete_file(FT_Handle handle, const char* fileName);
 
-// ── Configuration ─────────────────────────────────────
+// Configuration
 
 /// Set the directory where received files are saved.
 void ft_set_save_path(FT_Handle handle, const char* path);
@@ -111,11 +109,27 @@ typedef void (*FT_LogCallback)(void* userData, const char* msg);
 /// Pass callback==NULL to disable forwarding.
 void ft_set_log_callback(FT_LogCallback callback, void* userData);
 
-// ── Status queries ────────────────────────────────────
+// Status queries
 
 bool ft_is_connected(FT_Handle handle);
 bool ft_is_server_running(FT_Handle handle);
+/// Snapshot entry count (online and recently-offline peers) — matches ft_get_clients semantics.
 int ft_get_client_count(FT_Handle handle);
+
+/// Device snapshot entry. Kept after a short-lived connection closes; online=false means recently offline.
+typedef struct {
+    char     ip[64];        ///< IPv4 address in dotted-decimal notation
+    uint16_t port;          ///< peer port
+    bool     online;        ///< whether a session is currently active
+    uint64_t lastSeenMs;    ///< last connection time (Unix epoch milliseconds)
+    char     file[256];     ///< file currently being received on this session; empty when idle
+    uint64_t transferred;   ///< bytes received so far for that file
+    uint64_t total;         ///< total size of that file in bytes
+} FT_ClientInfo;
+
+/// Write up to capacity device entries; returns the number written, newest connection first.
+/// Returns 0 when out==NULL or capacity<=0.
+int ft_get_clients(FT_Handle handle, FT_ClientInfo* out, int capacity);
 
 #ifdef __cplusplus
 }

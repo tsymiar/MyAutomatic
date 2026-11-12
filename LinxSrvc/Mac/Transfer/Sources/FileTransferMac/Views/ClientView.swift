@@ -15,8 +15,7 @@ struct ClientView: View {
             Divider()
             content
         }
-        // Claim full tab height, top-aligned: without a greedy child (no tasks
-        // yet) the view would center vertically, leaving a blank band above.
+        // Claim full tab height, top-aligned: without a greedy child the view centers, leaving a blank band above.
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 
@@ -37,12 +36,14 @@ struct ClientView: View {
                 Text("Target IP:")
                     .foregroundColor(.secondary)
                 MacTextField(text: $core.targetIP, placeholder: "192.168.x.x",
-                             width: 180, isDisabled: core.isConnected)
+                             width: 180, isDisabled: core.isConnected,
+                             onSubmit: { connect() })
 
                 Text("Port:")
                     .foregroundColor(.secondary)
                 MacTextField(text: $core.targetPort, placeholder: "8800",
-                             width: 90, isDisabled: core.isConnected)
+                             width: 90, isDisabled: core.isConnected,
+                             onSubmit: { connect() })
 
                 Spacer()
 
@@ -62,8 +63,7 @@ struct ClientView: View {
                 Label("Disconnect", systemImage: "link.slash")
             }
             .buttonStyle(.borderedProminent)
-            // Disable disconnect while sending: destroying the engine while a
-            // background call is blocked in ft_send_file is use-after-free.
+            // Disable disconnect while sending: destroying an engine blocked in ft_send_file is use-after-free.
             .disabled(core.isBusy)
         } else {
             Button {
@@ -72,7 +72,8 @@ struct ClientView: View {
                 Label("Connect", systemImage: "link")
             }
             .buttonStyle(.borderedProminent)
-            .disabled(core.targetIP.isEmpty)
+            .disabled(core.targetIP.isEmpty || core.isConnecting)
+            .accessibilityLabel("Connect")
         }
     }
 
@@ -81,6 +82,7 @@ struct ClientView: View {
     private var statusBar: some View {
         HStack {
             Image(systemName: core.isConnected ? "checkmark.circle.fill" : "xmark.circle")
+                .font(.title3)
                 .foregroundColor(core.isConnected ? .green : .secondary)
             Text(shortTransferStatus(core.transferStatus))
                 .font(.caption)
@@ -104,9 +106,9 @@ struct ClientView: View {
 
     private var connectedContent: some View {
         VStack {
-            // Only for transfers started from this tab: totalBytes is shared
-            // core state, so a server-side receive must not inflate this view.
-            if core.isBusy || core.pendingDeleteFile != nil {
+            // Only transfers from this tab: totalBytes is shared state,
+            // so server-side receives must not inflate this view.
+            if core.isBusy || !core.pendingPartialNames.isEmpty {
                 HStack {
                     TransferProgressBar(status: core.transferStatus, progress: core.progress,
                                         transferred: core.transferredBytes, total: core.totalBytes,
@@ -122,8 +124,9 @@ struct ClientView: View {
                         .buttonStyle(.plain)
                         .padding(.trailing)
                         .help("Cancel the ongoing transfer")
-                    } else if core.pendingDeleteFile != nil {
-                        // Cancelled: the peer keeps the partial file — offer deletion
+                        .accessibilityLabel("Cancel transfer")
+                    } else {
+                        // Cancelled: the peer keeps the partial files — offer deletion
                         Button {
                             core.deletePartialFile()
                         } label: {
@@ -133,7 +136,8 @@ struct ClientView: View {
                         }
                         .buttonStyle(.plain)
                         .padding(.trailing)
-                        .help("Delete the partial file left on the peer")
+                        .help("Delete partial files left on the peer")
+                        .accessibilityLabel("Delete partial files on peer")
                     }
                 }
             }
@@ -141,18 +145,8 @@ struct ClientView: View {
             dropZone
 
             pullSection
-
-            if !core.transferTasks.isEmpty {
-                List {
-                    Section("Transfer Tasks") {
-                        ForEach(core.transferTasks) { task in
-                            TransferRow(task: task)
-                        }
-                    }
-                }
-                .listStyle(.inset)
-            }
         }
+        .frame(maxHeight: .infinity, alignment: .top)
     }
 
     private var dropZone: some View {
@@ -200,14 +194,14 @@ struct ClientView: View {
             Text("Remote file:")
                 .foregroundColor(.secondary)
             MacTextField(text: $pullFileName, placeholder: "e.g. report.pdf",
-                         width: 220, isDisabled: core.isBusy)
+                         width: 220, isDisabled: core.isBusy,
+                         onSubmit: { core.requestFile(pullFileName) })
             Button {
                 core.requestFile(pullFileName)
             } label: {
                 Label("Pull from Peer", systemImage: "arrow.down.to.line")
             }
-            // Mutually exclusive with sending: push/pull must not interleave
-            // on a single connection
+            // Mutually exclusive with sending: push/pull must not interleave on one connection.
             .disabled(core.isBusy
                       || pullFileName.trimmingCharacters(in: .whitespaces).isEmpty)
             Spacer()
@@ -220,8 +214,7 @@ struct ClientView: View {
             Image(systemName: "arrow.up.doc")
                 .font(.system(size: 48))
                 .foregroundColor(.secondary)
-            Text("Connect to a device running the transfer server,\nthen drag files here or click to select.")
-                .multilineTextAlignment(.center)
+            Text("Connect to a device, then drop files here.")
                 .foregroundColor(.secondary)
         }
         .frame(maxHeight: .infinity)

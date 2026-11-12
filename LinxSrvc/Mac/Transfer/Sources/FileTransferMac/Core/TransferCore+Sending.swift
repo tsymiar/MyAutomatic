@@ -19,6 +19,8 @@ extension TransferCore {
 
     private func drainSendQueue() {
         guard !isBusy, !sendQueue.isEmpty else { return }
+        // A new transfer invalidates any pending auto-disconnect timer.
+        disconnectToken &+= 1
         performSend(sendQueue.removeFirst())
     }
 
@@ -28,58 +30,80 @@ extension TransferCore {
             return
         }
 
+        let taskID = startSendTask(filePath)
+        let task = transferTasks.last(where: { $0.id == taskID })
+        let fileName = task?.fileName ?? ""
+        let fileSize = task?.fileSize ?? 0
+
+        Task.detached { [weak self, engine, filePath, taskID, fileName, fileSize] in
+            let ret = ft_send_file(engine, filePath)
+            await MainActor.run { [weak self] in
+                self?.finishSend(taskID: taskID, fileName: fileName, fileSize: fileSize, ret: ret)
+            }
+        }
+    }
+
+    /// Create the task row and prime the status bar for a new send; returns the task id.
+    private func startSendTask(_ filePath: String) -> UUID {
         let url = URL(fileURLWithPath: filePath)
         let fileName = url.lastPathComponent
         let fileSize = (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize).map(UInt64.init) ?? 0
 
         isBusy = true
+        inflightCalls += 1
         transferStatus = "Preparing..."
         transferFileName = fileName
         transferredBytes = 0; totalBytes = fileSize; progress = 0
         appendLog("Sending: \(fileName) (\(formatBytes(fileSize)))")
 
-        let idx = transferTasks.count
-        transferTasks.append(TransferTask(
+        var task = TransferTask(
             fileName: fileName, fileSize: fileSize,
-            direction: .sending, peerIP: "Peer Device"
-        ))
-        transferTasks[idx].status = .transferring
+            direction: .sending, peerIP: targetIP
+        )
+        task.status = .transferring
+        transferTasks.append(task)
+        inFlightTaskIDs.append(task.id)
+        return task.id
+    }
 
-        Task.detached { [weak self, engine] in
-            let ret = ft_send_file(engine, filePath)
-            await MainActor.run { [weak self] in
-                guard let self, idx < self.transferTasks.count else { return }
-                self.isBusy = false
-                let task = self.transferTasks[idx]
-                if ret == 0 {
-                    self.transferStatus = "Send complete"; self.progress = 1.0
-                    self.appendLog("Send complete: \(task.fileName)")
-                    self.transferTasks[idx].status = .completed
-                    self.transferTasks[idx].bytesTransferred = task.fileSize
-                } else if ret == -2 {
-                    // FT_EVT_TRANSFER_CANCELLED callback already marked the task
-                    // .cancelled — do not overwrite with .failed
-                    self.transferStatus = "Send cancelled"
-                    self.appendLog("Send cancelled: \(task.fileName)")
-                    // Peer keeps the partial file; arm the delete button
-                    self.pendingDeleteFile = task.fileName
-                } else {
-                    self.transferStatus = "Send failed (code \(ret))"
-                    self.appendLog("Send failed: \(task.fileName) (code \(ret))")
-                    self.transferTasks[idx].status = .failed
-                }
-                // Next queued file; auto-disconnect only after the queue is done.
-                if !self.sendQueue.isEmpty {
-                    self.drainSendQueue()
-                } else if ret == 0 && self.isConnected && self.pendingDeleteFile == nil {
-                    // Auto-disconnect only after success: a cancelled send keeps the
-                    // connection so the delete button can send CMD_DELETE. Wait 1s so
-                    // the peer finishes processing the final CMD_COMPLETE.
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-                        self?.disconnect()
-                    }
-                }
-            }
+    /// Handle the result of ft_send_file on the main thread.
+    private func finishSend(taskID: UUID, fileName: String, fileSize: UInt64, ret: Int32) {
+        endEngineCall()
+        // isBusy must be cleared even if History was cleared mid-transfer.
+        isBusy = false
+        inFlightTaskIDs.removeAll { $0 == taskID }
+        let idx = transferTasks.firstIndex { $0.id == taskID }
+        switch ret {
+        case 0:
+            transferStatus = "Send complete"; progress = 1.0
+            appendLog("Send complete: \(fileName)")
+            if let idx { transferTasks[idx].status = .completed }
+        case -2:
+            // CANCELLED callback already set .cancelled - do not overwrite with .failed.
+            transferStatus = "Send cancelled"
+            appendLog("Send cancelled: \(fileName)")
+            pendingPartialNames.append(fileName)
+            // Cancelling stops the whole queue; remaining files are not sent.
+            sendQueue.removeAll()
+        default:
+            transferStatus = "Send failed (code \(ret))"
+            appendLog("Send failed: \(fileName) (code \(ret))")
+            if let idx { transferTasks[idx].status = .failed }
+        }
+        if let idx {
+            transferTasks[idx].bytesTransferred =
+                ret == 0 ? fileSize : transferTasks[idx].bytesTransferred
+        }
+        continueSendQueue(after: ret)
+    }
+
+    /// Continue draining the queue, or auto-disconnect after a clean success.
+    private func continueSendQueue(after ret: Int32) {
+        if !sendQueue.isEmpty {
+            drainSendQueue()
+        } else if ret == 0 && isConnected && pendingPartialNames.isEmpty {
+            // Auto-disconnect only after success: a cancel keeps the connection for CMD_DELETE.
+            scheduleAutoDisconnect(after: 1.0)
         }
     }
 
@@ -103,8 +127,10 @@ extension TransferCore {
             return
         }
         let host = targetIP
+        disconnectToken &+= 1
 
         isBusy = true
+        inflightCalls += 1
         transferStatus = "Requesting \(name)…"
         transferredBytes = 0; totalBytes = 0; progress = 0
         appendLog("Pulling from \(host): \(name)")
@@ -113,14 +139,14 @@ extension TransferCore {
             let ret = ft_request_file(engine, host, port, name)
             await MainActor.run { [weak self] in
                 guard let self else { return }
+                self.endEngineCall()
                 self.isBusy = false
                 if ret == 0 {
                     self.transferStatus = "Pull complete"
                     self.appendLog("Pull complete: \(name)")
                     // Status + on-disk path handled by the FT_EVT_TRANSFER_COMPLETE callback
                 } else if ret == -8 {
-                    // Cancelled (locally or by peer): the FT_EVT_TRANSFER_CANCELLED
-                    // callback already marked the task .cancelled
+                    // Cancelled (local/peer): the CANCELLED callback already set .cancelled.
                     self.transferStatus = "Pull cancelled"
                     self.appendLog("Pull cancelled: \(name)")
                 } else {
@@ -150,29 +176,33 @@ extension TransferCore {
         appendLog("Cancel requested — waiting for the current chunk to finish…")
     }
 
-    /// Delete the partial file left on the peer by a cancelled send
-    /// (CMD_DELETE, matched by the original file name on the peer side).
-    /// Disconnects 1s after success — the whole cancel flow is then done.
+    /// Delete partial files left on the peer by cancelled sends (CMD_DELETE,
+    /// matched by the original file name on the peer side).
     func deletePartialFile() {
-        guard let name = pendingDeleteFile else { return }
-        pendingDeleteFile = nil
+        guard !pendingPartialNames.isEmpty else { return }
+        let names = pendingPartialNames
+        pendingPartialNames = []
         guard isConnected, let engine = handle else {
             appendLog("ERROR: Cannot delete partial: not connected")
+            pendingPartialNames = names
             return
         }
-        appendLog("Deleting partial on peer: \(name)")
-        Task.detached { [weak self, engine, name] in
-            let ret = ft_delete_file(engine, name)
+        disconnectToken &+= 1
+        inflightCalls += 1
+        appendLog("Deleting \(names.count) partial file(s) on peer")
+        Task.detached { [weak self, engine, names] in
+            // Immutable snapshot: a captured var would be a Swift 6 sendability error.
+            let failed = names.filter { ft_delete_file(engine, $0) != 0 }
             await MainActor.run { [weak self] in
                 guard let self else { return }
-                if ret == 0 {
-                    self.transferStatus = "Partial deleted: \(name)"
-                    // Wait 1s so the peer finishes handling CMD_DELETE, then close
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
-                        self?.disconnect()
-                    }
+                self.endEngineCall()
+                if failed.isEmpty {
+                    self.transferStatus = "Partial deleted"
+                    self.appendLog("Partial deleted: \(names.joined(separator: ", "))")
+                    self.scheduleAutoDisconnect(after: 2.0)
                 } else {
-                    self.appendLog("ERROR: Delete partial failed: \(name) (code \(ret))")
+                    self.pendingPartialNames = failed
+                    self.appendLog("ERROR: Delete partial failed: \(failed.joined(separator: ", "))")
                 }
             }
         }

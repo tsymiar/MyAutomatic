@@ -11,6 +11,8 @@ struct MacTextField: NSViewRepresentable {
     let placeholder: String
     var width: CGFloat?
     var isDisabled: Bool = false
+    // Called when the user presses Return; lets a field act as a form row (e.g. connect / pull).
+    var onSubmit: (() -> Void)? = nil
 
     func makeNSView(context: Context) -> NSTextField {
         let field = NSTextField()
@@ -23,6 +25,10 @@ struct MacTextField: NSViewRepresentable {
         field.font = NSFont.systemFont(ofSize: NSFont.systemFontSize)
         field.delegate = context.coordinator
         field.translatesAutoresizingMaskIntoConstraints = false
+        if onSubmit != nil {
+            field.target = context.coordinator
+            field.action = #selector(Coordinator.submit)
+        }
         if let fieldWidth = width {
             field.widthAnchor.constraint(equalToConstant: fieldWidth).isActive = true
         }
@@ -35,6 +41,8 @@ struct MacTextField: NSViewRepresentable {
         }
         nsView.isEditable = !isDisabled
         nsView.isSelectable = !isDisabled
+        // Keep the closure current so it captures fresh state each render.
+        context.coordinator.onSubmit = onSubmit
     }
 
     func makeCoordinator() -> Coordinator {
@@ -43,6 +51,7 @@ struct MacTextField: NSViewRepresentable {
 
     final class Coordinator: NSObject, NSTextFieldDelegate {
         private var text: Binding<String>
+        var onSubmit: (() -> Void)?
 
         init(text: Binding<String>) {
             self.text = text
@@ -52,6 +61,8 @@ struct MacTextField: NSViewRepresentable {
             guard let field = obj.object as? NSTextField else { return }
             text.wrappedValue = field.stringValue
         }
+
+        @objc func submit() { onSubmit?() }
     }
 }
 
@@ -79,8 +90,7 @@ struct TransferProgressBar: View {
     let transferred: UInt64
     let total: UInt64
     var compact: Bool = false
-    // Left label prefers the file name: the status bar above already shows
-    // the verb ("Transfer complete!"), so the two displays stay distinct.
+    // Left label prefers the file name: the status bar already shows the verb, keeping the two distinct.
     var fileName: String = ""
 
     var body: some View {
@@ -109,9 +119,8 @@ struct ContentView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Picker + conditional content instead of TabView: macOS NSTabView
-            // sets refusesFirstResponder=YES, breaking TextField focus. All text
-            // fields use MacTextField (native NSTextField), bypassing the issue.
+            // Picker instead of TabView: NSTabView refusesFirstResponder=YES breaks TextField
+            // focus; MacTextField (native NSTextField) bypasses it.
             Picker("", selection: $selectedTab) {
                 Label("Server", systemImage: "arrow.down.circle").tag(0)
                 Label("Client", systemImage: "arrow.up.circle").tag(1)
@@ -124,8 +133,7 @@ struct ContentView: View {
             Divider()
                 .padding(.top, 8)
 
-            // Client text field state lives in TransferCore: values persist
-            // across tab switches even when the view is recreated.
+            // Client text field state lives in TransferCore so values persist across tab switches.
             Group {
                 switch selectedTab {
                 case 0: ServerView()
@@ -135,7 +143,8 @@ struct ContentView: View {
                 }
             }
 
-            if core.showLogConsole && !core.logMessages.isEmpty {
+            // Keep the console always present so the window height doesn't jump on the first log or on clear.
+            if core.showLogConsole {
                 Divider()
                 LogConsole(messages: core.logMessages) {
                     core.logMessages.removeAll()

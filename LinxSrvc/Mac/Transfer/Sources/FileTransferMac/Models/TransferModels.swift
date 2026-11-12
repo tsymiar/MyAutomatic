@@ -40,11 +40,9 @@ struct TransferTask: Identifiable, Equatable {
         return "\(fileSize) B"
     }
 
-    // No custom ==: SwiftUI List row diffing compares fields — an id-only ==
-    // would make changed-progress rows look unchanged and never re-render.
+    // No custom ==: SwiftUI diffs fields; an id-only == would hide changed-progress rows.
 }
 
-/// Received file record
 struct ReceivedFile: Identifiable {
     let id = UUID()
     let fileName: String
@@ -52,4 +50,25 @@ struct ReceivedFile: Identifiable {
     let fromIP: String
     let savedPath: URL
     let receivedAt: Date
+}
+
+/// Server-side device snapshot. A short-lived connection stays listed as
+/// offline so the device remains visible after the socket closes.
+struct ConnectedDevice: Identifiable, Equatable {
+    // Different ports on one IP are distinct sessions; using ip alone would collide row ids.
+    var id: String { "\(ip):\(port)" }
+    let ip: String
+    let port: UInt16
+    let online: Bool
+    let lastSeen: Date
+    // Live receive state from the engine snapshot; an empty file name means idle.
+    let transferringFile: String
+    let transferred: UInt64
+    let total: UInt64
+}
+
+/// Log line with a stable identity: trimming the buffer must not shift row ids.
+struct LogEntry: Identifiable {
+    let id = UUID()
+    let text: String
 }
