@@ -3,14 +3,8 @@
 #include <QKeyEvent>
 #include <QMouseEvent>
 #include <QWheelEvent>
-#include <QPainter>
-#include <QFont>
 #include <cmath>
 #include <cstdlib>
-#include <GL/gl.h>
-#include <GL/glu.h>
-
-// 构造/析构
 
 EchoMainWindow::EchoMainWindow(QWidget* parent) : QOpenGLWidget(parent)
 {
@@ -21,18 +15,13 @@ EchoMainWindow::EchoMainWindow(QWidget* parent) : QOpenGLWidget(parent)
     setFocusPolicy(Qt::StrongFocus);
     m_engine = new EchoEngine(this);
     connect(m_engine, &EchoEngine::fragmentPlaced, this, &EchoMainWindow::onFragmentPlaced);
-    connect(m_engine, &EchoEngine::fragmentRemoved, this, &EchoMainWindow::onFragmentRemoved);
     connect(m_engine, &EchoEngine::sceneCompleted, this, &EchoMainWindow::onSceneCompleted);
-    connect(m_engine, &EchoEngine::paranoiaChanged, this, &EchoMainWindow::onParanoiaChanged);
-    connect(m_engine, &EchoEngine::anxietyChanged, this, &EchoMainWindow::onAnxietyChanged);
     connect(m_engine, &EchoEngine::hallucinationTriggered, this, &EchoMainWindow::onHallucinationTriggered);
-    connect(m_engine, &EchoEngine::reverseUnlocked, this, &EchoMainWindow::onReverseUnlocked);
     connect(m_engine, &EchoEngine::noiseCommunion, this, &EchoMainWindow::onNoiseCommunion);
-    connect(m_engine, &EchoEngine::choiceRequired, this, [this](const QString& prompt, const QStringList& options) {
-        showChoice(prompt, options);
-        });
-    connect(m_engine, &EchoEngine::endingReached, this, [this](EndingType) {
-        m_state = GameState::EndingScreen;
+    connect(m_engine, &EchoEngine::morseMessage, this, [this](const QString& msg) {
+        FloatingNoise fn; fn.text = msg; fn.x = -0.4f; fn.y = -0.5f;
+        fn.alpha = 0.95f; fn.life = 7.0f;
+        m_noiseTexts.push_back(fn);
         });
     connect(m_engine, &EchoEngine::silenceMode, this, [this](bool active) {
         m_silenceMode = active;
@@ -79,8 +68,6 @@ EchoMainWindow::~EchoMainWindow()
     if (m_tickTimer && m_tickTimer->isActive()) m_tickTimer->stop();
 }
 
-// 游戏循环
-
 void EchoMainWindow::gameTick()
 {
     float dt = m_elapsed.elapsed() / 1000.0f; m_elapsed.restart();
@@ -89,7 +76,7 @@ void EchoMainWindow::gameTick()
     m_titlePulse = 1.0f + 0.08f * sinf(m_gameTime * 2.5f);
     m_titleWaveOffset += dt * 0.8f;
     if (m_glitchIntensity > 0.0f) { m_glitchIntensity -= dt * 0.3f;if (m_glitchIntensity < 0.0f)m_glitchIntensity = 0.0f; }
-    m_noiseOffset += dt * 15.0f;
+    m_noiseOffset += dt * 0.8f;
     m_bgFlicker = 0.02f * sinf(m_gameTime * 3.7f) + 0.01f * sinf(m_gameTime * 7.3f);
     float tp = m_engine->paranoiaLevel(); m_paranoiaDisplay += (tp - m_paranoiaDisplay) * dt * 3.0f;
     float ta = m_engine->anxietyLevel(); m_anxietyDisplay += (ta - m_anxietyDisplay) * dt * 3.0f;
@@ -152,8 +139,6 @@ void EchoMainWindow::gameTick()
     update();
 }
 
-// 切换选项
-
 void EchoMainWindow::showChapterIntro()
 {
     m_prevState = m_state;
@@ -172,10 +157,43 @@ void EchoMainWindow::showChapterIntro()
     }
 }
 
-void EchoMainWindow::showChoice(const QString& prompt, const QStringList& options)
+void EchoMainWindow::showChoice(const EchoEngine::ChoiceContent& cc)
 {
-    m_choicePrompt = prompt; m_choiceOptions = options; m_choiceSelectedIndex = 0;
+    m_currentChoice = cc;
+    m_choicePrompt = cc.prompt; m_choiceOptions = cc.options; m_choiceSelectedIndex = 0;
     m_prevState = m_state; m_state = GameState::PlayerChoice;
+}
+
+void EchoMainWindow::confirmCurrentChoice()
+{
+    if (m_choiceSelectedIndex < 0 || m_choiceSelectedIndex >= int(m_currentChoice.choices.size())) return;
+    PlayerChoice pc = m_currentChoice.choices[m_choiceSelectedIndex];
+    switch (m_currentChoice.point) {
+    case ChoicePoint::PrologueSigh:
+        m_engine->recordChoice(pc);
+        // 忽略叹息=相信官方锚点，记录叹息=放弃官方锚点靠自己判断
+        m_engine->setOfficialAnchor(pc == PlayerChoice::IgnoreSigh);
+        m_engine->generateFragments(GameChapter::Chapter1);
+        showChapterIntro();
+        break;
+    case ChoicePoint::HeYueHostage:
+        // 无论救没救都继续自我声纹选择，文案由 buildChoice 按状态拼接
+        m_engine->applyBranchChoice(ChoicePoint::HeYueHostage, m_choiceSelectedIndex);
+        showChoice(m_engine->buildChoice(ChoicePoint::Identity));
+        break;
+    case ChoicePoint::Identity:
+        m_engine->recordChoice(pc);
+        m_engine->generateFragments(GameChapter::Chapter4);
+        showChapterIntro();
+        break;
+    case ChoicePoint::LifeTransfer:
+        m_engine->recordChoice(pc);
+        m_engine->generateFragments(GameChapter::Finale);
+        showChapterIntro();
+        break;
+    default:
+        break;
+    }
 }
 
 void EchoMainWindow::advanceToNextChapter()
@@ -210,8 +228,6 @@ void EchoMainWindow::wheelEvent(QWheelEvent* e)
     }
     update();
 }
-
-// 坐标换算与命中测试
 
 float EchoMainWindow::glHalfWidth() const
 {
@@ -256,7 +272,22 @@ int EchoMainWindow::hitTestTimelineSlot(const QPointF& gp) const
     return -1;
 }
 
-// 输入处理
+int EchoMainWindow::hitTestChoiceOption(const QPointF& gp) const
+{
+    int n = m_choiceOptions.size();
+    if (n <= 0) return -1;
+    // 几何参数与 renderPlayerChoice 保持一致
+    int promptLines = m_choicePrompt.count('\n') + 1;
+    float itemH = 0.13f, gap = 0.05f;
+    float blockTop = 0.8f - promptLines * 0.05f - 0.15f;
+    float blockBottom = blockTop - n * (itemH + gap);
+    if (blockBottom < -0.8f) blockTop += (-0.8f - blockBottom);
+    for (int i = 0; i < n; ++i) {
+        float y = blockTop - i * (itemH + gap);
+        if (gp.x() >= -0.6f && gp.x() <= 0.6f && gp.y() >= y - itemH && gp.y() <= y) return i;
+    }
+    return -1;
+}
 
 void EchoMainWindow::keyPressEvent(QKeyEvent* e)
 {
@@ -313,20 +344,15 @@ void EchoMainWindow::keyPressEvent(QKeyEvent* e)
         if (e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter) {
             GameChapter cur = m_engine->currentChapter();
             if (cur == GameChapter::Prologue) {
-                auto cc = m_engine->buildChoice(ChoicePoint::PrologueSigh);
-                showChoice(cc.prompt, cc.options);
+                showChoice(m_engine->buildChoice(ChoicePoint::PrologueSigh));
             } else if (cur == GameChapter::Chapter3) {
-                // 第三章：先触发何悦被囚禁的支线抉择，再进入自我声纹选择
                 if (m_engine->heYueState() == HeYueState::Unknown) {
-                    auto cc = m_engine->buildChoice(ChoicePoint::HeYueHostage);
-                    showChoice(cc.prompt, cc.options);
+                    showChoice(m_engine->buildChoice(ChoicePoint::HeYueHostage));
                 } else {
-                    auto cc = m_engine->buildChoice(ChoicePoint::Identity);
-                    showChoice(cc.prompt, cc.options);
+                    showChoice(m_engine->buildChoice(ChoicePoint::Identity));
                 }
             } else if (cur == GameChapter::Chapter4) {
-                auto cc = m_engine->buildChoice(ChoicePoint::LifeTransfer);
-                showChoice(cc.prompt, cc.options);
+                showChoice(m_engine->buildChoice(ChoicePoint::LifeTransfer));
             } else {
                 GameChapter next = static_cast<GameChapter>(static_cast<int>(cur) + 1);
                 if (next <= GameChapter::Finale) {
@@ -352,43 +378,11 @@ void EchoMainWindow::keyPressEvent(QKeyEvent* e)
             if (e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter) advanceToNextChapter();
         }break;
     case GameState::PlayerChoice:
-        if (e->key() == Qt::Key_Up || e->key() == Qt::Key_W) { if (m_choiceSelectedIndex > 0)m_choiceSelectedIndex--; } else if (e->key() == Qt::Key_Down || e->key() == Qt::Key_S) { if (m_choiceSelectedIndex < m_choiceOptions.size() - 1)m_choiceSelectedIndex++; } else if (e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter) {
-            PlayerChoice pc = PlayerChoice::None;
-            GameChapter cur = m_engine->currentChapter();
-            if (cur == GameChapter::Prologue) {
-                pc = (m_choiceSelectedIndex == 0) ? PlayerChoice::IgnoreSigh : PlayerChoice::RecordSigh;
-                m_engine->recordChoice(pc);
-                // 接入官方锚点机制：忽略叹息=相信官方锚点，记录叹息=放弃官方锚点靠自己判断
-                m_engine->setOfficialAnchor(m_choiceSelectedIndex == 0);
-                m_engine->generateFragments(GameChapter::Chapter1);
-                showChapterIntro();
-            } else if (cur == GameChapter::Chapter3) {
-                if (m_engine->heYueState() == HeYueState::Unknown) {
-                    // 何悦支线抉择
-                    if (m_choiceSelectedIndex == 0) {
-                        m_engine->setHeYueState(HeYueState::Rescued);
-                        m_engine->addResonance(0.15f);
-                    } else {
-                        m_engine->setHeYueState(HeYueState::Brainwashed);
-                    }
-                    // 无论救没救，都继续自我声纹选择（文案由 buildChoice 根据状态动态拼接）
-                    auto cc = m_engine->buildChoice(ChoicePoint::Identity);
-                    showChoice(cc.prompt, cc.options);
-                    return;
-                }
-                if (m_choiceSelectedIndex == 0) pc = PlayerChoice::AcceptFusion;
-                else if (m_choiceSelectedIndex == 1) pc = PlayerChoice::RejectFusion;
-                else pc = PlayerChoice::SeparateVoices;
-                m_engine->recordChoice(pc);
-                m_engine->generateFragments(GameChapter::Chapter4);
-                showChapterIntro();
-            } else if (cur == GameChapter::Chapter4) {
-                pc = (m_choiceSelectedIndex == 0) ? PlayerChoice::TransferBack : PlayerChoice::DeleteLifeSupport;
-                m_engine->recordChoice(pc);
-                // 进入终章：在真相面前拼出被篡改的人生
-                m_engine->generateFragments(GameChapter::Finale);
-                showChapterIntro();
-            }
+        if (e->key() == Qt::Key_Up || e->key() == Qt::Key_W) { if (m_choiceSelectedIndex > 0)m_choiceSelectedIndex--; } else if (e->key() == Qt::Key_Down || e->key() == Qt::Key_S) { if (m_choiceSelectedIndex < m_choiceOptions.size() - 1)m_choiceSelectedIndex++; } else if (e->key() >= Qt::Key_1 && e->key() <= Qt::Key_9) {
+            int idx = e->key() - Qt::Key_1;
+            if (idx < m_choiceOptions.size()) { m_choiceSelectedIndex = idx; confirmCurrentChoice(); }
+        } else if (e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter) {
+            confirmCurrentChoice();
         } else if (e->key() == Qt::Key_Escape) { m_state = m_prevState; }
         break;
     case GameState::EndingScreen:
@@ -432,6 +426,16 @@ void EchoMainWindow::mousePressEvent(QMouseEvent* e)
     QPointF gp = screenToGL(e->pos());
     if (m_state == GameState::FragmentSelect || m_state == GameState::TimelinePuzzle || m_state == GameState::Tutorial) {
         if (e->button() == Qt::LeftButton) { int fi = hitTestFragment(gp);if (fi >= 0) { m_selectedFragmentIndex = fi;m_isDragging = true;m_dragStartPos = e->pos();m_dragCurrentPos = e->pos();if (m_state == GameState::FragmentSelect || m_state == GameState::Tutorial)m_state = GameState::TimelinePuzzle; } } else if (e->button() == Qt::RightButton) { m_selectedFragmentIndex = -1;m_isDragging = false; }
+    } else if (m_state == GameState::PlayerChoice) {
+        if (e->button() == Qt::LeftButton) {
+            int oi = hitTestChoiceOption(gp);
+            if (oi >= 0) {
+                if (oi == m_choiceSelectedIndex) confirmCurrentChoice();
+                else m_choiceSelectedIndex = oi;
+            }
+        }
+    } else if (m_state == GameState::Title) {
+        if (e->button() == Qt::LeftButton) { m_playerName.clear();m_state = GameState::NameInput; }
     }
 }
 
@@ -449,26 +453,19 @@ void EchoMainWindow::mouseReleaseEvent(QMouseEvent* e)
     if (e->button() == Qt::RightButton && m_state == GameState::TimelinePuzzle) { QPointF gp = screenToGL(e->pos());int si = hitTestTimelineSlot(gp);if (si >= 0)m_engine->removeFragment(si); }
 }
 
-// 信号槽
-
 void EchoMainWindow::onFragmentPlaced(int, int)
 {
     // 放置碎片 = 解谜推进，重置耳鸣指引计时
     m_stuckTime = 0.0f;
     m_tinnitusActive = false;
 }
-void EchoMainWindow::onFragmentRemoved(int, int) {}
 void EchoMainWindow::onSceneCompleted(int ch, bool d)
 {
     m_state = GameState::SceneComplete;
-    // chapter index 映射到 mentor message index（0=Prologue→msg0, 1=Ch1→msg1, ...）
-    // 最多 9 条消息，做边界保护
+    // 章节 index -> 导师消息 index（0=Prologue->msg0, 1=Ch1->msg1 ...），最多 9 条，做边界保护。
     m_mentorMessageIndex = std::min(ch, 8);
     if (d) m_glitchIntensity = 1.0f;
 }
-void EchoMainWindow::onParanoiaChanged(float) {}
-void EchoMainWindow::onAnxietyChanged(float) {}
-void EchoMainWindow::onReverseUnlocked() {}
 void EchoMainWindow::onHallucinationTriggered(const QString& m)
 {
     HallucinationText ht;ht.text = m;ht.x = (rand() % 160 - 80) / 100.0f;ht.y = (rand() % 120 - 60) / 100.0f;ht.alpha = 0.8f;ht.speedX = (rand() % 20 - 10) / 200.0f;ht.speedY = (rand() % 20 - 10) / 200.0f;ht.life = 4.0f + (rand() % 30) / 10.0f;m_hallucinations.push_back(ht);

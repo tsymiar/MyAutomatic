@@ -40,46 +40,46 @@ private:
     void renderSoulFragments(); // 灵魂碎片收集进度
     void renderDeviation();     // 原初嗡鸣偏差能量倒计时
 
-    // 辅助
     void drawTextGL(float x, float y, const QString& t, const QColor& c, float s);
     void drawRectGL(float x, float y, float w, float h, const QColor& c, bool filled);
     void drawCircleGL(float cx, float cy, float r, const QColor& c, int seg = 32);
     QPointF screenToGL(const QPoint& p) const;
     int hitSample(const QPointF& gp) const;
     int hitSlot(const QPointF& gp) const;
+    int firstFilledSlot() const;  // 无已填槽时返回 -1
 
-    // 执行推演
     void performDeduction();
 
     DeductionEngine m_engine;
     DeductionAudio m_audio;
 
-    // 推演盘状态
     std::vector<DeductionSlot> m_slots;    // 三个槽
     std::vector<Relation> m_relations;     // 关系
     int m_selectedSample = -1;             // 选中的样本（拖拽中）
     bool m_dragging = false;
-    QPointF m_dragPos;
+    QPointF m_dragPos;   // 拖拽光标（GL 坐标），画拖拽幽灵
     DeductionResult m_lastResult;
     bool m_hasResult = false;
 
-    // 心理变量滑块
     float m_greed = 0.5f;   // 贪婪
     float m_fear = 0.5f;    // 恐惧
     bool m_draggingGreed = false;
     bool m_draggingFear = false;
 
-    // 关系选择
     int m_selectedRelation = 0;
 
-    // 时间
+    // 活动焦点槽（Tab/空格的作用对象）
+    int m_activeSlot = -1;
+
+    // 待确认的不可逆操作按键及发起时间（超时自动取消）
+    int m_pendingConfirmKey = 0;
+    float m_pendingConfirmAt = 0.0f;
+
     QTimer* m_timer;
     QElapsedTimer m_elapsed;
     float m_gameTime = 0.0f;
 
-    // 窗口
     int m_winW = 800, m_winH = 600;
 
-    // 章节
     int m_chapter = 0;
 };

@@ -21,8 +21,6 @@ void DeductionEngine::initSoulFragments()
     resetSoulFragments(m_soulFragments, m_nextSoulFragmentId);
 }
 
-// 样本库构建
-
 DeductionSample DeductionEngine::addSample(const QString& name, const QString& desc,
     SampleKind kind, const QString& source, SpiritKind spiritKind)
 {
@@ -142,8 +140,6 @@ void DeductionEngine::setupFinale()
         { "第一供品：牺牲（释放一只声灵回归原初）", "第二供品：传递（把真相注入某人的梦）", "第三供品：定义（念出陈远山的灵魂基频）" });
 }
 
-// 样本查找 / 锁存
-
 DeductionSample* DeductionEngine::findSample(int id)
 {
     for (auto& s : m_samples) if (s.id == id) return &s;
@@ -161,8 +157,6 @@ bool DeductionEngine::isSampleLocked(int id) const
     for (const auto& s : m_samples) if (s.id == id) return s.locked;
     return false;
 }
-
-// 命题
 
 Proposition* DeductionEngine::currentProposition()
 {
@@ -219,7 +213,6 @@ DeductionResult DeductionEngine::deduce(const std::vector<DeductionSlot>& boardS
         desc << QString("%1[%2] 于%3").arg(s->name).arg(action).arg(anchor);
     }
 
-    // 关系描述
     QStringList relDesc;
     for (const auto& rel : relations) {
         switch (rel) {
@@ -243,7 +236,6 @@ DeductionResult DeductionEngine::deduce(const std::vector<DeductionSlot>& boardS
     baseCred -= bias * 0.2f;
     r.credibility = std::max(0.0f, std::min(1.0f, baseCred));
 
-    // 逻辑推断
     bool hasFutureAnchor = false;
     for (const auto& s : boardSlots) if (s.anchor == TimeAnchor::Future) hasFutureAnchor = true;
     if (hasFutureAnchor) {
@@ -252,15 +244,12 @@ DeductionResult DeductionEngine::deduce(const std::vector<DeductionSlot>& boardS
         r.logicInference = "推演显示：所有样本锚定在过去，这是一次对既成事实的重构。";
     }
 
-    // 记忆改写判定
     r.rewritesMemory = (r.credibility > 0.65f);
     if (r.rewritesMemory) {
         r.memoryEffects << "推演结果正在改写你的记忆库。";
     }
     return r;
 }
-
-// 心理变量
 
 void DeductionEngine::setGreedFear(float greed, float fear)
 {

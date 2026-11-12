@@ -1,17 +1,10 @@
 #include "EchoMainWindow.h"
 #include "DeductionBoardWidget.h"
-#include <QKeyEvent>
-#include <QMouseEvent>
-#include <QPainter>
-#include <QFont>
 #include <cmath>
 #include <cstdlib>
 #include <GL/gl.h>
-#include <GL/glu.h>
 
 // 结局 / 档案 / 机制特效渲染
-
-// 结局画面
 
 void EchoMainWindow::renderEndingScreen()
 {
@@ -43,8 +36,6 @@ void EchoMainWindow::renderEndingScreen()
     drawTextGL(-0.3f, -0.55f, "按 ENTER 聆听余波录音", QColor(0, 200, 255, int(b * 200)), 0.6f);
 }
 
-// 结局余波录音
-
 void EchoMainWindow::renderEpilogueScreen()
 {
     float a = m_epilogueAlpha;
@@ -55,8 +46,6 @@ void EchoMainWindow::renderEpilogueScreen()
     drawTextGL(-0.7f, 0.2f, m_epilogueText, QColor(160, 180, 200, int(a * 180)), 0.42f);
     if (m_epilogueFinished) { float b = 0.6f + 0.4f * sinf(m_gameTime * 3.0f);drawTextGL(-0.3f, -0.7f, "按 ENTER 返回标题", QColor(0, 200, 255, int(b * 200)), 0.6f); } else { drawTextGL(-0.2f, -0.7f, "……", QColor(80, 100, 130, int(a * 120)), 0.6f); }
 }
-
-// 回声碎片档案
 
 void EchoMainWindow::renderEchoArchive()
 {
@@ -122,8 +111,7 @@ void EchoMainWindow::renderResonanceAura()
 
 void EchoMainWindow::renderSilencePunishment()
 {
-    // 右侧频谱被"静音"——右耳失聪的视觉隐喻
-    // 覆盖右侧半屏的暗色遮罩，带微弱噪点，暗示右声道消失
+    // 右侧频谱静音隐喻右耳失聪：半屏暗色遮罩 + 微弱噪点，暗示右声道消失。
     float x0 = 0.0f;  // 从屏幕中心开始，覆盖右半
     float w = glHalfWidth();
     float h = glHalfHeight();
@@ -140,6 +128,11 @@ void EchoMainWindow::renderSilencePunishment()
     drawTextGL(x0 + 0.05f, 0.2f, "（右声道）", QColor(80, 100, 130, 120), 0.5f);
     drawTextGL(x0 + 0.05f, 0.1f, "……你正逐渐失去", QColor(120, 140, 170, 140), 0.4f);
     drawTextGL(x0 + 0.05f, 0.02f, "一半的声音", QColor(160, 80, 80, 160), 0.45f);
+    // 静音倾向条：失聪前的预警，放置真实碎片可缓慢回退
+    float st = m_engine->silenceTendency();
+    drawTextGL(x0 + 0.05f, 0.35f, "静音倾向", QColor(160, 80, 80, 140), 0.35f);
+    drawRectGL(x0 + 0.05f, 0.30f, 0.4f, 0.03f, QColor(40, 50, 70, 180), true);
+    drawRectGL(x0 + 0.05f, 0.30f, 0.4f * st, 0.03f, QColor(255, 80, 80, 200), true);
 }
 
 // 巧妙机制 3：碎片回声（衰减波纹）
@@ -171,8 +164,6 @@ void EchoMainWindow::renderSilenceMorse()
     drawTextGL(-0.65f, -0.55f, text, QColor(180, 200, 220, int(alpha * 200)), 0.4f);
 }
 
-// 视觉效果
-
 void EchoMainWindow::renderGlitchEffects()
 {
     float i = m_glitchIntensity;
@@ -183,7 +174,6 @@ void EchoMainWindow::renderGlitchEffects()
 
 void EchoMainWindow::renderParanoiaMeter()
 {
-    // 右侧指示器，基于可见宽度自适应，避免窄屏溢出
     // 右侧指示器，基于可见宽度自适应，避免窄屏溢出
     float mx = glHalfWidth() - 0.08f, my = 0.8f, mw = 0.04f, mh = 0.3f;
     drawRectGL(mx, my - mh, mw, mh, QColor(10, 10, 20, 120), true); drawRectGL(mx, my - mh, mw, mh, QColor(60, 80, 120, 40), false);
@@ -225,7 +215,11 @@ void EchoMainWindow::renderHallucinations()
 
 void EchoMainWindow::renderNoiseDialogues()
 {
-    for (auto& n : m_noiseTexts) drawTextGL(n.x, n.y, n.text, QColor(100, 255, 200, int(n.alpha * 120)), 0.45f);
+    // 底噪文字带缓慢横向漂浮（m_noiseOffset 为相位）——底噪是活的
+    for (auto& n : m_noiseTexts) {
+        float sway = 0.02f * sinf(m_noiseOffset + n.y * 7.0f);
+        drawTextGL(n.x + sway, n.y, n.text, QColor(100, 255, 200, int(n.alpha * 120)), 0.45f);
+    }
     // 底噪意识对话（接入 canCommuneWithNoise + noiseDialogue）
     if (m_engine->canCommuneWithNoise() && (rand() % 100) < 10) {
         QString nd = m_engine->noiseDialogue();
@@ -322,7 +316,6 @@ void EchoMainWindow::renderTinnitusGuide()
     float ux = dirX / len, uy = dirY / len;
     // 箭头起点：屏幕边缘（目标方向的反方向边缘）
     float ex = ghw * ux, ey = ghh * uy;
-    // 绘制箭头线
     drawLineGL(ex, ey, tx, ty, QColor(255, 255, 255, int(arrowAlpha * 255)), 2.0f);
     // 箭头头部（两条短斜线）
     float headLen = 0.08f;

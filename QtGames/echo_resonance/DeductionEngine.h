@@ -17,8 +17,8 @@ public:
 
     // ── 命题 ──
     const std::vector<Proposition>& propositions() const { return m_propositions; }
-    Proposition* currentProposition();     // 当前待验证命题
-    void resolveProposition(int id);       // 标记命题已推演
+    Proposition* currentProposition();     // 待验证命题
+    void resolveProposition(int id);       // 命题已推演
 
     // ── 推演核心 ──
     // 放入两个以上样本，设定时间锚点相对关系，生成推演结果
@@ -49,19 +49,16 @@ public:
     void setupChapter3();   // 第三章：推演关系
     void setupFinale();     // 终章：推演未来
 
-    // 获取当前章节
     int chapter() const { return m_chapter; }
     void setChapter(int c) { m_chapter = c; }
 
     // 离奇魔幻基因：声灵系统接口
 
-    // 声灵库
     const std::vector<SpiritInfo>& spirits() const { return m_spirits; }
     SpiritInfo* findSpirit(SpiritKind kind);
 
     // 召唤声灵（每次推演即召唤对应声灵，提升好感度）
     void summonSpirit(SpiritKind kind);
-    // 声灵好感度
     float spiritAffinity(SpiritKind kind) const;
     // 声灵反噬：过度依赖某类声灵时，它开始"润色"你的推演
     bool isSpiritBacklashing(SpiritKind kind) const;

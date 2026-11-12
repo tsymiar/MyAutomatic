@@ -7,11 +7,23 @@
 #include <cmath>
 #include <cstdlib>
 #include <GL/gl.h>
-#include <GL/glu.h>
 
 // OpenGL 初始化与图元绘制辅助
 
-// OpenGL 初始化
+// 声纹指纹：谱形由 createFragment 按可信度调制——伪造/噪声碎片的条形明显发虚
+void EchoMainWindow::drawSpectrumBars(float x, float yBase, float w, float hMax, const CommonFragment& f, int bars)
+{
+    int n = int(f.spectrumSamples.size());
+    if (n == 0) return;
+    float bw = w / float(bars);
+    QColor c = f.displayColor(); c.setAlpha(160);
+    for (int i = 0; i < bars; ++i) {
+        float v = f.spectrumSamples[size_t(i * n / bars)];
+        if (v < 0.02f) v = 0.02f;
+        if (v > 1.5f) v = 1.5f;
+        drawRectGL(x + bw * float(i), yBase, bw * 0.7f, v * hMax * 0.66f, c, true);
+    }
+}
 
 void EchoMainWindow::initializeGL()
 {
@@ -33,8 +45,6 @@ void EchoMainWindow::resizeGL(int w, int h)
     else glOrtho(-1.0, 1.0, -1.0 / aspect, 1.0 / aspect, -1.0, 1.0);
     glMatrixMode(GL_MODELVIEW);
 }
-
-// 绘制辅助
 
 void EchoMainWindow::drawTextGL(float x, float y, const QString& t, const QColor& c, float s)
 {

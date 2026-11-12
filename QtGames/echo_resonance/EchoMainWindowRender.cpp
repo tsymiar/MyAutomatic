@@ -1,17 +1,10 @@
 #include "EchoMainWindow.h"
 #include "DeductionBoardWidget.h"
-#include <QKeyEvent>
-#include <QMouseEvent>
-#include <QPainter>
-#include <QFont>
 #include <cmath>
 #include <cstdlib>
 #include <GL/gl.h>
-#include <GL/glu.h>
 
 // 主场景渲染（标题 → 玩家选择）
-
-// 渲染主入口
 
 void EchoMainWindow::paintGL()
 {
@@ -50,8 +43,6 @@ void EchoMainWindow::paintGL()
     if (m_tinnitusActive) renderTinnitusGuide();
 }
 
-// 标题画面
-
 void EchoMainWindow::renderTitle()
 {
     for (int i = 0;i < 5;++i) { float r = 0.3f + i * 0.12f + 0.02f * sinf(m_gameTime * 1.5f + i), a = 0.15f - i * 0.025f;drawCircleGL(0, 0.1f, r, QColor(0, 150, 255, int(a * 255)), 64); }
@@ -67,8 +58,6 @@ void EchoMainWindow::renderTitle()
         if (i > 0) { float t2 = (i - 1) / 200.0f, x2 = -0.95f + t2 * 1.9f, y2 = -0.85f + 0.03f * sinf(t2 * 30.0f + m_gameTime * 4.0f) * (1.0f + 0.5f * sinf(m_gameTime));drawLineGL(x2, y2, x, y, QColor(255, 40, 40, 30), 0.5f); }
     }
 }
-
-// 角色名输入
 
 void EchoMainWindow::renderNameInput()
 {
@@ -91,15 +80,12 @@ void EchoMainWindow::renderNameInput()
     }
 }
 
-// 教程界面
-
 void EchoMainWindow::renderTutorial()
 {
     drawTextGL(-0.9f, 0.85f, "序章：入职第7天 — 教程", QColor(0, 200, 255, 220), 1.0f);
     drawTextGL(-0.9f, 0.72f, "目标：还原昨天下午茶水间的对话", QColor(150, 200, 220, 180), 0.5f);
     drawTextGL(-0.9f, 0.65f, "操作：点击左侧碎片 → 拖放到时间轴槽位 → 按 TAB 切换到时间轴", QColor(120, 160, 200, 180), 0.4f);
     drawTextGL(-0.9f, 0.58f, "蓝色碎片=真实残留 | 青色=可疑 | 黄色=噪声 | 红色=伪造", QColor(100, 140, 180, 150), 0.38f);
-    // 锚点提示
     AnchorType a = m_engine->currentAnchor();
     QString an = "锚点音：";
     switch (a) {
@@ -112,8 +98,6 @@ void EchoMainWindow::renderTutorial()
     drawTextGL(0.1f, -0.85f, "按 TAB 开始拼接 | ESC 退出", QColor(100, 120, 140, 120), 0.4f);
 }
 
-// 章节介绍
-
 void EchoMainWindow::renderChapterIntro()
 {
     float a = m_chapterIntroAlpha;
@@ -124,8 +108,6 @@ void EchoMainWindow::renderChapterIntro()
     drawTextGL(-0.8f, 0.2f, desc, QColor(180, 200, 220, int(a * 180)), 0.42f);
     if (a > 0.8f) { float b = 0.6f + 0.4f * sinf(m_gameTime * 3.0f);drawTextGL(-0.3f, -0.5f, "按 ENTER 继续", QColor(0, 200, 255, int(b * 200)), 0.6f); }
 }
-
-// 碎片选择界面
 
 void EchoMainWindow::renderFragmentSelect()
 {
@@ -156,6 +138,8 @@ void EchoMainWindow::renderFragmentSelect()
         }
         QString d = QString("%1秒").arg(f.durationSec, 0, 'f', 1);
         drawTextGL(px + pw - 0.12f, y - 0.04f, d, QColor(150, 150, 150, 150), 0.35f);
+        // 声纹指纹迷你频谱：真实碎片谱形干净，伪造/噪声碎片发虚，供玩家肉眼比对
+        drawSpectrumBars(px + pw - 0.26f, y - 0.015f, 0.11f, 0.07f, f, 12);
     }
     QString cs = QString("可用碎片: %1 / %2 (已放置: %3)").arg(tf - m_engine->placedFragmentCount()).arg(tf).arg(m_engine->placedFragmentCount());
     drawTextGL(-0.9f, -0.9f, cs, QColor(120, 140, 160, 150), 0.4f);
@@ -171,6 +155,9 @@ void EchoMainWindow::renderFragmentSelect()
             QString rd = m_engine->getReverseDescription(f.id);
             if (!rd.isEmpty()) drawTextGL(0.1f, 0.24f, "逆向后揭示: " + rd, QColor(255, 150, 220, 200), 0.35f);
         }
+        // 放大的声纹指纹（陈远山的教导：先看谱，再下判断）
+        drawTextGL(0.1f, 0.08f, "声纹指纹:", QColor(120, 140, 160, 160), 0.35f);
+        drawSpectrumBars(0.1f, 0.03f, 0.5f, 0.25f, f, 20);
     }
     drawTextGL(0.1f, -0.6f, "ESC: 返回 | TAB: 时间轴 | R: 逆向播放 | E: 回声档案", QColor(100, 120, 140, 120), 0.4f);
     // 低频警告（接入 getLowFreqWarning）
@@ -180,8 +167,6 @@ void EchoMainWindow::renderFragmentSelect()
         drawTextGL(0.1f, -0.75f, lfw, QColor(255, 80, 80, int(a * 255)), 0.4f);
     }
 }
-
-// 时间轴拼图
 
 void EchoMainWindow::renderTimelinePuzzle()
 {
@@ -221,7 +206,10 @@ void EchoMainWindow::renderTimelinePuzzle()
     }
     if (m_isDragging && m_selectedFragmentIndex >= 0) {
         auto& f = frags[m_selectedFragmentIndex];
+        QPointF sp = screenToGL(QPoint(int(m_dragStartPos.x()), int(m_dragStartPos.y())));
         QPointF gp = screenToGL(QPoint(int(m_dragCurrentPos.x()), int(m_dragCurrentPos.y())));
+        // 从拾取点到光标的轨迹线：长距离拖拽时不丢失"拿的是哪块"的视线
+        drawLineGL(sp.x(), sp.y(), gp.x(), gp.y(), QColor(0, 220, 200, 60), 1.5f);
         QColor dc = f.displayColor();dc.setAlpha(120);drawRectGL(gp.x() - 0.04f, gp.y() - 0.03f, 0.08f, 0.06f, dc, true);drawTextGL(gp.x() - 0.03f, gp.y(), f.name, f.displayColor(), 0.35f);
     }
     // 锚点状态提示（接入 isAnchorCorrect）
@@ -231,8 +219,6 @@ void EchoMainWindow::renderTimelinePuzzle()
     }
     drawTextGL(-0.9f, -0.9f, "ESC: 返回碎片选择 | R: 重置 | 右键槽位移除 | TAB: 逆向播放选中", QColor(100, 120, 140, 120), 0.35f);
 }
-
-// 场景完成
 
 void EchoMainWindow::renderSceneComplete()
 {
@@ -247,6 +233,11 @@ void EchoMainWindow::renderSceneComplete()
     drawTextGL(-0.3f, 0.3f, QString("声纹一致性: %1%").arg(int(coh * 100)), d ? QColor(255, 120, 60) : QColor(0, 200, 150), 0.7f);
     QString desc = d ? "你使用了冲突的声纹碎片强行拼接。\n现实出现了裂痕——但裂痕中，有时会透出真相。" : "音频场景完整重现。但请记住导师的警告：别相信你听到的任何声音。";
     drawTextGL(-0.5f, 0.1f, desc, QColor(180, 200, 220, 200), 0.45f);
+    // 场景回溯小结（接入 currentScene）：交代本章重建的地点
+    AudioScene sc = m_engine->currentScene();
+    drawTextGL(-0.5f, -0.42f, QString("场景回溯 · 第%1章 · %2 — %3")
+                   .arg(m_engine->chapterNumber()).arg(sc.name, sc.description),
+               d ? QColor(255, 140, 100, 190) : QColor(140, 180, 220, 190), 0.4f);
     if (d || m_engine->paranoiaLevel() > 0.5f) { float a = 0.5f + 0.3f * sinf(m_gameTime * 2.0f);QString msg = m_engine->getMentorMessage(m_mentorMessageIndex);drawTextGL(-0.5f, -0.2f, "\"" + msg + "\"", QColor(255, 200, 100, int(a * 255)), 0.55f); }
     // 角色对话（接入 getCharacterDialogue，扭曲版本下浮现角色内心）
     if (d) {
@@ -263,8 +254,6 @@ void EchoMainWindow::renderSceneComplete()
     drawTextGL(-0.3f, -0.5f, "ENTER: 继续 | R: 重新拼接", QColor(150, 180, 200, 180), 0.5f);
     if (d) { float b = sinf(m_gameTime * 4.0f) > 0 ? 1.0f : 0.3f;drawTextGL(-0.2f, -0.6f, "提示：扭曲版本可能揭示了隐藏线索", QColor(255, 80, 40, int(b * 200)), 0.4f); }
 }
-
-// 导师信息
 
 void EchoMainWindow::renderMentorMessage()
 {
@@ -283,13 +272,10 @@ void EchoMainWindow::renderMentorMessage()
     }
 }
 
-// 玩家选择界面
-
 void EchoMainWindow::renderPlayerChoice()
 {
     glClearColor(0.03f, 0.03f, 0.06f, 1.0f);glClear(GL_COLOR_BUFFER_BIT);glClearColor(0.05f, 0.05f, 0.08f, 1.0f);
-    // prompt 放在顶部，选项整体下移，避免重叠
-    // prompt 多行展开从 y=0.8 向下，选项从下方固定区域开始
+    // prompt 置顶（多行从 y=0.8 向下展开），选项从下方固定区域排布，避免重叠。
     drawTextGL(-0.8f, 0.8f, m_choicePrompt, QColor(0, 200, 255, 220), 0.5f);
     // 计算 prompt 占用行数，动态下移选项起始位置
     int promptLines = m_choicePrompt.count('\n') + 1;
@@ -313,5 +299,5 @@ void EchoMainWindow::renderPlayerChoice()
         // 选项文字 y 对齐到框内中部
         drawTextGL(-0.55f, y - itemH / 2.0f - 0.015f, QString("%1. %2").arg(i + 1).arg(m_choiceOptions[i]), QColor(200, 220, 255, 200), 0.45f);
     }
-    drawTextGL(-0.3f, -0.85f, "↑↓ 选择 | ENTER 确认 | ESC 返回", QColor(150, 180, 200, 180), 0.4f);
+    drawTextGL(-0.3f, -0.85f, "↑↓/数字键/鼠标点击 选择 | ENTER 确认 | ESC 返回", QColor(150, 180, 200, 180), 0.4f);
 }

@@ -6,8 +6,6 @@
 #include <cmath>
 #include <GL/gl.h>
 
-// 构造 / 析构
-
 DeductionBoardWidget::DeductionBoardWidget(QWidget* parent)
     : QOpenGLWidget(parent)
 {
@@ -37,8 +35,9 @@ DeductionBoardWidget::~DeductionBoardWidget()
 void DeductionBoardWidget::loadChapter(int chapter)
 {
     m_chapter = chapter;
-    // 清空推演盘
     for (auto& s : m_slots) { s.sampleId = -1; s.action = Intervention::Play; s.anchor = TimeAnchor::Past; }
+    m_activeSlot = -1;
+    m_pendingConfirmKey = 0;
     m_hasResult = false;
     switch (chapter) {
     case 0: m_engine.setupPrologue(); break;
@@ -49,8 +48,6 @@ void DeductionBoardWidget::loadChapter(int chapter)
     default: m_engine.setupPrologue(); break;
     }
 }
-
-// OpenGL
 
 void DeductionBoardWidget::initializeGL()
 {
@@ -115,10 +112,8 @@ void DeductionBoardWidget::renderSamples()
         drawTextGL(px + 0.01f, y - 0.02f, s.name, s.color(), 0.4f);
         drawTextGL(px + 0.01f, y - 0.06f, "[" + s.kindLabel() + "] " + s.source, s.color().lighter(130), 0.28f);
         if (s.locked) drawTextGL(px + 0.28f, y - 0.06f, "🔒", QColor(255, 200, 100, 220), 0.35f);
-        // 回声强化提示
         if (s.basePitch > 1.01f) drawTextGL(px + 0.01f, y - 0.09f, "▲音高+" + QString::number(s.basePitch, 'f', 1), QColor(255, 120, 120, 200), 0.25f);
     }
-    // 锁存提示
     drawTextGL(-0.95f, -0.9f, "L: 锁存选中样本（防负片覆盖）", QColor(100, 130, 160, 140), 0.3f);
 }
 
@@ -126,7 +121,8 @@ void DeductionBoardWidget::renderSamples()
 
 void DeductionBoardWidget::renderBoard()
 {
-    drawTextGL(-0.45f, 0.9f, "声纹推演盘", QColor(0, 220, 200, 230), 0.8f);
+    static const char* chapterNames[5] = { "序章", "第1章", "第2章", "第3章", "终章" };
+    drawTextGL(-0.45f, 0.9f, QString("声纹推演盘  [%1]  N/P 切换章节").arg(chapterNames[m_chapter % 5]), QColor(0, 220, 200, 230), 0.8f);
     static const char* slotNames[3] = { "样本", "干预动作", "时间锚点" };
     static const char* actions[] = { "播放", "删减", "变调", "伪造" };
     static const char* anchors[] = { "过去", "现在", "未来" };
@@ -134,9 +130,10 @@ void DeductionBoardWidget::renderBoard()
     float bx = -0.45f, by = 0.7f, bw = 0.9f, bh = 0.18f, gap = 0.06f;
     for (int i = 0; i < 3; ++i) {
         float y = by - (bh + gap) * i;
-        // 槽背景
         drawRectGL(bx, y - bh, bw, bh, QColor(15, 20, 35, 160), true);
-        QColor bc = (m_dragging && m_selectedSample >= 0) ? QColor(0, 220, 200, 180) : QColor(60, 90, 130, 80);
+        QColor bc = (m_dragging && m_selectedSample >= 0) ? QColor(0, 220, 200, 180)
+                  : (i == m_activeSlot) ? QColor(255, 210, 100, 200)
+                  : QColor(60, 90, 130, 80);
         drawRectGL(bx, y - bh, bw, bh, bc, false);
         drawTextGL(bx + 0.02f, y - 0.03f, QString("槽%1：%2").arg(i + 1).arg(slotNames[i]), QColor(150, 180, 210, 170), 0.35f);
 
@@ -153,7 +150,6 @@ void DeductionBoardWidget::renderBoard()
         }
     }
 
-    // 关系选择
     static const char* rels[] = { "掩盖", "激发", "反转", "同步" };
     drawTextGL(bx, by - 3 * (bh + gap) - 0.02f, "相对关系：", QColor(150, 180, 210, 170), 0.35f);
     for (int i = 0; i < 4; ++i) {
@@ -162,9 +158,25 @@ void DeductionBoardWidget::renderBoard()
         drawTextGL(rx, by - 3 * (bh + gap) - 0.02f, QString("[%1]").arg(rels[i]), rc, 0.35f);
     }
 
-    // 推演按钮提示
     float blink = 0.5f + 0.3f * sinf(m_gameTime * 3.0f);
-    drawTextGL(bx, by - 3 * (bh + gap) - 0.2f, "ENTER: 执行推演  |  数字1-4切换关系  |  Tab: 切换动作/锚点", QColor(0, 220, 200, int(blink * 200)), 0.35f);
+    drawTextGL(bx, by - 3 * (bh + gap) - 0.2f, "ENTER: 执行推演  |  数字1-4切换关系  |  Tab/空格: 切换黄色焦点槽的动作/锚点", QColor(0, 220, 200, int(blink * 200)), 0.35f);
+    if (m_chapter == 3)
+        drawTextGL(bx, by - 3 * (bh + gap) - 0.3f, "5/6/7: 与镜/默/谎声灵立约（按两次确认，不可撤销）", QColor(180, 150, 220, 180), 0.3f);
+    if (m_chapter == 4)
+        drawTextGL(bx, by - 3 * (bh + gap) - 0.3f, "选中样本后按 R: 释放声灵（按两次确认，不可撤销）", QColor(180, 150, 220, 180), 0.3f);
+    if (m_pendingConfirmKey != 0 && m_gameTime - m_pendingConfirmAt < 4.0f) {
+        float a = 0.5f + 0.3f * sinf(m_gameTime * 6.0f);
+        drawTextGL(bx, by - 3 * (bh + gap) - 0.42f, "⚠ 再按一次相同按键确认（其他按键取消）", QColor(255, 100, 100, int(a * 255)), 0.35f);
+    }
+
+    // 拖拽幽灵：拖着样本移动时名字跟随光标
+    if (m_dragging && m_selectedSample >= 0) {
+        const auto& samples = m_engine.samples();
+        if (m_selectedSample < int(samples.size())) {
+            QColor gc = samples[size_t(m_selectedSample)].color(); gc.setAlpha(200);
+            drawTextGL(m_dragPos.x() + 0.02f, m_dragPos.y(), "▶ " + samples[size_t(m_selectedSample)].name, gc, 0.4f);
+        }
+    }
 }
 
 // 命题 + 心理变量滑块（顶部右侧）
@@ -174,30 +186,28 @@ void DeductionBoardWidget::renderProposition()
     Proposition* p = m_engine.currentProposition();
     if (p) {
         drawTextGL(0.5f, 0.9f, "待验证命题", QColor(255, 210, 100, 220), 0.6f);
-        // 命题自动换行
         drawTextGL(0.5f, 0.8f, p->text, QColor(230, 210, 170, 200), 0.4f);
     }
 
     // 心理变量滑块（贪婪/恐惧）
     if (m_chapter >= 1) {
         drawTextGL(0.5f, 0.45f, "陈远山动机锚定偏差", QColor(180, 160, 200, 200), 0.45f);
-        // 贪婪滑块
         drawTextGL(0.5f, 0.38f, QString("贪婪 %1%").arg(int(m_greed * 100)), QColor(255, 150, 80, 200), 0.35f);
         drawRectGL(0.5f, 0.32f, 0.5f, 0.03f, QColor(40, 40, 60, 180), true);
         drawRectGL(0.5f, 0.32f, 0.5f * m_greed, 0.03f, QColor(255, 150, 80, 220), true);
-        // 恐惧滑块
         drawTextGL(0.5f, 0.24f, QString("恐惧 %1%").arg(int(m_fear * 100)), QColor(150, 160, 255, 200), 0.35f);
         drawRectGL(0.5f, 0.18f, 0.5f, 0.03f, QColor(40, 40, 60, 180), true);
         drawRectGL(0.5f, 0.18f, 0.5f * m_fear, 0.03f, QColor(150, 160, 255, 220), true);
     }
 }
 
-// 推演结果
-
 void DeductionBoardWidget::renderResult()
 {
     drawTextGL(-0.95f, -0.35f, "推演结果", QColor(0, 220, 160, 220), 0.55f);
     drawTextGL(-0.95f, -0.45f, m_lastResult.audioDescription, QColor(160, 220, 200, 180), 0.35f);
+    // 无 Qt Multimedia 时明确告知当前是视觉模拟，避免玩家等待声音
+    drawTextGL(-0.95f, -0.40f, m_audio.hasAudioOutput() ? "♪ 真实音频输出" : "♪ 视觉模拟（未检测到音频模块）",
+               QColor(120, 160, 180, 130), 0.28f);
     drawTextGL(-0.95f, -0.58f, m_lastResult.logicInference, QColor(200, 200, 220, 180), 0.35f);
     drawTextGL(-0.95f, -0.68f, QString("心理可信度：%1%").arg(int(m_lastResult.credibility * 100)),
         m_lastResult.credibility > 0.65f ? QColor(255, 200, 80, 220) : QColor(150, 180, 200, 200), 0.4f);
@@ -234,7 +244,6 @@ void DeductionBoardWidget::renderSpirits()
         drawTextGL(0.88f, baseY - 0.04f, sp.name, sp.color(), 0.3f);
         drawTextGL(0.88f, baseY - 0.09f, QString("好感 %1%").arg(int(sp.affinity * 100)),
                    sp.color(), 0.28f);
-        // 反噬提示
         if (m_engine.isSpiritBacklashing(sp.kind)) {
             float a = 0.5f + 0.3f * sinf(m_gameTime * 4.0f);
             drawTextGL(0.88f, baseY - 0.14f, "⚠ 声灵反噬中", QColor(255, 100, 100, int(a * 255)), 0.28f);
@@ -254,7 +263,6 @@ void DeductionBoardWidget::renderSoulFragments()
 
     drawTextGL(-0.95f, -0.55f, QString("灵魂碎片 %1/%2").arg(collected).arg(total),
                QColor(255, 220, 120, 200), 0.4f);
-    // 碎片排成一排（发光几何体）
     float startX = -0.95f, pieceW = 0.06f, gap = 0.02f;
     for (int i = 0; i < total; ++i) {
         float x = startX + i * (pieceW + gap);
@@ -265,7 +273,6 @@ void DeductionBoardWidget::renderSoulFragments()
         }
         drawRectGL(x, -0.62f, pieceW, 0.06f, c, true);
     }
-    // 集齐提示
     if (m_engine.allSoulFragmentsCollected()) {
         float a = 0.5f + 0.4f * sinf(m_gameTime * 2.0f);
         drawTextGL(-0.95f, -0.72f, "碎片拼合成一张脸——那是林薇母亲的最终模样。",
@@ -286,11 +293,8 @@ void DeductionBoardWidget::renderDeviation()
     }
 }
 
-// 执行推演
-
 void DeductionBoardWidget::performDeduction()
 {
-    // 过滤空槽
     std::vector<DeductionSlot> filled;
     for (const auto& s : m_slots) if (s.sampleId >= 0) filled.push_back(s);
     if (filled.size() < 2) {
@@ -302,7 +306,6 @@ void DeductionBoardWidget::performDeduction()
         return;
     }
 
-    // 记录锚点偏好
     for (const auto& s : filled) m_engine.recordAnchor(s.anchor);
     m_engine.setGreedFear(m_greed, m_fear);
     // 偏差能量累计（原初嗡鸣倒计时）
@@ -311,7 +314,6 @@ void DeductionBoardWidget::performDeduction()
     m_lastResult = m_engine.deduce(filled, m_relations);
     m_hasResult = true;
 
-    // 合成音频描述
     std::vector<AudioLayer> layers;
     for (const auto& s : filled) {
         auto* smp = m_engine.findSample(s.sampleId);
@@ -326,12 +328,9 @@ void DeductionBoardWidget::performDeduction()
     QString audioDesc = m_audio.synthesize(layers, false);
     m_lastResult.audioDescription += " | " + audioDesc;
 
-    // 命题已推演
     Proposition* p = m_engine.currentProposition();
     if (p) m_engine.resolveProposition(p->id);
 }
-
-// 输入处理
 
 QPointF DeductionBoardWidget::screenToGL(const QPoint& p) const
 {
@@ -364,6 +363,13 @@ int DeductionBoardWidget::hitSlot(const QPointF& gp) const
     return -1;
 }
 
+int DeductionBoardWidget::firstFilledSlot() const
+{
+    for (int i = 0; i < int(m_slots.size()); ++i)
+        if (m_slots[i].sampleId >= 0) return i;
+    return -1;
+}
+
 void DeductionBoardWidget::keyPressEvent(QKeyEvent* e)
 {
     switch (e->key()) {
@@ -381,35 +387,61 @@ void DeductionBoardWidget::keyPressEvent(QKeyEvent* e)
         }
         break;
     case Qt::Key_Tab: {
-        // 切换选中槽的动作/锚点
-        for (int i = 0; i < 3; ++i) {
-            if (m_slots[i].sampleId >= 0) {
-                m_slots[i].action = static_cast<Intervention>((static_cast<int>(m_slots[i].action) + 1) % static_cast<int>(Intervention::Count));
-            }
+        if (m_activeSlot < 0 || m_activeSlot >= int(m_slots.size()) || m_slots[m_activeSlot].sampleId < 0)
+            m_activeSlot = firstFilledSlot();
+        if (m_activeSlot >= 0) {
+            auto& slot = m_slots[m_activeSlot];
+            slot.action = static_cast<Intervention>((static_cast<int>(slot.action) + 1) % static_cast<int>(Intervention::Count));
         }
         break;
     }
+    case Qt::Key_Space: {
+        if (m_activeSlot < 0 || m_activeSlot >= int(m_slots.size()) || m_slots[m_activeSlot].sampleId < 0)
+            m_activeSlot = firstFilledSlot();
+        if (m_activeSlot >= 0) {
+            auto& slot = m_slots[m_activeSlot];
+            slot.anchor = static_cast<TimeAnchor>((static_cast<int>(slot.anchor) + 1) % static_cast<int>(TimeAnchor::Count));
+        }
+        break;
+    }
+    case Qt::Key_N:
+        if (m_chapter < 4) loadChapter(m_chapter + 1);
+        break;
+    case Qt::Key_P:
+        if (m_chapter > 0) loadChapter(m_chapter - 1);
+        break;
     case Qt::Key_Up: m_fear = std::min(1.0f, m_fear + 0.05f); break;
     case Qt::Key_Down: m_fear = std::max(0.0f, m_fear - 0.05f); break;
     case Qt::Key_Left: m_greed = std::max(0.0f, m_greed - 0.05f); break;
     case Qt::Key_Right: m_greed = std::min(1.0f, m_greed + 0.05f); break;
     case Qt::Key_5:
-        if (m_chapter == 3) m_engine.makeContract(ContractSpirit::Mirror);
-        break;
     case Qt::Key_6:
-        if (m_chapter == 3) m_engine.makeContract(ContractSpirit::Silence);
-        break;
-    case Qt::Key_7:
-        if (m_chapter == 3) m_engine.makeContract(ContractSpirit::Lie);
-        break;
-    case Qt::Key_R:
-        // 释放声灵（终章牺牲供品）：释放当前选中样本关联的声灵
-        if (m_chapter == 4 && m_selectedSample >= 0 && m_selectedSample < int(m_engine.samples().size())) {
-            SpiritKind sk = m_engine.samples()[m_selectedSample].spiritKind;
-            m_engine.releaseSpirit(sk);
+    case Qt::Key_7: {
+        if (m_chapter != 3) break;
+        // 契约不可撤销，需二次确认
+        static const ContractSpirit contracts[3] = { ContractSpirit::Mirror, ContractSpirit::Silence, ContractSpirit::Lie };
+        if (m_pendingConfirmKey == e->key() && m_gameTime - m_pendingConfirmAt < 4.0f) {
+            m_engine.makeContract(contracts[e->key() - Qt::Key_5]);
+            m_pendingConfirmKey = 0;
+        } else {
+            m_pendingConfirmKey = e->key();
+            m_pendingConfirmAt = m_gameTime;
         }
         break;
     }
+    case Qt::Key_R:
+        // 释放声灵不可撤销，需二次确认
+        if (m_chapter != 4 || m_selectedSample < 0 || m_selectedSample >= int(m_engine.samples().size())) break;
+        if (m_pendingConfirmKey == Qt::Key_R && m_gameTime - m_pendingConfirmAt < 4.0f) {
+            m_engine.releaseSpirit(m_engine.samples()[m_selectedSample].spiritKind);
+            m_pendingConfirmKey = 0;
+        } else {
+            m_pendingConfirmKey = Qt::Key_R;
+            m_pendingConfirmAt = m_gameTime;
+        }
+        break;
+    }
+    if (e->key() != m_pendingConfirmKey) m_pendingConfirmKey = 0;
     update();
 }
 
@@ -422,8 +454,10 @@ void DeductionBoardWidget::mousePressEvent(QMouseEvent* e)
             m_selectedSample = si;
             m_dragging = true;
             m_dragPos = gp;
+        } else {
+            int slotIdx = hitSlot(gp);
+            if (slotIdx >= 0) m_activeSlot = slotIdx;
         }
-        // 检查滑块
         if (m_chapter >= 1) {
             if (gp.x() >= 0.5f && gp.x() <= 1.0f && gp.y() >= 0.30f && gp.y() <= 0.36f) {
                 m_draggingGreed = true; m_greed = (gp.x() - 0.5f) / 0.5f;
@@ -433,7 +467,6 @@ void DeductionBoardWidget::mousePressEvent(QMouseEvent* e)
             }
         }
     } else if (e->button() == Qt::RightButton) {
-        // 右键清除槽
         int slotIdx = hitSlot(gp);
         if (slotIdx >= 0) { m_slots[slotIdx].sampleId = -1; }
         m_selectedSample = -1;
@@ -458,8 +491,7 @@ void DeductionBoardWidget::mouseReleaseEvent(QMouseEvent* e)
         int slotIdx = hitSlot(gp);
         if (slotIdx >= 0) {
             m_slots[slotIdx].sampleId = m_engine.samples()[m_selectedSample].id;
-            // 拖入槽后自动应用当前关系作为该槽的锚点
-            m_slots[slotIdx].anchor = static_cast<TimeAnchor>(slotIdx % 3);
+            m_activeSlot = slotIdx;
         }
         m_dragging = false;
         m_selectedSample = -1;
@@ -467,8 +499,6 @@ void DeductionBoardWidget::mouseReleaseEvent(QMouseEvent* e)
     m_draggingGreed = false;
     m_draggingFear = false;
 }
-
-// 绘制辅助
 
 void DeductionBoardWidget::drawTextGL(float x, float y, const QString& t, const QColor& c, float s)
 {

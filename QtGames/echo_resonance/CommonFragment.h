@@ -8,8 +8,7 @@
 #define ECHO_PI 3.141592653589793f
 #endif
 
-// 玩家角色名的统一默认值与占位符
-// 所有叙事文案中用 {name} 占位，运行时统一替换为玩家输入的名字（空则用此默认值）
+// 玩家名默认占位符：叙事文案用 {name}，运行时替换为玩家输入（空则用默认值）。
 inline const QString DEFAULT_PLAYER_NAME = QStringLiteral("小周");
 inline const QString PLAYER_NAME_PLACEHOLDER = QStringLiteral("{name}");
 
@@ -92,7 +91,7 @@ struct CommonFragment {
     bool isPlaced = false;
     int timelineSlot = -1;
     int id = 0;
-    std::vector<float> spectrumSamples;
+    std::vector<float> spectrumSamples;  // 声纹指纹：迷你频谱条用；伪造/噪声碎片的谱形发虚，是视觉线索
     bool isAnchor = false;        // 是否为锚点音
     AnchorType anchorType = AnchorType::None;
     bool isReversed = false;      // 是否已逆向播放
@@ -124,12 +123,11 @@ struct CommonFragment {
 struct TimelineSlot {
     int index = 0;
     int fragmentId = -1;
-    bool isLocked = false;
     bool isAnchorSlot = false;     // 是否为锚点槽位
     AnchorType requiredAnchor = AnchorType::None;
 };
 
-// ── 音频场景 ──
+// ── 音频场景（场景回溯小结：SceneComplete 界面展示本章重建的"地点"）──
 struct AudioScene {
     QString name;
     QString description;
@@ -202,7 +200,7 @@ struct FragmentEcho {
 // ── 老刘静默摩斯（沉默中浮现的声音）──
 struct SilenceMorse {
     QString message;    // 摩斯信息
-    float threshold = 0.0f;    // 需要的静默时长
+    float threshold = 8.0f;    // 需要的静默时长（秒）
     bool revealed = false;
 };
 
@@ -212,12 +210,4 @@ enum class ChoicePoint {
     HeYueHostage,   // 第三章：何悦被囚禁
     Identity,       // 第三章：自我声纹认同
     LifeTransfer,   // 第四章：林薇生死
-};
-
-// ── 动态文案模板 ──
-// 用 {player} 占位玩家名，用 {suffix} 占位根据状态动态拼接的附加段落
-struct ChoiceTemplate {
-    ChoicePoint point = ChoicePoint::PrologueSigh;
-    QString promptBase;      // 提示基础文本（含 {player} 占位符）
-    QStringList options;     // 选项（含 {player} 占位符）
 };

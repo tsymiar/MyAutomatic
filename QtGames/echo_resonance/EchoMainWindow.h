@@ -6,7 +6,6 @@
 #include <QPointF>
 #include "EchoEngine.h"
 #include <vector>
-#include <deque>
 
 class DeductionBoardWidget;  // 声纹推演盘
 
@@ -95,15 +94,19 @@ private:
     void drawRectGL(float x, float y, float w, float h, const QColor& color, bool filled = true);
     void drawLineGL(float x1, float y1, float x2, float y2, const QColor& color, float width = 1.0f);
     void drawCircleGL(float cx, float cy, float r, const QColor& color, int segments = 32);
+    // 声纹指纹：按碎片的 spectrumSamples 在 [x, x+w] 画一排竖条（基线 yBase 向上）
+    void drawSpectrumBars(float x, float yBase, float w, float hMax, const CommonFragment& f, int bars);
     QPointF screenToGL(const QPoint& screenPos) const;
     // GL 可视区域的半宽/半高（随窗口宽高比变化，供坐标换算与边缘元素布局）
     float glHalfWidth() const;
     float glHalfHeight() const;
     int hitTestFragment(const QPointF& glPos) const;
     int hitTestTimelineSlot(const QPointF& glPos) const;
+    int hitTestChoiceOption(const QPointF& glPos) const;
 
     // ── 选择界面辅助 ──
-    void showChoice(const QString& prompt, const QStringList& options);
+    void showChoice(const EchoEngine::ChoiceContent& cc);
+    void confirmCurrentChoice();  // 键盘与鼠标共用的确认入口
     void showChapterIntro();
     // 推进到下一章节（生成碎片 + 章节介绍；终章之后进入结局）
     void advanceToNextChapter();
@@ -114,7 +117,7 @@ private:
     GameState m_prevState = GameState::Title;
     int m_selectedFragmentIndex = -1;
     bool m_isDragging = false;
-    QPointF m_dragStartPos, m_dragCurrentPos;
+    QPointF m_dragStartPos, m_dragCurrentPos;  // 起点画拖拽轨迹线、画拖拽幽灵点位
 
     // ── 计时 ──
     QTimer* m_tickTimer;
@@ -127,7 +130,7 @@ private:
     std::vector<HallucinationText> m_hallucinations;
     std::vector<FloatingNoise> m_noiseTexts;
     float m_glitchIntensity = 0.0f;
-    float m_noiseOffset = 0.0f;
+    float m_noiseOffset = 0.0f;   // 底噪文字的漂浮相位
     float m_paranoiaDisplay = 0.0f;
     float m_anxietyDisplay = 0.0f;
     float m_bgFlicker = 0.0f;
@@ -144,6 +147,7 @@ private:
     QString m_playerName;
 
     // ── 选择界面 ──
+    EchoEngine::ChoiceContent m_currentChoice;
     QString m_choicePrompt;
     QStringList m_choiceOptions;
     int m_choiceSelectedIndex = 0;

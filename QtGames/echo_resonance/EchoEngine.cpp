@@ -65,7 +65,6 @@ void EchoEngine::initCharacters()
         {"底噪", "存在于所有音频文件背景中的0.5Hz低频",
          "这是林薇提前植入的'唤醒信号'。当玩家拼出足够多的'错误版本'时，底噪会逐渐增强，最终与你直接对话。"}
     };
-    // 角色对话
     m_characterDialogues["林薇"] = QStringList{
         "核心盘我藏好了，你没机会的。",
         "{name}，如果你听到这段话，说明我已经不在了。",
@@ -245,8 +244,6 @@ void EchoEngine::initEpilogues()
     };
 }
 
-// 碎片生成
-
 void EchoEngine::initFragmentTypes()
 {
     m_fragments.clear();
@@ -259,7 +256,7 @@ void EchoEngine::initFragmentTypes()
     int slotCount = 4 + static_cast<int>(m_currentChapter) / 2;
     if (m_currentChapter >= GameChapter::Chapter4) slotCount = 6;
     for (int i = 0; i < slotCount; ++i) {
-        m_timeline.push_back({ i, -1, false, false, AnchorType::None });
+        m_timeline.push_back({ i, -1, false, AnchorType::None });
     }
 }
 
@@ -308,7 +305,7 @@ CommonFragment EchoEngine::createFragment(FragmentType type, Credibility cred, f
         default: break;
         }
     }
-    // 频谱采样
+    // 声纹指纹：伪造碎片谱形弱且抖，噪声碎片谱形发虚——渲染端画迷你频谱供玩家比对
     int sampleCount = 32;
     frag.spectrumSamples.resize(sampleCount);
     for (int i = 0; i < sampleCount; ++i) {
@@ -341,8 +338,7 @@ void EchoEngine::generateFragments(GameChapter chapter)
     m_echoes.clear();
     m_fragmentPlaceCount.clear();
     m_silenceIdleAccum = 0.0f;
-    // 静音惩罚跨章节累积（不回零，让"被静音"是一个渐进的宿命），
-    // 但真实碎片可以逐步抵消
+    // 静音惩罚跨章节累积不回零（渐进的宿命），真实碎片可逐步抵消。
     switch (chapter) {
     case GameChapter::Prologue: setupChapterPrologue(); break;
     case GameChapter::Chapter1: setupChapter1(); break;
@@ -351,14 +347,11 @@ void EchoEngine::generateFragments(GameChapter chapter)
     case GameChapter::Chapter4: setupChapter4(); break;
     case GameChapter::Finale:   setupFinale(); break;
     }
-    // 打乱碎片
     for (int i = static_cast<int>(m_fragments.size()) - 1; i > 0; --i) {
         int j = rand() % (i + 1);
         std::swap(m_fragments[i], m_fragments[j]);
     }
 }
-
-// 各章节碎片配置
 
 void EchoEngine::setupChapterPrologue()
 {
@@ -508,8 +501,6 @@ void EchoEngine::setupFinale()
     increaseLowFreq(); increaseLowFreq(); increaseLowFreq();
 }
 
-// 时间轴操作
-
 bool EchoEngine::placeFragment(int fragmentId, int slotIndex)
 {
     if (slotIndex < 0 || slotIndex >= static_cast<int>(m_timeline.size())) return false;
@@ -604,7 +595,25 @@ bool EchoEngine::removeFragment(int slotIndex)
     return true;
 }
 
-float EchoEngine::calculateCoherence()
+// 场景回溯小结：每章一个"地点"，SceneComplete 界面据此交代本章重建的是什么
+AudioScene EchoEngine::currentScene() const
+{
+    AudioScene sc;
+    sc.sceneId = chapterNumber();
+    sc.isDistorted = m_isDistorted;
+    sc.coherenceScore = calculateCoherence();
+    switch (m_currentChapter) {
+    case GameChapter::Prologue: sc.name = "凌晨的资料室"; sc.description = "你把白天漏听的声音重新铺上时间轴。"; break;
+    case GameChapter::Chapter1: sc.name = "休息区与门禁之间"; sc.description = "咖啡机、门禁、挂钟——被剪碎的一天重新接起来。"; break;
+    case GameChapter::Chapter2: sc.name = "地下三十米·配电层"; sc.description = "低频从地板下涌上来，监护仪的节拍不属于任何人。"; break;
+    case GameChapter::Chapter3: sc.name = "何悦的录音间"; sc.description = "两个声纹在同一个声道里呼吸。"; break;
+    case GameChapter::Chapter4: sc.name = "病房·生命维持系统旁"; sc.description = "心跳是唯一无法伪造的锚点，也是最先被删除的那个。"; break;
+    case GameChapter::Finale:   sc.name = "原初嗡鸣深处"; sc.description = "所有声音的来处。你听见了自己。"; break;
+    }
+    return sc;
+}
+
+float EchoEngine::calculateCoherence() const
 {
     if (placedFragmentCount() < 2) return 1.0f;
     float totalScore = 0.0f; int pairCount = 0;
@@ -664,8 +673,6 @@ void EchoEngine::resetCurrentChapter()
     m_paranoiaLevel = 0.3f; m_anxietyLevel = 0.1f;
 }
 
-// 锚点音
-
 bool EchoEngine::isAnchorCorrect() const
 {
     if (m_timeline.empty() || !m_timeline[0].isAnchorSlot) return true;
@@ -675,8 +682,6 @@ bool EchoEngine::isAnchorCorrect() const
         if (f.id == fid) return f.isAnchor && f.anchorType == m_timeline[0].requiredAnchor;
     return false;
 }
-
-// 逆向播放
 
 void EchoEngine::unlockReverse()
 {
@@ -784,8 +789,6 @@ void EchoEngine::revealCharacter(int index)
         m_characters[index].isRevealed = true;
 }
 
-// 选择系统
-
 void EchoEngine::recordChoice(PlayerChoice choice)
 {
     m_choices.push_back({ choice, m_currentChapter, "" });
@@ -804,8 +807,6 @@ PlayerChoice EchoEngine::getChapterChoice(GameChapter chapter) const
     return PlayerChoice::None;
 }
 
-// 结局系统
-
 EndingType EchoEngine::calculateEnding() const
 {
     bool trustDirector = hasChosen(PlayerChoice::IgnoreSigh);
@@ -814,10 +815,10 @@ EndingType EchoEngine::calculateEnding() const
     int fakeCount = 0;
     for (auto& f : m_fragments) if (f.credibility == Credibility::Fake && f.isPlaced) fakeCount++;
     int reversedCount = 0;
-    for (auto& f : m_fragments) if (f.isReversed) reversedCount++;
+    // 逆向播放必须已在时间轴上生效，才构成行为证据
+    for (auto& f : m_fragments) if (f.isPlaced && f.isReversed) reversedCount++;
 
-    // 隐藏/真结局（独立于选择，由行为触发）
-    // ZeroDecibel 真结局：大量伪造碎片 + 高底噪 + 高偏执（玩家"相信伪造声音"的终极代价）
+    // 隐藏/真结局由行为触发：ZeroDecibel = 大量伪造碎片 + 高底噪 + 高偏执。
     int placedCount = placedFragmentCount();
     float fakeRatio = placedCount > 0 ? float(fakeCount) / float(placedCount) : 0.0f;
     if (fakeCount >= 5 && fakeRatio >= 0.6f && m_lowFreqIntensity > 0.75f && m_paranoiaLevel > 0.8f)
@@ -869,17 +870,11 @@ int EchoEngine::unlockedEndingCount() const
     int c = 0; for (auto it = m_endings.begin();it != m_endings.end();++it) if (it->unlocked) c++; return c;
 }
 
-QString EchoEngine::endingTitle() const { return getEndingInfo(calculateEnding()).title; }
-QString EchoEngine::endingDescription() const { return getEndingInfo(calculateEnding()).description; }
-bool EchoEngine::isEndingUnlocked(EndingType type) const { return m_endings.value(type, {}).unlocked; }
-
 void EchoEngine::unlockEnding(EndingType type)
 {
     auto it = m_endings.find(type);
     if (it != m_endings.end()) it->unlocked = true;
 }
-
-// 章节信息
 
 QString EchoEngine::chapterName() const
 {
@@ -993,8 +988,6 @@ QString EchoEngine::forgottenListText() const
     return text;
 }
 
-// 结局余波
-
 QString EchoEngine::getEpilogue(EndingType type) const
 {
     auto it = m_epilogues.find(type);
@@ -1006,8 +999,7 @@ QString EchoEngine::getEpilogue(EndingType type) const
 
 QString EchoEngine::noiseConsciousnessLine() const
 {
-    // 底噪意识对玩家的称呼随"静音惩罚"状态变化
-    // 右耳失聪越严重，底噪的"语气"越破碎
+    // 底噪意识称呼随静音惩罚状态变化；右耳失聪越重，语气越破碎。
     QString name = playerDisplayName();
     if (m_rightEarSilenced) {
         return QString("底噪意识断续传来：'%1……别怕。你……听得见我……一半，对吗？你不是被夺舍的容器，你是我的选择。'").arg(name);
@@ -1018,6 +1010,7 @@ QString EchoEngine::noiseConsciousnessLine() const
 EchoEngine::ChoiceContent EchoEngine::buildChoice(ChoicePoint point) const
 {
     ChoiceContent cc;
+    cc.point = point;
     QString name = playerDisplayName();
 
     switch (point) {
@@ -1030,6 +1023,7 @@ EchoEngine::ChoiceContent EchoEngine::buildChoice(ChoicePoint point) const
             "你选择：");
         cc.options = QStringList{ "忽略叹息，按标准流程提交报告",
                       "记录叹息，今晚加班重听所有录音" };
+        cc.choices = { PlayerChoice::IgnoreSigh, PlayerChoice::RecordSigh };
         break;
     }
     case ChoicePoint::HeYueHostage: {
@@ -1039,6 +1033,8 @@ EchoEngine::ChoiceContent EchoEngine::buildChoice(ChoicePoint point) const
             "你选择：");
         cc.options = QStringList{ "先用重构仪破解门禁救何悦",
                       "先继续追查林薇线索，回头再救" };
+        // 何悦支线后果由 applyBranchChoice 按同一选项顺序应用
+        cc.choices = { PlayerChoice::None, PlayerChoice::None };
         break;
     }
     case ChoicePoint::Identity: {
@@ -1057,6 +1053,7 @@ EchoEngine::ChoiceContent EchoEngine::buildChoice(ChoicePoint point) const
         cc.options = QStringList{ QString("接受自己是'林薇+%1'的融合体").arg(name),
                       QString("拒绝融合，用'纯粹%1'身份继续（困难模式）").arg(name),
                       "尝试彻底分离两人声音——逆向播放+高频阻断" };
+        cc.choices = { PlayerChoice::AcceptFusion, PlayerChoice::RejectFusion, PlayerChoice::SeparateVoices };
         break;
     }
     case ChoicePoint::LifeTransfer: {
@@ -1065,12 +1062,26 @@ EchoEngine::ChoiceContent EchoEngine::buildChoice(ChoicePoint point) const
             "她的意识在你脑中，陈远山要的密钥也在你脑中。你面前只有一次操作：");
         cc.options = QStringList{ "将林薇的完整人格声纹从你脑中转录回她体内",
                       "删除林薇肉体的生命维持系统录音，让密钥彻底消失" };
+        cc.choices = { PlayerChoice::TransferBack, PlayerChoice::DeleteLifeSupport };
         break;
     }
     default:
         break;
     }
     return cc;
+}
+
+bool EchoEngine::applyBranchChoice(ChoicePoint point, int optionIndex)
+{
+    if (point != ChoicePoint::HeYueHostage) return false;
+    // 与 buildChoice(HeYueHostage) 的选项顺序一致：0=先救何悦，1=先追线索
+    if (optionIndex == 0) {
+        setHeYueState(HeYueState::Rescued);
+        addResonance(0.15f);
+    } else {
+        setHeYueState(HeYueState::Brainwashed);
+    }
+    return true;
 }
 
 // 巧妙机制 1：陈远山的"静音惩罚"（他右耳失聪，你每放一个伪造碎片，就离"被静音"更近一步）
@@ -1114,13 +1125,14 @@ void EchoEngine::updateSilenceMorse(float idleSeconds)
     // 只有序章之后、老刘在附近时才触发
     if (m_currentChapter == GameChapter::Prologue) return;
     m_silenceIdleAccum += idleSeconds;
-    if (m_silenceIdleAccum >= 8.0f) {  // 静默 8 秒后浮现
+    if (m_silenceIdleAccum >= m_silenceMorse.threshold) {  // 静默达到阈值后浮现
         m_silenceMorseRevealed = true;
         m_silenceMorse.revealed = true;
         // 老刘的求救日期倒计时
         m_silenceMorse.message = "……（沉默中，你听见老刘用手指在桌面敲出的摩斯电码）……\n"
             "他弟弟自杀后的第7年，老刘曾在档案库中尝试自杀，被林薇用声波唤醒。\n"
             "他画下的符号，是'那个人还没死'的倒计时。";
+        emit morseMessage(m_silenceMorse.message);
     }
 }
 

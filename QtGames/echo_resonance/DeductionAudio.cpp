@@ -1,5 +1,6 @@
 #include "DeductionAudio.h"
 #include "DeductionData.h"  // ECHO_PI 宏
+#include <cmath>
 
 DeductionAudio::DeductionAudio(QObject* parent) : QObject(parent)
 {
@@ -42,7 +43,6 @@ QByteArray DeductionAudio::generatePCM(const std::vector<AudioLayer>& layers, in
         for (const auto& l : layers) {
             if (t > l.durationSec) continue;
             activeCount++;
-            // 变调：频率乘 pitchScale
             float f = l.frequency * l.pitchScale;
             // 指数衰减包络（防御 durationSec <= 0 导致除零）
             float dur = l.durationSec > 0.0f ? l.durationSec : 0.5f;
@@ -54,7 +54,6 @@ QByteArray DeductionAudio::generatePCM(const std::vector<AudioLayer>& layers, in
             sample += v * l.amplitude * env;
         }
         if (activeCount > 1) sample /= static_cast<float>(activeCount); // 叠加归一化
-        // 限幅
         if (sample > 1.0f) sample = 1.0f;
         if (sample < -1.0f) sample = -1.0f;
         qint16 val = static_cast<qint16>(sample * 32000.0f);
@@ -63,8 +62,6 @@ QByteArray DeductionAudio::generatePCM(const std::vector<AudioLayer>& layers, in
     }
     return pcm;
 }
-
-// 合成 + 描述
 
 QString DeductionAudio::synthesize(const std::vector<AudioLayer>& layers, bool play)
 {
@@ -80,8 +77,7 @@ QString DeductionAudio::synthesize(const std::vector<AudioLayer>& layers, bool p
 
     if (m_audioAvailable && play) {
         generatePCM(layers);
-        // 实际播放由上层持有 QAudioSink；此处仅生成数据，
-        // 播放管线在 DeductionBoardWidget 中管理（避免头文件依赖扩散）
+        // 仅生成数据；播放由 DeductionBoardWidget 持有 QAudioSink 管理，避免头文件依赖扩散。
         desc += "（已合成音频）";
     } else {
         desc += "（纯视觉模拟——环境无音频后端）";

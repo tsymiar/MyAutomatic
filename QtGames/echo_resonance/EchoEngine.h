@@ -13,8 +13,7 @@ public:
 
     // ── 章节管理 ──
     void generateFragments(GameChapter chapter);
-    // 开启新一周目：重置单局状态（选择、分支、机制数值），
-    // 保留跨周目收集（结局图鉴、回声碎片档案、角色揭示）
+    // 新周目：重置单局状态（选择/分支/机制数值），保留跨周目收集（结局图鉴/档案/角色揭示）。
     void startNewGame();
     GameChapter currentChapter() const { return m_currentChapter; }
     QString chapterName() const;
@@ -27,7 +26,9 @@ public:
     const std::vector<TimelineSlot>& timeline() const { return m_timeline; }
     bool placeFragment(int fragmentId, int slotIndex);
     bool removeFragment(int slotIndex);
-    float calculateCoherence();
+    float calculateCoherence() const;
+    // 当前章节的场景回溯小结（SceneComplete 界面展示）
+    AudioScene currentScene() const;
     bool isDistorted() const { return m_isDistorted; }
     int totalFragments() const { return static_cast<int>(m_fragments.size()); }
     int placedFragmentCount() const;
@@ -81,9 +82,6 @@ public:
     EndingInfo getEndingInfo(EndingType type) const;
     int unlockedEndingCount() const;
     int totalEndingCount() const { return static_cast<int>(m_endings.size()); }
-    QString endingTitle() const;
-    QString endingDescription() const;
-    bool isEndingUnlocked(EndingType type) const;
     void unlockEnding(EndingType type);
 
     // ── 底噪意识 ──
@@ -150,8 +148,16 @@ public:
 
     // ── 动态文案组合（减少硬编码）──
     // 根据玩家名字、何悦状态、老刘沉默、静音惩罚等动态拼装选择提示
-    struct ChoiceContent { QString prompt; QStringList options; };
+    // options 与 choices 一一对应，避免选项文案顺序与分支跳转失配
+    struct ChoiceContent {
+        QString prompt;
+        QStringList options;
+        std::vector<PlayerChoice> choices;
+        ChoicePoint point = ChoicePoint::PrologueSigh;
+    };
     ChoiceContent buildChoice(ChoicePoint point) const;
+    // 应用不属于 PlayerChoice 的支线后果；无此类后果时返回 false
+    bool applyBranchChoice(ChoicePoint point, int optionIndex);
     // 根据当前状态生成"底噪意识"的动态称呼与语气
     QString noiseConsciousnessLine() const;
 
@@ -186,9 +192,7 @@ signals:
     void anxietyChanged(float level);
     void hallucinationTriggered(const QString& message);
     void reverseUnlocked();
-    void choiceRequired(const QString& prompt, const QStringList& options);
-    void endingReached(EndingType type);
-    void morseMessage(const QString& message);
+    void morseMessage(const QString& message);  // 老刘静默摩斯浮现时携带电文全文
     void noiseCommunion(const QString& message);
     void silenceMode(bool active);
     void spiritManifested(SpiritKind kind);
