@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevUtils · 行情</title>
+    <link rel="icon" href="favicon.ico">
+    <style>
+        :root {
+            --panel: #ffffff;
+            --primary: #5b62f4;
+            --primary-dark: #3b34b8;
+            --text: #1b2338;
+            --muted: #6b7793;
+            --border: #e7eaf3;
+            --err: #f43f5e;
+            --radius: 16px;
+            --shadow-soft: 0 2px 10px rgba(28, 36, 74, .06);
+            --shadow: 0 12px 30px -14px rgba(49, 46, 129, .20);
+            --shadow-btn: 0 8px 20px -6px rgba(91, 98, 244, .55);
+            --grad-btn: linear-gradient(135deg, var(--primary), #7c5cff);
+        }
+        * { box-sizing: border-box; }
+        button { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background-color: #f5f7fc;
+            background-image:
+                radial-gradient(1100px 520px at 6% -10%, rgba(124, 92, 255, .20), transparent 62%),
+                radial-gradient(900px 480px at 100% 0%, rgba(6, 182, 212, .16), transparent 58%);
+            color: var(--text);
+            margin: 0;
+            padding: 4px 2px 10px;
+        }
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 18px 20px;
+            box-shadow: var(--shadow-soft);
+            margin: 0 auto 16px;
+        }
+        .card:hover { box-shadow: var(--shadow); border-color: #d9def0; }
+        .card h2 { margin: 0 0 4px; font-size: 17px; display: flex; align-items: center; gap: 8px; letter-spacing: .3px; }
+        input[type=text] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            font-size: 14px;
+            font-family: inherit;
+            background: #fbfcfe;
+            color: var(--text);
+            transition: .15s;
+        }
+        input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(91,98,244,.16); background: #fff; }
+        .btn {
+            border: none; cursor: pointer;
+            padding: 9px 16px; border-radius: 10px;
+            font-size: 13.5px; font-weight: 600; letter-spacing: .2px;
+            background: var(--grad-btn); color: #fff;
+            box-shadow: 0 4px 12px -4px rgba(91, 98, 244, .45);
+            transition: .18s; margin: 4px 6px 4px 0;
+        }
+        .btn:hover { box-shadow: var(--shadow-btn); transform: translateY(-1px); }
+        .btn:active { transform: translateY(0) scale(.985); filter: brightness(.97); }
+        .btn.ghost { background: #f1f4fb; color: #3a4560; box-shadow: none; }
+        .btn.ghost:hover { background: #e6ebf8; color: var(--primary-dark); }
+        .btn.ghost.on { background: var(--grad-btn); color: #fff; box-shadow: none; }
+        .btn.sm { padding: 6px 11px; font-size: 12.5px; }
+        select.mk-period {
+            padding: 6px 9px; border: 1px solid var(--border); border-radius: 9px;
+            font-size: 12.5px; font-weight: 600; font-family: inherit;
+            background: #f1f4fb; color: #3a4560; cursor: pointer;
+        }
+        select.mk-period:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(91,98,244,.16); }
+        .mk-inds { display: inline-flex; border: 1px solid var(--border); border-radius: 9px; overflow: hidden; background: #f1f4fb; }
+        .mk-inds button { border: none; background: transparent; color: #3a4560; font-size: 11.5px; font-weight: 600; padding: 6px 9px; cursor: pointer; font-family: inherit; }
+        .mk-inds button + button { border-left: 1px solid var(--border); }
+        .mk-inds button:hover { background: #e6ebf8; }
+        .mk-inds button.on { background: var(--grad-btn); color: #fff; }
+        .stat { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+        .toast {
+            position: fixed; bottom: 46px; left: 50%; transform: translateX(-50%);
+            background: #0f172a; color: #fff; padding: 10px 18px; border-radius: 10px;
+            font-size: 13px; opacity: 0; pointer-events: none; transition: .25s; z-index: 50;
+        }
+        .mk-hint { font-size: 12px; color: var(--muted); margin: 0 0 10px; }
+        .mk-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+        .mk-tools { display: flex; align-items: center; gap: 8px; }
+        .mk-meta { font-size: 12px; color: var(--muted); white-space: nowrap; }
+        .mk-add { display: flex; gap: 8px; align-items: center; position: relative; margin-bottom: 14px; }
+        .mk-add input { flex: 1; min-width: 0; }
+        .mk-add .btn { margin: 0; flex: 0 0 auto; }
+        .mk-sug {
+            position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+            background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+            box-shadow: var(--shadow); overflow: hidden; z-index: 5; display: none;
+        }
+        .mk-sug.show { display: block; }
+        .mk-sug button { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; border: none; background: transparent; padding: 9px 14px; cursor: pointer; font-size: 13.5px; }
+        .mk-sug button:hover { background: #eef1fe; }
+        .mk-sug .sn { font-weight: 600; }
+        .mk-sug .sc { margin-left: auto; color: var(--muted); font-size: 12px; }
+        .mk-list { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+        .mk-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--border); cursor: pointer; }
+        .mk-row:last-child { border-bottom: none; }
+        .mk-row.sel { background: #f4f6ff; }
+        .mk-l { flex: 1; min-width: 0; }
+        .mk-name { font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .mk-code { font-size: 11px; color: var(--muted); margin-top: 2px; }
+        .mk-r { text-align: right; flex: 0 0 auto; }
+        .mk-price { font-weight: 700; font-size: 15px; font-variant-numeric: tabular-nums; }
+        .mk-chg { font-size: 12px; font-variant-numeric: tabular-nums; margin-top: 2px; }
+        .mk-chg.up { color: #D62728; }
+        .mk-chg.down { color: #1E8E3E; }
+        .mk-chg.flat { color: #64748B; }
+        .mk-del { border: none; background: transparent; color: var(--muted); cursor: pointer; padding: 4px 7px; border-radius: 8px; font-size: 12px; }
+        .mk-del:hover { color: var(--err); background: rgba(244, 63, 94, .08); }
+        .mk-empty { padding: 24px 14px; text-align: center; color: var(--muted); }
+        #mk_chart { display: block; width: 100%; }
+        /* iframe 高度由内容上报，热力图别用 vh，否则两边互相顶 */
+        .mk-heat { position: relative; height: 520px; border: 1px solid var(--border); overflow: hidden; background: #fff; }
+        .mk-tile { position: absolute; padding: 2px; }
+        .mk-tile-in {
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            overflow: hidden; cursor: pointer; line-height: 1.2; transition: filter .15s;
+        }
+        .mk-tile-in > * { flex: 0 0 auto; }
+        .mk-tile-in:hover { filter: brightness(1.1); }
+        .mk-tile-in b { max-width: 100%; overflow: hidden; white-space: normal; word-break: break-all; line-height: 1.05; text-align: center; padding: 0 2px; }
+        .mk-tile-in i, .mk-tile-in em { font-style: normal; font-size: 10.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+        .mk-tile-in em { opacity: .82; }
+        .mk-legend { font-size: 11px; color: var(--muted); margin-top: 6px; }
+        .mk-heat-foot { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+        .mk-breadth { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+        .mk-breadth .up { color: #D62728; }
+        .mk-breadth .down { color: #1E8E3E; }
+        .mk-breadth .flat { color: #64748B; }
+        .mk-snap { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--muted); margin: -2px 0 8px; font-variant-numeric: tabular-nums; }
+        .mk-modal { position: fixed; inset: 0; z-index: 60; display: none; align-items: center; justify-content: center; }
+        .mk-modal.show { display: flex; }
+        .mk-modal-mask { position: absolute; inset: 0; background: rgba(15, 23, 42, .55); }
+        .mk-modal-box {
+            position: relative; z-index: 1; width: calc(100% - 20px); height: min(90%, 900px);
+            background: var(--panel); border-radius: var(--radius); box-shadow: 0 30px 80px rgba(15, 23, 42, .35);
+            display: flex; flex-direction: column; padding: 12px 14px 14px;
+        }
+        .mk-modal-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+        .mk-modal-head h2 { font-size: 16px; margin: 0; }
+        .mk-modal-box canvas { display: block; width: 100%; height: calc(100% - 56px); }
+        .mk-hover {
+            position: fixed; z-index: 70; width: 262px; padding: 10px 12px;
+            background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+            box-shadow: 0 18px 40px -12px rgba(15, 23, 42, .35);
+            pointer-events: none; display: none;
+        }
+        .mk-hover.show { display: block; }
+        .mk-hover-head { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; font-weight: 700; margin-bottom: 6px; }
+        .mk-hover canvas { width: 100%; height: 140px; }
+        .mk-tip {
+            position: fixed; z-index: 90; display: none; pointer-events: none;
+            min-width: 168px; padding: 9px 11px; border-radius: 10px;
+            background: rgba(15, 23, 42, .93); color: #e8edf8;
+            font-size: 11px; line-height: 1.65; box-shadow: 0 14px 32px -10px rgba(15, 23, 42, .5);
+            white-space: nowrap;
+        }
+        .mk-tip.show { display: block; }
+        .mk-tip b { color: #fff; font-size: 12px; }
+        .mk-tip .up { color: #ff8a8a; }
+        .mk-tip .down { color: #7ee2a8; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="mk-head">
+            <h2>🔥 热力图</h2>
+            <div class="mk-tools">
+                <button class="btn ghost sm" data-action="mkHeatRefresh">⟳ 刷新</button>
+            </div>
+        </div>
+        <div class="mk-heat" id="mk_heat"></div>
+        <div class="mk-heat-foot">
+            <div class="mk-legend" id="mk_heat_legend"></div>
+            <div class="mk-breadth" id="mk_breadth"></div>
+        </div>
+        <div class="stat" id="mk_heat_stat"></div>
+    </div>
+
+    <div class="card">
+        <div class="mk-head">
+            <h2>📈 行情</h2>
+            <div class="mk-tools">
+                <span class="mk-meta" id="mk_meta"></span>
+                <button class="btn ghost sm" id="mk_auto" data-action="mkToggleAuto">⏸ 暂停</button>
+                <button class="btn ghost sm" data-action="mkRefresh">⟳ 刷新</button>
+            </div>
+        </div>
+        <p class="mk-hint">点行切换曲线标的 · 每 15 秒自动刷新</p>
+        <div class="mk-add">
+            <input type="text" id="mk_input" placeholder="输入代码添加，如 600519 / 000858 / 00700，或搜索名称">
+            <button class="btn sm" data-action="mkAdd">添加</button>
+            <div class="mk-sug" id="mk_sug"></div>
+        </div>
+        <div class="mk-list" id="mk_list"></div>
+        <div class="stat" id="mk_stat"></div>
+    </div>
+
+    <div class="card" id="mk_chart_card" style="display:none">
+        <div class="mk-head">
+            <h2 id="mk_chart_title">📈 K线</h2>
+            <div class="mk-tools">
+                <span class="mk-meta" id="mk_chart_meta"></span>
+                <button class="btn ghost sm" data-action="mkOpenFloat">⛶ 放大</button>
+                <select id="mk_period" class="mk-period">
+                    <option value="intraday">分时</option>
+                    <option value="m1">1分钟</option>
+                    <option value="m5">5分钟</option>
+                    <option value="m15">15分钟</option>
+                    <option value="m30">30分钟</option>
+                    <option value="m60">60分钟</option>
+                    <option value="day">日K</option>
+                    <option value="week">周K</option>
+                    <option value="month">月K</option>
+                </select>
+                <div class="mk-inds" id="mk_inds">
+                    <button type="button" class="on" data-action="mkIndChange" data-arg="vol" title="成交量">VOL</button>
+                    <button type="button" data-action="mkIndChange" data-arg="macd" title="MACD(12,26,9)">MACD</button>
+                    <button type="button" data-action="mkIndChange" data-arg="rsi" title="RSI(14)">RSI</button>
+                    <button type="button" data-action="mkIndChange" data-arg="kdj" title="KDJ(9,3,3)">KDJ</button>
+                </div>
+            </div>
+        </div>
+        <div class="mk-snap" id="mk_snap"></div>
+        <canvas id="mk_chart"></canvas>
+        <div class="stat" id="mk_chart_stat"></div>
+    </div>
+
+    <div class="mk-modal" id="mk_modal">
+        <div class="mk-modal-mask" data-action="mkCloseFloat"></div>
+        <div class="mk-modal-box">
+            <div class="mk-modal-head">
+                <h2 id="mk_float_title">📈 K线</h2>
+                <div class="mk-tools">
+                    <select id="mk_float_period" class="mk-period"></select>
+                    <div class="mk-inds" id="mk_float_inds"></div>
+                    <button class="btn ghost sm" data-action="mkCloseFloat">✕ 关闭</button>
+                </div>
+            </div>
+            <canvas id="mk_float_chart"></canvas>
+        </div>
+    </div>
+
+    <div class="mk-hover" id="mk_hover">
+        <div class="mk-hover-head"><span id="mk_hover_name"></span><span id="mk_hover_pct"></span></div>
+        <canvas id="mk_hover_chart"></canvas>
+        <div class="stat" id="mk_hover_stat"></div>
+    </div>
+
+    <div class="mk-tip" id="mk_cross_tip"></div>
+    <div class="toast" id="toast"></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+function toast(msg) {
+    const t = $('toast');
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+const MK = {
+    codes: JSON.parse(localStorage.getItem('devutils_mk') || 'null') || [],
+    sel: localStorage.getItem('devutils_mk_sel') || null,
+    range: localStorage.getItem('devutils_mk_range') || 'day',
+    ind: localStorage.getItem('devutils_mk_ind') || 'vol',
+    rows: [], heat: [], chartData: null,
+    hoverCache: {}, hoverCode: null, hoverSeq: 0, floatOpen: false,
+    timer: null, auto: true, busy: false, chartBusy: false, heatBusy: false
+};
+const MK_PERIOD = {
+    intraday: { kind: 'line' },
+    m1: { kind: 'kline', api: 'mkline', key: 'm1' },
+    m5: { kind: 'kline', api: 'mkline', key: 'm5' },
+    m15: { kind: 'kline', api: 'mkline', key: 'm15' },
+    m30: { kind: 'kline', api: 'mkline', key: 'm30' },
+    m60: { kind: 'kline', api: 'mkline', key: 'm60' },
+    day: { kind: 'kline', api: 'fqkline', key: 'day' },
+    week: { kind: 'kline', api: 'fqkline', key: 'week' },
+    month: { kind: 'kline', api: 'fqkline', key: 'month' }
+};
+function mkSave() { localStorage.setItem('devutils_mk', JSON.stringify(MK.codes)); }
+function mkMkt(c) { return { sh: '沪', sz: '深', bj: '京', hk: '港', us: '美' }[c.slice(0, 2)] || ''; }
+function mkCap(v) {
+    if (!(v > 0) || !isFinite(v)) return '-';
+    if (v >= 1e12) return (v / 1e12).toFixed(2) + '万亿';
+    if (v >= 1e8) return (v / 1e8).toFixed(2) + '亿';
+    if (v >= 1e4) return (v / 1e4).toFixed(2) + '万';
+    return v.toFixed(0);
+}
+function mkNorm(raw) {
+    const c = raw.trim().toLowerCase();
+    if (/^(sh|sz|bj|hk|us)[0-9a-z.]+$/.test(c)) return c;
+    if (/^\d{6}$/.test(c)) return /^[695]/.test(c) ? 'sh' + c : (/^[84]/.test(c) ? 'bj' + c : 'sz' + c);
+    if (/^\d{4,5}$/.test(c)) return 'hk' + c;
+    return null;
+}
+function mkLoadScript(src, charset, refPolicy) {
+    return new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        if (charset) s.charset = charset;
+        if (refPolicy) s.referrerpolicy = refPolicy;
+        const t = setTimeout(() => { s.remove(); reject(new Error('行情源请求超时')); }, 9000);
+        s.onload = () => { clearTimeout(t); s.remove(); resolve(); };
+        s.onerror = () => { clearTimeout(t); s.remove(); reject(new Error('行情源请求失败')); };
+        s.src = src;
+        document.head.appendChild(s);
+    });
+}
+function mkTake(name) {
+    const v = window[name];
+    try { delete window[name]; } catch (e) {}
+    if (!v) throw new Error('行情数据为空');
+    return v;
+}
+// 腾讯 ifzq 网关：_var=xxx 让响应变成「xxx=JSON」的赋值脚本
+async function mkJsonVar(url) {
+    const name = 'mkjv_' + Date.now().toString(36) + Math.floor(Math.random() * 1e5).toString(36);
+    await mkLoadScript(url + '&_var=' + name);
+    return mkTake(name);
+}
+// cb= 是回调调用，必须先挂好 window 回调再注入脚本
+function mkJsonCb(url) {
+    return new Promise((resolve, reject) => {
+        const name = 'mkcb_' + Date.now().toString(36) + Math.floor(Math.random() * 1e5).toString(36);
+        let settled = false;
+        window[name] = data => {
+            settled = true;
+            try { delete window[name]; } catch (e) {}
+            resolve(data);
+        };
+        mkLoadScript(url + '&cb=' + name).then(() => {
+            if (!settled) reject(new Error('行情数据为空'));
+        }, err => reject(err));
+    });
+}
+function mkFetch(codes) {
+    // 腾讯行情接口返回 GBK 编码的变量赋值脚本且无 CORS 头，只能 script 注入
+    return new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.charset = 'GBK';
+        const t = setTimeout(() => { s.remove(); reject(new Error('行情源请求超时')); }, 8000);
+        s.onload = () => {
+            clearTimeout(t); s.remove();
+            resolve(codes.map(c => {
+                const v = window['v_' + c];
+                try { delete window['v_' + c]; } catch (e) {}
+                if (!v) return { code: c, bad: true };
+                const f = v.split('~');
+                const price = parseFloat(f[3]), prev = parseFloat(f[4]);
+                let pct = parseFloat(f[32]);
+                if (!isFinite(pct) && isFinite(price) && prev > 0) pct = (price - prev) / prev * 100;
+                // 腾讯盘口的市值单位是亿，统一折成元
+                return {
+                    code: c, name: f[1] || c, price, pct,
+                    cap: (parseFloat(f[45]) || 0) * 1e8,
+                    floatCap: (parseFloat(f[44]) || 0) * 1e8,
+                    turnover: parseFloat(f[38]), pe: parseFloat(f[39])
+                };
+            }));
+        };
+        s.onerror = () => { clearTimeout(t); s.remove(); reject(new Error('行情源请求失败')); };
+        s.src = 'https://qt.gtimg.cn/q=' + codes.join(',') + '&r=' + Date.now();
+        document.head.appendChild(s);
+    });
+}
+let mkLastH = -1;
+function mkReport() {
+    const h = document.documentElement.scrollHeight;
+    // 布局未就绪时 scrollHeight 为 0，不能上报，否则宿主页会把 iframe 压成 0 高
+    if (h <= 0 || h === mkLastH) return;
+    mkLastH = h;
+    try { parent.postMessage({ mkHeight: h }, '*'); } catch (e) {}
+}
+
+async function mkRefresh() {
+    if (MK.busy) return;
+    if (!MK.codes.length) {
+        MK.rows = [];
+        $('mk_list').innerHTML = '<div class="mk-empty">自选为空，输入代码添加，或点击上方热力图选标的</div>';
+        $('mk_meta').textContent = '';
+        $('mk_snap').textContent = '';
+        mkReport();
+        return;
+    }
+    MK.busy = true;
+    try {
+        MK.rows = await mkFetch(MK.codes);
+        const fmt = n => isFinite(n) ? n.toFixed(2) : '--';
+        $('mk_list').innerHTML = MK.rows.map(r => {
+            const chg = r.pct, cls = chg > 0 ? 'up' : (chg < 0 ? 'down' : 'flat');
+            return `<div class="mk-row" data-code="${r.code}" data-name="${r.name}" data-pct="${r.pct}">
+                <div class="mk-l"><div class="mk-name">${r.bad ? '无效代码' : r.name}</div><div class="mk-code">${r.code}${mkMkt(r.code) ? ' · ' + mkMkt(r.code) : ''}${r.cap > 0 ? ' · 市值 ' + mkCap(r.cap) : ''}</div></div>
+                <div class="mk-r"><div class="mk-price">${r.bad ? '--' : fmt(r.price)}</div><div class="mk-chg ${cls}">${r.bad || !isFinite(chg) ? '--' : (chg > 0 ? '+' : '') + chg.toFixed(2) + '%'}</div></div>
+                <button class="mk-del" data-action="mkDel" data-arg="${r.code}">✕</button>
+            </div>`;
+        }).join('');
+        mkHighlightSel();
+        mkSnap();
+        $('mk_meta').textContent = '更新 ' + new Date().toLocaleTimeString('zh-CN', { hour12: false });
+    } catch (err) {
+        $('mk_stat').textContent = err.message;
+    } finally {
+        MK.busy = false;
+        mkReport();
+    }
+}
+function mkHighlightSel() {
+    document.querySelectorAll('#mk_list .mk-row').forEach(el =>
+        el.classList.toggle('sel', el.dataset.code === MK.sel));
+}
+function mkTradingNow() {
+    // 用 UTC getter 读 +8 后的钟点，宿主机器不在中国时区也不误判
+    const bj = new Date(Date.now() + 480 * 60000);
+    const day = bj.getUTCDay();
+    if (day === 0 || day === 6) return false;
+    const m = bj.getUTCHours() * 60 + bj.getUTCMinutes();
+    return (m >= 570 && m <= 690) || (m >= 780 && m <= 900);
+}
+function mkRefreshInterval() { return mkTradingNow() ? 15000 : 120000; }
+function mkTick() {
+    if (!MK.auto) { MK.timer = null; return; }
+    mkRefresh();
+    if (MK.sel) mkChartLoad(true);
+    MK.timer = setTimeout(mkTick, mkRefreshInterval());
+}
+function mkStart() {
+    mkRefresh();
+    if (MK.auto && !MK.timer) MK.timer = setTimeout(mkTick, mkRefreshInterval());
+}
+function mkStop() { clearTimeout(MK.timer); MK.timer = null; }
+function mkToggleAuto() {
+    MK.auto = !MK.auto;
+    $('mk_auto').textContent = MK.auto ? '⏸ 暂停' : '▶ 自动刷新';
+    if (MK.auto) mkStart(); else mkStop();
+}
+function mkAdd() {
+    const code = mkNorm($('mk_input').value);
+    if (!code) {
+        const first = $('mk_sug').querySelector('[data-arg]');
+        if (first) { mkPick(first.dataset.arg); return; }
+        toast('无法识别的代码，试试 600519 / 000858 / 00700 或搜索名称');
+        return;
+    }
+    if (MK.codes.includes(code)) { toast('已在自选中'); return; }
+    MK.codes.push(code); mkSave(); mkRefresh();
+}
+function mkDel(code) {
+    MK.codes = MK.codes.filter(c => c !== code);
+    if (MK.sel === code) { MK.sel = null; localStorage.removeItem('devutils_mk_sel'); mkChartLoad(); }
+    mkSave(); mkRefresh();
+}
+function mkSelect(code) {
+    if (!MK.codes.includes(code)) { MK.codes.push(code); mkSave(); mkRefresh(); }
+    if (MK.sel === code && $('mk_chart_card').style.display !== 'none') return;
+    MK.sel = code;
+    localStorage.setItem('devutils_mk_sel', code);
+    mkHighlightSel();
+    mkChartLoad();
+}
+function mkPick(code) {
+    $('mk_sug').classList.remove('show');
+    if (!code || MK.codes.includes(code)) return;
+    MK.codes.push(code); mkSave(); mkRefresh();
+    $('mk_input').value = '';
+}
+let mkSugT;
+function mkSuggest(q) {
+    const s = document.createElement('script');
+    s.charset = 'GBK';
+    s.onload = () => {
+        s.remove();
+        let list = [];
+        try {
+            // smartbox 是老格式：^ 分隔条目，每条 mkt~code~名称~拼音~类型（\uXXXX 转义）
+            const raw = String(window.v_hint || '');
+            list = raw.split('^').map(it => {
+                const p = it.split('~');
+                return { code: (p[0] + p[1]).toLowerCase(), name: p[2] };
+            }).filter(x => /^(sh|sz|bj|hk|us)/.test(x.code) && x.name).slice(0, 8);
+        } catch (e) {}
+        try { delete window.v_hint; } catch (e) {}
+        const box = $('mk_sug');
+        box.innerHTML = list.length
+            ? list.map(x => `<button type="button" data-action="mkPick" data-arg="${x.code}"><span class="sn">${x.name}</span><span class="sc">${x.code}</span></button>`).join('')
+            : '<div class="mk-empty">无匹配结果</div>';
+        box.classList.add('show');
+    };
+    s.onerror = () => s.remove();
+    s.src = 'https://smartbox.gtimg.cn/s3/?q=' + encodeURIComponent(q) + '&t=all&r=' + Date.now();
+    document.head.appendChild(s);
+}
+
+function mkSyncControls() {
+    if (!MK_PERIOD[MK.range]) MK.range = 'day';
+    $('mk_period').value = MK.range;
+    $('mk_float_period').value = MK.range;
+    if (!['vol', 'macd', 'rsi', 'kdj'].includes(MK.ind)) MK.ind = 'vol';
+    document.querySelectorAll('.mk-inds button').forEach(b => b.classList.toggle('on', b.dataset.arg === MK.ind));
+}
+function mkIndChange(arg) {
+    if (!['vol', 'macd', 'rsi', 'kdj'].includes(arg)) return;
+    MK.ind = arg;
+    localStorage.setItem('devutils_mk_ind', arg);
+    mkSyncControls();
+    mkPaintAll();
+}
+function mkRange(arg) {
+    if (!MK_PERIOD[arg]) return;
+    MK.range = arg;
+    localStorage.setItem('devutils_mk_range', arg);
+    mkSyncControls();
+    mkChartLoad();
+}
+function mkSetMeta(last, ref, first) {
+    const pct = ref > 0 ? (last - ref) / ref * 100 : NaN;
+    const color = pct > 0 ? '#D62728' : (pct < 0 ? '#1E8E3E' : '#64748B');
+    const range = first > 0 ? (last - first) / first * 100 : NaN;
+    const rangeColor = range > 0 ? '#D62728' : (range < 0 ? '#1E8E3E' : '#64748B');
+    $('mk_chart_meta').innerHTML = `<b style="color:${color}">${last.toFixed(2)}${isFinite(pct) ? ' ' + (pct > 0 ? '+' : '') + pct.toFixed(2) + '%' : ''}</b>`
+        + (isFinite(range) ? ` <span style="color:${rangeColor}">区间 ${range > 0 ? '+' : ''}${range.toFixed(2)}%</span>` : '');
+}
+function mkSnap() {
+    const row = MK.rows.find(r => r.code === MK.sel);
+    const el = $('mk_snap');
+    if (!row || row.bad) { el.textContent = ''; return; }
+    const bits = [];
+    if (row.cap > 0) bits.push('总市值 ' + mkCap(row.cap));
+    if (row.floatCap > 0) bits.push('流通 ' + mkCap(row.floatCap));
+    if (isFinite(row.turnover) && row.turnover > 0) bits.push('换手 ' + row.turnover.toFixed(2) + '%');
+    if (isFinite(row.pe) && row.pe > 0) bits.push('市盈 ' + row.pe.toFixed(2));
+    el.textContent = bits.join(' · ');
+}
+const MK_DASH = {
+    grid: { dash: [1, 4], color: '#dfe4f0', width: 1 },
+    base: { dash: [8, 5], color: '#8b97b0', width: 1.2 },
+    last: { dash: [9, 3, 2, 3], width: 1.4 },
+    cross: { dash: [2, 4], color: '#94a3b8', width: 1 }
+};
+const MK_CHART_H = { line: 280, kline: 400 };
+function mkDashed(ctx, style, draw, color) {
+    ctx.save();
+    ctx.setLineDash(style.dash);
+    ctx.lineWidth = style.width;
+    ctx.strokeStyle = color || style.color;
+    ctx.beginPath();
+    draw();
+    ctx.stroke();
+    ctx.restore();
+}
+function mkCanvas(w, h, cv) {
+    const dpr = window.devicePixelRatio || 1;
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    cv.style.width = w + 'px'; cv.style.height = h + 'px';
+    const ctx = cv.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    return ctx;
+}
+function mkChartTitle() {
+    const row = MK.rows.find(r => r.code === MK.sel);
+    const opt = $('mk_period').querySelector('option:checked');
+    const t = '📈 ' + ((row && row.name) || '') + ' ' + (MK.sel || '') + ' · ' + (opt ? opt.textContent : MK.range);
+    $('mk_chart_title').textContent = t;
+    $('mk_float_title').textContent = t;
+}
+function mkPaint(data, cv, fixedH) {
+    if (!data || !cv) return;
+    // 上次绘制写死了 px 尺寸，先恢复自适应宽高再测量，窗口变化后才能按新尺寸画
+    cv.style.width = '100%';
+    cv.style.height = '';
+    const w = cv.clientWidth;
+    const h = fixedH || cv.clientHeight || MK_CHART_H.line;
+    if (w <= 0 || h <= 0) return;
+    const ctx = mkCanvas(w, h, cv);
+    if (data.kind === 'line') mkLinePainter(ctx, w, h, data.closes, data.base);
+    else mkKLinePainter(ctx, w, h, data.rows);
+}
+function mkPaintAll() {
+    if (!MK.chartData) return;
+    mkPaint(MK.chartData, $('mk_chart'), MK_CHART_H[MK.chartData.kind]);
+    if (MK.floatOpen) mkPaint(MK.chartData, $('mk_float_chart'));
+}
+async function mkChartLoad(silent) {
+    const code = MK.sel;
+    const card = $('mk_chart_card');
+    if (!code) {
+        card.style.display = 'none';
+        MK.chartData = null;
+        mkReport();
+        return;
+    }
+    card.style.display = '';
+    if (MK.chartBusy) return;
+    MK.chartBusy = true;
+    if (!silent) $('mk_chart_stat').textContent = '加载中…';
+    try {
+        const spec = MK_PERIOD[MK.range] || MK_PERIOD.day;
+        if (spec.kind === 'line') {
+            const d = await mkIntraday(code);
+            const node = (d && d.data && d.data[code]) || {};
+            const pts = (((node.data || {}).data) || []).map(s => {
+                const p = String(s).split(' ');
+                return { t: p[0], v: parseFloat(p[1]) };
+            }).filter(o => isFinite(o.v) && o.v > 0);
+            const qt = (node.qt || {})[code];
+            const base = qt ? parseFloat(qt[4]) : 0;
+            if (pts.length < 2) throw new Error('暂无数据');
+            const closes = pts.map(o => o.v);
+            MK.chartData = { kind: 'line', closes, times: pts.map(o => o.t), base };
+            mkSetMeta(closes[closes.length - 1], base || closes[0], closes[0]);
+        } else {
+            let arr = [];
+            if (spec.api === 'mkline') {
+                const d = await mkJsonVar('https://ifzq.gtimg.cn/appstock/app/kline/mkline?param=' + code + ',' + spec.key + ',,120');
+                const node = (d && d.data && d.data[code]) || {};
+                arr = node[spec.key] || [];
+            } else {
+                const q = 'param=' + code + ',' + spec.key + ',,,120,qfq';
+                let d;
+                try { d = await mkJsonVar('https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?' + q); }
+                catch (e) { d = await mkJsonVar('https://ifzq.gtimg.cn/appstock/app/fqkline/get?' + q); }
+                const node = (d && d.data && d.data[code]) || {};
+                arr = node['qfq' + spec.key] || node[spec.key] || [];
+            }
+            const rows = arr.map(a => ({
+                t: String(a[0]), o: parseFloat(a[1]), c: parseFloat(a[2]),
+                h: parseFloat(a[3]), l: parseFloat(a[4]), v: parseFloat(a[5]) || 0
+            })).filter(r => [r.o, r.c, r.h, r.l].every(isFinite) && r.h >= r.l && r.h > 0);
+            if (rows.length < 2) throw new Error('暂无数据');
+            MK.chartData = { kind: 'kline', rows };
+            mkSetMeta(rows[rows.length - 1].c, rows[rows.length - 2].c, rows[0].c);
+        }
+        mkChartTitle();
+        mkSnap();
+        mkPaintAll();
+        $('mk_chart_stat').textContent = '';
+    } catch (err) {
+        $('mk_chart_stat').textContent = err.message;
+    } finally {
+        MK.chartBusy = false;
+        mkReport();
+    }
+}
+function mkLinePainter(ctx, w, h, closes, base) {
+    let min = Math.min(...closes), max = Math.max(...closes);
+    // 基准线也要落在可视范围内，否则曲线贴顶时基准线画到框外
+    if (base > 0) { min = Math.min(min, base); max = Math.max(max, base); }
+    let span = max - min;
+    if (span <= 0) { const pad = Math.abs(max) * 0.002 + 0.5; min -= pad; max += pad; span = max - min; }
+    const padX = 2, padY = 8;
+    const uw = w - padX * 2, uh = h - padY * 2;
+    const ref = base > 0 ? base : closes[0];
+    const last = closes[closes.length - 1];
+    const lineColor = last > ref ? '#D62728' : (last < ref ? '#1E8E3E' : '#64748B');
+    const px = i => padX + uw * i / (closes.length - 1);
+    const py = v => padY + (max - v) / span * uh;
+    const grad = ctx.createLinearGradient(0, padY, 0, h - padY);
+    grad.addColorStop(0, lineColor + '70');
+    grad.addColorStop(1, lineColor + '00');
+    ctx.beginPath();
+    closes.forEach((v, i) => i ? ctx.lineTo(px(i), py(v)) : ctx.moveTo(px(0), py(v)));
+    ctx.lineTo(px(closes.length - 1), h - padY);
+    ctx.lineTo(px(0), h - padY);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+    if (base > 0) {
+        mkDashed(ctx, MK_DASH.base, () => {
+            ctx.moveTo(padX, py(base));
+            ctx.lineTo(w - padX, py(base));
+        });
+    }
+    ctx.beginPath();
+    closes.forEach((v, i) => i ? ctx.lineTo(px(i), py(v)) : ctx.moveTo(px(0), py(v)));
+    ctx.lineWidth = 1.6;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = lineColor;
+    ctx.stroke();
+    const lx = px(closes.length - 1), ly = py(last);
+    ctx.beginPath(); ctx.arc(lx, ly, 4, 0, 7); ctx.fillStyle = '#fff'; ctx.fill();
+    ctx.beginPath(); ctx.arc(lx, ly, 2.6, 0, 7); ctx.fillStyle = lineColor; ctx.fill();
+    if (base > 0 && w >= 260) {
+        ctx.font = '10px -apple-system, "PingFang SC", sans-serif';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'bottom';
+        ctx.fillStyle = '#8b97b0';
+        ctx.fillText('昨收 ' + base.toFixed(2), w - padX - 2, py(base) - 2);
+    }
+}
+function mkTimeLabel(t) {
+    return /^\d{12}$/.test(t) ? t.slice(8, 10) + ':' + t.slice(10, 12) : String(t).slice(5);
+}
+// MACD 柱按 2*(DIF-DEA)，与行情软件口径一致
+function mkSMA(a, p) {
+    return a.map((_, i) => {
+        if (i < p - 1) return NaN;
+        let s = 0;
+        for (let k = i - p + 1; k <= i; k++) s += a[k];
+        return s / p;
+    });
+}
+function mkEMA(a, span) {
+    const alpha = 2 / (span + 1), out = [];
+    let prev = a[0];
+    for (let i = 0; i < a.length; i++) { prev = i ? alpha * a[i] + (1 - alpha) * prev : prev; out.push(prev); }
+    return out;
+}
+function mkMACD(a) {
+    const fast = mkEMA(a, 12), slow = mkEMA(a, 26);
+    const dif = a.map((_, i) => fast[i] - slow[i]);
+    const dea = mkEMA(dif, 9);
+    return { dif, dea, hist: dif.map((v, i) => 2 * (v - dea[i])) };
+}
+function mkRSI(a, p) {
+    const out = a.map(() => NaN);
+    if (a.length <= p) return out;
+    let gain = 0, loss = 0;
+    for (let i = 1; i <= p; i++) {
+        const d = a[i] - a[i - 1];
+        if (d > 0) gain += d; else loss -= d;
+    }
+    gain /= p; loss /= p;
+    for (let i = p; i < a.length; i++) {
+        if (i > p) {
+            const d = a[i] - a[i - 1];
+            gain = (gain * (p - 1) + Math.max(0, d)) / p;
+            loss = (loss * (p - 1) + Math.max(0, -d)) / p;
+        }
+        out[i] = loss === 0 ? 100 : 100 - 100 / (1 + gain / loss);
+    }
+    return out;
+}
+function mkKDJ(rows) {
+    const k = [], d = [], j = [];
+    let pk = 50, pd = 50;
+    rows.forEach((r, i) => {
+        let hi = -Infinity, lo = Infinity;
+        for (let m = Math.max(0, i - 8); m <= i; m++) { hi = Math.max(hi, rows[m].h); lo = Math.min(lo, rows[m].l); }
+        const rsv = hi === lo ? 50 : (r.c - lo) / (hi - lo) * 100;
+        pk = (pk * 2 + rsv) / 3;
+        pd = (pd * 2 + pk) / 3;
+        k.push(pk); d.push(pd); j.push(3 * pk - 2 * pd);
+    });
+    return { k, d, j };
+}
+function mkIndicators(rows) {
+    const closes = rows.map(r => r.c);
+    return {
+        ma5: mkSMA(closes, 5), ma10: mkSMA(closes, 10), ma20: mkSMA(closes, 20),
+        macd: mkMACD(closes), rsi: mkRSI(closes, 14), kdj: mkKDJ(rows)
+    };
+}
+function mkSubPainter(ctx, w, h, rows, g, ind, inds) {
+    const { padL, padR, subTop, subH, step, cx } = g;
+    const bw = Math.max(1, Math.min(13, step * 0.62));
+    const x1 = w - padR;
+    ctx.font = '10px -apple-system, "PingFang SC", sans-serif';
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'left';
+    const label = (text, color) => { ctx.fillStyle = color || '#8a93a8'; ctx.fillText(text, padL + 2, subTop + 8); };
+    if (ind === 'vol') {
+        const maxV = Math.max(...rows.map(r => r.v)) || 1;
+        rows.forEach((r, i) => {
+            const bh = r.v / maxV * (subH - 12);
+            ctx.fillStyle = r.c >= r.o ? 'rgba(214,39,40,.55)' : 'rgba(30,142,62,.55)';
+            ctx.fillRect(cx(i) - bw / 2, subTop + subH - bh, bw, bh);
+        });
+        label('成交量');
+    } else if (ind === 'macd') {
+        const { dif, dea, hist } = inds.macd;
+        let maxAbs = 0;
+        for (let i = 0; i < rows.length; i++) maxAbs = Math.max(maxAbs, Math.abs(dif[i]), Math.abs(dea[i]), Math.abs(hist[i]));
+        maxAbs = maxAbs || 1;
+        const zero = subTop + subH / 2;
+        const y = v => zero - v / maxAbs * (subH / 2 - 3);
+        mkDashed(ctx, MK_DASH.grid, () => { ctx.moveTo(padL, zero); ctx.lineTo(x1, zero); });
+        rows.forEach((r, i) => {
+            const yy = y(hist[i]);
+            ctx.fillStyle = hist[i] >= 0 ? 'rgba(214,39,40,.6)' : 'rgba(30,142,62,.6)';
+            ctx.fillRect(cx(i) - bw / 2, Math.min(zero, yy), bw, Math.max(1, Math.abs(yy - zero)));
+        });
+        [[dif, '#f59e0b'], [dea, '#8b5cf6']].forEach(([arr, color]) => {
+            ctx.beginPath();
+            arr.forEach((v, i) => i ? ctx.lineTo(cx(i), y(v)) : ctx.moveTo(cx(0), y(v)));
+            ctx.lineWidth = 1.2; ctx.strokeStyle = color; ctx.stroke();
+        });
+        const n = rows.length - 1;
+        label(`MACD(12,26,9)  DIF ${dif[n].toFixed(3)}  DEA ${dea[n].toFixed(3)}  MACD ${hist[n].toFixed(3)}`, '#f59e0b');
+    } else if (ind === 'rsi') {
+        const r = inds.rsi;
+        const y = v => subTop + subH - v / 100 * subH;
+        [30, 70].forEach(v => mkDashed(ctx, MK_DASH.grid, () => { ctx.moveTo(padL, y(v)); ctx.lineTo(x1, y(v)); }));
+        ctx.beginPath();
+        let started = false;
+        r.forEach((v, i) => {
+            if (!isFinite(v)) return;
+            if (started) ctx.lineTo(cx(i), y(v)); else { ctx.moveTo(cx(i), y(v)); started = true; }
+        });
+        ctx.lineWidth = 1.4; ctx.strokeStyle = '#f59e0b'; ctx.stroke();
+        label(`RSI(14)  ${isFinite(r[r.length - 1]) ? r[r.length - 1].toFixed(2) : '-'}`, '#f59e0b');
+    } else {
+        const { k, d, j } = inds.kdj;
+        // J 常冲出 0~100，纵轴留到 -20~120（同 KLineView）
+        const y = v => subTop + subH - (v + 20) / 140 * subH;
+        [20, 80].forEach(v => mkDashed(ctx, MK_DASH.grid, () => { ctx.moveTo(padL, y(v)); ctx.lineTo(x1, y(v)); }));
+        [[k, '#f59e0b'], [d, '#8b5cf6'], [j, '#0891b2']].forEach(([arr, color]) => {
+            ctx.beginPath();
+            arr.forEach((v, i) => i ? ctx.lineTo(cx(i), y(v)) : ctx.moveTo(cx(0), y(v)));
+            ctx.lineWidth = 1.2; ctx.strokeStyle = color; ctx.stroke();
+        });
+        const n = rows.length - 1;
+        label(`KDJ(9,3,3)  K ${k[n].toFixed(2)}  D ${d[n].toFixed(2)}  J ${j[n].toFixed(2)}`, '#f59e0b');
+    }
+}
+function mkKLinePainter(ctx, w, h, rows) {
+    const padL = 6, padR = 56, padT = 22, padB = 20, volH = 56, gap = 10;
+    const plotW = w - padL - padR, priceH = h - padT - padB - volH - gap;
+    const { lo, hi } = mkPriceRange(rows);
+    const py = v => padT + (hi - v) / (hi - lo) * priceH;
+    const step = plotW / rows.length;
+    const bw = Math.max(1, Math.min(13, step * 0.62));
+    const cx = i => padL + (i + 0.5) * step;
+    ctx.font = '10px -apple-system, "PingFang SC", sans-serif';
+    ctx.textBaseline = 'middle';
+    for (let i = 0; i <= 4; i++) {
+        const gy = padT + priceH * i / 4;
+        mkDashed(ctx, MK_DASH.grid, () => { ctx.moveTo(padL, gy); ctx.lineTo(w - padR, gy); });
+        ctx.fillStyle = '#8a93a8';
+        ctx.textAlign = 'left';
+        ctx.fillText((hi - (hi - lo) * i / 4).toFixed(2), w - padR + 6, gy);
+    }
+    const inds = mkIndicators(rows);
+    const subTop = padT + priceH + gap;
+    mkSubPainter(ctx, w, h, rows, { padL, padR, subTop, subH: volH, step, cx }, MK.ind, inds);
+    rows.forEach((r, i) => {
+        const x = cx(i), up = r.c >= r.o;
+        const color = up ? '#D62728' : '#1E8E3E';
+        ctx.strokeStyle = color; ctx.fillStyle = color;
+        ctx.beginPath(); ctx.moveTo(x, py(r.h)); ctx.lineTo(x, py(r.l)); ctx.stroke();
+        const yo = py(r.o), yc = py(r.c);
+        ctx.fillRect(x - bw / 2, Math.min(yo, yc), bw, Math.max(1, Math.abs(yc - yo)));
+    });
+    let legendX = padL;
+    ctx.textAlign = 'left';
+    [[5, inds.ma5, '#f59e0b'], [10, inds.ma10, '#8b5cf6'], [20, inds.ma20, '#0891b2']].forEach(([p, ma, color]) => {
+        ctx.beginPath();
+        let started = false;
+        rows.forEach((r, i) => {
+            if (!isFinite(ma[i])) return;
+            const x = cx(i), y = py(ma[i]);
+            if (started) ctx.lineTo(x, y); else { ctx.moveTo(x, y); started = true; }
+        });
+        ctx.lineWidth = 1.2; ctx.strokeStyle = color; ctx.stroke();
+        const v = ma[ma.length - 1];
+        const label = 'MA' + p + (isFinite(v) ? ':' + v.toFixed(2) : '');
+        ctx.fillStyle = color;
+        ctx.fillText(label, legendX, 11);
+        legendX += ctx.measureText(label).width + 12;
+    });
+    const last = rows[rows.length - 1];
+    const ly = py(last.c);
+    const lastColor = last.c >= rows[rows.length - 2].c ? '#D62728' : '#1E8E3E';
+    mkDashed(ctx, MK_DASH.last, () => { ctx.moveTo(padL, ly); ctx.lineTo(w - padR, ly); }, lastColor);
+    ctx.fillStyle = lastColor;
+    ctx.fillRect(w - padR, ly - 8, padR, 16);
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'center';
+    ctx.fillText(last.c.toFixed(2), w - padR / 2, ly);
+    ctx.fillStyle = '#8a93a8';
+    [0, Math.floor(rows.length / 3), Math.floor(rows.length * 2 / 3), rows.length - 1].forEach((i, k) => {
+        ctx.textAlign = k === 0 ? 'left' : (k === 3 ? 'right' : 'center');
+        ctx.fillText(mkTimeLabel(rows[i].t), k === 0 ? padL : (k === 3 ? w - padR : cx(i)), h - padB / 2);
+    });
+}
+
+// 分时接口两台主机常有一台回 501，逐台试
+async function mkIntraday(code) {
+    try { return await mkJsonVar('https://ifzq.gtimg.cn/appstock/app/minute/query?code=' + code); }
+    catch (e) { return await mkJsonVar('https://web.ifzq.gtimg.cn/appstock/app/minute/query?code=' + code); }
+}
+
+// iframe 内 fixed 浮窗会被裁剪，须由宿主页临时撑高 iframe
+function mkOpenFloat() {
+    if (!MK.chartData) { toast('请先选择标的'); return; }
+    MK.floatOpen = true;
+    $('mk_modal').classList.add('show');
+    try { parent.postMessage({ mkFloat: true }, '*'); } catch (e) {}
+    requestAnimationFrame(() => mkPaintAll());
+}
+function mkCloseFloat() {
+    if (!MK.floatOpen) return;
+    MK.floatOpen = false;
+    $('mk_modal').classList.remove('show');
+    $('mk_cross_tip').classList.remove('show');
+    try { parent.postMessage({ mkFloat: false }, '*'); } catch (e) {}
+    mkReport();
+}
+function mkPriceRange(rows) {
+    const lo0 = Math.min(...rows.map(r => r.l)), hi0 = Math.max(...rows.map(r => r.h));
+    const pad = (hi0 - lo0 || Math.abs(hi0) * 0.01 || 1) * 0.06;
+    return { lo: lo0 - pad, hi: hi0 + pad };
+}
+function mkAxisTag(ctx, text, x, y, width) {
+    ctx.save();
+    ctx.fillStyle = '#334155';
+    ctx.fillRect(x, y - 8, width, 16);
+    ctx.fillStyle = '#fff';
+    ctx.font = '10px -apple-system, "PingFang SC", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, x + width / 2, y);
+    ctx.restore();
+}
+function mkChartGeom(data, w, h) {
+    if (data.kind === 'line') {
+        const padX = 2, padY = 8, uw = w - padX * 2, uh = h - padY * 2;
+        return { padX, padY, uw, uh, cx: i => padX + uw * i / (data.closes.length - 1) };
+    }
+    const padL = 6, padR = 56, padT = 22, padB = 20, volH = 56, gap = 10;
+    const plotW = w - padL - padR, priceH = h - padT - padB - volH - gap;
+    const step = plotW / data.rows.length;
+    const { lo, hi } = mkPriceRange(data.rows);
+    return { padL, padR, padT, padB, volH, gap, plotW, priceH, step, lo, hi, cx: i => padL + (i + 0.5) * step };
+}
+function mkCrossMove(e) {
+    const cv = e.target;
+    const tip = $('mk_cross_tip');
+    const data = MK.chartData;
+    if (!cv || (cv.id !== 'mk_chart' && cv.id !== 'mk_float_chart') || !data) { tip.classList.remove('show'); return; }
+    const isInline = cv.id === 'mk_chart';
+    mkPaint(data, cv, isInline ? MK_CHART_H[data.kind] : undefined);
+    const rect = cv.getBoundingClientRect();
+    const x = e.clientX - rect.left, y = e.clientY - rect.top;
+    const w = cv.clientWidth, h = cv.clientHeight;
+    if (w <= 0 || h <= 0) return;
+    const g = mkChartGeom(data, w, h);
+    const ctx = cv.getContext('2d');
+    let html = '';
+    if (data.kind === 'line') {
+        const closes = data.closes;
+        const i = Math.max(0, Math.min(closes.length - 1, Math.round(x / g.uw * (closes.length - 1))));
+        let min = Math.min(...closes), max = Math.max(...closes);
+        if (data.base > 0) { min = Math.min(min, data.base); max = Math.max(max, data.base); }
+        let span = max - min;
+        if (span <= 0) { const pad = Math.abs(max) * 0.002 + 0.5; min -= pad; max += pad; span = max - min; }
+        const py = v => g.padY + (max - v) / span * g.uh;
+        const cx = g.cx(i), cy = py(closes[i]);
+        mkDashed(ctx, MK_DASH.cross, () => { ctx.moveTo(cx, 0); ctx.lineTo(cx, h); ctx.moveTo(0, y); ctx.lineTo(w - 48, y); });
+        ctx.beginPath(); ctx.arc(cx, cy, 3, 0, 7); ctx.fillStyle = '#fff'; ctx.fill();
+        if (y >= g.padY && y <= h - g.padY) {
+            mkAxisTag(ctx, (max - (y - g.padY) / g.uh * span).toFixed(2), w - 48, y, 46);
+        }
+        const t = (data.times && data.times[i]) || '';
+        const label = /^\d{12}$/.test(t) ? t.slice(8, 10) + ':' + t.slice(10, 12) : (t || '第' + (i + 1) + '点');
+        const ref = data.base > 0 ? data.base : closes[0];
+        const pct = ref > 0 ? (closes[i] - ref) / ref * 100 : 0;
+        const cls = pct > 0 ? 'up' : (pct < 0 ? 'down' : '');
+        html = `<b>${label} ${MK.sel}</b><br>价 <span class="${cls}">${closes[i].toFixed(2)}</span><br>涨跌 <span class="${cls}">${pct > 0 ? '+' : ''}${pct.toFixed(2)}%</span>`;
+    } else {
+        const rows = data.rows;
+        const i = Math.max(0, Math.min(rows.length - 1, Math.floor((x - g.padL) / g.step)));
+        const r = rows[i], prev = i > 0 ? rows[i - 1].c : r.o;
+        const cx = g.cx(i);
+        mkDashed(ctx, MK_DASH.cross, () => { ctx.moveTo(cx, 0); ctx.lineTo(cx, h); ctx.moveTo(g.padL, y); ctx.lineTo(w - g.padR, y); });
+        if (y >= g.padT && y <= g.padT + g.priceH) {
+            mkAxisTag(ctx, (g.hi - (y - g.padT) / g.priceH * (g.hi - g.lo)).toFixed(2), w - g.padR, y, g.padR);
+        }
+        const pct = prev > 0 ? (r.c - prev) / prev * 100 : 0;
+        const amp = prev > 0 ? (r.h - r.l) / prev * 100 : 0;
+        const cls = pct > 0 ? 'up' : (pct < 0 ? 'down' : '');
+        const inds = mkIndicators(rows);
+        const num = v => isFinite(v) ? v.toFixed(2) : '-';
+        let indLine;
+        if (MK.ind === 'macd') {
+            const m = inds.macd;
+            indLine = `DIF ${num(m.dif[i])}　DEA ${num(m.dea[i])}　MACD ${num(m.hist[i])}`;
+        } else if (MK.ind === 'rsi') indLine = `RSI(14) ${num(inds.rsi[i])}`;
+        else if (MK.ind === 'kdj') indLine = `K ${num(inds.kdj.k[i])}　D ${num(inds.kdj.d[i])}　J ${num(inds.kdj.j[i])}`;
+        else indLine = `成交量 ${r.v.toFixed(0)} 手`;
+        html = `<b>${mkTimeLabel(r.t)} ${MK.sel}</b><br>开 ${r.o.toFixed(2)}　高 ${r.h.toFixed(2)}　低 ${r.l.toFixed(2)}　收 <span class="${cls}">${r.c.toFixed(2)}</span><br>涨跌 <span class="${cls}">${pct > 0 ? '+' : ''}${pct.toFixed(2)}%</span>　振幅 ${amp.toFixed(2)}%<br>MA5 ${num(inds.ma5[i])}　MA10 ${num(inds.ma10[i])}　MA20 ${num(inds.ma20[i])}<br>${indLine}`;
+    }
+    tip.innerHTML = html;
+    tip.classList.add('show');
+    tip.style.left = Math.max(8, Math.min(e.clientX + 16, window.innerWidth - tip.offsetWidth - 8)) + 'px';
+    tip.style.top = Math.max(8, Math.min(e.clientY + 16, window.innerHeight - tip.offsetHeight - 8)) + 'px';
+}
+function mkCrossLeave(e) {
+    const cv = e.target;
+    if (!cv || (cv.id !== 'mk_chart' && cv.id !== 'mk_float_chart')) return;
+    $('mk_cross_tip').classList.remove('show');
+    mkPaintAll();
+}
+
+async function mkHoverData(code) {
+    const c = MK.hoverCache[code];
+    if (c && Date.now() - c.ts < 60000) return c.data;
+    const d = await mkIntraday(code);
+    const node = (d && d.data && d.data[code]) || {};
+    const closes = (((node.data || {}).data) || [])
+        .map(s => parseFloat(String(s).split(' ')[1])).filter(v => isFinite(v) && v > 0);
+    const qt = (node.qt || {})[code];
+    const data = { kind: 'line', closes, base: qt ? parseFloat(qt[4]) : 0 };
+    if (closes.length < 2) throw new Error('暂无分时数据');
+    MK.hoverCache[code] = { ts: Date.now(), data };
+    return data;
+}
+function mkHoverMove(e) {
+    const el = e.target.closest('.mk-tile');
+    const box = $('mk_hover');
+    if (!el || !el.dataset.code || MK.floatOpen) { box.classList.remove('show'); MK.hoverCode = null; return; }
+    const code = el.dataset.code;
+    box.style.left = Math.max(8, Math.min(e.clientX + 16, window.innerWidth - 278)) + 'px';
+    box.style.top = Math.max(8, Math.min(e.clientY + 16, window.innerHeight - 205)) + 'px';
+    box.classList.add('show');
+    if (code === MK.hoverCode) return;
+    MK.hoverCode = code;
+    const seq = ++MK.hoverSeq;
+    const pct = parseFloat(el.dataset.pct);
+    $('mk_hover_name').textContent = el.dataset.name || code;
+    $('mk_hover_pct').textContent = isFinite(pct) ? (pct > 0 ? '+' : '') + pct.toFixed(2) + '%' : '';
+    $('mk_hover_pct').style.color = pct > 0 ? '#D62728' : (pct < 0 ? '#1E8E3E' : '#64748B');
+    $('mk_hover_stat').textContent = '加载中…';
+    mkHoverData(code).then(data => {
+        if (seq !== MK.hoverSeq || !box.classList.contains('show')) return;
+        $('mk_hover_stat').textContent = '';
+        mkPaint(data, $('mk_hover_chart'), 140);
+    }).catch(err => {
+        if (seq === MK.hoverSeq) $('mk_hover_stat').textContent = err.message;
+    });
+}
+
+// push2 clist 常整段不回包，新浪榜作主线路
+async function mkHeatFromSina() {
+    const vn = 'mksi_' + Date.now().toString(36) + Math.floor(Math.random() * 1e5).toString(36);
+    await mkLoadScript('https://vip.stock.finance.sina.com.cn/quotes_service/api/jsonp.php/var%20'
+        + vn + '=/Market_Center.getHQNodeData?page=1&num=50&sort=mktcap&asc=0&node=hs_a&symbol=&r=' + Date.now(), null, 'no-referrer');
+    const arr = window[vn];
+    window[vn] = null;
+    if (!Array.isArray(arr) || !arr.length) throw new Error('行情数据为空');
+    return arr.map(x => ({
+        code: String(x.symbol || ''),
+        name: x.name,
+        pct: parseFloat(x.changepercent),
+        cap: parseFloat(x.mktcap) * 1e4      // 新浪的市值单位是万元
+    })).filter(r => r.code && isFinite(r.cap) && r.cap > 0 && isFinite(r.pct));
+}
+async function mkHeatFromEast() {
+    const d = await mkJsonCb('https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=50&po=1&np=1&fltt=2&invt=2&fid=f20&fs='
+        + encodeURIComponent('m:0+t:6,m:0+t:80,m:1+t:2,m:1+t:23,m:0+t:81+s:2048')
+        + '&fields=f2,f3,f12,f13,f14,f20');
+    const diff = (d && d.data && d.data.diff) || [];
+    return diff.map(x => ({
+        code: (x.f13 === 1 ? 'sh' : 'sz') + String(x.f12),
+        name: x.f14,
+        pct: parseFloat(x.f3),
+        cap: parseFloat(x.f20)
+    })).filter(r => isFinite(r.cap) && r.cap > 0 && isFinite(r.pct));
+}
+// 家数得单独取整市场，市值榜只有前几十只，讲不出今天是不是普涨
+let mkBreadthTs = 0, mkBreadthBusy = false;
+async function mkBreadthFromSina() {
+    const vn = 'mkb_' + Date.now().toString(36) + Math.floor(Math.random() * 1e5).toString(36);
+    await mkLoadScript('https://vip.stock.finance.sina.com.cn/quotes_service/api/jsonp.php/var%20'
+        + vn + '=/Market_Center.getHQNodeData?page=1&num=6000&sort=symbol&asc=1&node=hs_a&symbol=&r=' + Date.now(), null, 'no-referrer');
+    const arr = window[vn];
+    window[vn] = null;
+    if (!Array.isArray(arr) || !arr.length) throw new Error('全市场家数无数据');
+    return arr.map(x => parseFloat(x.changepercent) || 0);
+}
+async function mkBreadthFromEast() {
+    const d = await mkJsonCb('https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=6000&po=1&np=1&fltt=2&invt=2&fid=f3&fs='
+        + encodeURIComponent('m:0+t:6,m:0+t:80,m:1+t:2,m:1+t:23,m:0+t:81+s:2048')
+        + '&fields=f3,f12');
+    const diff = (d && d.data && d.data.diff) || [];
+    const arr = Array.isArray(diff) ? diff : Object.values(diff);
+    if (!arr.length) throw new Error('全市场家数无数据');
+    return arr.map(x => parseFloat(x && x.f3) || 0);
+}
+async function mkBreadthLoad() {
+    if (mkBreadthBusy || Date.now() - mkBreadthTs < 60000) return;
+    mkBreadthBusy = true;
+    let vals = null;
+    try { vals = await mkBreadthFromSina(); }
+    catch (e1) { try { vals = await mkBreadthFromEast(); } catch (e2) {} }
+    if (vals && vals.length) {
+        let up = 0, down = 0, flat = 0;
+        vals.forEach(p => { if (p > 0.0001) up++; else if (p < -0.0001) down++; else flat++; });
+        $('mk_breadth').innerHTML = `全市场 <span class="up">涨 ${up}</span>　<span class="down">跌 ${down}</span>　<span class="flat">平 ${flat}</span>`;
+        mkBreadthTs = Date.now();
+    } else {
+        $('mk_breadth').textContent = '';
+    }
+    mkBreadthBusy = false;
+    mkReport();
+}
+async function mkHeatLoad() {
+    if (MK.heatBusy) return;
+    MK.heatBusy = true;
+    $('mk_heat_stat').textContent = '加载中…';
+    let rows = null, lastErr = null;
+    try {
+        rows = await mkHeatFromSina();
+    } catch (e1) {
+        lastErr = e1;
+        try { rows = await mkHeatFromEast(); } catch (e2) { lastErr = e2; }
+    }
+    if (rows && rows.length) {
+        MK.heat = rows;
+        const stamp = new Date().toLocaleTimeString('zh-CN', { hour12: false, hour: '2-digit', minute: '2-digit' });
+        mkHeatRender();
+        $('mk_heat_stat').textContent = '';
+        $('mk_heat_legend').textContent = '面积=市值 · 颜色=涨跌 · 沪深京' + rows.length + ' · ' + stamp;
+        mkBreadthLoad();
+    } else {
+        $('mk_heat_stat').textContent = (lastErr ? lastErr.message : '无数据') + '，可点刷新重试';
+    }
+    MK.heatBusy = false;
+    mkReport();
+}
+function mkHeatColor(pct) {
+    const base = pct > 0.0001 ? [214, 39, 40] : (pct < -0.0001 ? [30, 142, 62] : [100, 116, 139]);
+    const a = 0.28 + Math.min(1, Math.abs(pct) / 5) * 0.72;   // 0% 也留底色，全透明会看成空洞
+    return { css: `rgba(${base[0]},${base[1]},${base[2]},${a.toFixed(2)})`, strong: a >= 0.59 };
+}
+function mkRowLength(items, from, total, side, cross) {
+    let best = 1, run = 0, bestWorst = Infinity;
+    const minExt = Math.max(2, side / 18);
+    for (let n = 1; from + n <= items.length; n++) {
+        run += Math.max(0, items[from + n - 1].cap);
+        if (!(run > 0) || !(total > 0)) break;
+        const thick = cross * run / total;
+        if (thick < 1) break;
+        let worst = 0;
+        for (let i = from; i < from + n; i++) {
+            const ext = side * Math.max(0, items[i].cap) / run;
+            if (ext < minExt) { worst = Infinity; break; }
+            worst = Math.max(worst, thick / ext, ext / thick);
+        }
+        if (worst <= bestWorst) { bestWorst = worst; best = n; }
+        else if (n > best) break;
+    }
+    return Math.max(1, Math.min(best, items.length - from));
+}
+function mkHeatLayout(rows, x, y, w, h) {
+    const usable = rows.filter(r => r.cap > 0).sort((a, b) => b.cap - a.cap);
+    if (!(usable.length && w > 1 && h > 1)) return [];
+    const out = [];
+    let X = x, Y = y, W = w, H = h, from = 0;
+    while (from < usable.length) {
+        // 分母必须按剩余标的重算，否则各行厚度凑不满矩形、右下留白
+        const restTotal = usable.slice(from).reduce((s, r) => s + r.cap, 0);
+        const along = W >= H;
+        const side = along ? H : W;
+        const cross = along ? W : H;
+        const n = mkRowLength(usable, from, restTotal, side, cross);
+        const line = usable.slice(from, from + n);
+        const lineCap = line.reduce((s, r) => s + r.cap, 0);
+        const thick = cross * lineCap / restTotal;
+        let off = 0;
+        for (const r of line) {
+            const ext = side * r.cap / lineCap;
+            out.push(Object.assign({ x: along ? X : X + off, y: along ? Y + off : Y, w: along ? thick : ext, h: along ? ext : thick }, r));
+            off += ext;
+        }
+        if (along) X += thick; else Y += thick;
+        if (along) W -= thick; else H -= thick;
+        from += n;
+    }
+    return out;
+}
+function mkTileFont(w, h, len, smallLines) {
+    const lines = len > 3 ? 2 : 1;
+    const availH = h - 6 - smallLines * 12;
+    return Math.max(5, Math.min(16, (w - 6) / Math.ceil(len / lines), availH / (lines * 1.15)));
+}
+function mkHeatRender() {
+    const box = $('mk_heat');
+    let w = box.clientWidth, h = box.clientHeight;
+    // 布局还不可测（display:none / 首帧）时退到虚拟尺寸按百分比铺，不依赖测量时机
+    const pctMode = !(w > 1 && h > 1);
+    if (pctMode) { w = 1000; h = 560; }
+    const rects = mkHeatLayout(MK.heat, 0, 0, w, h);
+    const pos = r => pctMode
+        ? `left:${(r.x / w * 100).toFixed(2)}%;top:${(r.y / h * 100).toFixed(2)}%;width:${(r.w / w * 100).toFixed(2)}%;height:${(r.h / h * 100).toFixed(2)}%`
+        : `left:${r.x.toFixed(1)}px;top:${r.y.toFixed(1)}px;width:${r.w.toFixed(1)}px;height:${r.h.toFixed(1)}px`;
+    const scale = pctMode ? 0.72 : 1;
+    box.innerHTML = rects.map(r => {
+        const c = mkHeatColor(r.pct);
+        const realW = r.w * scale, realH = r.h * scale;
+        const showPct = realW >= 52 && realH >= 30;
+        const showCap = realW >= 68 && realH >= 46;
+        const cap = mkCap(r.cap);
+        const fs = mkTileFont(realW, realH, r.name.length, (showPct ? 1 : 0) + (showCap ? 1 : 0));
+        const title = `${r.name} ${r.pct > 0 ? '+' : ''}${r.pct.toFixed(2)}% · 总市值 ${cap}`;
+        return `<div class="mk-tile" style="${pos(r)}" data-code="${r.code}" data-name="${r.name}" data-pct="${r.pct}" data-len="${r.name.length}" title="${title}">
+            <div class="mk-tile-in" style="background:${c.css};color:${c.strong ? '#fff' : 'var(--text)'}"><b style="font-size:${fs.toFixed(1)}px">${r.name}</b><em style="${showCap ? '' : 'display:none'}">${cap}</em><i style="${showPct ? '' : 'display:none'}">${r.pct > 0 ? '+' : ''}${r.pct.toFixed(2)}%</i></div>
+        </div>`;
+    }).join('');
+    requestAnimationFrame(mkFitTileFonts);
+}
+function mkFitTileFonts() {
+    document.querySelectorAll('#mk_heat .mk-tile').forEach(t => {
+        const b = t.querySelector('b'), pct = t.querySelector('i'), cap = t.querySelector('em');
+        const w = t.clientWidth, h = t.clientHeight;
+        if (!b || !pct || !cap || w <= 0 || h <= 0) return;
+        pct.style.fontSize = cap.style.fontSize = Math.max(7, Math.min(10.5, w / 8)).toFixed(1) + 'px';
+        // 三行 → 两行 → 单行逐档实测，名称字号给不出下限时降级，别为塞市值把名字压到读不清
+        for (const [capOn, pctOn, minFs] of [[true, true, 9], [false, true, 7], [false, false, 5]]) {
+            cap.style.display = capOn ? '' : 'none';
+            pct.style.display = pctOn ? '' : 'none';
+            if ((capOn && cap.offsetWidth > w - 4) || (pctOn && pct.offsetWidth > w - 4)) continue;
+            let fs = mkTileFont(w, h, b.textContent.length, (capOn ? 1 : 0) + (pctOn ? 1 : 0));
+            if (fs < minFs) continue;
+            b.style.fontSize = fs.toFixed(1) + 'px';
+            const height = () => b.offsetHeight + (capOn ? cap.offsetHeight : 0) + (pctOn ? pct.offsetHeight : 0);
+            for (let k = 0; k < 12; k++) {
+                if (height() <= h - 4 && b.scrollWidth <= b.clientWidth + 1) break;
+                fs = Math.max(5, fs - 0.8);
+                b.style.fontSize = fs.toFixed(1) + 'px';
+                if (fs <= 5) break;
+            }
+            if (fs >= minFs && height() <= h - 4) return;
+        }
+        cap.style.display = 'none';
+        pct.style.display = 'none';
+        b.style.fontSize = Math.max(5, mkTileFont(w, h, b.textContent.length, 0)).toFixed(1) + 'px';
+    });
+}
+
+const Actions = { mkRefresh, mkAdd, mkDel, mkPick, mkToggleAuto, mkRange, mkIndChange, mkHeatRefresh: mkHeatLoad, mkOpenFloat, mkCloseFloat };
+document.addEventListener('click', e => {
+    const act = e.target.closest('[data-action]');
+    if (act && typeof Actions[act.dataset.action] === 'function') Actions[act.dataset.action](act.dataset.arg);
+    if (!e.target.closest('.mk-add')) $('mk_sug').classList.remove('show');
+});
+$('mk_list').addEventListener('click', e => {
+    if (e.target.closest('.mk-del')) return;
+    const row = e.target.closest('.mk-row');
+    if (row && row.dataset.code) mkSelect(row.dataset.code);
+});
+$('mk_heat').addEventListener('click', e => {
+    const tile = e.target.closest('.mk-tile');
+    if (tile && tile.dataset.code) mkSelect(tile.dataset.code);
+});
+$('mk_float_period').innerHTML = $('mk_period').innerHTML;
+$('mk_float_inds').innerHTML = $('mk_inds').innerHTML;
+['mk_period', 'mk_float_period'].forEach(id => $(id).addEventListener('change', e => mkRange(e.target.value)));
+['mk_chart', 'mk_float_chart'].forEach(id => {
+    $(id).addEventListener('mousemove', mkCrossMove);
+    $(id).addEventListener('mouseleave', mkCrossLeave);
+});
+document.addEventListener('mousemove', mkHoverMove);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') mkCloseFloat(); });
+$('mk_input').addEventListener('input', e => {
+    clearTimeout(mkSugT);
+    const q = e.target.value.trim();
+    if (!q) { $('mk_sug').classList.remove('show'); return; }
+    mkSugT = setTimeout(() => mkSuggest(q), 300);
+});
+$('mk_input').addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    mkAdd();
+});
+function mkRelayout() {
+    mkHeatRender();
+    mkFitTileFonts();
+    mkPaintAll();
+    mkReport();
+}
+let mkRsT;
+window.addEventListener('resize', () => {
+    clearTimeout(mkRsT);
+    mkRsT = setTimeout(mkRelayout, 200);
+});
+// 隐藏时停轮询，避免 iframe 空转
+window.addEventListener('message', e => {
+    if (!e.data) return;
+    if (e.data.mkCloseFloat) mkCloseFloat();
+    if (e.data.mkResize) mkRelayout();
+    if (typeof e.data.mkPause !== 'boolean') return;
+    if (e.data.mkPause) mkStop();
+    else if (MK.auto) mkStart();
+});
+mkSyncControls();
+mkStart();
+mkHeatLoad();
+if (MK.sel) mkChartLoad();
+window.addEventListener('load', () => {
+    // load 后布局尺寸才真正可用，重铺一次并把最终高度报给宿主页
+    if (MK.heat.length) mkHeatRender();
+    mkFitTileFonts();
+    mkPaintAll();
+    mkReport();
+});
+if (window.ResizeObserver) {
+    // 卡片展开/收起、字体加载都会改高度，统一由 observer 补报
+    new ResizeObserver(() => mkReport()).observe(document.body);
+}
+</script>
+</body>
+</html>

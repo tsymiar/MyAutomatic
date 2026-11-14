@@ -1,0 +1,1928 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevUtils · 游戏</title>
+    <link rel="icon" href="favicon.ico">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --bg-soft: #1e293b;
+            --panel: #ffffff;
+            --primary: #5b62f4;
+            --primary-2: #7c5cff;
+            --primary-dark: #3b34b8;
+            --violet: #8b5cf6;
+            --accent: #06b6d4;
+            --accent-2: #14b8a6;
+            --text: #1b2338;
+            --muted: #6b7793;
+            --border: #e7eaf3;
+            --ok: #10b981;
+            --err: #f43f5e;
+            --radius: 16px;
+            --grad: linear-gradient(120deg, #4f46e5 0%, #7c3aed 52%, #0891b2 100%);
+            --grad-btn: linear-gradient(135deg, var(--primary), var(--primary-2));
+            --shadow-soft: 0 2px 10px rgba(28, 36, 74, .06);
+            --shadow: 0 12px 30px -14px rgba(49, 46, 129, .20);
+            --shadow-hover: 0 22px 48px -16px rgba(49, 46, 129, .28);
+            --shadow-btn: 0 8px 20px -6px rgba(91, 98, 244, .55);
+            --shadow-accent: 0 8px 20px -6px rgba(6, 182, 212, .50);
+        }
+        * { box-sizing: border-box; }
+        ::selection { background: rgba(91, 98, 244, .18); }
+        html, body { margin: 0; padding: 0; overflow-x: clip; }
+        button, label { -webkit-tap-highlight-color: transparent; touch-action: manipulation; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background-color: #f5f7fc;
+            background-image:
+                radial-gradient(1100px 520px at 6% -10%, rgba(124, 92, 255, .20), transparent 62%),
+                radial-gradient(900px 480px at 100% 0%, rgba(6, 182, 212, .16), transparent 58%),
+                radial-gradient(900px 620px at 50% 110%, rgba(79, 70, 229, .14), transparent 60%);
+            background-attachment: fixed;
+            color: var(--text);
+            min-height: 100vh;
+            padding-bottom: 38px;
+            display: flex;
+            flex-direction: column;
+        }
+        .panel { display: none; animation: fade .25s ease; }
+        .panel.active { display: block; }
+        @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 22px 24px;
+            box-shadow: var(--shadow-soft);
+            margin-bottom: 22px;
+            position: relative;
+            transition: box-shadow .25s, border-color .25s;
+        }
+        /* 不用 overflow:hidden，避免裁剪内部 fixed 弹层 */
+        .card::before {
+            content: ""; position: absolute; left: 1px; right: 1px; top: 0; height: 3px;
+            border-radius: var(--radius) var(--radius) 0 0;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6 52%, #06b6d4);
+            opacity: .92;
+        }
+        .card:hover { box-shadow: var(--shadow); border-color: #d9def0; }
+        .card h2 { margin: 0 0 4px; font-size: 17px; display: flex; align-items: center; gap: 8px; letter-spacing: .3px; }
+        .card .desc { color: var(--muted); font-size: 13px; margin: 0 0 16px; line-height: 1.65; }
+        .card h3 { font-size: 14px; margin: 18px 0 10px; color: var(--primary-dark); }
+
+        label.fld { display: block; font-size: 12.5px; color: var(--muted); margin: 12px 0 5px; font-weight: 600; }
+        input[type=text], input[type=password], input[type=number], input[type=url], input[type=datetime-local], textarea, select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            font-size: 14px;
+            font-family: inherit;
+            background: #fbfcfe;
+            color: var(--text);
+            transition: .15s;
+        }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(91,98,244,.16); background: #fff; }
+        /* 取代原生 spinner 的加减小箭头 */
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+        .num-wrap { position: relative; display: block; flex: 1; min-width: 0; }
+        .num-wrap > input[type=number] { padding-right: 32px; }
+        .num-step { position: absolute; right: 1px; width: 28px; border: none; background: transparent; color: var(--muted); cursor: pointer; font-size: 9px; line-height: 1; display: flex; align-items: center; justify-content: center; padding: 0; border-radius: 6px; transition: .15s; }
+        .num-step:hover { color: var(--primary); background: rgba(91,98,244,.14); }
+        .num-step.up { top: 1px; bottom: 50%; border-radius: 0 8px 0 0; }
+        .num-step.down { top: 50%; bottom: 1px; border-radius: 0 0 8px 0; }
+        textarea { resize: vertical; min-height: 70px; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+        .row { display: flex; gap: 12px; flex-wrap: wrap; }
+        .row > * { flex: 1; min-width: 160px; }
+
+        .btn {
+            border: none; cursor: pointer;
+            padding: 9px 16px; border-radius: 10px;
+            font-size: 13.5px; font-weight: 600; letter-spacing: .2px;
+            background: var(--grad-btn); color: #fff;
+            box-shadow: 0 4px 12px -4px rgba(91, 98, 244, .45);
+            transition: .18s; margin: 4px 6px 4px 0;
+        }
+        .btn:hover { box-shadow: var(--shadow-btn); transform: translateY(-1px); }
+        .btn:active { transform: translateY(0) scale(.985); filter: brightness(.97); }
+        .btn.accent { background: linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow: 0 4px 12px -4px rgba(6, 182, 212, .45); }
+        .btn.accent:hover { box-shadow: var(--shadow-accent); }
+        .btn.ghost { background: #f1f4fb; color: #3a4560; box-shadow: none; }
+        .btn.ghost:hover { background: #e6ebf8; color: var(--primary-dark); }
+        .btn.danger { background: #fff1f4; color: var(--err); box-shadow: none; }
+        .btn.danger:hover { background: #ffe1e8; transform: translateY(-1px); }
+        .btn.sm { padding: 6px 11px; font-size: 12.5px; }
+        .btn-row { margin-top: 10px; }
+        .rgbs { gap: 8px; flex-wrap: wrap; }
+        .rgbs > div { flex: 0 0 auto; min-width: 0; }
+        input.rgb-in { width: 55px; text-align: center; }
+        .swatch-lg { display: block; width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--border); margin: 8px 0 4px; background: #fff; box-shadow: inset 0 0 0 2px rgba(255,255,255,.85), 0 4px 10px -4px rgba(28,36,74,.35); }
+
+        .edit-box { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+        .edit-box input { flex: 1; }
+        .edit-box > .btn { flex: 0 0 auto; }
+        /* 小组件固有宽度大，允许收缩 */
+        .edit-box input[type=datetime-local] { min-width: 0; }
+        .edit-box .del { flex: 0 0 auto; }
+        .checks { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin: 4px 0 10px; }
+        .checks label { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--text); cursor: pointer; }
+        .checks input[type=checkbox] { width: auto; accent-color: var(--primary); cursor: pointer; }
+        .chk-grp { display: flex; align-items: center; gap: 6px; }
+        .chk-grp .num-wrap { flex: 0 0 auto; }
+        .chk-grp input[type=number] { width: 62px; }
+
+        .out {
+            margin-top: 12px;
+            background: linear-gradient(160deg, #101a33 0%, #0c1327 100%);
+            color: #dbe4f5;
+            border: 1px solid rgba(255,255,255,.07);
+            border-radius: 12px; padding: 12px 14px;
+            font-family: ui-monospace, Menlo, Consolas, monospace;
+            font-size: 13px; white-space: pre-wrap; word-break: break-all;
+            min-height: 20px; position: relative;
+        }
+        .out .otext { display: block; white-space: pre-wrap; word-break: break-all; }
+        /* 提示行不参与复制 */
+        .out .onote {
+            display: block; margin-bottom: 6px; padding-bottom: 6px;
+            border-bottom: 1px dashed rgba(255,255,255,.14);
+            color: #8b98b8; font-size: 12px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif;
+        }
+        .resp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 12px; --resp-h: 360px; }
+        .resp-grid > div { min-width: 0; }
+        .col-label { font-size: 12px; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
+        .html-preview { width: 100%; height: var(--resp-h); border: 1px solid var(--border); border-radius: 12px; background: #fff; }
+        /* 文本区内部滚动，复制按钮固定在右上角 */
+        .out-fixed { height: var(--oh, 240px); }
+        .out-fixed .otext { max-height: calc(var(--oh, 240px) - 24px); overflow: auto; }
+        /* 原始响应与 HTML 预览等高 */
+        .resp-raw { --oh: var(--resp-h); }
+        @media (max-width: 820px) { .resp-grid { grid-template-columns: 1fr; --resp-h: 300px; } }
+        .out .copy {
+            position: absolute; top: 8px; right: 8px;
+            background: rgba(34, 211, 238, .16); color: #5eeaf4;
+            border: 1px solid rgba(34, 211, 238, .48);
+            padding: 4px 9px; border-radius: 7px; font-size: 11px; font-weight: 600;
+            letter-spacing: .5px; cursor: pointer;
+            text-shadow: 0 1px 2px rgba(8, 47, 73, .55);
+            transition: .15s;
+        }
+        .out .copy:hover { background: rgba(34, 211, 238, .30); color: #b7f8ff; border-color: rgba(34, 211, 238, .80); }
+        .out .copy:active { transform: scale(.96); }
+        .out.empty::before { content: "（将显示处理结果）"; color: #6b7793; }
+
+        .stat { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+        .stat b { color: var(--text); }
+        @media (max-width: 820px) {
+            /* 纵向排列时交叉轴为水平轴：必须 stretch，否则撑不满小屏 */
+            .layout { flex-direction: column; align-items: stretch; }
+            nav.sidebar { width: 100%; height: auto; position: static; display: flex; overflow-x: auto; border-right: none; border-bottom: 1px solid var(--border); }
+            nav.sidebar button { width: auto; white-space: nowrap; }
+            .grid2 { grid-template-columns: 1fr; }
+            main.content { padding: 18px; width: 100%; min-width: 0; }
+            .panel { width: 100%; min-width: 0; }
+            input[type=text], input[type=password], input[type=number], input[type=url], input[type=datetime-local], textarea, select { font-size: 16px; }
+        }
+        .toast {
+            position: fixed; bottom: 46px; left: 50%; transform: translateX(-50%);
+            background: #0f172a; color: #fff; padding: 10px 18px; border-radius: 10px;
+            font-size: 13px; opacity: 0; pointer-events: none; transition: .25s; z-index: 50;
+        }
+        .toast.show { opacity: 1; }
+        @media (max-width: 640px) {
+            .conv-line { flex-direction: column; align-items: flex-start; }
+            /* 收窄，避免占满屏幕 */
+            .palette-pop { width: 250px; max-width: 84vw; max-height: 58vh; padding: 12px 12px 14px; border-radius: 12px; }
+            .palette-pop .ph { margin-bottom: 8px; }
+            .palette-pop .ph b { font-size: 12.5px; }
+            .palette { grid-template-columns: repeat(12, 1fr); gap: 2px; }   /* 12 列：色块约 17px */
+            .palette-cell { border-radius: 2px; }
+            .color-head { gap: 8px; }
+            .card { padding: 18px 16px; }
+            .ts-top { flex-wrap: wrap; }
+        }
+        .game-pick { display: flex; gap: 8px; flex-wrap: wrap; margin: 2px 0 14px; }
+        .game-pick button {
+            padding: 8px 16px; border-radius: 11px; border: 1px solid var(--border);
+            background: #fff; cursor: pointer; font-weight: 600; font-size: 13.5px;
+            color: var(--muted); transition: .18s;
+        }
+        .game-pick button:hover { color: var(--primary-dark); border-color: #c9d0f5; background: #f6f8ff; }
+        .game-pick button.on {
+            color: #fff; border-color: transparent; background: var(--grad-btn);
+            box-shadow: 0 8px 18px -7px rgba(91,98,244,.65);
+        }
+        .game-stage { display: none; }
+        .game-stage.on { display: block; animation: fade .25s ease; }
+        .game-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 14px; }
+        .gstat {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 7px 13px; border-radius: 10px; font-size: 12.5px; font-weight: 600;
+            color: var(--muted); background: #f1f4fb; border: 1px solid var(--border);
+        }
+        .gstat b { color: var(--primary-dark); font-size: 14.5px; font-variant-numeric: tabular-nums; }
+        .game-bar .stat { margin: 0; }
+
+        .g2048-board {
+            position: relative; width: 100%; max-width: 380px; aspect-ratio: 1 / 1;
+            border-radius: 16px; touch-action: none;
+            background: linear-gradient(160deg, rgba(148,163,184,.32), rgba(148,163,184,.18));
+            box-shadow: inset 0 1px 3px rgba(15,23,42,.10), 0 14px 34px -20px rgba(28,36,74,.5);
+        }
+        .g2048-cells, .g2048-tiles { position: absolute; inset: 8px; }
+        .g2048-cells { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr); gap: 8px; }
+        .g2048-cell { border-radius: 10px; background: rgba(255,255,255,.55); }
+        .g2048-tile {
+            position: absolute;
+            width: calc((100% - 24px) / 4); height: calc((100% - 24px) / 4);
+            left: calc(((100% - 24px) / 4 + 8px) * var(--c));
+            top:  calc(((100% - 24px) / 4 + 8px) * var(--r));
+            border-radius: 10px; display: grid; place-items: center;
+            font-weight: 700; letter-spacing: -.5px;
+            transition: left .13s ease-in-out, top .13s ease-in-out;
+        }
+        @keyframes tilePop { from { transform: scale(.2); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes tileMerge { 0% { transform: scale(1); } 45% { transform: scale(1.18); } 100% { transform: scale(1); } }
+        .g2048-tile.new { animation: tilePop .18s ease; }
+        .g2048-tile.merge { animation: tileMerge .2s ease; z-index: 2; }
+
+        #snakeCanvas {
+            display: block; width: 100%; max-width: 380px; aspect-ratio: 1 / 1;
+            border-radius: 16px; touch-action: none;
+            background: linear-gradient(160deg, #111c36 0%, #0c1327 100%);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,.07), 0 14px 34px -20px rgba(15,23,42,.75);
+        }
+        #trexCanvas {
+            display: block; width: 100%; max-width: 620px; aspect-ratio: 600 / 180;
+            border-radius: 16px; touch-action: none; cursor: pointer;
+            background: linear-gradient(180deg, #f9faff 0%, #edf1fb 100%);
+            box-shadow: inset 0 0 0 1px rgba(28,36,74,.07), 0 14px 34px -20px rgba(28,36,74,.55);
+        }
+        @media (max-width: 640px) {
+            .g2048-board, #snakeCanvas, #trexCanvas,
+            .sudoku-board, .puzzle-board, .memory-grid { max-width: 100%; }
+        }
+
+        .sudoku-wrap { display: flex; gap: 18px; flex-wrap: wrap; align-items: flex-start; }
+        .sudoku-board {
+            display: grid; grid-template-columns: repeat(9, 1fr);
+            width: 100%; max-width: 396px; aspect-ratio: 1 / 1;
+            border: 2px solid #7c88a8; border-radius: 10px; overflow: hidden;
+            background: #fff; box-shadow: 0 14px 34px -20px rgba(28,36,74,.55);
+        }
+        .sd-cell {
+            position: relative; display: flex; align-items: center; justify-content: center;
+            border-right: 1px solid var(--border); border-bottom: 1px solid var(--border);
+            font-weight: 700; font-size: clamp(15px, 4.2vw, 21px); line-height: 1;
+            font-variant-numeric: tabular-nums; color: var(--primary-dark);
+            background: #fff; cursor: pointer; transition: background .12s;
+            user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+        }
+        .sd-cell:nth-child(9n) { border-right: none; }
+        .sd-cell:nth-last-child(-n+9) { border-bottom: none; }
+        .sd-cell.br { border-right: 2px solid #7c88a8; }
+        .sd-cell.bb { border-bottom: 2px solid #7c88a8; }
+        .sd-cell.given { color: #2b3450; }
+        .sd-cell.peer { background: #f2f5fd; }
+        .sd-cell.same { background: #e4e9fb; }
+        .sd-cell.sel  { background: #ccd5ff; }
+        .sd-cell.err  { background: #ffe5ea; color: #e11d48; }
+        .sd-cell.pop  { animation: sdPop .85s ease; }
+        @keyframes sdPop { 0%, 100% { background: #ccd5ff; } 45% { background: #a7f3d0; } }
+        .sd-notes {
+            position: absolute; inset: 2px;
+            display: none; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
+            place-items: center; font-size: clamp(7px, 1.8vw, 10px);
+            font-weight: 600; color: var(--muted); line-height: 1;
+        }
+        .sd-notes i { font-style: normal; visibility: hidden; }
+        .sudoku-side { flex: 1 1 150px; min-width: 140px; display: flex; flex-direction: column; gap: 10px; }
+        .sd-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+        .sd-key {
+            border: 1px solid var(--border); background: #fff; border-radius: 10px;
+            padding: 8px 0; font-size: 16px; font-weight: 700; color: var(--primary-dark);
+            cursor: pointer; transition: .15s;
+        }
+        .sd-key:hover { background: #f2f5ff; border-color: #c9d0f5; }
+        .sd-key:active { transform: scale(.94); }
+        .sd-key.wide { grid-column: 1 / -1; padding: 7px 0; font-size: 12.5px; font-weight: 600; color: var(--muted); }
+        .sd-tip { font-size: 12.5px; color: var(--muted); line-height: 1.65; }
+        .mini-pick { display: flex; gap: 6px; flex-wrap: wrap; }
+        .mini-pick button {
+            padding: 5px 13px; border-radius: 9px; border: 1px solid var(--border);
+            background: #fff; cursor: pointer; font-weight: 600; font-size: 12.5px;
+            color: var(--muted); transition: .18s;
+        }
+        .mini-pick button:hover { color: var(--primary-dark); border-color: #c9d0f5; background: #f6f8ff; }
+        .mini-pick button.on {
+            color: #fff; border-color: transparent; background: var(--grad-btn);
+            box-shadow: 0 6px 14px -8px rgba(91,98,244,.7);
+        }
+
+        .tetris-wrap { display: flex; gap: 18px; flex-wrap: wrap; align-items: flex-start; }
+        .tetris-main { display: flex; flex-direction: column; gap: 10px; }
+        #tetrisCanvas {
+            display: block; width: 100%; max-width: 240px; aspect-ratio: 1 / 2;
+            border-radius: 14px; touch-action: none;
+            background: linear-gradient(180deg, #111c36 0%, #0c1327 100%);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,.07), 0 14px 34px -20px rgba(15,23,42,.75);
+        }
+        .tetris-keys {
+            display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, auto);
+            gap: 6px; width: 100%; max-width: 200px;
+        }
+        .tetris-keys button {
+            padding: 9px 0; border-radius: 10px; border: 1px solid var(--border); background: #fff;
+            font-size: 15px; font-weight: 700; color: var(--primary-dark); cursor: pointer; transition: .15s;
+        }
+        .tetris-keys button:hover { background: #f2f5ff; border-color: #c9d0f5; }
+        .tetris-keys button:active { transform: scale(.94); }
+        .tetris-keys .k-rot  { grid-column: 2; grid-row: 1; }
+        .tetris-keys .k-left { grid-column: 1; grid-row: 2; }
+        .tetris-keys .k-down { grid-column: 2; grid-row: 2; }
+        .tetris-keys .k-right{ grid-column: 3; grid-row: 2; }
+        .tetris-keys .k-drop { grid-column: 2; grid-row: 3; }
+        .tetris-side { flex: 1 1 130px; min-width: 120px; display: flex; flex-direction: column; gap: 8px; }
+        #tetrisNext {
+            display: block; width: 80px; height: 80px; border-radius: 12px;
+            background: linear-gradient(180deg, #111c36 0%, #0c1327 100%);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,.07);
+        }
+        @media (max-width: 640px) {
+            .tetris-wrap { gap: 12px; }
+            #tetrisCanvas { max-width: 180px; }
+            .tetris-side { min-width: 96px; }
+            .tetris-keys button { font-size: 13px; padding: 8px 0; }
+        }
+
+        .puzzle-board {
+            --gp: 1.6%; --ts: 32%; --st: 33.6%;
+            position: relative; width: 100%; max-width: 380px; aspect-ratio: 1 / 1;
+            border-radius: 16px; touch-action: manipulation;
+            background: linear-gradient(160deg, rgba(148,163,184,.32), rgba(148,163,184,.18));
+            box-shadow: inset 0 1px 3px rgba(15,23,42,.10), 0 14px 34px -20px rgba(28,36,74,.5);
+        }
+        .pz-tile {
+            --r: 0; --c: 0;
+            position: absolute; width: var(--ts); height: var(--ts);
+            left: calc(var(--gp) + var(--st) * var(--c));
+            top:  calc(var(--gp) + var(--st) * var(--r));
+            display: grid; place-items: center; border-radius: 12px;
+            font-weight: 700; color: #fff; font-variant-numeric: tabular-nums;
+            background: var(--grad-btn); box-shadow: 0 8px 16px -9px rgba(91,98,244,.9);
+            cursor: pointer; user-select: none; -webkit-user-select: none;
+            transition: left .16s cubic-bezier(.3,.85,.3,1), top .16s cubic-bezier(.3,.85,.3,1), background .2s;
+        }
+        .pz-tile.ok { background: linear-gradient(135deg, var(--ok), #34d399); box-shadow: 0 8px 16px -9px rgba(16,185,129,.85); }
+
+        .memory-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; max-width: 380px; }
+        .mm-card { position: relative; aspect-ratio: 3 / 4; perspective: 700px; cursor: pointer; }
+        .mm-in { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform .35s cubic-bezier(.3,.85,.3,1); }
+        .mm-card.flip .mm-in { transform: rotateY(180deg); }
+        .mm-face {
+            position: absolute; inset: 0; border-radius: 12px; display: grid; place-items: center;
+            font-size: clamp(20px, 6vw, 30px);
+            backface-visibility: hidden; -webkit-backface-visibility: hidden;
+        }
+        .mm-back { background: var(--grad-btn); box-shadow: 0 10px 20px -12px rgba(91,98,244,.9); color: rgba(255,255,255,.9); font-size: 17px; font-weight: 700; }
+        .mm-front { transform: rotateY(180deg); background: #fff; border: 1px solid var(--border); }
+        .mm-card.done .mm-front { background: #ecfdf5; border-color: #a7f3d0; }
+        .out .otext, .palette-pop, nav.sidebar { scrollbar-width: thin; scrollbar-color: rgba(120,132,160,.45) transparent; }
+        .out .otext::-webkit-scrollbar, .palette-pop::-webkit-scrollbar, nav.sidebar::-webkit-scrollbar { width: 8px; height: 8px; }
+        .out .otext::-webkit-scrollbar-track, .palette-pop::-webkit-scrollbar-track, nav.sidebar::-webkit-scrollbar-track { background: transparent; }
+        .palette-pop::-webkit-scrollbar-thumb, nav.sidebar::-webkit-scrollbar-thumb {
+            background: rgba(120,132,160,.40); border-radius: 8px; border: 2px solid transparent; background-clip: content-box;
+        }
+        .palette-pop::-webkit-scrollbar-thumb:hover, nav.sidebar::-webkit-scrollbar-thumb:hover { background: rgba(120,132,160,.65); background-clip: content-box; }
+        .out .otext::-webkit-scrollbar-thumb {
+            background: rgba(190,205,235,.32); border-radius: 8px; border: 2px solid transparent; background-clip: content-box;
+        }
+        .out .otext::-webkit-scrollbar-thumb:hover { background: rgba(190,205,235,.55); background-clip: content-box; }
+
+        /* 键盘焦点可见（鼠标点击不显示外框） */
+        a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible,
+        select:focus-visible, label:focus-visible, .palette-cell:focus-visible {
+            outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 8px;
+        }
+        ::placeholder { color: #9aa5bd; opacity: 1; }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: .001ms !important; animation-iteration-count: 1 !important;
+                transition-duration: .001ms !important; scroll-behavior: auto !important;
+            }
+        }
+        body { min-height: 0; display: block; padding: 4px 2px 18px; }
+    </style>
+</head>
+<body>
+            <section class="panel active" id="game">
+                <div class="card">
+                    <h2>🎮 休闲小游戏</h2>
+                    <p class="desc">摸鱼时刻：2048 / 贪吃蛇 / T-Rex 跑酷 / 猜数字 / 数独 / 俄罗斯方块 / 数字华容道 / 记忆翻牌。最高分与纪录会保存在浏览器本地。</p>
+                    <div class="game-pick" id="gamePick">
+                        <button data-g="g2048" class="on">🧩 2048</button>
+                        <button data-g="snake">🐍 贪吃蛇</button>
+                        <button data-g="trex">🦖 T-Rex</button>
+                        <button data-g="guess">🎯 猜数字</button>
+                        <button data-g="sudoku">🔢 数独</button>
+                        <button data-g="tetris">🟦 俄罗斯方块</button>
+                        <button data-g="puzzle">🧮 华容道</button>
+                        <button data-g="memory">🃏 记忆翻牌</button>
+                    </div>
+
+                    <div class="game-stage on" id="stage_g2048">
+                        <div class="game-bar">
+                            <span class="gstat">得分 <b id="g2048_score">0</b></span>
+                            <span class="gstat">最高 <b id="g2048_best">0</b></span>
+                            <button class="btn sm" data-action="g2048New">新游戏</button>
+                            <span class="stat">方向键 / WASD / 手指滑动</span>
+                        </div>
+                        <div class="g2048-board" id="g2048_board">
+                            <div class="g2048-cells">
+                                <div class="g2048-cell"></div><div class="g2048-cell"></div><div class="g2048-cell"></div><div class="g2048-cell"></div>
+                                <div class="g2048-cell"></div><div class="g2048-cell"></div><div class="g2048-cell"></div><div class="g2048-cell"></div>
+                                <div class="g2048-cell"></div><div class="g2048-cell"></div><div class="g2048-cell"></div><div class="g2048-cell"></div>
+                                <div class="g2048-cell"></div><div class="g2048-cell"></div><div class="g2048-cell"></div><div class="g2048-cell"></div>
+                            </div>
+                            <div class="g2048-tiles" id="g2048_tiles"></div>
+                        </div>
+                        <div class="stat" id="g2048_msg"></div>
+                    </div>
+
+                    <div class="game-stage" id="stage_snake">
+                        <div class="game-bar">
+                            <span class="gstat">得分 <b id="snake_score">0</b></span>
+                            <span class="gstat">最高 <b id="snake_best">0</b></span>
+                            <button class="btn sm" data-action="snakeToggle" id="snake_btn">开始</button>
+                            <button class="btn ghost sm" data-action="snakeRestart">重开</button>
+                            <span class="stat">方向键 / WASD / 滑动，空格暂停</span>
+                        </div>
+                        <canvas id="snakeCanvas" width="400" height="400"></canvas>
+                        <div class="stat" id="snake_msg">点击「开始」或按任意方向键启动</div>
+                    </div>
+
+                    <div class="game-stage" id="stage_trex">
+                        <div class="game-bar">
+                            <span class="gstat">得分 <b id="trex_score">0</b></span>
+                            <span class="gstat">最高 <b id="trex_best">0</b></span>
+                            <button class="btn sm" data-action="trexToggle" id="trex_btn">开始</button>
+                            <button class="btn ghost sm" data-action="trexRestart">重开</button>
+                            <span class="stat">空格 / ↑ 跳跃，↓ 下蹲，也可点击画面</span>
+                        </div>
+                        <canvas id="trexCanvas" width="600" height="180"></canvas>
+                        <div class="stat" id="trex_msg">点击「开始」或按空格 / ↑ 启动</div>
+                    </div>
+
+                    <div class="game-stage" id="stage_guess">
+                        <div class="game-bar">
+                            <span class="gstat">次数 <b id="guess_tries">0</b></span>
+                            <span class="gstat">最佳 <b id="guess_best">—</b></span>
+                            <button class="btn ghost sm" data-action="guessNew">换个数字</button>
+                        </div>
+                        <p class="desc">我已经想好一个 1~100 的整数，每次都会告诉你是「大了」还是「小了」。</p>
+                        <div class="edit-box">
+                            <input type="number" id="guess_in" placeholder="1 - 100" min="1" max="100" step="1">
+                            <button class="btn" data-action="guessSubmit">猜！</button>
+                        </div>
+                        <div class="out empty" id="guess_out"></div>
+                    </div>
+
+                    <div class="game-stage" id="stage_sudoku">
+                        <div class="game-bar">
+                            <span class="gstat">用时 <b id="sudoku_time">00:00</b></span>
+                            <span class="gstat">最佳 <b id="sudoku_best">—</b></span>
+                            <span class="gstat">待填 <b id="sudoku_left">0</b></span>
+                            <button class="btn sm" data-action="sudokuNew">新一局</button>
+                            <button class="btn ghost sm" data-action="sudokuCheck">检查</button>
+                            <button class="btn ghost sm" data-action="sudokuHint">提示</button>
+                        </div>
+                        <div class="mini-pick" id="sudoku_lvl" style="margin:0 0 14px">
+                            <button data-lvl="0">简单</button>
+                            <button data-lvl="1">中等</button>
+                            <button data-lvl="2">困难</button>
+                        </div>
+                        <div class="sudoku-wrap">
+                            <div class="sudoku-board" id="sudoku_board"></div>
+                            <div class="sudoku-side">
+                                <div class="sd-pad" id="sudoku_pad">
+                                    <button class="sd-key" data-n="1">1</button>
+                                    <button class="sd-key" data-n="2">2</button>
+                                    <button class="sd-key" data-n="3">3</button>
+                                    <button class="sd-key" data-n="4">4</button>
+                                    <button class="sd-key" data-n="5">5</button>
+                                    <button class="sd-key" data-n="6">6</button>
+                                    <button class="sd-key" data-n="7">7</button>
+                                    <button class="sd-key" data-n="8">8</button>
+                                    <button class="sd-key" data-n="9">9</button>
+                                    <button class="sd-key wide" data-action="sudokuNote" id="sudoku_note">✏️ 笔记：关</button>
+                                    <button class="sd-key wide" data-n="0">清除本格</button>
+                                </div>
+                                <div class="sd-tip">点格子选中，再按数字填入；再按一次同一数字可清除。键盘 1-9 填数、方向键移动、Delete 清除。</div>
+                            </div>
+                        </div>
+                        <div class="stat" id="sudoku_msg"></div>
+                    </div>
+
+                    <div class="game-stage" id="stage_tetris">
+                        <div class="game-bar">
+                            <span class="gstat">得分 <b id="tetris_score">0</b></span>
+                            <span class="gstat">最高 <b id="tetris_best">0</b></span>
+                            <span class="gstat">消行 <b id="tetris_lines">0</b></span>
+                            <span class="gstat">等级 <b id="tetris_level">1</b></span>
+                            <button class="btn sm" data-action="tetrisToggle" id="tetris_btn">开始</button>
+                            <button class="btn ghost sm" data-action="tetrisRestart">重开</button>
+                        </div>
+                        <div class="tetris-wrap">
+                            <div class="tetris-main">
+                                <canvas id="tetrisCanvas" width="240" height="480"></canvas>
+                            </div>
+                            <div class="tetris-side">
+                                <label class="fld">下一个</label>
+                                <canvas id="tetrisNext" width="80" height="80"></canvas>
+                                <div class="tetris-keys">
+                                    <button class="k-rot" data-action="tetrisAct" data-arg="rot" aria-label="旋转">🔄</button>
+                                    <button class="k-left" data-action="tetrisAct" data-arg="left" aria-label="左移">◀</button>
+                                    <button class="k-down" data-action="tetrisAct" data-arg="down" aria-label="软降">▼</button>
+                                    <button class="k-right" data-action="tetrisAct" data-arg="right" aria-label="右移">▶</button>
+                                    <button class="k-drop" data-action="tetrisAct" data-arg="drop" aria-label="直落">⤓</button>
+                                </div>
+                                <div class="sd-tip">← → 移动，↑ / X 旋转，Z 反向，↓ 软降，空格直落，P 暂停。手机上可直接用右侧按钮或在画面滑动。</div>
+                            </div>
+                        </div>
+                        <div class="stat" id="tetris_msg">点击「开始」或按空格启动</div>
+                    </div>
+
+                    <div class="game-stage" id="stage_puzzle">
+                        <div class="game-bar">
+                            <span class="gstat">步数 <b id="puzzle_moves">0</b></span>
+                            <span class="gstat">用时 <b id="puzzle_time">00:00</b></span>
+                            <span class="gstat">最佳 <b id="puzzle_best">—</b></span>
+                            <button class="btn sm" data-action="puzzleNew">打乱重来</button>
+                            <span class="stat">点击方块滑动，或方向键移动空格</span>
+                        </div>
+                        <div class="mini-pick" id="puzzle_size" style="margin:0 0 14px">
+                            <button data-size="3">3 × 3</button>
+                            <button data-size="4">4 × 4</button>
+                            <button data-size="5">5 × 5</button>
+                        </div>
+                        <div class="puzzle-board" id="puzzle_board"></div>
+                        <div class="stat" id="puzzle_msg">把数字按 1 → N 排好，空格留在右下角</div>
+                    </div>
+
+                    <div class="game-stage" id="stage_memory">
+                        <div class="game-bar">
+                            <span class="gstat">步数 <b id="memory_moves">0</b></span>
+                            <span class="gstat">用时 <b id="memory_time">00:00</b></span>
+                            <span class="gstat">最佳 <b id="memory_best">—</b></span>
+                            <button class="btn ghost sm" data-action="memoryNew">重新洗牌</button>
+                            <span class="stat">翻开两张相同图案即配对成功</span>
+                        </div>
+                        <div class="memory-grid" id="memory_grid"></div>
+                        <div class="stat" id="memory_msg">翻牌开始计时，步数越少越好</div>
+                    </div>
+                </div>
+            </section>
+    <div class="toast" id="toast"></div>
+
+<script>
+const $  = (id) => document.getElementById(id);
+const $$ = (sel, root) => (root || document).querySelectorAll(sel);
+function toast(msg) {
+    const t = $('toast');
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 1800);
+}
+function setOut(id, text) {
+    const el = $(id);
+    const code = el.querySelector('.otext');
+    if (text === '' || text == null) { code.textContent = ''; el.classList.add('empty'); }
+    else { code.textContent = text; el.classList.remove('empty'); }
+}
+function copyText(text) {
+    if (!text) { toast('没有可复制内容'); return; }
+    const ok = () => toast('内容已复制');
+    const fail = () => toast('复制失败，请长按结果手动复制');
+    const legacy = () => {
+        try {
+            const ta = document.createElement('textarea');
+            ta.value = text; ta.readOnly = true;
+            ta.style.cssText = 'position:fixed;left:-9999px;opacity:0';
+            document.body.appendChild(ta); ta.select();
+            const done = document.execCommand('copy'); ta.remove();
+            done ? ok() : fail();
+        } catch (e) { fail(); }
+    };
+    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(ok, legacy);
+    else legacy();
+}
+$$('.out').forEach(el => {
+    const code = document.createElement('span');
+    code.className = 'otext';
+    el.insertBefore(code, el.firstChild);
+    const b = document.createElement('button');
+    b.className = 'copy'; b.textContent = '复制';
+    el.appendChild(b);
+});
+
+const LS = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) {} return null; };
+let curGame = 'g2048';
+
+function stopAllGames() {
+    snakeStop(); trexStop(); tetrisStop();
+    clockStop(SD); clockStop(PZ); clockStop(MM);
+}
+function showGame(name) {
+    stopAllGames();
+    $$('.game-stage').forEach(s => s.classList.remove('on'));
+    const st = $('stage_' + name);
+    if (st) st.classList.add('on');
+    if (name === 'snake') snakeReset();
+    if (name === 'trex') trexReset();
+    if (name === 'sudoku') { sudokuBuild(); resumeClock('sudoku', SD, 'sudoku_time'); }
+    if (name === 'tetris') tetrisInit();
+    if (name === 'puzzle') resumeClock('puzzle', PZ, 'puzzle_time');
+    if (name === 'memory') resumeClock('memory', MM, 'memory_time');
+}
+$('gamePick').addEventListener('click', e => {
+    const b = e.target.closest('button[data-g]'); if (!b) return;
+    $$('#gamePick button').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    curGame = b.dataset.g;
+    showGame(curGame);
+});
+
+const G4 = { cells: [], tiles: [], els: {}, score: 0, best: +(LS('du_2048_best') || 0), tid: 0, over: false };
+const TILE_STYLE = {
+    2: ['#f3f5fb', '#4a5570'], 4: ['#e3e8ff', '#3b34b8'], 8: ['#c9d1ff', '#2f2a8a'],
+    16: ['#aab5ff', '#241f6e'], 32: ['#8d99ff', '#fff'], 64: ['#727ffa', '#fff'],
+    128: ['#5b62f4', '#fff'], 256: ['#7c4dff', '#fff'], 512: ['#9b51e0', '#fff'],
+    1024: ['#0ea5e9', '#fff'], 2048: ['#06b6d4', '#fff'], 4096: ['#14b8a6', '#fff']
+};
+function g2048New() {
+    G4.cells = [[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null]];
+    G4.tiles.forEach(t => { const el = G4.els[t.id]; if (el) el.remove(); });
+    G4.tiles = []; G4.els = {}; G4.tid = 0; G4.score = 0; G4.over = false;
+    $('g2048_tiles').innerHTML = '';
+    $('g2048_msg').textContent = '';
+    g2048Add(); g2048Add();
+    g2048Render(); g2048Sync();
+}
+function g2048Add() {
+    const free = [];
+    for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++) if (!G4.cells[r][c]) free.push({ r, c });
+    if (!free.length) return;
+    const p = free[Math.floor(Math.random() * free.length)];
+    const t = { id: ++G4.tid, v: Math.random() < 0.9 ? 2 : 4, r: p.r, c: p.c, isNew: true, merged: false };
+    G4.cells[p.r][p.c] = t; G4.tiles.push(t);
+}
+function g2048Render() {
+    const box = $('g2048_tiles');
+    G4.tiles.forEach(t => {
+        let el = G4.els[t.id];
+        if (!el) {
+            el = document.createElement('div');
+            el.className = 'g2048-tile' + (t.isNew ? ' new' : '');
+            G4.els[t.id] = el; box.appendChild(el);
+        }
+        el.style.setProperty('--r', t.r);
+        el.style.setProperty('--c', t.c);
+        el.textContent = t.v;
+        const st = TILE_STYLE[t.v] || ['#0d9488', '#fff'];
+        el.style.background = st[0]; el.style.color = st[1];
+        el.style.fontSize = t.v < 100 ? 'clamp(22px,7vw,32px)' : t.v < 1000 ? 'clamp(18px,5.5vw,26px)' : 'clamp(15px,4.5vw,21px)';
+        el.style.boxShadow = t.v >= 1024 ? '0 6px 18px -6px rgba(6,182,212,.75)' : '0 2px 6px -3px rgba(28,36,74,.4)';
+    });
+}
+function g2048Sync() {
+    $('g2048_score').textContent = G4.score;
+    $('g2048_best').textContent = G4.best;
+}
+const VEC4 = { left: [0, -1], right: [0, 1], up: [-1, 0], down: [1, 0] };
+function g2048Move(dir) {
+    if (G4.over) return;
+    const v = VEC4[dir]; if (!v) return;
+    const order = [0, 1, 2, 3];
+    const orderR = v[0] > 0 ? order.slice().reverse() : order;
+    const orderC = v[1] > 0 ? order.slice().reverse() : order;
+    let moved = false, gained = 0;
+    const dying = [];
+    G4.tiles.forEach(t => { t.merged = false; t.dying = false; });
+    orderR.forEach(r => orderC.forEach(c => {
+        const t = G4.cells[r][c]; if (!t || t.dying) return;
+        let nr = r, nc = c;
+        for (;;) {
+            const tr = nr + v[0], tc = nc + v[1];
+            if (tr < 0 || tr > 3 || tc < 0 || tc > 3) break;
+            const o = G4.cells[tr][tc];
+            if (o) {
+                if (o.v === t.v && !o.merged) {
+                    G4.cells[r][c] = null;
+                    o.v *= 2; o.merged = true; gained += o.v;
+                    t.r = tr; t.c = tc; t.dying = true; dying.push(t); moved = true;
+                }
+                break;
+            }
+            nr = tr; nc = tc;
+        }
+        if (!t.dying && (nr !== r || nc !== c)) {
+            G4.cells[r][c] = null;
+            G4.cells[nr][nc] = t; t.r = nr; t.c = nc; moved = true;
+        }
+    }));
+    if (!moved) { g2048CheckOver(); return; }
+    G4.tiles = G4.tiles.filter(t => !t.dying);
+    G4.score += gained;
+    if (G4.score > G4.best) { G4.best = G4.score; LS('du_2048_best', G4.best); }
+    g2048Add();
+    g2048Render();
+    dying.forEach(t => {
+        const el = G4.els[t.id]; if (!el) return;
+        el.style.setProperty('--r', t.r); el.style.setProperty('--c', t.c);
+        el.classList.add('merge');
+        setTimeout(() => { el.remove(); delete G4.els[t.id]; }, 170);
+    });
+    G4.tiles.forEach(t => {
+        if (!t.merged) return;
+        const el = G4.els[t.id]; if (!el) return;
+        el.classList.add('merge');
+        setTimeout(() => el.classList.remove('merge'), 220);
+    });
+    g2048Sync(); g2048CheckOver();
+}
+function g2048CheckOver() {
+    for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++) {
+        const t = G4.cells[r][c];
+        if (!t) return;
+        if (c < 3 && G4.cells[r][c + 1] && G4.cells[r][c + 1].v === t.v) return;
+        if (r < 3 && G4.cells[r + 1][c] && G4.cells[r + 1][c].v === t.v) return;
+    }
+    G4.over = true;
+    $('g2048_msg').textContent = '游戏结束！本局得分 ' + G4.score + '，点击「新游戏」再来一局';
+}
+
+const SN = { w: 400, h: 400, n: 20, cell: 20, snake: [], dir: { x: 1, y: 0 }, next: null, food: null,
+             score: 0, best: +(LS('du_snake_best') || 0), timer: null, playing: false, speed: 130, ctx: null };
+function snakeInit() {
+    if (SN.ctx) return;
+    const cv = $('snakeCanvas');
+    if (!cv) return;
+    SN.ctx = cv.getContext('2d');
+}
+function snakeReset() {
+    snakeStop();
+    snakeInit();
+    const m = Math.floor(SN.n / 2);
+    SN.snake = [{ x: m, y: m }, { x: m - 1, y: m }, { x: m - 2, y: m }];
+    SN.dir = { x: 1, y: 0 }; SN.next = null; SN.score = 0; SN.speed = 130;
+    snakeFood(); snakeDraw();
+    $('snake_score').textContent = '0';
+    $('snake_best').textContent = SN.best;
+    $('snake_msg').textContent = '点击「开始」或按任意方向键启动';
+    const b = $('snake_btn'); if (b) b.textContent = '开始';
+}
+function snakeFood() {
+    let p;
+    do { p = { x: Math.floor(Math.random() * SN.n), y: Math.floor(Math.random() * SN.n) }; }
+    while (SN.snake.some(s => s.x === p.x && s.y === p.y));
+    SN.food = p;
+}
+function snakeStart() {
+    if (SN.playing) return;
+    snakeInit();
+    SN.playing = true;
+    $('snake_btn').textContent = '暂停';
+    $('snake_msg').textContent = '进行中…';
+    snakeTick();
+}
+function snakeStop() { SN.playing = false; if (SN.timer) { clearTimeout(SN.timer); SN.timer = null; } }
+function snakeToggle() {
+    if (SN.playing) {
+        snakeStop();
+        $('snake_btn').textContent = '继续';
+        $('snake_msg').textContent = '已暂停，按空格或「继续」恢复';
+    } else snakeStart();
+}
+function snakeRestart() { snakeReset(); snakeStart(); }
+function snakeGameOver() {
+    snakeStop();
+    $('snake_btn').textContent = '开始';
+    $('snake_msg').textContent = '💀 撞到了！本局得分 ' + SN.score + '，点击「重开」再来';
+    snakeDraw(true);
+}
+function snakeTick() {
+    if (!SN.playing) return;
+    if (SN.next) { SN.dir = SN.next; SN.next = null; }
+    const head = { x: SN.snake[0].x + SN.dir.x, y: SN.snake[0].y + SN.dir.y };
+    const hitSelf = SN.snake.some(s => s.x === head.x && s.y === head.y);
+    if (head.x < 0 || head.x >= SN.n || head.y < 0 || head.y >= SN.n || hitSelf) { snakeGameOver(); return; }
+    SN.snake.unshift(head);
+    if (SN.food && head.x === SN.food.x && head.y === SN.food.y) {
+        SN.score += 10;
+        if (SN.score > SN.best) { SN.best = SN.score; LS('du_snake_best', SN.best); }
+        $('snake_score').textContent = SN.score;
+        $('snake_best').textContent = SN.best;
+        if (SN.speed > 70) SN.speed -= 3;
+        snakeFood();
+    } else SN.snake.pop();
+    snakeDraw();
+    SN.timer = setTimeout(snakeTick, SN.speed);
+}
+function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath(); ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+}
+function snakeDraw(dead) {
+    const ctx = SN.ctx; if (!ctx) return;
+    const cs = SN.cell;
+    ctx.clearRect(0, 0, SN.w, SN.h);
+    ctx.strokeStyle = 'rgba(255,255,255,.05)'; ctx.lineWidth = 1;
+    for (let i = 1; i < SN.n; i++) {
+        ctx.beginPath(); ctx.moveTo(i * cs, 0); ctx.lineTo(i * cs, SN.h); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, i * cs); ctx.lineTo(SN.w, i * cs); ctx.stroke();
+    }
+    if (SN.food) {
+        const cx = SN.food.x * cs + cs / 2, cy = SN.food.y * cs + cs / 2;
+        const g = ctx.createRadialGradient(cx, cy, 1, cx, cy, cs / 2);
+        g.addColorStop(0, '#fda4af'); g.addColorStop(1, '#f43f5e');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, cs / 2 - 2, 0, Math.PI * 2); ctx.fill();
+    }
+    SN.snake.forEach((s, i) => {
+        const x = s.x * cs, y = s.y * cs;
+        ctx.fillStyle = i === 0
+            ? (dead ? '#f43f5e' : '#a5b4fc')
+            : 'rgba(129,140,248,' + Math.max(.38, 1 - i / (SN.snake.length + 5)).toFixed(3) + ')';
+        roundRect(ctx, x + 2, y + 2, cs - 4, cs - 4, 5); ctx.fill();
+    });
+}
+function snakeDir(x, y) {
+    snakeInit();
+    const cur = SN.next || SN.dir;
+    if (SN.snake.length > 1 && cur.x === -x && cur.y === -y) return;   // 不能直接反向
+    if (!SN.playing) { SN.next = { x, y }; snakeStart(); return; }
+    SN.next = { x, y };
+}
+
+const TR = {
+    w: 600, h: 180, ground: 152, ctx: null, raf: 0, last: 0,
+    speed: 6, dist: 0, score: 0, best: +(LS('du_trex_best') || 0),
+    running: false, over: false,
+    dino: { y: 0, vy: 0, jump: false, duck: false, leg: 0, legT: 0 },
+    obs: [], clouds: [], spawn: 380, cloudT: 20
+};
+function trexInit() {
+    if (TR.ctx) return;
+    const cv = $('trexCanvas');
+    if (!cv) return;
+    TR.ctx = cv.getContext('2d');
+}
+function trexReset() {
+    trexStop();
+    trexInit();
+    TR.speed = 6; TR.dist = 0; TR.score = 0; TR.over = false;
+    TR.dino = { y: 0, vy: 0, jump: false, duck: false, leg: 0, legT: 0 };
+    TR.obs = []; TR.clouds = []; TR.spawn = 380; TR.cloudT = 20;
+    $('trex_score').textContent = '0';
+    $('trex_best').textContent = TR.best || 0;
+    $('trex_msg').textContent = '点击「开始」或按空格 / ↑ 启动';
+    const b = $('trex_btn'); if (b) b.textContent = '开始';
+    trexDraw();
+}
+function trexStart() {
+    if (TR.running) return;
+    trexInit();
+    if (TR.over) trexReset();
+    TR.running = true; TR.last = 0;
+    $('trex_btn').textContent = '暂停';
+    $('trex_msg').textContent = '进行中…空格 / ↑ 跳跃，↓ 下蹲';
+    TR.raf = requestAnimationFrame(trexLoop);
+}
+function trexStop() {
+    TR.running = false;
+    if (TR.raf) { cancelAnimationFrame(TR.raf); TR.raf = 0; }
+    const b = $('trex_btn');
+    if (b && !TR.over) b.textContent = '继续';
+}
+function trexToggle() {
+    if (TR.over) { trexRestart(); return; }
+    if (TR.running) { trexStop(); $('trex_msg').textContent = '已暂停，按空格或点「继续」恢复'; }
+    else trexStart();
+}
+function trexRestart() { trexReset(); trexStart(); }
+function trexJump() {
+    if (TR.over) { trexRestart(); return; }
+    if (!TR.running) { trexStart(); return; }
+    const d = TR.dino;
+    if (!d.jump) { d.jump = true; d.vy = 10.8; d.duck = false; }   // y 为「离地高度」，向上为正
+}
+function trexDuck(on) {
+    if (!TR.running || TR.over) return;
+    const d = TR.dino;
+    if (on) { if (d.jump) d.vy -= 5.5; else d.duck = true; }   // 空中下蹲 = 快速下落
+    else d.duck = false;
+}
+function trexDinoBox() {
+    const d = TR.dino;
+    const w = d.duck ? 40 : 34, h = d.duck ? 26 : 44;
+    return { x: 44, w, h, y: TR.ground - h - d.y };
+}
+function trexSpawn() {
+    if (TR.score > 220 && Math.random() < 0.3) {
+        const ys = [TR.ground - 36, TR.ground - 66, TR.ground - 96];
+        TR.obs.push({ type: 'bird', x: TR.w + 24, y: ys[Math.floor(Math.random() * ys.length)], w: 34, h: 18, f: 0 });
+        return;
+    }
+    const n = 1 + (Math.random() < 0.3 ? 1 : 0) + (Math.random() < 0.1 ? 1 : 0);
+    const h = 30 + Math.round(Math.random() * 24);
+    TR.obs.push({ type: 'cactus', x: TR.w + 24, y: TR.ground - h, w: n * 14 + (n - 1) * 3, h, n });
+}
+function trexUpdate(dt) {
+    const f = dt / 16.667;
+    TR.speed = 6 + Math.min(TR.score / 90, 8);
+    TR.dist += TR.speed * f;
+    TR.score = Math.floor(TR.dist / 28);
+    $('trex_score').textContent = TR.score;
+
+    const d = TR.dino;
+    if (d.jump) {
+        d.vy -= 0.62 * f;
+        d.y += d.vy * f;
+        if (d.y <= 0) { d.y = 0; d.vy = 0; d.jump = false; }
+    }
+    d.legT += dt;
+    if (d.legT > 150) { d.legT = 0; d.leg = 1 - d.leg; }
+
+    TR.spawn -= TR.speed * f;
+    // 障碍间隔按时间给（0.8~1.7 秒），保证高速时仍跳得过去
+    if (TR.spawn <= 0) { trexSpawn(); TR.spawn = TR.speed * (48 + Math.random() * 52); }
+    for (const o of TR.obs) { o.x -= TR.speed * f; if (o.type === 'bird') o.f += dt / 130; }
+    TR.obs = TR.obs.filter(o => o.x + o.w > -20);
+
+    TR.cloudT -= dt;
+    if (TR.cloudT <= 0) {
+        TR.clouds.push({ x: TR.w + 30, y: 22 + Math.random() * 46, s: .4 + Math.random() * .5 });
+        TR.cloudT = 900 + Math.random() * 1800;
+    }
+    for (const c of TR.clouds) c.x -= c.s * f * 1.4;
+    TR.clouds = TR.clouds.filter(c => c.x > -70);
+
+    const hb = trexDinoBox();
+    for (const o of TR.obs) {
+        if (hb.x < o.x + o.w - 4 && hb.x + hb.w > o.x + 4 &&
+            hb.y < o.y + o.h - 2 && hb.y + hb.h > o.y + 2) { trexGameOver(); return; }
+    }
+}
+function trexGameOver() {
+    TR.over = true; TR.running = false;
+    if (TR.raf) { cancelAnimationFrame(TR.raf); TR.raf = 0; }
+    if (TR.score > TR.best) { TR.best = TR.score; LS('du_trex_best', TR.best); }
+    $('trex_best').textContent = TR.best;
+    $('trex_btn').textContent = '开始';
+    $('trex_msg').textContent = '💀 撞到了！本局得分 ' + TR.score + '，按空格或点「重开」再来';
+    trexDraw();
+}
+function trexLoop(ts) {
+    if (!TR.running) return;
+    if (!TR.last) TR.last = ts;
+    let dt = ts - TR.last; TR.last = ts;
+    if (dt > 60) dt = 60;                 // 切后台回来时避免跳变
+    trexUpdate(dt);
+    if (!TR.over) { trexDraw(); TR.raf = requestAnimationFrame(trexLoop); }
+}
+function drawTrexCactus(ctx, o) {
+    ctx.fillStyle = '#2f9e6f';
+    const h = o.h, cy = o.y;
+    for (let i = 0; i < o.n; i++) {
+        const cx = o.x + i * 17;
+        ctx.fillRect(cx + 4, cy, 7, h);
+        if (i % 2 === 0) {
+            ctx.fillRect(cx, cy + h * .30, 4, h * .26);
+            ctx.fillRect(cx, cy + h * .30, 8, 4);
+            ctx.fillRect(cx, cy + h * .44, 8, 4);
+        } else {
+            ctx.fillRect(cx + 11, cy + h * .18, 4, h * .24);
+            ctx.fillRect(cx + 7, cy + h * .18, 8, 4);
+            ctx.fillRect(cx + 7, cy + h * .32, 8, 4);
+        }
+    }
+}
+function drawTrexBird(ctx, o) {
+    ctx.fillStyle = '#5b6478';
+    const bx = o.x, by = o.y;
+    ctx.fillRect(bx + 8, by + 6, 20, 6);
+    ctx.fillRect(bx + 26, by + 2, 8, 6);
+    ctx.fillRect(bx + 33, by + 4, 5, 3);
+    if (Math.floor(o.f) % 2 === 0) { ctx.fillRect(bx + 10, by - 4, 15, 6); ctx.fillRect(bx + 12, by, 5, 8); }
+    else { ctx.fillRect(bx + 10, by + 10, 15, 6); ctx.fillRect(bx + 12, by + 2, 5, 8); }
+}
+function drawTrexDino(ctx) {
+    const d = TR.dino, gx = 44, gy = TR.ground - d.y;
+    ctx.fillStyle = TR.over ? '#f43f5e' : '#39435c';
+    if (d.duck) {
+        ctx.fillRect(gx + 2, gy - 24, 28, 14);
+        ctx.fillRect(gx + 24, gy - 33, 20, 12);
+        ctx.fillRect(gx + 38, gy - 29, 7, 4);
+        ctx.fillRect(gx + 6, gy - 10, 5, 8);
+        ctx.fillRect(gx + 19, gy - 10, 5, 8);
+        ctx.fillStyle = '#f6f8fd';
+        ctx.fillRect(gx + 36, gy - 31, 3, 3);
+    } else {
+        ctx.fillRect(gx + 4, gy - 34, 20, 16);
+        ctx.fillRect(gx - 1, gy - 31, 6, 6);
+        ctx.fillRect(gx + 15, gy - 46, 21, 14);
+        ctx.fillRect(gx + 30, gy - 40, 8, 5);
+        if (d.jump) {
+            ctx.fillRect(gx + 6, gy - 18, 6, 10);
+            ctx.fillRect(gx + 17, gy - 22, 6, 12);
+        } else if (d.leg) {
+            ctx.fillRect(gx + 6, gy - 8, 6, 8);
+            ctx.fillRect(gx + 17, gy - 18, 6, 8);
+        } else {
+            ctx.fillRect(gx + 6, gy - 18, 6, 8);
+            ctx.fillRect(gx + 17, gy - 8, 6, 8);
+        }
+        ctx.fillStyle = '#f6f8fd';
+        ctx.fillRect(gx + 32, gy - 43, 3, 3);
+    }
+}
+function trexDraw() {
+    const ctx = TR.ctx; if (!ctx) return;
+    ctx.clearRect(0, 0, TR.w, TR.h);
+
+    ctx.fillStyle = 'rgba(120,140,190,.30)';
+    TR.clouds.forEach(c => {
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, 8, 0, Math.PI * 2);
+        ctx.arc(c.x + 12, c.y - 5, 11, 0, Math.PI * 2);
+        ctx.arc(c.x + 25, c.y, 9, 0, Math.PI * 2);
+        ctx.rect(c.x - 2, c.y, 29, 8);
+        ctx.fill();
+    });
+
+    ctx.fillStyle = '#9aa4bd';
+    ctx.fillRect(0, TR.ground, TR.w, 2);
+    ctx.fillStyle = 'rgba(120,132,160,.42)';
+    const off = TR.dist % 32;
+    for (let i = 0; i < 22; i++) {
+        const x = i * 32 - off;
+        ctx.fillRect(x, TR.ground + 7 + (i % 3) * 6, 5 + (i % 5) * 3, 2);
+    }
+
+    TR.obs.forEach(o => o.type === 'bird' ? drawTrexBird(ctx, o) : drawTrexCactus(ctx, o));
+    drawTrexDino(ctx);
+
+    ctx.font = '600 13px ui-monospace, Menlo, Consolas, monospace';
+    ctx.fillStyle = '#6b7793';
+    ctx.textAlign = 'right';
+    ctx.fillText('HI ' + String(TR.best).padStart(5, '0') + '   ' + String(TR.score).padStart(5, '0'), TR.w - 14, 26);
+    ctx.textAlign = 'left';
+
+    if (TR.over || !TR.running) {
+        ctx.textAlign = 'center';
+        ctx.font = '700 15px -apple-system, "PingFang SC", sans-serif';
+        ctx.fillStyle = TR.over ? '#f43f5e' : '#6b7793';
+        ctx.fillText(TR.over ? 'GAME OVER · 按空格重开' : '按空格 / ↑ 或点击画面开始', TR.w / 2, TR.ground - 66);
+        ctx.textAlign = 'left';
+    }
+}
+
+const GUESS = { n: 0, tries: 0, best: +(LS('du_guess_best') || 0), history: [] };
+function guessNew() {
+    GUESS.n = Math.floor(Math.random() * 100) + 1;
+    GUESS.tries = 0; GUESS.history = [];
+    $('guess_tries').textContent = '0';
+    $('guess_best').textContent = GUESS.best || '—';
+    const inp = $('guess_in'); if (inp) inp.value = '';
+    setOut('guess_out', '已想好一个 1~100 的数字，开始猜吧！');
+}
+function guessSubmit() {
+    const inp = $('guess_in');
+    if (!GUESS.n) { toast('本局已结束，点击「换个数字」开始新一局'); return; }
+    const v = parseInt(inp.value, 10);
+    if (!v || v < 1 || v > 100) { toast('请输入 1~100 的整数'); return; }
+    GUESS.tries++;
+    $('guess_tries').textContent = GUESS.tries;
+    if (v === GUESS.n) {
+        if (!GUESS.best || GUESS.tries < GUESS.best) { GUESS.best = GUESS.tries; LS('du_guess_best', GUESS.best); }
+        $('guess_best').textContent = GUESS.best;
+        const isBest = GUESS.best === GUESS.tries;
+        setOut('guess_out', '🎉 猜中了！答案就是 ' + GUESS.n
+            + '\n共用 ' + GUESS.tries + ' 次' + (isBest && GUESS.tries > 0 ? '（新纪录！）' : '')
+            + '\n\n历史：\n' + GUESS.history.concat([v + ' → ✅ 命中']).join('\n'));
+        GUESS.n = 0;
+        return;
+    }
+    const tip = v > GUESS.n ? '大了 ↓' : '小了 ↑';
+    GUESS.history.push(v + ' → ' + tip);
+    setOut('guess_out', tip + '\n\n历史：\n' + GUESS.history.join('\n'));
+}
+
+function fmtTime(ms) {
+    const s = Math.max(0, Math.floor(ms / 1000));
+    return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+}
+function clockStart(st, elId) {
+    if (st.tid || st.done) return;
+    st.t0 = Date.now();
+    st.tid = setInterval(() => {
+        const el = $(elId);
+        if (el) el.textContent = fmtTime(st.el + Date.now() - st.t0);
+    }, 500);
+}
+function clockStop(st) {
+    if (!st.tid) return;
+    clearInterval(st.tid); st.tid = 0;
+    st.el += Date.now() - st.t0;
+}
+function resumeClock(name, st, elId) {
+    if (st.done) return;
+    const s = $('stage_' + name);
+    if (s && s.classList.contains('on')) clockStart(st, elId);
+}
+function shuf(a) {
+    for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = a[i]; a[i] = a[j]; a[j] = t; }
+    return a;
+}
+
+const SD_LVLS = [{ name: '简单', blanks: 34 }, { name: '中等', blanks: 44 }, { name: '困难', blanks: 54 }];
+const SD = {
+    grid: [], sol: [], given: [], notes: [], cells: [], sel: -1, note: false,
+    lvl: 0, done: false, el: 0, tid: 0, t0: 0
+};
+function sdFull() {
+    const g = new Array(81).fill(0);
+    const row = new Array(9).fill(0), col = new Array(9).fill(0), box = new Array(9).fill(0);
+    (function fill(p) {
+        if (p === 81) return true;
+        const r = (p / 9) | 0, c = p % 9, b = ((r / 3) | 0) * 3 + ((c / 3) | 0);
+        const used = row[r] | col[c] | box[b];
+        const cand = [];
+        for (let v = 1; v <= 9; v++) if (!(used & (1 << v))) cand.push(v);
+        shuf(cand);
+        for (const v of cand) {
+            const m = 1 << v;
+            g[p] = v; row[r] |= m; col[c] |= m; box[b] |= m;
+            if (fill(p + 1)) return true;
+            row[r] &= ~m; col[c] &= ~m; box[b] &= ~m; g[p] = 0;
+        }
+        return false;
+    })(0);
+    return g;
+}
+function sdCount(g, limit) {
+    const work = g.slice();
+    const row = new Array(9).fill(0), col = new Array(9).fill(0), box = new Array(9).fill(0);
+    for (let i = 0; i < 81; i++) {
+        const v = work[i]; if (!v) continue;
+        const r = (i / 9) | 0, c = i % 9, b = ((r / 3) | 0) * 3 + ((c / 3) | 0);
+        const m = 1 << v;
+        if ((row[r] | col[c] | box[b]) & m) return 0;
+        row[r] |= m; col[c] |= m; box[b] |= m;
+    }
+    let cnt = 0;
+    (function rec() {
+        let best = -1, used = 0, few = 10;
+        for (let i = 0; i < 81; i++) {
+            if (work[i]) continue;
+            const r = (i / 9) | 0, c = i % 9, b = ((r / 3) | 0) * 3 + ((c / 3) | 0);
+            const u = row[r] | col[c] | box[b];
+            let n = 0;
+            for (let v = 1; v <= 9; v++) if (!(u & (1 << v))) n++;
+            if (n === 0) return;
+            if (n < few) { few = n; best = i; used = u; if (n === 1) break; }
+        }
+        if (best < 0) { cnt++; return; }
+        const r = (best / 9) | 0, c = best % 9, b = ((r / 3) | 0) * 3 + ((c / 3) | 0);
+        for (let v = 1; v <= 9; v++) {
+            const m = 1 << v;
+            if (used & m) continue;
+            work[best] = v; row[r] |= m; col[c] |= m; box[b] |= m;
+            rec();
+            row[r] &= ~m; col[c] &= ~m; box[b] &= ~m; work[best] = 0;
+            if (cnt >= limit) return;
+        }
+    })();
+    return cnt;
+}
+function sdFits(g, i, v) {
+    const r = (i / 9) | 0, c = i % 9;
+    for (let k = 0; k < 9; k++) {
+        if (g[r * 9 + k] === v || g[k * 9 + c] === v) return false;
+    }
+    const br = ((r / 3) | 0) * 3, bc = ((c / 3) | 0) * 3;
+    for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) if (g[(br + y) * 9 + bc + x] === v) return false;
+    return true;
+}
+/* 挖空：只要该格还能填别的数字且仍可解，就说明不唯一，必须保留 */
+function sdMake(blanks) {
+    const sol = sdFull();
+    const g = sol.slice();
+    const order = shuf(Array.from({ length: 81 }, (_, i) => i));
+    let n = 0;
+    for (const i of order) {
+        if (n >= blanks) break;
+        const bak = g[i];
+        g[i] = 0;
+        let unique = true;
+        for (let v = 1; v <= 9 && unique; v++) {
+            if (v === bak || !sdFits(g, i, v)) continue;
+            const w = g.slice(); w[i] = v;
+            if (sdCount(w, 1) === 1) unique = false;
+        }
+        if (unique) n++; else g[i] = bak;
+    }
+    return { g, sol };
+}
+function sdPeer(a, b) {
+    const ar = (a / 9) | 0, ac = a % 9, br = (b / 9) | 0, bc = b % 9;
+    return ar === br || ac === bc || (((ar / 3) | 0) === ((br / 3) | 0) && ((ac / 3) | 0) === ((bc / 3) | 0));
+}
+function sdConflicts() {
+    const bad = new Array(81).fill(false);
+    for (let i = 0; i < 81; i++) {
+        const v = SD.grid[i]; if (!v) continue;
+        const r = (i / 9) | 0, c = i % 9;
+        for (let k = 0; k < 9; k++) {
+            const jr = r * 9 + k, jc = k * 9 + c;
+            if (k !== c && SD.grid[jr] === v) { bad[i] = bad[jr] = true; }
+            if (k !== r && SD.grid[jc] === v) { bad[i] = bad[jc] = true; }
+        }
+        const br = ((r / 3) | 0) * 3, bc = ((c / 3) | 0) * 3;
+        for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) {
+            const j = (br + y) * 9 + bc + x;
+            if (j !== i && SD.grid[j] === v) { bad[i] = bad[j] = true; }
+        }
+    }
+    return bad;
+}
+function sudokuBuild() {
+    const board = $('sudoku_board'); if (!board) return;
+    if (board.childElementCount !== 81) {
+        board.innerHTML = ''; SD.cells = [];
+        for (let i = 0; i < 81; i++) {
+            const r = (i / 9) | 0, c = i % 9;
+            const el = document.createElement('div');
+            el.className = 'sd-cell' + (c === 2 || c === 5 ? ' br' : '') + (r === 2 || r === 5 ? ' bb' : '');
+            el.dataset.i = i;
+            const v = document.createElement('span');
+            const nt = document.createElement('span'); nt.className = 'sd-notes';
+            for (let d = 1; d <= 9; d++) { const s = document.createElement('i'); s.textContent = d; nt.appendChild(s); }
+            el.appendChild(v); el.appendChild(nt);
+            board.appendChild(el);
+            SD.cells.push({ el, v, nt });
+        }
+        board.addEventListener('click', e => { const c2 = e.target.closest('.sd-cell'); if (c2) sudokuSelect(+c2.dataset.i); });
+    }
+}
+function sudokuRender() {
+    const conf = sdConflicts();
+    const sv = SD.sel >= 0 ? SD.grid[SD.sel] : 0;
+    let left = 0;
+    for (let i = 0; i < 81; i++) {
+        const o = SD.cells[i]; if (!o) continue;
+        const v = SD.grid[i]; if (!v) left++;
+        const r = (i / 9) | 0, c = i % 9;
+        let cls = 'sd-cell';
+        if (c === 2 || c === 5) cls += ' br';
+        if (r === 2 || r === 5) cls += ' bb';
+        if (SD.given[i]) cls += ' given';
+        if (SD.sel === i) cls += ' sel';
+        else if (sv && v === sv) cls += ' same';
+        else if (SD.sel >= 0 && sdPeer(SD.sel, i)) cls += ' peer';
+        if (conf[i]) cls += ' err';
+        o.el.className = cls;
+        o.v.textContent = v || '';
+        const nm = SD.notes[i] || 0;
+        if (v || !nm) o.nt.style.display = 'none';
+        else {
+            o.nt.style.display = 'grid';
+            for (let d = 0; d < 9; d++) o.nt.childNodes[d].style.visibility = (nm & (1 << (d + 1))) ? 'visible' : 'hidden';
+        }
+    }
+    $('sudoku_left').textContent = left;
+}
+function sudokuSelect(i) { SD.sel = i; sudokuRender(); }
+function sudokuMoveSel(d) {
+    const cur = SD.sel < 0 ? 40 : SD.sel;
+    let r = (cur / 9) | 0, c = cur % 9;
+    if (d === 'up') r = (r + 8) % 9;
+    else if (d === 'down') r = (r + 1) % 9;
+    else if (d === 'left') c = (c + 8) % 9;
+    else c = (c + 1) % 9;
+    sudokuSelect(r * 9 + c);
+}
+function sudokuInput(v) {
+    if (SD.done) { toast('本局已完成，点「新一局」再来'); return; }
+    if (SD.sel < 0) { toast('先点一个要填的格子'); return; }
+    const i = SD.sel;
+    if (SD.given[i]) { toast('这是题目给定的数字'); return; }
+    if (!v) { SD.grid[i] = 0; SD.notes[i] = 0; }
+    else if (SD.note) { if (SD.grid[i]) return; SD.notes[i] ^= (1 << v); }
+    else { SD.grid[i] = SD.grid[i] === v ? 0 : v; SD.notes[i] = 0; }
+    sudokuRender(); sudokuWinCheck();
+}
+function sudokuWinCheck() {
+    if (!SD.done && SD.grid.every(v => v) && !sdConflicts().some(Boolean)) {
+        SD.done = true;
+        clockStop(SD);
+        const key = 'du_sudoku_best_' + SD.lvl, prev = +LS(key) || 0;
+        if (!prev || SD.el < prev) LS(key, SD.el);
+        $('sudoku_best').textContent = fmtTime(+LS(key) || SD.el);
+        $('sudoku_msg').textContent = '🎉 完成！用时 ' + fmtTime(SD.el) + (!prev || SD.el < prev ? '（新纪录）' : '');
+        toast('数独完成！');
+    }
+}
+function sudokuCheck() {
+    const left = SD.grid.reduce((a, v) => a + (v ? 0 : 1), 0);
+    if (left) { $('sudoku_msg').textContent = '还有 ' + left + ' 格没填，继续加油～'; toast('还有 ' + left + ' 格未填'); return; }
+    if (sdConflicts().some(Boolean)) { sudokuRender(); $('sudoku_msg').textContent = '有冲突（红色格子），检查一下吧'; }
+    else sudokuWinCheck();
+}
+function sudokuHint() {
+    if (SD.done) return;
+    let i = SD.sel;
+    if (i < 0 || SD.given[i] || SD.grid[i] === SD.sol[i]) {
+        const cand = [];
+        for (let k = 0; k < 81; k++) if (SD.grid[k] !== SD.sol[k]) cand.push(k);
+        if (!cand.length) return;
+        i = cand[Math.floor(Math.random() * cand.length)];
+    }
+    SD.sel = i; SD.grid[i] = SD.sol[i]; SD.notes[i] = 0;
+    sudokuRender();
+    if (SD.cells[i]) {
+        const el = SD.cells[i].el;
+        el.classList.add('pop'); setTimeout(() => el.classList.remove('pop'), 900);
+    }
+    $('sudoku_msg').textContent = '已替你填好一格正确答案 ✅';
+    sudokuWinCheck();
+}
+function sudokuNote() {
+    SD.note = !SD.note;
+    const b = $('sudoku_note');
+    if (b) { b.textContent = '✏️ 笔记：' + (SD.note ? '开' : '关'); b.style.color = SD.note ? 'var(--primary-dark)' : ''; }
+}
+function sudokuSyncLvl() { $$('#sudoku_lvl button').forEach(b => b.classList.toggle('on', +b.dataset.lvl === SD.lvl)); }
+function sudokuLvl(v) {
+    SD.lvl = Math.min(2, Math.max(0, +v || 0)); LS('du_sudoku_lvl', SD.lvl);
+    sudokuSyncLvl(); sudokuNew();
+}
+function sudokuNew() {
+    sudokuBuild();
+    const made = sdMake(SD_LVLS[SD.lvl].blanks);
+    SD.grid = made.g; SD.sol = made.sol;
+    SD.given = made.g.map(v => !!v);
+    SD.notes = new Array(81).fill(0);
+    SD.sel = -1; SD.done = false;
+    clockStop(SD); SD.el = 0;
+    const bk = +LS('du_sudoku_best_' + SD.lvl) || 0;
+    $('sudoku_best').textContent = bk ? fmtTime(bk) : '—';
+    $('sudoku_time').textContent = '00:00';
+    $('sudoku_msg').textContent = '难度：' + SD_LVLS[SD.lvl].name + '，共 ' + SD.grid.reduce((a, v) => a + (v ? 0 : 1), 0) + ' 格待填';
+    sudokuRender();
+    resumeClock('sudoku', SD, 'sudoku_time');
+}
+$('sudoku_pad').addEventListener('click', e => {
+    const b = e.target.closest('button[data-n]');
+    if (b) sudokuInput(+b.dataset.n);
+});
+$('sudoku_lvl').addEventListener('click', e => {
+    const b = e.target.closest('button[data-lvl]');
+    if (b) sudokuLvl(b.dataset.lvl);
+});
+
+const TET = {
+    I: ['#22d3ee', [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]]],
+    J: ['#6366f1', [[1,0,0],[1,1,1],[0,0,0]]],
+    L: ['#f59e0b', [[0,0,1],[1,1,1],[0,0,0]]],
+    O: ['#facc15', [[1,1],[1,1]]],
+    S: ['#22c55e', [[0,1,1],[1,1,0],[0,0,0]]],
+    T: ['#a855f7', [[0,1,0],[1,1,1],[0,0,0]]],
+    Z: ['#ef4444', [[1,1,0],[0,1,1],[0,0,0]]]
+};
+const TET_KEYS = Object.keys(TET);
+const TT = {
+    cols: 10, rows: 20, cell: 24, ctx: null, nctx: null, grid: [], cur: null, next: null, bag: [],
+    score: 0, lines: 0, level: 1, best: +(LS('du_tetris_best') || 0),
+    playing: false, over: false, raf: 0, last: 0, acc: 0
+};
+function tetrisInit() {
+    if (!TT.ctx) {
+        const cv = $('tetrisCanvas'); if (!cv) return;
+        TT.ctx = cv.getContext('2d');
+        TT.nctx = $('tetrisNext') ? $('tetrisNext').getContext('2d') : null;
+    }
+    if (TT.grid.length !== TT.rows) tetrisReset();
+    tetrisDraw();
+}
+function tetrisTake() {
+    if (!TT.bag.length) TT.bag = shuf(TET_KEYS.slice());
+    const k = TT.bag.pop();
+    const m = TET[k][1].map(r => r.slice());
+    return { k, m, x: Math.floor((TT.cols - m.length) / 2), y: 0 };
+}
+function tetrisReset() {
+    tetrisStop();
+    TT.grid = Array.from({ length: TT.rows }, () => new Array(TT.cols).fill(0));
+    TT.bag = []; TT.score = 0; TT.lines = 0; TT.level = 1; TT.acc = 0; TT.over = false;
+    TT.cur = null; TT.next = tetrisTake();
+    $('tetris_score').textContent = '0';
+    $('tetris_lines').textContent = '0';
+    $('tetris_level').textContent = '1';
+    $('tetris_best').textContent = TT.best || 0;
+    const b = $('tetris_btn'); if (b) b.textContent = '开始';
+    $('tetris_msg').textContent = '点击「开始」或按空格启动';
+    tetrisDraw();
+}
+function tetrisStart() {
+    if (TT.playing) return;
+    tetrisInit();
+    if (TT.over) tetrisReset();
+    if (!TT.cur) { TT.cur = TT.next || tetrisTake(); TT.next = tetrisTake(); }
+    if (tetrisHit(TT.cur.m, TT.cur.x, TT.cur.y)) { tetrisGameOver(); return; }
+    TT.playing = true; TT.last = 0; TT.acc = 0;
+    const b = $('tetris_btn'); if (b) b.textContent = '暂停';
+    $('tetris_msg').textContent = '进行中…← → 移动，↑ 旋转，空格直落';
+    TT.raf = requestAnimationFrame(tetrisLoop);
+    tetrisDraw();
+}
+function tetrisStop() { TT.playing = false; if (TT.raf) { cancelAnimationFrame(TT.raf); TT.raf = 0; } }
+function tetrisToggle() {
+    if (TT.over) { tetrisRestart(); return; }
+    if (TT.playing) {
+        tetrisStop();
+        const b = $('tetris_btn'); if (b) b.textContent = '继续';
+        $('tetris_msg').textContent = '已暂停，按 P 或「继续」恢复';
+        tetrisDraw();
+    } else tetrisStart();
+}
+function tetrisRestart() { tetrisReset(); tetrisStart(); }
+function tetrisHit(m, px, py) {
+    for (let y = 0; y < m.length; y++) for (let x = 0; x < m.length; x++) {
+        if (!m[y][x]) continue;
+        const gx = px + x, gy = py + y;
+        if (gx < 0 || gx >= TT.cols || gy >= TT.rows) return true;
+        if (gy >= 0 && TT.grid[gy][gx]) return true;
+    }
+    return false;
+}
+function tetrisLock() {
+    const p = TT.cur;
+    for (let y = 0; y < p.m.length; y++) for (let x = 0; x < p.m.length; x++) {
+        if (p.m[y][x] && p.y + y >= 0) TT.grid[p.y + y][p.x + x] = p.k;
+    }
+    let n = 0;
+    for (let y = TT.rows - 1; y >= 0; y--) {
+        if (TT.grid[y].every(v => v)) { TT.grid.splice(y, 1); TT.grid.unshift(new Array(TT.cols).fill(0)); n++; y++; }
+    }
+    if (n) {
+        TT.lines += n;
+        TT.score += [0, 100, 300, 500, 800][n] * TT.level;
+        TT.level = Math.floor(TT.lines / 10) + 1;
+        if (TT.score > TT.best) { TT.best = TT.score; LS('du_tetris_best', TT.best); }
+        $('tetris_lines').textContent = TT.lines;
+        $('tetris_level').textContent = TT.level;
+        $('tetris_score').textContent = TT.score;
+        $('tetris_best').textContent = TT.best;
+    }
+    TT.cur = TT.next; TT.next = tetrisTake(); TT.acc = 0;
+    if (tetrisHit(TT.cur.m, TT.cur.x, TT.cur.y)) { tetrisGameOver(); return; }
+}
+function tetrisRotate(dir) {
+    const p = TT.cur; if (!p) return;
+    const n = p.m.length, nm = [];
+    for (let y = 0; y < n; y++) { nm.push([]); for (let x = 0; x < n; x++) nm[y].push(dir > 0 ? p.m[n - 1 - x][y] : p.m[x][n - 1 - y]); }
+    for (const off of [0, -1, 1, -2, 2]) if (!tetrisHit(nm, p.x + off, p.y)) { p.m = nm; p.x += off; return; }
+}
+function tetrisAct(a) {
+    if (TT.over) return;
+    if (!TT.playing) { tetrisStart(); return; }
+    const p = TT.cur; if (!p) return;
+    if (a === 'left') { if (!tetrisHit(p.m, p.x - 1, p.y)) p.x--; }
+    else if (a === 'right') { if (!tetrisHit(p.m, p.x + 1, p.y)) p.x++; }
+    else if (a === 'rot') tetrisRotate(1);
+    else if (a === 'rot2') tetrisRotate(-1);
+    else if (a === 'down') {
+        if (!tetrisHit(p.m, p.x, p.y + 1)) { p.y++; TT.score++; $('tetris_score').textContent = TT.score; TT.acc = 0; }
+        else tetrisLock();
+    } else if (a === 'drop') {
+        let d = 0; while (!tetrisHit(p.m, p.x, p.y + d + 1)) d++;
+        p.y += d; TT.score += d * 2; $('tetris_score').textContent = TT.score; tetrisLock();
+    }
+    tetrisDraw();
+}
+function tetrisGameOver() {
+    TT.over = true; tetrisStop();
+    if (TT.score > TT.best) { TT.best = TT.score; LS('du_tetris_best', TT.best); }
+    $('tetris_best').textContent = TT.best;
+    const b = $('tetris_btn'); if (b) b.textContent = '开始';
+    $('tetris_msg').textContent = '💀 堆到顶了！本局 ' + TT.score + ' 分 / ' + TT.lines + ' 行，按「重开」再来';
+    tetrisDraw();
+}
+function tetrisLoop(ts) {
+    if (!TT.playing) return;
+    if (!TT.last) TT.last = ts;
+    let dt = ts - TT.last; TT.last = ts;
+    if (dt > 100) dt = 100;
+    const iv = Math.max(90, 800 - (TT.level - 1) * 65);
+    TT.acc += dt;
+    while (TT.acc >= iv && TT.playing) {
+        TT.acc -= iv;
+        const p = TT.cur; if (!p) break;
+        if (!tetrisHit(p.m, p.x, p.y + 1)) p.y++;
+        else { tetrisLock(); break; }
+    }
+    if (!TT.playing) return;
+    tetrisDraw();
+    TT.raf = requestAnimationFrame(tetrisLoop);
+}
+function tetBlock(ctx, px, py, cs, key, ghost) {
+    const c = TET[key] ? TET[key][0] : '#94a3b8';
+    if (ghost) {
+        ctx.strokeStyle = c; ctx.lineWidth = 2;
+        roundRect(ctx, px + 2, py + 2, cs - 4, cs - 4, 4); ctx.stroke();
+        return;
+    }
+    ctx.fillStyle = c;
+    roundRect(ctx, px + 1, py + 1, cs - 2, cs - 2, 4); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.30)';
+    roundRect(ctx, px + 3, py + 3, cs - 6, cs * .34, 3); ctx.fill();
+}
+function tetrisDrawNext() {
+    const ctx = TT.nctx; if (!ctx) return;
+    ctx.clearRect(0, 0, 80, 80);
+    const p = TT.next; if (!p) return;
+    const m = p.m, n = m.length;
+    let minX = n, maxX = -1, minY = n, maxY = -1;
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (m[y][x]) {
+        if (x < minX) minX = x; if (x > maxX) maxX = x;
+        if (y < minY) minY = y; if (y > maxY) maxY = y;
+    }
+    if (maxX < 0) return;
+    const cs = Math.min(16, Math.floor(64 / Math.max(maxX - minX + 1, maxY - minY + 1)));
+    const ox = (80 - (maxX - minX + 1) * cs) / 2, oy = (80 - (maxY - minY + 1) * cs) / 2;
+    for (let y = minY; y <= maxY; y++) for (let x = minX; x <= maxX; x++)
+        if (m[y][x]) tetBlock(ctx, ox + (x - minX) * cs, oy + (y - minY) * cs, cs, p.k, false);
+}
+function tetrisDraw() {
+    const ctx = TT.ctx; if (!ctx) return;
+    const cs = TT.cell, W = TT.cols * cs, H = TT.rows * cs;
+    ctx.clearRect(0, 0, W, H);
+    ctx.strokeStyle = 'rgba(255,255,255,.055)'; ctx.lineWidth = 1;
+    for (let x = 1; x < TT.cols; x++) { ctx.beginPath(); ctx.moveTo(x * cs, 0); ctx.lineTo(x * cs, H); ctx.stroke(); }
+    for (let y = 1; y < TT.rows; y++) { ctx.beginPath(); ctx.moveTo(0, y * cs); ctx.lineTo(W, y * cs); ctx.stroke(); }
+    for (let y = 0; y < TT.rows; y++) for (let x = 0; x < TT.cols; x++)
+        if (TT.grid[y][x]) tetBlock(ctx, x * cs, y * cs, cs, TT.grid[y][x], false);
+    const p = TT.cur;
+    if (p && !TT.over) {
+        let gy = p.y; while (!tetrisHit(p.m, p.x, gy + 1)) gy++;
+        for (let y = 0; y < p.m.length; y++) for (let x = 0; x < p.m.length; x++) {
+            if (!p.m[y][x]) continue;
+            if (gy + y >= 0 && gy !== p.y) tetBlock(ctx, (p.x + x) * cs, (gy + y) * cs, cs, p.k, true);
+            if (p.y + y >= 0) tetBlock(ctx, (p.x + x) * cs, (p.y + y) * cs, cs, p.k, false);
+        }
+    }
+    if (!TT.playing) {
+        ctx.fillStyle = 'rgba(9,14,30,.62)'; ctx.fillRect(0, 0, W, H);
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#e2e8f0'; ctx.font = '700 15px -apple-system, "PingFang SC", sans-serif';
+        ctx.fillText(TT.over ? 'GAME OVER' : '已暂停', W / 2, H / 2 - 6);
+        ctx.fillStyle = 'rgba(226,232,240,.75)'; ctx.font = '600 12px -apple-system, "PingFang SC", sans-serif';
+        ctx.fillText(TT.over ? '点「重开」再来一局' : '按 P 或点「继续」恢复', W / 2, H / 2 + 14);
+        ctx.textAlign = 'left';
+    }
+    tetrisDrawNext();
+}
+
+const PZ = { n: 3, a: [], tiles: [], moves: 0, done: false, el: 0, tid: 0, t0: 0, best: {} };
+function puzzleSolved() {
+    const tot = PZ.n * PZ.n;
+    for (let i = 0; i < tot - 1; i++) if (PZ.a[i] !== i + 1) return false;
+    return PZ.a[tot - 1] === 0;
+}
+function puzzleShuffle() {
+    const n = PZ.n;
+    let b = PZ.a.indexOf(0);
+    const step = () => {
+        const r = (b / n) | 0, c = b % n, cand = [];
+        if (r > 0) cand.push(b - n);
+        if (r < n - 1) cand.push(b + n);
+        if (c > 0) cand.push(b - 1);
+        if (c < n - 1) cand.push(b + 1);
+        const nb = cand[Math.floor(Math.random() * cand.length)];
+        PZ.a[b] = PZ.a[nb]; PZ.a[nb] = 0; b = nb;
+    };
+    for (let s = 0, tot = n * n * 60; s < tot; s++) step();
+    for (let s = 0; s < 9 && puzzleSolved(); s++) step();   // 极小概率走回原状，再挪几步
+}
+function puzzleBuild() {
+    const board = $('puzzle_board'); if (!board) return;
+    const n = PZ.n, tot = n * n, gp = 1.6, ts = (100 - gp * (n + 1)) / n;
+    board.style.setProperty('--gp', gp + '%');
+    board.style.setProperty('--ts', ts + '%');
+    board.style.setProperty('--st', (ts + gp) + '%');
+    board.innerHTML = ''; PZ.tiles = [];
+    for (let v = 1; v < tot; v++) {
+        const t = document.createElement('div');
+        t.className = 'pz-tile'; t.dataset.v = v; t.textContent = v;
+        t.style.fontSize = n >= 5 ? 'clamp(14px,3.4vw,20px)' : n === 4 ? 'clamp(17px,4.4vw,25px)' : 'clamp(20px,5.8vw,30px)';
+        board.appendChild(t); PZ.tiles[v] = t;
+    }
+    if (!board.dataset.bound) {
+        board.dataset.bound = '1';
+        board.addEventListener('click', e => { const t = e.target.closest('.pz-tile'); if (t) puzzleTry(+t.dataset.v); });
+    }
+}
+function puzzleRender() {
+    const n = PZ.n;
+    for (let i = 0; i < n * n; i++) {
+        const v = PZ.a[i]; if (!v) continue;
+        const t = PZ.tiles[v]; if (!t) continue;
+        t.style.setProperty('--r', String((i / n) | 0));
+        t.style.setProperty('--c', String(i % n));
+        t.classList.toggle('ok', v === i + 1);
+    }
+}
+function puzzleTry(v) {
+    if (PZ.done) return;
+    const n = PZ.n, blank = PZ.a.indexOf(0), i = PZ.a.indexOf(v);
+    if (i < 0) return;
+    const r = (i / n) | 0, c = i % n, br = (blank / n) | 0, bc = blank % n;
+    if (Math.abs(r - br) + Math.abs(c - bc) !== 1) return;
+    PZ.a[blank] = v; PZ.a[i] = 0;
+    PZ.moves++;
+    $('puzzle_moves').textContent = PZ.moves;
+    puzzleRender(); puzzleWinCheck();
+}
+function puzzleMove(d) {
+    const n = PZ.n, blank = PZ.a.indexOf(0);
+    const br = (blank / n) | 0, bc = blank % n;
+    let tr = br, tc = bc;
+    if (d === 'up') tr++; else if (d === 'down') tr--;
+    else if (d === 'left') tc++; else tc--;
+    if (tr < 0 || tr >= n || tc < 0 || tc >= n) return;
+    puzzleTry(PZ.a[tr * n + tc]);
+}
+function puzzleWinCheck() {
+    if (!puzzleSolved()) return;
+    PZ.done = true;
+    clockStop(PZ);
+    const prev = PZ.best[PZ.n] || 0, rec = !prev || PZ.moves < prev;
+    if (rec) { PZ.best[PZ.n] = PZ.moves; LS('du_puzzle_best_' + PZ.n, PZ.moves); }
+    $('puzzle_best').textContent = PZ.best[PZ.n];
+    $('puzzle_msg').textContent = '🎉 复原成功！' + PZ.moves + ' 步 / ' + fmtTime(PZ.el) + (rec ? '（新纪录）' : '');
+    toast('华容道复原！');
+}
+function puzzleSyncSize() { $$('#puzzle_size button').forEach(b => b.classList.toggle('on', +b.dataset.size === PZ.n)); }
+function puzzleSize(v) {
+    PZ.n = [3, 4, 5].indexOf(+v) >= 0 ? +v : 3;
+    LS('du_puzzle_n', PZ.n);
+    puzzleSyncSize(); puzzleNew();
+}
+function puzzleNew() {
+    const n = PZ.n, tot = n * n;
+    if (!PZ.best[n]) PZ.best[n] = +LS('du_puzzle_best_' + n) || 0;
+    PZ.a = Array.from({ length: tot }, (_, i) => (i + 1) % tot);
+    PZ.moves = 0; PZ.done = false;
+    clockStop(PZ); PZ.el = 0;
+    $('puzzle_time').textContent = '00:00';
+    $('puzzle_moves').textContent = '0';
+    $('puzzle_best').textContent = PZ.best[n] || '—';
+    $('puzzle_msg').textContent = '把数字按 1 → ' + (tot - 1) + ' 排好，空格留在右下角';
+    puzzleShuffle(); puzzleBuild(); puzzleRender();
+    resumeClock('puzzle', PZ, 'puzzle_time');
+}
+$('puzzle_size').addEventListener('click', e => {
+    const b = e.target.closest('button[data-size]');
+    if (b) puzzleSize(b.dataset.size);
+});
+
+const MM_ICONS = ['🍎', '🍇', '🍋', '🍉', '🍓', '🥑', '🍒', '🥕', '🐳', '🦊'];
+const MM = { list: [], els: [], first: -1, lock: false, moves: 0, matched: 0, done: false,
+             best: +(LS('du_memory_best') || 0), el: 0, tid: 0, t0: 0 };
+function memoryBuild() {
+    const g = $('memory_grid'); if (!g) return;
+    g.innerHTML = '';
+    MM.els = MM.list.map((ic, i) => {
+        const c = document.createElement('div'); c.className = 'mm-card'; c.dataset.i = i;
+        const inn = document.createElement('div'); inn.className = 'mm-in';
+        const back = document.createElement('div'); back.className = 'mm-face mm-back'; back.textContent = '?';
+        const front = document.createElement('div'); front.className = 'mm-face mm-front'; front.textContent = ic;
+        inn.appendChild(back); inn.appendChild(front);
+        c.appendChild(inn); g.appendChild(c);
+        return c;
+    });
+    if (!g.dataset.bound) {
+        g.dataset.bound = '1';
+        g.addEventListener('click', e => { const c = e.target.closest('.mm-card'); if (c) memoryFlip(+c.dataset.i); });
+    }
+}
+function memoryFlip(i) {
+    const el = MM.els[i];
+    if (!el || MM.lock || MM.done) return;
+    if (el.classList.contains('flip') || el.classList.contains('done')) return;
+    el.classList.add('flip');
+    if (MM.first < 0) { MM.first = i; return; }
+    const a = MM.first, b = i;
+    MM.first = -1;
+    MM.moves++;
+    $('memory_moves').textContent = MM.moves;
+    if (MM.list[a] === MM.list[b]) {
+        MM.els[a].classList.add('done'); MM.els[b].classList.add('done');
+        MM.matched += 2;
+        if (MM.matched === MM.list.length) memoryWin();
+    } else {
+        MM.lock = true;
+        setTimeout(() => {
+            MM.els[a].classList.remove('flip'); MM.els[b].classList.remove('flip'); MM.lock = false;
+        }, 720);
+    }
+}
+function memoryWin() {
+    MM.done = true;
+    clockStop(MM);
+    const prev = MM.best || 0, rec = !prev || MM.moves < prev;
+    if (rec) { MM.best = MM.moves; LS('du_memory_best', MM.best); }
+    $('memory_best').textContent = MM.best;
+    $('memory_msg').textContent = '🎉 全部配对完成！' + MM.moves + ' 步 / ' + fmtTime(MM.el) + (rec ? '（新纪录）' : '');
+    toast('记忆翻牌完成！');
+}
+function memoryNew() {
+    const icons = shuf(MM_ICONS.slice()).slice(0, 8);
+    MM.list = shuf(icons.concat(icons));
+    MM.first = -1; MM.lock = false; MM.moves = 0; MM.matched = 0; MM.done = false;
+    clockStop(MM); MM.el = 0;
+    $('memory_time').textContent = '00:00';
+    $('memory_moves').textContent = '0';
+    $('memory_best').textContent = MM.best || '—';
+    $('memory_msg').textContent = '翻牌开始计时，步数越少越好';
+    memoryBuild();
+    resumeClock('memory', MM, 'memory_time');
+}
+
+function bindSwipe(el, cb) {
+    if (!el) return;
+    let sx = 0, sy = 0;
+    el.addEventListener('touchstart', e => { const t = e.touches[0]; sx = t.clientX; sy = t.clientY; }, { passive: true });
+    el.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+    el.addEventListener('touchend', e => {
+        const t = e.changedTouches[0];
+        const dx = t.clientX - sx, dy = t.clientY - sy;
+        if (Math.abs(dx) < 24 && Math.abs(dy) < 24) return;
+        cb(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'));
+    }, { passive: true });
+}
+bindSwipe($('g2048_board'), d => g2048Move(d));
+bindSwipe($('snakeCanvas'), d => {
+    const m = { left: [-1, 0], right: [1, 0], up: [0, -1], down: [0, 1] }[d];
+    if (m) snakeDir(m[0], m[1]);
+});
+const trexCanvas = $('trexCanvas');
+bindSwipe(trexCanvas, d => {
+    if (d === 'up' || d === 'left' || d === 'right') trexJump();
+    else { trexDuck(true); setTimeout(() => trexDuck(false), 450); }
+});
+if (trexCanvas) trexCanvas.addEventListener('click', () => trexJump());
+bindSwipe($('tetrisCanvas'), d => {
+    tetrisAct(d === 'left' ? 'left' : d === 'right' ? 'right' : d === 'up' ? 'rot' : 'down');
+});
+const guessInput = $('guess_in');
+if (guessInput) guessInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); guessSubmit(); } });
+const KEY_DIR4 = { arrowleft: 'left', arrowright: 'right', arrowup: 'up', arrowdown: 'down', a: 'left', d: 'right', w: 'up', s: 'down' };
+const KEY_DIRS = { arrowleft: [-1, 0], arrowright: [1, 0], arrowup: [0, -1], arrowdown: [0, 1], a: [-1, 0], d: [1, 0], w: [0, -1], s: [0, 1] };
+document.addEventListener('keydown', e => {
+    if (!$('game') || !$('game').classList.contains('active')) return;
+    const tag = (e.target && e.target.tagName) || '';
+    if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+    const k = e.key.toLowerCase();
+    if (curGame === 'g2048') {
+        const d = KEY_DIR4[k];
+        if (d) { e.preventDefault(); g2048Move(d); }
+    } else if (curGame === 'snake') {
+        const d = KEY_DIRS[k];
+        if (d) { e.preventDefault(); snakeDir(d[0], d[1]); }
+        else if (e.key === ' ') { e.preventDefault(); snakeToggle(); }
+    } else if (curGame === 'trex') {
+        if (e.key === ' ' || k === 'arrowup' || k === 'w') { e.preventDefault(); trexJump(); }
+        else if (k === 'arrowdown' || k === 's') { e.preventDefault(); trexDuck(true); }
+    } else if (curGame === 'sudoku') {
+        if (k >= '1' && k <= '9') { e.preventDefault(); sudokuInput(+k); }
+        else if (k === '0' || k === 'backspace' || k === 'delete') { e.preventDefault(); sudokuInput(0); }
+        else { const d = KEY_DIR4[k]; if (d) { e.preventDefault(); sudokuMoveSel(d); } }
+    } else if (curGame === 'tetris') {
+        if (k === 'arrowleft' || k === 'a') { e.preventDefault(); tetrisAct('left'); }
+        else if (k === 'arrowright' || k === 'd') { e.preventDefault(); tetrisAct('right'); }
+        else if (k === 'arrowup' || k === 'w' || k === 'x') { e.preventDefault(); tetrisAct('rot'); }
+        else if (k === 'z') { e.preventDefault(); tetrisAct('rot2'); }
+        else if (k === 'arrowdown' || k === 's') { e.preventDefault(); tetrisAct('down'); }
+        else if (e.key === ' ') { e.preventDefault(); tetrisAct('drop'); }
+        else if (k === 'p') { e.preventDefault(); tetrisToggle(); }
+    } else if (curGame === 'puzzle') {
+        const d = KEY_DIR4[k];
+        if (d) { e.preventDefault(); puzzleMove(d); }
+    }
+});
+document.addEventListener('keyup', e => {
+    if (curGame !== 'trex') return;
+    const k = e.key.toLowerCase();
+    if (k === 'arrowdown' || k === 's') trexDuck(false);
+});
+/* 切到后台自动暂停，避免回来时已经撞死 / 分数虚高 */
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+        if (curGame === 'sudoku') resumeClock('sudoku', SD, 'sudoku_time');
+        if (curGame === 'puzzle') resumeClock('puzzle', PZ, 'puzzle_time');
+        if (curGame === 'memory') resumeClock('memory', MM, 'memory_time');
+        return;
+    }
+    if (SN.playing) {
+        snakeStop();
+        const b = $('snake_btn'); if (b) b.textContent = '继续';
+        $('snake_msg').textContent = '已暂停，按空格或「继续」恢复';
+    }
+    if (TR.running) trexStop();
+    tetrisStop();
+    clockStop(SD); clockStop(PZ); clockStop(MM);
+});
+const _sl = +LS('du_sudoku_lvl'); SD.lvl = [0, 1, 2].indexOf(_sl) >= 0 ? _sl : 0;
+const _pn = +LS('du_puzzle_n');   PZ.n = [3, 4, 5].indexOf(_pn) >= 0 ? _pn : 3;
+sudokuSyncLvl(); puzzleSyncSize();
+g2048New(); snakeReset(); trexReset(); guessNew();
+sudokuNew(); tetrisReset(); puzzleNew(); memoryNew();
+const Actions = { g2048New, snakeToggle, snakeRestart, trexToggle, trexRestart, guessNew, guessSubmit,
+    sudokuNew, sudokuCheck, sudokuHint, sudokuNote, sudokuLvl,
+    tetrisToggle, tetrisRestart, tetrisAct, puzzleNew, puzzleSize, memoryNew };
+document.addEventListener('click', e => {
+    const copyBtn = e.target.closest('.copy');
+    if (copyBtn) {
+        const box = copyBtn.closest('.out');
+        const t = box ? box.querySelector('.otext') : null;
+        copyText(t ? t.textContent : '');
+        return;
+    }
+    const act = e.target.closest('[data-action]');
+    if (!act) return;
+    const fn = Actions[act.dataset.action];
+    if (typeof fn === 'function') fn(act.dataset.arg);
+});
+
+function enhanceNumberInputs() {
+    $$('input[type=number]').forEach(inp => {
+        if (inp.dataset.stepped) return;
+        inp.dataset.stepped = '1';
+        const wrap = document.createElement('span');
+        wrap.className = 'num-wrap';
+        inp.parentNode.insertBefore(wrap, inp);
+        wrap.appendChild(inp);
+        const mk = (dir, txt) => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'num-step ' + dir;
+            b.textContent = txt;
+            b.addEventListener('click', e => {
+                e.preventDefault();
+                const step = parseFloat(inp.getAttribute('step')) || 1;
+                let v = parseFloat(inp.value);
+                if (isNaN(v)) v = parseFloat(inp.getAttribute('min')) || 0;
+                v += (dir === 'up' ? step : -step);
+                const min = inp.getAttribute('min'), max = inp.getAttribute('max');
+                if (min !== null && !isNaN(parseFloat(min)) && v < parseFloat(min)) v = parseFloat(min);
+                if (max !== null && !isNaN(parseFloat(max)) && v > parseFloat(max)) v = parseFloat(max);
+                inp.value = v;
+                inp.dispatchEvent(new Event('input', { bubbles: true }));
+            });
+            wrap.appendChild(b);
+        };
+        mk('up', '▲'); mk('down', '▼');
+    });
+}
+enhanceNumberInputs();
+let gmLastH = -1;
+function gmReport() {
+    const h = document.documentElement.scrollHeight;
+    // 布局未就绪时 scrollHeight 为 0，不能上报，否则宿主页会把 iframe 压成 0 高
+    if (h <= 0 || h === gmLastH) return;
+    gmLastH = h;
+    try { parent.postMessage({ gmHeight: h }, '*'); } catch (e) {}
+}
+window.addEventListener('message', e => {
+    if (!e.data || typeof e.data.gmPause !== 'boolean') return;
+    if (e.data.gmPause) stopAllGames();
+    else {
+        resumeClock('sudoku', SD, 'sudoku_time');
+        resumeClock('puzzle', PZ, 'puzzle_time');
+        resumeClock('memory', MM, 'memory_time');
+    }
+});
+window.addEventListener('load', gmReport);
+if (window.ResizeObserver) new ResizeObserver(() => gmReport()).observe(document.body);
+
+</script>
+</body>
+</html>
