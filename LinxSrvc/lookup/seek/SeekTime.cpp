@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "SeekTime.h"
 #include "logging.h"
 
@@ -9,7 +10,7 @@
 typedef TransProjFrame StruFrameHeader;
 typedef uint32_t key_size_t;
 #define FRAME_SIZE PROJECT_PAYLOAD_SIZE // Frame size remains unchanged
-// The value written to the database only needs to be increasing and non-duplicated to be searchable
+// The seek value only need to be increasing and unique.
 #define FRAME_TIME (header->majorHead.getSeekValue())
 // #define FRAME_TIME (((DataXxx*)(header->data))->getSeekValue())
 #else
@@ -18,6 +19,28 @@ typedef uint64_t key_size_t;
 #define FRAME_SIZE (header->size)
 #define FRAME_TIME (header->utctime)
 #endif
+
+/* A truncated frame cannot be an end boundary. */
+static bool getFramePayload(FILE* file, int64_t fileSize, int64_t offset,
+    int64_t& payload)
+{
+    if (offset < 0
+        || offset + static_cast<int64_t>(sizeof(StruFrameHeader)) > fileSize) {
+        return false;
+    }
+    uint8_t buffer[sizeof(StruFrameHeader)] = { 0 };
+    if (fseek(file, offset, SEEK_SET) != 0
+        || fread(buffer, sizeof(buffer), 1, file) != 1) {
+        return false;
+    }
+    if (*reinterpret_cast<key_size_t*>(buffer) != SEEK_FRAME_HEAD) {
+        return false;
+    }
+    StruFrameHeader* header = reinterpret_cast<StruFrameHeader*>(buffer);
+    static_cast<void>(header);
+    payload = static_cast<int64_t>(FRAME_SIZE);
+    return payload >= 0;
+}
 
 SeekTime::SeekTime()
 {
@@ -93,7 +116,6 @@ int SeekTime::findFileFragmentDetail(FILE* file, FileFrameData& startframe, File
     int count = 0;
     bool found = false;
 
-    /* Binary search to find the left boundary position */
     if (startpos == tailpos) {
         LOG_INF("left terminal startpos=%lld, tailpos=%lld", startpos, tailpos);
         startframe.target.offset = startpos;
@@ -102,7 +124,7 @@ int SeekTime::findFileFragmentDetail(FILE* file, FileFrameData& startframe, File
         comidx.value.offset = startframe.target.offset;
         comidx.value.timestamp = startframe.target.timestamp;
         comidx.fileid = startframe.id;
-        comidx.duration = -1; // For non-final results, set this field to -1 to distinguish from final results
+        comidx.duration = -1; // intermediate index
         LOG_INF("left terminal target offset=%lld timestamp=%lld", startframe.target.offset, startframe.target.timestamp);
         if (tailpos != 0) {
             m_dbMgr->addIndexNoDuplex(&comidx);
@@ -122,7 +144,7 @@ int SeekTime::findFileFragmentDetail(FILE* file, FileFrameData& startframe, File
                     LOG_INF("left found target offset=%lld timestamp=%lld", startframe.target.offset, startframe.target.timestamp);
                     found = true;
                 } else if (FRAME_TIME < startframe.target.timestamp) {
-                    startframe.offset.head = curpos + i; // record last search position
+                    startframe.offset.head = curpos + i;
                     startframe.ftime.first = FRAME_TIME;
                 } else {
                     startframe.offset.tail = curpos + i;
@@ -133,7 +155,7 @@ int SeekTime::findFileFragmentDetail(FILE* file, FileFrameData& startframe, File
                 comidx.value.offset = curpos + i;
                 comidx.value.timestamp = FRAME_TIME;
                 comidx.fileid = startframe.id;
-                comidx.duration = -1; // For non-final results, set this field to -1 to distinguish from final results
+                comidx.duration = -1; // intermediate index
                 m_dbMgr->addIndexNoDuplex(&comidx);
                 break;
             }
@@ -144,14 +166,12 @@ int SeekTime::findFileFragmentDetail(FILE* file, FileFrameData& startframe, File
             break;
         }
 
-        /* Set next read size */
         curpos = startframe.offset.average();
         fseek(file, curpos, SEEK_SET);
         cursize = startframe.offset.tail - curpos;
         buffSize = m_windSize > cursize ? cursize : m_windSize;
 
         if (cursize < MIN_JUDGE_FRAME_SIZE || cursize == lastsize) {
-            // Still not found this time, use previous result
             startframe.target.offset = startframe.offset.head;
             startframe.target.timestamp = startframe.ftime.first;
             LOG_WRN("left terminal target not found, return target offset=%lld timestamp=%lld cursize=%lld lastsize=%lld curSeekPos=%lld",
@@ -162,11 +182,12 @@ int SeekTime::findFileFragmentDetail(FILE* file, FileFrameData& startframe, File
         count++;
     }
 
-    /* Binary search to find the right boundary position */
     startpos = tailframe.offset.head;
     tailpos = tailframe.offset.tail;
     curpos = tailframe.offset.average();
     cursize = tailpos - curpos;
+    /* Reset progress for the right search; the left value would stop it after one window. */
+    lastsize = tailpos - startpos;
     buffSize = m_windSize > cursize ? cursize : m_windSize;
     found = false;
     count = 0;
@@ -180,7 +201,7 @@ int SeekTime::findFileFragmentDetail(FILE* file, FileFrameData& startframe, File
         comidx.value.offset = tailframe.target.offset;
         comidx.value.timestamp = tailframe.target.timestamp;
         comidx.fileid = tailframe.id;
-        comidx.duration = -1; // For non-final results, set this parameter to -1 to distinguish from final results
+        comidx.duration = -1; // intermediate index
         LOG_INF("right terminal target offset=%lld timestamp=%lld", tailframe.target.offset, tailframe.target.timestamp);
         if (tailpos != 0) {
             m_dbMgr->addIndexNoDuplex(&comidx);
@@ -211,7 +232,7 @@ int SeekTime::findFileFragmentDetail(FILE* file, FileFrameData& startframe, File
                 comidx.value.offset = curpos + i;
                 comidx.value.timestamp = FRAME_TIME;
                 comidx.fileid = tailframe.id;
-                comidx.duration = -1; // For non-final results, set this field to -1 to distinguish from final results
+                comidx.duration = -1; // intermediate index
                 m_dbMgr->addIndexNoDuplex(&comidx);
                 break;
             }
@@ -221,7 +242,6 @@ int SeekTime::findFileFragmentDetail(FILE* file, FileFrameData& startframe, File
             break;
         }
 
-        /* Set next read size */
         curpos = tailframe.offset.average();
         cursize = tailframe.offset.tail - curpos;
         buffSize = m_windSize > cursize ? cursize : m_windSize;
@@ -240,7 +260,6 @@ int SeekTime::findFileFragmentDetail(FILE* file, FileFrameData& startframe, File
     return (found ? 0 : -1);
 }
 
-/* Find first frame information of the file */
 bool getFirstFrame(FILE* file, uint32_t winsize, SeekTimeContent& headIdx, uint32_t offset)
 {
     uint64_t position = 0;
@@ -285,7 +304,6 @@ bool getFirstFrame(FILE* file, uint32_t winsize, SeekTimeContent& headIdx, uint3
     return find;
 }
 
-/* Find last frame information of the file */
 bool getTailFrame(FILE* file, uint32_t winsize, SeekTimeContent& tailIdx)
 {
     fseek(file, 0, SEEK_END);
@@ -325,7 +343,6 @@ bool getTailFrame(FILE* file, uint32_t winsize, SeekTimeContent& tailIdx)
         }
         if (position >= bytes) {
             position = position - bytes;
-            // bytes unchanged
         } else {
             buffSize = position;
             position = 0;
@@ -349,7 +366,6 @@ int SeekTime::seekFileDataTime(uint32_t duration, std::vector<SeekTimeContent>& 
             snprintf(fileinfo.fileName, MAX_NAME_LEN, "%s", vecFileTime.first.c_str());
             LOG_INF("'%s', selecting time=%lld ...", fileinfo.fileName, seekTime.average());
 
-            // First check the database TblFileIdMapping for a record of this file; if not found, insert a record
             uint32_t fileId = 0;
             FileFrameData startframe{};
             FileFrameData tailframe{};
@@ -372,7 +388,6 @@ int SeekTime::seekFileDataTime(uint32_t duration, std::vector<SeekTimeContent>& 
                     if (ret != 0) {
                         LOG_ERR("insertFileIdbyName() failed(%d)!", ret);
                     }
-                    /* Insert the first and last frame information of the file into TblSeekTimeIndex */
                     ret = m_dbMgr->addIndexNoDuplex(&headIdx);
                     if (ret != 0) {
                         LOG_ERR("addIndexNoDuplex() headIdx failed!");
@@ -381,7 +396,6 @@ int SeekTime::seekFileDataTime(uint32_t duration, std::vector<SeekTimeContent>& 
                 find = getTailFrame(m_pfile, m_windSize, tailIdx);
                 if (find) {
                     snprintf(tailIdx.fileName, MAX_NAME_LEN, "%s", vecFileTime.first.c_str());
-                    /* Insert file information into TblFileIdMapping table */
                     fileMapping.offset.tail = tailIdx.value.offset;
                     fileMapping.ftime.last = tailIdx.value.timestamp;
                     ret = m_dbMgr->insertFileIdbyName(&fileMapping);
@@ -394,10 +408,7 @@ int SeekTime::seekFileDataTime(uint32_t duration, std::vector<SeekTimeContent>& 
                     }
                 }
                 fseek(m_pfile, 0, SEEK_SET);
-            }
-            /* If TblFileIdMapping has information for this file, query frame info in TblSeekTimeIndex */
-            else {
-                /* Database already has a record for the target segment, continue to next target segment */
+            } else {
                 fileinfo.fileid = fileId;
                 if (m_dbMgr->getTargetFragmentByTime(seekTime.average(), duration, &fileinfo) == 0) {
                     if (fileinfo.value.size > 0) {
@@ -412,14 +423,12 @@ int SeekTime::seekFileDataTime(uint32_t duration, std::vector<SeekTimeContent>& 
                 }
             }
 
-            /* If not found exactly in database, find the smallest range for start and end times */
             ret = m_dbMgr->getTimeOffsetByFileName(vecFileTime.first, seekTime, startframe, tailframe);
             if (ret != 0) {
                 LOG_WRN("can not get TimeOffset in dataBase , target time is out of range, quit!");
                 continue;
             }
 
-            /* Based on the smallest range from database, use binary search within the range to find left and right boundary targets */
             LOG_INF("before findFileFragmentDetail: Offset left[%lld, %lld], right[%lld, %lld], Time left[%lld, %lld] right[%lld, %lld].",
                 startframe.offset.head, startframe.offset.tail, tailframe.offset.head, tailframe.offset.tail,
                 startframe.ftime.first, startframe.ftime.last, tailframe.ftime.first, tailframe.ftime.last);
@@ -429,17 +438,42 @@ int SeekTime::seekFileDataTime(uint32_t duration, std::vector<SeekTimeContent>& 
                 fileinfo.found = false;
             } else {
                 fileinfo.fileid = startframe.id;
-                fileinfo.value.size =
-                    (tailframe.offset.tail > tailframe.target.offset ? tailframe.offset.tail : tailframe.target.offset)
-                    - (startframe.target.offset < startframe.offset.head ? startframe.target.offset : startframe.offset.head);
-                fileinfo.value.offset = startframe.target.offset;
+                /* Keep offset and size on the same expanded boundaries. */
+                const bool startExact =
+                    static_cast<uint64_t>(startframe.target.timestamp) == seekTime.first;
+                const int64_t begin = startExact ? startframe.target.offset
+                    : std::min(startframe.target.offset, startframe.offset.head);
+
+                /* Include the tail frame's payload; drop the frame if truncated. */
+                fseek(m_pfile, 0, SEEK_END);
+                const int64_t fileSize = ftell(m_pfile);
+                const int64_t endFrame = tailframe.target.offset;
+                const int64_t frameHead = static_cast<int64_t>(sizeof(StruFrameHeader));
+                int64_t payload = 0;
+                int64_t tail = endFrame;
+                if (getFramePayload(m_pfile, fileSize, endFrame, payload)
+                    && payload >= 0 && payload <= fileSize - endFrame - frameHead) {
+                    tail = endFrame + frameHead + payload;
+                } else {
+                    LOG_WRN("tail frame at %lld has incomplete payload, drop it.", endFrame);
+                }
+                if (tail < begin) {
+                    tail = begin;
+                }
+                if (tail > fileSize) {
+                    tail = fileSize;
+                }
+                fileinfo.value.size = tail > begin ? tail - begin : 0;
+                fileinfo.value.offset = static_cast<uint64_t>(begin);
                 fileinfo.value.timestamp = seekTime.average();
                 fileinfo.duration = duration;
                 if (fileinfo.value.size > 0) {
                     fileinfos.emplace_back(fileinfo);
-                    LOG_INF("findFileFragmentDetail success (target offset=%lld len=%lld).", startframe.target.offset, fileinfo.value.size);
+                    LOG_INF("findFileFragmentDetail success (target offset=%llu len=%llu).",
+                        (unsigned long long)fileinfo.value.offset, (unsigned long long)fileinfo.value.size);
                 } else {
-                    LOG_WRN("result is not nomal (target offset=%lld len=%lld).", startframe.target.offset, fileinfo.value.size);
+                    LOG_WRN("result is not nomal (target offset=%llu len=%llu).",
+                        (unsigned long long)fileinfo.value.offset, (unsigned long long)fileinfo.value.size);
                 }
                 ret = m_dbMgr->addIndexNoDuplex(&fileinfo);
                 if (ret != 0) {
@@ -473,10 +507,8 @@ int SeekTime::getFileTime(const std::string& sfile, SelectTime& time, uint32_t o
         if (getTailFrame(file, m_windSize, frameIdx)) {
             time.last = frameIdx.value.timestamp;
         }
-        fclose(file);   /* 原实现漏了 fclose，文件句柄泄漏 */
-        /* 注意：这里不要把文件登记进 TblFileMapping。seekFileDataTime 靠
-           queryFileIdbyName 是否成功来判断"这个文件建过索引没有"，
-           提前登记会让它跳过建索引分支，TblSeekTime 就永远填不上。 */
+        fclose(file);
+        /* 不要登记 TblFileMapping：seekFileDataTime 靠 queryFileIdbyName 判断是否建过索引，提前登记会跳过建索引分支。 */
     }
     LOG_INF("------- Parse file(%s) time=(first=%llu,last=%llu) -------", sfile.c_str(), time.first, time.last);
     return 0;

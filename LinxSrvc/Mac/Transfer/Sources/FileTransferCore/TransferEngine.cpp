@@ -935,15 +935,14 @@ void TransferEngine::clientHandler(int sock, const std::string& clientIp, unsign
                     if (pct != lastLoggedPct) {
                         auto now = std::chrono::steady_clock::now();
                         double sec = std::chrono::duration<double>(now - lastSpeedTime).count();
-                        double mbps = 0.0;
-                        if (sec > 0.001) {
-                            mbps = (double)(session->transSize - lastSpeedBytes)
-                                / sec / (1024.0 * 1024.0);
-                        }
                         LOG_INF("%s receiving: %d%% (%llu/%llu bytes, %.1f MB/s)",
                             statusPrefix.c_str(), pct,
                             (unsigned long long)session->transSize,
-                            (unsigned long long)header.fileSize, mbps);
+                            (unsigned long long)header.fileSize,
+                            sec > 0.001
+                                ? (double)(session->transSize - lastSpeedBytes)
+                                    / sec / (1024.0 * 1024.0)
+                                : 0.0);
                         lastLoggedPct = pct;
                         lastSpeedTime = now;
                         lastSpeedBytes = session->transSize;
@@ -1170,10 +1169,11 @@ int TransferEngine::sendSliceData(int sock, const std::string& filePath, uint64_
             if (pct != lastPct) {
                 auto now = std::chrono::steady_clock::now();
                 double sec = std::chrono::duration<double>(now - lastSpeedTime).count();
-                double mbps = sec > 0.001
-                    ? (double)(totalSent - lastSpeedBytes) / sec / (1024.0 * 1024.0) : 0.0;
                 LOG_INF("sendSliceData: %d%% (%llu/%llu bytes, %.1f MB/s)",
-                    pct, (unsigned long long)totalSent, (unsigned long long)fileSize, mbps);
+                    pct, (unsigned long long)totalSent, (unsigned long long)fileSize,
+                    sec > 0.001
+                        ? (double)(totalSent - lastSpeedBytes) / sec / (1024.0 * 1024.0)
+                        : 0.0);
                 m_progressCallback(totalSent, fileSize, "Sending...", FT_EVT_NONE);
                 lastPct = pct;
                 lastSpeedTime = now;

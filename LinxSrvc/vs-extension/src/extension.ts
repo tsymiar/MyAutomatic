@@ -4,32 +4,40 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as os from 'os';
 import {
-    parseComparisonOutput, ComparisonFolderResults
+    parseComparisonOutput, ComparisonFolderResults, getWebviewContent
 } from './parse_text';
-import { webviewRender } from './view_html';
 
 export const QUICK_COMPARE_COMMAND = 'similarity.quickCompare';
 
+const LAST_SOURCE_KEY = 'similarity.lastSource';
+const LAST_TARGET_KEY = 'similarity.lastTarget';
+
+const SCAN_LIMIT_DIRS = 1000;
+const SKIPPED_SCAN_DIRS = new Set([
+    '.git', '.hg', '.svn', '.venv', 'venv', '__pycache__', 'node_modules',
+    '.cache'
+]);
+
+interface FolderPair {
+    source: string;
+    target: string;
+}
+
+interface ExtensionItem extends vscode.QuickPickItem {
+    ext: string;
+}
+
 /**
- * Register a lightweight command intended to be bound to a keyboard shortcut.
- * It simply delegates to the main 'similarity.compareFolders' command so the keybinding
- * can be declared in package.json without duplicating logic.
+ * Palette and keybinding entry point. Explorer arguments are forwarded to the
+ * main command so both entries share one comparison flow.
  */
 export function registerQuickCompareShortcut(context: vscode.ExtensionContext) {
-    const disposable = vscode.commands.registerCommand(QUICK_COMPARE_COMMAND, async (...args: any[]) => {
-        const outChannel = vscode.window.createOutputChannel('Files Comparison');
-        context.subscriptions.push(outChannel);
-
-        try {
-            const handled = await compareFromExplorerArgs(context, outChannel, args);
-            if (!handled) {
-                await vscode.commands.executeCommand('similarity.compareFolders', ...args);
-            }
-        } catch {
-            await vscode.commands.executeCommand('similarity.compareFolders', ...args);
-        }
-    });
-
+    const disposable = vscode.commands.registerCommand(
+        QUICK_COMPARE_COMMAND,
+        (...args: any[]) => vscode.commands.executeCommand(
+            'similarity.compareFolders', ...args
+        )
+    );
     context.subscriptions.push(disposable);
 }
 
@@ -45,22 +53,16 @@ export function activate(context: vscode.ExtensionContext) {
         outChannel.show();
     });
 
-    // Command palette / shortcut entry: falls back to the compareFolders flow
-    // when two folders are not selected
     registerQuickCompareShortcut(context);
 
     context.subscriptions.push(disposableCompare, disposableOpenResults, outChannel);
 }
 
-/**
- * Shared handler for both the compareFolders and quickCompare commands.
- */
 async function handleCompareCommand(
     context: vscode.ExtensionContext,
     outChannel: vscode.OutputChannel,
     args: any[]
 ): Promise<void> {
-    outChannel.show();
     outChannel.clear();
     outChannel.appendLine('Starting files comparison...');
 
@@ -75,66 +77,268 @@ async function handleCompareCommand(
             // Two or more folders selected → compare the first two directly
             source = folderPaths[0];
             target = folderPaths[1];
+            rememberPair(context, source, target);
             if (folderPaths.length > 2) {
                 outChannel.appendLine(`Selected ${folderPaths.length} folders, comparing first two:`);
             }
             outChannel.appendLine(`Comparing below folder files:\n  ${source}\n  ${target}`);
-        } else if (folderPaths.length === 1) {
-            source = folderPaths[0];
-            outChannel.appendLine(`Using Explorer selected folder as first directory: ${source}`);
-            target = await selectFolder('Select as target directory');
-            if (!target) {
-                outChannel.appendLine('Second directory selection canceled!');
-                return;
-            }
         } else {
-            source = await selectFolder('Select as source directory');
-            if (!source) {
-                outChannel.appendLine('First directory selection canceled!');
+            // Zero or one folder from Explorer → interactive picker
+            const pair = await chooseFoldersInteractively(context, folderPaths[0]);
+            if (!pair) {
+                outChannel.appendLine('Folder selection canceled!');
                 return;
             }
-            target = await selectFolder('Select as target directory');
-            if (!target) {
-                outChannel.appendLine('Second directory selection canceled!');
-                return;
-            }
+            source = pair.source;
+            target = pair.target;
+            rememberPair(context, source, target);
+            outChannel.appendLine(`Comparing below folder files:\n  ${source}\n  ${target}`);
         }
 
-        const ignoreExt = await getIgnoreExtensions();
+        const ignoreExt = await getIgnoreExtensions(source, target);
+        if (ignoreExt === undefined) {
+            outChannel.appendLine('Extension selection canceled!');
+            return;
+        }
         outChannel.appendLine(`Ignoring extensions: ${ignoreExt.join(', ') || 'none'}`);
 
         const result = await runFolderComparison(context, source, target, ignoreExt, outChannel);
         showComparisonResults(result, outChannel);
     } catch (error: any) {
         outChannel.appendLine(`Error: ${error?.message ?? String(error)}`);
+        outChannel.show();
         vscode.window.showErrorMessage(`Files comparison failed: ${error?.message ?? String(error)}`);
     }
 }
 
-async function selectFolder(prompt: string): Promise<string | undefined> {
+function dirExists(p: string | undefined): p is string {
+    if (!p) { return false; }
+    try {
+        return fs.statSync(p).isDirectory();
+    } catch {
+        return false;
+    }
+}
+
+function getLastPair(context: vscode.ExtensionContext): FolderPair | undefined {
+    const source = context.workspaceState.get<string>(LAST_SOURCE_KEY);
+    const target = context.workspaceState.get<string>(LAST_TARGET_KEY);
+    if (dirExists(source) && dirExists(target)) {
+        return { source, target };
+    }
+    return undefined;
+}
+
+function rememberPair(context: vscode.ExtensionContext, source: string, target: string): void {
+    context.workspaceState.update(LAST_SOURCE_KEY, source);
+    context.workspaceState.update(LAST_TARGET_KEY, target);
+}
+
+function workspaceFolderPaths(): string[] {
+    return (vscode.workspace.workspaceFolders ?? [])
+        .map(folder => folder.uri.fsPath)
+        .filter(dirExists);
+}
+
+async function openFolderDialog(title: string, multiSelect: boolean): Promise<string[]> {
     const uris = await vscode.window.showOpenDialog({
         canSelectFiles: false,
         canSelectFolders: true,
-        canSelectMany: false,
-        openLabel: prompt
+        canSelectMany: multiSelect,
+        openLabel: title
     });
-
-    return uris && uris.length > 0 ? uris[0].fsPath : undefined;
+    return (uris ?? []).map(uri => uri.fsPath);
 }
 
-async function getIgnoreExtensions(): Promise<string[]> {
-    const ignore = await vscode.window.showInputBox({
-        prompt: 'Enter file extensions to ignore (comma-separated)',
-        placeHolder: '.so, .gz, .log, .exe, .dll, .wps, .pdf, .jpg, .jpeg, .vsix',
-        value: vscode.workspace.getConfiguration('similarity').get('ignoreExtensions', '')
+/**
+ * Interactive picker for the two comparison folders.
+ * - If a folder is already known (Explorer selection) it becomes the source and
+ *   only the target is asked for.
+ * - Otherwise the user can reuse the last pair or pick both folders in a single
+ *   dialog (source first, then target). Picking one folder falls back to the
+ *   target picker with workspace/last-used suggestions.
+ */
+async function chooseFoldersInteractively(
+    context: vscode.ExtensionContext,
+    preselectedSource?: string
+): Promise<FolderPair | undefined> {
+    const last = getLastPair(context);
+
+    if (dirExists(preselectedSource)) {
+        const target = await pickTarget(preselectedSource, last?.target);
+        if (!target) { return undefined; }
+        return { source: preselectedSource, target };
+    }
+
+    if (last) {
+        const reuse = await vscode.window.showQuickPick(
+            [
+                {
+                    label: '$(history) Reuse last comparison',
+                    description: `${last.source}  ⇄  ${last.target}`,
+                    pair: last as FolderPair | undefined
+                },
+                { label: '$(new-folder) Choose folders...', pair: undefined }
+            ],
+            { placeHolder: 'Compare two folders' }
+        );
+        if (!reuse) { return undefined; }
+        if (reuse.pair) { return reuse.pair; }
+    }
+
+    // Pick both folders in one dialog; selection order defines source/target.
+    const picked = await openFolderDialog(
+        'Compare folders (pick 2: source first, then target)', true
+    );
+    if (picked.length === 0) { return undefined; }
+    if (picked.length === 1) {
+        const target = await pickTarget(picked[0], last?.target);
+        if (!target) { return undefined; }
+        return { source: picked[0], target };
+    }
+    return { source: picked[0], target: picked[1] };
+}
+
+/**
+ * Target picker with convenient candidates: last-used target, workspace
+ * folders, then a plain browse dialog.
+ */
+async function pickTarget(
+    source: string,
+    lastTarget?: string
+): Promise<string | undefined> {
+    interface TargetItem extends vscode.QuickPickItem {
+        path?: string;
+        browse?: boolean;
+    }
+
+    const items: TargetItem[] = [];
+    if (dirExists(lastTarget) && lastTarget !== source) {
+        items.push({
+            label: '$(history) Last used target',
+            description: lastTarget,
+            path: lastTarget
+        });
+    }
+    for (const ws of workspaceFolderPaths()) {
+        if (ws !== source) {
+            items.push({ label: '$(folder-active) Workspace folder', description: ws, path: ws });
+        }
+    }
+    items.push({ label: '$(search) Browse for target folder...', browse: true });
+
+    const picked = await vscode.window.showQuickPick(items, {
+        placeHolder: `Select the target directory to compare against ${source}`
     });
+    if (!picked) { return undefined; }
 
-    if (!ignore) { return []; }
+    if (picked.browse) {
+        const browsed = await openFolderDialog('Select as target directory', false);
+        return browsed[0];
+    }
+    return picked.path;
+}
 
-    return ignore.split(',')
-        .map((ext: string) => ext.trim())
-        .filter((ext: string) => ext !== '')
-        .map((ext: string) => ext.startsWith('.') ? ext : `.${ext}`);
+function normalizeExtensions(values: string[]): string[] {
+    const result: string[] = [];
+    for (const value of values) {
+        let ext = value.trim().toLowerCase();
+        if (ext.startsWith('*.')) {
+            ext = ext.slice(1);
+        }
+        if (!ext.startsWith('.')) {
+            ext = `.${ext}`;
+        }
+        if (!/^\.[a-z0-9_+~-]+$/.test(ext)) {
+            continue;
+        }
+        if (!result.includes(ext)) {
+            result.push(ext);
+        }
+    }
+    return result;
+}
+
+/** Counts file extensions in both folders, bounded to keep the picker responsive. */
+async function collectExtensions(
+    folders: string[]
+): Promise<Map<string, number>> {
+    const counts = new Map<string, number>();
+    const queue = [...folders];
+    let scanned = 0;
+
+    while (queue.length > 0 && scanned < SCAN_LIMIT_DIRS) {
+        const dir = queue.shift()!;
+        scanned++;
+        let entries: fs.Dirent[];
+        try {
+            entries = await fs.promises.readdir(dir, { withFileTypes: true });
+        } catch {
+            continue;
+        }
+        for (const entry of entries) {
+            if (entry.isDirectory()) {
+                if (!SKIPPED_SCAN_DIRS.has(entry.name)) {
+                    queue.push(path.join(dir, entry.name));
+                }
+                continue;
+            }
+            const ext = path.extname(entry.name).toLowerCase();
+            if (ext) {
+                counts.set(ext, (counts.get(ext) ?? 0) + 1);
+            }
+        }
+    }
+    return counts;
+}
+
+/**
+ * Checkbox picker for the extensions to skip. Only extensions present in the
+ * two selected folders are offered; the confirmed selection replaces the
+ * saved setting. Returns undefined when the user dismisses the picker.
+ */
+async function getIgnoreExtensions(
+    source: string,
+    target: string
+): Promise<string[] | undefined> {
+    const config = vscode.workspace.getConfiguration('similarity');
+    const configured = config.get<string>('ignoreExtensions', '');
+    const previously = normalizeExtensions(configured.split(','));
+
+    const counts = await collectExtensions([source, target]);
+    const discovered = [...counts.keys()]
+        .filter(ext => /^\.[a-z0-9_+~-]+$/.test(ext))
+        .sort((a, b) => (counts.get(b)! - counts.get(a)!) || a.localeCompare(b));
+    if (discovered.length === 0) {
+        return [];
+    }
+
+    const items: ExtensionItem[] = discovered.map(ext => ({
+        label: ext,
+        description: `${counts.get(ext)} file(s)`,
+        picked: previously.includes(ext),
+        ext
+    }));
+
+    const picked = await vscode.window.showQuickPick(items, {
+        canPickMany: true,
+        title: 'Ignore file extensions',
+        placeHolder: 'Check extensions to skip; leave all unchecked to compare everything'
+    });
+    if (picked === undefined) {
+        return undefined;
+    }
+
+    const selected = picked.map(item => item.ext);
+    try {
+        const configTarget = vscode.workspace.workspaceFolders
+            ? vscode.ConfigurationTarget.Workspace
+            : vscode.ConfigurationTarget.Global;
+        await config.update('ignoreExtensions', selected.join(', '), configTarget);
+    } catch {
+        // Comparison still runs even when settings.json cannot be written.
+    }
+    return selected;
 }
 
 async function checkPythonInstallation(outChannel: vscode.OutputChannel): Promise<void> {
@@ -160,15 +364,14 @@ async function checkPythonInstallation(outChannel: vscode.OutputChannel): Promis
 // Try to resolve selected folders from Explorer context-menu args.
 // VSCode passes (uri, selection[]) for explorer/context commands.
 // Returns an array of valid directory paths (deduplicated, in selection order).
-export async function getFoldersFromExplorerArgs(args?: any): Promise<string[]> {
+async function getFoldersFromExplorerArgs(args?: any): Promise<string[]> {
     if (args === undefined || args === null) {
         return [];
     }
 
-    // Flatten all args into a flat list, expanding nested arrays one level
+    // Explorer passes [Uri, Uri[]]; expand nested arrays into a flat list.
     const flattenOnce = (input: any): any[] => {
         if (!Array.isArray(input)) { return [input]; }
-        // If input looks like [Uri, Uri[]], flatten the second element too
         const result: any[] = [];
         for (const item of input) {
             if (Array.isArray(item)) {
@@ -217,50 +420,6 @@ export async function getFoldersFromExplorerArgs(args?: any): Promise<string[]> 
     return candidatePaths;
 }
 
-// Convenience function to be called from the command handler when args may be provided.
-// Returns true if explorer-based comparison was started, false otherwise.
-export async function compareFromExplorerArgs(
-  context: vscode.ExtensionContext,
-  outChannel: vscode.OutputChannel,
-  args?: any
-): Promise<boolean> {
-  const folderPaths = await getFoldersFromExplorerArgs(args);
-  if (folderPaths.length < 2) {
-    return false;
-  }
-
-  const source = folderPaths[0];
-  const target = folderPaths[1];
-
-  outChannel.show();
-  outChannel.clear();
-  if (folderPaths.length > 2) {
-    outChannel.appendLine(`Selected ${folderPaths.length} folders, comparing first two:`);
-  }
-  outChannel.appendLine(`Comparing below folder files:\n  ${source}\n  ${target}`);
-
-  try {
-    await checkPythonInstallation(outChannel);
-
-    const ignoreExt = await getIgnoreExtensions();
-    outChannel.appendLine(`Ignoring extensions: ${ignoreExt.join(', ') || 'none'}`);
-
-    const result = await runFolderComparison(
-      context,
-      source,
-      target,
-      ignoreExt,
-      outChannel
-    );
-
-    showComparisonResults(result, outChannel);
-    return true;
-  } catch (error: any) {
-    outChannel.appendLine(`Error: ${error.message}`);
-    vscode.window.showErrorMessage(`Files comparison failed: ${error.message}`);
-    return true; // we handled the invocation (even on error)
-  }
-}
 async function runFolderComparison(
     context: vscode.ExtensionContext,
     source: string,
@@ -277,7 +436,6 @@ async function runFolderComparison(
             return;
         }
 
-        // Build the argument list
         const args = [
             scriptPath,
             `"${source}"`,
@@ -321,8 +479,6 @@ async function runFolderComparison(
             }
 
             try {
-                // similary.py emits structured JSON (--json) when available and
-                // falls back to human-readable text; parseComparisonOutput handles both.
                 const result = parseComparisonOutput(output, source, target);
                 outChannel.appendLine(`Parsed output: ${JSON.stringify(result, null, 2)}`);
                 if (result && result.source && result.target) {
@@ -364,106 +520,13 @@ function showComparisonResults(result: ComparisonFolderResults, outChannel: vsco
         `Target unique: ${result.target_unique.length ?? 0}, ` +
         `Matched: ${result.matched_files.length ?? 0}, ` +
         `Different: ${result.different_files.length ?? 0}, ` +
-        `Common: ${result.common_files.length ?? 0}`
-    );
-}
-
-function getWebviewContent(result: ComparisonFolderResults): string {
-    const maxDisplayLen = 80;
-    const escapeHtml = (str: string) => {
-        if (!str) return '';
-        return str.replace(/&/g, '&amp;')
-                  .replace(/</g, '&lt;')
-                  .replace(/>/g, '&gt;')
-                  .replace(/"/g, '&quot;')
-                  .replace(/'/g, '&#39;');
-    };
-    const shorten = (s: string) => {
-        if (!s) return '';
-        if (s.length <= maxDisplayLen) return s;
-        const headLen = Math.floor(maxDisplayLen / 2) - 2;
-        const tailLen = Math.ceil(maxDisplayLen / 2) - 2;
-        return s.substring(0, headLen) + '…' + s.substring(s.length - tailLen);
-    };
-    const ratioPercent = (r: number) => {
-        if (r <= 1) { return (r * 100).toFixed(1); }
-        return r.toFixed(1);
-    };
-    const ratioColor = (r: number) => {
-        const pct = r <= 1 ? r * 100 : r;
-        if (pct >= 100) { return '#10b981'; }
-        if (pct >= 70) { return '#22c55e'; }
-        if (pct >= 30) { return '#f59e0b'; }
-        return '#ef4444';
-    };
-
-    const buildFileList = (files: string[]) => {
-        if (!files.length) { return '<li class="empty">None</li>'; }
-        return files.map(f => {
-            const full = escapeHtml(f);
-            return `<li title="${full}">${escapeHtml(shorten(f))}</li>`;
-        }).join('');
-    };
-
-    const buildDiffRows = () => {
-        if (!result.different_files.length) {
-            return '<tr><td colspan="4" class="empty-row">No differences found</td></tr>';
+        `Common: ${result.common_files.length ?? 0}`,
+        'Show Log'
+    ).then(choice => {
+        if (choice === 'Show Log') {
+            outChannel.show();
         }
-        return result.different_files.map(f => `
-            <tr>
-                <td class="file-cell" title="${escapeHtml(f.detail.file)}">${escapeHtml(shorten(f.detail.file))}</td>
-                <td class="ratio-cell"><span class="ratio-bar" style="--ratio:${ratioPercent(f.detail.ratio)}%;--color:${ratioColor(f.detail.ratio)}"></span>${ratioPercent(f.detail.ratio)}%</td>
-                <td class="size-cell">${formatSize(f.size)}</td>
-                <td class="hash-cell">${escapeHtml(f.hash?.substring(0, 8) ?? '—')}</td>
-            </tr>
-        `).join('');
-    };
-
-    const buildAnalysis = () => {
-        const s = result.analysis_summary;
-        if (!s || (s.common_lines === 0 && s.total_lines === 0)) { return ''; }
-        return `
-<div class="section ana">
-    <div class="section-header"><span class="dot"></span>Analysis Summary</div>
-    <div class="analysis-grid">
-        <div class="ana-item">
-            <div class="ana-val">${s.common_lines}</div>
-            <div class="ana-lbl">Duplicate Lines</div>
-        </div>
-        <div class="ana-item">
-            <div class="ana-val">${s.total_lines}</div>
-            <div class="ana-lbl">Total Original Lines</div>
-        </div>
-        <div class="ana-item">
-            <div class="ana-val">${s.common_ratio.toFixed(2)}%</div>
-            <div class="ana-lbl">Overall Similarity</div>
-        </div>
-    </div>
-</div>`;
-    };
-
-    return webviewRender({
-        sourceShort: shorten(result.source),
-        targetShort: shorten(result.target),
-        sourceFull: escapeHtml(result.source),
-        targetFull: escapeHtml(result.target),
-        sourceUniqueCount: result.source_unique.length ?? 0,
-        targetUniqueCount: result.target_unique.length ?? 0,
-        commonCount: result.common_files.length ?? 0,
-        differentCount: result.different_files.length ?? 0,
-        sourceUniqueList: buildFileList(result.source_unique),
-        targetUniqueList: buildFileList(result.target_unique),
-        diffTableRows: buildDiffRows(),
-        analysisHtml: buildAnalysis(),
     });
-}
-
-function formatSize(bytes: number): string {
-    if (bytes === 0) { return '0 Bytes'; }
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
 export function deactivate() { }

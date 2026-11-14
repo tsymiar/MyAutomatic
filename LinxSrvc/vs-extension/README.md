@@ -1,70 +1,51 @@
 # Files Comparison
 
-A VS Code extension that compares **two folders** and reports per-file similarity.
-Comments and whitespace are ignored so renaming or reformatting doesn't mask a copy;
-results are rendered in a Webview, plus a JSON view for tooling.
+A **VS Code extension** that compares **two folders** per file and reports
+similarity in a Webview. Comments and blank lines are ignored, so renaming or
+reformatting does not mask a copy. Requires **Python 3** on PATH (`python` on
+Windows); extension id `similarity`.
 
-- extension id `similarity`, version `1.0.1`
-- TypeScript sources in `src/`, the actual analysis is done by a Python script
-- requires **Python 3** available as `python3` (`python` on Windows)
+## Install
 
-## Install / Build
+Install the VSIX via **Extensions: Install from VSIX...** in VS Code, or from
+a terminal:
 
 ```bash
-cd LinxSrvc/vs-extension
-./make.sh                       # nvm + vsce → ../gen/similarity-1.0.1.vsix
-code --install-extension ../gen/similarity-*.vsix
+code --install-extension similarity-*.vsix
 ```
 
 ## Usage
 
-Right-click two folders in the Explorer and pick **Compare Selected Directories**,
-then read the results panel. Use **Files Comparison: Open Files Comparison Results**
-to reopen the last report.
+Right-click two folders in the Explorer and choose
+**Compare Selected Directories**, or run **Quick Compare Selected Folders**
+from the command palette. Results open in a Webview; the **Files Comparison**
+output channel holds the raw log.
 
-| command | where it shows up |
+| command | VS Code entry point |
 |---|---|
-| `similarity.compareFolders` | Explorer context menu on folders (`explorerResourceIsFolder`) |
-| `similarity.openResults` | registered, currently hidden from the palette (`when: false`) |
-| `similarity.quickCompare` | declared in `package.json`; appears in the command palette and can be bound to a shortcut (falls back to the same flow as `compareFolders`) |
+| `similarity.compareFolders` | Explorer folder context menu |
+| `similarity.quickCompare` | palette + `Ctrl+Alt+Shift+C` (`Cmd` on macOS) |
+| `similarity.openResults` | not shown in the command palette |
 
-When prompted, you may enter comma-separated **file extensions to ignore**
-(persisted in the `similarity.ignoreExtensions` setting).
+With fewer than two folders selected, a picker offers:
 
-## How it works
+- **Reuse last comparison** — previous pair, remembered per workspace
+- **Choose folders** — pick both in one dialog (source first); picking one
+  folder opens a target picker with last-used and workspace suggestions
 
-```text
-src/extension.ts      picks the two folders + ignore extensions, spawns Python
-   └─ python3 scripts/similarity.py "<source>" "<target>" --detail --json --no-color [--ignore-ext=…]
-        └─ src/parse_text.ts   parses JSON output (falls back to plain text)
-             └─ src/view_html.ts  renders the Webview report
-```
+A **checkbox picker** then lists only the extensions found in the two
+selected folders, with file counts, most frequent first. Previous checks
+start out checked. The selection is saved to the
+`similarity.ignoreExtensions` setting (comma-separated), which is also
+available in the Settings UI. `Esc` cancels the comparison; confirming with
+nothing checked compares all files. Extension matching is case-insensitive
+and uses a leading dot.
 
-`scripts/similarity.py` is a **symlink** to `../../../toolset/similary.py` — the real analyser
-lives outside this folder. If that path is missing the comparison fails immediately with
-*"Python script not found"*.
+## Report
 
-### Backend options (`toolset/similary.py`)
+- **Unmatched files** — source only / target only
+- **Matched files** — similarity % per pair: 🟢 ≥ 70%, 🟡 30–70%,
+  🔴 < 30%
+- **Summary** — counts, overall similarity, duplicate line total
 
-| flag | meaning |
-|---|---|
-| `source` / `target` | two positional paths, file **or** directory |
-| `--diff` | print the line-level diff details |
-| `--detail` | per-file detail in the report (always passed by the extension) |
-| `--ignore-dirs a,b` | comma-separated directory names to skip |
-| `--ignore-files *.tmp,*.bak` | comma-separated file patterns to skip |
-| `--ignore-ext .log,.tmp` | extensions to skip; repeatable (`--ignore-ext=.log --ignore-ext=.tmp`), `.` prefix optional |
-| `--no-color` | disable ANSI colors |
-| `--json` | emit JSON instead of the human-readable report |
-
-Ignored extensions are normalised to lowercase with a leading dot, so `.LOG`, `log` and `*.log`-style
-input all work; matching happens in both directories before any file is read.
-
-## Report sections
-
-1. **Unmatched files** (source only / target only) with original and effective line counts
-2. **Matched files** — similarity % per pair plus line statistics
-   - 🟢 green ≥ 70% · 🟡 yellow 30–70% · 🔴 red < 30%
-3. **Summary** — matched/unmatched counts, overall similarity, duplicate line total
-
-*Effective lines = original lines − comments − blank lines*; similarity is computed on those only.
+*Effective lines = original lines − comments − blank lines*.

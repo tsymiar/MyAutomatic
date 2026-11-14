@@ -52,6 +52,15 @@ macOS 文件传输应用 —— 底层 C++ 协议引擎 + 上层 SwiftUI 界面�
 | 5 | 取消 |
 | 6 | 删除取消残留的半截文件 |
 
+### 与 Device2Device（Android）互通
+
+同一套 FTF 协议的 Android 端实现见 GitHub 仓库
+[Device2Device](https://github.com/tsymiar/Device2Device)
+（JNI 层的 `FileMsgSocket`，前台/后台服务收发）：协议头与本引擎 `TransferEngine.h`
+逐字段对齐——64 字节大端头、魔数、命令字 1~6、默认端口 8800 完全一致，
+手机 ↔ Mac 在局域网内可直接互传。两端无编译依赖，靠人工保持同步：
+修改 `TransferEngine.h` 的协议字段时，必须同步对端的 `FileMsgSocket.h`。
+
 ## 构建
 
 要求 macOS 13+ / Swift 5.9（`Package.swift` 里两个 target：
@@ -72,7 +81,8 @@ swift build -c release   # 只编译
 因此访问 `192.168.x.x` 请优先用打包后的 `.app`。
 
 > Linux 上**无法**编译 SwiftUI 目标（缺 SwiftUI / AppKit / Combine），但 C++ 引擎可完整编译链接：
-> `./build_app.sh test` 产出 `.build/test/transfer`（server / send / pull / del 子命令）。
+> `./build_app.sh test` 产出 `.build/test/transfer`（`serve` / `send` / `pull` / `del`
+> 子命令，`serve` 是默认值可省略），可直接与 Device2Device 手机端互传做对端测试。
 
 ## 使用
 
@@ -89,6 +99,11 @@ swift build -c release   # 只编译
 2. 输入目标设备的 IP 和端口
 3. 点击 **Connect**
 4. 拖放文件到虚线区域，或点击 **Select Files…**
+
+### 取消与删除
+
+传输中的文件可点击 **Cancel** 中止（按分片边界生效，速度/进度照常上报）；
+取消后对端残留的半截文件通过 `CMD_DELETE` 自动删除。
 
 ### 文件写入位置
 

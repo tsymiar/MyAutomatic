@@ -12,6 +12,7 @@
   ],
   "activationEvents": [],
   "main": "./out/extension.js",
+  "icon": "images/icon.png",
   "contributes": {
     "commands": [
       {
@@ -45,6 +46,23 @@
           "when": "explorerResourceIsFolder"
         }
       ]
+    },
+    "keybindings": [
+      {
+        "command": "similarity.quickCompare",
+        "key": "ctrl+alt+shift+c",
+        "mac": "cmd+alt+shift+c"
+      }
+    ],
+    "configuration": {
+      "title": "Files Comparison",
+      "properties": {
+        "similarity.ignoreExtensions": {
+          "type": "string",
+          "default": "",
+          "description": "Comma-separated file extensions to skip. The compare command shows a checkbox picker and saves the checked extensions here."
+        }
+      }
     }
   },
   "scripts": {
@@ -52,7 +70,7 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
-    "lint": "eslint src --ext ts",
+    "lint": "eslint src",
     "package": "vsce package"
   },
   "devDependencies": {

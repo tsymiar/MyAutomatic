@@ -449,8 +449,8 @@ def print_summary(total, details, unmatched, color):
     print(f"{color('yellow')}▏ 目标目录独有: {len(unmatched['target'])} 个")
     print(f"\n{color('cyan')}=== 综合分析 ===")
     print(f"{color('green')}▏ 重复总行数: {total['common']}")
-    print(f"{color('magenta')}▏ 总原始行数: {total['orig1']} → 有效 {total['valid1']}")
-    print(f"{color('magenta')}▏ 总目标行数: {total['orig2']} → 有效 {total['valid2']}")
+    print(f"{color('magenta')}▏ 原始总行数: {total['orig1']} → 有效 {total['valid1']}")
+    print(f"{color('magenta')}▏ 目标总行数: {total['orig2']} → 有效 {total['valid2']}")
     print(f"{color('yellow')}▏ 综合重复率: {total['ratio']:.2%} (基于有效行数)")
 
 def print_detail(total, details, unmatched, show_detail, use_color=True):
@@ -540,16 +540,9 @@ def _round_ratio_val(r):
 
 
 def _normalize_ratio(info):
-    """把 ratio 归一化为百分比并保留 3 位小数"""
-    if 'ratio' not in info:
-        return
-    try:
-        val = float(info['ratio'])
-    except Exception as e:
-        print(f"Error processing ratio: {e}")
-        return
-    # ratio 已 >1 视为百分比，不再乘 100
-    info['ratio'] = _round_ratio_val(val) if val <= 1 else round(val, 3)
+    """把 0-1 的 ratio 转成百分比并保留 3 位小数"""
+    if 'ratio' in info:
+        info['ratio'] = _round_ratio_val(info['ratio'])
 
 
 def _normalize_details(details):
@@ -570,10 +563,12 @@ def _on_json_output_exit():
 
     def _wrap_file_compare(file1, file2, base_dir, show_diff, use_state_machine=False):
         res = _orig_file_compare(file1, file2, base_dir, show_diff, use_state_machine)
-        if 'ratio' in res:
-            res['ratio'] = _round_ratio_val(res['ratio'])
+        # 目录模式 details 复用同一个 dict
+        data = dict(res)
+        if 'ratio' in data:
+            data['ratio'] = _round_ratio_val(data['ratio'])
         _json_store['type'] = 'file'
-        _json_store['data'] = res
+        _json_store['data'] = data
         return res
 
     def _wrap_dir_compare(dir1, dir2, show_diff, ignore_dirs, ignore_files, ignore_exts=()):

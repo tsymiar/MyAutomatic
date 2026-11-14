@@ -1,3 +1,5 @@
+import { webviewRender } from './view_html';
+
 interface CommonFile {
   file: string;
   ratio: number;
@@ -6,6 +8,7 @@ interface CommonFile {
 interface AnalysisSummary {
   common_lines: number;
   total_lines: number;
+  effective_lines: number;
   common_ratio: number;
 }
 
@@ -37,6 +40,7 @@ function emptyResult(source: string, target: string): ComparisonFolderResults {
     analysis_summary: {
       common_lines: 0,
       total_lines: 0,
+      effective_lines: 0,
       common_ratio: 0
     }
   };
@@ -46,18 +50,9 @@ function num(x: any): number {
   return typeof x === 'number' && isFinite(x) ? x : 0;
 }
 
-// similary.py reports ratio already as a percentage when the raw value is <=1
-// (it multiplies by 100); normalise everything onto a percentage scale where
-// 100 means fully identical.
-function normalizePct(r: number): number {
-  const v = num(r);
-  return v <= 1 ? v * 100 : v;
-}
-
 /**
  * Map similary.py's `--json` payload (directory or single-file mode) onto the
- * structure the Webview expects. Returns null when the payload doesn't look like
- * similary JSON so the caller can fall back to the text parser.
+ * structure the Webview expects. Ratios are 0-100 percentages.
  */
 function parseJsonResult(obj: any, source: string, target: string): ComparisonFolderResults | null {
   if (!obj || typeof obj !== 'object') {
@@ -72,7 +67,8 @@ function parseJsonResult(obj: any, source: string, target: string): ComparisonFo
     result.analysis_summary = {
       common_lines: num(total.common),
       total_lines: num(total.orig1),
-      common_ratio: normalizePct(total.ratio)
+      effective_lines: Math.max(num(total.valid1), num(total.valid2)),
+      common_ratio: num(total.ratio)
     };
 
     const um = obj.unmatched;
@@ -80,7 +76,7 @@ function parseJsonResult(obj: any, source: string, target: string): ComparisonFo
     result.target_unique = Array.isArray(um.target) ? um.target.map(String) : [];
 
     for (const d of obj.details) {
-      const pct = normalizePct(d.ratio);
+      const pct = num(d.ratio);
       const fileName = typeof d.file_name === 'string' ? d.file_name : '';
       if (pct >= 100) {
         result.common_files.push({ file: fileName, ratio: pct });
@@ -101,7 +97,13 @@ function parseJsonResult(obj: any, source: string, target: string): ComparisonFo
 
   // Single-file comparison: a flat object carrying a `ratio` field.
   if (typeof obj.ratio === 'number') {
-    const pct = normalizePct(obj.ratio);
+    const pct = num(obj.ratio);
+    result.analysis_summary = {
+      common_lines: num(obj.common),
+      total_lines: num(obj.orig1),
+      effective_lines: Math.max(num(obj.valid1), num(obj.valid2)),
+      common_ratio: pct
+    };
     const fileName = typeof obj.file_name === 'string' ? obj.file_name : '';
     if (pct >= 100) {
       result.common_files.push({ file: fileName, ratio: pct });
@@ -123,167 +125,115 @@ function parseJsonResult(obj: any, source: string, target: string): ComparisonFo
 }
 
 /**
- * Parse similary.py output. Prefers the structured `--json` payload and falls
- * back to the legacy human-readable text parser for older / non-JSON runs.
+ * Parse similary.py's `--json` stdout into the structure the Webview expects.
  */
 export function parseComparisonOutput(
   text: string,
   source: string,
   target: string
 ): ComparisonFolderResults {
-  const clean = text.replace(/[\x00-\x1F]/g, '').trim();
-  const start = clean.indexOf('{');
-  const end = clean.lastIndexOf('}');
-  if (start !== -1 && end > start) {
-    try {
-      const obj = JSON.parse(clean.substring(start, end + 1));
-      const fromJson = parseJsonResult(obj, source, target);
-      if (fromJson) {
-        return fromJson;
-      }
-    } catch {
-      // fall through to the text parser
-    }
+  const obj = JSON.parse(text.trim());
+  const result = parseJsonResult(obj, source, target);
+  if (!result) {
+    throw new Error('Unexpected similary.py JSON payload');
   }
-  return parseComparisonResult(text, source, target);
-}
-
-// ---- Legacy text parser (fallback) ----
-
-export function parseComparisonResult(
-  text: string,
-  source: string,
-  target: string
-): ComparisonFolderResults {
-  const result = emptyResult(source, target);
-
-  const lines = text.split('\n');
-  let currentSection = '';
-
-  for (let i = 0; i < lines.length; i++) {
-    const rawLine = lines[i];
-    const line = rawLine.trim();
-
-    // Detect section headers
-    if (line.includes('=== 未匹配文件 ===')) {
-      currentSection = 'unmatched';
-    } else if (line.includes('=== 匹配文件详情')) {
-      currentSection = 'matched';
-    } else if (line.includes('=== 统计摘要 ===')) {
-      currentSection = 'summary';
-    } else if (line.includes('=== 综合分析 ===')) {
-      currentSection = 'analysis';
-    } else if (line.includes('=== Comparison Results ===')) {
-      currentSection = 'comparison';
-    }
-
-    switch (currentSection) {
-      case 'unmatched':
-        parseUnmatchedSection(line, result, lines, i);
-        break;
-      case 'matched':
-        parseMatchedSection(line, result);
-        break;
-      case 'summary':
-        break;
-      case 'analysis':
-        parseAnalysisSection(line, result);
-        break;
-      case 'comparison':
-        break;
-    }
-  }
-
   return result;
 }
 
-function parseMatchedSection(line: string, result: ComparisonFolderResults): void {
-  // Match pattern like "▏ CMakeLists.txt ↔ CMakeLists.txt 相似度: 1.1%"
-  if (line.includes('↔') && line.includes('相似度:')) {
-    // Capture the whole relation (both sides of the arrow), not just the prefix.
-    const match = line.match(/▏\s*(.+?)\s*相似度:/);
-    if (match && match[1]) {
-      const fileName = match[1].trim();
-      result.matched_files.push(fileName);
+export function getWebviewContent(result: ComparisonFolderResults): string {
+  const maxDisplayLen = 80;
+  const escapeHtml = (str: string) => {
+    if (!str) return '';
+    return str.replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;')
+              .replace(/"/g, '&quot;')
+              .replace(/'/g, '&#39;');
+  };
+  const shorten = (s: string) => {
+    if (!s) return '';
+    if (s.length <= maxDisplayLen) return s;
+    const headLen = Math.floor(maxDisplayLen / 2) - 2;
+    const tailLen = Math.ceil(maxDisplayLen / 2) - 2;
+    return s.substring(0, headLen) + '…' + s.substring(s.length - tailLen);
+  };
+  const ratioPercent = (r: number) => r.toFixed(1);
+  const ratioColor = (r: number) => {
+    if (r >= 100) { return '#10b981'; }
+    if (r >= 70) { return '#22c55e'; }
+    if (r >= 30) { return '#f59e0b'; }
+    return '#ef4444';
+  };
 
-      // Extract similarity percentage
-      const similarityMatch = line.match(/相似度:\s*([\d.]+)%/);
-      if (similarityMatch) {
-        const similarity = parseFloat(similarityMatch[1]);
+  const buildFileList = (files: string[]) => {
+    if (!files.length) { return '<li class="empty">None</li>'; }
+    return files.map(f => {
+      const full = escapeHtml(f);
+      return `<li title="${full}">${escapeHtml(shorten(f))}</li>`;
+    }).join('');
+  };
 
-        if (similarity === 100) {
-          result.common_files.push({
-            file: fileName,
-            ratio: 100
-          });
-        } else {
-          result.different_files.push({
-            detail: {
-              file: fileName,
-              ratio: similarity
-            },
-            line: 0,
-            size: 0,
-            hash: ''
-          });
-        }
-      }
+  const buildDiffRows = () => {
+    if (!result.different_files.length) {
+      return '<tr><td colspan="4" class="empty-row">No differences found</td></tr>';
     }
-  }
+    return result.different_files.map(f => `
+      <tr>
+        <td class="file-cell" title="${escapeHtml(f.detail.file)}">${escapeHtml(shorten(f.detail.file))}</td>
+        <td class="ratio-cell"><span class="ratio-bar" style="--ratio:${ratioPercent(f.detail.ratio)}%;--color:${ratioColor(f.detail.ratio)}"></span>${ratioPercent(f.detail.ratio)}%</td>
+        <td class="size-cell">${formatSize(f.size)}</td>
+        <td class="hash-cell">${escapeHtml(f.hash?.substring(0, 8) ?? '—')}</td>
+      </tr>
+    `).join('');
+  };
+
+  const buildAnalysis = () => {
+    const s = result.analysis_summary;
+    if (!s || (s.common_lines === 0 && s.total_lines === 0)) { return ''; }
+    return `
+<div class="section ana">
+  <div class="section-header"><span class="dot"></span>Analysis Summary</div>
+  <div class="analysis-grid">
+    <div class="ana-item">
+      <div class="ana-val">${s.common_lines}</div>
+      <div class="ana-lbl">Duplicate Lines</div>
+    </div>
+    <div class="ana-item">
+      <div class="ana-val">${s.total_lines}</div>
+      <div class="ana-lbl">Total Original Lines</div>
+    </div>
+    <div class="ana-item">
+      <div class="ana-val">${s.effective_lines}</div>
+      <div class="ana-lbl">Effective Lines (Ratio Base)</div>
+    </div>
+    <div class="ana-item">
+      <div class="ana-val">${s.common_ratio.toFixed(2)}%</div>
+      <div class="ana-lbl">Overall Similarity</div>
+    </div>
+  </div>
+</div>`;
+  };
+
+  return webviewRender({
+    sourceShort: shorten(result.source),
+    targetShort: shorten(result.target),
+    sourceFull: escapeHtml(result.source),
+    targetFull: escapeHtml(result.target),
+    sourceUniqueCount: result.source_unique.length ?? 0,
+    targetUniqueCount: result.target_unique.length ?? 0,
+    commonCount: result.common_files.length ?? 0,
+    differentCount: result.different_files.length ?? 0,
+    sourceUniqueList: buildFileList(result.source_unique),
+    targetUniqueList: buildFileList(result.target_unique),
+    diffTableRows: buildDiffRows(),
+    analysisHtml: buildAnalysis(),
+  });
 }
 
-function parseUnmatchedSection(
-  line: string,
-  result: ComparisonFolderResults,
-  lines: string[],
-  index: number
-): void {
-  if (line.includes('源目录独有文件')) {
-    let j = 1;
-    while (index + j < lines.length && lines[index + j] != null && lines[index + j].includes('•')) {
-      const fileName = lines[index + j].trim().replace('•', '').trim();
-      if (fileName) {
-        result.source_unique.push(fileName);
-      }
-      j++;
-    }
-  } else if (line.includes('目标目录独有文件')) {
-    let j = 1;
-    while (index + j < lines.length && lines[index + j] != null && lines[index + j].includes('•')) {
-      const fileName = lines[index + j].trim().replace('•', '').trim();
-      if (fileName) {
-        result.target_unique.push(fileName);
-      }
-      j++;
-    }
-  }
-}
-
-function parseAnalysisSection(line: string, result: ComparisonFolderResults): void {
-  // Match pattern like "▏ 重复总行数: 2"
-  if (line.includes('重复总行数:')) {
-    const match = line.match(/重复总行数:\s*(\d+)/);
-    if (match && match[1]) {
-      result.analysis_summary!.common_lines = parseInt(match[1], 10);
-    }
-  }
-
-  // Match pattern like "▏ 总原始行数: 33 → 有效 30"
-  else if (line.includes('总原始行数:')) {
-    // Extract the first number (original total lines)
-    const match = line.match(/总原始行数:\s*(\d+)/);
-    if (match && match[1]) {
-      // The total lines should be the effective lines, but we'll store the original
-      // If we need effective lines, we'd need to parse the "有效" part
-      result.analysis_summary!.total_lines = parseInt(match[1], 10);
-    }
-  }
-
-  // Match pattern like "▏ 综合重复率: 1.12% (基于有效行数)"
-  else if (line.includes('综合重复率:')) {
-    const match = line.match(/综合重复率:\s*([\d.]+)%/);
-    if (match && match[1]) {
-      result.analysis_summary!.common_ratio = parseFloat(match[1]);
-    }
-  }
+function formatSize(bytes: number): string {
+  if (bytes === 0) { return '0 Bytes'; }
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }

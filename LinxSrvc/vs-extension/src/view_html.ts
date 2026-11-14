@@ -172,9 +172,9 @@ tbody tr:hover td { background: rgba(255,255,255,.02); color: var(--text); }
 
 /* ---- analysis summary ---- */
 .analysis-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
 }
-@media (max-width: 500px) { .analysis-grid { grid-template-columns: 1fr; } }
+@media (max-width: 500px) { .analysis-grid { grid-template-columns: repeat(2, 1fr); } }
 .ana-item {
     text-align: center; padding: 10px 8px;
     background: rgba(255,255,255,.02); border-radius: 6px;

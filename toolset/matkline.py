@@ -2,43 +2,36 @@
 # coding: utf-8
 """本地/实时K线图工具 matkline。
 
-数据流：数据源接口 -> 解析成统一7列结构 -> 历史区间过滤 -> 绘图(蜡烛图/折线)
-
-统一结构（绘图只用到第0/2/3/4/5列）:
-    [时间, 成交量, 开, 收, 高, 低, 成交额]
+数据流：数据源接口 -> 统一7列结构 [时间, 量, 开, 收, 高, 低, 额] -> 区间过滤 -> 绘图
 
 数据源（均为免密钥真实接口）:
     tencent      A股/指数/基金    日线(原生支持区间) + 1/5/15/30分钟/小时
     eastmoney    东方财富        A股/期货/港股
     gold         沪金/沪银       新浪国内期货，日线全量历史 + 分钟线，真实OHLC
-    xau/gc       伦敦金/纽约金    日线真实OHLC；分钟线由当日分时线+实时快照聚合
-    crude        纽约原油 WTI    同一机制，日线最早到1996年
-    brent        布伦特原油 ICE   同一机制
-    ng           美国天然气      同一机制
-    usd          美元指数        东财分时聚合出的分钟/小时K线（无免费历史日线）
+    xau/gc/crude/brent/ng        新浪国际期货(伦敦金/纽约金/WTI/布伦特/天然气)
+                                 日线真实OHLC；分钟线由当日分时线+实时快照聚合
+    usd          美元指数        分钟线由东财分时聚合；日线及以上由欧洲央行汇率反算
     binance/okx  加密货币        按 startTime 分页取全
 
-国际盘：`--source xau`(伦敦金) / `gc`(纽约金) / `crude`(WTI原油) / `brent`(布伦特) /
-    `ng`(天然气) / `usd`(美元指数)，也支持用中文标的自动选源（--symbol 原油）。
-    --interval 1d           真实日线 OHLC（新浪国际期货全量历史）
-    --interval 5m/15m/30m/1h 当日分时线聚合，真实高低点，开箱即可用
-    --interval 1m           当日每分钟价格，单价的平价K线
-    --interval 1Q/1Y        季K/年K，由日线本地聚合（各源无原生季年接口）
-    --interval 5s           5秒线，由 Binance 系 1s K线聚合，默认以贝塞尔曲线显示
-
-交互：悬停蜡烛图看该根K线详情；单击底部副图在 成交量/MACD/RSI/KDJ 之间切换。
-导出：`--csv out.csv` 把当前K线写成CSV；指标参数用 --macd/--rsi/--kdj 调整。
+周期：1Q/1Y 由日线本地聚合，usd 的 1w/1M 同；5s 由 Binance 系 1s K线聚合，
+    默认以贝塞尔曲线显示。
+交互：悬停蜡烛图看该根K线详情；单击底部副图在 成交量/MACD/RSI/KDJ 之间切换；
+    顶部菜单「配置 → 行情参数」可改 数据源/标的/周期/根数 并就地重绘。
+导出：`--csv out.csv` 把当前K线写成CSV；指标参数用 --macd/--rsi/--kdj 调整；
+    菜单「文件 → 保存图片」把当前图导出为 PNG。
 """
 
 import argparse
 import csv
 import json
+import math
 import os
 import re
 import sys
+import threading
 import time
 from collections import namedtuple
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import partial
 from urllib.parse import urlencode, urlparse
 from urllib.request import Request, urlopen
@@ -46,7 +39,6 @@ from urllib.request import Request, urlopen
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.offsetbox import AnnotationBbox, HPacker, TextArea, VPacker
-from matplotlib.patches import Rectangle
 from matplotlib.ticker import FixedLocator, FuncFormatter, MaxNLocator
 
 DEFAULT_FILE = "../WinNTKline/KlineUtil/data/SH600747.DAT"
@@ -60,7 +52,7 @@ SINA_REFERER = "https://finance.sina.com.cn"
 # ---------------------------------------------------------------------------
 SOURCES = {
     "tencent": {
-        # web.ifzq.gtimg.cn 会 301 到 web3.ifzq.gtimg.cn（部分网络无法解析），故 ifzq 优先、web 作镜像
+        # 部分网络解析不了 ifzq 的 301 目标 web3，故 ifzq 优先、web 作镜像
         "kline_url": ["https://ifzq.gtimg.cn/appstock/app/fqkline/get",
                       "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get"],
         "minute_url": ["https://ifzq.gtimg.cn/appstock/app/kline/mkline",
@@ -85,14 +77,13 @@ SOURCES = {
         "default_symbol": "AU0",
     },
     "usd": {
-        # 美元指数：东财分时接口能稳定取到（最多5个交易日），无免费历史日线
+        # 分钟线走东财分时（最多5个交易日）；日线及以上走 Frankfurter 汇率反算
         "default_symbol": "UDI",
         "trends_secid": "100.UDI",
     },
 }
 
-# 新浪国际期货（免密钥）：统一走 GlobalFuturesService，
-# 日线是真实历史OHLC，分钟线用当日分时线 + 实时快照聚合。
+# 新浪国际期货（免密钥）：日线为真实历史OHLC，分钟线由当日分时线 + 实时快照聚合
 SINA_FUTURES = {
     "xau": {"code": "XAU", "name": "伦敦金现货", "snapshot": "hf_XAU"},
     "gc": {"code": "GC", "name": "纽约金COMEX", "snapshot": "hf_GC"},
@@ -100,17 +91,17 @@ SINA_FUTURES = {
     "brent": {"code": "OIL", "name": "布伦特原油", "snapshot": "hf_OIL"},
     "ng": {"code": "NG", "name": "美国天然气", "snapshot": "hf_NG"},
 }
-# 这些源共用同一套加载逻辑，逐条登记进 SOURCES（即 --source 的可选值）
+# 逐条登记进 SOURCES（即 --source 的可选值）
 SOURCES.update({name: {"default_symbol": conf["code"], "snapshot_code": conf["snapshot"]}
                 for name, conf in SINA_FUTURES.items()})
 
-# 支持别名/中文名选源的数据源集合（贵金属、原油、天然气、美元指数）
+# 支持中文别名选源的数据源
 COMMODITY_SOURCES = frozenset(SINA_FUTURES) | {"gold", "usd"}
 
 # auto 模式的尝试顺序（逐个容错回退）
 AUTO_ORDER = ["tencent", "eastmoney", "binance", "okx"]
 
-# 各数据源单次请求能返回的最大K线根数（--limit 0 或历史区间查询时按此上限取）
+# 各源单次请求的最大K线根数（--limit 0 或历史区间查询时按此上限取）
 SINGLE_REQUEST_MAX = {"tencent": 640, "eastmoney": 10000, "binance": 1000, "okx": 300}
 
 # 周期写法在各数据源的映射
@@ -119,7 +110,7 @@ INTERVAL_ALIAS = {"day": "1d", "d": "1d", "1day": "1d", "week": "1w", "w": "1w",
                   "quarter": "1Q", "q": "1Q", "1q": "1Q", "1quarter": "1Q",
                   "year": "1Y", "y": "1Y", "1y": "1Y", "1year": "1Y",
                   "5sec": "5s", "5secs": "5s", "5seconds": "5s"}
-# 60m 与 1h 完全等价(同为60分钟), 统一用 1h, 不再保留 60m 写法
+# 60m 与 1h 等价(同为60分钟)，统一写 1h
 MINUTE_STEP = {"1m": 1, "5m": 5, "15m": 15, "30m": 30, "1h": 60}
 TENCENT_DAILY_KEY = {"1d": "day", "1w": "week", "1M": "month"}
 TENCENT_MINUTE_KEY = {"1m": "m1", "5m": "m5", "15m": "m15", "30m": "m30", "1h": "m60"}
@@ -128,15 +119,17 @@ EASTMONEY_KLT = {"1m": 1, "5m": 5, "15m": 15, "30m": 30,
 OKX_BAR = {"1m": "1m", "5m": "5m", "15m": "15m", "30m": "30m",
            "1h": "1H", "4h": "4H", "1d": "1D", "1w": "1W", "1M": "1M"}
 
-# 无原生接口的周期: 先取「基础周期」再本地聚合 (见 resample_points)
-# 季K/年K 由日线聚合；5s 由 1s K线聚合（只有 Binance 系接口有秒级原始数据）
+# 无原生接口的周期: 先取基础周期再本地聚合(见 resample_points)；
+# 季/年线由日线聚合，5s 由 1s K线聚合，usd 的周/月线由汇率日线聚合
 RESAMPLE_BASE = {"1Q": "1d", "1Y": "1d", "5s": "1s"}
-BARS_PER_PERIOD = {"1Q": 63, "1Y": 250, "5s": 5}  # 一根目标K线大致需要的原始K线根数
+EXTRA_RESAMPLE_BASE = {"usd": {"1w": "1d", "1M": "1d"}}
+BARS_PER_PERIOD = {"1Q": 63, "1Y": 250, "1w": 5, "1M": 21, "5s": 5}
 SECOND_STEP = {"5s": 5}                   # 秒级周期的聚合步长(秒)
 
-# 各数据源真正支持的周期（避免 .get(key, default) 静默降级成别的周期）
+# 各源真正支持的周期（避免静默降级成别的周期）
 FUTURES_INTERVALS = ["1m", "5m", "15m", "30m", "1h", "1d", "1Q", "1Y"]  # 新浪期货(国内/国际)
-USD_INDEX_INTERVALS = ["1m", "5m", "15m", "30m", "1h"]   # 东财分时(无免费日线, 故无季/年K)
+USD_INDEX_INTERVALS = ["1m", "5m", "15m", "30m", "1h", "1d", "1w", "1M", "1Q", "1Y"]
+# 美元指数：分钟线靠分时聚合，日线及以上由汇率反算
 SUPPORTED_INTERVALS = {
     "tencent": ["1m", "5m", "15m", "30m", "1h", "1d", "1w", "1M", "1Q", "1Y"],
     "eastmoney": ["1m", "5m", "15m", "30m", "1h", "1d", "1w", "1M", "1Q", "1Y"],
@@ -148,23 +141,24 @@ SUPPORTED_INTERVALS = {
 }
 SUPPORTED_INTERVALS.update({name: FUTURES_INTERVALS for name in SINA_FUTURES})
 
+# 周期下拉框的固定顺序（从秒到年）
+INTERVAL_ORDER = ["1s", "5s", "1m", "3m", "5m", "15m", "30m", "1h", "2h", "4h",
+                  "6h", "8h", "12h", "1d", "3d", "1w", "1M", "1Q", "1Y"]
+
 # 标的形态识别（auto 模式据此挑源）
 CRYPTO_SYMBOL = re.compile(r"^[A-Z0-9]{2,12}(?:[-/]?(?:USDT|USDC|USD|BTC|ETH))$")
 DOMESTIC_SYMBOL = re.compile(r"^(?:sh|sz|bj|nf_|hf_|[0-9]{6})", re.IGNORECASE)
 
 # 商品/指数别名：--symbol 可直接写中文或常用写法
 COMMODITY_ALIASES = {
-    # 贵金属
     "au": "AU0", "au0": "AU0", "沪金": "AU0", "黄金": "AU0", "黄金期货": "AU0", "gold": "AU0",
     "xau": "XAU", "xauusd": "XAU", "伦敦金": "XAU", "现货黄金": "XAU", "国际黄金": "XAU",
     "gc": "GC", "gc0": "GC", "comex": "GC", "纽约金": "GC", "纽约黄金": "GC",
     "ag": "AG0", "ag0": "AG0", "沪银": "AG0", "白银": "AG0", "现货白银": "AG0",
-    # 能源
     "cl": "CL", "cl0": "CL", "wti": "CL", "crude": "CL", "原油": "CL", "美原油": "CL",
     "纽约原油": "CL", "美国原油": "CL",
     "oil": "OIL", "brent": "OIL", "布伦特": "OIL", "布伦特原油": "OIL",
     "ng": "NG", "ng0": "NG", "天然气": "NG", "美国天然气": "NG",
-    # 指数
     "udi": "UDI", "dxy": "UDI", "usdx": "UDI", "usd": "UDI",
     "美元": "UDI", "美元指数": "UDI",
 }
@@ -192,7 +186,7 @@ COMMODITY_PREFIXES = (
     (re.compile(r"^(?:udi|dxy|usdx|美元)", re.IGNORECASE), ["usd"]),
 )
 
-# 预编译：以下匹配在解析路径中反复使用，避免每次重新编译
+# 解析路径中反复使用的预编译正则
 _NON_DIGITS = re.compile(r"[^0-9]")
 _JSONP_SHELL = re.compile(r"\((.*)\)\s*;?\s*$", re.S)
 _SINA_SNAPSHOT = re.compile(r'="([^"]*)"')
@@ -207,6 +201,13 @@ SINA_SNAPSHOT_URL = "https://hq.sinajs.cn/list=%s"
 # 东财分时(1分钟)行情：美元指数等没有免费历史K线的品种，用它聚合出分钟K线
 EASTMONEY_TRENDS_URL = "https://push2his.eastmoney.com/api/qt/stock/trends2/get"
 
+# 新浪外汇快照：美元指数实时一笔价（东财分时不可达时的兜底）
+SINA_FOREX_CODE = "DINIW"
+# 欧洲央行参考汇率（免密钥）：美元指数日线及以上按 ICE 官方权重反算
+FRANKFURTER_URL = "https://api.frankfurter.dev/v1/"
+USDX_CURRENCIES = "EUR,JPY,GBP,CAD,SEK,CHF"
+USDX_BASE = 50.14348112
+
 # 中国习惯：红涨绿跌
 UP_COLOR = "#d62728"
 DOWN_COLOR = "#2ca02c"
@@ -218,7 +219,7 @@ STYLE = {
 }
 MA_COLORS = ((5, "#e8890c"), (10, "#2f6fd0"), (20, "#8a5cd6"))
 
-# 非交互式后端：不产生窗口，实时刷新时无需（也不应）调用 show()
+# 非交互式后端：无窗口，实时刷新不应调用 show()
 NON_GUI_BACKENDS = {"agg", "pdf", "ps", "svg", "svgz", "template", "cairo", "pgf"}
 
 # 底部副图：单击可在四种模式间循环切换
@@ -258,7 +259,7 @@ def _font_available(name):
 
 
 def setup_font():
-    """自动挑选系统已安装的中文字体，避免 SimHei 缺失导致的 findfont 告警与中文乱码。"""
+    """自动挑选系统已安装的中文字体，避免 findfont 告警与中文乱码。"""
     available = [name for name in CJK_FONT_CANDIDATES if _font_available(name)]
     if not available:
         print("提示：未检测到中文字体，图表中的中文可能显示为方块。\n"
@@ -271,7 +272,7 @@ def setup_font():
 
 
 def setup_style():
-    """统一整体观感：面板配色、字号、图例与网格默认值。"""
+    """统一面板配色、字号与图例默认值。"""
     plt.rcParams.update({
         "figure.facecolor": STYLE["figure"],
         "axes.facecolor": STYLE["axes"],
@@ -314,10 +315,10 @@ def normalize_interval(interval):
 
 
 def validate_interval(source, interval):
-    """校验周期是否被该数据源支持，避免静默降级成别的周期。"""
+    """校验周期是否被该数据源支持。"""
     supported = SUPPORTED_INTERVALS.get(source)
     if supported and interval not in supported:
-        raise UnsupportedInterval("%s 不支持周期 %s，可用周期: %s"
+        raise UnsupportedInterval("%s 不支持周期 %s，可选周期: %s"
                                   % (source, interval, "/".join(supported)))
     return interval
 
@@ -409,7 +410,7 @@ def parse_date_arg(text):
 
 
 def to_timestamp_ms(day, end_of_day=False):
-    """把 YYYY-MM-DD 转成毫秒时间戳（与本模块的本地时间格式化保持一致）。"""
+    """把 YYYY-MM-DD 转成毫秒时间戳（本地时区）。"""
     stamp = datetime.strptime(day, "%Y-%m-%d")
     if end_of_day:
         stamp = stamp.replace(hour=23, minute=59, second=59)
@@ -447,11 +448,7 @@ FUTURE_TOLERANCE_HOURS = 24
 
 
 def drop_future_points(points, tolerance_hours=FUTURE_TOLERANCE_HOURS):
-    """丢掉时间明显超前于当前时刻的K线。
-
-    新浪国内期货分钟线末端偶尔混入「下一交易日」的占位行（如周六凌晨出现周一 00:00），
-    会造成图上多出一根未来K线、且「最新时间」显示成未来日期。日期无法解析时一律保留。
-    """
+    """丢掉时间超前于当前时刻的K线；新浪期货分钟线末端会混入下日占位行，日期无法解析时保留。"""
     if not points or not points[0]:
         return points
     horizon = datetime.now().timestamp() + tolerance_hours * 3600
@@ -464,6 +461,31 @@ def drop_future_points(points, tolerance_hours=FUTURE_TOLERANCE_HOURS):
             continue
         if stamp <= horizon:
             keep.append(index)
+    if len(keep) == len(points[0]):
+        return points
+    return [[column[index] for index in keep] for column in points]
+
+
+def sanitize_points(points):
+    """滤掉四价全 0 或任一价格非有限值的K线（字段缺失会产生全 0 行，把价格轴拉伸到 0）。
+
+    只判全 0 不判 <=0，避免误伤真实负油价。
+    """
+    if not points or not points[0]:
+        return points
+    keep = []
+    for index, when in enumerate(points[0]):
+        if not str(when).strip():
+            continue
+        try:
+            prices = [float(points[column][index]) for column in (2, 3, 4, 5)]
+        except (TypeError, ValueError):
+            continue
+        if not all(math.isfinite(price) for price in prices):
+            continue
+        if prices[0] == 0 and prices[1] == 0 and prices[2] == 0 and prices[3] == 0:
+            continue
+        keep.append(index)
     if len(keep) == len(points[0]):
         return points
     return [[column[index] for index in keep] for column in points]
@@ -492,10 +514,7 @@ def span_text(points):
 
 
 def export_csv(points, path):
-    """把7列K线写成CSV，返回写入行数。
-
-    用 utf-8-sig 编码写 BOM，Excel 双击打开不会中文乱码；实时模式下每帧覆盖同一个文件。
-    """
+    """把7列K线写成CSV（utf-8-sig 带 BOM，Excel 双击打开不乱码；实时模式每帧覆盖），返回写入行数。"""
     target = os.path.abspath(os.path.expanduser(path))
     parent = os.path.dirname(target)
     if parent and not os.path.isdir(parent):
@@ -536,11 +555,7 @@ def sina_headers():
 
 
 def ensure_http_url(url):
-    """校验地址只走 http/https，否则抛 ValueError。
-
-    urlopen 本身支持 file:、ftp: 等协议，若不限制，用户传入的 --api-url 就能让
-    程序读本地文件或走别的协议，因此这里同时要求带主机名。
-    """
+    """校验地址只走 http/https 且带主机名（urlopen 支持 file: 等协议，不能让 --api-url 读本地文件），否则抛 ValueError。"""
     parts = urlparse(url)
     if parts.scheme not in ("http", "https") or not parts.netloc:
         raise ValueError("仅支持 http/https 地址: %s" % url)
@@ -580,10 +595,7 @@ def fetch_first(urls, params, timeout, headers, parse):
 # 六、解析器：各数据源 -> 统一7列结构
 # ---------------------------------------------------------------------------
 def build_points(bars):
-    """把 (时间, 开, 收, 高, 低, 量[, 额]) 序列转成 [时间, 量, 开, 收, 高, 低, 额]。
-
-    缺第7项时用收盘价填充成交额（该列仅供展示，绘图不依赖）。
-    """
+    """把 (时间, 开, 收, 高, 低, 量[, 额]) 转成 [时间, 量, 开, 收, 高, 低, 额]；缺第7项时用收盘价填充成交额。"""
     points = [[], [], [], [], [], [], []]
     for bar in bars:
         points[0].append(bar[0])
@@ -597,16 +609,18 @@ def build_points(bars):
 
 
 def bucket_start(when, interval):
-    """返回该时间串所属周期的起始时刻。
-
-    1Q/1Y 取季初/年初；5s 等秒级周期把秒数向下取整到步长的整数倍（由 1s K线聚合）。
-    """
+    """返回该时间串所属周期的起始时刻（周/月/季/年初，或秒级向下取整到步长）。"""
     text = str(when)[:19].replace("/", "-").replace(".", "-")
     day = datetime.strptime(text[:10], "%Y-%m-%d")
     if interval == "1Y":
         return "%04d-01-01 00:00:00" % day.year
     if interval == "1Q":
         return "%04d-%02d-01 00:00:00" % (day.year, (day.month - 1) // 3 * 3 + 1)
+    if interval == "1M":
+        return "%04d-%02d-01 00:00:00" % (day.year, day.month)
+    if interval == "1w":
+        monday = day - timedelta(days=day.weekday())
+        return "%04d-%02d-%02d 00:00:00" % (monday.year, monday.month, monday.day)
     stamp = datetime.strptime(text, "%Y-%m-%d %H:%M:%S")
     epoch = int(stamp.timestamp())
     return datetime.fromtimestamp(epoch - epoch % SECOND_STEP[interval]).strftime(
@@ -614,11 +628,7 @@ def bucket_start(when, interval):
 
 
 def resample_points(points, interval):
-    """把基础周期K线聚合成 1Q/1Y/5s：开=区间首开，收=区间尾收，高/低取极值，量额累加。
-
-    这些周期各数据源基本没有原生接口，本地聚合结果跨源一致；
-    最后一根是尚未走完的周期（季/年/5秒），与行情软件行为一致。
-    """
+    """把基础周期K线聚合成 1w/1M/1Q/1Y/5s：开取首、收取尾、高低取极值、量额累加；末根为未走完周期，与行情软件一致。"""
     bars = []
     slots = {}
     for index, when in enumerate(points[0]):
@@ -798,11 +808,7 @@ def parse_sina_snapshot(text, code):
 
 
 def parse_sina_minline(payload, code):
-    """新浪国际期货分时线: payload['minLine_1d']，返回当日 (时间, 价格) 序列。
-
-    首行为 10 列 [日期, 昨收, 交易所, '', 时间, 价格, '0', '0', 均价, 完整时间]，
-    其余行为 6 列 [时间, 价格, '0', '0', 均价, 完整时间]。统一取「完整时间 + 价格」。
-    """
+    """新浪国际期货分时 payload['minLine_1d'] -> 当日 (时间, 价格) 序列；首行 10 列取 [9]时间+[5]价，其余 6 列取 [5]+[1]。"""
     rows = payload.get("minLine_1d")
     if not isinstance(rows, list) or not rows:
         raise ValueError("新浪分时接口无数据(%s)" % code)
@@ -824,10 +830,7 @@ def parse_sina_minline(payload, code):
 
 
 def parse_eastmoney_trends(payload, code):
-    """东财分时(1分钟)行情: data['trends'] 每行为 "时间,开,收,高,低,量,额,均价"。
-
-    该接口的「开」固定为 0，只有最新价可用，因此返回 (完整时间, 价格) 序列。
-    """
+    """东财分时 data['trends'] 每行 "时间,开,收,高,低,量,额,均价" -> (时间, 价格) 序列；「开」固定为 0，只有最新价可用。"""
     data = (payload or {}).get("data") or {}
     rows = data.get("trends")
     if not isinstance(rows, list) or not rows:
@@ -848,6 +851,57 @@ def parse_eastmoney_trends(payload, code):
     return ticks
 
 
+def parse_sina_forex_snapshot(text, code):
+    """新浪外汇快照 var hq_str_DINIW="时间,开,昨收,...,最高,最低,最新价,名称,日期"；只取最新价一笔，返回 (完整时间, 价格)。"""
+    match = _SINA_SNAPSHOT.search(text)
+    if not match or not match.group(1):
+        raise ValueError("未取到 %s 快照" % code)
+    parts = match.group(1).split(",")
+    if len(parts) < 11:
+        raise ValueError("快照字段不足(%s): %d" % (code, len(parts)))
+    price = float(parts[8]) if parts[8] else 0.0
+    when = "%s %s" % (parts[10].strip(), parts[0].strip())
+    if price <= 0 or len(when) < 16 or when[4] != "-" or when[7] != "-":
+        raise ValueError("%s 暂无有效价格" % code)
+    return when, price
+
+
+def usdx_from_rates(row):
+    """ICE 官方公式反算美元指数：50.14348112 × EURUSD^-0.576 × USDJPY^0.136
+    × GBPUSD^-0.119 × USDCAD^0.091 × USDSEK^0.042 × USDCHF^0.036。
+    任一币种缺失/非正时返回 0。
+    """
+    rates = {}
+    for currency in USDX_CURRENCIES.split(","):
+        value = float(row.get(currency, 0) or 0)
+        if value <= 0:
+            return 0.0
+        rates[currency] = value
+    # base=USD 时 EUR/GBP 给的是「1美元兑X外币」，取倒数还原成 EURUSD/GBPUSD
+    return (USDX_BASE * (1.0 / rates["EUR"]) ** -0.576 * rates["JPY"] ** 0.136
+            * (1.0 / rates["GBP"]) ** -0.119 * rates["CAD"] ** 0.091
+            * rates["SEK"] ** 0.042 * rates["CHF"] ** 0.036)
+
+
+def parse_frankfurter_usdx(payload):
+    """Frankfurter 汇率时序 rates = {"2015-01-02": {...}, ...} -> 统一K线（四价同值）。"""
+    rates = (payload or {}).get("rates")
+    if not isinstance(rates, dict) or not rates:
+        raise ValueError("汇率接口无数据")
+    bars = []
+    for day in sorted(rates):
+        row = rates[day]
+        if not isinstance(row, dict):
+            continue
+        usdx = usdx_from_rates(row)
+        if usdx <= 0:
+            continue
+        bars.append(("%s 00:00:00" % day, usdx, usdx, usdx, usdx, 0.0, usdx))
+    if not bars:
+        raise ValueError("汇率数据不完整")
+    return build_points(bars)
+
+
 # ---------------------------------------------------------------------------
 # 七、实时快照聚合为分钟K线（国际金没有分钟K线接口）
 # ---------------------------------------------------------------------------
@@ -859,10 +913,12 @@ class MinuteAggregator:
         self.index = {}
         self.last_volume = None
         self.max_bars = max_bars
+        self.last_push = time.monotonic()
 
     def push(self, when, price, volume=None):
         if price <= 0:
             return
+        self.last_push = time.monotonic()
         bar = self.index.get(when)
         if bar is None:
             bar = [when, price, price, price, price, 0.0]
@@ -888,6 +944,9 @@ class MinuteAggregator:
 
 AGGREGATORS = {}
 
+# 聚合器最长空窗期（远大于刷新间隔），超过则丢弃重建，避免隔天旧累积混排。
+AGGREGATOR_IDLE_SECONDS = 20 * 60
+
 
 def floor_minute(when, step):
     """把 'YYYY-MM-DD HH:MM:SS' 向下取整到 step 分钟，作为K线的时间桶。"""
@@ -900,14 +959,12 @@ def floor_minute(when, step):
 
 
 def aggregate_snapshot(source, ticks, step, name, snapshot_code):
-    """把分时/快照价格序列按 step 分钟聚合成K线（部分品种没有分钟K线接口）。
-
-    分时线一次就能提供当日（或近几日）全部分钟价格，因此 5m/15m/30m/1h 周期可立即
-    得到带真实高低点的K线；1m 周期为每分钟单价的平价K线。
-    """
-    aggregator = AGGREGATORS.get(source)
-    if aggregator is None:
-        aggregator = AGGREGATORS[source] = MinuteAggregator()
+    """把分时/快照价格按 step 分钟聚合成K线（部分品种没有分钟K线接口）；缓存键必须带 step，否则切换周期后新旧步长混排会串周期。"""
+    key = "%s|%d" % (source, step)
+    now = time.monotonic()
+    aggregator = AGGREGATORS.get(key)
+    if aggregator is None or now - aggregator.last_push > AGGREGATOR_IDLE_SECONDS:
+        aggregator = AGGREGATORS[key] = MinuteAggregator()
     for when, price in ticks:
         aggregator.push(floor_minute(when, step), price)
     if not aggregator.bars:
@@ -986,13 +1043,13 @@ def _load_sina_futures(query):
                                          headers=sina_headers()))
         return parse_sina_global(payload, code)
 
-    # 当日分时线：一次拿到全天每分钟价格，无需从启动开始慢慢累积
+    # 当日分时线：一次拿到全天每分钟价格
     url = SINA_GLOBAL_URL % (code, "getGlobalFuturesMinLine")
     payload = parse_jsonp(fetch_text(url, {"symbol": code}, query.timeout,
                                      headers=sina_headers()))
     ticks = parse_sina_minline(payload, code)
 
-    # 再补一笔最新快照，让最后一根K线跟到最新价
+    # 补一笔最新快照，让末根K线跟到最新价
     snapshot_code = conf["snapshot"]
     text = fetch_text(SINA_SNAPSHOT_URL % snapshot_code, None, query.timeout,
                       encoding="gbk", headers=sina_headers())
@@ -1003,20 +1060,30 @@ def _load_sina_futures(query):
                               name, snapshot_code)
 
 
-def _load_usd_index(query):
-    """美元指数：用东财分时（最多5个交易日）聚合出分钟K线。
+def load_usd_daily_points(query):
+    """美元指数日线：ICE 官方日线无免费源，用 Frankfurter 免密钥汇率按 ICE 权重反算；周/月/季/年线由 load_source_points 先取日线再聚合。"""
+    url = "%s2015-01-01..?base=USD&symbols=%s" % (FRANKFURTER_URL, USDX_CURRENCIES)
+    payload = fetch_json(url, None, query.timeout)
+    return parse_frankfurter_usdx(payload)
 
-    东财K线接口对 100.UDI 没有数据、新浪外汇也没有历史日线，因此不支持 1d，
-    请求日线时由 SUPPORTED_INTERVALS 在命令行阶段直接报错，而不是静默降级。
-    """
+
+def _load_usd_index(query):
+    """美元指数：分钟线用东财分时（最多5个交易日）聚合，日线及以上走汇率反算；分时不可达时退到新浪外汇快照 DINIW（东财K线接口对 100.UDI 无数据）。"""
+    if query.interval not in MINUTE_STEP:
+        return load_usd_daily_points(query)
     conf = SOURCES[query.source]
     secid = conf["trends_secid"]
     days = 1 if query.interval == "1m" else 5     # 1分钟只看当日，其它周期多取几天凑根数
     params = {"secid": secid, "fields1": "f1,f2,f3,f4",
               "fields2": "f51,f52,f53,f54,f55,f56", "iscr": 0, "ndays": days}
-    payload = fetch_json(EASTMONEY_TRENDS_URL, params, query.timeout,
-                         headers=default_headers())
-    ticks = parse_eastmoney_trends(payload, secid)
+    try:
+        payload = fetch_json(EASTMONEY_TRENDS_URL, params, query.timeout,
+                             headers=default_headers())
+        ticks = parse_eastmoney_trends(payload, secid)
+    except (OSError, ValueError, KeyError):
+        text = fetch_text(SINA_SNAPSHOT_URL % SINA_FOREX_CODE, None, query.timeout,
+                          encoding="gbk", headers=sina_headers())
+        ticks = [parse_sina_forex_snapshot(text, SINA_FOREX_CODE)]
     return aggregate_snapshot(query.source, ticks, MINUTE_STEP[query.interval],
                               "美元指数", secid)
 
@@ -1086,9 +1153,10 @@ def load_source_points(source, symbol, interval, limit=120, timeout=10, start=No
     if loader is None:
         raise ValueError("未知数据源: %s" % source)
     interval = validate_interval(source, normalize_interval(interval))
-    # 1Q/1Y/5s 无原生接口: 先按基础周期取数(根数按比例放大), 再本地聚合
-    resample = interval in RESAMPLE_BASE
-    fetch_interval = RESAMPLE_BASE[interval] if resample else interval
+    # 1Q/1Y/5s(及美元指数周/月) 无原生接口: 先按基础周期取数(根数按比例放大), 再本地聚合
+    base = RESAMPLE_BASE.get(interval) or EXTRA_RESAMPLE_BASE.get(source, {}).get(interval)
+    resample = base is not None
+    fetch_interval = base or interval
     fetch_limit = request_limit(limit, SINGLE_REQUEST_MAX.get(source, 0))
     if resample:
         cap = SINGLE_REQUEST_MAX.get(source, 0)
@@ -1099,7 +1167,8 @@ def load_source_points(source, symbol, interval, limit=120, timeout=10, start=No
                   fetch_interval,
                   fetch_limit,
                   timeout, start, end)
-    points = shape_points(drop_future_points(loader(query)), start, end, fetch_limit)
+    points = shape_points(sanitize_points(drop_future_points(loader(query))),
+                          start, end, fetch_limit)
     return slice_tail(resample_points(points, interval), limit) if resample else points
 
 
@@ -1132,7 +1201,8 @@ def load_api_points(url, symbol=None, interval="1m", limit=120, timeout=10,
     query = Query("binance", symbol or "",
                   RESAMPLE_BASE[interval] if resample else interval,
                   fetch_limit, timeout, start, end)
-    points = shape_points(load_binance_points([url], query), start, end, fetch_limit)
+    points = shape_points(sanitize_points(load_binance_points([url], query)),
+                          start, end, fetch_limit)
     return slice_tail(resample_points(points, interval), limit) if resample else points
 
 
@@ -1171,11 +1241,7 @@ def _parse_stamp(text):
 
 
 def time_label_format(date):
-    """按数据跨度选择时间刻度格式。
-
-    先区分日线/日内：日线一律用日期格式（避免出现无意义的 00:00）；
-    日内数据同日→时分，跨日→月-日 时:分，更长→只标月-日。
-    """
+    """按数据跨度选择时间刻度格式；日线一律用日期格式（避免无意义的 00:00）。"""
     samples = [_parse_stamp(date[index]) for index in (0, len(date) // 2, len(date) - 1)]
     samples = [stamp for stamp in samples if stamp is not None]
     if not samples:
@@ -1218,11 +1284,7 @@ def time_ticks(date, max_ticks=8):
 
 
 def price_decimals(low, high):
-    """按价格区间大小决定需要的小数位，避免价位刻度精度失真。
-
-    阈值按「区间跨度」而非绝对价格选取：美元指数这类 ~100 且日内波动 1 点左右的品种
-    取 2 位小数即可，不必铺满 3 位。
-    """
+    """按价格区间跨度决定小数位，避免价位刻度精度失真。"""
     span = abs(float(high) - float(low))
     for limit, digits in ((500, 0), (20, 1), (1, 2), (0.05, 3)):
         if span >= limit:
@@ -1242,13 +1304,10 @@ def compact_number(value, decimals=0):
 
 
 def apply_time_axis(axis, date, max_ticks=8):
-    """给X轴套上智能时间刻度，标签过长时自动倾斜。
+    """给X轴套上智能时间刻度，标签过长时自动倾斜；悬停完整时间挂在 Axes.fmt_xdata 上。
 
-    刻度标签用 FixedLocator + FuncFormatter，而不是 set_xticklabels：
-    后者会装上 FixedFormatter，而它的 format_data_short() 恒返回空串，
-    会让鼠标悬停时右下角的横坐标显示为空（format_coord -> format_xdata）。
-    另外把悬停文本挂到 Axes.fmt_xdata 上，这样悬停显示该根K线的完整时间，
-    而刻度标签仍保持精简。
+    刻度须用 FixedLocator + FuncFormatter：set_xticklabels 会装上 FixedFormatter，
+    其 format_data_short() 恒为空，悬停横坐标会显示为空。
     """
     positions, labels = time_ticks(date, max_ticks)
     fmt = time_label_format(date)
@@ -1312,7 +1371,7 @@ def style_panel_axis(axis, label, formatter=None, decimals=2):
 # 十、绘图
 # ---------------------------------------------------------------------------
 def _on_click(event):
-    """单击底部副图，在 成交量 -> MACD -> RSI 之间循环切换。"""
+    """单击底部副图，在 成交量/MACD/RSI/KDJ 之间循环切换。"""
     figure = event.canvas.figure
     store = getattr(figure, "_matkline_hover", None)
     if not store or event.button != 1 or event.inaxes is not store["axes"][1]:
@@ -1385,11 +1444,7 @@ def panel_label(mode, params):
 
 
 def _draw_panel(axis, x, mode, volume, colors, close_arr, high_arr, low_arr, params):
-    """画底部副图，返回该面板的纵轴数值格式化函数（None 表示沿用价格精度）。
-
-    指标数据不足时回退到成交量面板；无成交量的数据源（如国际金）给出文字提示，
-    而不是画一个空白面板。
-    """
+    """画底部副图，返回纵轴格式化函数（None 表示沿用价格精度）；指标数据不足时回落到成交量面板，无成交量的源给出文字提示。"""
     if mode == "macd":
         dif, dea, hist = macd(close_arr, *params["macd"])
         axis.bar(x, hist, width=0.6, color=np.where(hist >= 0, UP_COLOR, DOWN_COLOR))
@@ -1413,7 +1468,12 @@ def _draw_panel(axis, x, mode, volume, colors, close_arr, high_arr, low_arr, par
         axis.plot(x, j_line, color="purple", linewidth=0.9, label="J")
         for level in (20, 50, 80):
             axis.axhline(level, color="0.75", linewidth=0.6, linestyle="--")
-        axis.set_ylim(-20, 120)                # J 常冲出 0~100，上下留余量
+        finite = np.concatenate([k_line, d_line, j_line])
+        finite = finite[np.isfinite(finite)]
+        if finite.size:                        # 视口按实际值域取，J 越界也不裁剪
+            low, high = float(finite.min()), float(finite.max())
+            pad = max((high - low) * 0.08, 1.0)
+            axis.set_ylim(low - pad, high + pad)
         axis.set_autoscaley_on(False)
         axis.legend(loc="upper right", fontsize=7, ncol=3, handlelength=1.2,
                     frameon=True, framealpha=0.85, edgecolor="none")
@@ -1445,11 +1505,7 @@ def _pair(label, value, color=None):
 
 
 def _bar_box(store, index):
-    """拼出悬停信息框：时间 / 开收 / 高低 / 量·涨跌。
-
-    收与涨跌按相对前一根收盘（首根退化用开盘）红涨绿跌；高恒红、低恒绿，
-    与行情软件的配色习惯一致。无成交量的数据源不显示成交量一栏。
-    """
+    """拼出悬停信息框：时间 / 开收 / 高低 / 量·涨跌；收与涨跌相对前一根收盘（首根退化用开盘）红涨绿跌，高恒红、低恒绿。"""
     fmt = "%%.%df" % store["digits"]
     open_val, close_val = store["open"][index], store["close"][index]
     high_val, low_val = store["high"][index], store["low"][index]
@@ -1489,19 +1545,26 @@ def _place_hover(store, index):
 
 
 def _hover_artists(axis):
-    """创建悬停用的高亮竖线；信息框在悬停时按需生成（多色排版需要重建）。"""
+    """创建悬停用的十字线与左侧价格标注；信息框在悬停时按需生成（多色排版需要重建）。"""
+    from matplotlib.transforms import blended_transform_factory
+    style = dict(color="0.45", linewidth=0.7, linestyle="--", visible=False,
+                 zorder=6)
     return {
-        "vline": axis.axvline(0, color="0.45", linewidth=0.7, linestyle="--",
-                              visible=False, zorder=6),
+        "vline": axis.axvline(0, **style),
+        "hline": axis.axhline(0, **style),
+        # 左端贴轴、纵向跟数据坐标的价格标注
+        "ylabel": axis.text(
+            0.0, 0, "", transform=blended_transform_factory(
+                axis.transAxes, axis.transData),
+            ha="left", va="bottom", fontsize=7.5, color="0.35", visible=False,
+            zorder=7,
+            bbox=dict(boxstyle="round,pad=0.15", fc="white", ec="none", alpha=0.8)),
         "box": None,
     }
 
 
 def _on_hover(event):
-    """鼠标悬停：高亮该根K线，并在旁边显示其开高低收量。
-
-    只在「换到另一根K线」时重绘：横向不做跟随，避免每次鼠标移动都整图重画。
-    """
+    """鼠标悬停：十字线跟随光标，高亮该根K线并显示其开高低收量；水平线每次移动都更新，竖线/信息框只在换到另一根K线时重绘。"""
     figure = event.canvas.figure
     store = getattr(figure, "_matkline_hover", None)
     if not store:
@@ -1511,7 +1574,19 @@ def _on_hover(event):
         candidate = int(round(event.xdata))
         if 0 <= candidate < store["count"]:
             index = candidate
-    if index == store["last"]:            # 同一根K线内移动不重绘
+    on_price = event.inaxes == store["axes"][0] and event.ydata is not None
+    y = event.ydata if on_price else None
+    hline = store["hline"]
+    hline.set_visible(y is not None)
+    label = store["ylabel"]
+    label.set_visible(y is not None)
+    if y is not None:
+        hline.set_ydata([y, y])
+        label.set_position((0.0, y))
+        label.set_text("%.*f" % (store.get("digits", 2), y))
+    if index == store["last"]:
+        if hline.get_visible():
+            event.canvas.draw_idle()
         return
     store["last"] = index
     visible = index is not None
@@ -1540,7 +1615,7 @@ def plot_points(points, title):
         return
     figure = plt.gcf()
     figure.clf()
-    figure._matkline_hover = None         # 折线模式不提供K线悬停提示
+    figure._matkline_hover = None
     axis = figure.add_subplot(111)
     x = np.arange(len(points[0]))
     for values, label, color, style in ((points[2], "开", MA_COLORS[0][1], "-"),
@@ -1557,11 +1632,7 @@ def plot_points(points, title):
 
 
 def bezier_curve(x, y, samples=16, tension=1.0):
-    """Catmull-Rom 控制点转三次贝塞尔，把折线平滑成密集采样点。
-
-    tension=0 退化成直线，1 为标准 Catmull-Rom；x 只做线性插值，曲线仅在纵向弯曲，
-    因此时间轴刻度仍与原始K线一一对应。
-    """
+    """Catmull-Rom 控制点转三次贝塞尔，把折线平滑成密集采样点；x 只做线性插值，曲线仅在纵向弯曲，时间刻度仍与原始K线对应。"""
     values = np.asarray(y, dtype=float)
     xs = np.asarray(x, dtype=float)
     count = len(values)
@@ -1585,7 +1656,7 @@ def plot_bezier(points, title):
         return
     figure = plt.gcf()
     figure.clf()
-    figure._matkline_hover = None         # 曲线模式不提供K线悬停提示
+    figure._matkline_hover = None
     axis = figure.add_subplot(111)
     x = np.arange(len(points[0]), dtype=float)
     for values, label, color, style in ((points[2], "开", MA_COLORS[0][1], "-"),
@@ -1604,11 +1675,7 @@ def plot_bezier(points, title):
 
 
 def plot_candles(points, title, bars=None, params=None):
-    """蜡烛图模式：红涨绿跌 + 影线 + MA5/10/20 + 可切换副图。
-
-    bars=None 表示画出全部数据（取多少根由 --limit 控制）；
-    params 为指标参数（缺省用 DEFAULT_PARAMS），由调用方一路传进来。
-    """
+    """蜡烛图模式：红涨绿跌 + 影线 + MA5/10/20 + 可切换副图；bars=None 画全部数据（根数由 --limit 控制）。"""
     params = params or DEFAULT_PARAMS
     total = len(points[0])
     if total == 0:
@@ -1626,7 +1693,7 @@ def plot_candles(points, title, bars=None, params=None):
 
     figure = plt.gcf()
     figure.clf()
-    # 没有成交量的数据源（如国际金）默认展示 MACD，而不是一片空面板
+    # 无成交量的源（如国际金）默认展示 MACD
     if not hasattr(figure, "_matkline_panel"):
         figure._matkline_panel = 0 if np.any(volume > 0) else 1
     panel_mode = PANEL_MODES[figure._matkline_panel % len(PANEL_MODES)]
@@ -1636,21 +1703,19 @@ def plot_candles(points, title, bars=None, params=None):
         gridspec_kw={"height_ratios": [3, 1], "hspace": 0.08})
     hover = _hover_artists(axis)      # 先建好并隐藏，避免影响下面的坐标范围
 
-    # 影线 + 实体：K线越密实体越宽，避免整片糊在一起
+    # 影线 + 实体：按K线密度调整宽度，避免糊在一起
     count = len(x)
     body = 0.62 if count <= 240 else (0.76 if count <= 600 else 0.9)
     wick = 0.85 if count <= 600 else 0.6
     half = body / 2.0
     axis.vlines(x, low_arr, high_arr, color=colors, linewidth=wick)
-    for xi, oi, ci, up in zip(x, open_arr, close_arr, rising):
-        if up:
-            axis.add_patch(Rectangle((xi - half, oi), body, max(ci - oi, 1e-9),
-                                     facecolor=UP_COLOR, edgecolor=UP_COLOR, linewidth=0))
-        else:
-            axis.add_patch(Rectangle((xi - half, ci), body, oi - ci,
-                                     facecolor=DOWN_COLOR, edgecolor=DOWN_COLOR, linewidth=0))
+    up = rising
+    down = ~rising
+    axis.bar(x[up], np.maximum(close_arr[up] - open_arr[up], 1e-9), body,
+             open_arr[up], color=UP_COLOR, linewidth=0)
+    axis.bar(x[down], open_arr[down] - close_arr[down], body, close_arr[down],
+             color=DOWN_COLOR, linewidth=0)
 
-    # 均线
     for window, color in MA_COLORS:
         if len(close_arr) >= window:
             ma = np.convolve(close_arr, np.ones(window) / window, mode="valid")
@@ -1667,7 +1732,7 @@ def plot_candles(points, title, bars=None, params=None):
     axis.set_autoscaley_on(False)
     style_price_axis(axis, low_min, high_max)
 
-    # 标题靠左，右上角放最新价与涨跌幅（红涨绿跌），并画出最新价虚线
+    # 右上角最新价与涨跌幅（红涨绿跌）+ 最新价虚线
     last_close = float(close_arr[-1])
     base_close = float(close_arr[-2]) if len(close_arr) > 1 else float(open_arr[-1])
     change = (last_close - base_close) / base_close * 100.0 if base_close else 0.0
@@ -1710,21 +1775,22 @@ def plot_candles(points, title, bars=None, params=None):
 # 十一、实时刷新
 # ---------------------------------------------------------------------------
 def _refresh_wait(figure, interval):
-    """刷新画面并等待 interval 秒，但不会把窗口提到最前。
+    """刷新画面并等待 interval 秒，且不会把窗口提到最前。
 
-    不能用 plt.pause()：它内部每帧都会调用 show(block=False)，而后端的
-    FigureManager.show() 会 deiconify()+lift()/raise_()，导致每刷新一次就抢一次焦点。
-    这里只在首帧开一次窗，之后仅重绘并处理GUI事件（按小片休眠，保证期间可交互）。
+    不能用 plt.pause()：其内部 show(block=False) 会每帧 deiconify+lift 抢焦点。
+    只在首帧开一次窗，之后仅重绘并处理GUI事件（小片休眠，期间可交互）。
     """
     canvas = figure.canvas
-    canvas.draw()                                       # 先重绘再开窗，避免首帧白屏
+    if getattr(figure, "_matkline_dirty", True):        # 数据未变时整段跳过，省 CPU
+        figure._matkline_dirty = False
+        canvas.draw()                                   # 先重绘再开窗，避免首帧白屏
     if not getattr(figure, "_matkline_shown", False):
         figure._matkline_shown = True
         if plt.get_backend().lower() not in NON_GUI_BACKENDS:
-            plt.show(block=False)                       # 只开这一次窗，之后不再 show
+            plt.show(block=False)
     deadline = time.monotonic() + max(interval, 0.0)
     while True:
-        canvas.flush_events()                           # 只处理GUI事件，不再触发 show
+        canvas.flush_events()
         remaining = deadline - time.monotonic()
         if remaining <= 0:
             break
@@ -1747,10 +1813,220 @@ def set_window_title(figure, text):
         pass
 
 
-def stream_api(loader, refresh=5.0, chart="candle", csv_path=None, params=None):
+def save_figure_as(figure):
+    """弹出保存对话框，把当前图导出为 PNG；取消选择则不做任何事。"""
+    from tkinter import filedialog
+    manager = getattr(figure.canvas, "manager", None)
+    window = getattr(manager, "window", None)
+    path = filedialog.asksaveasfilename(
+        parent=window, title="保存图片", defaultextension=".png",
+        filetypes=[("PNG 图片", "*.png"), ("全部文件", "*.*")])
+    if not path:
+        return
+    try:
+        figure.savefig(path)
+        print("已保存图片: %s" % path)
+    except OSError as error:
+        print("保存图片失败: %s" % error, file=sys.stderr)
+
+
+def prepare_window_ui():
+    """创建图窗前确定后端与工具栏形态，必须在任何 figure 创建前调用。
+
+    菜单栏挂在 Tk 窗口上：TkAgg 关默认工具栏；macosx 后端挂不了菜单，
+    tkinter 可用时切到 TkAgg，否则保留默认工具栏、配置入口改绑到工具栏按钮。
+    """
+    backend = plt.get_backend().lower()
+    if backend == "tkagg":
+        plt.rcParams["toolbar"] = "none"      # 图窗操作走自定义 Tk 菜单栏
+        return
+    if backend == "macosx":
+        try:
+            import tkinter                    # noqa: F401
+        except ImportError:
+            print("提示：未检测到 tkinter，保留 macosx 默认工具栏（无自定义菜单）")
+            return
+        try:
+            plt.switch_backend("TkAgg")
+        except ImportError as error:
+            print("提示：TkAgg 加载失败(%s)，保留 macosx 默认工具栏" % error,
+                  file=sys.stderr)
+            return
+        plt.rcParams["toolbar"] = "none"
+
+
+def install_custom_menu(figure, quote_handler):
+    """装上自定义窗口操作入口：「文件 → 保存图片」「配置 → 行情参数」。
+
+    TkAgg 在窗口顶部装 Tk 菜单栏、底部装状态行；macosx 后端没有窗口菜单接口，
+    把工具栏「Configure subplots」按钮的回调换成「行情参数」，保存按钮保留原生行为。
+    """
+    backend = plt.get_backend().lower()
+    if backend == "tkagg":
+        _install_tk_menu(figure, quote_handler)
+        _install_status_bar(figure)
+    elif backend == "macosx":
+        _rebind_macosx_toolbar(figure, quote_handler)
+
+
+def _install_status_bar(figure):
+    """图窗底部安装一条状态行显示错误信息（同一窗口只装一次）。"""
+    manager = getattr(figure.canvas, "manager", None)
+    window = getattr(manager, "window", None)
+    if window is None or getattr(figure, "_matkline_status", None) is not None:
+        return
+    import tkinter as tk
+    bar = tk.Label(window, text="", anchor="w", fg="#c23b3b", padx=6)
+    # before=canvas 先占底部条带，否则先 pack 的画布会把状态行挤成 0 高
+    bar.pack(side=tk.BOTTOM, fill=tk.X,
+             before=figure.canvas.get_tk_widget())
+    figure._matkline_status = bar
+
+
+def set_status_text(figure, text, error=True):
+    """把错误/提示写入窗口底部状态行；空串清除，非 Tk 后端静默跳过。"""
+    bar = getattr(figure, "_matkline_status", None)
+    if bar is None:
+        return
+    bar.config(text=text, fg="#c23b3b" if error else "#555555")
+
+
+def _install_tk_menu(figure, quote_handler):
+    """在 TkAgg 图窗顶部装菜单栏；无 manager 的后端静默跳过。"""
+    manager = getattr(figure.canvas, "manager", None)
+    window = getattr(manager, "window", None)
+    if window is None:
+        return
+    import tkinter as tk
+    menu = tk.Menu(window)
+    file_menu = tk.Menu(menu, tearoff=False)
+    file_menu.add_command(label="保存图片…", command=lambda: save_figure_as(figure))
+    quote_menu = tk.Menu(menu, tearoff=False)
+    quote_menu.add_command(label="行情参数…", command=quote_handler)
+    menu.add_cascade(label="文件", menu=file_menu)
+    menu.add_cascade(label="配置", menu=quote_menu)
+    try:
+        window.config(menu=menu)
+    except tk.TclError as error:
+        print("菜单栏安装失败: %s" % error, file=sys.stderr)
+
+
+def _rebind_macosx_toolbar(figure, quote_handler):
+    """macosx 工具栏按钮由 C 扩展按方法名回调 Python，改写实例属性即可换绑。"""
+    toolbar = getattr(figure.canvas.manager, "toolbar", None)
+    if toolbar is None:
+        return
+    try:
+        toolbar.prepare_configure_subplots = quote_handler
+        print("工具栏: 「Configure subplots」已改为「行情参数」")
+    except Exception as error:
+        print("工具栏按钮改配失败: %s" % error, file=sys.stderr)
+
+
+def open_quote_dialog(config, on_apply, figure=None):
+    """弹出「行情参数」对话框：数据源/标的/周期/根数，确认后写回 config 并触发 on_apply。
+
+    数据源与周期为下拉选择，周期列表随数据源联动，只列该源支持的周期
+    （auto 取其候选源的并集）。parent 取图窗窗口，不指定时落到 Tk 默认 root。
+    """
+    import tkinter as tk
+    from tkinter import messagebox, ttk
+
+    print("打开「行情参数」对话框")
+    parent = None
+    if figure is not None:
+        manager = getattr(figure.canvas, "manager", None)
+        parent = getattr(manager, "window", None)
+    window = tk.Toplevel(parent)
+    window.title("行情参数")
+
+    source_values = ["auto"] + list(SOURCES)
+
+    def interval_values(source):
+        names = AUTO_ORDER if source == "auto" else [source]
+        return [iv for iv in INTERVAL_ORDER
+                if any(iv in SUPPORTED_INTERVALS.get(name, []) for name in names)]
+
+    tk.Label(window, text="数据源").grid(row=0, column=0, sticky="e", padx=4, pady=2)
+    source_box = ttk.Combobox(window, width=24, state="readonly", values=source_values)
+    source_box.set(str(config.get("source") or "auto"))
+    source_box.grid(row=0, column=1, padx=4, pady=2)
+    tk.Label(window, text="auto=按标的自动选源", fg="#888888").grid(
+        row=0, column=2, sticky="w", padx=4)
+
+    tk.Label(window, text="标的").grid(row=1, column=0, sticky="e", padx=4, pady=2)
+    symbol_entry = tk.Entry(window, width=26)
+    symbol_entry.insert(0, str(config.get("symbol", "") or ""))
+    symbol_entry.grid(row=1, column=1, padx=4, pady=2)
+    tk.Label(window, text="代码或中文名，留空用数据源默认", fg="#888888").grid(
+        row=1, column=2, sticky="w", padx=4)
+
+    tk.Label(window, text="周期").grid(row=2, column=0, sticky="e", padx=4, pady=2)
+    interval_box = ttk.Combobox(window, width=24, state="readonly")
+    interval_box.set(normalize_interval(config.get("interval") or "1d"))
+
+    def sync_intervals(_event=None):
+        values = interval_values(source_box.get())
+        if not values:                    # 未知数据源兜底，保住当前周期可提交
+            values = [normalize_interval(config.get("interval") or "1d")]
+        interval_box["values"] = values
+        if interval_box.get() not in values:
+            interval_box.set(values[0])
+
+    sync_intervals()
+    source_box.bind("<<ComboboxSelected>>", sync_intervals)
+    interval_box.grid(row=2, column=1, padx=4, pady=2)
+    tk.Label(window, text="数据周期", fg="#888888").grid(
+        row=2, column=2, sticky="w", padx=4)
+
+    tk.Label(window, text="根数").grid(row=3, column=0, sticky="e", padx=4, pady=2)
+    limit_entry = tk.Entry(window, width=26)
+    limit_entry.insert(0, str(config.get("limit", 0) or 0))
+    limit_entry.grid(row=3, column=1, padx=4, pady=2)
+    tk.Label(window, text="0 表示不限", fg="#888888").grid(
+        row=3, column=2, sticky="w", padx=4)
+
+    def confirm(event=None):
+        try:
+            source = source_box.get().strip() or "auto"
+            interval = normalize_interval(interval_box.get().strip())
+            if source != "auto" and interval not in SUPPORTED_INTERVALS.get(source, []):
+                raise ValueError("%s 不支持周期 %s" % (source, interval))
+            limit = int(limit_entry.get().strip() or 0)
+            if limit < 0:
+                raise ValueError("根数不能为负数")
+        except ValueError as error:
+            messagebox.showerror("行情参数", str(error), parent=window)
+            return
+        config.update(source=source, symbol=symbol_entry.get().strip(),
+                      interval=interval, limit=limit)
+        window.destroy()
+        on_apply()
+
+    window.bind("<Return>", confirm)
+    window.bind("<Escape>", lambda _event: window.destroy())
+    tk.Button(window, text="确定", command=confirm).grid(row=4, column=1, pady=6)
+    tk.Button(window, text="取消", command=window.destroy).grid(row=4, column=2, pady=6)
+    # macOS 上 Toplevel 默认会被主窗口压住：挂到父窗口下并置顶抢焦点
+    if parent is not None:
+        window.transient(parent)
+    window.lift()
+    window.focus_force()
+    try:
+        window.grab_set()                 # 模态：对话框期间主图窗不接受点击
+    except tk.TclError:                   # 窗口尚未映射时 grab 会失败，忽略
+        pass
+    return window
+
+
+def stream_api(loader, refresh=5.0, chart="candle", csv_path=None, params=None,
+               config=None):
     """轮询数据源并刷新图表，直到窗口关闭。loader() 返回 (标题, points)。
 
-    指定 csv_path 时每帧把最新K线覆盖写入该文件（导出失败只提示，不影响刷新）。
+    取数在后台线程：主线程只渲染和派发GUI事件，网络慢不冻结窗口；
+    主线程/Tcl回调里做阻塞socket，新版Python的GIL记账下会直接崩溃。
+    csv_path 指定时每帧覆盖写CSV（导出失败只提示，不影响刷新）；
+    config 给定时菜单「配置 → 行情参数」可改参数，下一次轮询生效。
     """
     if chart == "candle":
         render = partial(plot_candles, bars=None, params=params)
@@ -1761,23 +2037,71 @@ def stream_api(loader, refresh=5.0, chart="candle", csv_path=None, params=None):
     figure = plt.figure(figsize=(12, 6))
     if chart == "candle":
         print("提示：" + PANEL_HINT)
-    while plt.fignum_exists(figure.number):
-        try:
-            title, points = loader()
-            render(points, title)
-            set_window_title(figure, title)
-            tail = ""
-            if csv_path:
-                try:
-                    export_csv(points, csv_path)
-                    tail = "  csv=%s" % csv_path
-                except OSError as error:
-                    tail = "  导出CSV失败: %s" % error
-            print("%s  %s bars, last=%s%s"
-                  % (_now_text(), len(points[0]), points[3][-1], tail))
-        except (OSError, ValueError, json.JSONDecodeError, KeyError) as error:
-            print("%s  刷新失败: %s" % (_now_text(), error), file=sys.stderr)
-        _refresh_wait(figure, refresh)
+    if config is not None:
+        def quote_applied():
+            print("%s  配置已更新: source=%s symbol=%s interval=%s limit=%s"
+                  % (_now_text(), config["source"], config["symbol"],
+                     config["interval"], config["limit"]))
+        install_custom_menu(figure,
+                            lambda: open_quote_dialog(config, quote_applied, figure))
+    stop = threading.Event()
+    box = {}                                    # 后台线程写入，主线程读取
+    lock = threading.Lock()
+
+    def fetch_loop():
+        while not stop.is_set():
+            try:
+                title, points = loader()
+            except (OSError, ValueError, json.JSONDecodeError, KeyError) as error:
+                with lock:
+                    box["error"] = "%s  刷新失败: %s" % (_now_text(), error)
+            else:
+                with lock:
+                    box["data"] = (title, points)
+            stop.wait(max(refresh, 0.5))
+
+    threading.Thread(target=fetch_loop, daemon=True).start()
+    last_sig = None
+    try:
+        while plt.fignum_exists(figure.number):
+            with lock:
+                data = box.pop("data", None)
+                error = box.pop("error", None)
+            if error:
+                print(error, file=sys.stderr)
+                set_status_text(figure, error)
+            elif data:
+                title, points = data
+                sig = ((title, len(points[0]), points[0][-1], points[3][-1])
+                       if points[0] else None)
+                if sig != last_sig:
+                    last_sig = sig
+                    if points[0]:
+                        render(points, title)
+                        set_window_title(figure, title)
+                        figure._matkline_dirty = True
+                        set_status_text(figure, "", error=False)
+                        tail = ""
+                        if csv_path:
+                            try:
+                                export_csv(points, csv_path)
+                                tail = "  csv=%s" % csv_path
+                            except OSError as err:
+                                tail = "  导出CSV失败: %s" % err
+                                set_status_text(figure, "导出CSV失败: %s" % err)
+                        print("%s  %s bars, last=%s%s"
+                              % (_now_text(), len(points[0]), points[3][-1], tail))
+                    else:
+                        msg = "%s  空数据" % _now_text()
+                        print(msg, file=sys.stderr)
+                        set_status_text(figure, msg)
+            # 渲染过数据按 refresh 节奏等；还没数据时小步轮询，首图一到就画
+            _refresh_wait(figure, refresh if data else 0.1)
+    except KeyboardInterrupt:
+        print("Ctrl+C，安全退出")
+    finally:
+        stop.set()
+        plt.close(figure.number)
 
 
 # ---------------------------------------------------------------------------
@@ -1798,15 +2122,19 @@ EXAMPLES = """\
   python3 matkline.py --source crude --interval 1d --limit 250   # WTI原油日线
   python3 matkline.py --live --source brent --interval 1h        # 布伦特原油实时
   python3 matkline.py --source usd --interval 30m --limit 200    # 美元指数30分钟
+  python3 matkline.py --source usd --interval 1d --limit 250     # 美元指数日线(汇率反算)
   python3 matkline.py --source auto --symbol 美元指数 --interval 1h  # 中文标的自动选源
   python3 matkline.py --start 2007-01-01 --end 2007-12-31       # 本地示例数据
   python3 matkline.py --history --symbol 600519 --csv 600519.csv  # 导出CSV(utf-8-sig)
   python3 matkline.py --live --source xau --macd 6,13,5 --rsi 6 --kdj 9,3,3  # 自定义指标参数
 数据源: tencent(A股) eastmoney(东财) gold(沪金/沪银) xau/gc(国际金) crude(美原油)
         brent(布伦特) ng(天然气) usd(美元指数) binance/okx(加密货币)
-国际盘: xau/gc/crude/brent/ng 支持 1m/5m/15m/30m/1h/1d；usd(美元指数) 支持 1m~1h
-周期: 1Q/1Y 由日线本地聚合 5s 由 Binance 系 1s K线聚合(A股/期货源最小 1m，无秒级数据)，默认画成贝塞尔曲线
+国际盘: xau/gc/crude/brent/ng 支持 1m/5m/15m/30m/1h/1d；usd(美元指数) 支持 1m~1Y
+      美元指数日线及以上由欧洲央行汇率按 ICE 官方权重反算(四价同值)
+周期: 1Q/1Y 由日线本地聚合(usd 的 1w/1M 同) 5s 由 Binance 系 1s K线聚合(A股/期货源最小 1m，无秒级数据)，默认画成贝塞尔曲线
 交互: 悬停蜡烛图看该根K线详情；单击底部副图在 成交量/MACD/RSI/KDJ 之间切换
+      菜单「配置 → 行情参数」可改 数据源/标的/周期/根数（--live 时下一轮生效）
+      菜单「文件 → 保存图片」把当前图导出为 PNG
 """
 
 
@@ -1851,24 +2179,25 @@ def build_parser():
     return parser
 
 
-def api_loader(args, limit, start, end, suffix):
-    """自定义 REST 地址的数据读取器，返回 (标题, points)。"""
+def api_loader(args, config, start, end, suffix):
+    """自定义 REST 地址的数据读取器，返回 (标题, points)；参数从 config 取。"""
 
     def load():
-        points = load_api_points(args.api_url, args.symbol, args.interval,
-                                 limit, args.timeout, start, end)
-        return "%s - %s%s" % (args.symbol or "BTCUSDT", args.interval, suffix), points
+        points = load_api_points(args.api_url, config["symbol"], config["interval"],
+                                 config["limit"], args.timeout, start, end)
+        return "%s - %s%s" % (config["symbol"] or "BTCUSDT", config["interval"], suffix), points
 
     return load
 
 
-def source_loader(args, limit, start, end, suffix):
-    """内置数据源的读取器，返回 (标题, points)。"""
+def source_loader(config, timeout, start, end, suffix):
+    """内置数据源的读取器，返回 (标题, points)；参数从 config 取。"""
 
     def load():
-        name, code, points = resolve_points(args.source, args.symbol, args.interval,
-                                            limit, args.timeout, start, end)
-        interval = normalize_interval(args.interval)
+        name, code, points = resolve_points(config["source"], config["symbol"],
+                                            config["interval"], config["limit"],
+                                            timeout, start, end)
+        interval = normalize_interval(config["interval"])
         print("source=%s symbol=%s interval=%s bars=%d  %s"
               % (name, code, interval, len(points[0]), span_text(points)))
         return "%s [%s] %s%s" % (code, name, interval, suffix), points
@@ -1930,6 +2259,7 @@ def main(argv=None):
 
     setup_font()
     setup_style()
+    prepare_window_ui()
 
     try:
         start = parse_date_arg(args.start)
@@ -1952,27 +2282,21 @@ def main(argv=None):
     # （--source auto --symbol 原油 这类写法显然是想查行情，不该退回本地文件）
     online = (bool(args.api_url) or args.live or args.history
               or args.source != "auto" or bool(args.symbol))
-    # 持续刷新只由 --live 触发；--api-url 保持旧的实时语义，但指定历史区间时改为只查一次
+    # 持续刷新只由 --live 触发；--api-url 默认实时，指定历史区间时只查一次
     stream = args.live or (bool(args.api_url) and not historical)
 
-    if not online:
-        try:
-            points = shape_points(load_file_points(args.file), start, end, limit)
-        except (OSError, ValueError) as error:
-            print("查询失败: %s" % error, file=sys.stderr)
-            return 1
-        render(points, "%s%s" % (args.file, suffix))
-        print("file=%s bars=%d  %s" % (args.file, len(points[0]), span_text(points)))
-        set_window_title(plt.gcf(), args.file)
-        if args.csv:
-            write_csv(points, args.csv)
-        plt.show()
-        return 0
-
-    loader = (api_loader(args, limit, start, end, suffix) if args.api_url
-              else source_loader(args, limit, start, end, suffix))
+    config = {"source": args.source, "symbol": args.symbol or "",
+              "interval": args.interval, "limit": limit}
+    if online:
+        loader = (api_loader(args, config, start, end, suffix) if args.api_url
+                  else source_loader(config, args.timeout, start, end, suffix))
+    else:
+        def loader():
+            points = shape_points(load_file_points(args.file), start, end, config["limit"])
+            print("file=%s bars=%d  %s" % (args.file, len(points[0]), span_text(points)))
+            return "%s%s" % (args.file, suffix), points
     if stream:
-        stream_api(loader, args.refresh, chart, args.csv, params)
+        stream_api(loader, args.refresh, chart, args.csv, params, config)
         return 0
 
     try:
@@ -1985,9 +2309,40 @@ def main(argv=None):
     set_window_title(plt.gcf(), title)
     if args.csv:
         write_csv(points, args.csv)
+
+    def apply_quote():
+        """按「行情参数」里改好的参数重新取数并就地重绘（取数在后台线程，
+        重绘经 window.after 调回主线程，避免在 Tcl 回调里做阻塞 socket）。"""
+        window = plt.gcf().canvas.manager.window
+
+        def fetch():
+            try:
+                new_title, points = loader()
+            except (OSError, ValueError, json.JSONDecodeError, KeyError) as error:
+                msg = "%s  刷新失败: %s" % (_now_text(), error)
+                print(msg, file=sys.stderr)
+                set_status_text(plt.gcf(), msg)
+                return
+            window.after(0, lambda: show(points, new_title))
+
+        def show(points, new_title):
+            render(points, new_title)
+            print("bars=%d  %s" % (len(points[0]), span_text(points)))
+            set_window_title(plt.gcf(), new_title)
+            set_status_text(plt.gcf(), "", error=False)
+            plt.gcf().canvas.draw_idle()
+
+        threading.Thread(target=fetch, daemon=True).start()
+
+    install_custom_menu(plt.gcf(),
+                        lambda: open_quote_dialog(config, apply_quote, plt.gcf()))
     plt.show()
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        sys.exit(main())
+    except KeyboardInterrupt:              # plt.show() 等 GUI 阻塞期间的 Ctrl+C
+        plt.close("all")
+        sys.exit(130)

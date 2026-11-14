@@ -399,114 +399,72 @@ int SeekDbMgr::getTimeOffsetByFileName(const std::string& filename, const Select
         return ret;
     }
 
-    char sql[SQL_LEN] = { 0 };
-    int row = 0;
-    int column = 0;
-    char** ppResult = nullptr;
-    /* seek left */
-    {
-        snprintf(sql, SQL_LEN, "select %s,%s,%s from %s where %s=%u and %s<=%lld and %s<0 order by %s desc limit 1",
-            FIELD_TIMESTAMP, FIELD_OFFSET, FIELD_SIZE, TABLE_SEEK_TIME, FIELD_FILEID, fileid, FIELD_TIMESTAMP, timeValue.first, FIELD_DURATION, FIELD_TIMESTAMP);
+    struct Boundary {
+        int64_t timestamp;
+        int64_t offset;
+    };
+
+    /* Clamp to the file's first/last frame when time is out of range. */
+    auto queryNearest = [this, fileid](long long time, bool atOrBefore,
+                            Boundary& out) -> int {
+        const char* cmp = atOrBefore ? "<=" : ">=";
+        const char* order = atOrBefore ? "desc" : "asc";
+        const char* extreme = atOrBefore ? "min" : "max";
+        char sql[SQL_LEN] = { 0 };
+        snprintf(sql, SQL_LEN,
+            "select %s,%s,%s from %s where %s=%u and %s<0 and (%s%s%lld or %s=(select %s(%s) from %s where %s=%u and %s<0)) order by %s %s limit 1",
+            FIELD_TIMESTAMP, FIELD_OFFSET, FIELD_SIZE, TABLE_SEEK_TIME,
+            FIELD_FILEID, fileid, FIELD_DURATION,
+            FIELD_TIMESTAMP, cmp, time,
+            FIELD_TIMESTAMP, extreme, FIELD_TIMESTAMP, TABLE_SEEK_TIME,
+            FIELD_FILEID, fileid, FIELD_DURATION,
+            FIELD_TIMESTAMP, order);
         string sqlStatement = sql;
         printf("SQLITE:[ %s ]\n", sqlStatement.c_str());
-        ret = queryTable(sqlStatement, &ppResult, row, column);
-        if (ret != 0) {
-            LOG_ERR("error queryTable[%s] fileid=%d in dataBase failed!", filename.c_str(), fileid);
-            return ret;
-        }
 
-        if (row <= 0) {
-            LOG_WRN("queryTable(sql=%s) error: row[%d] is not greater than 0!",
-                sqlStatement.c_str(), row);
+        char** ppResult = nullptr;
+        int row = 0;
+        int column = 0;
+        int rc = queryTable(sqlStatement, &ppResult, row, column);
+        if (rc != 0 || row < 1 || column < 2) {
+            LOG_WRN("queryTable(sql=%s) got row[%d] column[%d] ret=%d!",
+                sqlStatement.c_str(), row, column, rc);
             freeTable(ppResult);
             return -1;
         }
-        if (row == 1) {
-            firstframe.ftime.first = atoll(ppResult[0]);
-            firstframe.offset.head = atoll(ppResult[1]);
-        }
+        out.timestamp = atoll(ppResult[0]);
+        out.offset = atoll(ppResult[1]);
         freeTable(ppResult);
+        return 0;
+    };
 
-        memset(sql, 0, SQL_LEN);
-        snprintf(sql, SQL_LEN, "select %s,%s,%s from %s where %s=%u and %s>=%lld and %s<0  order by %s asc limit 1",
-            FIELD_TIMESTAMP, FIELD_OFFSET, FIELD_SIZE, TABLE_SEEK_TIME, FIELD_FILEID, fileid, FIELD_TIMESTAMP, timeValue.first, FIELD_DURATION, FIELD_TIMESTAMP);
-        string sqlStatement1 = sql;
-        printf("SQLITE:[ %s ]\n", sqlStatement1.c_str());
-        ret = queryTable(sqlStatement1, &ppResult, row, column);
-        if (ret != 0) {
-            LOG_ERR("queryTable(sql=%s) error: %d!", sqlStatement1.c_str(), ret);
-            return ret;
-        }
-
-        if (row <= 0) {
-            LOG_WRN("queryTable(sql=%s) error: row[%d] is not greater than 0!",
-                sqlStatement1.c_str(), row);
-            freeTable(ppResult);
-            return -2;
-        }
-        if (row == 1) {
-            firstframe.ftime.last = atoll(ppResult[0]);
-            firstframe.offset.tail = atoll(ppResult[1]);
-        }
-        firstframe.id = fileid;
-        freeTable(ppResult);
+    const long long first = static_cast<long long>(timeValue.first);
+    const long long last = static_cast<long long>(timeValue.last);
+    Boundary leftHead{}, leftTail{}, rightHead{}, rightTail{};
+    if (queryNearest(first, true, leftHead) != 0) {
+        return -1;
+    }
+    if (queryNearest(first, false, leftTail) != 0) {
+        return -2;
+    }
+    if (queryNearest(last, true, rightHead) != 0) {
+        return -3;
+    }
+    if (queryNearest(last, false, rightTail) != 0) {
+        return -4;
     }
 
-    /* seek right */
-    {
-        snprintf(sql, SQL_LEN, "select %s,%s,%s from %s where %s=%u and %s<=%lld and %s<0 order by %s desc limit 1",
-            FIELD_TIMESTAMP, FIELD_OFFSET, FIELD_SIZE, TABLE_SEEK_TIME, FIELD_FILEID, fileid, FIELD_TIMESTAMP, timeValue.last, FIELD_DURATION, FIELD_TIMESTAMP);
-        string sqlStatement3 = sql;
+    firstframe.ftime.first = leftHead.timestamp;
+    firstframe.offset.head = leftHead.offset;
+    firstframe.ftime.last = leftTail.timestamp;
+    firstframe.offset.tail = leftTail.offset;
+    firstframe.id = fileid;
 
-        row = 0;
-        column = 0;
-        printf("SQLITE:[ %s ]\n", sqlStatement3.c_str());
-        ret = queryTable(sqlStatement3, &ppResult, row, column);
-        if (ret != 0) {
-            LOG_ERR("queryTable(sql=%s) error: %d!", sqlStatement3.c_str(), ret);
-            return ret;
-        }
-
-        if (row <= 0) {
-            LOG_WRN("queryTable(sql=%s) error: row[%d] is not greater than 0!",
-                sqlStatement3.c_str(), row);
-            freeTable(ppResult);
-            return -3;
-        }
-        if (row == 1) {
-            lastframe.ftime.first = atoll(ppResult[0]);
-            lastframe.offset.head = atoll(ppResult[1]);
-        }
-        freeTable(ppResult);
-
-        memset(sql, 0, SQL_LEN);
-        snprintf(sql, SQL_LEN, "select %s,%s,%s from %s where %s=%u and %s>=%lld and %s<0 order by %s asc limit 1",
-            FIELD_TIMESTAMP, FIELD_OFFSET, FIELD_SIZE, TABLE_SEEK_TIME, FIELD_FILEID, fileid, FIELD_TIMESTAMP, timeValue.last, FIELD_DURATION, FIELD_TIMESTAMP);
-        string sqlStatement4 = sql;
-
-        row = 0;
-        column = 0;
-        printf("SQLITE:[ %s ]\n", sqlStatement4.c_str());
-        ret = queryTable(sqlStatement4, &ppResult, row, column);
-        if (ret != 0) {
-            LOG_ERR("queryTable(sql=%s) error: %d!", sqlStatement4.c_str(), ret);
-            return ret;
-        }
-
-        if (row <= 0) {
-            LOG_WRN("queryTable(sql=%s) error: row[%d] is not greater than 0!",
-                sqlStatement4.c_str(), row);
-            freeTable(ppResult);
-            return -4;
-        }
-        if (row == 1) {
-            lastframe.ftime.last = atoll(ppResult[0]);
-            lastframe.offset.tail = atoll(ppResult[1]);
-        }
-
-        lastframe.id = fileid;
-        freeTable(ppResult);
-    }
+    lastframe.ftime.first = rightHead.timestamp;
+    lastframe.offset.head = rightHead.offset;
+    lastframe.ftime.last = rightTail.timestamp;
+    lastframe.offset.tail = rightTail.offset;
+    lastframe.id = fileid;
 
     return 0;
 }
