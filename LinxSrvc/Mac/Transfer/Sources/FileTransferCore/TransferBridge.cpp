@@ -50,12 +50,12 @@ void ft_destroy(FT_Handle handle) {
 // --------------------------------------------------------------------------
 int ft_start_server(FT_Handle handle, uint16_t port) {
     if (!handle) return -1;
-    return static_cast<TransferEngine*>(handle)->startServer(port);
+    return static_cast<TransferEngine*>(handle)->startFtfServer(port);
 }
 
 void ft_stop_server(FT_Handle handle) {
     if (!handle) return;
-    static_cast<TransferEngine*>(handle)->closeServer();
+    static_cast<TransferEngine*>(handle)->closeFtfServer();
 }
 
 // --------------------------------------------------------------------------
@@ -170,4 +170,53 @@ int ft_get_clients(FT_Handle handle, FT_ClientInfo* out, int capacity) {
         dst.total = list[i].totalBytes;
     }
     return n;
+}
+
+// --------------------------------------------------------------------------
+//  LAN discovery
+// --------------------------------------------------------------------------
+void ft_set_discovery_enabled(FT_Handle handle, bool enabled)
+{
+    if (!handle) return;
+    static_cast<TransferEngine*>(handle)->setDiscoveryEnabled(enabled);
+}
+
+bool ft_is_discovery_enabled(FT_Handle handle)
+{
+    if (!handle) return false;
+    return static_cast<TransferEngine*>(handle)->isDiscoveryEnabled();
+}
+
+void ft_set_interface(FT_Handle handle, const char* ifname)
+{
+    if (!handle) return;
+    static_cast<TransferEngine*>(handle)->setBindInterface(ifname ? ifname : "");
+}
+
+bool ft_is_broadcasting(FT_Handle handle)
+{
+    if (!handle) return false;
+    return static_cast<TransferEngine*>(handle)->isBroadcasting();
+}
+
+bool ft_start_discovery(FT_Handle handle, FT_DiscoveryCallback callback, void* userData)
+{
+    if (!handle) return false;
+    auto* e = static_cast<TransferEngine*>(handle);
+    std::shared_ptr<std::atomic<bool>> token;
+    if (callback) {
+        // Capture the C fn pointer + userData so the core can invoke it from any thread.
+        token = e->startDiscovery([callback, userData](const std::string& ip, unsigned short port) {
+            callback(userData, ip.c_str(), port);
+            });
+    } else {
+        token = e->startDiscovery(nullptr);
+    }
+    return token != nullptr;
+}
+
+void ft_stop_discovery(FT_Handle handle)
+{
+    if (!handle) return;
+    static_cast<TransferEngine*>(handle)->conceal(nullptr);
 }

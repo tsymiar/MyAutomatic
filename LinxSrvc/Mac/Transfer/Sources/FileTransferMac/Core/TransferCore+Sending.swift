@@ -26,7 +26,7 @@ extension TransferCore {
 
     private func performSend(_ filePath: String) {
         guard isConnected, let engine = handle else {
-            transferStatus = "Not connected"
+            status.client = "Not connected"
             return
         }
 
@@ -51,7 +51,7 @@ extension TransferCore {
 
         isBusy = true
         inflightCalls += 1
-        transferStatus = "Preparing..."
+        status.client = "Preparing..."
         transferFileName = fileName
         transferredBytes = 0; totalBytes = fileSize; progress = 0
         appendLog("Sending: \(fileName) (\(formatBytes(fileSize)))")
@@ -75,19 +75,19 @@ extension TransferCore {
         let idx = transferTasks.firstIndex { $0.id == taskID }
         switch ret {
         case 0:
-            transferStatus = "Send complete"; progress = 1.0
-            appendLog("Send complete: \(fileName)")
+            status.client = "Send complete"; progress = 1.0
+            appendLog("\(status.client): \(fileName)")
             if let idx { transferTasks[idx].status = .completed }
         case -2:
             // CANCELLED callback already set .cancelled - do not overwrite with .failed.
-            transferStatus = "Send cancelled"
-            appendLog("Send cancelled: \(fileName)")
+            status.client = "Send cancelled"
+            appendLog("\(status.client): \(fileName)")
             pendingPartialNames.append(fileName)
             // Cancelling stops the whole queue; remaining files are not sent.
             sendQueue.removeAll()
         default:
-            transferStatus = "Send failed (code \(ret))"
-            appendLog("Send failed: \(fileName) (code \(ret))")
+            status.client = "Send failed (code \(ret))"
+            appendLog("\(status.client): \(fileName)")
             if let idx { transferTasks[idx].status = .failed }
         }
         if let idx {
@@ -118,12 +118,12 @@ extension TransferCore {
         guard !name.isEmpty else { return }
         guard !isBusy else { return }
         guard isConnected, let engine = handle else {
-            transferStatus = "Not connected"
+            status.client = "Not connected"
             return
         }
         guard let port = UInt16(targetPort), port > 0 else {
-            transferStatus = "Invalid port number: \(targetPort)"
-            appendLog("ERROR: Invalid port: \(targetPort)")
+            status.client = "Invalid port number: \(targetPort)"
+            appendLog("ERROR: \(status.client)")
             return
         }
         let host = targetIP
@@ -131,7 +131,7 @@ extension TransferCore {
 
         isBusy = true
         inflightCalls += 1
-        transferStatus = "Requesting \(name)…"
+        status.client = "Requesting \(name)…"
         transferredBytes = 0; totalBytes = 0; progress = 0
         appendLog("Pulling from \(host): \(name)")
 
@@ -142,18 +142,18 @@ extension TransferCore {
                 self.endEngineCall()
                 self.isBusy = false
                 if ret == 0 {
-                    self.transferStatus = "Pull complete"
-                    self.appendLog("Pull complete: \(name)")
+                    self.status.client = "Pull complete"
+                    self.appendLog("\(self.status.client): \(name)")
                     // Status + on-disk path handled by the FT_EVT_TRANSFER_COMPLETE callback
                 } else if ret == -8 {
                     // Cancelled (local/peer): the CANCELLED callback already set .cancelled.
-                    self.transferStatus = "Pull cancelled"
-                    self.appendLog("Pull cancelled: \(name)")
+                    self.status.client = "Pull cancelled"
+                    self.appendLog("\(self.status.client): \(name)")
                 } else {
-                    self.transferStatus = ret == -5
+                    self.status.client = ret == -5
                         ? "File not found on peer: \(name)"
                         : "Pull failed (code \(ret))"
-                    self.appendLog("ERROR: Pull failed: \(name) (code \(ret))")
+                    self.appendLog("ERROR: \(self.status.client)")
                     if let idx = self.transferTasks.lastIndex(where: {
                         $0.fileName == name && $0.direction == .receiving
                             && $0.status != .completed
@@ -197,8 +197,8 @@ extension TransferCore {
                 guard let self else { return }
                 self.endEngineCall()
                 if failed.isEmpty {
-                    self.transferStatus = "Partial deleted"
-                    self.appendLog("Partial deleted: \(names.joined(separator: ", "))")
+                    self.status.client = "Partial deleted"
+                    self.appendLog("\(self.status.client): \(names.joined(separator: ", "))")
                     self.scheduleAutoDisconnect(after: 2.0)
                 } else {
                     self.pendingPartialNames = failed

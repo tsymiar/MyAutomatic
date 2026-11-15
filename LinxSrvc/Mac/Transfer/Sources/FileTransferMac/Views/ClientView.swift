@@ -84,7 +84,7 @@ struct ClientView: View {
             Image(systemName: core.isConnected ? "checkmark.circle.fill" : "xmark.circle")
                 .font(.title3)
                 .foregroundColor(core.isConnected ? .green : .secondary)
-            Text(shortTransferStatus(core.transferStatus))
+            Text(shortTransferStatus(core.status.client))
                 .font(.caption)
                 .foregroundColor(.secondary)
             Spacer()
@@ -110,7 +110,7 @@ struct ClientView: View {
             // so server-side receives must not inflate this view.
             if core.isBusy || !core.pendingPartialNames.isEmpty {
                 HStack {
-                    TransferProgressBar(status: core.transferStatus, progress: core.progress,
+                    TransferProgressBar(status: core.status.client, progress: core.progress,
                                         transferred: core.transferredBytes, total: core.totalBytes,
                                         compact: true, fileName: core.transferFileName)
                     if core.isBusy {
@@ -210,22 +210,79 @@ struct ClientView: View {
     }
 
     private var idleContent: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "arrow.up.doc")
-                .font(.system(size: 48))
-                .foregroundColor(.secondary)
-            Text("Connect to a device, then drop files here.")
-                .foregroundColor(.secondary)
+        VStack(alignment: .leading, spacing: 12) {
+            // Multicast listening toggle. The client's status row intentionally shows
+            // only connection state (not the server's broadcast status); here the panel
+            // owns its own "listening" control distinct from the server side.
+            HStack {
+                Image(systemName: core.discoverPeers
+                      ? "dot.radiowaves.left.and.right"
+                      : "dot.radiowaves.left.and.right.slash")
+                    .foregroundColor(core.discoverPeers ? .green : .secondary)
+                Text(core.discoverPeers ? "Listening for devices" : "Not listening")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Spacer()
+                Button {
+                    core.discoverPeers.toggle()
+                } label: {
+                    Label(core.discoverPeers ? "Stop listening" : "Start listening",
+                          systemImage: core.discoverPeers ? "stop.circle" : "play.circle")
+                }
+                .controlSize(.small)
+            }
+            .padding(.horizontal)
+
+            if core.discoverPeers {
+                if core.discoveredServers.isEmpty {
+                    Text("Listening on the LAN — no devices found yet…")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .padding(.horizontal)
+                } else {
+                    VStack(alignment: .leading, spacing: 6) {
+                        ForEach(core.discoveredServers) { server in
+                            // Tap the row to connect directly to that peer.
+                            Button {
+                                core.connect(to: server.ip, port: server.port)
+                            } label: {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "network")
+                                        .foregroundColor(.green)
+                                    Text("\(server.ip):\(server.port)")
+                                        .font(.system(.body, design: .monospaced))
+                                    Spacer()
+                                    Label("Connect", systemImage: "link")
+                                        .font(.caption)
+                                }
+                                .foregroundColor(.primary)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.horizontal)
+                }
+                Divider()
+            }
+
+            VStack(alignment: .center, spacing: 20) {
+                Image(systemName: "arrow.up.doc")
+                    .font(.system(size: 48))
+                    .foregroundColor(.secondary)
+                Text("Connect to a device, then drop files here.")
+                    .foregroundColor(.secondary)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(maxHeight: .infinity)
         }
-        .frame(maxHeight: .infinity)
     }
 
     // MARK: - Actions
 
     private func connect() {
         guard let port = UInt16(core.targetPort), port > 0 else {
-            core.transferStatus = "Invalid port number: \(core.targetPort)"
-            core.appendLog("ERROR: Invalid port: \(core.targetPort)")
+            core.status.client = "Invalid port number: \(core.targetPort)"
+            core.appendLog("ERROR: \(core.status.client)")
             return
         }
         core.connect(to: core.targetIP, port: port)

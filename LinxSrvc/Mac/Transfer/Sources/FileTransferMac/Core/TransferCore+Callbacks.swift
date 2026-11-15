@@ -55,7 +55,7 @@ extension TransferCore {
             return
         }
 
-        updateProgressState(current: current, total: total, status: status)
+        updateProgressState(current: current, total: total, text: status)
         updateActiveTask(evt: evt, current: current)
         if evt == evtReceiveStart { beginReceiveTask(total: total, status: status) }
         if evt == evtComplete || evt == evtCancelled { finishTerminalTask(evt: evt, status: status) }
@@ -67,10 +67,15 @@ extension TransferCore {
     }
 
     /// Write @Published only on change so each callback doesn't recompute the whole view tree.
-    private func updateProgressState(current: UInt64, total: UInt64, status: String) {
+    private func updateProgressState(current: UInt64, total: UInt64, text: String) {
         if transferredBytes != current { transferredBytes = current }
         if totalBytes != total { totalBytes = total }
-        if transferStatus != status { transferStatus = status }
+        // Server-side progress carries an [ip:port] prefix; client-side does not. Route on that.
+        if text.hasPrefix("[") {
+            if status.server != text { status.server = text }
+        } else {
+            if status.client != text { status.client = text }
+        }
         let newProgress = total > 0 ? Double(current) / Double(total) : 0
         if progress != newProgress { progress = newProgress }
     }

@@ -12,11 +12,12 @@ extension TransferCore {
     // MARK: - Engine lifecycle
 
     /// Create engine, set save path & callback. Returns the handle on success, nil on failure.
-    private func makeEngine() -> FT_Handle? {
+    func makeEngine() -> FT_Handle? {
         let engine = ft_create()
         guard let engine else {
-            transferStatus = "Failed to create instance"
-            appendLog("ERROR: Failed to create TransferEngine instance")
+            status.client = "Failed to create instance"
+            status.server = status.client
+            appendLog("ERROR: \(status.server)")
             return nil
         }
         ft_set_save_path(engine, savePath)
@@ -52,8 +53,8 @@ extension TransferCore {
     /// Destroy the engine only when neither role needs it. One engine instance
     /// can listen and connect at the same time, so stopping one side must keep
     /// the engine alive while the other side is still active.
-    private func destroyEngineIfIdle() {
-        guard !isServerRunning, !isConnected else { return }
+    func destroyEngineIfIdle() {
+        guard !isServerRunning, !isConnected, !peerDiscoveryActive else { return }
         destroyEngine()
     }
 
@@ -69,7 +70,7 @@ extension TransferCore {
 
     // MARK: - Server mode
 
-    func startServer(port: UInt16 = 8800) {
+    func startFtfServer(port: UInt16 = 8800) {
         guard !isServerRunning else { return }
         // Reuse the engine a connected client is already using; create one only when absent.
         let engine: FT_Handle
@@ -86,11 +87,12 @@ extension TransferCore {
             devices = []
             resetProgressIfIdle()
             isServerRunning = true
-            transferStatus = "Listening on port \(port)"
-            appendLog("Server started on port \(port)")
+            activeServerPort = port
+            status.server = "Server running on port \(port)"
+            appendLog(status.server)
         } else {
-            transferStatus = "Server start failed (code \(ret))"
-            appendLog("ERROR: Server start failed (code \(ret))")
+            status.server = "Server start failed (code \(ret))"
+            appendLog("ERROR: \(status.server)")
             destroyEngineIfIdle()
         }
     }
@@ -99,10 +101,11 @@ extension TransferCore {
         guard isServerRunning else { return }
         ft_stop_server(handle)
         isServerRunning = false
+        activeServerPort = 0
         devices = []
         resetProgressIfIdle()
-        transferStatus = "Server stopped"
-        appendLog(transferStatus)
+        status.server = "Server stopped"
+        appendLog(status.server)
         destroyEngineIfIdle()
     }
 
@@ -160,8 +163,8 @@ extension TransferCore {
             handle = created
         }
         isConnecting = true
-        transferStatus = "Connecting to \(host):\(port)…"
-        appendLog("Connecting to \(host):\(port)")
+        status.client = "Connecting to \(host):\(port)…"
+        appendLog(status.client)
 
         // ft_connect has a 3s connect timeout; keep it off the main thread.
         inflightCalls += 1
@@ -174,11 +177,11 @@ extension TransferCore {
                 if ret == 0 {
                     self.isConnected = true
                     self.resetProgress()
-                    self.transferStatus = "Connected to \(host):\(port)"
-                    self.appendLog("Connected to \(host):\(port)")
+                    self.status.client = "Connected to \(host):\(port)"
+                    self.appendLog(self.status.client)
                 } else {
-                    self.transferStatus = "Connection failed (code \(ret))"
-                    self.appendLog("ERROR: Connection to \(host):\(port) failed (code \(ret))")
+                    self.status.client = "Connection to \(host):\(port) failed (code \(ret))"
+                    self.appendLog("ERROR: \(self.status.client)")
                     // A running server keeps the shared engine; only an idle engine is destroyed.
                     self.destroyEngineIfIdle()
                 }
@@ -190,8 +193,8 @@ extension TransferCore {
         guard isConnected || isConnecting else { return }
         ft_disconnect(handle)
         isConnected = false
-        transferStatus = "Disconnected"
-        appendLog("Disconnected from server")
+        status.client = "Disconnected from server"
+        appendLog(status.client)
         resetProgress()
         destroyEngineIfIdle()
     }

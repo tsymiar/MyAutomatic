@@ -141,6 +141,13 @@ public:
     // 256KB：局域网下 64KB 分片会被逐片 RTT/ACK 限住吞吐；chunkSize 为 32 位，上限充足
     static constexpr uint32_t MAX_CHUNK_SIZE = 256 * 1024;
     static constexpr uint16_t DEFAULT_PORT = 8800;
+
+    // LAN discovery: the running server periodically broadcasts a beacon so peers
+    // can find it without manual IP entry. The TCP file-transfer port is announced;
+    // DISCOVERY_PORT is a fixed, separate UDP port used only for the beacon.
+    static constexpr uint16_t DISCOVERY_PORT = 8801;
+    static constexpr int DISCOVERY_INTERVAL_MS = 3000;
+    static constexpr const char* DISCOVERY_MAGIC = "FTF-DISCOVER";
     static constexpr int CONNECT_TIMEOUT_MS = 3000;    // 客户端 connect 超时
     static constexpr int RECV_POLL_TIMEOUT_MS = 5000;  // 服务端 poll 超时（避免 Nagle/RTT 导致文件名读取超时）
     static constexpr int RECV_RESP_TIMEOUT_MS = 5000;  // 客户端等待响应超时
@@ -150,8 +157,26 @@ public:
     TransferEngine();
     ~TransferEngine();
 
-    int startServer(unsigned short port = DEFAULT_PORT);
-    void closeServer();
+    int startFtfServer(unsigned short port = DEFAULT_PORT);
+    void closeFtfServer(const char* who = NULL);
+
+    // LAN discovery (beacon broadcast + peer listener).
+    // startBroadcast() is driven automatically by startFtfServer(); exposed so the UI can toggle it.
+    int startBroadcast();
+    void stopBroadcast();
+    bool isBroadcasting() const { return m_broadcastRunning.load(); }
+    void setDiscoveryEnabled(bool enabled);
+    bool isDiscoveryEnabled() const { return m_discoveryEnabled.load(); }
+    // Pin the beacon broadcast / discovery listener to a named interface
+    // (e.g. "en0", "eth0", "wlan0"). Empty = auto. Set before starting.
+    void setBindInterface(const std::string& ifname);
+    // Resolve the primary LAN IPv4 address (en0 / Ethernet / WiFi); "" on failure.
+    static std::string resolveLocalIP();
+    // Listen for peer beacons. onDiscovery is invoked (arbitrary thread) with the
+    // peer's LAN IP and TCP port. Returns a token; pass to conceal() to end.
+    std::shared_ptr<std::atomic<bool>> startDiscovery(
+        std::function<void(const std::string& ip, unsigned short port)> onDiscovery);
+    void conceal(std::shared_ptr<std::atomic<bool>> token);
 
     int connectToServer(const std::string& ip, unsigned short port);
     void disconnect();
@@ -200,6 +225,16 @@ private:
     int sendHeader(int sock, const FileHeader& header);
     int recvHeader(int sock, FileHeader& header);
 
+    // LAN discovery background loops (run on their own threads).
+    void broadcastLoop();
+    void discoveryLoop(std::shared_ptr<std::atomic<bool>> token);
+
+    // Interface pinning: pick/announce the address and bind a socket to m_bindInterface.
+    std::string resolveBindIP() const;
+    std::string bindInterfaceSnapshot() const;
+    static std::string interfaceIPv4(const std::string& ifname);
+    bool bindSocketToInterface(int sock) const;
+
     std::string savePath() const;
 
 private:
@@ -209,6 +244,28 @@ private:
     std::atomic<bool> m_serverRunning;
     std::atomic<bool> m_connected;
     std::atomic<bool> m_backoffEnabled;  // ENOTCONN 是否走指数退避（默认 false）
+
+    // LAN discovery: beacon broadcast is on by default; the UI can toggle it.
+    std::atomic<bool> m_discoveryEnabled{ true };
+    std::atomic<bool> m_broadcastRunning{ false };
+    std::thread m_broadcastThread;
+    std::atomic<int> m_broadcastSock{ -1 };
+    std::string m_announceIp;        // LAN IP advertised in the beacon
+    unsigned short m_announcePort{ 0 };
+    std::mutex m_broadcastMutex;     // serializes start/stopBroadcast
+
+    // Discovery listener (client side): receives peer beacons on DISCOVERY_PORT.
+    std::atomic<bool> m_discoveryRunning{ false };
+    std::thread m_discoveryThread;
+    std::atomic<int> m_discoverySock{ -1 };
+    mutable std::mutex m_discoveryMutex;
+    std::function<void(const std::string&, unsigned short)> m_discoveryCb;
+    std::shared_ptr<std::atomic<bool>> m_discoveryToken;
+    std::mutex m_discoveryLifecycleMutex;   // serializes startDiscovery/conceal
+
+    // Optional interface to pin LAN broadcast/discovery to ("" = auto).
+    std::string m_bindInterface;
+    mutable std::mutex m_bindMutex;   // guards m_bindInterface
 
     // 每次客户端传输一个独立标志，避免服务端并发代发互相消费，也避免新传输清掉刚发出的取消。
     std::mutex m_cancelMutex;

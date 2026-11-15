@@ -4,6 +4,7 @@
 
 #include "TransferEngine.h"
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
@@ -11,6 +12,8 @@
 #include <netdb.h>
 #include <poll.h>
 #include <fcntl.h>
+#include <ifaddrs.h>
+#include <net/if.h>
 #include <sys/stat.h>
 #include <cstring>
 #include <cerrno>
@@ -20,6 +23,8 @@
 #include <vector>
 #include <map>
 #include <ctime>
+#include <sstream>
+#include <string>
 
 // 由 TransferBridge.cpp 指向 Swift 控制台
 std::atomic<LogOutputFunc> g_logOutputFunc{ nullptr };
@@ -308,7 +313,8 @@ TransferEngine::TransferEngine()
 
 TransferEngine::~TransferEngine()
 {
-    closeServer();
+    conceal(nullptr);
+    closeFtfServer(" by itself.");
     disconnect();
 }
 
@@ -366,7 +372,7 @@ int TransferEngine::createServerSocket(unsigned short port)
         return -3;
     }
 
-    LOG_INF("TransferEngine server listening on port %d", port);
+    LOG_INF("TransferEngine server start listening on port %d", port);
     return sock;
 }
 
@@ -466,7 +472,7 @@ int TransferEngine::createClientSocket(const std::string& ip, unsigned short por
     return sock;
 }
 
-int TransferEngine::startServer(unsigned short port)
+int TransferEngine::startFtfServer(unsigned short port)
 {
     if (m_serverRunning.load()) {
         LOG_WRN("TransferEngine server already running");
@@ -479,14 +485,20 @@ int TransferEngine::startServer(unsigned short port)
     }
 
     m_serverRunning.store(true);
+    m_serverPort = port;
 
     m_serverThread = std::thread(&TransferEngine::fileServerProcess, this);
+    if (m_discoveryEnabled.load()) {
+        startBroadcast();
+    }
     return 0;
 }
 
-void TransferEngine::closeServer()
+void TransferEngine::closeFtpServer(const char* who)
 {
     m_serverRunning.store(false);
+
+    stopBroadcast();
 
     m_sessionMgr.closeAllSockets();
 
@@ -511,7 +523,353 @@ void TransferEngine::closeServer()
         m_clientFutures.clear();
     }
 
-    LOG_INF("TransferEngine Server Exit");
+    LOG_INF("TransferEngine Server Exit%s", who ? who : "");
+}
+
+// ── LAN 自动发现：周期性广播信标 ────────────────────────────────────────────
+
+std::string TransferEngine::resolveLocalIP()
+{
+    std::string addr;
+    struct ifaddrs* ifaddr = nullptr;
+    if (getifaddrs(&ifaddr) != 0) {
+        return addr;
+    }
+    for (struct ifaddrs* ifa = ifaddr; ifa != nullptr; ifa = ifa->ifa_next) {
+        if (ifa->ifa_addr == nullptr) continue;
+        if (ifa->ifa_addr->sa_family != AF_INET) continue;
+        const int flags = ifa->ifa_flags;
+        if ((flags & IFF_UP) == 0) continue;
+        const std::string name = ifa->ifa_name ? ifa->ifa_name : "";
+        // 跳过回环与隧道/链路本地虚拟网卡
+        if (name.rfind("lo", 0) == 0 || name.rfind("utun", 0) == 0
+            || name.rfind("llw", 0) == 0) continue;
+        char host[NI_MAXHOST] = { 0 };
+        if (getnameinfo(ifa->ifa_addr, sizeof(struct sockaddr_in), host,
+            sizeof(host), nullptr, 0, NI_NUMERICHOST) == 0) {
+            addr = host;
+            if (name == "en0") break;  // 优先 en0（主 Wi‑Fi/以太网）
+        }
+    }
+    freeifaddrs(ifaddr);
+    return addr;
+}
+
+void TransferEngine::setBindInterface(const std::string& ifname)
+{
+    std::lock_guard<std::mutex> lock(m_bindMutex);
+    m_bindInterface = ifname;
+}
+
+std::string TransferEngine::bindInterfaceSnapshot() const
+{
+    std::lock_guard<std::mutex> lock(m_bindMutex);
+    return m_bindInterface;
+}
+
+std::string TransferEngine::resolveBindIP() const
+{
+    const std::string iface = bindInterfaceSnapshot();
+    if (iface.empty()) {
+        return resolveLocalIP();
+    }
+    std::string ip = interfaceIPv4(iface);
+    if (ip.empty()) {
+        LOG_WRN("bind interface '%s' has no IPv4 address", iface.c_str());
+    }
+    return ip;
+}
+
+std::string TransferEngine::interfaceIPv4(const std::string& ifname)
+{
+    std::string ip;
+    struct ifaddrs* ifaddr = nullptr;
+    if (getifaddrs(&ifaddr) != 0) {
+        return ip;
+    }
+    for (struct ifaddrs* ifa = ifaddr; ifa != nullptr; ifa = ifa->ifa_next) {
+        if (!ifa->ifa_addr || ifa->ifa_addr->sa_family != AF_INET) continue;
+        if ((ifa->ifa_flags & IFF_UP) == 0) continue;
+        if (!ifa->ifa_name || ifname != ifa->ifa_name) continue;
+        char host[NI_MAXHOST] = { 0 };
+        if (getnameinfo(ifa->ifa_addr, sizeof(struct sockaddr_in), host,
+            sizeof(host), nullptr, 0, NI_NUMERICHOST) == 0) {
+            ip = host;
+            break;
+        }
+    }
+    freeifaddrs(ifaddr);
+    return ip;
+}
+
+bool TransferEngine::bindSocketToInterface(int sock) const
+{
+    const std::string iface = bindInterfaceSnapshot();
+    if (iface.empty()) {
+        return true;
+    }
+    unsigned int idx = if_nametoindex(iface.c_str());
+    if (idx == 0) {
+        LOG_WRN("bindSocket: interface '%s' not found", iface.c_str());
+        return false;
+    }
+#if defined(__APPLE__)
+    if (setsockopt(sock, IPPROTO_IP, IP_BOUND_IF, &idx, sizeof(idx)) != 0) {
+        LOG_WRN("bindSocket: IP_BOUND_IF(%s) failed: %s", iface.c_str(), strerror(errno));
+        return false;
+    }
+#elif defined(SO_BINDTODEVICE)
+    if (setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE,
+        iface.c_str(), (socklen_t)iface.size()) != 0) {
+        LOG_WRN("bindSocket: SO_BINDTODEVICE(%s) failed (needs root?): %s",
+            iface.c_str(), strerror(errno));
+        return false;
+    }
+#endif
+    LOG_INF("LAN traffic pinned to interface %s", iface.c_str());
+    return true;
+}
+
+void TransferEngine::setDiscoveryEnabled(bool enabled)
+{
+    m_discoveryEnabled.store(enabled);
+    // Apply immediately to a running server; otherwise the flag is only read at
+    // the next startFtfServer(). The beacon loop watches m_broadcastRunning (not this
+    // flag), so start/stop the thread here instead of waiting for a restart.
+    if (m_serverRunning.load()) {
+        if (enabled) {
+            startBroadcast();
+        } else {
+            stopBroadcast();
+        }
+    }
+}
+
+int TransferEngine::startBroadcast()
+{
+    std::lock_guard<std::mutex> lock(m_broadcastMutex);
+    if (m_broadcastRunning.exchange(true)) {
+        return 0;  // 已广播
+    }
+    m_announceIp = resolveBindIP();
+    m_announcePort = m_serverPort;
+
+    int sock = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sock < 0) {
+        LOG_ERR("startBroadcast: socket() failed: %s", strerror(errno));
+        m_broadcastRunning.store(false);
+        return -1;
+    }
+    int opt = 1;
+    setsockopt(sock, SOL_SOCKET, SO_BROADCAST, &opt, sizeof(opt));
+
+    // Pin egress to the requested interface: strict device binding where the
+    // platform allows it, plus source-IP binding as a portable fallback.
+    if (!bindInterfaceSnapshot().empty()) {
+        bindSocketToInterface(sock);
+        if (!m_announceIp.empty()) {
+            struct sockaddr_in src {};
+            src.sin_family = AF_INET;
+            src.sin_port = 0;
+            inet_pton(AF_INET, m_announceIp.c_str(), &src.sin_addr);
+            if (bind(sock, reinterpret_cast<struct sockaddr*>(&src), sizeof(src)) != 0) {
+                LOG_WRN("startBroadcast: bind source %s failed: %s",
+                    m_announceIp.c_str(), strerror(errno));
+            }
+        }
+    }
+    m_broadcastSock = sock;
+
+    m_broadcastThread = std::thread(&TransferEngine::broadcastLoop, this);
+    LOG_INF("LAN discovery beacon started: udp/%u, advertising tcp/%u (%s)",
+        (unsigned)DISCOVERY_PORT, (unsigned)m_announcePort,
+        m_announceIp.empty() ? "no local IP" : m_announceIp.c_str());
+    return 0;
+}
+
+void TransferEngine::stopBroadcast()
+{
+    std::lock_guard<std::mutex> lock(m_broadcastMutex);
+    if (!m_broadcastRunning.exchange(false)) {
+        return;
+    }
+    if (int fd = m_broadcastSock.exchange(-1); fd >= 0) {
+        close(fd);
+    }
+    if (m_broadcastThread.joinable()) {
+        m_broadcastThread.join();
+    }
+    LOG_INF("LAN discovery beacon has stopped");
+}
+
+void TransferEngine::broadcastLoop()
+{
+    struct sockaddr_in dest {};
+    dest.sin_family = AF_INET;
+    dest.sin_port = htons(DISCOVERY_PORT);
+    dest.sin_addr.s_addr = INADDR_BROADCAST;  // 255.255.255.255
+
+    // 广播期间内容固定，只拼一次。
+    // 格式："<MAGIC> <协议版本> <tcp端口>\n"
+    char beacon[128];
+    int len = snprintf(beacon, sizeof(beacon), "%s %d %u\n",
+        DISCOVERY_MAGIC, (int)PROTOCOL_VERSION, (unsigned)m_announcePort);
+    if (len < 0) len = 0;
+    if (len > (int)sizeof(beacon) - 1) len = (int)sizeof(beacon) - 1;
+    std::string payload(beacon, (size_t)len);
+
+    while (m_broadcastRunning.load()) {
+        ssize_t sent = sendto(m_broadcastSock, payload.c_str(), payload.size(), 0,
+            reinterpret_cast<struct sockaddr*>(&dest), sizeof(dest));
+        if (sent < 0) {
+            LOG_DBG("broadcast sendto failed: %s", strerror(errno));
+        } else {
+            LOG_DBG("broadcast beacon sent: '%s'", payload.c_str());
+        }
+        // 分段休眠，stopBroadcast 能及时返回
+        for (int waited = 0; waited < DISCOVERY_INTERVAL_MS && m_broadcastRunning.load();
+            waited += 100) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+    }
+}
+
+// ── LAN 自动发现：客户端信标监听 ────────────────────────────────────────────
+
+std::shared_ptr<std::atomic<bool>> TransferEngine::startDiscovery(
+    std::function<void(const std::string& ip, unsigned short port)> onDiscovery)
+{
+    std::lock_guard<std::mutex> lock(m_discoveryLifecycleMutex);
+    if (m_discoveryRunning.exchange(true)) {
+        // 已在监听，仅替换回调
+        std::lock_guard<std::mutex> lock(m_discoveryMutex);
+        m_discoveryCb = std::move(onDiscovery);
+        return m_discoveryToken;
+    }
+    {
+        std::lock_guard<std::mutex> lock(m_discoveryMutex);
+        m_discoveryCb = std::move(onDiscovery);
+    }
+
+    // Bind synchronously so the caller can tell whether the listener really came up.
+    int sock = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sock < 0) {
+        LOG_ERR("startDiscovery: socket() failed: %s", strerror(errno));
+        m_discoveryRunning.store(false);
+        return nullptr;
+    }
+    int opt = 1;
+    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+#ifdef SO_REUSEPORT
+    setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt));
+#endif
+    // Wake up periodically so stop is observed even if close() doesn't interrupt recvfrom.
+    struct timeval rcvTimeout {};
+    rcvTimeout.tv_sec = 0;
+    rcvTimeout.tv_usec = 500 * 1000;
+    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &rcvTimeout, sizeof(rcvTimeout));
+    bindSocketToInterface(sock);
+
+    struct sockaddr_in addr {};
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(DISCOVERY_PORT);
+    addr.sin_addr.s_addr = INADDR_ANY;
+    if (bind(sock, reinterpret_cast<struct sockaddr*>(&addr), sizeof(addr)) < 0) {
+        LOG_ERR("startDiscovery: bind() udp/%u failed: %s",
+            (unsigned)DISCOVERY_PORT, strerror(errno));
+        close(sock);
+        m_discoveryRunning.store(false);
+        return nullptr;
+    }
+    m_discoverySock = sock;
+
+    auto token = std::make_shared<std::atomic<bool>>(true);
+    m_discoveryToken = token;
+    m_discoveryThread = std::thread(&TransferEngine::discoveryLoop, this, token);
+    LOG_INF("LAN discovery listener started on udp/%u", (unsigned)DISCOVERY_PORT);
+    return token;
+}
+
+void TransferEngine::conceal(std::shared_ptr<std::atomic<bool>> token)
+{
+    std::lock_guard<std::mutex> lock(m_discoveryLifecycleMutex);
+    if (token) {
+        token->store(false);
+    }
+    // Also stop the live token so the loop exits even if close() doesn't wake recvfrom.
+    if (m_discoveryToken) {
+        m_discoveryToken->store(false);
+    }
+    if (!m_discoveryRunning.exchange(false)) {
+        return;
+    }
+    // 关 socket 唤醒 recvfrom，循环随即退出
+    if (int fd = m_discoverySock.exchange(-1); fd >= 0) {
+        close(fd);
+    }
+    if (m_discoveryThread.joinable()) {
+        m_discoveryThread.join();
+    }
+    {
+        std::lock_guard<std::mutex> lock(m_discoveryMutex);
+        m_discoveryCb = nullptr;
+    }
+    m_discoveryToken.reset();
+    LOG_INF("LAN discovery listener stopped");
+}
+
+void TransferEngine::discoveryLoop(std::shared_ptr<std::atomic<bool>> token)
+{
+    const int sock = m_discoverySock.load();
+    if (sock < 0) {
+        m_discoveryRunning.store(false);
+        return;
+    }
+
+    char buf[512];
+    while (token->load()) {
+        struct sockaddr_in from {};
+        socklen_t fromLen = sizeof(from);
+        ssize_t n = recvfrom(sock, buf, sizeof(buf) - 1, 0,
+            reinterpret_cast<struct sockaddr*>(&from), &fromLen);
+        if (n <= 0) {
+            if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK) continue;  // SO_RCVTIMEO tick
+            break;  // socket 被关（conceal）或出错
+        }
+        buf[n] = '\0';
+
+        // 以广播包源 IP 作为对端真实地址（最可靠）
+        char srcIp[INET_ADDRSTRLEN] = { 0 };
+        inet_ntop(AF_INET, &from.sin_addr, srcIp, sizeof(srcIp));
+
+        // 解析 "<MAGIC> <版本> <tcp端口>"，容忍结尾换行
+        std::string msg(buf);
+        while (!msg.empty() && (msg.back() == '\n' || msg.back() == '\r')) {
+            msg.pop_back();
+        }
+        std::istringstream iss(msg);
+        std::string magic;
+        int version = 0;
+        unsigned port = 0;
+        if (!(iss >> magic >> version >> port) || magic != DISCOVERY_MAGIC) {
+            continue;  // 非本机信标，忽略
+        }
+        if (version != PROTOCOL_VERSION) continue;  // 版本不同不互通
+        if (port == 0 || port > 65535) continue;
+
+        std::function<void(const std::string&, unsigned short)> cb;
+        {
+            std::lock_guard<std::mutex> lock(m_discoveryMutex);
+            cb = m_discoveryCb;
+        }
+        if (cb) {
+            cb(std::string(srcIp), (unsigned short)port);
+        }
+    }
+
+    if (m_discoverySock.exchange(-1) == sock) {
+        close(sock);
+    }
 }
 
 int TransferEngine::connectToServer(const std::string& ip, unsigned short port)
@@ -935,14 +1293,17 @@ void TransferEngine::clientHandler(int sock, const std::string& clientIp, unsign
                     if (pct != lastLoggedPct) {
                         auto now = std::chrono::steady_clock::now();
                         double sec = std::chrono::duration<double>(now - lastSpeedTime).count();
-                        LOG_INF("%s receiving: %d%% (%llu/%llu bytes, %.1f MB/s)",
+                        double mbps = sec > 0.001
+                            ? (double)(session->transSize - lastSpeedBytes)
+                            / sec / (1024.0 * 1024.0)
+                            : 0.0;
+                        char rate[32];
+                        snprintf(rate, sizeof(rate), "%.1f MB/s", mbps);
+                        LOG_INF("%s receiving: %d%% (%llu/%llu bytes, %s)",
                             statusPrefix.c_str(), pct,
                             (unsigned long long)session->transSize,
                             (unsigned long long)header.fileSize,
-                            sec > 0.001
-                                ? (double)(session->transSize - lastSpeedBytes)
-                                    / sec / (1024.0 * 1024.0)
-                                : 0.0);
+                            rate);
                         lastLoggedPct = pct;
                         lastSpeedTime = now;
                         lastSpeedBytes = session->transSize;
@@ -1169,11 +1530,13 @@ int TransferEngine::sendSliceData(int sock, const std::string& filePath, uint64_
             if (pct != lastPct) {
                 auto now = std::chrono::steady_clock::now();
                 double sec = std::chrono::duration<double>(now - lastSpeedTime).count();
-                LOG_INF("sendSliceData: %d%% (%llu/%llu bytes, %.1f MB/s)",
-                    pct, (unsigned long long)totalSent, (unsigned long long)fileSize,
-                    sec > 0.001
-                        ? (double)(totalSent - lastSpeedBytes) / sec / (1024.0 * 1024.0)
-                        : 0.0);
+                double mbps = sec > 0.001
+                    ? (double)(totalSent - lastSpeedBytes) / sec / (1024.0 * 1024.0)
+                    : 0.0;
+                char rate[32];
+                snprintf(rate, sizeof(rate), "%.1f MB/s", mbps);
+                LOG_INF("sentSliceData: %d%% (%llu/%llu bytes, %s)",
+                    pct, (unsigned long long)totalSent, (unsigned long long)fileSize, rate);
                 m_progressCallback(totalSent, fileSize, "Sending...", FT_EVT_NONE);
                 lastPct = pct;
                 lastSpeedTime = now;
@@ -1444,8 +1807,10 @@ int TransferEngine::receivePullData(int sock, const std::string& fileName, uint6
             double sec = std::chrono::duration<double>(now - lastSpeedTime).count();
             double mbps = sec > 0.001
                 ? (double)(received - lastSpeedBytes) / sec / (1024.0 * 1024.0) : 0.0;
-            LOG_INF("receivePullData: %d%% (%llu/%llu bytes, %.1f MB/s)",
-                pct, (unsigned long long)received, (unsigned long long)fileSize, mbps);
+            char rate[32];
+            snprintf(rate, sizeof(rate), "%.1f MB/s", mbps);
+            LOG_INF("receivePullData: %d%% (%llu/%llu bytes, %s)",
+                pct, (unsigned long long)received, (unsigned long long)fileSize, rate);
             lastPct = pct;
             lastSpeedTime = now;
             lastSpeedBytes = received;

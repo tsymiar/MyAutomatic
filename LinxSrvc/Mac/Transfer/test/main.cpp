@@ -1,13 +1,17 @@
 // transfer — command-line test driver for FileTransferCore (macOS/Linux).
 // Extra/unrecognized args are ignored on purpose.
 // Usage:
-//   transfer [serve] [-p port] [-d save_dir]           listen and receive pushes,
+//   transfer [serve] [-p port] [-d save_dir] [-i iface]  listen and receive pushes,
 //                                                      serve pull/del requests
 //   transfer send <ip> <port> <file> [cancel_ms]       connect + push a file;
 //                                                      cancel_ms>0 cancels mid-send,
 //                                                      then deletes the partial on the peer
 //   transfer pull [-d save_dir] <ip> <port> <name>     pull a file from the peer
 //   transfer del <ip> <port> <name>                    delete a cancelled partial on the peer
+//   transfer discover [-i iface]                       listen for LAN beacons and print peers
+//
+//   -i <iface> pins the LAN beacon broadcast (serve) or discovery listener
+//   (discover) to a named interface (e.g. en0 / eth0). Omit for auto.
 
 #include "TransferBridge.h"
 
@@ -59,17 +63,21 @@ static int cmd_server(int argc, char** argv, int i)
 {
     uint16_t port = 8800;
     const char* saveDir = "received";
+    const char* iface = NULL;
 
     for (; i < argc; ++i) {
         if (strcmp(argv[i], "-p") == 0 && i + 1 < argc) {
             port = (uint16_t)atoi(argv[++i]);
         } else if (strcmp(argv[i], "-d") == 0 && i + 1 < argc) {
             saveDir = argv[++i];
+        } else if (strcmp(argv[i], "-i") == 0 && i + 1 < argc) {
+            iface = argv[++i];
         }
     }
 
     FT_Handle h = create_engine(saveDir);
     if (!h) return 1;
+    if (iface) ft_set_interface(h, iface);
 
     if (ft_start_server(h, port) < 0) {
         fprintf(stderr, "start server on port %u failed\n", port);
@@ -193,6 +201,44 @@ static int cmd_delete(int argc, char** argv, int i)
     return 0;
 }
 
+static void on_discover(void*, const char* ip, uint16_t port)
+{
+    printf("discovered peer %s:%u\n", ip ? ip : "?", (unsigned)port);
+    fflush(stdout);
+}
+
+static int cmd_discover(int argc, char** argv, int i)
+{
+    const char* iface = NULL;
+    for (; i < argc; ++i) {
+        if (strcmp(argv[i], "-i") == 0 && i + 1 < argc) {
+            iface = argv[++i];
+        }
+    }
+
+    FT_Handle h = create_engine(NULL);
+    if (!h) return 1;
+    if (iface) ft_set_interface(h, iface);
+    ft_set_discovery_enabled(h, true);
+    if (!ft_start_discovery(h, on_discover, NULL)) {
+        fprintf(stderr, "failed to bind discovery listener on udp/8801\n");
+        ft_destroy(h);
+        return 1;
+    }
+    printf("Listening for LAN beacons on udp/%u. Ctrl+C to stop.\n", 8801u);
+    fflush(stdout);
+
+    while (!g_stop) {
+        sleep(1);
+    }
+
+    printf("stopping discovery...\n");
+    ft_stop_discovery(h);
+    ft_destroy(h);
+    printf("bye\n");
+    return 0;
+}
+
 int main(int argc, char** argv)
 {
     // Linux has no SO_NOSIGPIPE: ignore SIGPIPE so a closed peer yields EPIPE instead of killing the process.
@@ -203,7 +249,8 @@ int main(int argc, char** argv)
     const char* cmd = "serve";
     int i = 1;
     if (argc > 1 && (strcmp(argv[1], "serve") == 0 || strcmp(argv[1], "send") == 0 ||
-        strcmp(argv[1], "pull") == 0 || strcmp(argv[1], "del") == 0)) {
+        strcmp(argv[1], "pull") == 0 || strcmp(argv[1], "del") == 0 ||
+        strcmp(argv[1], "discover") == 0)) {
         cmd = argv[1];
         i = 2;
     }
@@ -211,5 +258,6 @@ int main(int argc, char** argv)
     if (strcmp(cmd, "serve") == 0) return cmd_server(argc, argv, i);
     if (strcmp(cmd, "send") == 0)   return cmd_send(argc, argv, i);
     if (strcmp(cmd, "pull") == 0)   return cmd_pull(argc, argv, i);
+    if (strcmp(cmd, "discover") == 0) return cmd_discover(argc, argv, i);
     return cmd_delete(argc, argv, i);
 }

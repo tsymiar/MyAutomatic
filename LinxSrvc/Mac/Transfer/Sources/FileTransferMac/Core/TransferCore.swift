@@ -43,7 +43,27 @@ final class TransferCore: ObservableObject {
         didSet { UserDefaults.standard.set(showLogConsole, forKey: "showLogConsole") }
     }
 
-    @Published var transferStatus: String = ""
+    /// Server beacon: advertise this device's IP:port on the LAN while listening.
+    /// Persisted; pushed to the engine on change and at server start.
+    @Published var broadcastEnabled: Bool = UserDefaults.standard.object(forKey: "broadcastEnabled") as? Bool ?? true {
+        didSet {
+            UserDefaults.standard.set(broadcastEnabled, forKey: "broadcastEnabled")
+            if let engine = handle { ft_set_discovery_enabled(engine, broadcastEnabled) }
+        }
+    }
+
+    /// Client listener: discover peers broadcasting on the LAN. Persisted.
+    @Published var discoverPeers: Bool = UserDefaults.standard.object(forKey: "discoverPeers") as? Bool ?? true {
+        didSet {
+            UserDefaults.standard.set(discoverPeers, forKey: "discoverPeers")
+            if discoverPeers { startPeerDiscovery() } else { stopPeerDiscovery() }
+        }
+    }
+
+    /// Peers seen on the LAN via the discovery beacon (newest first).
+    @Published var discoveredServers: [DiscoveredServer] = []
+
+    @Published var status = RoleStatus()          // per-tab status text (server / client)
     @Published var transferFileName = ""          // file shown on the progress bar
     @Published var transferredBytes: UInt64 = 0
     @Published var totalBytes: UInt64 = 0
@@ -93,6 +113,16 @@ final class TransferCore: ObservableObject {
     /// Keep a strong reference to the C callback so it is not deallocated.
     var callbackRef: FT_ProgressCallback?
     var logCallbackRef: FT_LogCallback?
+    /// Strong reference to the discovery C callback (kept alive while listening).
+    var discoveryCallbackRef: FT_DiscoveryCallback?
+
+    /// True while the LAN discovery listener is active (keeps a bare engine alive).
+    var peerDiscoveryActive = false
+
+    /// Port this app's own server is listening on (0 when not serving). Used to
+    /// skip its own looped-back beacon while still accepting other local peers
+    /// (e.g. the CLI test tool running on the same host).
+    var activeServerPort: UInt16 = 0
 
     @Published var receivedFiles: [ReceivedFile] = []
     @Published var transferTasks: [TransferTask] = []
@@ -159,7 +189,7 @@ final class TransferCore: ObservableObject {
         progress = 0
         isBusy = false
         transferFileName = ""
-        transferStatus = ""
+        status.client = ""
     }
 
     /// Reset the progress bar only when no client send/pull is in flight.
@@ -172,7 +202,7 @@ final class TransferCore: ObservableObject {
         totalBytes = 0
         progress = 0
         transferFileName = ""
-        transferStatus = ""
+        status.server = ""
     }
 
     // MARK: - Utilities

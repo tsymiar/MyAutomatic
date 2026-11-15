@@ -53,6 +53,17 @@ struct ServerView: View {
                     }
 
                     Spacer()
+
+                    // LAN broadcast badge: this device is advertising its IP:port on the LAN.
+                    if core.isServerRunning && core.broadcastEnabled {
+                        Label("LAN", systemImage: "dot.radiowaves.left.and.right")
+                            .font(.caption2.bold())
+                            .padding(.horizontal, 7)
+                            .padding(.vertical, 2)
+                            .background(Capsule().fill(Color.green.opacity(0.18)))
+                            .foregroundColor(.green)
+                            .help("Broadcasting this device's IP:port on the LAN every 3s so peers can find it automatically")
+                    }
                 }
             }
             .padding()
@@ -66,7 +77,18 @@ struct ServerView: View {
                       : "antenna.radiowaves.left.and.right.slash")
                     .font(.title3)
                     .foregroundColor(core.isServerRunning ? .green : .secondary)
-                Text(shortTransferStatus(core.transferStatus))
+                if core.isServerRunning && core.broadcastEnabled {
+                    Label("Broadcasting on LAN", systemImage: "dot.radiowaves.left.and.right")
+                        .font(.caption2)
+                        .foregroundColor(.green)
+                        .help("Periodically announcing this device's IP:port so peers can find it automatically")
+                } else if core.isServerRunning {
+                    Label("Broadcast off", systemImage: "antenna.radiowaves.left.and.right.slash")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                        .help("LAN broadcast is off — peers must enter this device's IP:port manually")
+                }
+                Text(shortTransferStatus(core.status.server))
                     .font(.caption)
                     .foregroundColor(.secondary)
                 Spacer()
@@ -82,11 +104,11 @@ struct ServerView: View {
                 } else {
                     Button {
                         guard let port = UInt16(portText), port > 0 else {
-                            core.transferStatus = "Invalid port number"
-                            core.appendLog("ERROR: Invalid port: \(portText)")
+                            core.status.server = "Invalid port number: \(portText)"
+                            core.appendLog("ERROR: \(core.status.server)")
                             return
                         }
-                        core.startServer(port: port)
+                        core.startFtfServer(port: port)
                     } label: {
                         Label("Start Listening", systemImage: "play.fill")
                     }
@@ -101,7 +123,7 @@ struct ServerView: View {
 
             if core.isServerRunning {
                 if core.totalBytes > 0 {
-                    TransferProgressBar(status: core.transferStatus, progress: core.progress,
+                    TransferProgressBar(status: core.status.server, progress: core.progress,
                                         transferred: core.transferredBytes, total: core.totalBytes,
                                         fileName: core.transferFileName)
                 }
@@ -211,6 +233,15 @@ struct TransferSettingsPanel: View {
             Text("Retry a connection that died before any data arrived (ENOTCONN). "
                 + "On: up to 16 retries, delay doubles from 10ms (~655s worst case). "
                 + "Off (default): 3 short retries, then close.")
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Divider()
+
+            Toggle("Broadcast on LAN", isOn: $core.broadcastEnabled)
+                .toggleStyle(.switch)
+            Text("While listening, announce this device's IP:port on the LAN every 3s so peers can find it without typing an address.")
                 .font(.caption)
                 .foregroundColor(.secondary)
                 .fixedSize(horizontal: false, vertical: true)

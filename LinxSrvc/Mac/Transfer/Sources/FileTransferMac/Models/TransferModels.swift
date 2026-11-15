@@ -1,5 +1,12 @@
 import Foundation
 
+/// Per-role status text shared by the Server and Client tabs. One `@Published`
+/// value keeps both tabs' state together while each role stays logically distinct.
+struct RoleStatus {
+    var server: String = ""   // Server tab: server lifecycle + receive progress
+    var client: String = ""   // Client tab: connection + send/receive progress
+}
+
 /// Transfer task model
 struct TransferTask: Identifiable, Equatable {
     let id = UUID()
@@ -50,6 +57,15 @@ struct ReceivedFile: Identifiable {
     let fromIP: String
     let savedPath: URL
     let receivedAt: Date
+}
+
+/// A peer discovered on the LAN via the discovery beacon.
+struct DiscoveredServer: Identifiable, Equatable {
+    // Different ports on one IP are distinct sessions; using ip alone would collide row ids.
+    var id: String { "\(ip):\(port)" }
+    let ip: String
+    let port: UInt16
+    var lastSeen: Date
 }
 
 /// Server-side device snapshot. A short-lived connection stays listed as

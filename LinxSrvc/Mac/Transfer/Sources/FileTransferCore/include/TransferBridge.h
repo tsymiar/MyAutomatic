@@ -116,6 +116,35 @@ bool ft_is_server_running(FT_Handle handle);
 /// Snapshot entry count (online and recently-offline peers) — matches ft_get_clients semantics.
 int ft_get_client_count(FT_Handle handle);
 
+// LAN discovery (server beacon broadcast + peer listener)
+
+/// Enable/disable the LAN beacon the server broadcasts while listening.
+/// Default on; toggling takes effect immediately on a running server.
+void ft_set_discovery_enabled(FT_Handle handle, bool enabled);
+/// True if beacon broadcast is enabled (the default).
+bool ft_is_discovery_enabled(FT_Handle handle);
+
+/// Pin the LAN beacon broadcast / discovery listener to a named interface
+/// (e.g. "en0", "eth0", "wlan0"). Empty string = auto. Call before starting.
+void ft_set_interface(FT_Handle handle, const char* ifname);
+
+/// True while the server is broadcasting its IP:port beacons.
+bool ft_is_broadcasting(FT_Handle handle);
+
+/// Discovery callback: invoked (arbitrary thread) for each peer beacon received.
+///   userData – opaque pointer registered via ft_start_discovery()
+///   ip       – peer LAN IPv4 address (dotted-decimal, null-terminated)
+///   port     – peer TCP file-transfer port
+typedef void (*FT_DiscoveryCallback)(void* userData, const char* ip, uint16_t port);
+
+/// Start listening for peer beacons on the discovery UDP port. The engine may be
+/// shared with a running server/client; discovery is independent of both.
+/// Returns false if the listener could not start (e.g. udp/8801 bind fails).
+bool ft_start_discovery(FT_Handle handle, FT_DiscoveryCallback callback, void* userData);
+
+/// Stop the discovery listener.
+void ft_stop_discovery(FT_Handle handle);
+
 /// Device snapshot entry. Kept after a short-lived connection closes; online=false means recently offline.
 typedef struct {
     char     ip[64];        ///< IPv4 address in dotted-decimal notation

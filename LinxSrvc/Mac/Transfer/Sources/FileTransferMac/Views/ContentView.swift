@@ -152,5 +152,15 @@ struct ContentView: View {
                     .frame(height: 140)
             }
         }
+        // LAN discovery listener runs for the app's lifetime (while enabled) and
+        // prunes stale peers; it backs the Client tab's "Discovered on LAN" list.
+        .task {
+            core.startPeerDiscovery()
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 3_000_000_000)
+                core.pruneDiscoveredServers()
+            }
+            core.stopPeerDiscovery()
+        }
     }
 }
