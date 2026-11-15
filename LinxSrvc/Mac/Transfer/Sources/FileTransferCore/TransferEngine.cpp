@@ -494,7 +494,7 @@ int TransferEngine::startFtfServer(unsigned short port)
     return 0;
 }
 
-void TransferEngine::closeFtpServer(const char* who)
+void TransferEngine::closeFtfServer(const char* who)
 {
     m_serverRunning.store(false);
 

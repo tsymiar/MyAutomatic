@@ -112,10 +112,12 @@
   <ItemGroup>
     <ClCompile Include="WebevApi.cpp" />
     <ClCompile Include="WebMain.cpp" />
+    <ClCompile Include="WsServe.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="WebevApi.h" />
     <ClInclude Include="WebMain.h" />
+    <ClInclude Include="WsServe.h" />
     <ClInclude Include="..\include\Utils.h" />
   </ItemGroup>
   <ItemGroup>

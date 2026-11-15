@@ -10,7 +10,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, DistributedSampler
 from torch.utils.tensorboard import SummaryWriter
-from transformers import get_linear_schedule_with_warmup
+from transformers import DataCollatorForSeq2Seq, get_linear_schedule_with_warmup
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 
 # 添加项目根目录到路径
@@ -179,6 +179,11 @@ class Trainer:
                 sharegpt_config=data_cfg.get('sharegpt', {})
             )
 
+            # 动态 padding：按 batch 内最长补齐
+            collator = DataCollatorForSeq2Seq(
+                self.tokenizer, padding=True, label_pad_token_id=-100, return_tensors='pt'
+            )
+
             train_sampler = DistributedSampler(train_dataset) if self.args.local_rank != -1 else None
 
             self.train_loader = DataLoader(
@@ -188,7 +193,8 @@ class Trainer:
                 shuffle=(train_sampler is None),
                 num_workers=data_cfg['num_workers'],
                 pin_memory=True,
-                drop_last=True  # 确保梯度累积时批次大小一致
+                drop_last=True,  # 确保梯度累积时批次大小一致
+                collate_fn=collator,
             )
             self.val_loader = DataLoader(
                 val_dataset,
@@ -196,6 +202,7 @@ class Trainer:
                 shuffle=False,
                 num_workers=data_cfg['num_workers'],
                 pin_memory=True,
+                collate_fn=collator,
             )
 
             self.train_sampler = train_sampler  # 保存引用以便后续使用
@@ -210,8 +217,10 @@ class Trainer:
         weight_decay = self.config['training']['weight_decay']
         self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=lr, weight_decay=weight_decay)
 
-        total_steps = len(self.train_loader) * self.config['training']['epochs']
-        warmup_steps = self.config['scheduler']['warmup_steps']
+        accum = max(1, self.config['training']['gradient_accumulation_steps'])
+        steps_per_epoch = max(1, len(self.train_loader) // accum)  # 累积满才 step()
+        total_steps = max(1, steps_per_epoch * self.config['training']['epochs'])
+        warmup_steps = min(self.config['scheduler']['warmup_steps'], total_steps)
         self.scheduler = get_linear_schedule_with_warmup(
             self.optimizer,
             num_warmup_steps=warmup_steps,
@@ -219,8 +228,9 @@ class Trainer:
         )
 
     def _setup_mixed_precision(self):
-        self.use_fp16 = self.config['training'].get('fp16', False)
-        self.scaler = torch.cuda.amp.GradScaler(enabled=self.use_fp16) if torch.cuda.is_available() else None
+        # 无 CUDA 时禁用 fp16
+        self.use_fp16 = bool(self.config['training'].get('fp16', False)) and torch.cuda.is_available()
+        self.scaler = torch.cuda.amp.GradScaler(enabled=True) if self.use_fp16 else None
 
     def train(self):
         """训练循环"""
@@ -307,7 +317,7 @@ class Trainer:
                 if val_loss < best_val_loss:
                     best_val_loss = val_loss
                     patience_counter = 0
-                    self._save_checkpoint(epoch, is_best=True)
+                    self._save_checkpoint(epoch, is_best=True, best_val_loss=best_val_loss)
                     logging.info(f"保存最佳模型，验证损失: {best_val_loss:.4f}")
                 else:
                     patience_counter += 1
@@ -317,7 +327,7 @@ class Trainer:
 
                 # 定期保存 checkpoint
                 if epoch % self.config['training']['save_interval'] == 0:
-                    self._save_checkpoint(epoch)
+                    self._save_checkpoint(epoch, best_val_loss=best_val_loss)
 
         logging.info("训练完成！")
         if self.args.local_rank in [0, -1]:
@@ -337,7 +347,7 @@ class Trainer:
                 labels = batch['labels'].to(self.device)
 
                 # 使用混合精度进行验证
-                with torch.amp.autocast(device_type='cuda', enabled=self.use_fp16):
+                with torch.amp.autocast(device_type='cuda' if self.device.type == 'cuda' else 'cpu', enabled=self.use_fp16):
                     outputs = self.model(
                         input_ids=input_ids,
                         attention_mask=attention_mask,
@@ -353,8 +363,8 @@ class Trainer:
 
         return total_loss / len(self.val_loader)
 
-    def _save_checkpoint(self, epoch, is_best=False):
-        """保存模型 checkpoint"""
+    def _save_checkpoint(self, epoch, is_best=False, best_val_loss=None):
+        """保存 checkpoint（权重走 save_pretrained）"""
         if self.args.local_rank not in [0, -1]:
             return  # 只在主进程中保存
 
@@ -367,17 +377,16 @@ class Trainer:
 
         os.makedirs(save_path, exist_ok=True)
 
-        # 保存模型和 tokenizer
+        # 权重已由 save_pretrained 保存，不重复存 state_dict
         model_to_save.save_pretrained(save_path)
         self.tokenizer.save_pretrained(save_path)
 
-        # 保存训练状态
+        # 训练状态
         checkpoint_state = {
             'epoch': epoch,
-            'model_state_dict': model_to_save.state_dict(),
             'optimizer_state_dict': self.optimizer.state_dict(),
             'scheduler_state_dict': self.scheduler.state_dict(),
-            'best_val_loss': self.config.get('best_val_loss', float('inf')),
+            'best_val_loss': best_val_loss if best_val_loss is not None else float('inf'),
             'config': self.config,
         }
 

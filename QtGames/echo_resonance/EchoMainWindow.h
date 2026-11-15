@@ -51,12 +51,8 @@ protected:
 private slots:
     void gameTick();
     void onFragmentPlaced(int fragmentId, int slotIndex);
-    void onFragmentRemoved(int fragmentId, int slotIndex);
     void onSceneCompleted(int chapter, bool isDistorted);
-    void onParanoiaChanged(float level);
-    void onAnxietyChanged(float level);
     void onHallucinationTriggered(const QString& message);
-    void onReverseUnlocked();
     void onNoiseCommunion(const QString& message);
 
 private:

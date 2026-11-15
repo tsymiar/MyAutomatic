@@ -111,7 +111,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <div class="n s1"><div class="lb">📡 IM</div><div class="ln">聊天服务 + KaiSocket</div></div>
 <div class="n s1"><div class="lb">🌐 webevs</div><div class="ln">libevent HTTP + WS</div></div>
 <div class="n x1"><div class="lb">🔄 gSOAPverify</div><div class="ln">SOAP + MySQL</div></div>
-<div class="n g1"><div class="lb">📦 Mac/Transfer</div><div class="ln">FTF 文件传输</div></div>
+<div class="n g1"><div class="lb">📦 Mac/Transfer</div><div class="ln">FTF 传输 + LAN 发现</div></div>
 </div></div>
 <div class="ag"><div class="al">检索 / 数据层</div><div class="ao">
 <div class="n s1"><div class="lb">🔍 lookup</div><div class="ln">录制流按时间检索</div></div>
@@ -146,7 +146,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 ├── hdware/             # 内核与硬件：chsdev / virtex / rdma / phm2f + GPIO/4G/v4l2/pipe 等
 ├── IM/                 # IM.cc 聊天服务器 + KaiSocket pub/sub 库 + KaiTest CLI
 ├── lookup/             # 按时间定位录制帧 (main.cc + seek/ time/ tool/ test/ sql/ + logging.h)
-├── Mac/Transfer/       # macOS SwiftUI App + C++17 FTF 传输引擎 (SwiftPM)
+├── Mac/Transfer/       # macOS SwiftUI App + C++17 FTF 引擎 (push/pull + UDP 信标, SwiftPM)
 ├── media/              # VideoRender：Jetson DRM/EGL/V4L2 分支 + FFmpeg/SDL2 分支
 ├── mock/               # TCP / UDP / 组播吞吐压测工具
 ├── pyex/               # 数独 Python C 扩展 (extend.c + sudoku.c)
@@ -283,10 +283,10 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <tr><td>事件框架</td><td>libevent2 <code>event2/http.h</code>（evhttp + event_base_dispatch），非裸 epoll</td></tr>
 <tr><td>允许方法</td><td>GET｜POST｜HEAD｜OPTIONS｜PUT｜DELETE；OPTIONS 强制回 200</td></tr>
 <tr><td>WebSocket</td><td>libwebsockets 独立端口 + 独立线程；CMake <code>find_library(websockets)</code> 命中才加 <code>-DWITH_WEBSOCKETS</code>，缺失时 <code>WsServe.h</code> 提供空桩</td></tr>
-<tr><td>静态前端</td><td>默认 <code>gh-pages:./webevs-frontend</code>，启动时 <code>rm -rf</code> 后用 <code>git archive</code> 出 tar 再 <code>tar -xf</code> 解包；先从 <code>WEBEV_REPO</code> 或 <code>git rev-parse --show-toplevel</code> 定位仓库</td></tr>
-<tr><td>可选 LevelDB</td><td>环境变量 <code>WITH_LEVELDB</code> 指向根目录时追加头文件路径与 leveldb 链接（CMake 内取的是 <code>${WITH_LEVELDB}</code> 而非 <code>$ENV{}</code>，未导出时路径退化为 <code>/include</code>）</td></tr>
+<tr><td>静态前端</td><td>默认 <code>gh-pages:./webevs-frontend</code>，启动时 <code>rm -rf</code> 后用 <code>git archive</code> 出 tar 再 <code>tar -xf</code> 解包；先从 <code>WEBEV_REPO</code> 或 <code>git rev-parse --show-toplevel</code> 定位仓库。响应走 <code>evbuffer_add_file</code>（sendfile，不整文件读进内存）并带 <code>Last-Modified</code>，命中 <code>If-Modified-Since</code> 时回 304</td></tr>
+<tr><td>可选 LevelDB</td><td>环境变量 <code>WITH_LEVELDB</code> 指向根目录时追加 <code>$ENV{WITH_LEVELDB}/include</code> 与 leveldb 链接</td></tr>
 <tr><td>启动方式</td><td><code>./webevs_serve &lt;port&gt; [ws_port]</code> 或 <code>./webevs_serve http://…</code>（客户端），WS 端口可来自 <code>WEBEV_WS_PORT</code></td></tr>
-<tr><td>HTTP 客户端</td><td>RequestClient 分块读取：<code>ReadChunkCallback</code> 按长度 <code>append</code> 进 <code>g_msgRecv</code>（互斥锁保护，不依赖 NUL 结尾），响应体可跨块累积；detail.base 读取前以 atomic 标记就绪</td></tr>
+<tr><td>HTTP 客户端</td><td>RequestClient 在调用线程内同步 <code>event_base_dispatch</code>：<code>ReadChunkCallback</code> 按长度 <code>append</code> 进 <code>g_msgRecv</code>（互斥锁保护，不依赖 NUL 结尾），响应体可跨块累积；连接超时 10s / 读写超时 120s 设在 evhttp_connection 的 bufferevent 上，响应、连接关闭或超时都会跳出事件循环</td></tr>
 </tbody></table>
 <div class="tags" style="margin-top:.4rem"><span class="t tb">libevent2</span><span class="t tb">evhttp</span><span class="t tg2">libwebsockets</span><span class="t tc">Reactor</span><span class="t tp">JSON</span><span class="t ty">git archive 前端</span></div>
 </div></section>
@@ -454,55 +454,70 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 </div></section>
 
 <section id="mc"><div class="ct">
-<div class="st"><h2>📦 Mac/Transfer — macOS SwiftUI + C++17 FTF 文件传输</h2><span class="tg">Swift 5.9 / C++17 / POSIX</span></div>
+<div class="st"><h2>📦 Mac/Transfer — macOS SwiftUI + C++17 FTF 文件传输</h2><span class="tg">Swift 5.9 / C++17 / POSIX / UDP 信标</span></div>
 <div class="cd"><div class="cd2">
-<div style="text-align:center;margin-bottom:.3rem"><div class="n g1" style="width:auto;padding:.3rem .8rem"><div class="lb" style="font-size:.68rem">SwiftPM 双 target：FileTransferCore（C++ 静态库 + C 桥）→ FileTransferMac（SwiftUI App）</div><div class="ln">链接分离的关键：Swift 侧只见 C ABI（FT_Handle + 回调 + void* userData）</div></div></div>
+<div style="text-align:center;margin-bottom:.3rem"><div class="n g1" style="width:auto;padding:.3rem .8rem"><div class="lb" style="font-size:.68rem">SwiftPM 双 target：FileTransferCore（C++17 静态库 + C 桥）→ FileTransferMac（SwiftUI App）</div><div class="ln">链接分离的关键：Swift 侧只见 C ABI（FT_Handle + 回调 + void* userData）；Linux 只能跑引擎与 CLI 测试</div></div></div>
 <div class="rw">
 <div class="ag"><div class="al">C++ 引擎 FileTransferCore</div><div class="ao">
-<div class="n s1"><div class="lb">TransferEngine.cpp</div><div class="ln">服务端 / 客户端收发</div></div>
-<div class="n i1"><div class="lb">TransferBridge.cpp</div><div class="ln">C API 桥接</div></div>
-<div class="n z1"><div class="lb">CommLogger.h</div><div class="ln">4KB 日志缓冲 → Swift</div></div>
+<div class="n s1"><div class="lb">TransferEngine.cpp</div><div class="ln">1838 行：push/pull 收发 + 并发会话</div></div>
+<div class="n i1"><div class="lb">TransferBridge.cpp</div><div class="ln">extern "C" 门面 222 行</div></div>
+<div class="n z1"><div class="lb">CommLogger.h</div><div class="ln">任意线程日志 → Swift 控制台</div></div>
+<div class="n z1"><div class="lb">broadcastLoop / discoveryLoop</div><div class="ln">UDP 信标收发各一后台线程</div></div>
 </div></div>
-<div class="ag"><div class="al">协议（64B 定长头）</div><div class="ao">
-<div class="n x1"><div class="lb">magic 'F','T',0xF0+ver,NUL</div><div class="ln">大端序 htonl</div></div>
-<div class="n x1"><div class="lb">CMD 1..5</div><div class="ln">请求/响应/数据/完成/取消</div></div>
-<div class="n e1"><div class="lb">MAX_CHUNK_SIZE 64KB</div><div class="ln">MAX_FILE_NAME_LEN 1024</div></div>
-<div class="n e1"><div class="lb">DEFAULT_PORT 8800</div><div class="ln">超时 3s / 5s / 30s</div></div>
+<div class="ag"><div class="al">协议 FTF（64B 定长头）</div><div class="ao">
+<div class="n x1"><div class="lb">magic 'F','T',0xF0+ver,NUL</div><div class="ln">大端序 htonl，版本不同即拒</div></div>
+<div class="n x1"><div class="lb">CMD 1..6</div><div class="ln">请求/响应/数据/完成/取消/删残留</div></div>
+<div class="n x1"><div class="lb">event 字段</div><div class="ln">RESP_ACCEPT=1 + FT_EVT_*</div></div>
+<div class="n e1"><div class="lb">MAX_CHUNK_SIZE 256KB</div><div class="ln">MAX_FILE_NAME_LEN 1024</div></div>
+<div class="n e1"><div class="lb">TCP 8800 / UDP 8801</div><div class="ln">信标 3s；超时 3s / 5s / 5s / 30s</div></div>
+</div></div>
+<div class="ag"><div class="al">传输模式</div><div class="ao">
+<div class="n m1"><div class="lb">push：ft_send_file</div><div class="ln">分片 ≤256KB 顺序发送</div></div>
+<div class="n m1"><div class="lb">pull：ft_request_file</div><div class="ln">对端只取 savePath 下同名普通文件</div></div>
+<div class="n i1"><div class="lb">服务端并发代发</div><div class="ln">每连接一个异步任务，chunkBuf 复用</div></div>
+<div class="n r1"><div class="lb">取消 / 删残留</div><div class="ln">分片边界生效，CMD 6 清对端半截</div></div>
 </div></div>
 <div class="ag"><div class="al">SwiftUI 界面</div><div class="ao">
-<div class="n m1"><div class="lb">ContentView</div><div class="ln">三页：Server/Client/History</div></div>
-<div class="n m1"><div class="lb">ServerView</div><div class="ln">监听 + 齿轮设置</div></div>
-<div class="n m1"><div class="lb">ClientView</div><div class="ln">连接 + 拖拽发送</div></div>
-<div class="n m1"><div class="lb">HistoryViews</div><div class="ln">History 页</div></div>
-<div class="n i1"><div class="lb">TransferCore.swift</div><div class="ln">@MainActor 状态中心</div></div>
-<div class="n i1"><div class="lb">+Engine/Callbacks/Sending</div><div class="ln">104 / 97 / 76，拆成三个 extension</div></div>
+<div class="n m1"><div class="lb">ContentView</div><div class="ln">分段 Picker 三页：Server/Client/History</div></div>
+<div class="n m1"><div class="lb">ServerView</div><div class="ln">监听/停止 + 齿轮设置 + LAN 徽标</div></div>
+<div class="n m1"><div class="lb">ClientView</div><div class="ln">设备列表 + 拖拽/选择 + Pull from Peer</div></div>
+<div class="n m1"><div class="lb">HistoryViews</div><div class="ln">传输历史 + 日志控制台</div></div>
+</div></div>
+<div class="ag"><div class="al">Swift 状态层（@MainActor）</div><div class="ao">
+<div class="n i1"><div class="lb">TransferCore.swift</div><div class="ln">238 行：状态中心 / UserDefaults</div></div>
+<div class="n i1"><div class="lb">+Engine 201 / +Sending 210</div><div class="ln">引擎生命周期 / 发送与拉取</div></div>
+<div class="n i1"><div class="lb">+Callbacks 157 / +Discovery 100</div><div class="ln">C 回调编组 / 信标监听</div></div>
+<div class="n z1"><div class="lb">TransferModels / UtilityExtensions</div><div class="ln">TransferTask、ReceivedFile、DiscoveredServer</div></div>
 </div></div>
 <div class="ag"><div class="al">构建 / 分发</div><div class="ao">
-<div class="n y1"><div class="lb">build_app.sh</div><div class="ln">release → .app → ad-hoc 签名</div></div>
+<div class="n y1"><div class="lb">build_app.sh</div><div class="ln">app / test / auto / clean</div></div>
+<div class="n g1"><div class="lb">Package.swift</div><div class="ln">macOS 13+，swift-tools 5.9</div></div>
 <div class="n g1"><div class="lb">Info.plist</div><div class="ln">NSLocalNetworkUsageDescription</div></div>
 <div class="n r1"><div class="lb">本地网络权限</div><div class="ln">macOS 15 起必须授权</div></div>
 </div></div>
 </div>
 <div class="dv"></div>
 <div class="fc">
-<div class="fd" style="background:rgba(16,185,129,.06)"><div class="dm">1</div><div><div class="lb" style="font-size:.6rem">Server 页 startServer(8800) 监听（listen backlog 5 + TCP_NODELAY）；Client 页 connectToServer → EHOSTUNREACH 多为本地网络权限未授权</div></div></div>
+<div class="fd" style="background:rgba(16,185,129,.06)"><div class="dm">1</div><div><div class="lb" style="font-size:.6rem">Server 页 startServer(8800) 监听（listen backlog 5 + TCP_NODELAY），同时每 3s 向 udp/8801 广播 <code>FTF-DISCOVER &lt;ver&gt; &lt;tcpPort&gt;</code>；Client 侧监听信标填入设备列表，15s 未再收到即剔除，EHOSTUNREACH 多为本地网络权限未授权</div></div></div>
 <div class="dx">↓</div>
-<div class="fd" style="background:rgba(59,130,246,.06)"><div class="dm">2</div><div><div class="lb" style="font-size:.6rem">发送端先发 64B 头（CMD 1 请求）→ 接收端回 CMD 2 响应（含文件名长度校验与路径穿越防护）</div></div></div>
+<div class="fd" style="background:rgba(59,130,246,.06)"><div class="dm">2</div><div><div class="lb" style="font-size:.6rem">发送端先发 64B 头（CMD 1 请求 push / 带 FT_EVT_REQUEST_PULL 为 pull）→ 接收端回 CMD 2（<code>event=1</code> 接受，含文件名长度校验与路径穿越防护，空文件也可）</div></div></div>
 <div class="dx">↓</div>
-<div class="fd" style="background:rgba(139,92,246,.06)"><div class="dm">3</div><div><div class="lb" style="font-size:.6rem">CMD 3 按剩余字节分片发送（≤64KB/片），Swift 侧串行队列避免多文件分片交错</div></div></div>
+<div class="fd" style="background:rgba(139,92,246,.06)"><div class="dm">3</div><div><div class="lb" style="font-size:.6rem">CMD 3 按剩余字节分片（≤256KB/片）；服务端每连接一个异步任务 + 分片缓冲复用，Swift 侧 <code>sendQueue</code>+<code>isBusy</code> 逐个发送，多选文件不会交错</div></div></div>
 <div class="dx">↓</div>
-<div class="fd" style="background:rgba(249,115,22,.06)"><div class="dm">4</div><div><div class="lb" style="font-size:.6rem">CMD 4 完成（回传真实落盘路径）/ CMD 5 取消；日志记录进 History 页</div></div></div>
+<div class="fd" style="background:rgba(249,115,22,.06)"><div class="dm">4</div><div><div class="lb" style="font-size:.6rem">CMD 4 完成（回传真实落盘路径）/ CMD 5 取消 → CMD 6 让对端删掉半截文件；日志与结果进 History 页</div></div></div>
 </div>
 </div></div>
 <table style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现（代码实测）</th></tr></thead><tbody>
-<tr><td>工程结构</td><td><code>Package.swift</code>（swift-tools 5.9，macOS 13+）：<code>FileTransferCore</code>(C++17, libc++) 被 <code>FileTransferMac</code> 依赖</td></tr>
-<tr><td>桥接方式</td><td><code>include/TransferBridge.h</code> 提供 <code>extern "C"</code> 接口（<code>ft_create/ft_start_server/ft_send_file/ft_set_save_path/ft_set_backoff_enabled…</code>），Swift 用 <code>Unmanaged</code> 传 self 作回调 userData</td></tr>
-<tr><td>健壮性</td><td>文件名长度上限 + 路径穿越过滤；空文件支持（分片按剩余字节算）；SO_SNDTIMEO + sendAll 超时不忙等；接收端 accept 后 <code>recv(MSG_PEEK)</code> 探测「到达即死」连接</td></tr>
-<tr><td>可选项</td><td>指数退避开关（构造默认关闭=快速判死）、保存路径、默认端口、日志控制台显示，均 UserDefaults 持久化</td></tr>
-<tr><td>本机限制</td><td><b>Linux 无法构建 SwiftUI 部分</b>（无 SwiftUI/AppKit/Combine）；C++ core 可 <code>g++ -fsyntax-only -std=c++17</code> 校验，Swift 层只能 <code>swiftc -typecheck</code> + 手写 modulemap 顶替</td></tr>
-<tr><td>已知坑</td><td>服务运行中改保存路径不会立即生效（引擎懒创建，仅在 makeEngine 时下发）— 现状保留</td></tr>
+<tr><td>工程结构</td><td><code>Package.swift</code>（swift-tools 5.9，macOS 13+）：<code>FileTransferCore</code>(C++17, libc++) 被 <code>FileTransferMac</code> 依赖；引擎 <code>TransferEngine.cpp</code> 1838 行 + 桥接 222 行</td></tr>
+<tr><td>桥接方式</td><td><code>include/TransferBridge.h</code> 提供 <code>extern "C"</code> 接口（<code>ft_create/ft_start_server/ft_send_file/ft_request_file/ft_cancel_transfer/ft_delete_file/ft_start_discovery…</code>），Swift 用 <code>Unmanaged</code> 传 self 作回调 userData；回调线程不定，Swift 侧用 <code>DispatchQueue.main</code> / <code>Task { @MainActor in … }</code> 编组</td></tr>
+<tr><td>传输模式</td><td>push（<code>ft_send_file</code>，连接后分片发送）、pull（<code>ft_request_file</code>，对端只在自身 savePath 找同名普通文件，缺失回 <code>-5</code>）、服务端并发代发；同一连接上 push/pull 互斥</td></tr>
+<tr><td>局域网发现</td><td>服务端 <code>broadcastLoop</code> 每 3s 广播 UDP 信标（默认开，Server 页齿轮可即时开关），客户端 <code>ft_start_discovery</code> 监听 8801 解析对端 IP:端口；<code>ft_set_interface</code> 可把广播/监听绑到指定网卡（en0/eth0/wlan0），载荷格式改动需同步 Android 端</td></tr>
+<tr><td>设备快照</td><td><code>ClientSessionMgr</code> 保留最近连接记录（<code>online</code> 标记 + 最近时间 + 正在接收的文件名与进度），<code>ft_get_clients</code> 按最近连接倒序写 <code>FT_ClientInfo</code>，短连接断开后设备不会从列表消失</td></tr>
+<tr><td>健壮性</td><td>文件名长度上限 1024 + 路径穿越过滤 + 同名追加 -1/-2；空文件支持（用 <code>event</code> 标记接受）；SO_SNDTIMEO + sendAll 超时不忙等；接收端 accept 后 <code>recv(MSG_PEEK)</code> 探测「到达即死」连接；每次传输独立取消标志（<code>weak_ptr</code> 不延寿）；进度回调以 <code>shared_ptr</code> 快照避免替换/析构竞争</td></tr>
+<tr><td>可选项</td><td>指数退避开关（默认关=3×20ms 快判死，开=≤16 次翻倍约 655s）、保存路径、默认端口、日志控制台显示，均 UserDefaults 持久化；改保存路径对后续传输立即生效（引擎每次落盘前重读）</td></tr>
+<tr><td>本机限制</td><td><b>Linux 无法构建 SwiftUI 部分</b>（无 SwiftUI/AppKit/Combine）；<code>./build_app.sh test</code> 可产出 CLI 驱动 <code>.build/test/transfer</code>（<code>serve/send/pull/del/discover</code>），直接与 Device2Device 手机端对传；Swift 层只能 <code>swiftc -typecheck</code> + 手写 modulemap 顶替</td></tr>
 </tbody></table>
-<div class="tags" style="margin-top:.4rem"><span class="t tk">SwiftUI</span><span class="t tp">Combine</span><span class="t tb">C++17</span><span class="t to">C ABI 桥接</span><span class="t tc">POSIX socket</span><span class="t ty">大端序协议</span><span class="t tr">ENOTCONN/退避</span></div>
+<div class="tags" style="margin-top:.4rem"><span class="t tk">SwiftUI</span><span class="t tp">Combine</span><span class="t tb">C++17</span><span class="t to">C ABI 桥接</span><span class="t tc">POSIX socket</span><span class="t ty">大端序协议</span><span class="t tg2">UDP 信标</span><span class="t m1">push + pull</span><span class="t tr">ENOTCONN/退避</span></div>
 </div></section>
 
 <section id="hd"><div class="ct">
@@ -758,7 +773,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <div class="dx">↓</div>
 <div class="fd" style="background:rgba(6,182,212,.06)"><div class="dm">2</div><div><div class="lb" style="font-size:.6rem">lookup：genSeek 造数据 → 扫帧头建索引 → 按时间窗返回偏移</div></div></div>
 <div class="dx">↓</div>
-<div class="fd" style="background:rgba(16,185,129,.06)"><div class="dm">3</div><div><div class="lb" style="font-size:.6rem">Mac/Transfer：64B 头握手 → 64KB 分片 → 完成/落盘</div></div></div>
+<div class="fd" style="background:rgba(16,185,129,.06)"><div class="dm">3</div><div><div class="lb" style="font-size:.6rem">Mac/Transfer：UDP 信标发现 → 64B 头握手 → 256KB 分片 → 完成/落盘</div></div></div>
 <div class="dx">↓</div>
 <div class="fd" style="background:rgba(249,115,22,.06)"><div class="dm">4</div><div><div class="lb" style="font-size:.6rem">hdware：ioctl/mmap 直接驱动字符设备、FPGA、RDMA</div></div></div>
 </div></div>

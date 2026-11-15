@@ -94,6 +94,8 @@ class Order:
     price: float
     qty: int = 0
     order_type: str = "limit"  # "limit" / "market"
+    stop_price: Optional[float] = None  # 风控止损价
+    trend_score: float = 0.0            # 趋势评分
     timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
 
 
@@ -371,11 +373,19 @@ class MultiTimeframeAnalyzer:
         self._indicator_cache: Dict[str, Dict] = {}
 
     def update_data(self) -> None:
-        """更新各周期K线数据"""
+        """更新各周期K线（去重，避免轮询累积重复行）"""
         for tf in self.timeframes:
             new_data = self.data_api.get_historical_data(self.symbol, tf)
-            if not new_data.empty:
-                self.data[tf] = pd.concat([self.data[tf], new_data]).tail(500)
+            if new_data.empty:
+                continue
+            merged = pd.concat([self.data[tf], new_data])
+            key = next((k for k in ("trade_date", "datetime", "date", "time")
+                        if k in merged.columns), None)
+            if key is not None:
+                merged = merged.drop_duplicates(subset=key, keep="last")
+            elif merged.index.has_duplicates:
+                merged = merged[~merged.index.duplicated(keep="last")]
+            self.data[tf] = merged.tail(500)
         self._indicator_cache.clear()  # 数据更新后清空指标缓存
 
     def _ensure_ohlc(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -568,13 +578,13 @@ class RiskManager:
             if self.daily_trade_count.get(order.symbol, 0) >= max_trades:
                 return False, f"Exceed daily trade limit ({max_trades})"
 
-            # 6. 单笔止损检查 (基于 ATR)
+            # 6. 单笔止损：写回订单供执行使用
             stop_loss = self.config.get("single_stop_loss", 0.03)
             if order.direction == "buy":
-                atr_stop_price = order.price * (1 - stop_loss)
+                order.stop_price = order.price * (1 - stop_loss)
             else:
-                atr_stop_price = order.price * (1 + stop_loss)
-            logger.debug("止损价: %.2f", atr_stop_price)
+                order.stop_price = order.price * (1 + stop_loss)
+            logger.debug("止损价: %.2f", order.stop_price)
 
             self.daily_trade_count[order.symbol] += 1
             return True, "Approved"
@@ -761,11 +771,13 @@ class EnhancedDualMAStrategy:
                 orders.append(Order(
                     symbol=sym, direction="buy", price=price,
                     qty=self.calculate_position_size(sym, price),
+                    trend_score=trend_score,
                 ))
             elif bearish and trend_score < -0.3:
                 orders.append(Order(
                     symbol=sym, direction="sell", price=price,
                     qty=self.calculate_position_size(sym, price),
+                    trend_score=trend_score,
                 ))
             else:
                 logger.debug(
@@ -775,7 +787,7 @@ class EnhancedDualMAStrategy:
 
         self._signal_history.extend([
             Signal(order.symbol, order.direction, order.price,
-                   reason=f"trend_score={trend_score:.2f}")
+                   reason=f"trend_score={order.trend_score:.2f}")
             for order in orders
         ])
         # 只保留最近 1000 条信号记录
@@ -800,6 +812,7 @@ class EnhancedDualMAStrategy:
                     "direction": order.direction,
                     "price": order.price,
                     "qty": order.qty,
+                    "stop_price": order.stop_price,
                     "timestamp": datetime.now().isoformat(),
                 })
 

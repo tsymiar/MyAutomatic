@@ -41,10 +41,12 @@ int main(int argc, char** argv)
                 cerr << "invalid websocket port: " << wsPort << " (expect 1~65535)" << endl;
                 return -1;
             }
-            if (wsPort > 0)
-                WsStartServer(wsPort);
-            StartServer(port);
+            if (wsPort > 0 && WsStartServer(wsPort) != 0)
+                cerr << "websocket server not started on port " << wsPort << endl;
+            int served = StartServer(port);
             WsStopServer();
+            if (served != 0)
+                return served;
         } else {
             HookDetail message;
             int stat = RequestClient(argv[1], message);

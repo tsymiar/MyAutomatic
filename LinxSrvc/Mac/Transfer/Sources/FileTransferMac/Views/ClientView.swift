@@ -234,34 +234,7 @@ struct ClientView: View {
             .padding(.horizontal)
 
             if core.discoverPeers {
-                if core.discoveredServers.isEmpty {
-                    Text("Listening on the LAN — no devices found yet…")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .padding(.horizontal)
-                } else {
-                    VStack(alignment: .leading, spacing: 6) {
-                        ForEach(core.discoveredServers) { server in
-                            // Tap the row to connect directly to that peer.
-                            Button {
-                                core.connect(to: server.ip, port: server.port)
-                            } label: {
-                                HStack(spacing: 8) {
-                                    Image(systemName: "network")
-                                        .foregroundColor(.green)
-                                    Text("\(server.ip):\(server.port)")
-                                        .font(.system(.body, design: .monospaced))
-                                    Spacer()
-                                    Label("Connect", systemImage: "link")
-                                        .font(.caption)
-                                }
-                                .foregroundColor(.primary)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                    .padding(.horizontal)
-                }
+                DiscoveredPeersView()
                 Divider()
             }
 
@@ -309,5 +282,44 @@ struct ClientView: View {
                 core.postLocalFile(url.path)
             }
         }
+    }
+}
+
+// MARK: - Peers found by the LAN discovery listener
+
+/// Rows are one-tap shortcuts: connecting means filling in that peer's
+/// IP:port, which is what the user would otherwise type by hand.
+private struct DiscoveredPeersView: View {
+    @EnvironmentObject var core: TransferCore
+
+    var body: some View {
+        Group {
+            if core.discoveredServers.isEmpty {
+                Text("Listening on the LAN — no devices found yet…")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            } else {
+                VStack(alignment: .leading, spacing: 6) {
+                    ForEach(core.discoveredServers) { server in
+                        Button {
+                            core.connect(to: server.ip, port: server.port)
+                        } label: {
+                            HStack(spacing: 8) {
+                                Image(systemName: "network")
+                                    .foregroundColor(.green)
+                                Text("\(server.ip):\(server.port)")
+                                    .font(.system(.body, design: .monospaced))
+                                Spacer()
+                                Label("Connect", systemImage: "link")
+                                    .font(.caption)
+                            }
+                            .foregroundColor(.primary)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
+        .padding(.horizontal)
     }
 }

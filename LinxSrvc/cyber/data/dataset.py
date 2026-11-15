@@ -87,13 +87,12 @@ class ConversationDataset(Dataset):
         enc = self.tokenizer(
             text,
             truncation=True,
-            padding='max_length',
             max_length=self.max_length,
             return_tensors='pt'
         )
 
-        input_ids = enc['input_ids'].squeeze()
-        attention_mask = enc['attention_mask'].squeeze()
+        input_ids = enc['input_ids'][0]
+        attention_mask = enc['attention_mask'][0]
 
         # 对于 raw 格式，简单地将整个序列作为 labels
         # 注意：这种方式会训练模型预测整个序列，包括 user 部分
@@ -107,79 +106,102 @@ class ConversationDataset(Dataset):
         }
 
     def _process_sharegpt(self, idx):
-        """处理 ShareGPT 格式数据
-
-        只计算 assistant 回复部分的损失，将 user 部分的 labels 设为 -100
-        """
+        """ShareGPT：仅 assistant 回复计损失（offset_mapping 一次定位，O(n)）。"""
         conv = self.examples[idx]['conversations']
-
-        # 获取角色配置
         human_role = self.sharegpt_config.get('human_role', 'human')
         assistant_role = self.sharegpt_config.get('assistant_role', 'gpt')
 
-        # 构建文本
+        parts = []
+        masked_spans = []        # 需置 -100 的字符区间
+        cursor = 0
+        for turn in conv:
+            role = turn.get('from')
+            if role == human_role:
+                seg = f"User: {turn['value']}\n"
+                masked_spans.append((cursor, cursor + len(seg)))
+            elif role == assistant_role:
+                seg = f"Assistant: {turn['value']}\n"
+            else:
+                continue
+            parts.append(seg)
+            cursor += len(seg)
+        tail = "Assistant:"
+        parts.append(tail)
+        masked_spans.append((cursor, cursor + len(tail)))
+        full_text = "".join(parts)
+
+        try:
+            enc = self.tokenizer(
+                full_text,
+                truncation=True,
+                max_length=self.max_length,
+                return_tensors='pt',
+                return_offsets_mapping=True,
+            )
+        except (ValueError, NotImplementedError):
+            # 无 offset 时回退逐段累积
+            return self._process_sharegpt_slow(idx)
+
+        input_ids = enc['input_ids'][0]
+        attention_mask = enc['attention_mask'][0]
+        labels = input_ids.clone()
+        offsets = enc.get('offset_mapping')
+        if offsets is None:
+            return self._process_sharegpt_slow(idx)
+        for tok_idx, (tok_start, tok_end) in enumerate(offsets[0].tolist()):
+            if tok_start == tok_end:          # 特殊 token 保留
+                continue
+            if any(tok_start < m_end and tok_end > m_start
+                   for m_start, m_end in masked_spans):
+                labels[tok_idx] = -100
+        return {
+            'input_ids': input_ids,
+            'attention_mask': attention_mask,
+            'labels': labels,
+        }
+
+    def _process_sharegpt_slow(self, idx):
+        """无 offset 时的回退实现。"""
+        conv = self.examples[idx]['conversations']
+        human_role = self.sharegpt_config.get('human_role', 'human')
+        assistant_role = self.sharegpt_config.get('assistant_role', 'gpt')
+
         text_parts = []
         label_parts = []
-
         for turn in conv:
             if turn['from'] == human_role:
-                # user 输入：不计算损失
-                user_text = f"User: {turn['value']}\n"
-                text_parts.append(user_text)
-                label_parts.append(None)  # 标记为不计算损失
+                text_parts.append(f"User: {turn['value']}\n")
+                label_parts.append(None)      # 不计算损失
             elif turn['from'] == assistant_role:
-                # assistant 回复：计算损失
-                assistant_text = f"Assistant: {turn['value']}\n"
-                text_parts.append(assistant_text)
-                label_parts.append(True)  # 标记为计算损失
-
-        # 添加最后的提示符
+                text_parts.append(f"Assistant: {turn['value']}\n")
+                label_parts.append(True)      # 计算损失
         text_parts.append("Assistant:")
-        label_parts.append(False)  # 提示符不计算损失
-
-        # 合并文本
+        label_parts.append(False)
         full_text = "".join(text_parts)
 
-        # tokenize
         enc = self.tokenizer(
             full_text,
             truncation=True,
-            padding='max_length',
             max_length=self.max_length,
-            return_tensors='pt'
+            return_tensors='pt',
         )
-
-        input_ids = enc['input_ids'].squeeze()
-        attention_mask = enc['attention_mask'].squeeze()
-
-        # 构建正确的 labels：只计算 assistant 回复部分
+        input_ids = enc['input_ids'][0]
+        attention_mask = enc['attention_mask'][0]
         labels = input_ids.clone()
 
-        # 计算各部分的 token 范围
         if len(text_parts) > 1:
             cumulative_text = ""
             token_positions = []
-
-            # 逐部分累积文本并记录对应的 token 范围
             for part in text_parts:
                 part_start = len(self.tokenizer(
-                    cumulative_text,
-                    return_tensors='pt',
-                    add_special_tokens=False
+                    cumulative_text, return_tensors='pt', add_special_tokens=False
                 )['input_ids'][0])
-
                 cumulative_text += part
-
                 part_end = len(self.tokenizer(
-                    cumulative_text,
-                    return_tensors='pt',
-                    add_special_tokens=False
+                    cumulative_text, return_tensors='pt', add_special_tokens=False
                 )['input_ids'][0])
-
                 token_positions.append((part_start, part_end))
-
-            # 将应该忽略的部分设为 -100
-            for _, (pos, should_label) in enumerate(zip(token_positions, label_parts)):
+            for (pos, should_label) in zip(token_positions, label_parts):
                 if not should_label:
                     start_pos, end_pos = pos
                     if start_pos < len(labels):
@@ -189,7 +211,7 @@ class ConversationDataset(Dataset):
         return {
             'input_ids': input_ids,
             'attention_mask': attention_mask,
-            'labels': labels
+            'labels': labels,
         }
 
     def _process_alpaca(self, idx):
@@ -238,13 +260,12 @@ class ConversationDataset(Dataset):
         enc = self.tokenizer(
             full_text,
             truncation=True,
-            padding='max_length',
             max_length=self.max_length,
             return_tensors='pt'
         )
 
-        input_ids = enc['input_ids'].squeeze()
-        attention_mask = enc['attention_mask'].squeeze()
+        input_ids = enc['input_ids'][0]
+        attention_mask = enc['attention_mask'][0]
 
         # 构建 labels：只计算 output 部分
         labels = input_ids.clone()

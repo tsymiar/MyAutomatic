@@ -5,8 +5,10 @@
 
 #include <libwebsockets.h>
 
+#include <atomic>
 #include <cstring>
 #include <deque>
+#include <mutex>
 #include <string>
 #include <thread>
 #include <vector>
@@ -17,6 +19,7 @@ constexpr size_t MAX_WS_MSG = 16 * 1024;   // max accepted inbound frame size
 
 struct SessionData {
     std::deque<std::string>* out = nullptr;  // per-connection outbound queue
+    std::vector<unsigned char> frame;        // reusable write buffer (LWS_PRE + payload)
 };
 
 int wsCallback(struct lws* wsi, enum lws_callback_reasons reason,
@@ -31,8 +34,9 @@ struct lws_protocols protocols[] = {
 
 std::vector<struct lws*> g_clients;        // all live connections (one thread)
 WsMessageCallback g_onMessage = nullptr;   // user hook (optional)
+std::mutex g_wsMtx;                        // guards g_wsThread / g_running in start+stop
 std::thread g_wsThread;
-volatile bool g_running = false;
+std::atomic<bool> g_running{ false };      // read by the service loop, written by callers
 
 int wsCallback(struct lws* wsi, enum lws_callback_reasons reason,
                void* user, void* in, size_t len)
@@ -60,12 +64,11 @@ int wsCallback(struct lws* wsi, enum lws_callback_reasons reason,
     case LWS_CALLBACK_SERVER_WRITEABLE:
         if (sd->out != nullptr && !sd->out->empty()) {
             const std::string& m = sd->out->front();
-            unsigned char* buf = new unsigned char[LWS_PRE + m.size()];
-            memcpy(buf + LWS_PRE, m.data(), m.size());
-            int n = lws_write(wsi, buf + LWS_PRE, m.size(), LWS_WRITE_TEXT);
-            delete[] buf;
-            if (n < 0) {
-                Error("ws: lws_write failed");
+            sd->frame.resize(LWS_PRE + m.size());
+            memcpy(sd->frame.data() + LWS_PRE, m.data(), m.size());
+            int n = lws_write(wsi, sd->frame.data() + LWS_PRE, m.size(), LWS_WRITE_TEXT);
+            if (n < 0 || (size_t)n < m.size()) {
+                Error("ws: lws_write failed(%d of %zu)", n, m.size());
                 return -1;
             }
             sd->out->pop_front();
@@ -111,13 +114,18 @@ void wsServiceLoop(int port)
     struct lws_context* context = lws_create_context(&info);
     if (context == nullptr) {
         Error("ws: create context failed on port %d", port);
+        g_running.store(false);     // otherwise a retry is rejected as "already running"
         return;
     }
     Message("websocket server start over [%d] OK!", port);
-    while (g_running) {
-        lws_service(context, 50);   // 50ms poll; all lws ops stay on this thread
+    while (g_running.load()) {
+        if (lws_service(context, 50) < 0) {   // 50ms poll; all lws ops stay on this thread
+            Error("ws: lws_service failed, stop the service loop");
+            break;
+        }
     }
     lws_context_destroy(context);
+    g_running.store(false);
     Message("websocket server stopped");
 }
 
@@ -132,22 +140,30 @@ int WsStartServer(int port)
         Error("ws: invalid port %d, expect 1~65535!", port);
         return -1;
     }
-    if (g_running) {
+    std::lock_guard<std::mutex> lock(g_wsMtx);
+    if (g_running.load()) {
         Warning("ws: server already running");
         return 0;
     }
-    g_running = true;
+    if (g_wsThread.joinable()) {
+        g_wsThread.join();          // a previous loop already exited (e.g. bind failed)
+    }
+    g_running.store(true);
     g_wsThread = std::thread(wsServiceLoop, port);
     return 0;
 }
 
 void WsStopServer()
 {
-    if (!g_running)
-        return;
-    g_running = false;
-    if (g_wsThread.joinable())
-        g_wsThread.join();
+    std::thread worker;
+    {
+        std::lock_guard<std::mutex> lock(g_wsMtx);
+        g_running.store(false);
+        worker = std::move(g_wsThread);
+    }
+    if (worker.joinable()) {
+        worker.join();
+    }
 }
 
 #endif // WITH_WEBSOCKETS

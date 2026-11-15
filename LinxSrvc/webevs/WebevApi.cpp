@@ -1,6 +1,7 @@
 #include "WebevApi.h"
 
 #include <errno.h>
+#include <fcntl.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/wait.h>
@@ -10,16 +11,15 @@
 #include <string.h>
 #include <ctype.h>
 #include <unordered_map>
-#include <chrono>
-#include <thread>
 #include <mutex>
-#include <atomic>
 
 #include "event2/http_struct.h"
 #include "event2/event.h"
 #include "event2/buffer.h"
+#include "event2/bufferevent.h"
 #include "event2/dns.h"
 #include "event2/thread.h"
+#include "event2/util.h"
 #include "event2/keyvalq_struct.h" 
 #include "event2/buffer_compat.h"
 
@@ -35,7 +35,8 @@ vector<string> g_headList = {
 };
 
 namespace {
-    const int g_wait100ms = 100000;
+    const int g_connectTimeout = 10;    // seconds to establish the client connection
+    const int g_ioTimeout = 120;        // seconds without traffic on the client connection
     const char* HTTPD_SIGNATURE = "webserver/1.0";
     static unordered_map<void*, string> g_msgRecv = {};
     static unordered_map<string, string> g_extraOpts = {};
@@ -43,16 +44,35 @@ namespace {
     static string g_frontendRoot = { };      // frontend static root; empty means frontend disabled
     // g_msgRecv: written by the event thread, read by the requester
     static mutex g_msgMtx;
-    // set by HttpClient before dispatching, guards reading detail.base
-    static atomic<bool> g_clientBaseReady{ false };
 }
 
 void Response(struct evhttp_request* request, HookDetail detail = {});
 void Release(event_base* base, evhttp_connection* evcon = nullptr);
 
-void NullFunc(...)
+void NullFunc(const HookDetail&, size_t)
 {
     Message("calling null func");
+}
+
+// reason phrase matching the status line, so clients do not see e.g. "404 OK"
+const char* ReasonPhrase(int status)
+{
+    switch (status) {
+    case HTTP_OK: return "OK";
+    case HTTP_NOCONTENT: return "No Content";
+    case HTTP_MOVEPERM: return "Moved Permanently";
+    case HTTP_MOVETEMP: return "Found";
+    case HTTP_NOTMODIFIED: return "Not Modified";
+    case HTTP_BADREQUEST: return "Bad Request";
+    case HTTP_NOTFOUND: return "Not Found";
+    case HTTP_BADMETHOD: return "Method Not Allowed";
+    case HTTP_ENTITYTOOLARGE: return "Payload Too Large";
+    case HTTP_EXPECTATIONFAILED: return "Expectation Failed";
+    case HTTP_INTERNAL: return "Internal Server Error";
+    case HTTP_NOTIMPLEMENTED: return "Not Implemented";
+    case HTTP_SERVUNAVAIL: return "Service Unavailable";
+    default: return "Unknown";
+    }
 }
 
 void ElegantlyBreak(void* arg)
@@ -75,12 +95,15 @@ DEALRES_CALLBACK GetResHook(const string& uri, evhttp_cmd_type cmd)
 
 void RemoteReadCallback(struct evhttp_request* remote_host, void* arg)
 {
-    if (remote_host == nullptr)
-        return;
-    Message("remote_rsp: %s[%d]", remote_host->remote_host, remote_host->remote_port);
+    // a null request means the connection failed, the loop must stop anyway
+    if (remote_host != nullptr) {
+        Message("remote_rsp: %s[%d]", remote_host->remote_host, remote_host->remote_port);
+    } else {
+        Warning("remote_rsp: null request, connection failed");
+    }
     ElegantlyBreak(arg);
 }
-#ifdef evhttp_request_error
+#if LIBEVENT_VERSION_NUMBER >= 0x02010000
 void RemoteRequestErrorCallback(enum evhttp_request_error error, void* arg)
 {
     Error("request failed: %d!", error);
@@ -93,11 +116,10 @@ void RemoteConnectionCloseCallback(struct evhttp_connection* /*connection*/, voi
     ElegantlyBreak(arg);
 }
 
+#if LIBEVENT_VERSION_NUMBER >= 0x02010000
 int ReadHeaderDoneCallback(struct evhttp_request* remote_rsp, void*)
 {
-#ifdef evhttp_request_get_response_code_line
     Message("< HTTP/1.1 %d %s", evhttp_request_get_response_code(remote_rsp), evhttp_request_get_response_code_line(remote_rsp));
-#endif
     struct evkeyvalq* headers = evhttp_request_get_input_headers(remote_rsp);
     struct evkeyval* header;
     TAILQ_FOREACH(header, headers, next) {
@@ -106,10 +128,11 @@ int ReadHeaderDoneCallback(struct evhttp_request* remote_rsp, void*)
     Message("< ");
     return 0;
 }
+#endif
 
 void ReadChunkCallback(struct evhttp_request* resp, void* base)
 {
-    const int len = 4096;
+    const size_t len = 4096;
     char data[len];
     struct evbuffer* evbuf = evhttp_request_get_input_buffer(resp);
     size_t size = 0;
@@ -197,7 +220,7 @@ bool IsSafeToken(const string& in)
 }
 
 // map an url to a real file under the frontend root; empty result means "not served"
-string ResolveFrontendFile(const string& url)
+string ResolveFrontendFile(const string& url, struct stat* info)
 {
     if (g_frontendRoot.empty()) {
         return "";
@@ -207,9 +230,8 @@ string ResolveFrontendFile(const string& url)
     if (stop != string::npos) {
         path.resize(stop);   // stop <= size()，等价截断且不再构造临时串
     }
-    while (!path.empty() && path[0] == '/') {
-        path.erase(path.begin());
-    }
+    size_t begin = path.find_first_not_of('/');
+    path.erase(0, begin == string::npos ? path.size() : begin);
     if (path.empty()) {
         path = "index.html";                    // "/" serves the landing page
     }
@@ -228,6 +250,9 @@ string ResolveFrontendFile(const string& url)
     if (stat(full.c_str(), &st) != 0 || !S_ISREG(st.st_mode)) {
         return "";
     }
+    if (info != nullptr) {
+        *info = st;
+    }
     return full;
 }
 
@@ -244,8 +269,64 @@ void SendFrontend(struct evhttp_request* req_ptr, const string& content, int sta
     evhttp_add_header(heads, "Content-Type", type);
     evhttp_add_header(heads, "Access-Control-Allow-Origin", "*");
     evhttp_add_header(heads, "Cache-Control", "no-cache");
-    evhttp_send_reply(req_ptr, status, "OK", buf);
+    evhttp_send_reply(req_ptr, status, ReasonPhrase(status), buf);
     evbuffer_free(buf);
+}
+
+// the browser keeps the asset and asks again with the exact Last-Modified value it got
+bool NotModifiedSince(struct evhttp_request* req_ptr, const char* date)
+{
+    const struct evkeyvalq* heads = evhttp_request_get_input_headers(req_ptr);
+    const char* since = evhttp_find_header(heads, "If-Modified-Since");
+    if (since == nullptr) {
+        return false;
+    }
+    const size_t len = strlen(date);
+    return strncmp(since, date, len) == 0 && since[len] == '\0';
+}
+
+// stream the file from disk: the page cache holds the bytes, no userspace copy per request
+void SendFrontendFile(struct evhttp_request* req_ptr, const string& full, const struct stat& info)
+{
+    struct evkeyvalq* heads = req_ptr->output_headers;
+    char date[64] = { 0 };
+    struct tm tmv = { };
+    if (gmtime_r(&info.st_mtime, &tmv) != nullptr) {
+        evutil_date_rfc1123(date, sizeof(date), &tmv);
+    }
+    if (NotModifiedSince(req_ptr, date)) {
+        evhttp_add_header(heads, "Server", HTTPD_SIGNATURE);
+        evhttp_add_header(heads, "Last-Modified", date);
+        evhttp_send_reply(req_ptr, HTTP_NOTMODIFIED, ReasonPhrase(HTTP_NOTMODIFIED), nullptr);
+        Message("[304] frontend: %s", full.c_str());
+        return;
+    }
+    struct evbuffer* buf = evbuffer_new();
+    if (buf == nullptr) {
+        Error("create response buffer failed!");
+        SendFrontend(req_ptr, "500 Read File Failed\n", HTTP_INTERNAL, "text/plain; charset=utf-8");
+        return;
+    }
+    if (info.st_size > 0) {
+        const int fd = open(full.c_str(), O_RDONLY);
+        if (fd < 0 || evbuffer_add_file(buf, fd, 0, (ev_off_t)info.st_size) != 0) {
+            if (fd >= 0) {
+                close(fd);      // add_file only owns the fd once it succeeded
+            }
+            evbuffer_free(buf);
+            Error("[500] read frontend file failed: %s (%s)", full.c_str(), strerror(errno));
+            SendFrontend(req_ptr, "500 Read File Failed\n", HTTP_INTERNAL, "text/plain; charset=utf-8");
+            return;
+        }
+    }
+    evhttp_add_header(heads, "Server", HTTPD_SIGNATURE);
+    evhttp_add_header(heads, "Content-Type", MimeTypeOf(full));
+    evhttp_add_header(heads, "Access-Control-Allow-Origin", "*");
+    evhttp_add_header(heads, "Last-Modified", date);
+    evhttp_add_header(heads, "Cache-Control", "no-cache");
+    evhttp_send_reply(req_ptr, HTTP_OK, ReasonPhrase(HTTP_OK), buf);
+    evbuffer_free(buf);
+    Message("[200] frontend: %s (%lld bytes)", full.c_str(), (long long)info.st_size);
 }
 
 // serve the frontend; return false when the frontend is disabled (keep legacy behavior)
@@ -254,20 +335,14 @@ bool ServeFrontend(struct evhttp_request* req_ptr, const string& url)
     if (g_frontendRoot.empty()) {
         return false;
     }
-    string full = ResolveFrontendFile(url);
+    struct stat info = { };
+    string full = ResolveFrontendFile(url, &info);
     if (full.empty()) {
         Warning("[404] frontend file not found: %s", url.c_str());
         SendFrontend(req_ptr, "404 Not Found\n", HTTP_NOTFOUND, "text/plain; charset=utf-8");
         return true;
     }
-    string body = getFileAsCstring(full);
-    if (body.empty()) {
-        Error("[500] read frontend file failed: %s", full.c_str());
-        SendFrontend(req_ptr, "500 Read File Failed\n", HTTP_INTERNAL, "text/plain; charset=utf-8");
-        return true;
-    }
-    SendFrontend(req_ptr, body, HTTP_OK, MimeTypeOf(full));
-    Message("[200] frontend: %s (%zu bytes)", full.c_str(), body.size());
+    SendFrontendFile(req_ptr, full, info);
     return true;
 }
 
@@ -318,10 +393,23 @@ string DetectRepoRoot()
     return root;
 }
 
+// ".." would make the "rm -rf" below escape the working directory, and "/"
+// would remove the filesystem root
+bool IsSafeWorkdir(const string& dir)
+{
+    if (dir.empty()) {
+        return true;                            // empty means the built-in default
+    }
+    if (!IsSafeToken(dir) || dir.find("..") != string::npos) {
+        return false;
+    }
+    return dir.find_first_not_of('/') != string::npos;
+}
+
 // export a git branch as the frontend root; every git command runs inside the repo root
 int FetchFrontendFromGit(const string& branch, const string& workdir)
 {
-    if (!IsSafeToken(branch) || !IsSafeToken(workdir)) {
+    if (!IsSafeToken(branch) || branch.find("..") != string::npos || !IsSafeWorkdir(workdir)) {
         Error("unsafe branch/workdir: '%s', '%s'!", branch.c_str(), workdir.c_str());
         return -1;
     }
@@ -410,10 +498,9 @@ void GenericHandler(struct evhttp_request* req_ptr, void* param)
         evhttp_connection_get_peer(conn, &address, &port);
     }
     const char* req_uri = evhttp_request_get_uri(req_ptr);
-    char* dec_uri = evhttp_decode_uri(req_uri);
-    struct evkeyvalq head;
-    evhttp_parse_query(dec_uri, &head);
-    string url = dec_uri;
+    size_t dec_len = 0;
+    char* dec_uri = evhttp_uridecode(req_uri == nullptr ? "/" : req_uri, 1, &dec_len);
+    string url = dec_uri == nullptr ? string("/") : string(dec_uri, dec_len);
     free(dec_uri);
     evhttp_cmd_type method = evhttp_request_get_command(req_ptr);
     size_t size = EVBUFFER_LENGTH(req_ptr->input_buffer);
@@ -459,10 +546,16 @@ void GenericHandler(struct evhttp_request* req_ptr, void* param)
             return;
         }
         int status = 0;
+        // the child inherits the parent stdio buffer: flush it first, so the child
+        // cannot write the parent's pending lines a second time
+        fflush(stdout);
+        fflush(stderr);
         pid_t child = fork();
         if (child == 0) {
             if (list.size() > 0 && list[0] == "log") {
                 status = HTTP_OK;
+                struct evkeyvalq head;
+                evhttp_parse_query(url.c_str(), &head);
                 for (auto it = g_headList.begin(); it != g_headList.end(); ++it) {
                     const char* ptr = evhttp_find_header(&head, it->c_str());
                     if (ptr == nullptr) continue;
@@ -503,6 +596,7 @@ void GenericHandler(struct evhttp_request* req_ptr, void* param)
                 if (list.size() > 1 && list[1] == "save") {
                     Message("cmd = %s", getVariable(url, "cmd").c_str());
                 }
+                evhttp_clear_headers(&head);
             } else {
                 Message("no resource to deal.");
             }
@@ -510,7 +604,11 @@ void GenericHandler(struct evhttp_request* req_ptr, void* param)
             if (write(filedes[1], &status, sizeof(int)) < 0) {
                 Error("write status to pipe failed!");
             }
-            exit(0);
+            // flush what this child printed, then leave without running the
+            // inherited atexit handlers (they would flush the parent's buffers)
+            fflush(stdout);
+            fflush(stderr);
+            _exit(0);
         } else if (child > 0) {
             // Close the write end first: otherwise read() never sees EOF if the child dies
             close(filedes[1]);
@@ -541,27 +639,16 @@ void GenericHandler(struct evhttp_request* req_ptr, void* param)
     }
 }
 
-void WaitMsgTask(event_base* base)
-{
-    unsigned int count = 0;
-    while (true) {
-        bool empty;
-        {
-            lock_guard<mutex> lock(g_msgMtx);
-            empty = (base == nullptr) || g_msgRecv[base].empty();
+// frees the parsed uri on every exit path of HttpClient; host/path point into it
+struct UriHolder {
+    struct evhttp_uri* uri = nullptr;
+    ~UriHolder()
+    {
+        if (uri != nullptr) {
+            evhttp_uri_free(uri);
         }
-        if (!empty || count > 3)
-            break;
-        this_thread::sleep_for(chrono::microseconds(g_wait100ms));
-        Message("dispatch timeout %us to exit", count);
-        count++;
-    };
-    if (base != nullptr) {
-        ElegantlyBreak(base);
-    } else {
-        exit(0);
     }
-}
+};
 
 int HttpClient(HookDetail& detail)
 {
@@ -571,13 +658,14 @@ int HttpClient(HookDetail& detail)
         return -1;
     }
 
-    struct evhttp_uri* uri = evhttp_uri_parse(detail.url.c_str());
-    if (uri == nullptr) {
+    UriHolder holder;
+    holder.uri = evhttp_uri_parse(detail.url.c_str());
+    if (holder.uri == nullptr) {
         Error("parse url(%s) failed!", detail.url.c_str());
         Release(base);
         return -2;
     }
-    const char* path = evhttp_uri_get_path(uri);
+    const char* path = evhttp_uri_get_path(holder.uri);
     if (path == nullptr || path[0] == '\0') {
         detail.url = "/";
         path = "(null)";
@@ -591,13 +679,13 @@ int HttpClient(HookDetail& detail)
         return -3;
     }
 
-    const char* host = evhttp_uri_get_host(uri);
+    const char* host = evhttp_uri_get_host(holder.uri);
     if (host == nullptr) {
         Error("get host from %s failed!", detail.url.c_str());
         Release(base);
         return -4;
     }
-    int port = evhttp_uri_get_port(uri);
+    int port = evhttp_uri_get_port(holder.uri);
     if (port < 0) port = 80;
 
     Message("url: %s, host: %s, port: %d, path: %s.", detail.url.c_str(), host, port, path);
@@ -609,9 +697,14 @@ int HttpClient(HookDetail& detail)
         return -5;
     }
     evhttp_connection_set_closecb(connect, RemoteConnectionCloseCallback, base);
-    if (request->evcon != nullptr) evhttp_connection_set_timeout(request->evcon, 300);
+    // the timeouts belong to the connection: request->evcon is still null here
+    evhttp_connection_set_timeout(connect, g_connectTimeout);
+    struct bufferevent* bev = evhttp_connection_get_bufferevent(connect);
+    if (bev != nullptr) {
+        struct timeval tv = { g_ioTimeout, 0 };
+        bufferevent_set_timeouts(bev, &tv, &tv);
+    }
     detail.base = base;
-    g_clientBaseReady.store(true, memory_order_release);
     Message("http success connects!");
 
     const char* user_agent = "Mozilla/5.0 (Macintosh;"
@@ -622,7 +715,6 @@ int HttpClient(HookDetail& detail)
     evhttp_add_header(output_headers, "Connection", "keep-alive");
     evhttp_add_header(output_headers, "User-Agent", user_agent);
     evhttp_add_header(output_headers, "Accept", "*/*");
-    evhttp_add_header(output_headers, "Accept-Encoding", "gzip,deflate,br");
     evhttp_add_header(output_headers, "Accept-Language", "zh-CN,zh;q=0.8");
     evhttp_add_header(output_headers, "Cache-Control", "max-age=0");
     if (!g_extraOpts.empty()) {
@@ -633,9 +725,8 @@ int HttpClient(HookDetail& detail)
 
     if (detail.filename != nullptr) {
         char conBuf[256] = { 0 };
-        snprintf(conBuf, 256, "http://%s", host);
+        snprintf(conBuf, sizeof(conBuf), "http://%s", host);
         evhttp_add_header(output_headers, "Origin", conBuf);
-        snprintf(conBuf, 48, "application/x-www-form-urlencoded;charset=utf-8");
         Message("setting '%s' form-data", detail.filename);
 
         evbuffer* output_buffer = evhttp_request_get_output_buffer(request);
@@ -681,15 +772,20 @@ int HttpClient(HookDetail& detail)
         evhttp_add_header(output_headers, "Content-Type", conBuf);
     }
 
-#ifdef evhttp_request_set_header_cb
+#if LIBEVENT_VERSION_NUMBER >= 0x02010000
     evhttp_request_set_header_cb(request, ReadHeaderDoneCallback);
 #endif
     evhttp_request_set_chunked_cb(request, ReadChunkCallback);
-#ifdef RemoteRequestErrorCallback
+#if LIBEVENT_VERSION_NUMBER >= 0x02010000
     evhttp_request_set_error_cb(request, RemoteRequestErrorCallback);
 #endif
-    evhttp_make_request(connect, request, detail.method, detail.url.c_str());
+    if (evhttp_make_request(connect, request, detail.method, detail.url.c_str()) != 0) {
+        Error("dispatch request to %s failed!", detail.url.c_str());
+        Release(base, connect);
+        return -7;
+    }
 
+    // returns once a response, a connection close or a timeout breaks the loop
     event_base_dispatch(base);
     Release(base, connect);
     Message("request finished");
@@ -714,6 +810,7 @@ int StartServer(int port, struct SrvCallbacks* callbacks)
     struct evhttp* http = evhttp_new(base);
     if (http == nullptr) {
         Error("http server malloc failed!");
+        event_base_free(base);
         return -1;
     }
 
@@ -721,6 +818,8 @@ int StartServer(int port, struct SrvCallbacks* callbacks)
     int ret = evhttp_bind_socket(http, addr, port);
     if (ret != 0) {
         Error("http bind socket failed(%d): %d!", ret, port);
+        evhttp_free(http);
+        event_base_free(base);
         return -1;
     }
 
@@ -737,64 +836,65 @@ int StartServer(int port, struct SrvCallbacks* callbacks)
 
 int RequestClient(const char* url, HookDetail& detail, DEALRES_CALLBACK hook)
 {
-    int stat = -1;
-    // register before the thread starts; null hook means no per-chunk handling
+    if (url == nullptr || url[0] == '\0') {
+        Error("empty url!");
+        return -1;
+    }
+    // registered before dispatching; a null hook disables per-chunk handling
     g_dealHooks["handleResponse"].callback = hook;
-    g_clientBaseReady.store(false, memory_order_relaxed);
-    thread client([&stat, &detail](const char* target) {
-        detail.url = target;
-        stat = HttpClient(detail);
-        }, url);
-    // bounded wait for the base publication (error paths never publish)
-    for (int i = 0; i < 10 && !g_clientBaseReady.load(memory_order_acquire); ++i)
-        this_thread::sleep_for(chrono::microseconds(g_wait100ms));
-    // break the dispatch once a message lands
-    if (g_clientBaseReady.load(memory_order_acquire))
-        WaitMsgTask(detail.base);
-    client.join();
+    detail.url = url;
+    const int stat = HttpClient(detail);
     {
         lock_guard<mutex> lock(g_msgMtx);
-        for (auto msg : g_msgRecv) {
-            if (!msg.second.empty()) {
-                detail.msg = msg.second;
+        auto it = g_msgRecv.find(detail.base);
+        if (it != g_msgRecv.end()) {
+            if (!it->second.empty()) {
+                detail.msg.swap(it->second);
             }
+            g_msgRecv.erase(it);
         }
     }
+    detail.base = nullptr;
     return stat;
 }
 
 void Response(struct evhttp_request* request, HookDetail message)
 {
-    struct evbuffer* buf = evbuffer_new();
-    if (buf == nullptr) {
-        Error("failed to create response buffer!");
+    if (request == nullptr) {
+        Error("client request invalid!");
         return;
     }
     string content = "";
+    bool json = false;
     if (message.method == EVHTTP_REQ_OPTIONS) {
         message.status = HTTP_OK;
     } else {
         if (message.status < HTTP_OK && message.status != 0) {
             message.status = HTTP_BADMETHOD;
         } else if (message.status != HTTP_NOTIMPLEMENTED) {
-            const char* status = (message.status == HTTP_OK ? "true" : "false");
             if (message.status == 0) {
                 message.status = HTTP_BADMETHOD;
             }
+            const char* status = (message.status == HTTP_OK ? "true" : "false");
             content =
                 "{  \"status\": [" + to_string(message.status) +
                 ", " + string(status) + "]" +
                 (message.status != HTTP_OK ? (",  \"message\": \"" + message.msg + "\"") : "") +
                 "}";
+            json = true;
         } else {
             content = message.msg;
         }
     }
-    if (request == NULL) {
-        Error("client request invalid!");
+    struct evbuffer* buf = evbuffer_new();
+    if (buf == nullptr) {
+        Error("failed to create response buffer!");
         return;
     }
     evhttp_add_header(request->output_headers, "Server", HTTPD_SIGNATURE);
+    if (json) {
+        evhttp_add_header(request->output_headers, "Content-Type", "application/json; charset=utf-8");
+    }
     evhttp_add_header(request->output_headers, "Access-Control-Allow-Origin", "*");
     evhttp_add_header(request->output_headers, "Access-Control-Allow-Method", "POST, GET, OPTIONS");
     evhttp_add_header(request->output_headers, "Access-Control-Allow-Headers", "X-PINGOTHER, Content-Type");
@@ -807,8 +907,8 @@ void Response(struct evhttp_request* request, HookDetail message)
         }
     }
 
-    evbuffer_add_printf(buf, "%s", content.c_str());
-    evhttp_send_reply(request, message.status, "OK", buf);
+    evbuffer_add(buf, content.data(), content.size());
+    evhttp_send_reply(request, message.status, ReasonPhrase(message.status), buf);
     evbuffer_free(buf);
     Message("[%d]\n%s", message.status, content.c_str());
 }

@@ -6,6 +6,12 @@ project ("${TARGET}")
 add_definitions(-std=c++11)
 set(CXX_STANDARD 11)
 
+# a server should not be built with the default -O0
+if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "build type" FORCE)
+endif()
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -ggdb -pthread")
+
 include_directories (
     ../include
     /usr/local/include
@@ -25,13 +31,7 @@ endif()
 if (NOT ${EVENT_LIB} MATCHES "NOTFOUND")
     file(GLOB SRC_FILE_LIST "*[^.h]*.c*[^.txt]*")
     add_executable (${TARGET} ${SRC_FILE_LIST})
-    target_link_libraries (${TARGET}
-        -fPIC
-        -Wall
-        -ggdb
-        -pthread
-        ${EVENT_LIB}
-    )
+    target_link_libraries (${TARGET} ${EVENT_LIB})
     if (NOT ${WEBSOCKETS_LIB} MATCHES "NOTFOUND")
         target_link_libraries (${TARGET} ${WEBSOCKETS_LIB})
     endif()

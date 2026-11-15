@@ -62,7 +62,8 @@ struct ServerView: View {
                             .padding(.vertical, 2)
                             .background(Capsule().fill(Color.green.opacity(0.18)))
                             .foregroundColor(.green)
-                            .help("Broadcasting this device's IP:port on the LAN every 3s so peers can find it automatically")
+                            .help("Broadcasting this device's IP:port on the LAN every 3s "
+                                  + "so peers can find it automatically")
                     }
                 }
             }
@@ -241,7 +242,8 @@ struct TransferSettingsPanel: View {
 
             Toggle("Broadcast on LAN", isOn: $core.broadcastEnabled)
                 .toggleStyle(.switch)
-            Text("While listening, announce this device's IP:port on the LAN every 3s so peers can find it without typing an address.")
+            Text("While listening, announce this device's IP:port on the LAN every 3s "
+                 + "so peers can find it without typing an address.")
                 .font(.caption)
                 .foregroundColor(.secondary)
                 .fixedSize(horizontal: false, vertical: true)

@@ -1,24 +1,12 @@
 #!/usr/bin/python
 # coding: utf-8
-"""本地/实时K线图工具 matkline。
+"""本地/实时K线图工具。
 
-数据流：数据源接口 -> 统一7列结构 [时间, 量, 开, 收, 高, 低, 额] -> 区间过滤 -> 绘图
-
-数据源（均为免密钥真实接口）:
-    tencent      A股/指数/基金    日线(原生支持区间) + 1/5/15/30分钟/小时
-    eastmoney    东方财富        A股/期货/港股
-    gold         沪金/沪银       新浪国内期货，日线全量历史 + 分钟线，真实OHLC
-    xau/gc/crude/brent/ng        新浪国际期货(伦敦金/纽约金/WTI/布伦特/天然气)
-                                 日线真实OHLC；分钟线由当日分时线+实时快照聚合
-    usd          美元指数        分钟线由东财分时聚合；日线及以上由欧洲央行汇率反算
-    binance/okx  加密货币        按 startTime 分页取全
-
-周期：1Q/1Y 由日线本地聚合，usd 的 1w/1M 同；5s 由 Binance 系 1s K线聚合，
-    默认以贝塞尔曲线显示。
-交互：悬停蜡烛图看该根K线详情；单击底部副图在 成交量/MACD/RSI/KDJ 之间切换；
-    顶部菜单「配置 → 行情参数」可改 数据源/标的/周期/根数 并就地重绘。
-导出：`--csv out.csv` 把当前K线写成CSV；指标参数用 --macd/--rsi/--kdj 调整；
-    菜单「文件 → 保存图片」把当前图导出为 PNG。
+数据流：数据源 -> 统一7列 [时间,量,开,收,高,低,额] -> 区间过滤 -> 绘图
+数据源：tencent/eastmoney/gold/新浪国际期货(xau,gc,crude,brent,ng)/usd/binance/okx
+周期：1Q/1Y 由日线聚合；5s 由 Binance 1s 聚合，默认贝塞尔显示
+交互：悬停看K线详情；单击副图切换 成交量/MACD/RSI/KDJ；「配置→行情参数」就地重绘
+导出：--csv 写CSV；「文件→保存图片」导出PNG
 """
 
 import argparse
@@ -52,7 +40,7 @@ SINA_REFERER = "https://finance.sina.com.cn"
 # ---------------------------------------------------------------------------
 SOURCES = {
     "tencent": {
-        # 部分网络解析不了 ifzq 的 301 目标 web3，故 ifzq 优先、web 作镜像
+        # ifzq 优先、web 镜像（部分网络解析不了 301 目标）
         "kline_url": ["https://ifzq.gtimg.cn/appstock/app/fqkline/get",
                       "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get"],
         "minute_url": ["https://ifzq.gtimg.cn/appstock/app/kline/mkline",
@@ -83,7 +71,7 @@ SOURCES = {
     },
 }
 
-# 新浪国际期货（免密钥）：日线为真实历史OHLC，分钟线由当日分时线 + 实时快照聚合
+# 新浪国际期货：日线真实OHLC，分钟线由分时线+快照聚合
 SINA_FUTURES = {
     "xau": {"code": "XAU", "name": "伦敦金现货", "snapshot": "hf_XAU"},
     "gc": {"code": "GC", "name": "纽约金COMEX", "snapshot": "hf_GC"},
@@ -877,7 +865,7 @@ def usdx_from_rates(row):
         if value <= 0:
             return 0.0
         rates[currency] = value
-    # base=USD 时 EUR/GBP 给的是「1美元兑X外币」，取倒数还原成 EURUSD/GBPUSD
+    # base=USD 时 EUR/GBP 为「1美元兑X外币」，取倒数还原
     return (USDX_BASE * (1.0 / rates["EUR"]) ** -0.576 * rates["JPY"] ** 0.136
             * (1.0 / rates["GBP"]) ** -0.119 * rates["CAD"] ** 0.091
             * rates["SEK"] ** 0.042 * rates["CHF"] ** 0.036)
@@ -986,7 +974,7 @@ def _load_tencent(query):
                   % (query.code, TENCENT_MINUTE_KEY[query.interval], query.limit)}
         urls = conf["minute_url"]
     else:
-        # 日线及以上支持 code,period,start,end,count 的原生历史区间查询
+        # 日线及以上走原生区间查询
         key = TENCENT_DAILY_KEY.get(query.interval, "day")
         params = {"param": "%s,%s,%s,%s,%d,qfq"
                   % (query.code, key, query.start or "", query.end or "", query.limit)}
@@ -1153,7 +1141,7 @@ def load_source_points(source, symbol, interval, limit=120, timeout=10, start=No
     if loader is None:
         raise ValueError("未知数据源: %s" % source)
     interval = validate_interval(source, normalize_interval(interval))
-    # 1Q/1Y/5s(及美元指数周/月) 无原生接口: 先按基础周期取数(根数按比例放大), 再本地聚合
+    # 1Q/1Y/5s 等无原生接口：先取基础周期（放大根数）再本地聚合
     base = RESAMPLE_BASE.get(interval) or EXTRA_RESAMPLE_BASE.get(source, {}).get(interval)
     resample = base is not None
     fetch_interval = base or interval
@@ -1707,7 +1695,6 @@ def plot_candles(points, title, bars=None, params=None):
     count = len(x)
     body = 0.62 if count <= 240 else (0.76 if count <= 600 else 0.9)
     wick = 0.85 if count <= 600 else 0.6
-    half = body / 2.0
     axis.vlines(x, low_arr, high_arr, color=colors, linewidth=wick)
     up = rising
     down = ~rising
@@ -1842,7 +1829,9 @@ def prepare_window_ui():
         return
     if backend == "macosx":
         try:
-            import tkinter                    # noqa: F401
+            import importlib.util
+            if importlib.util.find_spec("tkinter") is None:
+                raise ImportError
         except ImportError:
             print("提示：未检测到 tkinter，保留 macosx 默认工具栏（无自定义菜单）")
             return
@@ -1877,7 +1866,7 @@ def _install_status_bar(figure):
         return
     import tkinter as tk
     bar = tk.Label(window, text="", anchor="w", fg="#c23b3b", padx=6)
-    # before=canvas 先占底部条带，否则先 pack 的画布会把状态行挤成 0 高
+    # 先占底部条带，否则画布会把状态行挤成 0 高
     bar.pack(side=tk.BOTTOM, fill=tk.X,
              before=figure.canvas.get_tk_widget())
     figure._matkline_status = bar
@@ -2019,14 +2008,71 @@ def open_quote_dialog(config, on_apply, figure=None):
     return window
 
 
+def _make_quote_applied(config):
+    """返回打印「配置已更新」的回调（对话框应用参数后调用）。"""
+
+    def quote_applied():
+        print("%s  配置已更新: source=%s symbol=%s interval=%s limit=%s"
+              % (_now_text(), config["source"], config["symbol"],
+                 config["interval"], config["limit"]))
+
+    return quote_applied
+
+
+def _fetch_loop(loader, refresh, stop, box, lock):
+    """后台取数线程主体：按 refresh 周期拉取，结果写入 box（加锁）。"""
+    while not stop.is_set():
+        try:
+            title, points = loader()
+        except (OSError, ValueError, json.JSONDecodeError, KeyError) as error:
+            with lock:
+                box["error"] = "%s  刷新失败: %s" % (_now_text(), error)
+        else:
+            with lock:
+                box["data"] = (title, points)
+        stop.wait(max(refresh, 0.5))
+
+
+def _apply_stream_frame(figure, render, data, error, last_sig, csv_path):
+    """处理后台线程送来的一帧（错误/新数据/无变化），返回新的 last_sig。"""
+    if error:
+        print(error, file=sys.stderr)
+        set_status_text(figure, error)
+        return last_sig
+    if not data:
+        return last_sig
+    title, points = data
+    sig = ((title, len(points[0]), points[0][-1], points[3][-1])
+           if points[0] else None)
+    if sig == last_sig:
+        return last_sig
+    if points[0]:
+        render(points, title)
+        set_window_title(figure, title)
+        figure._matkline_dirty = True
+        set_status_text(figure, "", error=False)
+        tail = ""
+        if csv_path:
+            try:
+                export_csv(points, csv_path)
+                tail = "  csv=%s" % csv_path
+            except OSError as err:
+                tail = "  导出CSV失败: %s" % err
+                set_status_text(figure, "导出CSV失败: %s" % err)
+        print("%s  %s bars, last=%s%s"
+              % (_now_text(), len(points[0]), points[3][-1], tail))
+    else:
+        msg = "%s  空数据" % _now_text()
+        print(msg, file=sys.stderr)
+        set_status_text(figure, msg)
+    return sig
+
+
 def stream_api(loader, refresh=5.0, chart="candle", csv_path=None, params=None,
                config=None):
-    """轮询数据源并刷新图表，直到窗口关闭。loader() 返回 (标题, points)。
+    """轮询数据源并刷新图表直到窗口关闭。loader() 返回 (标题, points)。
 
-    取数在后台线程：主线程只渲染和派发GUI事件，网络慢不冻结窗口；
-    主线程/Tcl回调里做阻塞socket，新版Python的GIL记账下会直接崩溃。
-    csv_path 指定时每帧覆盖写CSV（导出失败只提示，不影响刷新）；
-    config 给定时菜单「配置 → 行情参数」可改参数，下一次轮询生效。
+    取数在后台线程，避免阻塞 GUI；csv_path 每帧覆盖写CSV；config 供「行情参数」改参。
     """
     if chart == "candle":
         render = partial(plot_candles, bars=None, params=params)
@@ -2038,63 +2084,23 @@ def stream_api(loader, refresh=5.0, chart="candle", csv_path=None, params=None,
     if chart == "candle":
         print("提示：" + PANEL_HINT)
     if config is not None:
-        def quote_applied():
-            print("%s  配置已更新: source=%s symbol=%s interval=%s limit=%s"
-                  % (_now_text(), config["source"], config["symbol"],
-                     config["interval"], config["limit"]))
-        install_custom_menu(figure,
-                            lambda: open_quote_dialog(config, quote_applied, figure))
+        install_custom_menu(
+            figure,
+            lambda: open_quote_dialog(config, _make_quote_applied(config), figure))
     stop = threading.Event()
     box = {}                                    # 后台线程写入，主线程读取
     lock = threading.Lock()
-
-    def fetch_loop():
-        while not stop.is_set():
-            try:
-                title, points = loader()
-            except (OSError, ValueError, json.JSONDecodeError, KeyError) as error:
-                with lock:
-                    box["error"] = "%s  刷新失败: %s" % (_now_text(), error)
-            else:
-                with lock:
-                    box["data"] = (title, points)
-            stop.wait(max(refresh, 0.5))
-
-    threading.Thread(target=fetch_loop, daemon=True).start()
+    threading.Thread(target=_fetch_loop,
+                     args=(loader, refresh, stop, box, lock),
+                     daemon=True).start()
     last_sig = None
     try:
         while plt.fignum_exists(figure.number):
             with lock:
                 data = box.pop("data", None)
                 error = box.pop("error", None)
-            if error:
-                print(error, file=sys.stderr)
-                set_status_text(figure, error)
-            elif data:
-                title, points = data
-                sig = ((title, len(points[0]), points[0][-1], points[3][-1])
-                       if points[0] else None)
-                if sig != last_sig:
-                    last_sig = sig
-                    if points[0]:
-                        render(points, title)
-                        set_window_title(figure, title)
-                        figure._matkline_dirty = True
-                        set_status_text(figure, "", error=False)
-                        tail = ""
-                        if csv_path:
-                            try:
-                                export_csv(points, csv_path)
-                                tail = "  csv=%s" % csv_path
-                            except OSError as err:
-                                tail = "  导出CSV失败: %s" % err
-                                set_status_text(figure, "导出CSV失败: %s" % err)
-                        print("%s  %s bars, last=%s%s"
-                              % (_now_text(), len(points[0]), points[3][-1], tail))
-                    else:
-                        msg = "%s  空数据" % _now_text()
-                        print(msg, file=sys.stderr)
-                        set_status_text(figure, msg)
+            last_sig = _apply_stream_frame(figure, render, data, error,
+                                           last_sig, csv_path)
             # 渲染过数据按 refresh 节奏等；还没数据时小步轮询，首图一到就画
             _refresh_wait(figure, refresh if data else 0.1)
     except KeyboardInterrupt:
@@ -2246,6 +2252,34 @@ def build_indicator_params(parser, args):
     return params
 
 
+def make_apply_quote(loader, render):
+    """「行情参数」回调：后台线程重新取数，经 window.after 回主线程重绘。"""
+
+    def apply_quote():
+        window = plt.gcf().canvas.manager.window
+
+        def fetch():
+            try:
+                new_title, points = loader()
+            except (OSError, ValueError, json.JSONDecodeError, KeyError) as error:
+                msg = "%s  刷新失败: %s" % (_now_text(), error)
+                print(msg, file=sys.stderr)
+                set_status_text(plt.gcf(), msg)
+                return
+            window.after(0, lambda: show(points, new_title))
+
+        def show(points, new_title):
+            render(points, new_title)
+            print("bars=%d  %s" % (len(points[0]), span_text(points)))
+            set_window_title(plt.gcf(), new_title)
+            set_status_text(plt.gcf(), "", error=False)
+            plt.gcf().canvas.draw_idle()
+
+        threading.Thread(target=fetch, daemon=True).start()
+
+    return apply_quote
+
+
 def main(argv=None):
     parser = build_parser()
     argv = sys.argv[1:] if argv is None else argv
@@ -2272,17 +2306,16 @@ def main(argv=None):
     historical = bool(start or end)
     # 普通模式默认120根；历史区间查询默认不限条数，否则只会拿到区间末尾一小段
     limit = args.limit if args.limit is not None else (0 if historical else 120)
-    # 秒级周期(5s)K线密集，默认画成贝塞尔曲线；显式指定 --chart 时以用户选择为准
+    # 5s 默认贝塞尔；显式 --chart 优先
     chart = args.chart or ("bezier" if normalize_interval(args.interval) in SECOND_STEP
                            else "candle")
     render = (partial(plot_candles, bars=None, params=params) if chart == "candle"
               else plot_bezier if chart == "bezier" else plot_points)
     suffix = range_suffix(start, end)
-    # 联网条件：自定义地址 / --live / --history / 显式数据源 / 指定了标的
-    # （--source auto --symbol 原油 这类写法显然是想查行情，不该退回本地文件）
+    # 联网：有地址/live/history/非auto源/指定标的
     online = (bool(args.api_url) or args.live or args.history
               or args.source != "auto" or bool(args.symbol))
-    # 持续刷新只由 --live 触发；--api-url 默认实时，指定历史区间时只查一次
+    # 持续刷新：--live，或 --api-url 且非历史区间
     stream = args.live or (bool(args.api_url) and not historical)
 
     config = {"source": args.source, "symbol": args.symbol or "",
@@ -2310,30 +2343,7 @@ def main(argv=None):
     if args.csv:
         write_csv(points, args.csv)
 
-    def apply_quote():
-        """按「行情参数」里改好的参数重新取数并就地重绘（取数在后台线程，
-        重绘经 window.after 调回主线程，避免在 Tcl 回调里做阻塞 socket）。"""
-        window = plt.gcf().canvas.manager.window
-
-        def fetch():
-            try:
-                new_title, points = loader()
-            except (OSError, ValueError, json.JSONDecodeError, KeyError) as error:
-                msg = "%s  刷新失败: %s" % (_now_text(), error)
-                print(msg, file=sys.stderr)
-                set_status_text(plt.gcf(), msg)
-                return
-            window.after(0, lambda: show(points, new_title))
-
-        def show(points, new_title):
-            render(points, new_title)
-            print("bars=%d  %s" % (len(points[0]), span_text(points)))
-            set_window_title(plt.gcf(), new_title)
-            set_status_text(plt.gcf(), "", error=False)
-            plt.gcf().canvas.draw_idle()
-
-        threading.Thread(target=fetch, daemon=True).start()
-
+    apply_quote = make_apply_quote(loader, render)
     install_custom_menu(plt.gcf(),
                         lambda: open_quote_dialog(config, apply_quote, plt.gcf()))
     plt.show()
