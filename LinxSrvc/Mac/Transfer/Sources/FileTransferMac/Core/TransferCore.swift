@@ -11,6 +11,7 @@ import FileTransferCore
 //    • TransferCore+Engine.swift     engine lifecycle, server / client connection
 //    • TransferCore+Sending.swift    send queue and single-file sending
 //    • TransferCore+Callbacks.swift  C callback wiring and progress handling
+//    • TransferCore+Discovery.swift  LAN discovery beacon listener
 //  Members touched from those files cannot be private (Swift private is
 //  file-scoped), hence the internal storage below.
 // ──────────────────────────────────────────────────────────────────────────────
@@ -194,8 +195,8 @@ final class TransferCore: ObservableObject {
 
     /// Reset the progress bar only when no client send/pull is in flight.
     /// Server start/stop must not clobber the progress of a concurrent client
-    /// transfer now that both roles share one engine; isBusy also guards the
-    /// disconnect button, so it is never touched here.
+    /// transfer: both roles share one engine. isBusy also guards the disconnect
+    /// button, so it is never touched here.
     func resetProgressIfIdle() {
         guard !isBusy else { return }
         transferredBytes = 0
@@ -203,6 +204,40 @@ final class TransferCore: ObservableObject {
         progress = 0
         transferFileName = ""
         status.server = ""
+    }
+
+    // MARK: - History
+
+    /// Whether the task's peer is still connected. Sending rides the client
+    /// connection; receiving matches a server-side device entry.
+    private func peerOnline(_ task: TransferTask) -> Bool {
+        switch task.direction {
+        case .sending:
+            return isConnected
+        case .receiving:
+            guard isServerRunning else { return false }  // no server, no live transfer
+            let parts = task.peerIP.split(separator: ":")  // "ip:port" from the event prefix
+            guard parts.count == 2, let port = UInt16(parts[1]) else { return true }
+            guard let device = devices.first(where: {
+                $0.ip == String(parts[0]) && $0.port == port
+            }) else { return true }  // unknown peer: assume alive, keep the row locked
+            return device.online
+        }
+    }
+
+    /// Delete is offered for unfinished rows; an in-flight row stays locked
+    /// while its peer is online so a live transfer cannot lose its history row.
+    func canDeleteHistoryTask(_ task: TransferTask) -> Bool {
+        guard task.status != .completed else { return false }
+        guard task.status == .transferring || task.status == .pending else { return true }
+        return !peerOnline(task)
+    }
+
+    /// Drop one history row. The id leaves inFlightTaskIDs first so a late
+    /// progress/terminal callback cannot bind to a row the user deleted.
+    func removeHistoryTask(_ id: UUID) {
+        inFlightTaskIDs.removeAll { $0 == id }
+        transferTasks.removeAll { $0.id == id }
     }
 
     // MARK: - Utilities

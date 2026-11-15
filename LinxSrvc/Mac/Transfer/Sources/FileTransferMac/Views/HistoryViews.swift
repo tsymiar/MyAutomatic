@@ -53,6 +53,15 @@ struct TransferLogView: View {
                         Section("Tasks") {
                             ForEach(core.transferTasks) { task in
                                 TransferRow(task: task)
+                                    .contextMenu {
+                                        if core.canDeleteHistoryTask(task) {
+                                            Button(role: .destructive) {
+                                                core.removeHistoryTask(task.id)
+                                            } label: {
+                                                Label("Delete", systemImage: "trash")
+                                            }
+                                        }
+                                    }
                             }
                         }
                     }

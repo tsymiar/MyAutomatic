@@ -281,7 +281,7 @@ bool NotModifiedSince(struct evhttp_request* req_ptr, const char* date)
     if (since == nullptr) {
         return false;
     }
-    const size_t len = strlen(date);
+    const size_t len = strnlen(date, sizeof(date));   // bounded, date may be unset
     return strncmp(since, date, len) == 0 && since[len] == '\0';
 }
 

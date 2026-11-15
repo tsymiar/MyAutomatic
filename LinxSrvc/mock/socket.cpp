@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -35,7 +36,7 @@ struct RuntimeState {
     float fBps = 0;
     float progress = 0;
     bool bserv = false;
-    bool running = true;
+    volatile sig_atomic_t running = 1;
     bool dealFile = false;
     TCPUDP how = TCP;
     FILE* filep = NULL;
@@ -152,21 +153,37 @@ void wait(unsigned int tms)
     }
 }
 
-void signal_exit(int s)
+// Async-signal-safe: flip the flag and close the fd only; stdio and exit stay
+// on the main flow. The interactive client blocks on stdin, which cannot be
+// woken by a flag, so it hard-exits here; a second Ctrl-C forces any stuck path.
+void signal_stop(int)
+{
+    static volatile sig_atomic_t busy = 0;
+    if (busy) {
+        _exit(130);
+    }
+    busy = 1;
+    g_state.running = 0;
+    if (g_state.sock != -1) {
+        close(g_state.sock);                    // wakes accept/recv/send blocked on this fd
+        g_state.sock = -1;
+    }
+    if (!g_state.bserv && !g_state.dealFile) {
+        _exit(0);
+    }
+}
+
+// Main-thread cleanup: flush and close what the signal handler must not touch.
+void cleanupState()
 {
     if (g_state.dealFile && g_state.filep != NULL) {
         fclose(g_state.filep);
         g_state.filep = NULL;
     }
-    if (g_state.running) {
-        g_state.running = false;
-    }
     if (g_state.sock != -1) {
         close(g_state.sock);
         g_state.sock = -1;
     }
-    cout << "ctrl-c, socket close, SIG=" << s << "." << endl;
-    exit(0);
 }
 
 static bool is_multicast_addr(const char* ip)
@@ -285,8 +302,11 @@ int server(int argc, char* argv[])
                 if (errno == EINTR) {
                     continue;
                 }
-                perror("accept");
-                return -7;
+                if (g_state.running) {          // real accept error; Ctrl-C closed the fd already
+                    perror("accept");
+                    return -7;
+                }
+                break;
             }
             if (g_state.dealFile) {
                 if ((g_state.filep = fopen(file, "wb+")) == NULL) {
@@ -297,7 +317,7 @@ int server(int argc, char* argv[])
             inet_ntop(AF_INET, (void*)&local.sin_addr, ip, 16);
             cout << "socket accept from " << ip << ":" << ntohs(local.sin_port) << ", waiting message..." << endl;
             while (g_state.running) {
-                FD_ZERO(&fds);                      // Rebuild fd set each loop (select mutates timeout)
+                FD_ZERO(&fds);                      // select mutates both fd set and timeout; rebuild each loop
                 FD_SET(csock, &fds);
                 timeout.tv_sec = 0;
                 timeout.tv_usec = 3000;
@@ -324,7 +344,7 @@ int server(int argc, char* argv[])
                             fclose(g_state.filep);
                             g_state.filep = NULL;
                         } else if (rcvlen < 0x10000) {
-                            fsync(fileno(g_state.filep));   // Flush small packets; filep cleared on error
+                            fsync(fileno(g_state.filep));   // Flush small packets promptly
                         }
                     }
                 } else if (rcvlen == 0) {
@@ -361,7 +381,7 @@ int server(int argc, char* argv[])
                     tickRate(start, calclen);
                     inet_ntop(AF_INET, (void*)&loc.sin_addr, ip, sizeof(ip));
                     printf("recv from %s:%d size=%zd\n", ip, ntohs(loc.sin_port), rcvlen);
-                    // Batch-print in 32-byte lines via a buffer instead of per-byte printf
+                    // Batch-print 32 hex bytes per line
                     for (ssize_t i = 0; i < rcvlen; ) {
                         char line[3 * 32 + 1] = "";
                         char* p = line;
@@ -380,7 +400,7 @@ int server(int argc, char* argv[])
             }
         }
     }
-    signal_exit(0);
+    cleanupState();
     cout << "server exit." << endl;
     return 0;
 }
@@ -399,8 +419,8 @@ int client(int argc, char* argv[])
     const char* file = "./test";
     size_t thrds = 1;
     g_state.bserv = false;
-    vector<int> vecstat;
     vector<char> msgbuf(1024);
+    vector<thread> works;                       // joined after the send loop; empty outside file mode
     if (argc <= 2) {
         usage(argv[0]);
         return -1;
@@ -448,37 +468,6 @@ int client(int argc, char* argv[])
             cout << "thread count too big, fixed to " << MAX_WORK_THREADS << "." << endl;
         }
     }
-    if (thrds > 1 && g_state.how == TCP) {      // UDP uses sendto directly; no worker threads needed
-        vecstat.assign(thrds, 0);
-        thread* works = new thread[thrds];
-        for (size_t i = 0; i < thrds; i++) {
-            works[i] = thread([&](size_t index) -> void {
-                Message msg;
-                uint64_t total = 0;
-                while (!g_sentOver || queueSize() > 0) {   // Exit only after sender done and queue drained
-                    if (queuePop(msg) < 0) {
-                        wait(1);
-                        continue;
-                    }
-                    if (msg.sock > 0 && msg.size > 0 && msg.addr != nullptr) {
-                        ssize_t bytes = send(msg.sock, msg.addr, static_cast<size_t>(msg.size), 0);
-                        if (bytes < 0) {
-                            fprintf(stderr, "send failed, socket=%d, size=%d.\n", msg.sock, msg.size);
-                        } else {
-                            total += static_cast<uint64_t>(bytes);
-                        }
-                    }
-                    msg.release();
-                }
-                vecstat[index] = 1;             // Store per element to avoid vector<bool> bit sharing
-                cout << "work thread[" << index << "] total size = " << total << endl;
-                },
-                i);
-            works[i].detach();
-            cout << "work thread[" << i << "] start" << endl;
-        }
-        delete[] works;
-    }
     if (g_state.how == TCP) {
         ssock = socket(PF_INET, SOCK_STREAM, 0);
         if (ssock == -1) {
@@ -503,15 +492,41 @@ int client(int argc, char* argv[])
                 perror("setsockopt IP_MULTICAST_TTL");
             }
             // loopback left at default (optionally enabled)
-            // unsigned char loop = 1;
-            // setsockopt(ssock, IPPROTO_IP, IP_MULTICAST_LOOP, &loop, sizeof(loop));
+        }
+    }
+    g_state.sock = ssock;                       // the signal handler closes this fd to wake blocked sends
+    // Created after connect: an early return before this point must not leave
+    // joinable threads behind (vector<thread> would abort in its destructor).
+    if (thrds > 1 && g_state.how == TCP && g_state.dealFile) {  // workers only drain the file-send queue
+        works.reserve(thrds);
+        for (size_t i = 0; i < thrds; i++) {
+            works.emplace_back([&, i] {
+                Message msg;
+                uint64_t total = 0;
+                while (!g_sentOver || queueSize() > 0) {   // Exit only after sender done and queue drained
+                    if (queuePop(msg) < 0) {
+                        wait(1);
+                        continue;
+                    }
+                    if (msg.sock > 0 && msg.size > 0 && msg.addr != nullptr) {
+                        ssize_t bytes = send(msg.sock, msg.addr, static_cast<size_t>(msg.size), 0);
+                        if (bytes < 0) {
+                            fprintf(stderr, "send failed, socket=%d, size=%d.\n", msg.sock, msg.size);
+                        } else {
+                            total += static_cast<uint64_t>(bytes);
+                        }
+                    }
+                    msg.release();
+                }
+                cout << "work thread[" << i << "] total size = " << total << endl;
+            });
+            cout << "work thread[" << i << "] start" << endl;
         }
     }
     if (argc <= 5) {
         cout << "type message to send:" << endl;
-        while (cin >> msgbuf.data()) {
-            size_t len = strnlen(msgbuf.data(), msgbuf.size() - 1) + 1;
-            msgbuf[msgbuf.size() - 1] = '\0'; // Ensure null termination
+        while (g_state.running && (cin >> setw(msgbuf.size()) >> msgbuf.data())) {   // setw bounds the field write
+            size_t len = strlen(msgbuf.data()) + 1;   // setw already NUL-terminates
             if (g_state.how == TCP) {
                 ssize_t bytes = send(ssock, msgbuf.data(), len, 0);
                 if (bytes < 0) {
@@ -525,17 +540,17 @@ int client(int argc, char* argv[])
         }
     } else {
         g_sentOver = false;
+        uint64_t sentSize = 0;
+        uint64_t start = getUsecTime();
         g_state.fileno = open(file, O_RDONLY, 0666);
         if (g_state.fileno != -1) {
-            uint64_t sentSize = 0;
             long total = lseek(g_state.fileno, 0, SEEK_END);
             lseek(g_state.fileno, 0, SEEK_SET);
-            uint64_t start = getUsecTime();
             uint64_t current = start;
             uint64_t calcsize = 0;
             ssize_t rdsize = 0;
             size_t chunk = msgbuf.size();          // caplen already clamped and resized during parsing
-            while ((rdsize = read(g_state.fileno, msgbuf.data(), chunk)) > 0) { /*Flawfinder: ignore*/
+            while (g_state.running && (rdsize = read(g_state.fileno, msgbuf.data(), chunk)) > 0) { /*Flawfinder: ignore*/
                 if (rdsize > static_cast<ssize_t>(chunk)) {
                     // read should never return more than requested; bail out if it does
                     fprintf(stderr, "read beyond buffer: got %zd, expect <= %zu\n", rdsize, chunk);
@@ -559,6 +574,9 @@ int client(int argc, char* argv[])
                         ssize_t bytes = send(ssock, msgbuf.data(), static_cast<size_t>(rdsize), 0);
                         if (bytes < 0) {
                             perror("send");
+                            if (!g_state.running) {     // fd closed by the signal handler
+                                break;
+                            }
                             continue;
                         }
                         sentSize += static_cast<uint64_t>(bytes);
@@ -575,32 +593,30 @@ int client(int argc, char* argv[])
                         reinterpret_cast<struct sockaddr*>(&local), sizeof(local));
                     if (sent < 0) {
                         perror("sendto");
+                        if (!g_state.running) {         // fd closed by the signal handler
+                            break;
+                        }
                     } else {
                         sentSize += static_cast<uint64_t>(sent);
                     }
                 }
             }
-            g_sentOver = true;                  // All queued; signal workers they may exit
-            while (thrds > 1 && g_state.how == TCP) {
-                bool status = true;
-                for (size_t i = 0; i < vecstat.size(); i++) {
-                    status = status && (vecstat[i] != 0);
-                }
-                if (status) {
-                    break;
-                }
-                wait(1);                        // Sleep instead of spinning to save CPU
-            }
-            fprintf(stdout, "sent %.3fM over, average speed is %.3f MB/s\n",
-                static_cast<double>(sentSize) / 1048576.0,
-                static_cast<double>(sentSize) / static_cast<double>(getUsecTime() - start) * 1048576.0 / 1000000.0);
             close(g_state.fileno);
         } else {
             perror("open");
-            g_sentOver = true;              // Nothing to send; don't leave workers idle-waiting
         }
+        g_sentOver = true;                  // Queuing done; workers exit once the queue drains
+        for (auto& w : works) {
+            w.join();
+        }
+        fprintf(stdout, "sent %.3fM over, average speed is %.3f MB/s\n",
+            static_cast<double>(sentSize) / 1048576.0,
+            static_cast<double>(sentSize) / static_cast<double>(getUsecTime() - start) * 1048576.0 / 1000000.0);
     }
-    close(ssock);
+    if (g_state.sock == ssock) {                // skip if the signal handler already closed it
+        close(ssock);
+        g_state.sock = -1;
+    }
     return 0;
 }
 
@@ -645,7 +661,7 @@ int main(int argc, char* argv[])
     if (task.joinable()) {
         task.detach();
     }
-    signal(SIGINT, signal_exit);
+    signal(SIGINT, signal_stop);
     int status = 0;
 #ifndef CLIENT
     status = server(argc, argv);
