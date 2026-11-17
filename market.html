@@ -79,6 +79,9 @@
         .mk-inds button + button { border-left: 1px solid var(--border); }
         .mk-inds button:hover { background: #e6ebf8; }
         .mk-inds button.on { background: var(--grad-btn); color: #fff; }
+        /* 工具栏按钮统高 */
+        .mk-tools .btn.sm, select.mk-period, .mk-inds { height: 28px; }
+        .mk-tools .btn.sm, select.mk-period, .mk-inds button { padding-top: 0; padding-bottom: 0; }
         .stat { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
         .toast {
             position: fixed; bottom: 46px; left: 50%; transform: translateX(-50%);
@@ -149,7 +152,7 @@
         }
         .mk-modal-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
         .mk-modal-head h2 { font-size: 16px; margin: 0; }
-        .mk-modal-box canvas { display: block; width: 100%; height: calc(100% - 56px); }
+        .mk-modal-box canvas { display: block; width: 100%; flex: 1; min-height: 0; height: auto; }
         .mk-hover {
             position: fixed; z-index: 70; width: 262px; padding: 10px 12px;
             background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
@@ -170,6 +173,37 @@
         .mk-tip b { color: #fff; font-size: 12px; }
         .mk-tip .up { color: #ff8a8a; }
         .mk-tip .down { color: #7ee2a8; }
+        .mk-totop {
+            position: fixed; right: 14px; bottom: 18px; z-index: 55;
+            width: 40px; height: 40px; border: none; border-radius: 50%;
+            background: var(--grad-btn); color: #fff; font-size: 17px; cursor: pointer;
+            box-shadow: 0 10px 24px -8px rgba(91, 98, 244, .6);
+            opacity: 0; visibility: hidden; transform: translateY(8px); transition: .22s;
+        }
+        .mk-totop.show { opacity: 1; visibility: visible; transform: none; }
+        @media (max-width: 640px) {
+            body { padding: 0 0 8px; }
+            .card { padding: 13px 12px; margin-bottom: 10px; border-radius: 13px; }
+            .card h2 { font-size: 16px; }
+            .mk-head { gap: 8px; margin-bottom: 10px; }
+            .mk-tools { gap: 6px; flex-wrap: wrap; }
+            .mk-meta { display: none; }
+            .btn { padding: 9px 12px; }
+            .btn.sm { padding: 8px 11px; font-size: 13px; }
+            .mk-inds button { padding: 0 10px; font-size: 12px; }
+            select.mk-period { padding: 0 9px; font-size: 16px; }
+            .mk-tools .btn.sm, .mk-add .btn, select.mk-period, .mk-inds { height: 30px; }
+            .mk-add { gap: 6px; }
+            .mk-add input { font-size: 16px; }
+            .mk-heat { height: 400px; }
+            .mk-row { gap: 8px; padding: 12px 10px; }
+            .mk-del { padding: 9px 10px; }
+            .mk-snap { font-size: 11.5px; }
+            .mk-tip { white-space: normal; max-width: calc(100vw - 20px); }
+            .toast { bottom: 20px; max-width: calc(100% - 32px); text-align: center; }
+            .mk-modal-box { padding: 10px; height: 88%; }
+            .mk-modal-head { gap: 6px; }
+        }
     </style>
 </head>
 <body>
@@ -188,7 +222,7 @@
         <div class="stat" id="mk_heat_stat"></div>
     </div>
 
-    <div class="card">
+    <div class="card" id="mk_quote_card">
         <div class="mk-head">
             <h2>📈 行情</h2>
             <div class="mk-tools">
@@ -224,6 +258,12 @@
                     <option value="week">周K</option>
                     <option value="month">月K</option>
                 </select>
+                <select id="mk_bars" class="mk-period" title="K线根数">
+                    <option value="120">120根</option>
+                    <option value="250">250根</option>
+                    <option value="500">500根</option>
+                    <option value="800">800根</option>
+                </select>
                 <div class="mk-inds" id="mk_inds">
                     <button type="button" class="on" data-action="mkIndChange" data-arg="vol" title="成交量">VOL</button>
                     <button type="button" data-action="mkIndChange" data-arg="macd" title="MACD(12,26,9)">MACD</button>
@@ -244,6 +284,7 @@
                 <h2 id="mk_float_title">📈 K线</h2>
                 <div class="mk-tools">
                     <select id="mk_float_period" class="mk-period"></select>
+                    <select id="mk_float_bars" class="mk-period"></select>
                     <div class="mk-inds" id="mk_float_inds"></div>
                     <button class="btn ghost sm" data-action="mkCloseFloat">✕ 关闭</button>
                 </div>
@@ -259,6 +300,7 @@
     </div>
 
     <div class="mk-tip" id="mk_cross_tip"></div>
+    <button class="mk-totop" id="mk_totop" aria-label="回到顶部">↑</button>
     <div class="toast" id="toast"></div>
 
 <script>
@@ -274,6 +316,7 @@ const MK = {
     sel: localStorage.getItem('devutils_mk_sel') || null,
     range: localStorage.getItem('devutils_mk_range') || 'day',
     ind: localStorage.getItem('devutils_mk_ind') || 'vol',
+    bars: parseInt(localStorage.getItem('devutils_mk_bars'), 10) || 120,
     rows: [], heat: [], chartData: null,
     hoverCache: {}, hoverCode: null, hoverSeq: 0, floatOpen: false,
     timer: null, auto: true, busy: false, chartBusy: false, heatBusy: false
@@ -301,7 +344,7 @@ function mkCap(v) {
 function mkNorm(raw) {
     const c = raw.trim().toLowerCase();
     if (/^(sh|sz|bj|hk|us)[0-9a-z.]+$/.test(c)) return c;
-    if (/^\d{6}$/.test(c)) return /^[695]/.test(c) ? 'sh' + c : (/^[84]/.test(c) ? 'bj' + c : 'sz' + c);
+    if (/^\d{6}$/.test(c)) return /^(4|8|92)/.test(c) ? 'bj' + c : (/^[695]/.test(c) ? 'sh' + c : 'sz' + c);
     if (/^\d{4,5}$/.test(c)) return 'hk' + c;
     return null;
 }
@@ -387,7 +430,7 @@ async function mkRefresh() {
     if (MK.busy) return;
     if (!MK.codes.length) {
         MK.rows = [];
-        $('mk_list').innerHTML = '<div class="mk-empty">自选为空，输入代码添加，或点击上方热力图选标的</div>';
+        $('mk_list').innerHTML = '<div class="mk-empty">输入代码搜索或点击上方热力图选择标的</div>';
         $('mk_meta').textContent = '';
         $('mk_snap').textContent = '';
         mkReport();
@@ -441,7 +484,7 @@ function mkStart() {
 function mkStop() { clearTimeout(MK.timer); MK.timer = null; }
 function mkToggleAuto() {
     MK.auto = !MK.auto;
-    $('mk_auto').textContent = MK.auto ? '⏸ 暂停' : '▶ 自动刷新';
+    $('mk_auto').textContent = MK.auto ? '⏸ 暂停' : '▶ 自动';
     if (MK.auto) mkStart(); else mkStop();
 }
 function mkAdd() {
@@ -505,6 +548,9 @@ function mkSyncControls() {
     if (!MK_PERIOD[MK.range]) MK.range = 'day';
     $('mk_period').value = MK.range;
     $('mk_float_period').value = MK.range;
+    if (![120, 250, 500, 800].includes(MK.bars)) MK.bars = 120;
+    $('mk_bars').value = MK.bars;
+    $('mk_float_bars').value = MK.bars;
     if (!['vol', 'macd', 'rsi', 'kdj'].includes(MK.ind)) MK.ind = 'vol';
     document.querySelectorAll('.mk-inds button').forEach(b => b.classList.toggle('on', b.dataset.arg === MK.ind));
 }
@@ -519,6 +565,14 @@ function mkRange(arg) {
     if (!MK_PERIOD[arg]) return;
     MK.range = arg;
     localStorage.setItem('devutils_mk_range', arg);
+    mkSyncControls();
+    mkChartLoad();
+}
+function mkBars(arg) {
+    const n = parseInt(arg, 10);
+    if (![120, 250, 500, 800].includes(n)) return;
+    MK.bars = n;
+    localStorage.setItem('devutils_mk_bars', String(n));
     mkSyncControls();
     mkChartLoad();
 }
@@ -547,7 +601,24 @@ const MK_DASH = {
     last: { dash: [9, 3, 2, 3], width: 1.4 },
     cross: { dash: [2, 4], color: '#94a3b8', width: 1 }
 };
-const MK_CHART_H = { line: 280, kline: 400 };
+function mkChartHeight(kind) {
+    const narrow = window.innerWidth <= 640;
+    return kind === 'kline' ? (narrow ? 320 : 400) : (narrow ? 220 : 280);
+}
+// 底图缓存：十字线移动只 restore，不逐帧重绘全部 K 线与指标
+const MK_BG = new WeakMap();
+function mkRestoreChart(cv) {
+    const bg = MK_BG.get(cv);
+    if (!bg || !bg.width) return false;
+    const ctx = cv.getContext('2d');
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    // 底图透明区域不会覆盖旧十字线，必须先清空再贴，否则拖动时残影叠加
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    ctx.drawImage(bg, 0, 0);
+    const dpr = window.devicePixelRatio || 1;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return true;
+}
 function mkDashed(ctx, style, draw, color) {
     ctx.save();
     ctx.setLineDash(style.dash);
@@ -580,15 +651,19 @@ function mkPaint(data, cv, fixedH) {
     cv.style.width = '100%';
     cv.style.height = '';
     const w = cv.clientWidth;
-    const h = fixedH || cv.clientHeight || MK_CHART_H.line;
+    const h = fixedH || cv.clientHeight || mkChartHeight('line');
     if (w <= 0 || h <= 0) return;
     const ctx = mkCanvas(w, h, cv);
     if (data.kind === 'line') mkLinePainter(ctx, w, h, data.closes, data.base);
-    else mkKLinePainter(ctx, w, h, data.rows);
+    else mkKLinePainter(ctx, w, h, data.rows, data.inds || mkIndicators(data.rows));
+    let bg = MK_BG.get(cv);
+    if (!bg) { bg = document.createElement('canvas'); MK_BG.set(cv, bg); }
+    bg.width = cv.width; bg.height = cv.height;
+    bg.getContext('2d').drawImage(cv, 0, 0);
 }
 function mkPaintAll() {
     if (!MK.chartData) return;
-    mkPaint(MK.chartData, $('mk_chart'), MK_CHART_H[MK.chartData.kind]);
+    mkPaint(MK.chartData, $('mk_chart'), mkChartHeight(MK.chartData.kind));
     if (MK.floatOpen) mkPaint(MK.chartData, $('mk_float_chart'));
 }
 async function mkChartLoad(silent) {
@@ -609,10 +684,7 @@ async function mkChartLoad(silent) {
         if (spec.kind === 'line') {
             const d = await mkIntraday(code);
             const node = (d && d.data && d.data[code]) || {};
-            const pts = (((node.data || {}).data) || []).map(s => {
-                const p = String(s).split(' ');
-                return { t: p[0], v: parseFloat(p[1]) };
-            }).filter(o => isFinite(o.v) && o.v > 0);
+            const pts = mkIntradayPoints(node);
             const qt = (node.qt || {})[code];
             const base = qt ? parseFloat(qt[4]) : 0;
             if (pts.length < 2) throw new Error('暂无数据');
@@ -622,11 +694,11 @@ async function mkChartLoad(silent) {
         } else {
             let arr = [];
             if (spec.api === 'mkline') {
-                const d = await mkJsonVar('https://ifzq.gtimg.cn/appstock/app/kline/mkline?param=' + code + ',' + spec.key + ',,120');
+                const d = await mkJsonVar('https://ifzq.gtimg.cn/appstock/app/kline/mkline?param=' + code + ',' + spec.key + ',,' + MK.bars);
                 const node = (d && d.data && d.data[code]) || {};
                 arr = node[spec.key] || [];
             } else {
-                const q = 'param=' + code + ',' + spec.key + ',,,120,qfq';
+                const q = 'param=' + code + ',' + spec.key + ',,,' + MK.bars + ',qfq';
                 let d;
                 try { d = await mkJsonVar('https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?' + q); }
                 catch (e) { d = await mkJsonVar('https://ifzq.gtimg.cn/appstock/app/fqkline/get?' + q); }
@@ -638,7 +710,7 @@ async function mkChartLoad(silent) {
                 h: parseFloat(a[3]), l: parseFloat(a[4]), v: parseFloat(a[5]) || 0
             })).filter(r => [r.o, r.c, r.h, r.l].every(isFinite) && r.h >= r.l && r.h > 0);
             if (rows.length < 2) throw new Error('暂无数据');
-            MK.chartData = { kind: 'kline', rows };
+            MK.chartData = { kind: 'kline', rows, inds: mkIndicators(rows) };
             mkSetMeta(rows[rows.length - 1].c, rows[rows.length - 2].c, rows[0].c);
         }
         mkChartTitle();
@@ -700,16 +772,18 @@ function mkLinePainter(ctx, w, h, closes, base) {
     }
 }
 function mkTimeLabel(t) {
-    return /^\d{12}$/.test(t) ? t.slice(8, 10) + ':' + t.slice(10, 12) : String(t).slice(5);
+    const s = String(t);
+    if (/^\d{12}$/.test(s)) return s.slice(8, 10) + ':' + s.slice(10, 12);
+    if (/^\d{4}$/.test(s)) return s.slice(0, 2) + ':' + s.slice(2);
+    return s.slice(5);
 }
 // MACD 柱按 2*(DIF-DEA)，与行情软件口径一致
 function mkSMA(a, p) {
-    return a.map((_, i) => {
-        if (i < p - 1) return NaN;
-        let s = 0;
-        for (let k = i - p + 1; k <= i; k++) s += a[k];
-        return s / p;
-    });
+    const out = a.map(() => NaN);
+    const sum = [0];
+    for (let i = 0; i < a.length; i++) sum.push(sum[i] + a[i]);
+    for (let i = p - 1; i < a.length; i++) out[i] = (sum[i + 1] - sum[i + 1 - p]) / p;
+    return out;
 }
 function mkEMA(a, span) {
     const alpha = 2 / (span + 1), out = [];
@@ -824,8 +898,8 @@ function mkSubPainter(ctx, w, h, rows, g, ind, inds) {
         label(`KDJ(9,3,3)  K ${k[n].toFixed(2)}  D ${d[n].toFixed(2)}  J ${j[n].toFixed(2)}`, '#f59e0b');
     }
 }
-function mkKLinePainter(ctx, w, h, rows) {
-    const padL = 6, padR = 56, padT = 22, padB = 20, volH = 56, gap = 10;
+function mkKLinePainter(ctx, w, h, rows, inds) {
+    const padL = 6, padR = w < 400 ? 46 : 56, padT = 22, padB = 20, volH = 56, gap = 10;
     const plotW = w - padL - padR, priceH = h - padT - padB - volH - gap;
     const { lo, hi } = mkPriceRange(rows);
     const py = v => padT + (hi - v) / (hi - lo) * priceH;
@@ -841,7 +915,6 @@ function mkKLinePainter(ctx, w, h, rows) {
         ctx.textAlign = 'left';
         ctx.fillText((hi - (hi - lo) * i / 4).toFixed(2), w - padR + 6, gy);
     }
-    const inds = mkIndicators(rows);
     const subTop = padT + priceH + gap;
     mkSubPainter(ctx, w, h, rows, { padL, padR, subTop, subH: volH, step, cx }, MK.ind, inds);
     rows.forEach((r, i) => {
@@ -890,6 +963,12 @@ async function mkIntraday(code) {
     try { return await mkJsonVar('https://ifzq.gtimg.cn/appstock/app/minute/query?code=' + code); }
     catch (e) { return await mkJsonVar('https://web.ifzq.gtimg.cn/appstock/app/minute/query?code=' + code); }
 }
+function mkIntradayPoints(node) {
+    return (((node.data || {}).data) || []).map(s => {
+        const p = String(s).split(' ');
+        return { t: p[0], v: parseFloat(p[1]) };
+    }).filter(o => isFinite(o.v) && o.v > 0);
+}
 
 // iframe 内 fixed 浮窗会被裁剪，须由宿主页临时撑高 iframe
 function mkOpenFloat() {
@@ -928,19 +1007,20 @@ function mkChartGeom(data, w, h) {
         const padX = 2, padY = 8, uw = w - padX * 2, uh = h - padY * 2;
         return { padX, padY, uw, uh, cx: i => padX + uw * i / (data.closes.length - 1) };
     }
-    const padL = 6, padR = 56, padT = 22, padB = 20, volH = 56, gap = 10;
+    const padL = 6, padR = w < 400 ? 46 : 56, padT = 22, padB = 20, volH = 56, gap = 10;
     const plotW = w - padL - padR, priceH = h - padT - padB - volH - gap;
     const step = plotW / data.rows.length;
     const { lo, hi } = mkPriceRange(data.rows);
     return { padL, padR, padT, padB, volH, gap, plotW, priceH, step, lo, hi, cx: i => padL + (i + 0.5) * step };
 }
+let mkTouchUntil = 0;
 function mkCrossMove(e) {
+    if (!e.touch && Date.now() < mkTouchUntil) return;
     const cv = e.target;
     const tip = $('mk_cross_tip');
     const data = MK.chartData;
     if (!cv || (cv.id !== 'mk_chart' && cv.id !== 'mk_float_chart') || !data) { tip.classList.remove('show'); return; }
-    const isInline = cv.id === 'mk_chart';
-    mkPaint(data, cv, isInline ? MK_CHART_H[data.kind] : undefined);
+    if (!mkRestoreChart(cv)) return;
     const rect = cv.getBoundingClientRect();
     const x = e.clientX - rect.left, y = e.clientY - rect.top;
     const w = cv.clientWidth, h = cv.clientHeight;
@@ -963,7 +1043,7 @@ function mkCrossMove(e) {
             mkAxisTag(ctx, (max - (y - g.padY) / g.uh * span).toFixed(2), w - 48, y, 46);
         }
         const t = (data.times && data.times[i]) || '';
-        const label = /^\d{12}$/.test(t) ? t.slice(8, 10) + ':' + t.slice(10, 12) : (t || '第' + (i + 1) + '点');
+        const label = t ? mkTimeLabel(t) : '第' + (i + 1) + '点';
         const ref = data.base > 0 ? data.base : closes[0];
         const pct = ref > 0 ? (closes[i] - ref) / ref * 100 : 0;
         const cls = pct > 0 ? 'up' : (pct < 0 ? 'down' : '');
@@ -980,7 +1060,7 @@ function mkCrossMove(e) {
         const pct = prev > 0 ? (r.c - prev) / prev * 100 : 0;
         const amp = prev > 0 ? (r.h - r.l) / prev * 100 : 0;
         const cls = pct > 0 ? 'up' : (pct < 0 ? 'down' : '');
-        const inds = mkIndicators(rows);
+        const inds = data.inds || mkIndicators(rows);
         const num = v => isFinite(v) ? v.toFixed(2) : '-';
         let indLine;
         if (MK.ind === 'macd') {
@@ -1000,7 +1080,7 @@ function mkCrossLeave(e) {
     const cv = e.target;
     if (!cv || (cv.id !== 'mk_chart' && cv.id !== 'mk_float_chart')) return;
     $('mk_cross_tip').classList.remove('show');
-    mkPaintAll();
+    mkRestoreChart(cv);
 }
 
 async function mkHoverData(code) {
@@ -1008,15 +1088,15 @@ async function mkHoverData(code) {
     if (c && Date.now() - c.ts < 60000) return c.data;
     const d = await mkIntraday(code);
     const node = (d && d.data && d.data[code]) || {};
-    const closes = (((node.data || {}).data) || [])
-        .map(s => parseFloat(String(s).split(' ')[1])).filter(v => isFinite(v) && v > 0);
+    const pts = mkIntradayPoints(node);
     const qt = (node.qt || {})[code];
-    const data = { kind: 'line', closes, base: qt ? parseFloat(qt[4]) : 0 };
-    if (closes.length < 2) throw new Error('暂无分时数据');
+    const data = { kind: 'line', closes: pts.map(o => o.v), times: pts.map(o => o.t), base: qt ? parseFloat(qt[4]) : 0 };
+    if (data.closes.length < 2) throw new Error('暂无分时数据');
     MK.hoverCache[code] = { ts: Date.now(), data };
     return data;
 }
 function mkHoverMove(e) {
+    if (window.matchMedia && window.matchMedia('(hover: none)').matches) return;
     const el = e.target.closest('.mk-tile');
     const box = $('mk_hover');
     if (!el || !el.dataset.code || MK.floatOpen) { box.classList.remove('show'); MK.hoverCode = null; return; }
@@ -1061,43 +1141,39 @@ async function mkHeatFromEast() {
         + encodeURIComponent('m:0+t:6,m:0+t:80,m:1+t:2,m:1+t:23,m:0+t:81+s:2048')
         + '&fields=f2,f3,f12,f13,f14,f20');
     const diff = (d && d.data && d.data.diff) || [];
-    return diff.map(x => ({
-        code: (x.f13 === 1 ? 'sh' : 'sz') + String(x.f12),
-        name: x.f14,
-        pct: parseFloat(x.f3),
-        cap: parseFloat(x.f20)
-    })).filter(r => isFinite(r.cap) && r.cap > 0 && isFinite(r.pct));
+    return diff.map(x => {
+        // 北交所 f13=0 同深市，按代码段区分
+        const s12 = String(x.f12);
+        const mkt = x.f13 === 1 ? 'sh' : (/^[48]/.test(s12) || /^92/.test(s12) ? 'bj' : 'sz');
+        return {
+            code: mkt + s12,
+            name: x.f14,
+            pct: parseFloat(x.f3),
+            cap: parseFloat(x.f20)
+        };
+    }).filter(r => isFinite(r.cap) && r.cap > 0 && isFinite(r.pct));
 }
-// 家数得单独取整市场，市值榜只有前几十只，讲不出今天是不是普涨
 let mkBreadthTs = 0, mkBreadthBusy = false;
-async function mkBreadthFromSina() {
-    const vn = 'mkb_' + Date.now().toString(36) + Math.floor(Math.random() * 1e5).toString(36);
-    await mkLoadScript('https://vip.stock.finance.sina.com.cn/quotes_service/api/jsonp.php/var%20'
-        + vn + '=/Market_Center.getHQNodeData?page=1&num=6000&sort=symbol&asc=1&node=hs_a&symbol=&r=' + Date.now(), null, 'no-referrer');
-    const arr = window[vn];
-    window[vn] = null;
-    if (!Array.isArray(arr) || !arr.length) throw new Error('全市场家数无数据');
-    return arr.map(x => parseFloat(x.changepercent) || 0);
-}
-async function mkBreadthFromEast() {
-    const d = await mkJsonCb('https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=6000&po=1&np=1&fltt=2&invt=2&fid=f3&fs='
-        + encodeURIComponent('m:0+t:6,m:0+t:80,m:1+t:2,m:1+t:23,m:0+t:81+s:2048')
-        + '&fields=f3,f12');
-    const diff = (d && d.data && d.data.diff) || [];
-    const arr = Array.isArray(diff) ? diff : Object.values(diff);
-    if (!arr.length) throw new Error('全市场家数无数据');
-    return arr.map(x => parseFloat(x && x.f3) || 0);
-}
 async function mkBreadthLoad() {
     if (mkBreadthBusy || Date.now() - mkBreadthTs < 60000) return;
     mkBreadthBusy = true;
-    let vals = null;
-    try { vals = await mkBreadthFromSina(); }
-    catch (e1) { try { vals = await mkBreadthFromEast(); } catch (e2) {} }
-    if (vals && vals.length) {
-        let up = 0, down = 0, flat = 0;
-        vals.forEach(p => { if (p > 0.0001) up++; else if (p < -0.0001) down++; else flat++; });
-        $('mk_breadth').innerHTML = `全市场 <span class="up">涨 ${up}</span>　<span class="down">跌 ${down}</span>　<span class="flat">平 ${flat}</span>`;
+    let res = null;
+    try {
+        // clist 单次上限 100 条，须用指数涨跌平字段
+        const d = await mkJsonCb('https://push2.eastmoney.com/api/qt/ulist.np/get?fltt=2&invt=2&secids=1.000001,0.399001,0.899050&fields=f104,f105,f106');
+        const diff = (d && d.data && d.data.diff) || [];
+        if (diff.length) {
+            res = { up: 0, down: 0, flat: 0 };
+            diff.forEach(x => {
+                res.up += Number(x.f104) || 0;
+                res.down += Number(x.f105) || 0;
+                res.flat += Number(x.f106) || 0;
+            });
+            if (!res.up && !res.down && !res.flat) res = null;
+        }
+    } catch (e) {}
+    if (res) {
+        $('mk_breadth').innerHTML = `全市场 <span class="up">涨 ${res.up}</span>　<span class="down">跌 ${res.down}</span>　<span class="flat">平 ${res.flat}</span>`;
         mkBreadthTs = Date.now();
     } else {
         $('mk_breadth').textContent = '';
@@ -1239,7 +1315,7 @@ function mkFitTileFonts() {
     });
 }
 
-const Actions = { mkRefresh, mkAdd, mkDel, mkPick, mkToggleAuto, mkRange, mkIndChange, mkHeatRefresh: mkHeatLoad, mkOpenFloat, mkCloseFloat };
+const Actions = { mkRefresh, mkAdd, mkDel, mkPick, mkToggleAuto, mkRange, mkBars, mkIndChange, mkHeatRefresh: mkHeatLoad, mkOpenFloat, mkCloseFloat };
 document.addEventListener('click', e => {
     const act = e.target.closest('[data-action]');
     if (act && typeof Actions[act.dataset.action] === 'function') Actions[act.dataset.action](act.dataset.arg);
@@ -1250,16 +1326,44 @@ $('mk_list').addEventListener('click', e => {
     const row = e.target.closest('.mk-row');
     if (row && row.dataset.code) mkSelect(row.dataset.code);
 });
+function mkScrollToQuote() {
+    const el = $('mk_quote_card');
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // 滚动发生在宿主页，坐标须上报换算
+    try { parent.postMessage({ mkScrollTo: el.getBoundingClientRect().top + window.scrollY }, '*'); } catch (e) {}
+}
 $('mk_heat').addEventListener('click', e => {
     const tile = e.target.closest('.mk-tile');
-    if (tile && tile.dataset.code) mkSelect(tile.dataset.code);
+    if (!tile || !tile.dataset.code) return;
+    mkSelect(tile.dataset.code);
+    mkScrollToQuote();
 });
+$('mk_totop').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+window.addEventListener('scroll', () => {
+    // 只在放大模式 iframe 内滚动时出现
+    $('mk_totop').classList.toggle('show',
+        window.scrollY > 300 && document.documentElement.scrollHeight > window.innerHeight + 400);
+}, { passive: true });
 $('mk_float_period').innerHTML = $('mk_period').innerHTML;
+$('mk_float_bars').innerHTML = $('mk_bars').innerHTML;
 $('mk_float_inds').innerHTML = $('mk_inds').innerHTML;
 ['mk_period', 'mk_float_period'].forEach(id => $(id).addEventListener('change', e => mkRange(e.target.value)));
+['mk_bars', 'mk_float_bars'].forEach(id => $(id).addEventListener('change', e => mkBars(e.target.value)));
 ['mk_chart', 'mk_float_chart'].forEach(id => {
     $(id).addEventListener('mousemove', mkCrossMove);
     $(id).addEventListener('mouseleave', mkCrossLeave);
+});
+function mkCrossTouch(e) {
+    const t = e.touches[0];
+    if (!t) return;
+    mkTouchUntil = Date.now() + 700;
+    mkCrossMove({ target: e.target, clientX: t.clientX, clientY: t.clientY, touch: true });
+}
+['mk_chart', 'mk_float_chart'].forEach(id => {
+    $(id).addEventListener('touchstart', mkCrossTouch, { passive: true });
+    $(id).addEventListener('touchmove', mkCrossTouch, { passive: true });
+    $(id).addEventListener('touchend', mkCrossLeave);
+    $(id).addEventListener('touchcancel', mkCrossLeave);
 });
 document.addEventListener('mousemove', mkHoverMove);
 document.addEventListener('keydown', e => { if (e.key === 'Escape') mkCloseFloat(); });
@@ -1274,7 +1378,13 @@ $('mk_input').addEventListener('keydown', e => {
     e.preventDefault();
     mkAdd();
 });
+function mkInputPlaceholder() {
+    $('mk_input').placeholder = window.innerWidth <= 640
+        ? '输入代码或名称，如 600519'
+        : '输入代码添加，如 600519 / 000858 / 00700，或搜索名称';
+}
 function mkRelayout() {
+    mkInputPlaceholder();
     mkHeatRender();
     mkFitTileFonts();
     mkPaintAll();
@@ -1295,6 +1405,7 @@ window.addEventListener('message', e => {
     else if (MK.auto) mkStart();
 });
 mkSyncControls();
+mkInputPlaceholder();
 mkStart();
 mkHeatLoad();
 if (MK.sel) mkChartLoad();

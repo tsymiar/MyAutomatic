@@ -286,9 +286,9 @@
             /* 纵向排列时交叉轴为水平轴：必须 stretch，否则撑不满小屏 */
             .layout { flex-direction: column; align-items: stretch; }
             nav.sidebar { width: 100%; height: auto; position: static; display: flex; overflow-x: auto; border-right: none; border-bottom: 1px solid var(--border); }
-            nav.sidebar button { width: auto; white-space: nowrap; }
+            nav.sidebar button { width: auto; white-space: nowrap; padding: 8px 10px; border-radius: 9px; margin-bottom: 0; }
             nav.sidebar.collapsed { width: 100%; padding: 14px 10px; }
-            nav.sidebar.collapsed button[data-tab] { font-size: 14px; gap: 10px; justify-content: flex-start; padding: 11px 14px; }
+            nav.sidebar.collapsed button[data-tab] { font-size: 14px; gap: 10px; justify-content: flex-start; padding: 8px 10px; }
             nav.sidebar.collapsed button[data-tab] .ic { font-size: 16px; width: 20px; }
             nav.sidebar button.nav-toggle { display: none; }
             .grid2 { grid-template-columns: 1fr; }
@@ -302,6 +302,14 @@
             font-size: 13px; opacity: 0; pointer-events: none; transition: .25s; z-index: 50;
         }
         .toast.show { opacity: 1; }
+        .to-top {
+            position: fixed; right: 18px; bottom: 46px; z-index: 55;
+            width: 42px; height: 42px; border: none; border-radius: 50%;
+            background: var(--grad-btn); color: #fff; font-size: 18px; cursor: pointer;
+            box-shadow: 0 10px 24px -8px rgba(91, 98, 244, .6);
+            opacity: 0; visibility: hidden; transform: translateY(10px); transition: .22s;
+        }
+        .to-top.show { opacity: 1; visibility: visible; transform: none; }
         .statusbar {
             position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
             background: rgba(17,24,39,.94); color: #cbd5e1;
@@ -458,9 +466,11 @@
         }
 
         #market iframe { display: block; width: 100%; min-height: 600px; border: 0; background: transparent; }
-        body.mk-float .layout { max-width: none; }
+        body.mk-float { padding-bottom: 0; }
+        body.mk-float .layout { max-width: none; flex-direction: column; justify-content: center; align-items: stretch; }
         body.mk-float nav.sidebar { display: none; }
-        body.mk-float main.content { padding: 10px; }
+        body.mk-float header.app-bar { display: none; }
+        body.mk-float main.content { padding: 10px; flex: none; width: 100%; }
         #game iframe { display: block; width: 100%; height: 520px; border: 0; background: transparent; }
     </style>
 </head>
@@ -469,7 +479,7 @@
         <div class="logo">🧰</div>
         <div>
             <h1>DevUtils 工具箱</h1>
-            <div class="sub">HTTP · 编解码 · 时间戳 · 转换 · 颜色 · 游戏 · 登录</div>
+            <div class="sub">网络工具 · 编解码 · 时间戳 · 转换 · 颜色 · 游戏 · 登录 · 行情</div>
         </div>
     </header>
 
@@ -852,6 +862,7 @@
     </aside>
 
     <div class="toast" id="toast"></div>
+    <button class="to-top" id="toTop" aria-label="回到顶部">↑</button>
 
     <!-- 底部状态栏：展示控件错误 / 运行时日志，点击展开历史 -->
     <div class="statusbar" id="statusbar">
@@ -1019,17 +1030,29 @@ $$('#nav button[data-tab]').forEach(b => b.title = ((b.lastChild && b.lastChild.
 let navSaved = false;
 try { navSaved = localStorage.getItem(NAV_KEY) === '1'; } catch (err) {}
 navCollapsed(navSaved);
-$('nav').addEventListener('click', e => {
-    const btn = e.target.closest('button[data-tab]'); if (!btn) return;
+const TAB_KEY = 'devutils_nav_tab';
+function showTab(tab) {
+    const btn = document.querySelector('#nav button[data-tab="' + tab + '"]');
+    if (!btn) return;
     $$('#nav button[data-tab]').forEach(b => b.classList.remove('active'));
     $$('.panel').forEach(p => p.classList.remove('active'));
     btn.classList.add('active');
-    $(btn.dataset.tab).classList.add('active');
-    if (btn.dataset.tab === 'market') mkShow();
+    $(tab).classList.add('active');
+    if (tab === 'market') mkShow();
     else mkHide();
-    if (btn.dataset.tab === 'game') gmShow();
+    if (tab === 'game') gmShow();
     else gmHide();
+    try { localStorage.setItem(TAB_KEY, tab); } catch (err) {}
+}
+$('nav').addEventListener('click', e => {
+    const btn = e.target.closest('button[data-tab]');
+    if (btn) showTab(btn.dataset.tab);
 });
+// 恢复上次菜单
+try {
+    const lastTab = localStorage.getItem(TAB_KEY);
+    if (lastTab) showTab(lastTab);
+} catch (err) {}
 function toggleNet() {
     $('netDrawer').classList.toggle('show');
     $('netMask').classList.toggle('show');
@@ -1656,7 +1679,8 @@ window.addEventListener('message', e => {
     if (e.data.mkFloat === true && !f.dataset.float) {
         f.dataset.prevHeight = f.style.height;
         f.dataset.float = '1';
-        f.style.height = 'calc(100vh - 96px)';
+        const sbH = ($('statusbar') && $('statusbar').offsetHeight) || 30;
+        f.style.height = 'calc(100vh - ' + (sbH + 20) + 'px)';
         document.body.classList.add('mk-float');
         mkNotifyResize();
     } else if (e.data.mkFloat === false) {
@@ -1669,8 +1693,19 @@ window.addEventListener('message', e => {
         document.body.classList.remove('mk-float');
     } else if (e.data.mkHeight && !f.dataset.float) {
         f.style.height = e.data.mkHeight + 'px';
+    } else if (e.data.mkScrollTo != null && !f.dataset.float) {
+        // 换算宿主页坐标，扣除吸顶标题栏
+        const bar = document.querySelector('header.app-bar');
+        const top = f.getBoundingClientRect().top + window.scrollY + e.data.mkScrollTo - (bar ? bar.offsetHeight : 0) - 10;
+        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
     }
 });
+
+const toTopBtn = $('toTop');
+window.addEventListener('scroll', () => {
+    toTopBtn.classList.toggle('show', window.scrollY > 480);
+}, { passive: true });
+toTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
 function gmShow() {
     const f = $('gm_frame');
