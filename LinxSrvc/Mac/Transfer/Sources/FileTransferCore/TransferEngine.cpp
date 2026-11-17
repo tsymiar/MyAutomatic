@@ -59,6 +59,11 @@ static void headerToNet(FileHeader& h)
 /// 转换是对称的，网络序 -> 主机序复用同一个函数。
 static void headerToHost(FileHeader& h) { headerToNet(h); }
 
+static bool isMulticastIPv4(uint32_t netAddr)
+{
+    return (ntohl(netAddr) & 0xF0000000u) == 0xE0000000u;
+}
+
 // 文件名安全化：剥掉路径成分，防 "../../.ssh/..." 式路径遍历
 static std::string sanitizeFileName(const std::string& name)
 {
@@ -561,6 +566,26 @@ void TransferEngine::setBindInterface(const std::string& ifname)
     m_bindInterface = ifname;
 }
 
+bool TransferEngine::setDiscoveryEndpoint(const std::string& address, uint16_t port)
+{
+    uint32_t addr = INADDR_BROADCAST;
+    if (!address.empty() && address != "255.255.255.255") {
+        struct in_addr parsed {};
+        if (inet_pton(AF_INET, address.c_str(), &parsed) != 1) {
+            LOG_ERR("discovery address invalid: %s", address.c_str());
+            return false;
+        }
+        // 0.0.0.0 视作广播端点。
+        addr = (parsed.s_addr == INADDR_ANY) ? INADDR_BROADCAST : parsed.s_addr;
+    }
+    const uint16_t udpPort = port == 0 ? DISCOVERY_PORT : port;
+    m_discoveryAddr.store(addr);
+    m_discoveryPort.store(udpPort);
+    LOG_INF("LAN discovery endpoint: %s:%u",
+        address.empty() ? "255.255.255.255" : address.c_str(), (unsigned)udpPort);
+    return true;
+}
+
 std::string TransferEngine::bindInterfaceSnapshot() const
 {
     std::lock_guard<std::mutex> lock(m_bindMutex);
@@ -633,9 +658,7 @@ bool TransferEngine::bindSocketToInterface(int sock) const
 void TransferEngine::setDiscoveryEnabled(bool enabled)
 {
     m_discoveryEnabled.store(enabled);
-    // Apply immediately to a running server; otherwise the flag is only read at
-    // the next startFtfServer(). The beacon loop watches m_broadcastRunning (not this
-    // flag), so start/stop the thread here instead of waiting for a restart.
+    // 循环根据 m_broadcastRunning，即时启停线程。
     if (m_serverRunning.load()) {
         if (enabled) {
             startBroadcast();
@@ -662,9 +685,18 @@ int TransferEngine::startBroadcast()
     }
     int opt = 1;
     setsockopt(sock, SOL_SOCKET, SO_BROADCAST, &opt, sizeof(opt));
+    const uint32_t group = m_discoveryAddr.load();
+    if (isMulticastIPv4(group)) {
+        unsigned char ttl = 32;
+        setsockopt(sock, IPPROTO_IP, IP_MULTICAST_TTL, &ttl, sizeof(ttl));
+        const std::string srcIp = resolveBindIP();
+        struct in_addr ifAddr {};
+        if (!srcIp.empty() && inet_pton(AF_INET, srcIp.c_str(), &ifAddr) == 1) {
+            setsockopt(sock, IPPROTO_IP, IP_MULTICAST_IF, &ifAddr, sizeof(ifAddr));
+        }
+    }
 
-    // Pin egress to the requested interface: strict device binding where the
-    // platform allows it, plus source-IP binding as a portable fallback.
+    // 出接口：平台支持时严格绑设备，否则绑源 IP。
     if (!bindInterfaceSnapshot().empty()) {
         bindSocketToInterface(sock);
         if (!m_announceIp.empty()) {
@@ -682,7 +714,7 @@ int TransferEngine::startBroadcast()
 
     m_broadcastThread = std::thread(&TransferEngine::broadcastLoop, this);
     LOG_INF("LAN discovery beacon started: udp/%u, advertising tcp/%u (%s)",
-        (unsigned)DISCOVERY_PORT, (unsigned)m_announcePort,
+        (unsigned)m_discoveryPort.load(), (unsigned)m_announcePort,
         m_announceIp.empty() ? "no local IP" : m_announceIp.c_str());
     return 0;
 }
@@ -706,8 +738,8 @@ void TransferEngine::broadcastLoop()
 {
     struct sockaddr_in dest {};
     dest.sin_family = AF_INET;
-    dest.sin_port = htons(DISCOVERY_PORT);
-    dest.sin_addr.s_addr = INADDR_BROADCAST;  // 255.255.255.255
+    dest.sin_port = htons(m_discoveryPort.load());
+    dest.sin_addr.s_addr = m_discoveryAddr.load();
 
     // 广播期间内容固定，只拼一次。
     // 格式："<MAGIC> <协议版本> <tcp端口>\n"
@@ -770,23 +802,42 @@ std::shared_ptr<std::atomic<bool>> TransferEngine::startDiscovery(
     setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &rcvTimeout, sizeof(rcvTimeout));
     bindSocketToInterface(sock);
 
+    const uint16_t udpPort = m_discoveryPort.load();
+    const uint32_t group = m_discoveryAddr.load();
+    const bool multicast = isMulticastIPv4(group);
     struct sockaddr_in addr {};
     addr.sin_family = AF_INET;
-    addr.sin_port = htons(DISCOVERY_PORT);
-    addr.sin_addr.s_addr = INADDR_ANY;
+    addr.sin_port = htons(udpPort);
+    // 广播/组播绑 INADDR_ANY；单播只绑对应本地地址。
+    addr.sin_addr.s_addr = (group == INADDR_BROADCAST || multicast)
+        ? htonl(INADDR_ANY) : group;
     if (bind(sock, reinterpret_cast<struct sockaddr*>(&addr), sizeof(addr)) < 0) {
         LOG_ERR("startDiscovery: bind() udp/%u failed: %s",
-            (unsigned)DISCOVERY_PORT, strerror(errno));
+            (unsigned)udpPort, strerror(errno));
         close(sock);
         m_discoveryRunning.store(false);
         return nullptr;
+    }
+    if (multicast) {
+        struct ip_mreq mreq {};
+        mreq.imr_multiaddr.s_addr = group;
+        mreq.imr_interface.s_addr = htonl(INADDR_ANY);
+        const std::string ifIp = resolveBindIP();
+        if (!ifIp.empty()) inet_pton(AF_INET, ifIp.c_str(), &mreq.imr_interface);
+        if (setsockopt(sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq)) != 0) {
+            LOG_ERR("startDiscovery: IP_ADD_MEMBERSHIP failed: %s", strerror(errno));
+            close(sock);
+            m_discoveryRunning.store(false);
+            return nullptr;
+        }
     }
     m_discoverySock = sock;
 
     auto token = std::make_shared<std::atomic<bool>>(true);
     m_discoveryToken = token;
     m_discoveryThread = std::thread(&TransferEngine::discoveryLoop, this, token);
-    LOG_INF("LAN discovery listener started on udp/%u", (unsigned)DISCOVERY_PORT);
+    LOG_INF("LAN discovery listener started on udp/%u (%s)", (unsigned)udpPort,
+        multicast ? "multicast" : "broadcast");
     return token;
 }
 

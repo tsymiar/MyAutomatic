@@ -193,6 +193,13 @@ void ft_set_interface(FT_Handle handle, const char* ifname)
     static_cast<TransferEngine*>(handle)->setBindInterface(ifname ? ifname : "");
 }
 
+bool ft_set_discovery_endpoint(FT_Handle handle, const char* address, uint16_t port)
+{
+    if (!handle) return false;
+    return static_cast<TransferEngine*>(handle)->setDiscoveryEndpoint(
+        address ? address : "", port);
+}
+
 bool ft_is_broadcasting(FT_Handle handle)
 {
     if (!handle) return false;

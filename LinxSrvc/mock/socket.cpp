@@ -526,7 +526,14 @@ int client(int argc, char* argv[])
     if (argc <= 5) {
         cout << "type message to send:" << endl;
         while (g_state.running && (cin >> setw(msgbuf.size()) >> msgbuf.data())) {   // setw bounds the field write
-            size_t len = strlen(msgbuf.data()) + 1;   // setw already NUL-terminates
+            // setw() bounds the write and terminates it; scan inside the buffer
+            // so a missing terminator cannot over-read
+            size_t len = 0;
+            while (len < msgbuf.size() && msgbuf[len] != '\0')
+                ++len;
+            if (len == msgbuf.size())
+                len = msgbuf.size() - 1;
+            len += 1;                                 // include the terminator
             if (g_state.how == TCP) {
                 ssize_t bytes = send(ssock, msgbuf.data(), len, 0);
                 if (bytes < 0) {

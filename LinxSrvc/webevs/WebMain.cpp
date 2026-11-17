@@ -41,8 +41,15 @@ int main(int argc, char** argv)
                 cerr << "invalid websocket port: " << wsPort << " (expect 1~65535)" << endl;
                 return -1;
             }
-            if (wsPort > 0 && WsStartServer(wsPort) != 0)
-                cerr << "websocket server not started on port " << wsPort << endl;
+            if (wsPort > 0) {
+#ifdef WITH_WEBSOCKETS
+                if (WsStartServer(wsPort) != 0)
+                    cerr << "websocket server not started on port " << wsPort << endl;
+#else
+                // Stub build: no WS server available.
+                cerr << "websocket server not started: built without libwebsockets" << endl;
+#endif
+            }
             int served = StartServer(port);
             WsStopServer();
             if (served != 0)

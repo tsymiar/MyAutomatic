@@ -2,16 +2,18 @@
 // Extra/unrecognized args are ignored on purpose.
 // Usage:
 //   transfer [serve] [-p port] [-d save_dir] [-i iface]  listen and receive pushes,
-//                                                      serve pull/del requests
+//                    [-g addr] [-u udp_port]            serve pull/del requests
 //   transfer send <ip> <port> <file> [cancel_ms]       connect + push a file;
 //                                                      cancel_ms>0 cancels mid-send,
 //                                                      then deletes the partial on the peer
 //   transfer pull [-d save_dir] <ip> <port> <name>     pull a file from the peer
 //   transfer del <ip> <port> <name>                    delete a cancelled partial on the peer
-//   transfer discover [-i iface]                       listen for LAN beacons and print peers
+//   transfer discover [-i iface] [-g addr] [-p port]   listen for LAN beacons and print peers
 //
 //   -i <iface> pins the LAN beacon broadcast (serve) or discovery listener
 //   (discover) to a named interface (e.g. en0 / eth0). Omit for auto.
+//   -g <addr> group/UDP address; -u (serve) / -p (discover) UDP port.
+//   Omit for 255.255.255.255:8801.
 
 #include "TransferBridge.h"
 
@@ -62,8 +64,10 @@ static const char* file_base_name(const char* path)
 static int cmd_server(int argc, char** argv, int i)
 {
     uint16_t port = 8800;
+    uint16_t discoveryPort = 0;        // 0 = default
     const char* saveDir = "received";
     const char* iface = NULL;
+    const char* discoveryAddr = NULL;
 
     for (; i < argc; ++i) {
         if (strcmp(argv[i], "-p") == 0 && i + 1 < argc) {
@@ -72,12 +76,23 @@ static int cmd_server(int argc, char** argv, int i)
             saveDir = argv[++i];
         } else if (strcmp(argv[i], "-i") == 0 && i + 1 < argc) {
             iface = argv[++i];
+        } else if (strcmp(argv[i], "-g") == 0 && i + 1 < argc) {
+            discoveryAddr = argv[++i];
+        } else if (strcmp(argv[i], "-u") == 0 && i + 1 < argc) {
+            discoveryPort = (uint16_t)atoi(argv[++i]);
         }
     }
 
     FT_Handle h = create_engine(saveDir);
     if (!h) return 1;
     if (iface) ft_set_interface(h, iface);
+    if ((discoveryAddr || discoveryPort)
+        && !ft_set_discovery_endpoint(h, discoveryAddr, discoveryPort)) {
+        fprintf(stderr, "invalid discovery address: %s\n",
+            discoveryAddr ? discoveryAddr : "");
+        ft_destroy(h);
+        return 1;
+    }
 
     if (ft_start_server(h, port) < 0) {
         fprintf(stderr, "start server on port %u failed\n", port);
@@ -210,22 +225,35 @@ static void on_discover(void*, const char* ip, uint16_t port)
 static int cmd_discover(int argc, char** argv, int i)
 {
     const char* iface = NULL;
+    const char* address = NULL;
+    uint16_t port = 0;                 // 0 = default
     for (; i < argc; ++i) {
         if (strcmp(argv[i], "-i") == 0 && i + 1 < argc) {
             iface = argv[++i];
+        } else if (strcmp(argv[i], "-g") == 0 && i + 1 < argc) {
+            address = argv[++i];
+        } else if (strcmp(argv[i], "-p") == 0 && i + 1 < argc) {
+            port = (uint16_t)atoi(argv[++i]);
         }
     }
 
     FT_Handle h = create_engine(NULL);
     if (!h) return 1;
     if (iface) ft_set_interface(h, iface);
-    ft_set_discovery_enabled(h, true);
-    if (!ft_start_discovery(h, on_discover, NULL)) {
-        fprintf(stderr, "failed to bind discovery listener on udp/8801\n");
+    if ((address || port) && !ft_set_discovery_endpoint(h, address, port)) {
+        fprintf(stderr, "invalid discovery address: %s\n", address ? address : "");
         ft_destroy(h);
         return 1;
     }
-    printf("Listening for LAN beacons on udp/%u. Ctrl+C to stop.\n", 8801u);
+    ft_set_discovery_enabled(h, true);
+    if (!ft_start_discovery(h, on_discover, NULL)) {
+        fprintf(stderr, "failed to bind discovery listener on udp/%u\n",
+            port ? (unsigned)port : 8801u);
+        ft_destroy(h);
+        return 1;
+    }
+    printf("Listening for LAN beacons on %s:udp/%u. Ctrl+C to stop.\n",
+        address ? address : "255.255.255.255", port ? (unsigned)port : 8801u);
     fflush(stdout);
 
     while (!g_stop) {

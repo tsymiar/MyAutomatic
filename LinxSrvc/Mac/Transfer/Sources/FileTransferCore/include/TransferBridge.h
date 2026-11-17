@@ -128,6 +128,10 @@ bool ft_is_discovery_enabled(FT_Handle handle);
 /// (e.g. "en0", "eth0", "wlan0"). Empty string = auto. Call before starting.
 void ft_set_interface(FT_Handle handle, const char* ifname);
 
+/// Beacon/listener endpoint: empty = broadcast, 224.x-239.x = multicast,
+/// port 0 = default. Restart active listeners; false on a bad address.
+bool ft_set_discovery_endpoint(FT_Handle handle, const char* address, uint16_t port);
+
 /// True while the server is broadcasting its IP:port beacons.
 bool ft_is_broadcasting(FT_Handle handle);
 
@@ -139,7 +143,7 @@ typedef void (*FT_DiscoveryCallback)(void* userData, const char* ip, uint16_t po
 
 /// Start listening for peer beacons on the discovery UDP port. The engine may be
 /// shared with a running server/client; discovery is independent of both.
-/// Returns false if the listener could not start (e.g. udp/8801 bind fails).
+/// Returns false if the listener could not start (e.g. the UDP port is in use).
 bool ft_start_discovery(FT_Handle handle, FT_DiscoveryCallback callback, void* userData);
 
 /// Stop the discovery listener.

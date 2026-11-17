@@ -147,8 +147,13 @@ struct ServerView: View {
                                                   ? Color.green
                                                   : Color.secondary.opacity(0.5))
                                             .frame(width: 8, height: 8)
-                                        Text("\(device.ip):\(device.port)")
-                                            .font(.system(.body, design: .monospaced))
+                                        VStack(alignment: .leading, spacing: 0) {
+                                            Text(device.ip)
+                                                .font(.system(.body, design: .monospaced))
+                                            Text(String(device.port))
+                                                .font(.caption.monospacedDigit())
+                                                .foregroundColor(.secondary)
+                                        }
                                         Spacer()
                                         Text(device.online ? "Connected"
                                              : "Last seen " + timeFormatter.string(from: device.lastSeen))
@@ -244,6 +249,21 @@ struct TransferSettingsPanel: View {
                 .toggleStyle(.switch)
             Text("While listening, announce this device's IP:port on the LAN every 3s "
                  + "so peers can find it without typing an address.")
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            HStack {
+                Text("Discovery IP:")
+                    .foregroundColor(.secondary)
+                MacTextField(text: $core.discoveryAddress,
+                             placeholder: "255.255.255.255", width: 150)
+                Text("UDP:")
+                    .foregroundColor(.secondary)
+                MacTextField(text: $core.discoveryPort, placeholder: "8801", width: 60)
+            }
+            Text("The beacon sender and the peer listener share this IP and UDP port. "
+                 + "224.x–239.x joins a multicast group; leave the IP empty for broadcast.")
                 .font(.caption)
                 .foregroundColor(.secondary)
                 .fixedSize(horizontal: false, vertical: true)

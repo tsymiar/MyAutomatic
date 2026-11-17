@@ -35,10 +35,32 @@ extension TransferCore {
         let started = ft_start_discovery(engine, discoveryCallbackRef,
                                          Unmanaged.passUnretained(self).toOpaque())
         if started {
-            appendLog("LAN discovery listener started")
+            appendLog("LAN discovery listener started on udp/\(discoveryPort)")
         } else {
             peerDiscoveryActive = false
-            appendLog("ERROR: LAN discovery listener failed to bind udp/8801 (port in use?)")
+            appendLog("ERROR: LAN discovery listener failed to bind udp/\(discoveryPort) "
+                      + "(port in use, or not joined to \(discoveryAddress)?)")
+        }
+    }
+
+    /// Apply the saved endpoint; both loops snapshot it at start, so restart them.
+    func applyDiscoveryEndpoint() {
+        guard let engine = handle else { return }
+        guard let port = UInt16(discoveryPort), port > 0 else {
+            appendLog("ERROR: invalid discovery port \(discoveryPort)")
+            return
+        }
+        guard ft_set_discovery_endpoint(engine, discoveryAddress, port) else {
+            appendLog("ERROR: invalid discovery address \(discoveryAddress)")
+            return
+        }
+        if peerDiscoveryActive && discoverPeers {
+            stopPeerDiscovery()
+            startPeerDiscovery()
+        }
+        if isServerRunning && broadcastEnabled {
+            ft_set_discovery_enabled(engine, false)
+            ft_set_discovery_enabled(engine, true)
         }
     }
 

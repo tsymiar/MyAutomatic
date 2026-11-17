@@ -22,6 +22,13 @@ extension TransferCore {
         }
         ft_set_save_path(engine, savePath)
         ft_set_backoff_enabled(engine, backoffEnabled)
+        if UInt16(discoveryPort) == nil {
+            appendLog("ERROR: invalid discovery port \(discoveryPort), using default")
+        }
+        if !ft_set_discovery_endpoint(engine, discoveryAddress,
+                                      UInt16(discoveryPort) ?? 0) {
+            appendLog("ERROR: invalid discovery address \(discoveryAddress)")
+        }
         installCallbacks(engine)
         return engine
     }

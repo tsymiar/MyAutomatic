@@ -22,6 +22,7 @@ struct SrvCallbacks {
 };
 
 typedef void(*DEALRES_CALLBACK)(const HookDetail&, size_t);
+typedef std::string(*HTML_CALLBACK)(const HookDetail&);
 
 struct DealHooks {
     evhttp_cmd_type method = EVHTTP_REQ_GET;
@@ -30,6 +31,10 @@ struct DealHooks {
 
 int StartServer(int, struct SrvCallbacks* = nullptr);
 void RegisterCallback(const std::string&, evhttp_cmd_type, DEALRES_CALLBACK);
+/// Serve a full HTML page rendered by a C++ callback.
+/// `path` is the first URL segment (empty string matches "/").
+void RegisterHtmlCallback(const std::string& path, evhttp_cmd_type method,
+                          HTML_CALLBACK callback);
 int RequestClient(const char*, HookDetail&, DEALRES_CALLBACK = nullptr);
 
 void SetExtraOption(const std::string&, const std::string&);

@@ -58,6 +58,7 @@ section{padding:1.8rem 0}
 .dm{width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,var(--bl),var(--pp));color:#fff;font-weight:700;font-size:.5rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .dx{font-size:.65rem;color:var(--t2)}
 table{width:100%;border-collapse:collapse;margin:.45rem 0;font-size:.68rem}th{background:rgba(59,130,246,.06);color:var(--bl2);padding:.38rem .5rem;text-align:left;font-weight:600;border-bottom:2px solid var(--bl)}td{padding:.35rem .5rem;border-bottom:1px solid rgba(37,48,80,.4);color:var(--t2)}tr:hover{background:rgba(59,130,246,.04)}
+.cols-fit th:first-child,.cols-fit td:first-child{width:1%;white-space:nowrap}
 pre{background:rgba(0,0,0,.25);border:1px solid var(--bdr);border-radius:7px;padding:.65rem;overflow-x:auto;margin:.45rem 0;font-size:.6rem;line-height:1.38;font-family:var(--mn)}
 .rg{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:.65rem}
 .rg.rgf{grid-template-columns:minmax(0,1fr)}
@@ -227,7 +228,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <div class="fd" style="background:rgba(249,115,22,.06)"><div class="dm">4</div><div><div class="lb" style="font-size:.6rem">BROKER 经 proxyHook 转发；IM.cc 侧用 SysV 共享内存在线表判重/踢人</div></div></div>
 </div>
 </div></div>
-<table style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现（代码实测）</th></tr></thead><tbody>
+<table class="cols-fit" style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现（代码实测）</th></tr></thead><tbody>
 <tr><td>进程模型</td><td>IM.cc 主进程 accept + 每连接 <code>fork()</code>；<code>prctl(PR_SET_NAME,"inst_mssg")</code></td></tr>
 <tr><td>并发 / IPC</td><td>System V 共享内存在线表（<code>IPC_KEY 0x520607</code>），<code>select()</code> 做 socket 就绪探活，<code>set_n_get_mem</code> 带长度夹紧</td></tr>
 <tr><td>KaiSocket 传输</td><td>52B 定长头 + 变长负载，<code>ssid = PORT&lt;&lt;16 | socket&lt;&lt;8 | IP</code>；Linux 走 <code>USE_EPOLL</code>，其它平台退化为阻塞 accept + select/sleep</td></tr>
@@ -279,7 +280,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <div class="fd" style="background:rgba(249,115,22,.06)"><div class="dm">4</div><div><div class="lb" style="font-size:.6rem">Response() 输出 {"status":[200,true][,"message":"…"]}；/log 分支 fork 子进程读日志</div></div></div>
 </div>
 </div></div>
-<table style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现（代码实测）</th></tr></thead><tbody>
+<table class="cols-fit" style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现（代码实测）</th></tr></thead><tbody>
 <tr><td>事件框架</td><td>libevent2 <code>event2/http.h</code>（evhttp + event_base_dispatch），非裸 epoll</td></tr>
 <tr><td>允许方法</td><td>GET｜POST｜HEAD｜OPTIONS｜PUT｜DELETE；OPTIONS 强制回 200</td></tr>
 <tr><td>WebSocket</td><td>libwebsockets 独立端口 + 独立线程；CMake <code>find_library(websockets)</code> 命中才加 <code>-DWITH_WEBSOCKETS</code>，缺失时 <code>WsServe.h</code> 提供空桩</td></tr>
@@ -340,7 +341,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <div class="fd" style="background:rgba(249,115,22,.06)"><div class="dm">4</div><div><div class="lb" style="font-size:.6rem">SQL 查询 / 状态采样 → 结果写回；字符串必须 soap_strdup 分配，业务状态放进参</div></div></div>
 </div>
 </div></div>
-<table style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现（代码实测）</th></tr></thead><tbody>
+<table class="cols-fit" style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现（代码实测）</th></tr></thead><tbody>
 <tr><td>并发模型</td><td>主线程 accept + 8 工作线程 + 1024 槽环形队列（<code>MAX_THR</code>/<code>MAX_QUEUE</code>/<code>BACKLOG 64</code>/<code>TIMEOUT_SEC 20</code> 见 <code>main/mainSoap.h</code>）；<code>dequeue(&amp;ip)</code> 一次加锁同时取 socket 与 IP，退出时 <code>stop_workers</code> 给每个线程投一个 <code>SOAP_INVALID_SOCKET</code> 再 join</td></tr>
 <tr><td>返回约定</td><td>服务函数<b>必须返回 SOAP_OK(0)</b>；返回业务码会被 <code>soapServer.cpp</code> 的 <code>if (soap-&gt;error) return soap-&gt;error;</code> 吞掉响应体</td></tr>
 <tr><td>内存约定</td><td>出参字符串必须 <code>soap_strdup(soap, …)</code>，存栈变量地址会 stack-use-after-return</td></tr>
@@ -442,7 +443,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 </div></div>
 </div>
 </div></div>
-<table style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现</th></tr></thead><tbody>
+<table class="cols-fit" style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现</th></tr></thead><tbody>
 <tr><td>数据格式</td><td><code>prepare_data.py --input … --output …</code>（两个参数<b>必填</b>）产出每行一个 JSON 对象的 ShareGPT 数据；<code>training_config.yaml</code> 里路径名为 <code>data/processed/train.txt</code> 但 <code>data_format: sharegpt</code>，<b>扩展名不代表纯文本</b></td></tr>
 <tr><td>微调方式</td><td>LoRA（PEFT，r16 / α32 / 7 个 target proj）+ BitsAndBytes 4bit <b>可选</b>（<code>model.load_in_4bit</code> 已配置为 <code>false</code>），可 <code>merge_and_unload</code> 合成完整模型</td></tr>
 <tr><td>训练控制</td><td><code>get_linear_schedule_with_warmup</code> + EarlyStopping(patience 3) + 检查点保存 + TensorBoard</td></tr>
@@ -498,7 +499,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 </div>
 <div class="dv"></div>
 <div class="fc">
-<div class="fd" style="background:rgba(16,185,129,.06)"><div class="dm">1</div><div><div class="lb" style="font-size:.6rem">Server 页 startServer(8800) 监听（listen backlog 5 + TCP_NODELAY），同时每 3s 向 udp/8801 广播 <code>FTF-DISCOVER &lt;ver&gt; &lt;tcpPort&gt;</code>；Client 侧监听信标填入设备列表，15s 未再收到即剔除，EHOSTUNREACH 多为本地网络权限未授权</div></div></div>
+<div class="fd" style="background:rgba(16,185,129,.06)"><div class="dm">1</div><div><div class="lb" style="font-size:.6rem">Server 页 startServer(8800) 监听（listen backlog 5 + TCP_NODELAY），同时每 3s 向配置的 UDP 端点（默认广播，224.x–239.x 为组播）发送 <code>FTF-DISCOVER &lt;ver&gt; &lt;tcpPort&gt;</code>；Client 侧监听相同端点，信标填入设备列表（IP 与端口分两行），15s 未再收到即剔除，EHOSTUNREACH 多为本地网络权限未授权</div></div></div>
 <div class="dx">↓</div>
 <div class="fd" style="background:rgba(59,130,246,.06)"><div class="dm">2</div><div><div class="lb" style="font-size:.6rem">发送端先发 64B 头（CMD 1 请求 push / 带 FT_EVT_REQUEST_PULL 为 pull）→ 接收端回 CMD 2（<code>event=1</code> 接受，含文件名长度校验与路径穿越防护，空文件也可）</div></div></div>
 <div class="dx">↓</div>
@@ -507,11 +508,11 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 <div class="fd" style="background:rgba(249,115,22,.06)"><div class="dm">4</div><div><div class="lb" style="font-size:.6rem">CMD 4 完成（回传真实落盘路径）/ CMD 5 取消 → CMD 6 让对端删掉半截文件；日志与结果进 History 页</div></div></div>
 </div>
 </div></div>
-<table style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现（代码实测）</th></tr></thead><tbody>
+<table class="cols-fit" style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现（代码实测）</th></tr></thead><tbody>
 <tr><td>工程结构</td><td><code>Package.swift</code>（swift-tools 5.9，macOS 13+）：<code>FileTransferCore</code>(C++17, libc++) 被 <code>FileTransferMac</code> 依赖；引擎 <code>TransferEngine.cpp</code> 1838 行 + 桥接 222 行</td></tr>
 <tr><td>桥接方式</td><td><code>include/TransferBridge.h</code> 提供 <code>extern "C"</code> 接口（<code>ft_create/ft_start_server/ft_send_file/ft_request_file/ft_cancel_transfer/ft_delete_file/ft_start_discovery…</code>），Swift 用 <code>Unmanaged</code> 传 self 作回调 userData；回调线程不定，Swift 侧用 <code>DispatchQueue.main</code> / <code>Task { @MainActor in … }</code> 编组</td></tr>
 <tr><td>传输模式</td><td>push（<code>ft_send_file</code>，连接后分片发送）、pull（<code>ft_request_file</code>，对端只在自身 savePath 找同名普通文件，缺失回 <code>-5</code>）、服务端并发代发；同一连接上 push/pull 互斥</td></tr>
-<tr><td>局域网发现</td><td>服务端 <code>broadcastLoop</code> 每 3s 广播 UDP 信标（默认开，Server 页齿轮可即时开关），客户端 <code>ft_start_discovery</code> 监听 8801 解析对端 IP:端口；<code>ft_set_interface</code> 可把广播/监听绑到指定网卡（en0/eth0/wlan0），载荷格式改动需同步 Android 端</td></tr>
+<tr><td>局域网发现</td><td>服务端 <code>broadcastLoop</code> 每 3s 发送 UDP 信标（默认开，Server 页齿轮可即时开关），客户端 <code>ft_start_discovery</code> 监听同一端点解析对端 IP:端口；<code>ft_set_discovery_endpoint</code> 配置地址与 UDP 端口（空 IP = 广播，224.x–239.x = 组播并自动入组，TTL 32），Server 页齿轮内持久化设置，改动即重启收发两端；<code>ft_set_interface</code> 可把广播/监听绑到指定网卡（en0/eth0/wlan0），载荷格式改动需同步 Android 端</td></tr>
 <tr><td>设备快照</td><td><code>ClientSessionMgr</code> 保留最近连接记录（<code>online</code> 标记 + 最近时间 + 正在接收的文件名与进度），<code>ft_get_clients</code> 按最近连接倒序写 <code>FT_ClientInfo</code>，短连接断开后设备不会从列表消失</td></tr>
 <tr><td>健壮性</td><td>文件名长度上限 1024 + 路径穿越过滤 + 同名追加 -1/-2；空文件支持（用 <code>event</code> 标记接受）；SO_SNDTIMEO + sendAll 超时不忙等；接收端 accept 后 <code>recv(MSG_PEEK)</code> 探测「到达即死」连接；每次传输独立取消标志（<code>weak_ptr</code> 不延寿）；进度回调以 <code>shared_ptr</code> 快照避免替换/析构竞争</td></tr>
 <tr><td>可选项</td><td>指数退避开关（默认关=3×20ms 快判死，开=≤16 次翻倍约 655s）、保存路径、默认端口、日志控制台显示，均 UserDefaults 持久化；改保存路径对后续传输立即生效（引擎每次落盘前重读）</td></tr>
@@ -594,7 +595,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 </div></div>
 </div>
 </div></div>
-<table style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现</th></tr></thead><tbody>
+<table class="cols-fit" style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现</th></tr></thead><tbody>
 <tr><td>Jetson 解码</td><td>V4L2 INPUT(H264, sizeimage=1920*1080*1.5, MMAP 4 buffer) / CAPTURE(NV12, DMABUF) 双 STREAMON，<code>NvBufSurfaceFromFd</code> 取帧；解码面宽高回填 <code>video_width</code>/<code>video_height</code>，NV12→RGB 拷贝按 <code>w*h*3</code> 夹紧（pitch 布局下 dataSize 可超该值，不越界）</td></tr>
 <tr><td>上屏</td><td><code>drmModeAddFB</code>(24/32bpp) + <code>drmModeSetCrtc</code> + <code>eglSwapBuffers</code></td></tr>
 <tr><td>线程模型</td><td>解码线程 push、渲染线程 pop 全局 <code>std::queue&lt;uint8_t*&gt;</code>，容量上限 <code>MAX_FRAME_QUEUE=8</code>，满则对生产者施加<b>背压</b>（condvar 等待）；<code>g_decodeDone</code> / <code>g_renderDone</code> 两个 atomic 控制收尾，Jetson 主循环不再是 <code>while(true)</code>，<code>join()</code> 与 EGL/DRM 清理可达</td></tr>
@@ -745,7 +746,7 @@ footer{margin-top:1.8rem;padding:1.8rem 0;border-top:1px solid var(--bdr);text-a
 </div></div>
 </div>
 </div></div>
-<table style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现</th></tr></thead><tbody>
+<table class="cols-fit" style="margin-top:.6rem"><thead><tr><th>特性</th><th>实现</th></tr></thead><tbody>
 <tr><td>命令</td><td><code>similarity.compareFolders</code> / <code>similarity.openResults</code> / <code>similarity.quickCompare</code></td></tr>
 <tr><td>Python 探测</td><td>extension.ts 依次探测 python3 / python 后再 spawn</td></tr>
 <tr><td>结果与展示</td><td>JSON 输出由 <code>parse_text.ts</code> 解析（含纯文本回退），<code>view_html.ts</code> 负责 HTML/CSS 模板</td></tr>

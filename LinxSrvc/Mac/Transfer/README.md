@@ -53,29 +53,29 @@ macOS 文件传输应用 —— 底层 C++ 协议引擎 + 上层 SwiftUI 界面�
 | 5 | 取消 |
 | 6 | 删除取消残留的半截文件 |
 
-### LAN 自动发现（广播信标）
+### LAN 自动发现（广播 / 组播）
 
-`TransferEngine` 在 `startFtfServer` 后启动 `broadcastLoop` 后台线程，每 3s 向 `255.255.255.255:8801` 广播 UDP 信标通告自身 TCP 监听端口；`closeFtfServer` 时停止。广播默认开启，可在 **Server 页齿轮 → Broadcast on LAN** 关闭；运行中拨动会即时启停广播线程（`setDiscoveryEnabled` 直接 start/stop，无需重启服务）。
+服务端每 3s 向配置的 UDP 端点发信标通告 TCP 端口。**Server 页齿轮 → Broadcast on LAN** 即时开关；
+**Discovery IP / UDP** 可改收发端点，填 `224.x–239.x` 即组播，
+改动即时重启收发。设置持久化。客户端监听同一端点，点击发现的设备即连接，
+列表把 IP 和端口分两行显示。
 
-桥接层 `TransferBridge` 暴露 `ft_set_discovery_enabled` / `ft_is_discovery_enabled` / `ft_is_broadcasting` / `ft_start_discovery` 等接口。Swift 端 `TransferCore+Discovery.swift` 监听 `8801`，把对端填入 `discoveredServers`；**Client 面板**在未连接时提供「Start listening / Stop listening」开关与可点击直连的设备列表。
-
-信标载荷（以 `\n` 结尾）：
-
-```text
-FTF-DISCOVER <protocolVersion> <tcpPort>
-```
-
-例：`FTF-DISCOVER 1 8800`。监听方以**数据包源 IP** 作为对端地址、载荷中的 `<tcpPort>` 作为连接端口。
-
-> **跨端同步**：信标格式（魔数 `FTF-DISCOVER`、UDP 端口 `8801`、字段顺序 `<版本> <端口>`）为新增约定，Device2Device 的 JNI 层需实现对应解析才能自动发现本端；改动格式须同步两端。
+信标格式（以 `\n` 结尾）：`FTF-DISCOVER <版本> <TCP端口>`。
+监听方用来源 IP 加载荷端口连接，如 `FTF-DISCOVER 1 8800`。
+Android 端 JNI 需用同一格式，改动须同步两端。
 
 ### 测试（命令行）
 
 ```bash
 ./build_app.sh test
-.build/test/transfer serve -p 8800 -i en0 &   # -i 可选：把信标绑定到指定网卡（Linux 如 eth0/wlan0）
-.build/test/transfer discover -i en0          # 可只监听指定网卡；应看到 "discovered peer <ip>:8800"
+.build/test/transfer serve -p 8800 -i en0 &
+.build/test/transfer discover -i en0
+.build/test/transfer serve -g 239.1.2.3 -u 8901 -i en0 &
+.build/test/transfer discover -g 239.1.2.3 -p 8901 -i en0
 ```
+
+`-i` 绑网卡，`-g` 指定组播地址，`serve` 的 `-u` / `discover` 的 `-p`
+指定 UDP 端口；发现对端后打印 `discovered peer <ip>:8800`。
 
 ### 与 Device2Device（Android）互通
 
@@ -142,7 +142,7 @@ History 页右键未完成任务行 → `Delete` 单条删除（传输中的行�
 
 | 入口 | 内容 |
 |------|------|
-| Server 页齿轮 popover | 指数退避开关（`Exponential backoff`，默认关闭=快速判死）、**LAN 广播开关**（`Broadcast on LAN`，默认开，运行中即时生效）、文件保存路径 |
+| Server 页齿轮 popover | 指数退避开关、`LAN 广播开关`、**Discovery IP / UDP**（信标收发端点）、文件保存路径 |
 | Client 面板（未连接时） | **局域网发现开关**（Start/Stop listening）+ 发现的设备列表，点击即连接 |
 | ⌘, 设置窗口 | 默认端口（预填 Server/Client 端口字段，改动即时生效，默认 `8800`）、是否显示日志控制台（默认开） |
 

@@ -7,6 +7,7 @@
 
 #include <string>
 #include <cstdint>
+#include <netinet/in.h>
 #include <thread>
 #include <mutex>
 #include <atomic>
@@ -142,9 +143,8 @@ public:
     static constexpr uint32_t MAX_CHUNK_SIZE = 256 * 1024;
     static constexpr uint16_t DEFAULT_PORT = 8800;
 
-    // LAN discovery: the running server periodically broadcasts a beacon so peers
-    // can find it without manual IP entry. The TCP file-transfer port is announced;
-    // DISCOVERY_PORT is a fixed, separate UDP port used only for the beacon.
+    // LAN discovery: the server beacons its TCP port so peers need no manual IP
+    // entry. DISCOVERY_PORT is the default UDP beacon port.
     static constexpr uint16_t DISCOVERY_PORT = 8801;
     static constexpr int DISCOVERY_INTERVAL_MS = 3000;
     static constexpr const char* DISCOVERY_MAGIC = "FTF-DISCOVER";
@@ -170,6 +170,9 @@ public:
     // Pin the beacon broadcast / discovery listener to a named interface
     // (e.g. "en0", "eth0", "wlan0"). Empty = auto. Set before starting.
     void setBindInterface(const std::string& ifname);
+    // Endpoint: empty = broadcast, 224.x-239.x = multicast, port 0 = default.
+    // Restart active endpoints to apply. default: 255.255.255.255:8801.
+    bool setDiscoveryEndpoint(const std::string& address, uint16_t port);
     // Resolve the primary LAN IPv4 address (en0 / Ethernet / WiFi); "" on failure.
     static std::string resolveLocalIP();
     // Listen for peer beacons. onDiscovery is invoked (arbitrary thread) with the
@@ -254,7 +257,7 @@ private:
     unsigned short m_announcePort{ 0 };
     std::mutex m_broadcastMutex;     // serializes start/stopBroadcast
 
-    // Discovery listener (client side): receives peer beacons on DISCOVERY_PORT.
+    // Discovery listener (client side): receives peer beacons on the configured port.
     std::atomic<bool> m_discoveryRunning{ false };
     std::thread m_discoveryThread;
     std::atomic<int> m_discoverySock{ -1 };
@@ -266,6 +269,10 @@ private:
     // Optional interface to pin LAN broadcast/discovery to ("" = auto).
     std::string m_bindInterface;
     mutable std::mutex m_bindMutex;   // guards m_bindInterface
+
+    // Beacon destination (network order) and UDP port; read by each loop at start.
+    std::atomic<uint32_t> m_discoveryAddr{ INADDR_BROADCAST };
+    std::atomic<uint16_t> m_discoveryPort{ DISCOVERY_PORT };
 
     // 每次客户端传输一个独立标志，避免服务端并发代发互相消费，也避免新传输清掉刚发出的取消。
     std::mutex m_cancelMutex;

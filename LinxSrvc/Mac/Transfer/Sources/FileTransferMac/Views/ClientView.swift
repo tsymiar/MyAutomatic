@@ -307,8 +307,13 @@ private struct DiscoveredPeersView: View {
                             HStack(spacing: 8) {
                                 Image(systemName: "network")
                                     .foregroundColor(.green)
-                                Text("\(server.ip):\(server.port)")
-                                    .font(.system(.body, design: .monospaced))
+                                VStack(alignment: .leading, spacing: 0) {
+                                    Text(server.ip)
+                                        .font(.system(.body, design: .monospaced))
+                                    Text(String(server.port))
+                                        .font(.caption.monospacedDigit())
+                                        .foregroundColor(.secondary)
+                                }
                                 Spacer()
                                 Label("Connect", systemImage: "link")
                                     .font(.caption)

@@ -61,6 +61,24 @@ final class TransferCore: ObservableObject {
         }
     }
 
+    /// Beacon/listener address; empty = broadcast, 224.x-239.x = multicast.
+    @Published var discoveryAddress: String =
+        UserDefaults.standard.string(forKey: "discoveryAddress") ?? "255.255.255.255" {
+        didSet {
+            UserDefaults.standard.set(discoveryAddress, forKey: "discoveryAddress")
+            applyDiscoveryEndpoint()
+        }
+    }
+
+    /// UDP port paired with `discoveryAddress`.
+    @Published var discoveryPort: String =
+        UserDefaults.standard.string(forKey: "discoveryPort") ?? "8801" {
+        didSet {
+            UserDefaults.standard.set(discoveryPort, forKey: "discoveryPort")
+            applyDiscoveryEndpoint()
+        }
+    }
+
     /// Peers seen on the LAN via the discovery beacon (newest first).
     @Published var discoveredServers: [DiscoveredServer] = []
 

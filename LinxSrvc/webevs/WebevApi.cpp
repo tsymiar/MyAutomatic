@@ -20,7 +20,7 @@
 #include "event2/dns.h"
 #include "event2/thread.h"
 #include "event2/util.h"
-#include "event2/keyvalq_struct.h" 
+#include "event2/keyvalq_struct.h"
 #include "event2/buffer_compat.h"
 
 #include "Utils.h"
@@ -41,6 +41,12 @@ namespace {
     static unordered_map<void*, string> g_msgRecv = {};
     static unordered_map<string, string> g_extraOpts = {};
     static unordered_map<string, DealHooks> g_dealHooks = {};
+    struct HtmlHook {
+        evhttp_cmd_type method;
+        HTML_CALLBACK callback;
+        HtmlHook() : method(EVHTTP_REQ_GET), callback(nullptr) {}
+    };
+    static unordered_map<string, HtmlHook> g_htmlHooks = {};
     static string g_frontendRoot = { };      // frontend static root; empty means frontend disabled
     // g_msgRecv: written by the event thread, read by the requester
     static mutex g_msgMtx;
@@ -346,10 +352,42 @@ bool ServeFrontend(struct evhttp_request* req_ptr, const string& url)
     return true;
 }
 
+void SendHtml(struct evhttp_request* req_ptr, const string& html)
+{
+    struct evbuffer* buf = evbuffer_new();
+    if (buf == nullptr) {
+        Error("create response buffer for HTML page failed!");
+        return;
+    }
+    evbuffer_add(buf, html.data(), html.size());
+    struct evkeyvalq* heads = req_ptr->output_headers;
+    evhttp_add_header(heads, "Server", HTTPD_SIGNATURE);
+    evhttp_add_header(heads, "Content-Type", "text/html; charset=utf-8");
+    evhttp_add_header(heads, "Cache-Control", "no-cache");
+    evhttp_add_header(heads, "Access-Control-Allow-Origin", "*");
+    evhttp_send_reply(req_ptr, HTTP_OK, ReasonPhrase(HTTP_OK), buf);
+    evbuffer_free(buf);
+    Message("[200] html page: %zu bytes", html.size());
+}
+
+// HTML page routes win over static files when registered for the method.
+HTML_CALLBACK HtmlHookFor(const vector<string>& list, evhttp_cmd_type method)
+{
+    const string key = list.empty() ? "" : list[0];
+    unordered_map<string, HtmlHook>::const_iterator it = g_htmlHooks.find(key);
+    if (it != g_htmlHooks.end() && it->second.method == method) {
+        return it->second.callback;
+    }
+    return nullptr;
+}
+
 // registered APIs (/log branch, hooks) and OPTIONS preflight keep the legacy path
 bool IsDynamicUri(const vector<string>& list, evhttp_cmd_type method)
 {
     if (method == EVHTTP_REQ_OPTIONS) {
+        return true;
+    }
+    if (HtmlHookFor(list, method) != nullptr) {
         return true;
     }
     if (!list.empty() && list[0] == "log") {
@@ -522,6 +560,15 @@ void GenericHandler(struct evhttp_request* req_ptr, void* param)
     vector<string> list = parseUri(url);
     // serve frontend files first, registered APIs keep the legacy path
     if (!IsDynamicUri(list, method) && ServeFrontend(req_ptr, url)) {
+        return;
+    }
+    HTML_CALLBACK htmlCb = HtmlHookFor(list, method);
+    if (htmlCb != nullptr) {
+        HookDetail message = {};
+        message.url = url;
+        message.method = method;
+        message.payload = payload;
+        SendHtml(req_ptr, htmlCb(message));
         return;
     }
     if (param != nullptr) {
@@ -950,6 +997,12 @@ void RegisterCallback(const string& name, evhttp_cmd_type method, DEALRES_CALLBA
 {
     g_dealHooks[name].method = method;
     g_dealHooks[name].callback = hook;
+}
+
+void RegisterHtmlCallback(const string& path, evhttp_cmd_type method, HTML_CALLBACK callback)
+{
+    g_htmlHooks[path].method = method;
+    g_htmlHooks[path].callback = callback;
 }
 
 void SetHeadsList(const vector<string>& heads)
